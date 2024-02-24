@@ -1,13 +1,14 @@
 ---
-title: 抽象類別與介面的差異
-publishDate: 2023-10-22 00:00:00
+title: Abstract Class VS Interface
+publishDate: 2024-02-24 10:00:00
 img: /assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
-  Java
+  2024/02/24
 tags:
   - Interface
   - Abstract Class
+  - Java
 ---
 
 ##### 抽象類別
@@ -60,4 +61,12 @@ public class Main {
     dog.walk(); // "狗散步"
   }
 }
+```
+##### 繼承抽象類別
+目的為在抽象類別的架構下，繼續建構程式的內容。
+##### 繼承實體類別
+目的為透過父子類別的is-a關係實現代碼重用或擴增。
+```java
+Roles roles = new Magician();
+// Magician is a role.
 ```
