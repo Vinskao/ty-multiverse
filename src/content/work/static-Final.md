@@ -57,14 +57,26 @@ final 類別可以被實作嗎？只有介面才能被實作。
 
 ```java
 public class MyClass {
-  public static void myFunction(){};
+    public static void myFunction(){};
 }
 ```
 
 ```java
 public class YourClass {
-  public void yourFunction(){
-    MyClass.myFunction();
-  };
+    public void yourFunction(){
+        MyClass.myFunction();
+    };
+}
+```
+
+##### 靜態方法只能訪問靜態成員變量
+
+```java
+private final SalaryService salaryService = new SalaryService(); // 錯，無法在main被訪問
+
+private static final SalaryService salaryService = new SalaryService();
+
+public static void main(String[] args) {
+    salaryService.setSalary();
 }
 ```
