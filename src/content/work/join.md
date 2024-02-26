@@ -24,11 +24,13 @@ SELECT * FROM table1 INNER JOIN table2 ON table1.column = table2.column;
 
 ##### OUTER JOIN
 
-OUTER JOIN 分為左外連接（LEFT OUTER JOIN）和右外連接（RIGHT OUTER JOIN）。它返回兩個表中所有的行，以及它們之間的匹配行。如果在其中一個表中沒有相應的匹配行，則對應的行將以 NULL 值填充。
-
-在 LEFT OUTER JOIN 中，左表（table1）中的所有行都將包含在結果中，而右表（table2）中只有與左表中匹配的行才會包含在結果中。如果在右表中找不到匹配的行，則右表中的列將以 NULL 值填充。
+OUTER JOIN 分為左外連接（LEFT OUTER JOIN）和右外連接（RIGHT OUTER JOIN）。
 
 LEFT OUTER JOIN 就是 LEFT JOIN。
+
+它返回兩個表中所有的行，以及它們之間的匹配行。如果在其中一個表中沒有相應的匹配行，則對應的行將以 NULL 值填充。
+
+在 LEFT OUTER JOIN 中，左表（table1）中的所有行都將包含在結果中，而右表（table2）中只有與左表中匹配的行才會包含在結果中。如果在右表中找不到匹配的行，則右表中的列將以 NULL 值填充。
 
 ```sql
 SELECT * FROM table1 LEFT OUTER JOIN table2 ON table1.column = table2.column;

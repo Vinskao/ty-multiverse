@@ -47,6 +47,10 @@ const imageLinks = [
         imgUrl: "/assets/mongodb-logo.jpg",
         linkUrl: ""
     },
+	{
+        imgUrl: "/assets/SQL.jpg",
+        linkUrl: ""
+    },
 ];
 
 const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl === entry.data.img);
@@ -91,7 +95,6 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 
 
 <style>
-
 	header {
 		padding-bottom: 2.5rem;
 		border-bottom: 1px solid var(--gray-800);
@@ -176,6 +179,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 	}
 
 	@media (min-width: 50em) {
+
 		.back-link {
 			display: block;
 			align-self: flex-start;

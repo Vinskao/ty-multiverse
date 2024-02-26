@@ -47,3 +47,73 @@ List<User> findByUsernameLike(String username);
 // 查詢年齡大於指定年齡的用戶，並按照年齡降序排序
 List<User> findByAgeGreaterThanOrderByAgeDesc(int age);
 ```
+
+##### Optional
+
+Optional<Bean>：Java 8 引入的 Optional 類型可以用來表示一個可能為 null 的值，可以使用 Optional<Bean> 類型作為傳回類型，以表示方法可能傳回實體對象，也可能傳回 null。
+
+```java
+Optional<Bean> findById(Long id);
+```
+
+##### Set
+
+```java
+Set<Bean> findAllBeans();
+```
+
+##### Map
+
+```java
+Map<Long, Bean> findAllBeansWithIdMapping();
+```
+
+##### Stream
+
+Java 8 及以後的版本中，可以使用 Stream 作為回傳類型，傳回一個包含所有實體物件的流（Stream），可以對流進行各種操作，例如過濾、映射、排序等。
+
+```java
+Stream<Bean> findAllBeansAsStream();
+```
+
+- 過濾（Filtering）：
+  假設我們只想保留名字以 "A" 開頭的 Bean：
+
+  ```java
+  Stream<Bean> beansStartingWithA = findAllBeansAsStream()
+      .filter(bean -> bean.getName().startsWith("A"));
+  ```
+
+  beansStartingWithA 就是一個包含所有名字以 "A" 開頭的 Bean 的 Stream。
+
+- 映射（Mapping）：
+  假設我們想要取得所有 Bean 的名字：
+
+  ```java
+  Stream<String> beanNames = findAllBeansAsStream()
+      .map(Bean::getName);
+  ```
+
+  如果不使用::，要這樣寫：
+
+  ```java
+  Stream<String> beanNames = findAllBeansAsStream()
+    .map(new Function<Bean, String>() {
+        @Override
+        public String apply(Bean bean) {
+            return bean.getName();
+        }
+    });
+  ```
+
+  beanNames 就是一個包含所有 Bean 名字的 Stream。
+
+- 排序（Sorting）：
+  假設我們想要按照名字的字母順序對 Bean 進行排序：
+
+  ```java
+  Stream<Bean> sortedBeans = findAllBeansAsStream()
+      .sorted(Comparator.comparing(Bean::getName));
+  ```
+
+  sortedBeans 就是一個依照名字字母順序排序的 Stream。

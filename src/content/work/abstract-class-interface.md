@@ -13,11 +13,88 @@ tags:
 
 ##### 抽象類別
 
-一個可以同時存在抽象或實體方法的類別，其他類別繼承時也可以選擇要覆寫一個或多個抽象或實體方法。
+一個可以同時存在抽象或實體方法的類別，其他類別繼承時也可以選擇要覆寫一個或多個抽象或實體方法。如果是實體方法，繼承時可以不用改寫。
+
+```java
+abstract class User {
+    abstract void displayInfo();
+
+    void greet() {
+        System.out.println("Hello!");
+    }
+}
+
+class AdminUser extends User {
+    @Override
+    void displayInfo() {
+        System.out.println("Admin User");
+    }
+}
+```
+
+子類別如果有一個抽象方法，則也是抽象類別。
+
+```java
+abstract class Ghost extends User {
+    // 子類別可以包含父類別中不存在的方法
+    abstract void haunt();
+
+    // 不一定要覆寫greet()
+}
+```
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 實體方法不需要@Override
+        AdminUser admin = new AdminUser();
+        admin.greet();        // Hello!
+        admin.displayInfo();  // Admin User
+    }
+}
+```
+
+---
 
 ##### 介面
 
 其他類別可以透過實作一個介面的所有方法來覆寫其方法。假設介面有一個散步方法，那其他類別都可以透做實作獲取散步，並進行擴增。如果實作介面的屬性，會自動變成靜態 final 的狀態，一個不能改值的屬性。
+
+Java 8 及以後的版本中，介面中可以包含預設方法（default methods）。 預設方法是一種在介面中提供實作的方法，它可以在介面中直接定義方法體，而不需要實作類別來提供實作。 子類別可以選擇是否覆蓋介面中的預設方法。
+
+```java
+interface Walker {
+    void walk();
+
+    default void breathe() {
+        System.out.println("Breathing...");
+    }
+}
+
+class Human implements Walker {
+    // no @Override
+}
+
+class Dog implements Walker {
+    @Override
+    public void walk() {
+        System.out.println("Dog is walking");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Human human = new Human();
+        human.walk();   // Walking...
+        human.breathe(); // Breathing...
+
+        Dog dog = new Dog();
+        dog.walk();     // Dog is walking
+    }
+}
+```
+
+實體方法可以不加 default 嗎? 不行。
 
 ---
 
