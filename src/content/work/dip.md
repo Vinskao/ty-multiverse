@@ -12,10 +12,14 @@ tags:
   - Java
 ---
 
-##### 開放封閉原則
+#### 開放封閉原則
+
 程式開發遵循開放擴增，封閉修改的設計模式。讓後進的程式與先到的程式耦合度降低，使得進行依賴反轉成為可能。
-##### 依賴反轉
-如果有一隻程式叫打掃，一隻程式叫掃地工（低層程式）。這兩隻程式一起運作才能成為清潔API（高層程式）。有一天掃地工不幹了，清潔API就無法運作了，因為清潔API依賴掃地工，高層程式依賴低層程式。
+
+#### 依賴反轉
+
+如果有一隻程式叫打掃，一隻程式叫掃地工（低層程式）。這兩隻程式一起運作才能成為清潔 API（高層程式）。有一天掃地工不幹了，清潔 API 就無法運作了，因為清潔 API 依賴掃地工，高層程式依賴低層程式。
+
 ```java
 package org.controller;
 public class CleanController {
@@ -30,6 +34,7 @@ public class CleanController {
   }
 }
 ```
+
 ```java
 package org.service;
 public class CleanService{
@@ -38,6 +43,7 @@ public class CleanService{
   }
 }
 ```
+
 ```java
 package org.service;
 public class CleanerService{
@@ -46,7 +52,9 @@ public class CleanerService{
   }
 }
 ```
-如果清潔API依賴的是一個自動配發可用清潔工的清潔公司，那就不會有依賴清潔工的問題了，就不會有高層程式依賴低層程式的問題。service有問題就換掉，controller還是原封不動。
+
+如果清潔 API 依賴的是一個自動配發可用清潔工的清潔公司，那就不會有依賴清潔工的問題了，就不會有高層程式依賴低層程式的問題。service 有問題就換掉，controller 還是原封不動。
+
 ```java
 package org.service;
 public interface CleanerService {
@@ -54,6 +62,7 @@ public interface CleanerService {
   void clean();
 }
 ```
+
 ```java
 package org.service;
 public class StandardCleanerService implements CleanerService {
@@ -63,6 +72,7 @@ public class StandardCleanerService implements CleanerService {
   }
 }
 ```
+
 ```java
 package org.service;
 public class AdvancedCleanerService implements CleanerService {
@@ -72,6 +82,7 @@ public class AdvancedCleanerService implements CleanerService {
   }
 }
 ```
+
 ```java
 package org.controller;
 public class CleanController {
@@ -87,4 +98,5 @@ public class CleanController {
   }
 }
 ```
-clean()也是依此類推。我們一次只需要一種清潔工service，Advance Cleaner或Standard Cleaner，一個不能用使用另一個即可。不需要改高層程式controller。
+
+clean()也是依此類推。我們一次只需要一種清潔工 service，Advance Cleaner 或 Standard Cleaner，一個不能用使用另一個即可。不需要改高層程式 controller。

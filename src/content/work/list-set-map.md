@@ -17,7 +17,7 @@ List、Set、Map 是三個可以管理一串元素的介面，繼承這三者的
 
 以下介紹其特性：
 
-##### java.util.List
+#### java.util.List
 
 1. 有序：列表中的元素按照它們被添加的順序排列
 2. 可重複元素：列表允許儲存相同的元素。
@@ -37,7 +37,7 @@ myList.clear();
 System.out.println(myList); // []
 ```
 
-##### java.util.Set
+#### java.util.Set
 
 1. 無序
 2. 不可重複元素
@@ -67,7 +67,7 @@ mySet.clear();
 System.out.println(mySet); // []
 ```
 
-##### java.util.Map
+#### java.util.Map
 
 1. 無序
 2. Key 不可重複
@@ -87,7 +87,7 @@ myMap.clear();
 System.out.println(myMap); // {}
 ```
 
-##### java.util.Array
+#### java.util.Array
 
 實例化時就決定長度，初始值是 0。
 

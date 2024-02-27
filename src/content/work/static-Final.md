@@ -11,7 +11,7 @@ tags:
   - Java
 ---
 
-##### 權限修飾
+#### 權限修飾
 
 ```java
 public class Dog{}
@@ -25,7 +25,7 @@ class Dog{}
 
 如果一個在 org.service package、一個在 org.controller package，就只有 public 類別可以透過 import 被訪問。
 
-##### final
+#### final
 
 如果成員、區域變數宣告 final，就要馬上設值且不能再變動。
 
@@ -49,7 +49,7 @@ public final class Xxx implements Yyy{};// 錯，不能實作介面
 
 final 類別可以被實作嗎？只有介面才能被實作。
 
-##### static
+#### static
 
 被宣告成 static 的成員變量只會屬於類別，不會讓實例擁有。
 被宣告成 static 的成員變量用類別名稱來呼叫，因為在類別載入 static 成員即佔據記憶體。
@@ -69,7 +69,7 @@ public class YourClass {
 }
 ```
 
-##### 靜態方法只能訪問靜態成員變量
+#### 靜態方法只能訪問靜態成員變量
 
 ```java
 private final SalaryService salaryService = new SalaryService(); // 錯，無法在main被訪問

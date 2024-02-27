@@ -12,7 +12,7 @@ tags:
   - Java
 ---
 
-##### Lambda 表達式
+#### Lambda 表達式
 
 Lambda 表達式是 Java 8 中引入的一個重要特性，它可以用來建立匿名函數（或稱為閉包），從而實現函數式程式設計的一些特性。 Lambda 表達式主要用於簡化函數式介面（Functional Interface）的實作。
 
@@ -20,7 +20,7 @@ Lambda 表達式是 Java 8 中引入的一個重要特性，它可以用來建�
 
 ```
 
-##### ::
+#### ::
 
 Java 8 中，雙冒號 :: 是一種新的語法，用於建立方法參考（Method Reference）。 它可以簡化 Lambda 表達式。
 

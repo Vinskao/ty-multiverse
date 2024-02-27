@@ -12,7 +12,7 @@ tags:
   - SQL
 ---
 
-##### INNER JOIN
+#### INNER JOIN
 
 INNER JOIN 返回兩個表中匹配行的交集。即，它只返回兩個表中都存在的行。如果在其中一個表中沒有相應的匹配行，那麼這些行不會包含在結果中。
 
@@ -22,7 +22,7 @@ INNER JOIN 不會在結果中產生 NULL 值，它只返回兩個表中都有匹
 SELECT * FROM table1 INNER JOIN table2 ON table1.column = table2.column;
 ```
 
-##### OUTER JOIN
+#### OUTER JOIN
 
 OUTER JOIN 分為左外連接（LEFT OUTER JOIN）和右外連接（RIGHT OUTER JOIN）。
 

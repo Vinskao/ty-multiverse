@@ -15,7 +15,7 @@ tags:
   - Java
 ---
 
-##### HTTP 方法
+#### HTTP 方法
 
 HTTP 方法是指定在與 Web 伺服器或其他資源進行通訊時所採取的操作，是 HTTP 協定的一部分，用於定義客戶端對伺服器進行的請求的性質，常見的 HTTP 方法包括 GET、POST、PUT、DELETE 等。
 
@@ -79,13 +79,13 @@ DELETE /products/123 HTTP/1.1
 Host: product.com
 ```
 
-##### REST 架構
+#### REST 架構
 
 REST 將 Web 看作是一個巨大的資源集合，每個資源都可以通過一個唯一的 URI 來識別，並且客戶端和伺服器之間的通訊是無狀態的。REST 通常基於 HTTP 協定，使用 HTTP 方法（GET、POST、PUT、DELETE 等）來執行對資源的操作。
 
 關鍵是約束一個 API 使用一個 HTTP 方法的功能。
 
-##### RESTful 架構
+#### RESTful 架構
 
 "RESTful" 一詞是從 "REST" 衍生而來的形容詞，用於描述符合 REST 原則和約束的系統或服務。換句話說，當一個系統或服務遵循了 REST 的設計原則，並使用了 REST 的架構風格時，我們就可以稱其為 "RESTful"。
 

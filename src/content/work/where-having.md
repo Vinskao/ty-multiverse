@@ -12,7 +12,7 @@ tags:
   - SQL
 ---
 
-##### WHERE
+#### WHERE
 
 WHERE 用於篩選行（records），僅適用於資料庫中的原始資料，可用於篩選欄位中的值，比如查詢哪些行的特定欄位值等於、小於、大於等於某個特定值。
 
@@ -33,7 +33,7 @@ SELECT * FROM employees WHERE middle_name IS NULL;
 SELECT * FROM employees WHERE UPPER(first_name) = 'JOHN';
 ```
 
-##### HAVING
+#### HAVING
 
 HAVING 用於 SQL 聚合函數（如 SUM、COUNT、AVG 等）之後，對結果集進行篩選，篩選由 GROUP BY 子句分組的結果集。有 HAVING 需求 一定要先使用 GROUP BY。
 

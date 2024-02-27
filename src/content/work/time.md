@@ -12,7 +12,7 @@ tags:
   - Java
 ---
 
-##### java.time.LocalDateTime
+#### java.time.LocalDateTime
 
 LocalDateTime 是 LocalDate 和 LocateTime 的結合，一個處理年月日，一個處理時分秒。
 
@@ -29,7 +29,7 @@ LocalDateTime parsedDateTime = LocalDateTime.parse("2024-02-25T12:30:45");
 // 2024-02-25T12:30:45
 ```
 
-##### java.time.ZonedDateTime
+#### java.time.ZonedDateTime
 
 LocalDateTime 是使用系統默認時區，如果使用者與 server 在不同時區，而需要在 server 端指定為使用者的時區，可以這樣設計：
 
@@ -42,7 +42,7 @@ ZonedDateTime 的 parse()方法無法直接解析 LocalDateTime 類型的字串�
 
 先解析為 LocalDateTime，然後再轉換為帶有時區資訊的 ZonedDateTime。
 
-##### java.time.Duration 計算兩個時間的差
+#### java.time.Duration 計算兩個時間的差
 
 可以使用 Duration.between() 方法來計算兩個 LocalDateTime 之間的時間差，或兩個 ZonedDateTime 之間的時間差，不能將它們混合使用。
 

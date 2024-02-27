@@ -11,13 +11,13 @@ tags:
   - Java
 ---
 
-##### 相等性
+#### 相等性
 
 比較物件相等性用 equals()，而非==，==是比較參用相等性，也就是記憶體中儲存位置的相等性。但是沒有重新定義 equals 則其與==相同，因為沒有重新定義 equals()方法，它會繼承自 Object 類，而 Object 類別中的 equals()方法實際上與==運算子的行為相同。
 
 若要比較實質相等性，必須重新定義 equals()。
 
-##### String 特殊情況
+#### String 特殊情況
 
 使用 String 類別不用自己改寫 equals()，String 類別中有這個方法覆寫 Object 類別的 equals()：
 
@@ -38,7 +38,7 @@ System.out.println(s1.equals(s2));    // true (比較值)
 
 使用 new 建立物件時，會在 Heap 記憶體中為每個物件分配一個新的記憶體空間。 即使兩個物件的內容相同，它們也會被分配到不同的記憶體位置。 這就是為什麼 s1 和 s2 的記憶體位置不同。
 
-##### 重寫 equals 方法
+#### 重寫 equals 方法
 
 原始 ArrayList 的 equals 方法：
 

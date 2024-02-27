@@ -10,7 +10,7 @@ tags:
   - Java
 ---
 
-##### JPA (Java Persistence API)
+#### JPA (Java Persistence API)
 
 JPA 是 Java 平台上的一個 ORM（Object-Relational Mapping）標準。透過 JAVA 與資料庫交互的一個工具，主要可以在 JAVA 中寫下資料庫查詢的方法，而不需要去資料庫下 CRUD 指令。
 
@@ -48,6 +48,8 @@ List<User> findByUsernameLike(String username);
 List<User> findByAgeGreaterThanOrderByAgeDesc(int age);
 ```
 
+#### JPA 方法默認支援的回傳方式
+
 ##### Optional
 
 Optional<Bean>：Java 8 引入的 Optional 類型可以用來表示一個可能為 null 的值，可以使用 Optional<Bean> 類型作為傳回類型，以表示方法可能傳回實體對象，也可能傳回 null。
@@ -58,11 +60,15 @@ Optional<Bean> findById(Long id);
 
 ##### Set
 
+希望集合中不包含重複的元素，使用 Set 是一個不錯的選擇，Set 不像 List 和 Map 可能會包含重複的元素。但是資料庫中的如果建立不同的主鍵(id)，通常每筆資料都是不重複的。所以 List 或 Set 結果一樣。
+
 ```java
 Set<Bean> findAllBeans();
 ```
 
 ##### Map
+
+每個 Bean 物件都有一個唯一的 id，但同時這個 id 也被用作 Map 中的鍵。 這樣做的目的是為了能夠以 id 為索引快速地存取對應的 Bean 物件。
 
 ```java
 Map<Long, Bean> findAllBeansWithIdMapping();

@@ -11,15 +11,15 @@ tags:
   - Mongoose.js
 ---
 
-##### MongoDB Atlas
+#### MongoDB Atlas
 
 Atlas 是 MongoDB 的線上版本，一樣是一個 NoSQL 資料庫。
 
-##### Cluster
+#### Cluster
 
 要開始使用 Atlas，首先需要創建一個 Cluster。Cluster 是一種資料庫部署架構，在 Cluster 中可以進一步創建數據庫（DB）。
 
-##### 連線
+#### 連線
 
 當連線至數據庫時，Atlas 提供多個不同的驅動程式（drivers）供選擇，根據後端環境選擇適合的驅動程式。以下以 Node.js 環境為例，展示如何進行設定。
 
@@ -38,7 +38,7 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 MONGO_URI=mongodb+srv://xxx:password@xxx.sgkbzzx.mongodb.net/?retryWrites=true&w=majority&appName=xx
 ```
 
-##### 取得 MONGO_URI
+#### 取得 MONGO_URI
 
 瀏覽器 > Atlas 主頁 > 側邊欄的 Database > 剛剛新建的 Cluster 控制板上的 Connect 按鈕 >
 Connect to your application 下的 Drivers 擴展鍵 >>>
@@ -46,11 +46,11 @@ Connect to your application 下的 Drivers 擴展鍵 >>>
 
 ---
 
-##### Mongoose.js
+#### Mongoose.js
 
 透過 Mongoose.js 可以實現從 Node.js 中的 CRUD 程式對 MongoDB Atlas 進行資料庫操作。
 
-##### 創造一張表
+#### 創造一張表
 
 這張表有 name、age、favoriteFoods、DOB、Class 五個欄位及對應的格式。
 
@@ -70,7 +70,7 @@ let peopleSchema = new mongoose.Schema({
 let Person = mongoose.model("Person", peopleSchema);
 ```
 
-##### 新增
+#### 新增
 
 ```javascript
 const createAndSavePerson = (done) => {
@@ -91,7 +91,7 @@ const createAndSavePerson = (done) => {
 };
 ```
 
-##### 搜尋
+#### 搜尋
 
 ```javascript
 Person.findById("65254c2c1b665c28e085e329", (error, result) => {
@@ -112,7 +112,7 @@ Person.findById("65254c2c1b665c28e085e329", (error, result) => {
 // }
 ```
 
-##### 修改
+#### 修改
 
 ```javascript
 const findAndUpdate = (personName, done) => {
@@ -133,7 +133,7 @@ const findAndUpdate = (personName, done) => {
 };
 ```
 
-##### 刪除
+#### 刪除
 
 ```javascript
 const removeById = (personId, done) => {
