@@ -1,6 +1,6 @@
 ---
 title: Pyramid
-publishDate: 2024-02-26 19:00:00
+publishDate: 2024-02-28 23:00:00
 img: /assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
@@ -171,6 +171,13 @@ public String halfPyramid2(){
 * * * * *
 ```
 
+n + 1 就是我們要的金字塔每層數量。
+
+- n = 0，1 個。
+- n = 1，2 個。
+- n = 2，3 個。
+- n = 3，4 個。
+
 ###### 1. 使用 repeat()
 
 ```java
@@ -178,10 +185,10 @@ int totalHeight = 5;
 String space = " ";
 String sonStar = "* ";
 
-for (int i=0; i < totalHeight + 1 ; i++){
+for (int i=0; i < totalHeight; i++){
     // run 6 times
-    System.out.print(space.repeat(totalHeight-i));
-    System.out.print(sonStar.repeat(i));
+    System.out.print(space.repeat(totalHeight-i-1));
+    System.out.print(sonStar.repeat(i+1));
     System.out.println();
 }
 ```
@@ -192,16 +199,16 @@ for (int i=0; i < totalHeight + 1 ; i++){
 // 其他設定跟上面一樣
 public String sonPyramid1(){
     StringBuilder rs = new StringBuilder();
-    for (int i =0 ; i < totalHeight + 1; i++){
-        // run 6 times
-        rs.append(space.repeat(totalHeight - i));
-        // 第1圈i=0，重複5次空格
-        // 第2圈i=1，重複4次空格
-        // 第6圈i=5，重複0次空格
-        rs.append(sonStar.repeat(i)).append("\n");
-        // 第1圈i=0，重複0次星號
-        // 第2圈i=1，重複1次星號
-        // 第6圈i=5，重複5次星號
+    for (int i =0 ; i < totalHeight; i++){
+        // run 5 times
+        rs.append(space.repeat(totalHeight - i - 1));
+        // 第1圈i=0，重複4次空格
+        // 第2圈i=1，重複3次空格
+        // 第5圈i=4，重複0次空格
+        rs.append(sonStar.repeat(i + 1)).append("\n");
+        // 第1圈i=0，重複1次星號
+        // 第2圈i=1，重複2次星號
+        // 第5圈i=4，重複5次星號
     }
     return rs.toString();
     // 塔上會有一行空白列
@@ -214,19 +221,19 @@ public String sonPyramid1(){
 // 其他設定跟上面一樣
 public String sonPyramid2(){
     StringBuilder rs = new StringBuilder();
-    for (int i =0 ; i < totalHeight + 1; i++){
+    for (int i =0 ; i < totalHeight; i++){
         // run 6 times
-        for(int j = 0; j < totalHeight - i; j++){
+        for(int j = 0; j < totalHeight - i -1; j++){
             rs.append(space);
-            // 第1圈i=0，重複5次空格
-            // 第2圈i=1，重複4次空格
-            // 第6圈i=5，重複0次空格
+            // 第1圈i=0，重複4次空格
+            // 第2圈i=1，重複3次空格
+            // 第5圈i=4，重複0次空格
         }
-        for(int j = 0; j < i; j++){
+        for(int j = 0; j < i + 1; j++){
             rs.append(sonStar);
-            // 第1圈i=0，重複0次星號
-            // 第2圈i=1，重複1次星號
-            // 第6圈i=5，重複5次星號， j < i 所以j 在第六圈應該跑 6-1次 = 5次
+            // 第1圈i=0，重複1次星號
+            // 第2圈i=1，重複2次星號
+            // 第5圈i=4，重複5次星號， j < i+1 所以j 在第5圈應該跑 5次
         }
         rs.append("\n");
     }
@@ -244,18 +251,58 @@ public String sonPyramid2(){
  *********
 ```
 
+2n + 1 就是我們要的金字塔每層數量。
+
+- n = 0，1 個。
+- n = 1，3 個。
+- n = 2，5 個。
+- n = 3，7 個。
+
+###### 1. 使用 repeat()
+
 ```java
 int totalHeight = 5;
 String space = " ";
 String star = "*";
 
 for (int i = 0; i < totalHeight; i++){
-    System.out.print(space.repeat(totalHeight - i));
-    if (i > 0) {
-        System.out.println(star.repeat(i)+star.repeat(i)+star);
-    } else {
-        System.out.println(star);
+    // 執行5次
+    // 空格分別重複4、3、2、1、0次
+    System.out.print(space.repeat(totalHeight - i -1));
+    // 空格分別重複1、3、5、7、9次
+    System.out.println(star.repeat(2 * i + 1));
+}
+```
+
+###### 2. 使用 repeat()，並用 StringBuilder 打包
+
+```java
+public String triPyramid1(){
+    StringBuilder rs = new StringBuilder();
+    for (int i = 0; i < totalHeight; i++){
+        rs.append(space.repeat(totalHeight - i -1));
+        rs.append(star.repeat(2 * i + 1)).append("\n");
     }
+    return rs.toString();
+}
+```
+
+###### 3. 只用 StringBuilder 與迴圈
+
+```java
+public String triPyramid2(){
+    StringBuilder rs = new StringBuilder();
+    for (int i = 0; i < totalHeight; i++){
+        for(int j = 0; j < totalHeight - i - 1; j++){
+            rs.append(space);
+        }
+        // 在每行中加上星號，每層星號數量為2n+1
+        for(int j = 0; j < 2 * i + 1; j++) {
+            rs.append(star);
+        }
+        rs.append("\n"); // 要放回圈外，因為她只需要重複5次
+    }
+    return rs.toString();
 }
 ```
 
@@ -272,6 +319,8 @@ for (int i = 0; i < totalHeight; i++){
    * *
     *
 ```
+
+###### 1. 使用 repeat()
 
 ```java
 int totalHeight = 5;
@@ -291,6 +340,68 @@ for (int i = totalHeight ; i > 0; i--){
 }
 ```
 
+###### 2. 使用 repeat()，並用 StringBuilder 打包
+
+```java
+public String shard1(){
+    StringBuilder rs = new StringBuilder();
+    for (int i =0 ; i < totalHeight; i++){
+        // run 5 times
+        rs.append(space.repeat(totalHeight - i -1));
+        rs.append(sonStar.repeat(i + 1)).append("\n");
+    }
+    for (int i = totalHeight - 1  ; i > 0; i--){
+        // run 4 times
+        // 第1圈i=4，重複1次空格
+        // 第2圈i=3，重複2次空格
+        // 第4圈i=1，重複4次空格
+        rs.append(space.repeat(totalHeight - i));
+        // 第1圈i=4，重複4次星號
+        // 第2圈i=3，重複3次星號
+        // 第4圈i=1，重複1次星號
+        rs.append(sonStar.repeat(i)).append("\n");
+    }
+    return rs.toString();
+}
+```
+
+###### 3. 只用 StringBuilder 與迴圈
+
+```java
+public String shard2(){
+    StringBuilder rs = new StringBuilder();
+
+    for (int i =0 ; i < totalHeight; i++){
+        // run 5 times
+        for(int j = 0; j < totalHeight - i - 1; j++){
+            rs.append(space);
+        }
+        for(int j = 0; j < i + 1; j++){
+            rs.append(sonStar);
+        }
+        rs.append("\n");
+    }
+
+    for (int i = totalHeight - 1  ; i > 0; i--){
+        // run 4 times
+        // 第1圈j=5-4=1，重複1次空格
+        // 第2圈j=5-3=2，重複2次空格
+        // 第4圈j=5-1=4，重複4次空格
+        for(int j = totalHeight - i; j > 0; j--){
+            rs.append(space);
+        }
+        // 第1圈j=4，重複4次*
+        // 第2圈j=3，重複3次*
+        // 第4圈j=1，重複1次*
+        for(int j = i; j > 0; j--) {
+            rs.append(sonStar);
+        }
+        rs.append("\n");
+    }
+    return rs.toString();
+}
+```
+
 #### 正晶塔
 
 ```
@@ -304,6 +415,8 @@ for (int i = totalHeight ; i > 0; i--){
     ***
      *
 ```
+
+###### 1. 使用 repeat()
 
 使用 String.repeat(n) 方法，其中 n 是 0 或負數，則會返回一個空字串。
 
@@ -323,5 +436,56 @@ for (int i = 0; i < totalHeight; i++){
 for (int i = totalHeight ; i > 1; i--){
     System.out.print(space.repeat(totalHeight - i + 2));
     System.out.println(star.repeat(i - 1) + star.repeat(i - 2));
+}
+```
+
+###### 2. 使用 repeat()，並用 StringBuilder 打包
+
+```java
+public String diamond1(){
+    StringBuilder rs = new StringBuilder();
+    for (int i = 0; i < totalHeight; i++){
+        rs.append(space.repeat(totalHeight - i -1));
+        rs.append(star.repeat(2 * i + 1)).append("\n");
+    }
+    // 執行4次
+    for (int i = totalHeight-2 ; i >= 0; i--){
+        // 第1圈i=3，重複5-3-1=1次空格
+        // 第2圈i=2，重複5-2-1=2次空格
+        // 第4圈i=0，重複5-0-1=4次空格
+        rs.append(space.repeat(totalHeight - i -1));
+        // 第1圈i=3，重複7次*
+        // 第2圈i=2，重複5次*
+        // 第4圈i=0，重複1次*
+        rs.append(star.repeat(2 * i + 1)).append("\n");
+    }
+    return rs.toString();
+}
+```
+
+###### 3. 只用 StringBuilder 與迴圈
+
+```java
+public String diamond2(){
+    StringBuilder rs = new StringBuilder();
+    for (int i = 0; i < totalHeight; i++){
+        for(int j = 0; j < totalHeight - i - 1; j++){
+            rs.append(space);
+        }
+        for(int j = 0; j < 2 * i + 1; j++) {
+            rs.append(star);
+        }
+        rs.append("\n");
+    }
+    for (int i = totalHeight-2 ; i >= 0; i--){ // 需要確保在計算空格數量時不會出現數組越界的情況
+        for(int j = totalHeight - i - 1; j > 0; j--){
+            rs.append(space);
+        }
+        for(int j = 2 * i + 1; j > 0; j--){
+            rs.append(star);
+        }
+        rs.append("\n");
+    }
+    return rs.toString();
 }
 ```
