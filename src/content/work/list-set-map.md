@@ -87,6 +87,66 @@ myMap.clear();
 System.out.println(myMap); // {}
 ```
 
+##### 遍歷 HashMap 的鍵值對
+
+這邊提供三種可以用迴圈讀取 HashMap 鍵值對的方式。
+先準備一個 Hashmap 給等下三個迴圈跑，看是不是相同結果。
+
+```java
+public static void main(String[] args) {
+    HashMap<Integer, String> map = new HashMap<Integer, String>();
+    map.put(1,"Sorane");
+    map.put(2,"Sayuri");
+    map.put(3,"Chiaki");
+}
+```
+
+- keySet()
+
+  keySet() 是 HashMap 類別的一個方法，它傳回一個 Set 對象，該物件包含了 HashMap 中的所有鍵。當你只需要處理 HashMap 中的鍵時，可以使用 keySet()。 這種情況下，你只對鍵感興趣，不需要關心對應的值是什麼。
+
+  ```java
+  for(Integer key: map.keySet()){
+      String value = map.get(key);
+      System.out.println(value);
+  }
+  // 結果：
+  // Sorane
+  // Sayuri
+  // Chiaki
+  ```
+
+- entrySet()
+
+  當你需要同時存取鍵和對應的值時，可以使用 entrySet()。 在這種情況下，你可以直接從 Map.Entry 物件中取得鍵和值，而不需要先取得鍵再透過鍵取得值。
+
+  ```java
+  for(Map.Entry<Integer, String> entry: map.entrySet()){
+      Integer key = entry.getKey();
+      String value = entry.getValue();
+      System.out.printf("k.%d; y.%s", key, value);
+      System.out.println();
+  }
+  // 結果：
+  // k.1; y.Sorane
+  // k.2; y.Sayuri
+  // k.3; y.Chiaki
+  ```
+
+- forEach()
+
+  JAVA 8 以後的技術，用到 Lamda 表達式->。
+
+  ```java
+  map.forEach((key,value) -> {
+      System.out.println(value);
+  })
+  // 結果：
+  // Sorane
+  // Sayuri
+  // Chiaki
+  ```
+
 #### java.util.Array
 
 實例化時就決定長度，初始值是 0。

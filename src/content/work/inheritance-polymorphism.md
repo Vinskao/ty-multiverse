@@ -95,3 +95,26 @@ public static void case2() {
 ```
 
 當需要新增加其他子類別時，無需修改現有的程式碼，只需要新增新的子類別並確保它們符合父類別的方法。 符合開閉原則 OCP。
+
+#### 實現多型的範例
+
+```java
+interface A (){
+    void getValue();
+}
+interface B() implement {
+    @Override
+    default void getValue(){System.out.println(1);}
+}
+class C() extends ClassB{
+    // 有實現多型，只要用非C class來實力化與呼叫方法就算
+    public void add(A a){ a.getValue(); }
+    public void add(B b){ a.getValue(); }
+    public void add(A a, B b){ a.getValue(); b.getValue(); }
+    // 沒實現多型
+    public void add(C c){c.getValue();}
+    public void add(C c1,C c2){c1.getValue();}
+}
+```
+
+因為 A 是一個介面，所以任何實作了 A 介面的類別的物件都可以傳遞給 add 方法。
