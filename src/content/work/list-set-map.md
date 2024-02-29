@@ -24,18 +24,20 @@ List、Set、Map 是三個可以管理一串元素的介面，繼承這三者的
 3. 可變元素：可以透過新增、刪除、清空和修改操作來修改清單中的元素。可用 add(), remove(), clear(), set()。
 
 ```java
-List<String> myList = new ArrayList<>();
-myList.add("apple");
-myList.add("banana");
-myList.add("apple"); // 可重複
-System.out.println(myList.get(2)); // apple
-System.out.println(myList.get(3)); // out of bound error
-System.out.println(myList); // [apple, banana, apple]
-myList.remove("banana");
-System.out.println(myList); // [apple, apple]
-myList.clear();
-System.out.println(myList); // []
+List<String> list = new ArrayList<>();
+list.add("apple");
+list.add("banana");
+list.add("apple"); // 可重複
+System.out.println(list.get(2)); // apple
+System.out.println(list.get(3)); // out of bound error
+System.out.println(list); // [apple, banana, apple]
+list.remove("banana");
+System.out.println(list); // [apple, apple]
+list.clear();
+System.out.println(list); // []
 ```
+
+##### 用迴圈計算一串數字的加總
 
 #### java.util.Set
 
@@ -46,25 +48,52 @@ System.out.println(myList); // []
 Set 是一種集合，它不像 List 那樣有 index，因此沒有直接的方法來找到 Set 中的第 n 個元素。
 
 ```java
-Set<String> mySet = new HashSet<>();
-mySet.add("apple");
-mySet.add("banana");
-mySet.add("apple"); // 重複元素，但只會儲存一次
-// 以下為塞入List去找第 n 個元素
-List<String> list = new ArrayList<>(set);
-if (list.size() >= 2) {
-    String secondElement = list.get(1);
-    System.out.println("Second element: " + secondElement);
-} else {
-    System.out.println("Set does not contain enough elements");
+Set<String> set = new HashSet<>();
+set.add("apple");
+set.add("banana");
+set.add("apple"); // 重複元素，但只會覆蓋上個apple，還是只有一個apple。
+System.out.println(set.size()); // 2
+set.remove("apple");
+System.out.println(set.size()); // 1
+```
+
+##### 用迴圈計算一串數字的加總
+
+要加總數字，要先放入數字到 set，使用 addAll 方法可以一次放入多個數字，支援所有繼承 Collection 的子類別，包括 ArrayList、HashSet、LinkedList 等等。
+
+###### findAll
+
+```java
+set2.addAll(new ArrayList<>(Arrays.asList(2,3,5,6))); // [2, 3, 5, 6]
+```
+
+asList 將傳遞給它的陣列轉換為實作了 List 介面的列表，這個列表不支援新增或刪除元素，但可以使用列表的方法來修改陣列中的元素。現在 set 已經放好元素，可以做加總了。
+
+###### 加總
+
+使用 for-each 迴圈。 它的語法是 for (element_type element : collection)，其中 element_type 是集合中元素的類型，element 是在每次迭代中表示當前元素的變量，collection 是要遍歷的集合或數組。
+
+也就是說 for-each 是專門為了遍歷每個 Collection 元素而設立的，可以直接對 Collection 元素讀取，一般 for 是做不到的。
+
+```java
+int sum = 0;
+for(int n : set2){
+    sum += n;
 }
-// 在HashSet中元素的順序是不保證的，所以第二個元素不一定是 "banana"。
-// 以上為塞入List去找第 n 個元素
-System.out.println(mySet); // [banana, apple]
-mySet.remove("banana");
-System.out.println(mySet); // [apple]
-mySet.clear();
-System.out.println(mySet); // []
+System.out.println(sum); // 16
+```
+
+現在試試 while 迴圈的寫法，要搭配 Iterator。
+
+Iterator 遍歷集合（如 List、Collection、Array 等）中的元素，並對它們進行操作，以下用 hasNext(): 如果 Iterator 還有更多的元素可以迭代，則傳回 true；否則傳回 false。next()取得 Iterator 中的下一个元素，并将 Iterator 的位置向后移动一个位置，第一次调用 next() 方法时，它会返回集合中的第一个元素。
+
+```java
+Iterator<Integer> iterator = set2.iterator();
+while(iterator.hasNext()){
+  Integer n = iterator.next(); // 將[2, 3, 5, 6]一一取出
+  sum += n; // 一一放入sum，結果是16
+}
+
 ```
 
 #### java.util.Map
@@ -147,6 +176,8 @@ public static void main(String[] args) {
   // Chiaki
   ```
 
+##### 用迴圈計算一串數字的加總
+
 #### java.util.Array
 
 實例化時就決定長度，初始值是 0。
@@ -159,3 +190,5 @@ myArray[2] = 30;
 System.out.println(myArray[2]); // 30
 System.out.println(myArray[3]); // 0
 ```
+
+##### 用迴圈計算一串數字的加總

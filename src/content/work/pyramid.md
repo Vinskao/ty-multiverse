@@ -300,7 +300,7 @@ public String triPyramid2(){
         for(int j = 0; j < 2 * i + 1; j++) {
             rs.append(star);
         }
-        rs.append("\n"); // 要放回圈外，因為她只需要重複5次
+        rs.append("\n"); // 要放迴圈外，因為只需要重複5次
     }
     return rs.toString();
 }
