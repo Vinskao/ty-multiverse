@@ -1,6 +1,6 @@
 ---
 title: List & Set & Map & Array
-publishDate: 2024-02-26 10:00:00
+publishDate: 2024-03-04 16:00:00
 img: /assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
@@ -37,7 +37,45 @@ list.clear();
 System.out.println(list); // []
 ```
 
+##### 用迴圈取出 List 元素
+
+使用 for-each 迴圈。 它的語法是 for (element_type element : collection)，其中 element_type 是集合中元素的類型，element 是在每次迭代中表示當前元素的變量，collection 是要遍歷的集合或數組。
+
+也就是說 for-each 是專門為了遍歷每個 Collection 元素而設立的，可以直接對 Collection 元素讀取，一般 for 是做不到的。
+
+```java
+List<String> list_Strings = new ArrayList<>();
+list_Strings.add("Red");
+list_Strings.add("Green");
+list_Strings.add("Orange");
+
+for(String element : list_Strings){
+    System.out.println(element);
+}
+```
+
 ##### 用迴圈計算一串數字的加總
+
+###### ForEach
+
+```java
+List<Integer> numbers = new ArrayList<>();
+numbers.add(5);
+numbers.add(10);
+numbers.add(15);
+
+int sum = 0;
+for (int num : numbers) {
+    sum += num;
+}
+```
+
+###### Stream
+
+```java
+Integer[] n = {5, 10 ,15 ,20 ,25 };
+int sum2 = Arrays.stream(n).reduce(0, Integer::sum);
+```
 
 #### java.util.Set
 
@@ -70,10 +108,6 @@ set2.addAll(new ArrayList<>(Arrays.asList(2,3,5,6))); // [2, 3, 5, 6]
 asList 將傳遞給它的陣列轉換為實作了 List 介面的列表，這個列表不支援新增或刪除元素，但可以使用列表的方法來修改陣列中的元素。現在 set 已經放好元素，可以做加總了。
 
 ###### 加總
-
-使用 for-each 迴圈。 它的語法是 for (element_type element : collection)，其中 element_type 是集合中元素的類型，element 是在每次迭代中表示當前元素的變量，collection 是要遍歷的集合或數組。
-
-也就是說 for-each 是專門為了遍歷每個 Collection 元素而設立的，可以直接對 Collection 元素讀取，一般 for 是做不到的。
 
 ```java
 int sum = 0;
