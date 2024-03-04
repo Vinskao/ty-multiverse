@@ -43,7 +43,7 @@ WHERE id = (SELECT MAX(id) FROM customer);
 SELECT COUNT(*) FROM order_to_meal;
 ```
 
-計算 quantity 欄位 非 null 項目共幾個。
+計算 quantity 欄位 非 null 欄位共幾個。
 
 ```sql
 SELECT COUNT(quantity) FROM order_to_meal;

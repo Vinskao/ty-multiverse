@@ -59,6 +59,8 @@ HAVING 用於 SQL 聚合函數（如 SUM、COUNT、AVG 等）之後，對結果�
 
 ##### GROUP BY
 
+###### GROUP BY 放 1 個欄位
+
 顯示每一種不同的 price，只會有 price 欄位。
 
 ```sql
@@ -69,28 +71,52 @@ SELECT id FROM order_to_meal GROUP BY price
 -- Column 'order_to_meal.id' is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause.
 ```
 
-錯誤訊息說 SELECT 的對象一定要包在聚合函數或 GROUP BY 中。可以在 GROUP BY 放兩個欄位，這樣還會是顯示每一種不同的 price？
+錯誤訊息說 SELECT 的對象一定要包在聚合函數或 GROUP BY 中。
 
-由於 meal_id 比 price 的項目還多，所以變成顯示每一種不同的 meal_id 及其對應的 price。這個現象跟 ORDER BY meal_id DESC 沒有關係，那句只是幫我確認有沒有重複值而已。
+###### GROUP BY 放 2 個欄位
+
+可以在 GROUP BY 放兩個欄位，這樣還會是顯示每一種不同的 price？
+
+由於 meal_id 比 price 的欄位還多，所以變成顯示每一種不同的 meal_id 及其對應的 price。這個現象跟 ORDER BY meal_id DESC 沒有關係，那句只是幫我確認有沒有重複值而已。
 
 ```sql
 SELECT price, meal_id FROM order_to_meal GROUP BY price, meal_id ORDER BY meal_id DESC;
 ```
 
-現在我再放一個 order_id（項目最多的）到 GROUP BY 中，誰會有重複值，誰會不重複？ 注意，price、meal_id、order_id 在這張表都不是唯一的。
+###### GROUP BY 放 3 個欄位
+
+現在我再放一個 order_id（欄位最多的）到 GROUP BY 中，誰會有重複值，誰會不重複？ 注意，price、meal_id、order_id 在這張表都不是唯一的。
 
 這時候就要明確來區分一下，
 
-- 只有一个唯一性保持：
-  如果只有一个列参与 GROUP BY 子句，那么结果集中将只包含每种不同的值，并且每种值只会出现一次。这是因为 GROUP BY 子句将根据该列的值对结果进行分组，确保每种不同的值只出现一次。
-- 多个列参与 GROUP BY 子句时：
-  组合唯一性： 如果多个列参与 GROUP BY 子句，那么结果集中将包含每种不同的组合，并且每种组合只会出现一次。这意味着每种不同的组合值都将成为结果集中的一行。
+- 只有一個 GROUP BY 欄位則該欄位唯一性保持：
+  如果只有一個欄位參與 GROUP BY 子句，那麼結果集中將只包含每種不同的值，而每種值只會出現一次。 這是因為 GROUP BY 子句將根據該列的值對結果進行分組，確保每種不同的值只會出現一次。
+- 多個欄位參與 GROUP BY 子句時：
+  組合唯一性： 如果多個欄位參與 GROUP BY 子句，那麼結果集中將包含每種不同的組合，且每種組合只會出現一次。 這意味著每種不同的組合值都將成為結果集中的一行。
 
 ```sql
 SELECT price, meal_id, order_id FROM order_to_meal GROUP BY price, meal_id, order_id ORDER BY order_id DESC;
 ```
 
-因此三個 GROUP BY 項目看起來個別欄位都有重複值，但是組合起來，每個組合都是唯一的。
+因此三個 GROUP BY 欄位個別欄位都有重複值，但是組合起來，每個組合都是唯一的。
+
+##### 聚合函數 + GROUP BY
+
+SELECT 兩個欄位，GROUP BY 一個欄位，那個 SELECT 的其中一個欄位一定是聚合函數。
+
+```sql
+SELECT order_id, count(*), sum(price)
+FROM order_to_meal
+GROUP BY order_id
+```
+
+也可以幫查詢欄位加上別名。
+
+```sql
+SELECT order_id, count(*) AS meal_count, sum(price) AS total_price
+FROM order_to_meal
+GROUP BY order_id
+```
 
 ##### 聚合函數 + GROUP BY + HAVING
 

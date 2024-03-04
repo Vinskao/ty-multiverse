@@ -178,9 +178,9 @@
           }
         }
         //獲取了具有 id 為 "idSelectDay" 的 HTML 元素
-        //.selectedIndex: 這是 HTML Select 元素的一個屬性，它表示當前選中的項目在下拉框中的索引。索引是從 0 開始
+        //.selectedIndex: 這是 HTML Select 元素的一個屬性，它表示當前選中的欄位在下拉框中的索引。索引是從 0 開始
         //日期是從 1 開始的，而索引是從 0 開始的，所以需要將 selectedDay 減去 1。
-        //將下拉框的選中項目設置為與點擊的日期相對應的i
+        //將下拉框的選中欄位設置為與點擊的日期相對應的i
         document.getElementById("idSelectDay").selectedIndex = selectedDay - 1;
       }
       document.addEventListener("DOMContentLoaded", () => {
