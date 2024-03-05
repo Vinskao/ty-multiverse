@@ -184,11 +184,13 @@ for(int i=0; i < array.length; i++){
 }
 HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
-        .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll); // {1=5, 2=1, 3=3, 4=2, 5=4}
+        .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll);
+        // {1=5, 2=1, 3=3, 4=2, 5=4}
 
 HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
         .sorted(Map.Entry.comparingByValue())
-        .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll); // {2=1, 4=2, 3=3, 5=4, 1=5}
+        .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll);
+        // {2=1, 4=2, 3=3, 5=4, 1=5}
 ```
 
 在 collect() 方法中，逗號分隔的每個部分都代表了不同的功能：
@@ -197,7 +199,7 @@ HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
 2. (map, entry) -> 是一個 BiConsumer，是 Lambda 表達式的語法，它接受兩個參數 map 和 entry，將鍵值放入 LinkedHashMap。
 3. LinkedHashMap::putAll 表示當元素被收集到 BiConsumer 後，要呼叫 LinkedHashMap 的 putAll 方法，將元素加入新的 LinkedHashMap 中。
 
-##### Arrays.stream 加總整數陣列
+##### 用 reduce 加總整數陣列
 
 ```java
 Integer[] n = {5, 10 ,15 ,20 ,25 };
