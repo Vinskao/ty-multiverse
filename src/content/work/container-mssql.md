@@ -106,3 +106,6 @@ sudo docker run -e "ACCEPT_EULA=Y" \
    -d \
    mcr.microsoft.com/azure-sql-edge
 ```
+
+進入 Docker Desktop 可以看到 volume 位置：
+![展示結果](/assets/md-image/sql-volume.png)
