@@ -57,7 +57,7 @@ docker run --rm -v discord_db_data:/var/opt/mssql -v /Users/vinskao/volume/temp:
 
 ```bash
 docker run -e "ACCEPT_EULA=Y" \
-   -e "MSSQL_SA_PASSWORD=Wawi247525=" \
+   -e "MSSQL_SA_PASSWORD=xxx" \
    -e "MSSQL_COLLATION=Chinese_Taiwan_Stroke_CI_AI" \
    -e "TZ=Asia/Taipei" \
    -p 1433:1433 \
@@ -110,7 +110,7 @@ url: jdbc:sqlserver://sql_edge:1433;databaseName=discord;trustServerCertificate=
 在 Spring Boot 根目錄執行以下：
 
 ```bash
-docker build -t discord-app .
+docker build -t discord-backend .
 ```
 
 ##### 創建新 volume
@@ -121,10 +121,26 @@ docker volume create java_logs
 
 ##### 執行 Image
 
+如果 application.yml 沒有設定 datasource
+
 ```bash
-docker run -p 8088:8088 --name discord-app \
+docker run -d -p 8088:8088 --name discord-backend \
   -v java_logs:/var/opt/logs/discord \
-  --network discord_network discord-app
+  --network discord_network \
+  --hostname discord-backend-host \
+  discord-backend
+```
+
+如果 application.yml 有設定 datasource
+
+```bash
+docker run -d -p 8088:8088 --name discord-backend \
+  -v java_logs:/var/opt/logs/discord \
+  -e "DATASOURCE_URL=jdbc:sqlserver://sql_edge:1433;databaseName=discord;trustServerCertificate=true" \
+  -e DATASOURCE_USERNAME=SA \
+  -e DATASOURCE_PASSWORD=xxx \
+  --network discord_network \
+  discord-backend
 ```
 
 #### Vue 部分
@@ -171,6 +187,8 @@ docker build -t discord-frontend .
 
 ##### 執行 Image
 
+在容器內的/app 目錄會掛載到主機上的 vue_storage 目錄。
+
 ```bash
-docker run -d -p 8090:8090 --name discord-frontend --network discord_network -v vue_storage:/app discord-frontend
+docker run -d -p 8090:8090 --name discord-frontend --hostname discord-frontend-host --network discord_network -v vue_storage:/app discord-frontend
 ```
