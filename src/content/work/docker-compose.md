@@ -14,15 +14,16 @@ tags:
 
 使用 docker-compose.yml 一次啟動多服務。
 
-總共需要撰寫 docker-compose.yml、前端 Dockerfile、後端 Dockerfile、start-services.sh、資料庫 init-db.sql 五個檔案。
+總共需要額外撰寫 docker-compose.yml、前端 Dockerfile、後端 Dockerfile、start-services.sh、資料庫 init-db.sql 五個檔案。
 
-init-db.sql 是資料庫一啟動就想要插入的資料，直接在跟目錄建立一個 data 資料夾，然後把 sql 檔案放入。
+init-db.sql 裡面放資料庫一啟動就想要建立的表跟插入的資料，直接在跟目錄建立一個 data 資料夾，然後把 sql 檔案放入。
 
 #### Docketfile 撰寫
 
 ##### Spring Boot
 
 ```Dockerfile
+# 第一階段，選用了一個包含Maven 3.8.4和OpenJDK 11的官方基礎映像。這個映像被用作構建階段，即編譯和打包Java應用。as build部分給這一階段命名為build
 # 使用 Maven 和 OpenJDK 11 的官方基礎映像來構建專案
 FROM maven:3.8.4-openjdk-11-slim as build
 
@@ -32,56 +33,46 @@ COPY . /app
 # 設定工作目錄為/app
 WORKDIR /app
 
-# 使用 Maven 命令來構建專案
+# 使用 Maven 命令來構建專案，跳過單元測試
 RUN mvn clean package -DskipTests
 
+# 第二階段，這次選用的是僅包含OpenJDK 11 JRE（Java運行時環境）的輕量級基礎映像。這個映像用於運行已經構建好的Java應用，而不包含構建應用所需的任何額外工具或庫
 # 使用 OpenJDK 11 的輕量級基礎映像來運行構建好的應用
 FROM openjdk:11-jre-slim
 
-# 從構建階段複製構建好的應用到運行階段的容器內
-COPY --from=build /app/target/discord-0.0.1-SNAPSHOT.war /discord.war
+# 從構建階段複製構建好的 JAR 應用到運行階段的容器內
+COPY --from=build /app/target/discord-0.0.1-SNAPSHOT.jar /discord.jar
 
 # 指定運行應用的命令
-ENTRYPOINT ["java", "-jar", "/discord.war"]
+ENTRYPOINT ["java", "-jar", "/discord.jar"]
 
 # 定義容器內應用將會使用的端口
 EXPOSE 8088
-
 ```
 
 ##### Vue
 
 ```Dockerfile
-# Use the official Node.js image as a build stage
+# 以 Node.js 官方的長期支持版本作為基礎映像
 FROM node:lts AS build
 
-# Set the working directory in the container
+# 設定容器內的工作目錄為 /app。接下來的指令將會在這個目錄下執行
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# 複製依賴文件
 COPY package*.json ./
 
-# Install project dependencies
+# 安裝依賴
 RUN npm install
 
-# Copy the rest of your app's source code
+# 將除了 .dockerignore 文件中指定的內容外，將專案的所有其他文件和目錄都複製到工作目錄中。
 COPY . .
 
-# Use the official Node.js image for the runtime stage
-FROM node:lts
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy built assets from the build stage
-COPY --from=build /app .
-
-# Expose port 8090
+# 指示 Docker 在運行容器時監聽 8090 端口
 EXPOSE 8090
 
-# 启动开发服务器，直接使用 Vite 提供的命令行选项来禁用自动打开浏览器的功能。
+# 啟動開發伺服器，直接使用 Vite 提供的命令行選項來禁用自動打開瀏覽器的功能。
 CMD ["npx", "vite", "--host", "--port", "8090", "--no-open"]
-
 ```
 
 #### docker-compose.yml
@@ -128,6 +119,10 @@ services:
       - java_logs:/var/opt/logs/discord
     networks:
       - discord_network
+    environment:
+      - DATASOURCE_URL=jdbc:sqlserver://sql_edge:1433;databaseName=discord;trustServerCertificate=true
+      - DATASOURCE_USERNAME=SA
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
 
   discord_frontend:
     build:
@@ -148,7 +143,7 @@ networks:
     external: true
 ```
 
-寫完此檔案，在跟目錄執行：
+寫完此檔案，在根目錄執行：
 
 ```bash
 docker-compose up
@@ -181,12 +176,25 @@ sleep 20
 
 # 步驟 3: 禁用 Docker BuildKit，建構並啟動後端服務
 echo "正在建構並啟動後端服務..."
+# 如果不用重build
 docker-compose up -d discord_backend
+# 如果要重build
+docker-compose up --build -d discord_backend
+
 
 # 步驟 4: 啟動前端服務
 echo "正在啟動前端服務..."
+# 如果不用重build
 docker-compose up -d discord_frontend
+# 如果要重build
+docker-compose up --build -d discord_frontend
 
 echo "所有服務已啟動完成。"
 
+```
+
+執行以下一次啟動所有服務：
+
+```bash
+./start-services.sh
 ```
