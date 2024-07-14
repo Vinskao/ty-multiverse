@@ -10,6 +10,10 @@ import Org from  "../components/Org.html";
 <html>
   <head>
     <style>
+      .galwall-container {
+        position: relative;
+        z-index: 1000;
+      }
 
       .system-container {
         display: flex;
@@ -38,6 +42,7 @@ import Org from  "../components/Org.html";
         flex-direction: row;
         position: relative;
         columns: 2;
+        margin-top: 250px;
       }
 
       .left-container {
@@ -278,12 +283,14 @@ import Org from  "../components/Org.html";
     <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
       <div class="stack gap-20">
         <main class="wrapper stack gap-8">
+          <div class="galwall-container">
+            <Galwall />
+          </div>
           <Hero
             title="Palais"
             tagline="Welcome to Lily Palais."
             align="start"
           />
-            <Galwall />
             <div class="container">
               <div class="left-container">
                 <div id="cardInfoContainer">
