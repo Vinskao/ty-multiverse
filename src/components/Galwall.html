@@ -7,10 +7,10 @@
       #container1,
       #container2 {
         position: absolute;
-        top: 0;
+        top: 50px;
         left: 0;
         display: flex;
-        width: 4000px; /* Set the width to accommodate all images (100px * 21) */
+        width: 4000px;
         overflow: hidden;
       }
 
@@ -20,6 +20,7 @@
 
       #container2 {
         z-index: 2;
+        left: 450px;
       }
 
       .ad {
@@ -36,15 +37,6 @@
           transform: translateX(-100%);
         }
       }
-
-      @keyframes slideRight {
-        0% {
-          transform: translateX(0%);
-        }
-        100% {
-          transform: translateX(100%);
-        }
-      }
     </style>
   </head>
   <body>
@@ -58,13 +50,11 @@
         const numVisibleAds = 38;
         const imageList1 = [
           "/assets/person/Miku.png",
-          "/assets/person/Chiaki.png",
           "/assets/person/Sayuri.png",
           "/assets/person/Hitomi.png",
           "/assets/person/Yuko.png",
           "/assets/person/Etsuko.png",
           "/assets/person/Masako.png",
-          "/assets/person/Sorane.png",
           "/assets/person/Kyu.png",
           "/assets/person/Riuri.png",
           "/assets/person/Natsumi.png",
@@ -96,46 +86,11 @@
           "/assets/person/Miyako.png",
         ];
 
-        const imageList2 = [
-          "/assets/person/Miyako.png",
-          "/assets/person/Azusa.png",
-          "/assets/person/Taisy.png",
-          "/assets/person/Kristae.png",
-          "/assets/person/Shuan.png",
-          "/assets/person/Ann.png",
-          "/assets/person/Delsa.png",
-          "/assets/person/Spoke.png",
-          "/assets/person/Monroe.png",
-          "/assets/person/Mesoyei.png",
-          "/assets/person/Yui.png",
-          "/assets/person/Nianca.png",
-          "/assets/person/Draeny.png",
-          "/assets/person/Uiobbeci.png",
-          "/assets/person/Lucrece.png",
-          "/assets/person/Branwen.png",
-          "/assets/person/Z.png",
-          "/assets/person/Doire.png",
-          "/assets/person/Caleigh.png",
-          "/assets/person/Paprika.png",
-          "/assets/person/Samui.png",
-          "/assets/person/Mayo.png",
-          "/assets/person/Valmet.png",
-          "/assets/person/Miyu.png",
-          "/assets/person/Kazuko.png",
-          "/assets/person/Kamira.png",
-          "/assets/person/Natsumi.png",
-          "/assets/person/Riuri.png",
-          "/assets/person/Kyu.png",
+        const imageList3 = [
           "/assets/person/Sorane.png",
-          "/assets/person/Masako.png",
-          "/assets/person/Etsuko.png",
-          "/assets/person/Yuko.png",
-          "/assets/person/Hitomi.png",
-          "/assets/person/Sayuri.png",
+          "/assets/person/Wavo.png",
           "/assets/person/Chiaki.png",
         ];
-
-        const imageList3 = ["/assets/person/Wavo.png"];
 
         function createAdDiv(imageURL) {
           const adDiv = document.createElement("div");
@@ -156,23 +111,14 @@
           }
         }
 
-        function startAnimation(container, animationName, duration) {
-          container.style.animation = `${animationName} ${duration} linear infinite`;
-        }
-
-        // Initial load and start animation
+        // Initial load
         loadAds(imageList1, container1, numVisibleAds);
-        loadAds(imageList3, container2, 1);
-        startAnimation(container1, "slideLeft", "90s");
-        startAnimation(container2, "slideRight", "180s");
+        loadAds(imageList3, container2, imageList3.length); // 加載所有3張圖
 
-        // Restart animation when the animation ends
-        container1.addEventListener("animationend", () =>
-          startAnimation(container1, "slideLeft", "90s")
-        );
-        container2.addEventListener("animationend", () =>
-          startAnimation(container2, "slideRight", "180s")
-        );
+        // Start container1 animation
+        container1.style.animation = "slideLeft 10s linear infinite alternate";
+
+        // Container2 does not have animation
       });
     </script>
   </body>
