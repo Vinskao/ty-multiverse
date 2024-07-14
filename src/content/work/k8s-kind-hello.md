@@ -278,8 +278,6 @@ kubectl apply -f service.yaml
 kubectl get pods
 ```
 
-![alt text](image.png)
-
 可以查看以上三個 pods 的 log，來看 hello world 有沒有出來。
 
 ```bash
@@ -291,8 +289,6 @@ kubectl logs hello-kubernetes-7b8d6cd658-9zv26
 ```bash
 kubectl get svc
 ```
-
-![alt text](image-1.png)
 
 ### 查看 Hello World (目前是 Whitelabel Error Page)
 
