@@ -204,6 +204,8 @@ import Org from  "../components/Org.html";
             function displayCardInfo(card) {
               const cardInfoElement = document.createElement("div");
               cardInfoElement.className = "card-info";
+              // Check if card.name is empty or undefined
+              const imageName = card.name ? card.name : "default";
               cardInfoElement.innerHTML = `
               <p style="font-weight: bold; font-size: 50px;">${card.name_original}</p>
               <p style="font-size: 20px;">Army: ${card.origin_army_name} => ${card.army_name} </p>
@@ -226,8 +228,8 @@ import Org from  "../components/Org.html";
               <p>Faction: ${card.faction}</p>
               <p>Gave Birth: ${card.gave_birth}</p>
 
-
-              <img src="/assets/person/${card.name}.png" alt="${card.name}" style="width: 300px; height: auto; margin: -380px 0 0 0; float: right; position: static">
+              <img src="/assets/person/${imageName}.png" alt="${card.name_original}" onerror="this.onerror=null;this.src='/assets/person/default.png';"
+              style="width: 300px; height: auto; margin: -380px 0 0 0; float: right; position: static">
             `;
               cardInfoContainer.innerHTML = ""; // 清空容器
               cardInfoContainer.appendChild(cardInfoElement);
