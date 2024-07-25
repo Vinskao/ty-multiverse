@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fight</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+      }
+      .fightercontainer {
+        display: flex;
+        width: 1800px;
+        height: 400px;
+        padding-top: 50px;
+        padding-bottom: 50px;
+        margin: 0 auto;
+      }
+      .half {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+      }
+      .imagefighter {
+        max-width: 100%;
+        max-height: 900px;
+        border: 1px solid #000;
+        margin-bottom: 10px;
+      }
+      .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+      }
+      .button {
+        padding: 2px 5px;
+        font-size: 10px;
+        cursor: pointer;
+        margin: 1px;
+      }
+      .button.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .info-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 5px;
+      }
+      .info {
+        margin: 0 10px;
+        font-size: 14px;
+      }
+      .fightbutton {
+        width: 1800px;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        z-index: 1000;
+      }
+      .fightbutton button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .result {
+        font-weight: bold;
+        margin-top: 5px;
+      }
+      .win {
+        color: green;
+      }
+      .defeated {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fightbutton">
+      <button onclick="startFight()">Fight</button>
+    </div>
+    <div class="fightercontainer">
+      <div class="half">
+        <img
+          id="leftImage"
+          class="imagefighter"
+          src="/assets/person/default.png"
+          alt="Left Image"
+        />
+        <div id="leftInfo" class="info-container">
+          <div class="info" id="leftName"></div>
+          <div class="info-row">
+            <div class="info" id="leftPhysicPower"></div>
+            <div class="info" id="leftMagicPower"></div>
+            <div class="info" id="leftUtilityPower"></div>
+          </div>
+          <div class="info" id="leftAttributes"></div>
+          <div class="info" id="leftTotalPower"></div>
+        </div>
+        <div class="button-container" id="leftButtons"></div>
+        <!-- Add result image for left fighter -->
+        <div id="leftResult" class="result-image"></div>
+      </div>
+      <div class="half">
+        <img
+          id="rightImage"
+          class="imagefighter"
+          src="/assets/person/default.png"
+          alt="Right Image"
+        />
+        <div id="rightInfo" class="info-container">
+          <div class="info" id="rightName"></div>
+          <div class="info-row">
+            <div class="info" id="rightPhysicPower"></div>
+            <div class="info" id="rightMagicPower"></div>
+            <div class="info" id="rightUtilityPower"></div>
+          </div>
+          <div class="info" id="rightAttributes"></div>
+          <div class="info" id="rightTotalPower"></div>
+        </div>
+        <div class="button-container" id="rightButtons"></div>
+        <!-- Add result image for right fighter -->
+        <div id="rightResult" class="result-image"></div>
+      </div>
+    </div>
+    <script>
+      const allImages = [
+        "/assets/person/Miku.png",
+        "/assets/person/Sayuri.png",
+        "/assets/person/Hitomi.png",
+        "/assets/person/Yuko.png",
+        "/assets/person/Etsuko.png",
+        "/assets/person/Masako.png",
+        "/assets/person/Kyu.png",
+        "/assets/person/Riuri.png",
+        "/assets/person/Natsumi.png",
+        "/assets/person/Kamira.png",
+        "/assets/person/Kazuko.png",
+        "/assets/person/Miyu.png",
+        "/assets/person/Valmet.png",
+        "/assets/person/Mayo.png",
+        "/assets/person/Samui.png",
+        "/assets/person/Paprika.png",
+        "/assets/person/Caleigh.png",
+        "/assets/person/Doire.png",
+        "/assets/person/Z.png",
+        "/assets/person/Branwen.png",
+        "/assets/person/Lucrece.png",
+        "/assets/person/Uiobbeci.png",
+        "/assets/person/Draeny.png",
+        "/assets/person/Nianca.png",
+        "/assets/person/Yui.png",
+        "/assets/person/Mesoyei.png",
+        "/assets/person/Monroe.png",
+        "/assets/person/Spoke.png",
+        "/assets/person/Delsa.png",
+        "/assets/person/Ann.png",
+        "/assets/person/Shuan.png",
+        "/assets/person/Azusa.png",
+        "/assets/person/Kristae.png",
+        "/assets/person/Taisy.png",
+        "/assets/person/Miyako.png",
+        "/assets/person/Sorane.png",
+        "/assets/person/Wavo.png",
+        "/assets/person/Chiaki.png",
+      ];
+
+      let selectedFighters = {
+        left: {
+          image: null,
+          totalPower: 0,
+        },
+        right: {
+          image: null,
+          totalPower: 0,
+        },
+      };
+
+      function createButtons(containerId, side) {
+        const container = document.getElementById(containerId);
+        allImages.forEach((image) => {
+          const button = document.createElement("button");
+          button.textContent = image.split("/").pop().split(".")[0];
+          button.className = "button";
+          button.onclick = () => selectImage(side, image);
+          container.appendChild(button);
+        });
+      }
+
+      function updateButtons() {
+        const leftSelected = selectedFighters.left.image;
+        const rightSelected = selectedFighters.right.image;
+
+        // Update left side button states
+        document.querySelectorAll("#leftButtons .button").forEach((button) => {
+          const image = button.textContent;
+          if (
+            rightSelected &&
+            rightSelected.split("/").pop().split(".")[0] === image
+          ) {
+            button.classList.add("disabled");
+          } else {
+            button.classList.remove("disabled");
+          }
+        });
+
+        // Update right side button states
+        document.querySelectorAll("#rightButtons .button").forEach((button) => {
+          const image = button.textContent;
+          if (
+            leftSelected &&
+            leftSelected.split("/").pop().split(".")[0] === image
+          ) {
+            button.classList.add("disabled");
+          } else {
+            button.classList.remove("disabled");
+          }
+        });
+      }
+
+      function selectImage(side, image) {
+        const otherSide = side === "left" ? "right" : "left";
+        const selectedImage = image.split("/").pop().split(".")[0];
+
+        // Check if selected image is the same as the other side
+        if (
+          selectedFighters[otherSide].image &&
+          selectedFighters[otherSide].image.split("/").pop().split(".")[0] ===
+            selectedImage
+        ) {
+          return; // Do nothing
+        }
+
+        // Update selected image
+        selectedFighters[side].image = image;
+        document.getElementById(side + "Image").src = image;
+        updateButtons();
+        fetchAndUpdateInfo(side, selectedImage);
+      }
+
+      async function fetchAndUpdateInfo(side, name) {
+        try {
+          const response = await fetch(
+            "https://peoplesystem.tatdvsonorth.com/people/get-by-name",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            }
+          );
+          const data = await response.json();
+          if (data.length > 0) {
+            const fighter = data[0];
+            const physicPower = fighter.physicPower || 0;
+            const magicPower = fighter.magicPower || 0;
+            const utilityPower = fighter.utilityPower || 0;
+            const totalPower = physicPower + magicPower + utilityPower;
+
+            document.getElementById(side + "Name").textContent =
+              fighter.name || "N/A";
+            document.getElementById(side + "PhysicPower").textContent =
+              "Physic Power: " + (physicPower || "N/A");
+            document.getElementById(side + "MagicPower").textContent =
+              "Magic Power: " + (magicPower || "N/A");
+            document.getElementById(side + "UtilityPower").textContent =
+              "Utility Power: " + (utilityPower || "N/A");
+            document.getElementById(side + "Attributes").textContent =
+              "Attributes: " + (fighter.attributes || "N/A");
+            document.getElementById(side + "TotalPower").textContent =
+              "Total Power: " + (totalPower || "N/A");
+            selectedFighters[side].totalPower = totalPower;
+          } else {
+            document.getElementById(side + "Name").textContent = "N/A";
+            document.getElementById(side + "PhysicPower").textContent =
+              "Physic Power: N/A";
+            document.getElementById(side + "MagicPower").textContent =
+              "Magic Power: N/A";
+            document.getElementById(side + "UtilityPower").textContent =
+              "Utility Power: N/A";
+            document.getElementById(side + "Attributes").textContent =
+              "Attributes: N/A";
+            document.getElementById(side + "TotalPower").textContent =
+              "Total Power: N/A";
+            selectedFighters[side].totalPower = 0;
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+
+      function startFight() {
+        const leftTotalPower = selectedFighters.left.totalPower;
+        const rightTotalPower = selectedFighters.right.totalPower;
+
+        if (leftTotalPower > rightTotalPower) {
+          document.getElementById("leftName").innerHTML =
+            selectedFighters.left.image.split("/").pop().split(".")[0] +
+            " <span class='result win'>win</span>";
+          document.getElementById("rightName").innerHTML =
+            selectedFighters.right.image.split("/").pop().split(".")[0] +
+            " <span class='result defeated'>defeated</span>";
+        } else if (leftTotalPower < rightTotalPower) {
+          document.getElementById("leftName").innerHTML =
+            selectedFighters.left.image.split("/").pop().split(".")[0] +
+            " <span class='result defeated'>defeated</span>";
+          document.getElementById("rightName").innerHTML =
+            selectedFighters.right.image.split("/").pop().split(".")[0] +
+            " <span class='result win'>win</span>";
+        } else {
+          document.getElementById("leftName").innerHTML =
+            selectedFighters.left.image.split("/").pop().split(".")[0] +
+            " <span class='result'>draw</span>";
+          document.getElementById("rightName").innerHTML =
+            selectedFighters.right.image.split("/").pop().split(".")[0] +
+            " <span class='result'>draw</span>";
+        }
+      }
+
+      createButtons("leftButtons", "left");
+      createButtons("rightButtons", "right");
+    </script>
+  </body>
+</html>
