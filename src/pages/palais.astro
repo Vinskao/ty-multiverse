@@ -158,126 +158,87 @@ import Org from  "../components/Org.html";
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // var dataPoints = [];
-        $.getJSON(
-          // callback function
-          "https://firebasestorage.googleapis.com/v0/b/graph-2cfc7.appspot.com/o/palais.json?alt=media&token=a12f751a-3a31-4931-ab7e-b5de12e85015&_gl=1*u5u5sm*_ga*MTYxNzczOTU2MC4xNjk1MzQ5OTI4*_ga_CW55HF8NVT*MTY5OTI3NTE2Mi45LjEuMTY5OTI3NTk2MS40MS4wLjA.",
-          function (response) {
-            var jsonData = response;
-            // console.log("JSON data:", jsonData);
-            // 生成卡牌名字
-            const cardList = document.getElementById("cardList");
-            const cardInfoContainer =
-              document.getElementById("cardInfoContainer");
+        // Fetch data from the API
+        fetch("https://peoplesystem.tatdvsonorth.com/people/get-all", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          const cardList = document.getElementById("cardList");
+          const cardInfoContainer = document.getElementById("cardInfoContainer");
 
-            jsonData.forEach((item) => {
-              const listItem = document.createElement("li");
-              listItem.textContent = item.name_original;
-              listItem.style.cursor = "pointer";
-              listItem.style.paddingLeft = "5px";
-              listItem.style.listStyleType = "none";
-              listItem.style.marginRight = "auto";
-              listItem.style.border = "1px solid #ffffff";
-              listItem.style.display = "block";
-              listItem.style.marginBottom = "0px";
-              listItem.style.float = "right";
-              listItem.style.lineHeight = "1";
-              listItem.style.letterSpacing = "0px";
-              listItem.style.textAlign = "left";
-              listItem.style.textIndent = "-10px";
-              listItem.addEventListener("mouseover", function () {
-                displayCardInfo(item);
-                listItem.style.backgroundColor = "rgba(78, 112, 112, 0.304)";
-                listItem.style.color = "orange";
-              });
-
-              // 鼠标移出时清空卡片信息
-              listItem.addEventListener("mouseout", function () {
-                clearCardInfo();
-                listItem.style.backgroundColor = "";
-                listItem.style.color = "";
-              });
-
-              cardList.appendChild(listItem);
+          // Generate card list items
+          data.forEach((item) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = item.nameOriginal;
+            listItem.style.cursor = "pointer";
+            listItem.style.paddingLeft = "5px";
+            listItem.style.listStyleType = "none";
+            listItem.style.marginRight = "auto";
+            listItem.style.border = "1px solid #ffffff";
+            listItem.style.display = "block";
+            listItem.style.marginBottom = "0px";
+            listItem.style.float = "right";
+            listItem.style.lineHeight = "1";
+            listItem.style.letterSpacing = "0px";
+            listItem.style.textAlign = "left";
+            listItem.style.textIndent = "-10px";
+            listItem.addEventListener("mouseover", function () {
+              displayCardInfo(item);
+              listItem.style.backgroundColor = "rgba(78, 112, 112, 0.304)";
+              listItem.style.color = "orange";
             });
 
-            function displayCardInfo(card) {
-              const cardInfoElement = document.createElement("div");
-              cardInfoElement.className = "card-info";
-              // Check if card.name is empty or undefined
-              const imageName = card.name ? card.name : "default";
-              cardInfoElement.innerHTML = `
-              <p style="font-weight: bold; font-size: 50px;">${card.name_original}</p>
-              <p style="font-size: 20px;">Army: ${card.origin_army_name} => ${card.army_name} </p>
+            // Mouse out event
+            listItem.addEventListener("mouseout", function () {
+              clearCardInfo();
+              listItem.style.backgroundColor = "";
+              listItem.style.color = "";
+            });
 
-              <p>Physic Power: ${card.physic_power}</p>
-              <p>Magic Power: ${card.magic_power}</p>
-              <p>Utility Power: ${card.utility_power}</p>
+            cardList.appendChild(listItem);
+          });
+
+          function displayCardInfo(card) {
+            const cardInfoElement = document.createElement("div");
+            cardInfoElement.className = "card-info";
+            const imageName = card.name ? card.name : "default";
+            cardInfoElement.innerHTML = `
+              <p style="font-weight: bold; font-size: 50px;">${card.nameOriginal}</p>
+              <p style="font-size: 20px;">Army: ${card.originArmyName} => ${card.armyName} </p>
+              <p>Physic Power: ${card.physicPower}</p>
+              <p>Magic Power: ${card.magicPower}</p>
+              <p>Utility Power: ${card.utilityPower}</p>
               <p>Attributes: ${card.attributes}</p>
-              <p>Ass Size: ${card.ass_size}</p>
-              <p>Boobs Size: ${card.boobs_size}</p>
-              <p>${card.height_cm}(cm)</p>
-              <p>${card.weight_kg}(kg)</p>
+              <p>Ass Size: ${card.assSize}</p>
+              <p>Boobs Size: ${card.boobsSize}</p>
+              <p>${card.heightCm}(cm)</p>
+              <p>${card.weightKg}(kg)</p>
               <p>${card.profession}</p>
               <p>Job: ${card.job}</p>
               <p>Combat: ${card.combat}</p>
               <p>Concubine: ${card.concubine}</p>
-              <p>Main Weapon: ${card.main_weapon}</p>
-              <p>Sub Weapon: ${card.sub_weapon}</p>
-              <p>Dept: ${card.dept_name}</p>
+              <p>Main Weapon: ${card.mainWeapon}</p>
+              <p>Sub Weapon: ${card.subWeapon}</p>
+              <p>Dept: ${card.deptName}</p>
               <p>Faction: ${card.faction}</p>
-              <p>Gave Birth: ${card.gave_birth}</p>
+              <p>Gave Birth: ${card.gaveBirth}</p>
 
-              <img src="/assets/person/${imageName}.png" alt="${card.name_original}" onerror="this.onerror=null;this.src='/assets/person/default.png';"
+              <img src="/assets/person/${imageName}.png" alt="${card.nameOriginal}" onerror="this.onerror=null;this.src='/assets/person/default.png';"
               style="width: 300px; height: auto; margin: -380px 0 0 0; float: right; position: static">
             `;
-              cardInfoContainer.innerHTML = ""; // 清空容器
-              cardInfoContainer.appendChild(cardInfoElement);
-            }
-
-            function clearCardInfo() {
-              cardInfoContainer.innerHTML = ""; // 清空卡片信息容器
-            }
-
-            const cards = jsonData.map((item) => ({
-              id: item.id,
-              name_original: item.name_original,
-              code_name: item.code_name,
-              name: item.name,
-              physic_power: item.physic_power,
-              magic_power: item.magic_power,
-              utility_power: item.utility_power,
-              dob: item.dob,
-              race: item.race,
-              attributes: item.attributes,
-              gender: item.gender,
-              ass_size: item.ass_size,
-              boobs_size: item.boobs_size,
-              height_cm: item.height_cm,
-              weight_kg: item.weight_kg,
-              army_name: item.army_name,
-              dept_name: item.dept_name,
-              profession: item.profession,
-              combat: item.combat,
-              favorite_foods: item.favorite_foods,
-              job: item.job,
-              physics: item.physics,
-              known_as: item.known_as,
-              personally: item.personally,
-              concubine: item.concubine,
-              main_weapon: item.main_weapon,
-              sub_weapon: item.sub_weapon,
-              interest: item.interest,
-              likes: item.likes,
-              dislikes: item.dislikes,
-              faction: item.faction,
-              gave_birth: item.gave_birth,
-              origin_army_name: item.origin_army_name
-
-            }));
-
+            cardInfoContainer.innerHTML = ""; // Clear container
+            cardInfoContainer.appendChild(cardInfoElement);
           }
-        );
+
+          function clearCardInfo() {
+            cardInfoContainer.innerHTML = ""; // Clear card info container
+          }
+        })
+        .catch(error => console.error('Error fetching data:', error));
       });
     </script>
   </head>
@@ -306,13 +267,8 @@ import Org from  "../components/Org.html";
               </div>
             </div>
             <div class="system-container">
-     
-              
               <Org />
             </div>
-
-            
-
           </Hero>
         </main>
       </div>
