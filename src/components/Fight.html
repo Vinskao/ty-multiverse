@@ -82,9 +82,19 @@
       }
       .win {
         color: green;
+        font-size: 60px;
       }
       .defeated {
-        color: red;
+        color: rgb(146, 1, 1);
+        font-size: 60px;
+      }
+      .fdefeated {
+        color: rgb(255, 41, 41);
+        font-size: 60px;
+      }
+      .sdefeated {
+        color: rgb(255, 85, 85);
+        font-size: 60px;
       }
     </style>
   </head>
@@ -102,6 +112,7 @@
         />
         <div id="leftInfo" class="info-container">
           <div class="info" id="leftName"></div>
+          <div id="leftResult" class="result-image"></div>
           <div class="info-row">
             <div class="info" id="leftPhysicPower"></div>
             <div class="info" id="leftMagicPower"></div>
@@ -111,8 +122,6 @@
           <div class="info" id="leftTotalPower"></div>
         </div>
         <div class="button-container" id="leftButtons"></div>
-        <!-- Add result image for left fighter -->
-        <div id="leftResult" class="result-image"></div>
       </div>
       <div class="half">
         <img
@@ -123,6 +132,7 @@
         />
         <div id="rightInfo" class="info-container">
           <div class="info" id="rightName"></div>
+          <div id="rightResult" class="result-image"></div>
           <div class="info-row">
             <div class="info" id="rightPhysicPower"></div>
             <div class="info" id="rightMagicPower"></div>
@@ -132,8 +142,6 @@
           <div class="info" id="rightTotalPower"></div>
         </div>
         <div class="button-container" id="rightButtons"></div>
-        <!-- Add result image for right fighter -->
-        <div id="rightResult" class="result-image"></div>
       </div>
     </div>
     <script>
@@ -282,45 +290,110 @@
             document.getElementById(side + "Attributes").textContent =
               "Attributes: " + (fighter.attributes || "N/A");
             document.getElementById(side + "TotalPower").textContent =
-              "Total Power: " + (totalPower || "N/A");
+              "Total Power: " + totalPower;
+
             selectedFighters[side].totalPower = totalPower;
           } else {
-            document.getElementById(side + "Name").textContent = "N/A";
-            document.getElementById(side + "PhysicPower").textContent =
-              "Physic Power: N/A";
-            document.getElementById(side + "MagicPower").textContent =
-              "Magic Power: N/A";
-            document.getElementById(side + "UtilityPower").textContent =
-              "Utility Power: N/A";
-            document.getElementById(side + "Attributes").textContent =
-              "Attributes: N/A";
-            document.getElementById(side + "TotalPower").textContent =
-              "Total Power: N/A";
-            selectedFighters[side].totalPower = 0;
+            clearInfo(side);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
+          clearInfo(side);
         }
+      }
+
+      function clearInfo(side) {
+        document.getElementById(side + "Name").textContent = "";
+        document.getElementById(side + "PhysicPower").textContent = "";
+        document.getElementById(side + "MagicPower").textContent = "";
+        document.getElementById(side + "UtilityPower").textContent = "";
+        document.getElementById(side + "Attributes").textContent = "";
+        document.getElementById(side + "TotalPower").textContent = "";
+        selectedFighters[side].totalPower = 0;
       }
 
       function startFight() {
         const leftTotalPower = selectedFighters.left.totalPower;
         const rightTotalPower = selectedFighters.right.totalPower;
+        const leftResultElement = document.getElementById("leftResult");
+        const rightResultElement = document.getElementById("rightResult");
+
+        const percentageDifference = Math.abs(
+          (leftTotalPower - rightTotalPower) /
+            Math.max(leftTotalPower, rightTotalPower)
+        );
 
         if (leftTotalPower > rightTotalPower) {
-          document.getElementById("leftName").innerHTML =
-            selectedFighters.left.image.split("/").pop().split(".")[0] +
-            " <span class='result win'>win</span>";
-          document.getElementById("rightName").innerHTML =
-            selectedFighters.right.image.split("/").pop().split(".")[0] +
-            " <span class='result defeated'>defeated</span>";
-        } else if (leftTotalPower < rightTotalPower) {
-          document.getElementById("leftName").innerHTML =
-            selectedFighters.left.image.split("/").pop().split(".")[0] +
-            " <span class='result defeated'>defeated</span>";
-          document.getElementById("rightName").innerHTML =
-            selectedFighters.right.image.split("/").pop().split(".")[0] +
-            " <span class='result win'>win</span>";
+          const lossPercentage = (
+            ((leftTotalPower - rightTotalPower) / leftTotalPower) *
+            100
+          ).toFixed(2);
+          document.getElementById("leftTotalPower").classList.add("win");
+          document.getElementById("rightTotalPower").classList.add("defeated");
+          rightResultElement.textContent = `${lossPercentage}% Defeated`;
+          leftResultElement.textContent = "Winner";
+        } else if (rightTotalPower > leftTotalPower) {
+          const lossPercentage = (
+            ((rightTotalPower - leftTotalPower) / rightTotalPower) *
+            100
+          ).toFixed(2);
+          document.getElementById("rightTotalPower").classList.add("win");
+          document.getElementById("leftTotalPower").classList.add("defeated");
+          leftResultElement.textContent = `${lossPercentage}% Defeated`;
+          rightResultElement.textContent = "Winner";
+        } else {
+          leftResultElement.textContent = "Draw";
+          rightResultElement.textContent = "Draw";
+        }
+
+        if (percentageDifference > 0.4) {
+          if (leftTotalPower > rightTotalPower) {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Dominating</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result defeated'>Ravished</span>";
+          } else {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result defeated'>Ravished</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Dominating</span>";
+          }
+        } else if (percentageDifference > 0.1) {
+          if (leftTotalPower > rightTotalPower) {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Destroying</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result fdefeated'>Fucked Up</span>";
+          } else {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result fdefeated'>Fucked Up</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Destroying</span>";
+          }
+        } else if (percentageDifference > 0) {
+          if (leftTotalPower > rightTotalPower) {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Barely Succeed</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result sdefeated'>Slightly Defeated</span>";
+          } else {
+            document.getElementById("leftName").innerHTML =
+              selectedFighters.left.image.split("/").pop().split(".")[0] +
+              " <span class='result sdefeated'>Slightly Defeated</span>";
+            document.getElementById("rightName").innerHTML =
+              selectedFighters.right.image.split("/").pop().split(".")[0] +
+              " <span class='result win'>Barely Succeed</span>";
+          }
         } else {
           document.getElementById("leftName").innerHTML =
             selectedFighters.left.image.split("/").pop().split(".")[0] +
@@ -331,8 +404,10 @@
         }
       }
 
-      createButtons("leftButtons", "left");
-      createButtons("rightButtons", "right");
+      window.onload = function () {
+        createButtons("leftButtons", "left");
+        createButtons("rightButtons", "right");
+      };
     </script>
   </body>
 </html>
