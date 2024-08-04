@@ -4,6 +4,7 @@ import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.html";
 import Org from  "../components/Org.html";
 import Fight from  "../components/Fight.html";
+import GalTable from  "../components/GalTable.html";
 ---
 
 <!DOCTYPE html>
@@ -160,8 +161,7 @@ import Fight from  "../components/Fight.html";
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Fetch data from the API
-        fetch("https://peoplesystem.tatdvsonorth.com/people/get-all", {
+        fetch("http://localhost:8080/people/get-all", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -269,7 +269,9 @@ import Fight from  "../components/Fight.html";
               </div>
             </div>
             <div class="system-container">
+              <GalTable />
             </div>
+
             <div class="system-container">
               <Fight />
             </div>
@@ -284,7 +286,7 @@ import Fight from  "../components/Fight.html";
 
     <!-- 全屏遮罩 -->
 
-    <div class="overlay" id="passwordOverlay">
+    <!-- <div class="overlay" id="passwordOverlay">
       <script>
         var isAuthenticated = false;
 
@@ -299,7 +301,7 @@ import Fight from  "../components/Fight.html";
           }
         }
       </script>
-    </div>
+    </div> -->
 
     
 
