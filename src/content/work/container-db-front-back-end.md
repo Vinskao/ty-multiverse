@@ -1,7 +1,7 @@
 ---
 title: Spring Boot, SQL, VUE on Container
 publishDate: 2024-04-09 12:00:00
-img: /assets/container.jpg
+img: /tymultiverse/assets/container.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/04/09

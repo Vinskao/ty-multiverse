@@ -1,7 +1,7 @@
 ---
 title: Project Setup On K8s
 publishDate: 2024-05-06 13:00:00
-img: /assets/k8s.png
+img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/05/06

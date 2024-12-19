@@ -281,7 +281,7 @@ import Hero from "../components/Hero.astro";
               if (getCardArrayX2.length >= 2) {
                 var selectedCard = getCardArrayX2.shift();
                 var cardIndex = selectedCard;
-                var imageUrl = `/assets/poker/${cardIndex}.jpg`;
+                var imageUrl = `/tymultiverse/assets/poker/${cardIndex}.jpg`;
                 cardImages += `<img src='${imageUrl}' alt='Card'>`;
 
                 cardImagesContainer.innerHTML = cardImages;
@@ -304,7 +304,7 @@ import Hero from "../components/Hero.astro";
               if (getCardArrayX2.length >= 2) {
                 var selectedCard = getCardArrayX2.shift();
                 var cardIndex = selectedCard;
-                var imageUrl = `/assets/poker/${cardIndex}.jpg`;
+                var imageUrl = `/tymultiverse/assets/poker/${cardIndex}.jpg`;
                 cardImagesSorane += `<img src='${imageUrl}' alt='Card'>`;
                 playTwoDeck.push(selectedCard);
               }
@@ -313,7 +313,7 @@ import Hero from "../components/Hero.astro";
               if (getCardArrayX2.length >= 1) {
                 var selectedCard = getCardArrayX2.shift();
                 var cardIndex = selectedCard;
-                var imageUrl = `/assets/poker/${cardIndex}.jpg`;
+                var imageUrl = `/tymultiverse/assets/poker/${cardIndex}.jpg`;
                 cardImagesSorane += `<img src='${imageUrl}' alt='Card'>`;
                 playTwoDeck.push(selectedCard);
                 soraneScore = playerTwoScore();
@@ -331,7 +331,7 @@ import Hero from "../components/Hero.astro";
             if (getCardArrayX2.length >= 1) {
               var selectedCard = getCardArrayX2.shift();
               var cardIndex = selectedCard;
-              var imageUrl = `/assets/poker/${cardIndex}.jpg`;
+              var imageUrl = `/tymultiverse/assets/poker/${cardIndex}.jpg`;
 
               cardImages += `<img src="${imageUrl}" alt="Card">`;
               cardImagesContainer.innerHTML = cardImages;

@@ -1,4 +1,4 @@
-這是我的個人網站，build在dev branch。
+這是我的個人網站。
 
 主軸：
 
@@ -6,7 +6,14 @@
 
 
 
-啟動：
+## 啟動：
 ```bash
 docker build -t papakao/ty-multiverse-frontend:latest .
+docker build --no-cache -t papakao/ty-multiverse-frontend .
+docker run -p 4321:4321 ty-multiverse-frontend
+
+node ./dist/server/entry.mjs
+
+docker push papakao/ty-multiverse-frontend:latest
 ```
+
