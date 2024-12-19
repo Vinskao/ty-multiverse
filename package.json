@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
+    "dev": "astro dev --base /tymultiverse",
+    "start": "node ./dist/server/entry.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -29,6 +29,9 @@
     "@types/cors": "^2.8.14",
     "@types/jquery": "^3.5.29",
     "@types/node": "^20.7.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.9.5"
   },
   "description": "All commands are run from the root of the project, from a terminal:",
   "main": "index.js",

@@ -1,7 +1,7 @@
 ---
 title: JavaScript Algorithms
 publishDate: 2023-08-25 00:00:00
-img: /assets/stock-3.jpg
+img: /tymultiverse/assets/stock-3.jpg
 img_alt: Pearls of silky soft white cotton, bubble up under vibrant lighting
 description: |
   Click the image to verify the authentic copy.

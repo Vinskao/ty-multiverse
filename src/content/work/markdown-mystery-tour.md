@@ -1,7 +1,7 @@
 ---
 title: Data Visualization
 publishDate: 2023-09-12 00:00:00
-img: /assets/stock-1.jpg
+img: /tymultiverse/assets/stock-1.jpg
 img_alt: Iridescent ripples of a bright blue and pink liquid
 description: |
   Click the image to verify the authentic copy.
