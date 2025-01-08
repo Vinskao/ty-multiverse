@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import Gallery from  "../components/Gallery.html";
+
+---
+
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<html>
+  <head>
+    <style>
+    
+      #system {
+        text-align: center;
+      }
+      #settle {
+        font-size: 100px;
+        font-weight: bold;
+        color: rgb(81, 167, 247);
+      }
+    </style>
+  </head>
+  <body>
+    <BaseLayout
+      title="Palais | Wavo Yuropha"
+      description="Learn about TY's most recent projects"
+    >
+      <div class="stack gap-20">
+        <main class="wrapper stack gap-8">
+          <Hero
+            title="Wildland"
+            tagline="Designed by Tianyi in Taipei."
+            align="start"
+          />
+          <Gallery />
+
+        </main>
+      </div>
+      <script>
+      
+      </script>
+    </BaseLayout>
+    <!-- 全屏遮罩 -->
+
+    <div class="overlay" id="passwordOverlay">
+      <script>
+        var isAuthenticated = false;
+
+        if (!isAuthenticated) {
+          var password = prompt("請輸入密碼", "");
+          if (password === "1") {
+            isAuthenticated = true;
+            document.getElementById("passwordOverlay").style.display = "none";
+          } else {
+            alert("請再輸入一次密碼");
+            location.href = "examples/javascript/16ex2.html";
+          }
+        }
+      </script>
+    </div>
+  </body>
+</html>

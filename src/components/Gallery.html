@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Gallery</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .drop-zone {
+            width: 100%;
+            height: 100px;
+            border: 2px dashed #cccccc;
+            border-radius: 10px;
+            background-color: #eaeaea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888888;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+    
+        .drop-zone.drag-over {
+            background-color: #00000000;
+        }
+    
+        .image-gallery {
+            display: grid;
+            grid-template-columns: 1fr; /* Only one image per row */
+            gap: 10px;
+            width: 100%;
+            padding: 10px;
+            background-color: #00000000;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    
+        .image-gallery::-webkit-scrollbar {
+            display: none;
+        }
+    
+        .image-item {
+            position: relative;
+            width: 100%;
+            height: calc(100vw * (9 / 16));
+            min-width: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 5px;
+            border: 1px solid #dddddd;
+        }
+    
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+    
+        .delete-btn:hover {
+            background-color: rgba(255, 0, 0, 1);
+        }
+    </style>
+    
+</head>
+<body>
+
+<div class="drop-zone" id="dropZone">
+    Drag and drop images here or click to upload
+</div>
+
+<div class="image-gallery" id="imageGallery">
+    <!-- Images will be displayed here -->
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const imageGallery = document.getElementById('imageGallery');
+
+    dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const files = event.dataTransfer.files;
+        handleFiles(files);
+    });
+
+    dropZone.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/jpeg, image/png';
+        input.multiple = true;
+        input.addEventListener('change', () => {
+            handleFiles(input.files);
+        });
+        input.click();
+    });
+
+    function handleFiles(files) {
+        for (const file of files) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64Data = event.target.result.split(',')[1];
+                    saveToDatabase(base64Data);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+
+    function saveToDatabase(base64Data) {
+        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/save', {
+            id: 0,
+            imageBase64: base64Data,
+            uploadTime: new Date().toISOString(),
+        }).then(response => {
+            if (response.status === 200) {
+                console.log('Image saved to database');
+                fetchGalleryImages();
+            }
+        }).catch(error => {
+            console.error('Error saving image:', error);
+        });
+    }
+
+    function fetchGalleryImages() {
+        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/getAll')
+            .then(response => {
+                const images = response.data;
+                imageGallery.innerHTML = ''; // Clear current gallery
+                images.forEach(image => {
+                    const imageDiv = document.createElement('div');
+                    imageDiv.className = 'image-item';
+                    imageDiv.style.backgroundImage = `url(data:image/jpeg;base64,${image.imageBase64})`;
+
+                    // Create the delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.onclick = () => deleteImage(image.id); // Pass the image id to delete
+
+                    imageDiv.appendChild(deleteBtn);
+                    imageGallery.appendChild(imageDiv);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching gallery images:', error);
+            });
+    }
+
+    function deleteImage(imageId) {
+        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/delete', { id: imageId })
+            .then(response => {
+                if (response.status === 204) {
+                    console.log('Image deleted');
+                    fetchGalleryImages();
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting image:', error);
+            });
+    }
+
+    // Initial fetch to load existing images
+    fetchGalleryImages();
+</script>
+
+</body>
+</html>
