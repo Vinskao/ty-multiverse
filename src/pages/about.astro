@@ -3,9 +3,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
-import Calendar from "../components/Calendar.html";
-import Star from "../components/Star.html";
-import Adwall from "../components/Adwall.html";
 import Hamburger from "../components/Hamburger.astro";
 
 
@@ -13,9 +10,6 @@ import Hamburger from "../components/Hamburger.astro";
 
 <meta charset="UTF-8" />
 <style>
-  #adWall {
-    display: flex;
-  }
 
   .ad {
     flex: 0 0 auto;
@@ -117,7 +111,7 @@ import Hamburger from "../components/Hamburger.astro";
   @media (min-width: 50em) {
     .about {
       display: grid;
-      grid-template-columns: 1fr 60% 1fr;
+      grid-template-columns: 1fr 90% 1fr;
     }
 
     .about > :global(:first-child) {
@@ -129,21 +123,21 @@ import Hamburger from "../components/Hamburger.astro";
       font-size: var(--text-lg);
     }
   }
+
 </style>
 <body>
+
   <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
     <div class="stack gap-20">
       <main class="wrapper about">
+
         <Hero
           title="About"
           tagline="Thanks for stopping by. Read below to learn more about myself and my background."
         >
-          <h6>Choose Your Date of Birth:</h6>
           <div class="content">
             <Hamburger />
 
-            <Calendar />
-            <Adwall />
 
           </div>
           
@@ -225,12 +219,7 @@ import Hamburger from "../components/Hamburger.astro";
             </div>
           </div>
         </section>
-        <section>
-          <h2 class="section-title">Skills</h2>
-          <div class="content">
-            <p>Working on it...</p>
-          </div>
-        </section>
+
       </main>
 
       <ContactCTA />

@@ -24,27 +24,368 @@ const projects = (await getCollection('work'))
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
 ---
+<meta charset="UTF-8" />
 <head>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Kalam&display=swap">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
           
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
-<script src="https://d3js.org/d3.v5.min.js" async></script>
+<style>
+  .icon-container div .tooltip {
+	  opacity: 0; 
+	  position: absolute;
+	  background-color: rgba(75, 0, 130, 0.7);
+	  color: white;
+	  padding: 4px 8px;
+	  border-radius: 10px;
+	  font-size: 18px;
+	  white-space: nowrap;
+	  top: 5px;
+	  left: 110%; 
+	  transition: opacity 0.3s ease;
+	  z-index: 999;
+  }
 
+  .horizontal-icons div:hover .tooltip {
+	  opacity: 1;
+  }
+  
+  .horizontal-icons {
+	  display: flex;
+	  position: relative;
+	  background-image: url('/tymultiverse/assets/barchart-background.jpg');
+	  /* background-position: center; */
+	  background-position: bottom;
+	  border-radius: 20px;
+	  margin-top: 1px;
+	  padding-right: 8px;
+	  z-index: 998;
+  }
+
+  .horizontal-icons:hover {
+	  transform: scale(1.2);
+	  transition: transform 0.3s ease;
+  }
+
+  .icon-container {
+	  position: relative; 
+	  margin-left: 20px;
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: flex-start;
+	  position: relative;
+		  
+  }
+
+  .icon-container img {
+	  width: 30px;
+	  margin-left: 5px;
+	  transition: transform 0.3s ease;
+	  cursor: pointer;
+	  
+  }
+
+  .icon-container img:hover {
+	  transform: scale(1.5); 
+  }
+
+  
+
+  .barchart {
+	  width: 800px;
+	  height: 320px;
+	  background-color: #AB83E5;
+	  overflow: hidden;
+	  transition: border 0.3s ease;
+	  border: 10px solid transparent; 
+	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease;
+  }
+
+  .barchart:hover {
+	  border: 10px solid #AB83E5; 
+	  transform: scale(1.15); 
+	  z-index: 999;
+	  transition: transform 0.3s ease;
+  }
+  .video-container {
+	  position: relative; 
+  }
+  
+  .text-overlay {
+	  position: absolute; 
+	  top: 3%; 
+	  left: -10%; 
+	  transform: translate(-135%, -42%); 
+	  color: #fafafa;  
+	  padding: 10px; 
+	  z-index: 1; 
+	  font-size: 20px;
+	  width: 55%;
+	  font-weight: bold;
+	  font-family: 'Kalam', cursive;
+	  opacity: 0; 
+	  background: linear-gradient(
+	  166deg, 
+	  rgba(51, 2, 125, 0.65) 0%, 
+	  rgba(128, 0, 128, 0.25) 15%, 
+	  rgba(128, 0, 128, 0.55) 30%, 
+	  rgba(128, 0, 128, 0.15) 45%, 
+	  rgba(128, 0, 128, 0.65) 60%, 
+	  rgba(128, 0, 128, 0.40) 75%, 
+	  rgba(64, 9, 146, 0.9) 100%
+	  );
+	  background-size: cover; 
+	  background-repeat: no-repeat; 
+	  border-radius: 30px; 
+	  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+		 animation: fadeIn 1s ease-in forwards;
+	  backdrop-filter: blur(10px);
+	  padding: 25px;
+	  word-spacing: 10px;
+	  box-shadow: 0 0 40px rgba(128, 0, 128, 0.5);
+	  transition: top 0.5s ease, left 10s ease;
+	  letter-spacing: 1.5px;
+	  transform: scale(1); 
+		 transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
+	  
+  }
+
+  .text-overlay:hover {
+	  
+	  transform: scale(1.2);
+	  transition: transform 0.3s ease;
+	  top: 3%; 
+	  left: -10%; 
+  }
+  
+  .roles-image {
+	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
+	  z-index: 999;
+	  width: 400px; /* 調整為更寬 */
+	  height: auto; /* 保持原圖的比例 */
+	  border: 5px solid purple;
+	  border-radius: 10%;
+	  overflow: hidden;
+	  margin-right: 20px;
+  }
+  
+  .roles-image:hover {
+	  transform: scale(1.2);
+	  transition: transform 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+	  from {
+		  opacity: 0; 
+	  }
+	  to {
+		  opacity: 1; 
+	  }
+  }
+
+  .hero {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  gap: 2rem;
+  }
+
+  .roles {
+	  display: none;
+  }
+
+  .hero img {
+	  aspect-ratio: 5 / 4;
+	  object-fit: cover;
+	  object-position: top;
+	  border-radius: 1.5rem;
+	  box-shadow: var(--shadow-md);
+  }
+
+  @media (min-width: 50em) {
+	  .hero {
+		  display: grid;
+		  grid-template-columns: 6fr 4fr;
+		  padding-inline: 2.5rem;
+		  gap: 3.75rem;
+	  }
+
+	  .roles {
+		  margin-top: 0.5rem;
+		  display: flex;
+		  gap: 0.5rem;
+	  }
+
+	  .hero img {
+		  aspect-ratio: 3 / 4;
+		  border-radius: 4.5rem;
+		  object-fit: cover;
+	  }
+  }
+
+  /* ====================================================== */
+
+  .section {
+	  display: grid;
+	  gap: 2rem;
+  }
+
+  .with-background {
+	  position: relative;
+  }
+
+  .with-background::before {
+	  --hero-bg: var(--bg-image-subtle-2);
+
+	  content: '';
+	  position: absolute;
+	  pointer-events: none;
+	  left: 50%;
+	  width: 100vw;
+	  aspect-ratio: calc(2.25 / var(--bg-scale));
+	  top: 0;
+	  transform: translateY(-75%) translateX(-50%);
+	  background:
+		  url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
+		  var(--hero-bg) center center / var(--bg-gradient-size) no-repeat,
+		  var(--gray-999);
+	  background-blend-mode: overlay, normal, normal, normal;
+	  mix-blend-mode: var(--bg-blend-mode);
+	  z-index: -1;
+  }
+
+  .with-background.bg-variant::before {
+	  --hero-bg: var(--bg-image-subtle-1);
+  }
+
+  .section-header {
+	  justify-self: center;
+	  text-align: center;
+	  max-width: 50ch;
+	  font-size: var(--text-md);
+	  color: var(--gray-300);
+  }
+
+  .section-header h5 {
+	  font-size: var(--text-2xl);
+  }
+
+  @media (min-width: 50em) {
+	  .section {
+		  grid-template-columns: repeat(4, 1fr);
+		  grid-template-areas: 'header header header header' 'gallery gallery gallery gallery';
+		  gap: 5rem;
+	  }
+
+	  .section.with-cta {
+		  grid-template-areas: 'header header header cta' 'gallery gallery gallery gallery';
+	  }
+
+	  .section-header {
+		  grid-area: header;
+		  font-size: var(--text-lg);
+	  }
+
+	  .section-header h5 {
+		  font-size: var(--text-4xl);
+	  }
+
+	  .with-cta .section-header {
+		  justify-self: flex-start;
+		  text-align: left;
+	  }
+
+	  .gallery {
+		  grid-area: gallery;
+	  }
+
+	  .cta {
+		  grid-area: cta;
+	  }
+  }
+
+  /* ====================================================== */
+
+  .mention-card {
+	  display: flex;
+	  height: 7rem;
+	  justify-content: center;
+	  align-items: center;
+	  text-align: center;
+	  border: 1px solid var(--gray-800);
+	  border-radius: 1.5rem;
+	  color: var(--gray-300);
+	  background: var(--gradient-subtle);
+	  box-shadow: var(--shadow-sm);
+  }
+
+  @media (min-width: 50em) {
+	  .mention-card {
+		  border-radius: 1.5rem;
+		  height: 9.5rem;
+	  }
+  }
+
+.categories {
+    font-family: Arial, sans-serif;
+}
+.categories .category h5 {
+    margin-bottom: -5px; 
+	margin-top: 5px; 
+}
+
+.categories .pill {
+    margin: 1px 1px 1px 0; 
+}
+h5 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.pill {
+    display: inline-block;
+    margin: 5px 10px 5px 0;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+}
+
+.pill1 {
+    background-color: #b06c13;
+}
+
+.pill2 {
+    background-color: #948728;
+}
+
+.pill3 {
+    background-color: #306998;
+}
+
+.pill4 {
+    background-color: #47a248;
+}
+
+.pill5 {
+    background-color: #2496ed;
+}
+
+.pill6 {
+    background-color: #0052cc;
+}
+
+.pill7 {
+    background-color: #671f74;
+}
+
+.pill8 {
+    background-color: #6e1431;
+}
+
+</style>
 </head>
-
-<!-- CORS -->
-<!-- <script>
-
-import express from 'express';
-import cors from 'cors';
-const app = express();
-app.use(cors());
-
-</script> -->
-<!-- CORS -->
-
 
 <body>
 <!-- Messenger Chat Plugin Code -->
@@ -56,136 +397,101 @@ app.use(cors());
 <BaseLayout>
 	<div class="stack gap-20 lg:gap-48">
 		
-		<div class="wrapper stack gap-8 lg:gap-20">
+		<div class="wrapper stack gap-20 lg:gap-50">
 			
 			<header class="hero">
 				
 				<Hero
-					title="Welcome to TY's home!"
-					tagline="My personal website for non-commercial purposes, welcome to visit."
+					title="TY's home"
+					tagline="My personal website."
 					align="start"
 				>
 				
 					<div class="roles">
-						<Pill><Icon icon="code" size="1.33em" /> Developer</Pill>
-						<Pill><Icon icon="microphone-stage" size="1.33em" /> Toastmaster</Pill>
-						<Pill><Icon icon="pencil-line" size="1.33em" /> Former Project Manager</Pill>
+						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
+						<Pill><Icon icon="microphone-stage" size="1.33em" /> English</Pill>
+						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
 					</div>
 					<div style="display: flex; align-items: center;" >
 						<div class="roles-image" style="width: 300px; height: 270px; border: 5px solid purple; border-radius: 10%; overflow: hidden;">
 						  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Vinskao" alt="Top Languages" style="width: 100%; height: 100%; object-fit: cover; border-radius: 0; opacity: 0.9;">
 						</div>
-						<div class="icon-container" >
-							<div class='0' class="icon-wrapper" >
-								<div class="horizontal-icons">
-									<div>
-										<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" alt="Java" >
-										<div class="tooltip">Java</div>
-									</div>
-									<div>
-							
-										<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" alt="Spring"/>
-
-										<div class="tooltip">Spring</div>
-									</div>
-								</div>
+						<div class="categories">
+							<!-- 項目 1 -->
+							<div class="category">
+								<h5>Backend</h5>
+								<span class="pill pill1">Java</span>
+								<span class="pill pill1">Spring</span>
 							</div>
-							<div class='1'>
-								<div class="horizontal-icons">
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JavaScript" >
-									<div class="tooltip">JavaScript</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg">
-									<div class="tooltip">Node.js</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/d3js/d3js-original.svg">
-									<div class="tooltip">D3.js</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" />
-									<div class="tooltip">Vue.js</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jquery/jquery-original.svg">
-									<div class="tooltip">jQuery</div>
-									</div>
-								</div>
+						
+							<!-- 項目 2 -->
+							<div class="category">
+								<h5>Frontend</h5>
+								<span class="pill pill2">JavaScript</span>
+								<span class="pill pill2">Node.js</span>
+								<span class="pill pill2">D3.js</span>
+								<span class="pill pill2">Vue.js</span>
+								<span class="pill pill2">React.js</span>
+								<span class="pill pill2">jQuery</span>
 							</div>
-							<div class='2'>
-								<div class="horizontal-icons">
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg">
-									<div class="tooltip">Python</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg">
-									<div class="tooltip">Pandas</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/numpy/numpy-original.svg">
-									<div class="tooltip">NumPy</div>
-									</div>
-								</div>
+						
+							<!-- 項目 3 -->
+							<div class="category">
+								<h5>AI</h5>
+								<span class="pill pill3">Python</span>
+								<span class="pill pill3">Pandas</span>
+								<span class="pill pill3">NumPy</span>
+								<span class="pill pill3">Ollama</span>
 							</div>
-
-							<div class='3'>
-								<div class="horizontal-icons">
-							
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg">
-									<div class="tooltip">Firebase</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg">
-									<div class="tooltip">MongoDB</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg">
-									<div class="tooltip">PostgreSQL</div>
-									</div>
-									<div>
-										<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" >
-										<div class="tooltip">Microsoft SQL Server</div>
-									</div>
-								</div>
+						
+							<!-- 項目 4 -->
+							<div class="category">
+								<h5>DB</h5>
+								<span class="pill pill4">Firebase</span>
+								<span class="pill pill4">MongoDB</span>
+								<span class="pill pill4">PostgreSQL</span>
+								<span class="pill pill4">Microsoft SQL Server</span>
+							</div>
+						
+							<!-- 項目 5 -->
+							<div class="category">
+								<h5>IaC</h5>
+								<span class="pill pill5">Docker</span>
+								<span class="pill pill5">Linux</span>
+								<span class="pill pill5">JBoss</span>
+								<span class="pill pill5">Terraform</span>
+								<span class="pill pill5">K8S</span>
+								<span class="pill pill5">Ansible</span>
+							</div>
+						
+							<!-- 項目 6 -->
+							<div class="category">
+								<h5>Network</h5>
+								<span class="pill pill6">Istio</span>
+								<span class="pill pill6">Ingress</span>
 							</div>
 
-
-							<div class='4'>
-								<div class="horizontal-icons">
-
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-plain.svg">
-									<div class="tooltip">Docker</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg">
-									<div class="tooltip">Linux</div>
-									</div>
-								</div>
+							<!-- 項目 7 -->
+							<div class="category">
+								<h5>Cloud</h5>
+								<span class="pill pill7">OCI</span>
 							</div>
 
-							<div class='5'>
-								<div class="horizontal-icons">
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg">
-									<div class="tooltip">Jira</div>
-									</div>
-									<div>
-									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg">
-									<div class="tooltip">Salesforce</div>
-									</div>
-								</div>
+							<!-- 項目 8 -->
+							<div class="category">
+								<h5>HA</h5>
+								<span class="pill pill8">WebSocket</span>
+								<span class="pill pill8">ActiveMQ</span>
+
 							</div>
 						</div>
+						
+						  
 					</div>
 
-					<div class="barchart" style="width: 600px; height: 330px; background-image: url('/tymultiverse/assets/barchart-background.jpg'); background-position: center; border-radius: 50px; overflow: hidden;">
+					<!-- <div class="barchart" style="width: 600px; height: 330px; background-image: url('/tymultiverse/assets/barchart-background.jpg'); background-position: center; border-radius: 50px; overflow: hidden;">
 						<iframe src="https://peoplesystem.tatdvsonorth.com/github-contribution/" width="600" height="320" frameborder="0" frameborder="0" scrolling="no"></iframe>
-					</div>
+					</div> -->
 					
 
 				</Hero>
@@ -195,7 +501,7 @@ app.use(cors());
 						Your browser does not support the video tag.
 					</video>
 					<div class="text-overlay">
-						Hi, I'm TY.
+						WhoAmI: Hello TY!
 					</div>
 				</div>
 				
@@ -209,7 +515,7 @@ app.use(cors());
 		<main class="wrapper stack gap-20 lg:gap-48">
 			<section class="section with-background with-cta">
 				<header class="section-header stack gap-2 lg:gap-4">
-					<h3>Collections</h3>
+					<h5>Collections</h5>
 					<p>Take a look below at some of my featured work.</p>
 				</header>
 
@@ -235,7 +541,7 @@ app.use(cors());
 
 			<section class="section with-background bg-variant">
 				<header class="section-header stack gap-2 lg:gap-4">
-					<h3>Mentions</h3>
+					<h5>Mentions</h5>
 					<p>
 						To be updated in the future.
 					</p>
@@ -259,329 +565,6 @@ app.use(cors());
 	</div>
 </BaseLayout>
 
-<style>
 
-  	.icon-container div .tooltip {
-		opacity: 0; 
-		position: absolute;
-		background-color: rgba(75, 0, 130, 0.7);
-		color: white;
-		padding: 4px 8px;
-		border-radius: 10px;
-		font-size: 18px;
-		white-space: nowrap;
-		top: 5px;
-		left: 110%; 
-		transition: opacity 0.3s ease;
-		z-index: 999;
-	}
-
-	.horizontal-icons div:hover .tooltip {
-		opacity: 1;
-	}
-	
-	.horizontal-icons {
-		display: flex;
-		position: relative;
-		background-image: url('/tymultiverse/assets/barchart-background.jpg');
-		/* background-position: center; */
-		background-position: bottom;
-		border-radius: 20px;
-		margin-top: 1px;
-		padding-right: 8px;
-		z-index: 998;
-	}
-
-	.horizontal-icons:hover {
-		transform: scale(1.2);
-		transition: transform 0.3s ease;
-	}
-
-	.icon-container {
-		position: relative; 
-		margin-left: 20px;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-start;
-		position: relative;
-			
-	}
-
-	.icon-container img {
-		width: 30px;
-		margin-left: 5px;
-		transition: transform 0.3s ease;
-		cursor: pointer;
-		
-	}
-
-	.icon-container img:hover {
-		transform: scale(1.5); 
-	}
-
-	
-
-	.barchart {
-		width: 600px;
-		height: 320px;
-		background-color: #AB83E5;
-		overflow: hidden;
-		transition: border 0.3s ease;
-		border: 10px solid transparent; 
-		transition: transform 0.3s ease, top 0.5s ease, left 10s ease;
-	}
-
-	.barchart:hover {
-		border: 10px solid #AB83E5; 
-		transform: scale(1.15); 
-		z-index: 999;
-		transition: transform 0.3s ease;
-	}
-	.video-container {
-		position: relative; 
-	}
-	
-	.text-overlay {
-		position: absolute; 
-		top: 3%; 
-		left: -10%; 
-		transform: translate(-135%, -42%); 
-		color: #fafafa;  
-		padding: 10px; 
-		z-index: 1; 
-		font-size: 20px;
-		width: 55%;
-		font-weight: bold;
-		font-family: 'Kalam', cursive;
-		opacity: 0; 
-		background: linear-gradient(
-        166deg, 
-        rgba(51, 2, 125, 0.65) 0%, 
-        rgba(128, 0, 128, 0.25) 15%, 
-        rgba(128, 0, 128, 0.55) 30%, 
-        rgba(128, 0, 128, 0.15) 45%, 
-        rgba(128, 0, 128, 0.65) 60%, 
-        rgba(128, 0, 128, 0.40) 75%, 
-        rgba(64, 9, 146, 0.9) 100%
-    	);
-		background-size: cover; 
-		background-repeat: no-repeat; 
-		border-radius: 30px; 
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-   		animation: fadeIn 1s ease-in forwards;
-		backdrop-filter: blur(10px);
-		padding: 25px;
-		word-spacing: 10px;
-		box-shadow: 0 0 40px rgba(128, 0, 128, 0.5);
-		transition: top 0.5s ease, left 10s ease;
-		letter-spacing: 1.5px;
-		transform: scale(1); 
-   		transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
-		
-	}
-
-	.text-overlay:hover {
-		
-		transform: scale(1.2);
-		transition: transform 0.3s ease;
-		top: 3%; 
-    	left: -10%; 
-	}
-	
-	.roles-image {
-		transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
-		z-index: 999;
-	}
-	
-	.roles-image:hover {
-		transform: scale(1.2);
-		transition: transform 0.3s ease;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0; 
-		}
-		to {
-			opacity: 1; 
-		}
-	}
-
-	.hero {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2rem;
-	}
-
-	.roles {
-		display: none;
-	}
-
-	.hero img {
-		aspect-ratio: 5 / 4;
-		object-fit: cover;
-		object-position: top;
-		border-radius: 1.5rem;
-		box-shadow: var(--shadow-md);
-	}
-
-	@media (min-width: 50em) {
-		.hero {
-			display: grid;
-			grid-template-columns: 6fr 4fr;
-			padding-inline: 2.5rem;
-			gap: 3.75rem;
-		}
-
-		.roles {
-			margin-top: 0.5rem;
-			display: flex;
-			gap: 0.5rem;
-		}
-
-		.hero img {
-			aspect-ratio: 3 / 4;
-			border-radius: 4.5rem;
-			object-fit: cover;
-		}
-	}
-
-	/* ====================================================== */
-
-	.section {
-		display: grid;
-		gap: 2rem;
-	}
-
-	.with-background {
-		position: relative;
-	}
-
-	.with-background::before {
-		--hero-bg: var(--bg-image-subtle-2);
-
-		content: '';
-		position: absolute;
-		pointer-events: none;
-		left: 50%;
-		width: 100vw;
-		aspect-ratio: calc(2.25 / var(--bg-scale));
-		top: 0;
-		transform: translateY(-75%) translateX(-50%);
-		background:
-			url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
-			var(--hero-bg) center center / var(--bg-gradient-size) no-repeat,
-			var(--gray-999);
-		background-blend-mode: overlay, normal, normal, normal;
-		mix-blend-mode: var(--bg-blend-mode);
-		z-index: -1;
-	}
-
-	.with-background.bg-variant::before {
-		--hero-bg: var(--bg-image-subtle-1);
-	}
-
-	.section-header {
-		justify-self: center;
-		text-align: center;
-		max-width: 50ch;
-		font-size: var(--text-md);
-		color: var(--gray-300);
-	}
-
-	.section-header h3 {
-		font-size: var(--text-2xl);
-	}
-
-	@media (min-width: 50em) {
-		.section {
-			grid-template-columns: repeat(4, 1fr);
-			grid-template-areas: 'header header header header' 'gallery gallery gallery gallery';
-			gap: 5rem;
-		}
-
-		.section.with-cta {
-			grid-template-areas: 'header header header cta' 'gallery gallery gallery gallery';
-		}
-
-		.section-header {
-			grid-area: header;
-			font-size: var(--text-lg);
-		}
-
-		.section-header h3 {
-			font-size: var(--text-4xl);
-		}
-
-		.with-cta .section-header {
-			justify-self: flex-start;
-			text-align: left;
-		}
-
-		.gallery {
-			grid-area: gallery;
-		}
-
-		.cta {
-			grid-area: cta;
-		}
-	}
-
-	/* ====================================================== */
-
-	.mention-card {
-		display: flex;
-		height: 7rem;
-		justify-content: center;
-		align-items: center;
-		text-align: center;
-		border: 1px solid var(--gray-800);
-		border-radius: 1.5rem;
-		color: var(--gray-300);
-		background: var(--gradient-subtle);
-		box-shadow: var(--shadow-sm);
-	}
-
-	@media (min-width: 50em) {
-		.mention-card {
-			border-radius: 1.5rem;
-			height: 9.5rem;
-		}
-	}
-</style>
-
-<script>
-
-
-var chatbox = document.getElementById('fb-customer-chat');
-chatbox.setAttribute("page_id", "123241060880206");
-chatbox.setAttribute("attribution", "biz_inbox");
-</script>
-
-<!-- Your SDK code -->
-<script>
-window.fbAsyncInit = function() {
-	FB.init({
-	xfbml            : true,
-	version          : 'v18.0'
-	});
-};
-
-(function(d, s, id) {
-	var js, fjs = d.getElementsByTagName(s)[0];
-	if (d.getElementById(id)) return;
-	js = d.createElement(s); js.id = id;
-	js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
-	fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
-</script>
 
 </body>
-
-
-
-
-
-
-

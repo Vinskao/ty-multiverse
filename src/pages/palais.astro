@@ -161,11 +161,12 @@ import GalTable from  "../components/GalTable.html";
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        fetch("http://localhost:8080/people/get-all", {
+        fetch("https://peoplesystem.tatdvsonorth.com/tymb/people/get-all", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
+          credentials: 'include'
         })
         .then(response => response.json())
         .then(data => {
@@ -256,6 +257,7 @@ import GalTable from  "../components/GalTable.html";
             tagline="Welcome to Lily Palais."
             align="start"
           />
+          
             <div class="container">
               <div class="left-container">
                 <div id="cardInfoContainer">

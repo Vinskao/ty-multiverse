@@ -156,6 +156,7 @@
         "/tymultiverse/assets/person/Riuri.png",
         "/tymultiverse/assets/person/Natsumi.png",
         "/tymultiverse/assets/person/Kamira.png",
+        "/tymultiverse/assets/person/KamiraPeeing.png",
         "/tymultiverse/assets/person/Kazuko.png",
         "/tymultiverse/assets/person/Miyu.png",
         "/tymultiverse/assets/person/Valmet.png",
@@ -263,13 +264,14 @@
       async function fetchAndUpdateInfo(side, name) {
         try {
           const response = await fetch(
-            "https://peoplesystem.tatdvsonorth.com/people/get-by-name",
+            "https://peoplesystem.tatdvsonorth.com/tymb/people/get-by-name",
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({ name }),
+              credentials: 'include'
             }
           );
           const data = await response.json();

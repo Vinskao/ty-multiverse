@@ -134,13 +134,20 @@
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
     <script type="text/javascript">
+      const axiosInstance = axios.create({
+        baseURL: "https://peoplesystem.tatdvsonorth.com/tymb",
+        withCredentials: true, // 全域設置允許憑證
+        headers: {
+          "Content-Type": "application/json", // 設置 Content-Type
+          "Accept": "application/json",       // 設置接受的數據類型
+        },
+      });
       async function findPeople() {
         if ($.fn.DataTable && $.fn.DataTable.isDataTable("#bootstrap-data-table")) {
             $("#bootstrap-data-table").DataTable().destroy();
         }
-        const url = "https://peoplesystem.tatdvsonorth.com/people/get-all";
         try {
-          const response = await axios.post(url);
+          const response = await axiosInstance.post("/people/get-all");
           const people  = response.data;
           const tableBody = document.getElementById("peopleTableBody");
           tableBody.innerHTML = "";
@@ -251,10 +258,8 @@
             console.log(JSON.stringify(rowData, null, 2));
             console.log(rowData);
             Promise.all([
-              axios.post(
-                "https://peoplesystem.tatdvsonorth.com/people/update",
-                rowData
-              ),
+              axiosInstance.post("/people/update", rowData),
+
             ])
               .then((responses) => {
                 console.log(responses[0].data);
@@ -297,10 +302,8 @@
             console.log(JSON.stringify(rowData, null, 2));
             console.log(rowData);
             Promise.all([
-              axios.post(
-                "https://peoplesystem.tatdvsonorth.com/people/insert",
-                rowData
-              ),
+              axiosInstance.post("/people/insert", rowData),
+
             ])
               .then((responses) => {
                 console.log(responses[0].data);
