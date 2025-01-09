@@ -32,6 +32,12 @@ const projects = (await getCollection('work'))
           
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
 <style>
+  .github-graph {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto; /* 讓圖片置中 */
+  }
   .icon-container div .tooltip {
 	  opacity: 0; 
 	  position: absolute;
@@ -488,7 +494,7 @@ h5 {
 						
 						  
 					</div>
-
+					
 					<!-- <div class="barchart" style="width: 600px; height: 330px; background-image: url('/tymultiverse/assets/barchart-background.jpg'); background-position: center; border-radius: 50px; overflow: hidden;">
 						<iframe src="https://peoplesystem.tatdvsonorth.com/github-contribution/" width="600" height="320" frameborder="0" frameborder="0" scrolling="no"></iframe>
 					</div> -->
@@ -505,13 +511,15 @@ h5 {
 					</div>
 				</div>
 				
-				
-
 			</header>
-			
+			<div class="github-graph">
+				<h5>Github Contributions</h5>
+				<img src="http://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
+			</div>
 			<Skills />
+
 		</div>
-		
+
 		<main class="wrapper stack gap-20 lg:gap-48">
 			<section class="section with-background with-cta">
 				<header class="section-header stack gap-2 lg:gap-4">
