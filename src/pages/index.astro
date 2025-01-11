@@ -33,10 +33,10 @@ const projects = (await getCollection('work'))
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
 <style>
   .github-graph {
-    max-width: 100%;
+    width: 100%;
     height: auto;
     display: block;
-    margin: 0 auto; /* 讓圖片置中 */
+    margin: 0 auto;
   }
   .icon-container div .tooltip {
 	  opacity: 0; 
@@ -61,7 +61,6 @@ const projects = (await getCollection('work'))
 	  display: flex;
 	  position: relative;
 	  background-image: url('/tymultiverse/assets/barchart-background.jpg');
-	  /* background-position: center; */
 	  background-position: bottom;
 	  border-radius: 20px;
 	  margin-top: 1px;
@@ -96,9 +95,7 @@ const projects = (await getCollection('work'))
 	  transform: scale(1.5); 
   }
 
-  
-
-  .barchart {
+  /* .barchart {
 	  width: 800px;
 	  height: 320px;
 	  background-color: #AB83E5;
@@ -106,21 +103,21 @@ const projects = (await getCollection('work'))
 	  transition: border 0.3s ease;
 	  border: 10px solid transparent; 
 	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease;
-  }
+  } */
 
-  .barchart:hover {
+  /* .barchart:hover {
 	  border: 10px solid #AB83E5; 
 	  transform: scale(1.15); 
 	  z-index: 999;
 	  transition: transform 0.3s ease;
-  }
+  } */
   .video-container {
 	  position: relative; 
   }
-  
+
   .text-overlay {
 	  position: absolute; 
-	  top: 3%; 
+	  top: 33%; 
 	  left: -10%; 
 	  transform: translate(-135%, -42%); 
 	  color: #fafafa;  
@@ -158,28 +155,25 @@ const projects = (await getCollection('work'))
   }
 
   .text-overlay:hover {
-	  
 	  transform: scale(1.2);
 	  transition: transform 0.3s ease;
-	  top: 3%; 
+	  top: 33%; 
 	  left: -10%; 
   }
   
-  .roles-image {
+  /* .roles-image {
 	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
 	  z-index: 999;
-	  width: 400px; /* 調整為更寬 */
-	  height: auto; /* 保持原圖的比例 */
-	  border: 5px solid purple;
-	  border-radius: 10%;
+	  width: 30%; 
+	  height: auto; 
 	  overflow: hidden;
 	  margin-right: 20px;
-  }
+  } */
   
-  .roles-image:hover {
+  /* .roles-image:hover {
 	  transform: scale(1.2);
 	  transition: transform 0.3s ease;
-  }
+  } */
 
   @keyframes fadeIn {
 	  from {
@@ -202,10 +196,9 @@ const projects = (await getCollection('work'))
   }
 
   .hero img {
-	  aspect-ratio: 5 / 4;
 	  object-fit: cover;
 	  object-position: top;
-	  border-radius: 1.5rem;
+	  border-radius: 1rem;
 	  box-shadow: var(--shadow-md);
   }
 
@@ -224,8 +217,7 @@ const projects = (await getCollection('work'))
 	  }
 
 	  .hero img {
-		  aspect-ratio: 3 / 4;
-		  border-radius: 4.5rem;
+		  border-radius: 1rem;
 		  object-fit: cover;
 	  }
   }
@@ -335,6 +327,8 @@ const projects = (await getCollection('work'))
 
 .categories {
     font-family: Arial, sans-serif;
+	max-width: 40%;
+	width: 100%; 
 }
 .categories .category h5 {
     margin-bottom: -5px; 
@@ -356,6 +350,19 @@ h5 {
     border-radius: 20px;
     color: #fff;
     font-size: 14px;
+	transition: transform 0.3s ease;
+}
+
+.pill:hover {
+    transform: scale(1.2); 
+}
+
+:root {
+    --shade1: #e0f7ff;
+    --shade2: #b3e8ff;
+    --shade3: #80d8ff;
+    --shade4: #4dc9ff;
+    --shade5: #1abfff; 
 }
 
 .pill1 {
@@ -363,7 +370,7 @@ h5 {
 }
 
 .pill2 {
-    background-color: #948728;
+    background-color: #b7a414;
 }
 
 .pill3 {
@@ -394,6 +401,8 @@ h5 {
     background-color: #146e66;
 }
 
+
+
 </style>
 </head>
 
@@ -413,94 +422,103 @@ h5 {
 				
 				<Hero
 					title="TY's home"
-					tagline="My personal website."
+					tagline="The Future is Now"
 					align="start"
 				>
 				
 					<div class="roles">
 						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
-						<Pill><Icon icon="microphone-stage" size="1.33em" /> English</Pill>
 						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
+						<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
+						
 					</div>
-					<div style="display: flex; align-items: center;" >
-						<div class="roles-image" style="width: 300px; height: 270px; border: 5px solid purple; border-radius: 10%; overflow: hidden;">
-						  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Vinskao" alt="Top Languages" style="width: 100%; height: 100%; object-fit: cover; border-radius: 0; opacity: 0.9;">
+
+					<div style="display: flex; align-items: center max-width: 90%;">
+						<div class="roles-image">
+							<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=Vinskao" alt="Top Languages" style="width: 90%; height: auto;">
 						</div>
 						<div class="categories">
 							<!-- 項目 1 -->
 							<div class="category">
 								<h5>Backend</h5>
-								<span class="pill pill1">Java</span>
-								<span class="pill pill1">Spring</span>
+								<span class="pill pill1 shade1">Java</span>
+								<span class="pill pill1 shade5">Rust</span>
+								<span class="pill pill1 shade3">Spring</span>
+								<span class="pill pill1 shade2">Spring Boot</span>
+								<span class="pill pill1 shade1">JPA</span>
+								<span class="pill pill1 shade1">Mybatis</span>
 							</div>
 						
 							<!-- 項目 2 -->
 							<div class="category">
 								<h5>Frontend</h5>
-								<span class="pill pill2">JavaScript</span>
-								<span class="pill pill2">Node.js</span>
-								<span class="pill pill2">D3.js</span>
-								<span class="pill pill2">Vue.js</span>
-								<span class="pill pill2">React.js</span>
-								<span class="pill pill2">jQuery</span>
+								<span class="pill pill2 shade1">JavaScript</span>
+								<span class="pill pill2 shade4">Node.js</span>
+								<span class="pill pill2 shade3">D3.js</span>
+								<span class="pill pill2 shade2">Vue.js</span>
+								<span class="pill pill2 shade3">React.js</span>
+								<span class="pill pill2 shade1">jQuery</span>
 							</div>
 						
 							<!-- 項目 3 -->
 							<div class="category">
 								<h5>AI</h5>
-								<span class="pill pill3">Python</span>
-								<span class="pill pill3">Ollama</span>
+								<span class="pill pill3 shade3">Python</span>
+								<span class="pill pill3 shade5">Ollama</span>
 							</div>
 						
 							<!-- 項目 4 -->
 							<div class="category">
 								<h5>DB</h5>
-								<span class="pill pill4">Firebase</span>
-								<span class="pill pill4">MongoDB</span>
-								<span class="pill pill4">PostgreSQL</span>
-								<span class="pill pill4">MSSQL</span>
+								<span class="pill pill4 shade4">Firebase</span>
+								<span class="pill pill4 shade4">MongoDB</span>
+								<span class="pill pill4 shade1">PostgreSQL</span>
+								<span class="pill pill4 shade1">MSSQL</span>
+								<span class="pill pill4 shade1">SQLite</span>
 							</div>
 						
 							<!-- 項目 5 -->
 							<div class="category">
-								<h5>IaC</h5>
-								<span class="pill pill5">Docker</span>
-								<span class="pill pill5">Linux</span>
-								<span class="pill pill5">JBoss</span>
-								<span class="pill pill5">Terraform</span>
-								<span class="pill pill5">Bare Metal K8S</span>
-								<span class="pill pill5">OCP K8S</span>
-								<span class="pill pill5">Ansible</span>
+								<h5>Infra</h5>
+								<span class="pill pill5 shade1">Docker</span>
+								<span class="pill pill5 shade1">Linux</span>
+								<span class="pill pill5 shade2">JBoss</span>
+								<span class="pill pill5 shade4">Terraform</span>
+								<span class="pill pill5 shade2">Bare Metal K8S</span>
+								<span class="pill pill5 shade5">OCP K8S</span>
+								<span class="pill pill5 shade4">Ansible</span>
+								<span class="pill pill5 shade3">Tomcat</span>
 							</div>
 						
 							<!-- 項目 6 -->
 							<div class="category">
-								<h5>Web</h5>
-								<span class="pill pill6">Istio</span>
-								<span class="pill pill6">Ingress</span>
-								<span class="pill pill6">Tomcat</span>
+								<h5>Network</h5>
+								<span class="pill pill6 shade4">Istio</span>
+								<span class="pill pill6 shade1">Ingress</span>
+								<span class="pill pill6 shade2">Nginx Ingress Controller</span>
+								<span class="pill pill6 shade2">Nginx</span>
 							</div>
 
 							<!-- 項目 7 -->
 							<div class="category">
 								<h5>Cloud</h5>
-								<span class="pill pill7">OCI</span>
-								<span class="pill pill7">GCP</span>
+								<span class="pill pill7 shade3">OCI</span>
+								<span class="pill pill7 shade5">GCP</span>
 							</div>
 
 							<!-- 項目 8 -->
 							<div class="category">
 								<h5>HA</h5>
-								<span class="pill pill8">WebSocket</span>
-								<span class="pill pill8">ActiveMQ</span>
-								<span class="pill pill8">Ehcache</span>
+								<span class="pill pill8 shade3">WebSocket</span>
+								<span class="pill pill8 shade5">ActiveMQ</span>
+								<span class="pill pill8 shade5">Ehcache</span>
 							</div>
 							<!-- 項目 9 -->
 							<div class="category">
 								<h5>Security</h5>
-								<span class="pill pill9">Keycloak SSO</span>
-								<span class="pill pill9">JWT</span>
-								<span class="pill pill9">Spring Security</span>
+								<span class="pill pill9 shade1">Keycloak SSO</span>
+								<span class="pill pill9 shade2">JWT</span>
+								<span class="pill pill9 shade3">Spring Security</span>
 							</div>
 						</div>
 						
@@ -514,20 +532,26 @@ h5 {
 
 				</Hero>
 				<div class="video-container">
-					<video autoplay loop muted playsinline width="479" height="613" style="border-radius: 2.5rem; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4); ">
+					<div class="github-graph">
+						<h5>Github Contributions</h5>
+						<div>
+							<img src="http://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" style="object-fit: contain;"/>
+						</div>
+					</div>
+					<video autoplay loop muted playsinline style="width: 100%; height: auto; border-radius: 2.5rem; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4); object-fit: contain;">
 						<source src="/tymultiverse/assets/protrait.mp4" type="video/mp4">
 						Your browser does not support the video tag.
 					</video>
 					<div class="text-overlay">
-						WhoAmI: Hello TY!
+						WhoAmI: 
+						</br>
+						Hello TY!
 					</div>
+
 				</div>
 				
 			</header>
-			<div class="github-graph">
-				<h5>Github Contributions</h5>
-				<img src="http://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
-			</div>
+
 			<Skills />
 
 		</div>
@@ -536,7 +560,7 @@ h5 {
 			<section class="section with-background with-cta">
 				<header class="section-header stack gap-2 lg:gap-4">
 					<h5>Collections</h5>
-					<p>Feature</p>
+					<p>Feature Notes</p>
 				</header>
 
 				<div class="gallery">
@@ -588,3 +612,189 @@ h5 {
 
 
 </body>
+<script>
+
+// 加上tooltip
+document.addEventListener("DOMContentLoaded", () => {
+    // 定義提示文字
+    const shadeDescriptions = {
+        shade1: "Savage",
+        shade2: "Sufficient",
+        shade3: "Understood",
+        shade4: "Tried a Bit",
+        shade5: "Figuring Out",
+    };
+
+    // 建立提示框元素
+    const tooltip = document.createElement("div");
+    tooltip.style.position = "absolute";
+    tooltip.style.padding = "5px 10px";
+    tooltip.style.backgroundColor = "#333";
+    tooltip.style.color = "#fff";
+    tooltip.style.borderRadius = "4px";
+    tooltip.style.fontSize = "12px";
+    tooltip.style.display = "none";
+    tooltip.style.zIndex = "1000";
+    tooltip.style.pointerEvents = "none";
+    document.body.appendChild(tooltip);
+
+    // 處理 hover 事件
+    const pills = document.querySelectorAll(".pill");
+    pills.forEach((pill) => {
+        const shadeClass = [...pill.classList].find((cls) => cls.startsWith("shade"));
+        if (shadeClass && shadeDescriptions[shadeClass]) {
+            // 滑鼠進入
+            pill.addEventListener("mouseenter", (e) => {
+                tooltip.textContent = shadeDescriptions[shadeClass];
+                tooltip.style.display = "block";
+                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                tooltip.style.left = `${rect.left + window.scrollX}px`;
+                tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight - 5}px`;
+            });
+
+            // 滑鼠移動
+            pill.addEventListener("mousemove", (e: MouseEvent) => {
+                tooltip.style.left = `${e.pageX}px`;
+                tooltip.style.top = `${e.pageY - tooltip.offsetHeight - 5}px`;
+            });
+
+            // 滑鼠離開
+            pill.addEventListener("mouseleave", () => {
+                tooltip.style.display = "none";
+            });
+        }
+    });
+});
+
+
+// HEX to RGB 顏色轉換
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const bigint = parseInt(hex.slice(1), 16);
+    return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255,
+    };
+}
+
+// RGB to HSL 顏色轉換
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (delta !== 0) {
+        s = delta / (1 - Math.abs(2 * l - 1));
+        switch (max) {
+            case r:
+                h = ((g - b) / delta + (g < b ? 6 : 0)) % 6;
+                break;
+            case g:
+                h = (b - r) / delta + 2;
+                break;
+            case b:
+                h = (r - g) / delta + 4;
+                break;
+        }
+        h *= 60;
+    }
+
+    return { h, s: s * 100, l: l * 100 };
+}
+
+// HSL to HEX 顏色轉換
+function hslToHex(h: number, s: number, l: number): string {
+    s /= 100;
+    l /= 100;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+
+    let r = 0,
+        g = 0,
+        b = 0;
+
+    if (h >= 0 && h < 60) {
+        r = c;
+        g = x;
+        b = 0;
+    } else if (h >= 60 && h < 120) {
+        r = x;
+        g = c;
+        b = 0;
+    } else if (h >= 120 && h < 180) {
+        r = 0;
+        g = c;
+        b = x;
+    } else if (h >= 180 && h < 240) {
+        r = 0;
+        g = x;
+        b = c;
+    } else if (h >= 240 && h < 300) {
+        r = x;
+        g = 0;
+        b = c;
+    } else if (h >= 300 && h < 360) {
+        r = c;
+        g = 0;
+        b = x;
+    }
+
+    r = Math.round((r + m) * 255);
+    g = Math.round((g + m) * 255);
+    b = Math.round((b + m) * 255);
+
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+// 調整飽和度的函數 (使用 HSL)
+function adjustSaturation(hex, saturationFactor) {
+    const rgb = hexToRgb(hex);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    hsl.s *= saturationFactor; // 調整飽和度
+    return hslToHex(hsl.h, hsl.s, hsl.l);
+}
+
+// 初始化 shade 與 pill 顏色
+function applyShadesToPills() {
+    const pills = document.querySelectorAll('.pill') as NodeListOf<HTMLElement>; // 顯式轉換為 HTMLElement
+
+    pills.forEach((pill) => {
+        const baseColor = getComputedStyle(pill).backgroundColor; // 取得基礎顏色
+        const shadeClass = [...pill.classList].find((cls) => cls.startsWith('shade')); // 找到 shade 類別
+        if (shadeClass) {
+            const shadeLevel = parseInt(shadeClass.replace('shade', ''), 10); // 取得 shade 等級
+            const saturationFactor = 1 - (shadeLevel - 1) * 0.2; // 根據 shade 調整飽和度
+            const adjustedColor = adjustSaturation(rgbToHex(baseColor), saturationFactor); // 調整飽和度
+            pill.style.backgroundColor = adjustedColor; // 更新背景顏色
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    applyShadesToPills(); // 應用樣式
+});
+
+// 將 RGB 顏色轉為 HEX 的輔助函數
+function rgbToHex(rgb: string): string {
+    const match = rgb.match(/\d+/g);
+    if (!match) throw new Error('Invalid RGB color');
+    const [r, g, b] = match.map(Number);
+    return (
+        '#' +
+        ((1 << 24) + (r << 16) + (g << 8) + b)
+            .toString(16)
+            .slice(1)
+            .toUpperCase()
+    );
+}
+</script>
