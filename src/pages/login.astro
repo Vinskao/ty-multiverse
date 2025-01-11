@@ -1,0 +1,35 @@
+---
+const clientId = "peoplesystem";
+const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
+
+// 生成 Keycloak 的授權 URL
+const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/keycloak/auth/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+  redirectUri
+)}`;
+
+// 頁面加載時觸發跳轉
+function redirectToLogin() {
+  window.location.href = authorizationUrl;
+}
+
+// 加入內嵌的 JavaScript 來觸發跳轉
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting to Login...</title>
+  <script>
+    // 在頁面載入時立即執行跳轉
+    window.onload = () => {
+      const clientId = "peoplesystem";
+      const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
+      const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/keycloak/auth/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      window.location.href = authorizationUrl;
+    };
+  </script>
+</head>
+<body>
+  <p>Redirecting to login...</p>
+</body>
+</html>
