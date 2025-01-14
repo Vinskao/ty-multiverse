@@ -9,12 +9,13 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f928;
+      background: linear-gradient(135deg, #f3e5f55d, #f8bbd06e);
       color: #7d418e;
     }
     h3 {
       text-align: center;
       margin-top: 20px;
+      font-size: 2rem;
     }
     .clutch-container {
       display: flex;
@@ -23,47 +24,42 @@
       padding: 20px;
     }
     .clutch-box {
-      border: 3px dashed #888;
-      border-radius: 10px;
-      background-color: #ffffff37;
+      border: 3px dashed #d400f9cc;
+      border-radius: 15px;
+      background-color: #fce4ec31;
       padding: 20px;
-      width: 300px;
+      width: 320px;
       text-align: center;
-      transition: background-color 0.3s, border-color 0.3s;
+      transition: background-color 0.3s, transform 0.3s;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
     .clutch-box.dragging {
-      background-color: #e0f7fa;
-      border-color: #b700ff94;
+      background-color: #e1bee7;
+      transform: scale(1.05);
+      border-color: #7c4dff;
     }
     .clutch-box input {
       display: none;
     }
     .clutch-box label {
       display: block;
-      margin-top: 15px;
-      padding: 10px 15px;
-      background-color: #b700ff94;
+      margin: 20px 0;
+      padding: 10px 20px;
+      background-color: #ab47bc;
       color: #fff;
-      border-radius: 5px;
+      border-radius: 20px;
       cursor: pointer;
-      text-decoration: none;
+      font-size: 1rem;
+      font-weight: bold;
       transition: background-color 0.3s;
     }
     .clutch-box label:hover {
-      background-color: #0056b3;
+      background-color: #7b1fa2;
     }
-    .clutch-box button {
-      margin-top: 15px;
-      padding: 10px 15px;
-      background-color: #283da762;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .clutch-box button:hover {
-      background-color: #283da762;
+    .clutch-box h4 {
+      margin: 0 0 10px;
+      font-size: 1.5rem;
+      color: #8e35c5;
     }
   </style>
 </head>
@@ -73,9 +69,8 @@
     <!-- Box 1 -->
     <div class="clutch-box" id="clutch-release">
       <h4>Release</h4>
-      <input id="clutch-image-input" type="file" accept="image/*" multiple>
-      <label for="clutch-image-input">Drag or Click</label>
-      <button id="clutch-download-zip-images">Auto ZIP</button>
+      <input id="clutch-file-input" type="file" accept="image/*,video/*" multiple>
+      <label for="clutch-file-input">Drag or Click</label>
     </div>
 
     <!-- Box 2 -->
@@ -83,20 +78,17 @@
       <h4>Transform</h4>
       <input id="clutch-txt-input" type="file" accept=".txt" multiple>
       <label for="clutch-txt-input">Drag or Click</label>
-      <button id="clutch-download-zip-txts">Auto ZIP</button>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script>
-    // Helper: Generate timestamp-based filename
     const generateFilename = (prefix, extension) => {
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[-:.TZ]/g, "");
-      return `${prefix}_${timestamp}.${extension}`;
+      const date = now.toLocaleDateString('en-CA').replace(/-/g, '');
+      return `${prefix}_${date}.${extension}`;
     };
 
-    // Drag-and-drop helper functions
     const addDragEvents = (element, input) => {
       element.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -113,66 +105,54 @@
       });
     };
 
-    // Box 1: Convert images to Base64 and download as ZIP
-    document.getElementById('clutch-image-input').addEventListener('change', async (event) => {
-      const files = event.target.files;
+    const processFiles = async (files, processFunction, zipName) => {
       if (!files.length) return;
 
       const zip = new JSZip();
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        await processFunction(files[i], zip, i);
+      }
+
+      const zipContent = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipContent);
+      link.download = zipName;
+      link.click();
+    };
+
+    document.getElementById('clutch-file-input').addEventListener('change', (event) => {
+      const files = event.target.files;
+      processFiles(files, async (file, zip, index) => {
         const reader = new FileReader();
-        const base64Promise = new Promise((resolve) => {
+        const base64 = await new Promise((resolve) => {
           reader.onload = (e) => resolve(e.target.result.split(',')[1]);
           reader.readAsDataURL(file);
         });
-        const base64 = await base64Promise;
-        const filename = generateFilename(`image_${i + 1}`, 'txt');
-        zip.file(filename, base64);
-      }
-
-      const zipContent = await zip.generateAsync({ type: 'blob' });
-      const zipFilename = generateFilename('images', 'zip');
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(zipContent);
-      link.download = zipFilename;
-      link.click();
+        const ext = file.type.split('/')[1] || 'mov'; // 預設支援 MOV
+        zip.file(`file_${index + 1}.${ext}.txt`, base64);
+      }, generateFilename('media_files', 'zip'));
     });
 
-    // Box 2: Convert Base64 TXT to images and download as ZIP
-    document.getElementById('clutch-txt-input').addEventListener('change', async (event) => {
+    document.getElementById('clutch-txt-input').addEventListener('change', (event) => {
       const files = event.target.files;
-      if (!files.length) return;
-
-      const zip = new JSZip();
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      processFiles(files, async (file, zip, index) => {
         const reader = new FileReader();
-        const textPromise = new Promise((resolve) => {
+        const base64 = await new Promise((resolve) => {
           reader.onload = (e) => resolve(e.target.result.trim());
           reader.readAsText(file);
         });
-        const base64 = await textPromise;
-        const binaryData = atob(base64);
-        const arrayBuffer = new Uint8Array(binaryData.length);
-        for (let j = 0; j < binaryData.length; j++) {
-          arrayBuffer[j] = binaryData.charCodeAt(j);
+        const binary = atob(base64);
+        const arrayBuffer = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          arrayBuffer[i] = binary.charCodeAt(i);
         }
         const blob = new Blob([arrayBuffer]);
-        const filename = generateFilename(`restored_image_${i + 1}`, 'png');
-        zip.file(filename, blob);
-      }
-
-      const zipContent = await zip.generateAsync({ type: 'blob' });
-      const zipFilename = generateFilename('restored_images', 'zip');
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(zipContent);
-      link.download = zipFilename;
-      link.click();
+        const ext = base64.startsWith('/') ? 'png' : base64.startsWith('A') ? 'mov' : 'mp4';
+        zip.file(`restored_file_${index + 1}.${ext}`, blob);
+      }, generateFilename('restored_files', 'zip'));
     });
 
-    // Apply drag-and-drop functionality
-    addDragEvents(document.getElementById('clutch-release'), document.getElementById('clutch-image-input'));
+    addDragEvents(document.getElementById('clutch-release'), document.getElementById('clutch-file-input'));
     addDragEvents(document.getElementById('clutch-transform'), document.getElementById('clutch-txt-input'));
   </script>
 </body>
