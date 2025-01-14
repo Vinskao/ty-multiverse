@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #f3e5f55d, #f8bbd06e);
+      background: linear-gradient(135deg, #f3e5f5, #f8bbd0);
       color: #7d418e;
     }
     h3 {
@@ -24,9 +24,9 @@
       padding: 20px;
     }
     .clutch-box {
-      border: 3px dashed #d400f9cc;
+      border: 3px dashed #d500f9;
       border-radius: 15px;
-      background-color: #fce4ec31;
+      background-color: #fce4ec;
       padding: 20px;
       width: 320px;
       text-align: center;
@@ -59,7 +59,7 @@
     .clutch-box h4 {
       margin: 0 0 10px;
       font-size: 1.5rem;
-      color: #8e35c5;
+      color: #6a1b9a;
     }
   </style>
 </head>
@@ -85,8 +85,8 @@
   <script>
     const generateFilename = (prefix, extension) => {
       const now = new Date();
-      const date = now.toLocaleDateString('en-CA').replace(/-/g, '');
-      return `${prefix}_${date}.${extension}`;
+      const timestamp = now.toISOString().replace(/[-:.TZ]/g, "");
+      return `${prefix}_${timestamp}.${extension}`;
     };
 
     const addDragEvents = (element, input) => {
@@ -128,7 +128,7 @@
           reader.onload = (e) => resolve(e.target.result.split(',')[1]);
           reader.readAsDataURL(file);
         });
-        const ext = file.type.split('/')[1] || 'mov'; // 預設支援 MOV
+        const ext = file.type.split('/')[1];
         zip.file(`file_${index + 1}.${ext}.txt`, base64);
       }, generateFilename('media_files', 'zip'));
     });
@@ -147,7 +147,7 @@
           arrayBuffer[i] = binary.charCodeAt(i);
         }
         const blob = new Blob([arrayBuffer]);
-        const ext = base64.startsWith('/') ? 'png' : base64.startsWith('A') ? 'mov' : 'mp4';
+        const ext = base64.startsWith('/') ? 'png' : 'mp4';
         zip.file(`restored_file_${index + 1}.${ext}`, blob);
       }, generateFilename('restored_files', 'zip'));
     });
