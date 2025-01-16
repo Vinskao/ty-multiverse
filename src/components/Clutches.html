@@ -69,7 +69,7 @@
     <!-- Box 1 -->
     <div class="clutch-box" id="clutch-release">
       <h4>Release</h4>
-      <input id="clutch-file-input" type="file" accept="image/*,video/*" multiple>
+      <input id="clutch-file-input" type="file" accept="image/*" multiple>
       <label for="clutch-file-input">Drag or Click</label>
     </div>
 
@@ -121,7 +121,7 @@
     };
 
     document.getElementById('clutch-file-input').addEventListener('change', (event) => {
-      const files = event.target.files;
+      const files = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
       processFiles(files, async (file, zip, index) => {
         const reader = new FileReader();
         const base64 = await new Promise((resolve) => {
@@ -130,7 +130,7 @@
         });
         const ext = file.type.split('/')[1];
         zip.file(`file_${index + 1}.${ext}.txt`, base64);
-      }, generateFilename('media_files', 'zip'));
+      }, generateFilename('image_files', 'zip'));
     });
 
     document.getElementById('clutch-txt-input').addEventListener('change', (event) => {
@@ -147,8 +147,7 @@
           arrayBuffer[i] = binary.charCodeAt(i);
         }
         const blob = new Blob([arrayBuffer]);
-        const ext = base64.startsWith('/') ? 'png' : 'mp4';
-        zip.file(`restored_file_${index + 1}.${ext}`, blob);
+        zip.file(`restored_file_${index + 1}.png`, blob);
       }, generateFilename('restored_files', 'zip'));
     });
 

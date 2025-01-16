@@ -1,11 +1,3 @@
-這是我的個人網站。
-
-主軸：
-
-使用以下技術：
-
-
-
 ## 啟動：
 ```bash
 docker build --no-cache -t papakao/ty-multiverse-frontend .
@@ -15,4 +7,3 @@ node ./dist/server/entry.mjs
 docker build -t papakao/ty-multiverse-frontend:latest .
 docker push papakao/ty-multiverse-frontend:latest
 ```
-
