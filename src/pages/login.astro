@@ -3,7 +3,7 @@ const clientId = "peoplesystem";
 const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
 
 // 生成 Keycloak 的授權 URL
-const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/keycloak/auth/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
   redirectUri
 )}`;
 
@@ -24,7 +24,7 @@ function redirectToLogin() {
     window.onload = () => {
       const clientId = "peoplesystem";
       const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
-      const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/keycloak/auth/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
       window.location.href = authorizationUrl;
     };
   </script>
