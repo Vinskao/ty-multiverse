@@ -10,7 +10,7 @@
         top: 50px;
         left: 0;
         display: flex;
-        width: 4000px;
+        /* Initial width can be overridden by script */
         overflow: hidden;
       }
 
@@ -50,13 +50,11 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const container1 = document.getElementById("container1");
-        const container2 = document.getElementById("container2");
-        const numVisibleAds = 38;
         const imageList1 = [
           "/tymultiverse/assets/person/Miku.png",
           "/tymultiverse/assets/person/Wavo.png",
           "/tymultiverse/assets/person/Sorane.png",
+          "/tymultiverse/assets/person/Draeny.png",
           "/tymultiverse/assets/person/Masako.png",
           "/tymultiverse/assets/person/MasakoEntering.png",
           "/tymultiverse/assets/person/Sayuri.png",
@@ -67,11 +65,15 @@
           "/tymultiverse/assets/person/KamiraPeeing.png",
           "/tymultiverse/assets/person/Mayo.png",
           "/tymultiverse/assets/person/MayoPumped.png",
+          "/tymultiverse/assets/person/Spoke.png",
+          "/tymultiverse/assets/person/SpokeTied.png",
           "/tymultiverse/assets/person/Yuko.png",
+          "/tymultiverse/assets/person/Medicis.png",
+          "/tymultiverse/assets/person/Azusa.png",
+          "/tymultiverse/assets/person/Kristae.png",
           "/tymultiverse/assets/person/Aile.png",
           "/tymultiverse/assets/person/Taisy.png",
           "/tymultiverse/assets/person/Doire.png",
-          "/tymultiverse/assets/person/Spoke.png",
           "/tymultiverse/assets/person/Delsa.png",
           "/tymultiverse/assets/person/Etsuko.png",
           "/tymultiverse/assets/person/Kyu.png",
@@ -87,20 +89,22 @@
           "/tymultiverse/assets/person/Branwen.png",
           "/tymultiverse/assets/person/Lucrece.png",
           "/tymultiverse/assets/person/Uiobbeci.png",
-          "/tymultiverse/assets/person/Draeny.png",
           "/tymultiverse/assets/person/Nianca.png",
           "/tymultiverse/assets/person/Yui.png",
           "/tymultiverse/assets/person/Mesoyei.png",
-          "/tymultiverse/assets/person/Medicis.png",
           "/tymultiverse/assets/person/Ann.png",
           "/tymultiverse/assets/person/Shuan.png",
-          "/tymultiverse/assets/person/Azusa.png",
-          "/tymultiverse/assets/person/Kristae.png",
           "/tymultiverse/assets/person/Miyako.png",
         ];
 
-        const imageList3 = [
+        const container1 = document.getElementById("container1");
+        const container2 = document.getElementById("container2");
 
+        // Load the full set of images from imageList1.
+        const numVisibleAds = imageList1.length;
+
+        const imageList3 = [
+          // any images for container2 if needed
         ];
 
         function createAdDiv(imageURL) {
@@ -122,14 +126,16 @@
           }
         }
 
-        // Initial load
+        // Load all images so that the last image is included.
         loadAds(imageList1, container1, numVisibleAds);
         loadAds(imageList3, container2, imageList3.length);
 
+        // Adjust the width of container1 dynamically:
+        // First ad is 200px wide, subsequent ads add 100px each due to overlap.
+        container1.style.width = (200 + (numVisibleAds - 1) * 100) + "px";
+
         // Start container1 animation
         container1.style.animation = "slideLeft 180s linear infinite alternate";
-
-        // Container2 does not have animation
       });
     </script>
   </body>
