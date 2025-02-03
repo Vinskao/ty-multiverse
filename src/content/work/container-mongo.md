@@ -114,3 +114,9 @@ mongo-express:latest
 連線成功後可以看到以下畫面：
 
 ![展示結果](/tymultiverse/assets/md-image/mongodb-express.png)
+
+## 進階設定與資料保護
+
+- **資料持久性：** 利用 Docker Volume 確保 MongoDB 資料長期保留，並定期備份以防資料遺失。
+- **網路安全：** 建議管控容器之間的連線權限，對外公開介面需進行安全防護。
+- **監控管理：** 採用工具（例如 Portainer）監控容器狀態，有助於預測與處理潛在問題。

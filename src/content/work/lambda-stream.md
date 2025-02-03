@@ -205,3 +205,14 @@ HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
 Integer[] n = {5, 10 ,15 ,20 ,25 };
 int sum2 = Arrays.stream(n).reduce(0, Integer::sum);
 ```
+
+## 深入理解 Lambda 與 Stream
+
+- **Lambda 表達式：** 可大幅簡化匿名內部類的寫法，建議多練習其語法精髓與應用場景。
+- **方法參考 (::)：** 快速綁定已存在的方法，適用於靜態與實例方法，提升代碼可讀性。
+- **Stream 操作：** 熟悉中間操作與終端操作的執行時機，有助於撰寫高效資料處理流水線。
+
+## 常見最佳實踐
+
+- **資源釋放：** 確認使用後適當關閉或釋放 Stream 資源（例如使用 try-with-resources）。
+- **錯誤處理：** 確認在複雜流操作中加入適當的異常捕捉，避免意外中斷。

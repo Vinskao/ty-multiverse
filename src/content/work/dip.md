@@ -1,10 +1,9 @@
 ---
-title: Dependency Injection
+title: "Dependency Injection & Dependency Inversion Principle (DIP)"
 publishDate: 2024-02-24 12:00:00
 img: /tymultiverse/assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
-description: |
-  2024/02/24
+description: An introduction to Dependency Injection, DIP, and relevant design patterns in Java.
 tags:
   - DIP
   - OCP
@@ -12,32 +11,40 @@ tags:
   - Java
 ---
 
-#### 開放封閉原則
+# Dependency Injection & Dependency Inversion Principle (DIP)
 
-程式開發遵循開放擴增，封閉修改的設計模式。讓後進的程式與先到的程式耦合度降低，使得進行依賴反轉成為可能。
+## Overview
 
-#### 依賴反轉
+本文件探討如何藉由依賴注入（Dependency Injection, DI）及依賴反轉原則（Dependency Inversion Principle, DIP）降低高層模組與低層實作之間的耦合度。這樣的設計符合開放封閉原則（OCP），使系統更加靈活與易於維護。
 
-如果有一隻程式叫打掃，一隻程式叫掃地工（低層程式）。這兩隻程式一起運作才能成為清潔 API（高層程式）。有一天掃地工不幹了，清潔 API 就無法運作了，因為清潔 API 依賴掃地工，高層程式依賴低層程式。
+## 問題背景
+
+傳統的設計中，高層模組（例如 `CleanController`）直接依賴於低層實作（例如 `CleanerService`），導致一旦低層模組更換，高層模組也必須修改，增加了系統的脆弱性。
+
+### 緊耦合示例
 
 ```java
 package org.controller;
+
 public class CleanController {
   private CleanerService cleanerService;
+  
   public CleanController(CleanerService cleanerService){
     this.cleanerService = cleanerService;
   }
+  
   public void cleaningApi(){
     cleanerService.cleaner();
     cleanerService.clean();
-    // "Cleaner is...""Cleaning..."
+    // 輸出: "Cleaner is..." 與 "Cleaning..."
   }
 }
 ```
 
 ```java
 package org.service;
-public class CleanService{
+
+public class CleanService {
   public void clean(){
     System.out.print("Cleaning...");
   }
@@ -46,57 +53,85 @@ public class CleanService{
 
 ```java
 package org.service;
-public class CleanerService{
+
+public class CleanerService {
   public void cleaner(){
     System.out.print("Cleaner is...");
   }
 }
 ```
 
-如果清潔 API 依賴的是一個自動配發可用清潔工的清潔公司，那就不會有依賴清潔工的問題了，就不會有高層程式依賴低層程式的問題。service 有問題就換掉，controller 還是原封不動。
+## DI 與 DIP 的實踐
+
+將依賴改為抽象介面可以解決以上問題，實現高層模組與低層實作之間解耦。
+
+### 定義介面
 
 ```java
 package org.service;
+
 public interface CleanerService {
   void cleaner();
   void clean();
 }
 ```
 
+### 實作不同的清潔服務
+
 ```java
 package org.service;
+
 public class StandardCleanerService implements CleanerService {
   @Override
   public void cleaner(){
-    System.out.print("Standard Cleaner is...")
+    System.out.print("Standard Cleaner is...");
+  }
+  
+  @Override
+  public void clean(){
+    System.out.print("Cleaning...");
   }
 }
 ```
 
 ```java
 package org.service;
+
 public class AdvancedCleanerService implements CleanerService {
   @Override
   public void cleaner(){
-    System.out.print("Advanced Cleaner is...")
+    System.out.print("Advanced Cleaner is...");
+  }
+  
+  @Override
+  public void clean(){
+    System.out.print("Cleaning...");
   }
 }
 ```
+
+### 更新 Controller
 
 ```java
 package org.controller;
+
+import org.service.CleanerService;
+
 public class CleanController {
   private CleanerService cleanerService;
+  
   public CleanController(CleanerService cleanerService){
     this.cleanerService = cleanerService;
   }
+  
   public void cleaningApi(){
     cleanerService.cleaner();
     cleanerService.clean();
-    // "Advance Cleaner is...""Cleaning..."
-    // "Standard Cleaner is...""Cleaning..."
+    // 依據注入的實作，輸出 "Advanced Cleaner is..." 或 "Standard Cleaner is..." 再接上 "Cleaning..."
   }
 }
 ```
 
-clean()也是依此類推。我們一次只需要一種清潔工 service，Advance Cleaner 或 Standard Cleaner，一個不能用使用另一個即可。不需要改高層程式 controller。
+## Conclusion
+
+通過依賴注入和遵循 DIP，高層模組不再直接依賴具體實作，而是依賴抽象介面，從而極大提高系統的靈活性與可維護性。

@@ -10,78 +10,55 @@ tags:
   - Network
 ---
 
-## 連入連線
+# Kubernetes Networking
 
-### 1. kube-proxy 封包虛擬網路
-kube-proxy 是 Kubernetes 集群中實現虛擬網絡的關鍵組件。它負責管理集群內各節點之間的網絡流量，並且為每個服務 (Service) 提供虛擬 IP 地址，從而實現負載均衡。每個節點上的 kube-proxy 都會監控服務的變化並更新其轉發規則。
+## Overview
 
-### 2. Pod 連線方式
-- **IP 連線**：每個 Pod 都有一個唯一的 IP 地址，Pod 之間可以直接通過 IP 地址進行通信。
-- **Service 連線**：使用 Service 的虛擬 IP 來代表一組 Pod，實現對外訪問和負載均衡。
+本文從集群內部通訊與外部連線兩大方面，介紹 Kubernetes 中網絡架構的基本原理與組件，包括 kube-proxy、Service、Ingress 等，並探討網絡排查和安全策略。
 
-### 3. Service 物件
-Service 是 Kubernetes 中的一個抽象層，負責路由流量到一組運行中的 Pod：
-- **Discovering**：通過 Label Selector 動態選擇後端 Pod。
-- **Load Balancing**：在 Pod 之間分配流量。
-- 可暴露為 ClusterIP（內部）、NodePort（外部訪問）或 LoadBalancer（外部負載均衡器）。
+## 內部網絡
 
-### 4. Spring Cloud LB
-Spring Cloud LoadBalancer 提供微服務負載均衡，適用於 Spring Cloud 應用中，用於提升服務之間的高可用性。
+### kube-proxy
 
-### 5. LB 的 External IP 與 NodePort 的差異
-- **External IP**：由外部負載均衡器分配，用於公共訪問。
-- **NodePort**：將 Service 暴露於每個節點的特定端口上，用於開發或測試。
+`kube-proxy` 為 Kubernetes 提供虛擬網路，它負責監控 Service 變化，並動態調整轉發規則，以實現跨 Node 的流量分發。
 
-### 6. Selector
-Selector 是用於篩選 Pod 的條件，例如 `run: nginx` 篩選標籤為 `run=nginx` 的 Pod。
+### Pod 之間的連線
 
-### 7. Server / Endpoint Controller
-- **Server**：指提供服務的實體或邏輯組件。
-- **Endpoint Controller**：負責監控服務與 Pod 之間的關係，更新 Service 的 Endpoints。
+- **直接 IP 連線**：每個 Pod 都獲得一個獨立 IP，可直接通訊。  
+- **Service 抽象**：將一組 Pod 整合為一個虛擬 IP，實現負載均衡。
 
-### 8. EndpointSlice
-EndpointSlice 提供對 Endpoints 的優化管理，分片化提升性能。
+## Service 物件
 
-### 9. Service 抽象與自動負載均衡
-Service 提供一個靜態 IP 地址，並通過負載均衡機制將流量分配到後端 Pod。
+Service 提供穩定的網絡入口：
 
-### 10. LB 前端、Backend NodePort 及 EndpointSlice 觀察
-- **LB 前端**：處理外部流量。
-- **Backend NodePort**：處理內部流量。
-- **EndpointSlice**：檢查 Selector 與 Pod 的映射。
+- **服務發現**：透過 Label Selector 動態選取後端 Pod。  
+- **負載均衡**：將流量分發至各個 Pod。  
+- 可設定為：
+  - **ClusterIP**：僅內部訪問。
+  - **NodePort**：每個 Node 對外開放固定端口。
+  - **LoadBalancer**：自動配置外部負載均衡器。
 
-### 11. Ingress 物件
-- **應用層**：處理 HTTP/HTTPS 請求。
-- **Gateway API**：支援更多協議和流量管理功能。
-- **Host 和 Path**：根據域名與路徑進行流量轉發。
-- **TLS SNI**：根據 SNI 提供正確憑證。
-- **Reverse Proxy 角色**：Ingress 控制器作為反向代理。
-- **Gateway API 支援更多功能**：如 TCP、gRPC、路由重寫等。
+## 進階網絡概念
 
-### 12. SSL Termination vs SSL Passthrough
-1. **SSL Termination**：TLS/SSL 加密在 Ingress 層終止，適用於內部流量使用 HTTP。
-2. **SSL Passthrough**：TLS/SSL 加密保留到後端服務，適用於敏感數據場景。
+### Ingress
 
-## 連出連線
+Ingress 負責管理進入集群的 HTTP/HTTPS 流量，可以根據 host 和 path 規則進行流量轉發和 SSL Termination。
 
-### 13. Egress
-1. 建立 IP Pool。
-2. 決定 Pod 的出口 IP。
-3. 解決 IP 飄走後的 ARP 收斂問題。
+### EndpointSlice
 
-### Network Policy
-- **Selector**：選擇適用的流量。
-- **Policy 和 Rule**：先全拒，後以白名單模式允許特定流量。
+EndpointSlice 對大量 Pod 的 Endpoints 進行分片管理，提升性能與可拓展性。
 
-### CNI 如何辨別流量
-1. 先阻擋所有流量，再允許 CoreDNS 的相關策略。
-2. 使用 Network Policy 阻擋進入 API Server 的流量。
+### Egress 與 Network Policies
 
-### layer 2 至 layer 3
-實現從資料鏈路層到網絡層的傳輸管理。
+- **Egress**：管理 Pod 外發連線，例如配置出口 IP。  
+- **Network Policy**：定義限制進出流量的規則，以達到安全防護目的。
 
+## 排查網絡問題
 
-### VIP 不通的整段流程排查
-首先確認是誰吐出502 504 不知道是後端還是lb回的
-ha proxy standalone VM 等等其他proxy來確認
-透過lb 確認
+- **Layer 2 至 Layer 3**：確認資料鏈路層與網絡層之間的轉換是否正常。  
+- **LB 異常**：檢查是否因後端服務或負載均衡器導致 502/504 錯誤。  
+- **監控工具**：使用 HAProxy 或獨立代理進行流量監控與診斷。
+
+## Conclusion
+
+掌握 Kubernetes 的網絡架構對構建高可用、高性能的集群至關重要，通過內部通訊、服務抽象及網絡策略的整合，可有效保障流量的穩定與安全。
