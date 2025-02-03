@@ -109,3 +109,9 @@ sudo docker run -e "ACCEPT_EULA=Y" \
 
 進入 Docker Desktop 可以看到 volume 位置：
 ![展示結果](/tymultiverse/assets/md-image/sql-volume.png)
+
+## 容器運維與性能調優
+
+- **數據備份：** 利用 Volume 保存 SQL 資料，並規劃定期備份策略以防故障。
+- **環境安全：** 確保 MSSQL 容器的密碼強度與網路存取管控，防止未授權存取。
+- **資源監控：** 使用 Docker 監控工具（如 cAdvisor）持續監控容器資源使用，進行適時調整。

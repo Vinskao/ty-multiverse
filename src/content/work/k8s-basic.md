@@ -10,102 +10,44 @@ tags:
   - Basic
 ---
 
-## K8S基礎元件架構
-#### OS層級的虛擬化清單：
-1. C group: Kernal 管理
-2. Library
-3. Runtime
+# Kubernetes Basics
 
-#### K8s網路
-1. lb
-2. reverse-proxy
-3. domain register
+## Overview
 
-#### K8s網路解決方案
-1. lb
-2. tls
-3. fail over
+本文件為 Kubernetes 入門指南，介紹其基本元件和架構，幫助初學者理解 Kubernetes 集群的運作原理及核心概念。
 
-#### 儲存
-1. Component to API
-這指的是 Kubernetes 的不同組件（如 PVC、PV）透過 Kubernetes 的 API 來管理儲存。
+## 核心組件
 
-2. LUN (Logical Unit Number)
-LUN 是一個標識儲存設備中某個區塊的編號，通常用於 iSCSI 儲存設備，用來識別儲存資源。
+### OS 層級虛擬化
 
+- **C Groups**：由核心管理，用於資源分配。  
+- **Libraries 與 Runtimes**：執行容器所必需的基本環境。
 
-#### K8s 大腦
-```
-API Server --> ETCD DBs
+### Kubernetes Networking
 
-```
+- **Load Balancer (LB)**：負載均衡器分發流量。  
+- **Reverse Proxy**：負責轉發請求。  
+- **Domain Registration**：管理對外域名解析。
 
-##### Scheduler
-決定新create要進去哪個node
+### 儲存系統
 
-##### kubelet 
-node 與 control plane 的溝通代理。
+- **Persistent Volume Claim (PVC) / Persistent Volume (PV)**：用於申請和配置動態存儲資源。  
+- **Logical Unit Number (LUN)**：主要用於 iSCSI 儲存設備中的區塊識別。
 
-##### Static Pod
-1. 由kubelet所管理
+### 集群核心控制元件
 
-##### Daemon Type
-1. 用Systemd的方式啟動
-2. Daemon Set 每個pod運行同一服務
+- **API Server**：管理集群狀態，搭配 etcd 資料庫。  
+- **Scheduler**：決定新的 Pod 部署在哪個 Node 上。  
+- **Kubelet**：Node 端運行代理，確保 Pod 狀態。  
+- **Static Pod 與 DaemonSet**：管理必須在特定 Node 上運行的服務。
 
-##### ingress-nginx
-1. 如何固定在一個pod啟動一個controller
+### 其他概念
 
-##### ns vs nns
-1. nns: PV
-2. 共用的ns: storage, network
+- **Ingress 與 NodePort**：用於對外暴露服務。  
+- **Namespaces**：實現資源的邏輯隔離。  
+- **StatefulSet**：管理有狀態的應用。  
+- **DNS 與負載均衡**：確保服務發現與流量分發。
 
-##### CNI 網路
-內部網路機制
-##### CSI 儲存
-內部儲存機制
+## Conclusion
 
-
-##### StatefulSet何時使用
-
-##### 資料要區分pod跑
-1. 使用message queue 讓第一個pod跑完讓第2個pod去跑
-2. AP 控制
-
-##### PV/C
-1. PV 是一個代號，代表在Storage的一塊空間
-2. PVC是規格設定
-
-##### session affinity
-1. none default
-2. client ip, 會使 nginx 過重, 因為只有指定一個pod跑
-
-##### control panel 拓墣
-1. 主流control plane: 3 台
-
-##### DNS
-C name vs A record
-
-
-##### pod 流程
-1. client
-2. api server
-3. etcd
-4. controller manager: 生成pod
-5. scheduler
-6. kubelet
-7. containerd
-
-##### 物件建立好後 -> container建立完成
-
-
-##### K8s憑證
-1. kubelet mtls
-2. admin mtls
-3. api server mtls
-4. api server 連線
-* 裸機rotate 指令
-
-## DNS層級
-Dns delegation 
-Wildcar domain 
+掌握 Kubernetes 的基本原理有助於有效管理及排除集群問題，從網路、儲存到控制面都有其獨特的實現與應用。

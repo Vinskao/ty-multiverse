@@ -1,19 +1,26 @@
 ---
-title: Abstract Class VS Interface
+title: "Abstract Classes vs Interfaces in Java"
 publishDate: 2024-02-24 10:00:00
 img: /tymultiverse/assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
-description: |
-  2024/02/24
+description: A comprehensive comparison between abstract classes and interfaces in Java.
 tags:
-  - Interface
-  - Abstract Class
   - Java
+  - Abstract Class
+  - Interface
 ---
 
-#### 抽象類別
+# Abstract Classes vs Interfaces in Java
 
-一個可以同時存在抽象或實體方法的類別，其他類別繼承時也可以選擇要覆寫一個或多個抽象或實體方法。如果是實體方法，繼承時可以不用改寫。
+## Overview
+
+本文件深入比較了 Java 中的抽象類別與介面，介紹了各自的特性、使用情境以及實作示例，方便您根據需求選擇合適的設計方法。
+
+## Abstract Classes
+
+抽象類別可以同時包含抽象方法與實體方法，子類別可選擇性地覆寫抽象方法而不必覆寫實體方法。
+
+### Example
 
 ```java
 abstract class User {
@@ -32,35 +39,33 @@ class AdminUser extends User {
 }
 ```
 
-子類別如果有一個抽象方法，則也是抽象類別。
+若子類別尚未覆寫所有抽象方法，則子類本身也必須聲明為抽象類別：
 
 ```java
 abstract class Ghost extends User {
-    // 子類別可以包含父類別中不存在的方法
+    // 額外定義一個抽象方法
     abstract void haunt();
-
-    // 不一定要覆寫greet()
+    // 無需覆寫 greet() 方法
 }
 ```
+
+#### Main 方法示例
 
 ```java
 public class Main {
     public static void main(String[] args) {
-        // 實體方法不需要@Override
         AdminUser admin = new AdminUser();
-        admin.greet();        // Hello!
-        admin.displayInfo();  // Admin User
+        admin.greet();        // 輸出: Hello!
+        admin.displayInfo();  // 輸出: Admin User
     }
 }
 ```
 
----
+## Interfaces
 
-#### 介面
+介面定義了一組合約，各個類別通過實作介面來提供具體行為。自 Java 8 以後，介面也支援 default 方法，允許直接在介面中定義預設實作。
 
-其他類別可以透過實作一個介面的所有方法來覆寫其方法。假設介面有一個散步方法，那其他類別都可以透做實作獲取散步，並進行擴增。如果實作介面的屬性，會自動變成靜態 final 的狀態，一個不能改值的屬性。
-
-Java 8 及以後的版本中，介面中可以包含預設方法（default methods）。 預設方法是一種在介面中提供實作的方法，它可以在介面中直接定義方法體，而不需要實作類別來提供實作。 子類別可以選擇是否覆蓋介面中的預設方法。
+### Example
 
 ```java
 interface Walker {
@@ -70,9 +75,13 @@ interface Walker {
         System.out.println("Breathing...");
     }
 }
+```
 
+實作介面的類別：
+
+```java
 class Human implements Walker {
-    // no @Override
+    // 可視需求覆寫 walk() 方法
 }
 
 class Dog implements Walker {
@@ -85,80 +94,48 @@ class Dog implements Walker {
 public class Main {
     public static void main(String[] args) {
         Human human = new Human();
-        human.walk();   // Walking...
-        human.breathe(); // Breathing...
+        human.walk();    // 使用介面預設或自行實作
+        human.breathe(); // 輸出: Breathing...
 
         Dog dog = new Dog();
-        dog.walk();     // Dog is walking
+        dog.walk();      // 輸出: Dog is walking
     }
 }
 ```
 
-實體方法可以不加 default 嗎? 不行。
+## Inheritance and Polymorphism
 
----
+### 利用抽象類別實現多型
 
-#### 透過抽象類別實現多型
-
-抽象類別是子類別透過繼承父類別取得其所有或一部份公開方法及屬性並覆寫成自己適合的方法，比如貓、狗（子類別）從動物（父類別）繼承抽象吼叫方法，分別覆寫成 out.print("喵")及 out.print("汪")，另外在貓、狗類別分別透過動物類別實例化後以 setter 改寫動物類別的屬性-血量。
+抽象類別允許子類別共享通用行為並覆寫專屬功能：
 
 ```java
-// 父類別中：
 abstract class Animal {
   public abstract void makeSound(); // 抽象方法
-      public void eat() { // 實體方法
-          System.out.println("動物正在吃食物");
-      }
+
+  public void eat() {
+      System.out.println("The animal is eating");
+  }
 }
 ```
 
-```java
-// 子類別中：
-Animal animal = new Animal(); // 錯，抽象類別無法實例化
+### 利用介面實現多重繼承
 
-Animal dog = new Dog();
-dog.eat(); // "動物正在吃食物"
-```
+介面允許一個類別實作多個介面，從而組合多種行為：
 
 ```java
-// 被實作介面
-interface Animal {
+interface AnimalMovement {
   void walk();
 }
-```
 
-```java
-// 實作介面的類別
-class Dog implements Animal {
+class Dog implements AnimalMovement {
   @Override
   public void walk(){
-    System.out.println("狗散步");
+    System.out.println("Dog is walking");
   }
 }
 ```
 
-```java
-public class Main {
-  public static void main(String[] args) {
-    Animal animal = new Animal(); // 錯，介面無法實例化
+## Conclusion
 
-    Dog dog = new Dog();
-    dog.walk(); // "狗散步"
-  }
-}
-```
-
----
-
-#### 繼承抽象類別
-
-目的為在抽象類別的架構下，繼續建構程式的內容。
-
-#### 繼承實體類別
-
-目的為透過父子類別的 is-a 關係實現代碼重用或擴增。
-
-```java
-Roles roles = new Magician();
-// Magician is a role.
-```
+抽象類別與介面都是設計健全 Java 應用的重要工具。當需要部分通用實作時使用抽象類別；而當需要實現多重行為標準或契約時，則可選擇介面。

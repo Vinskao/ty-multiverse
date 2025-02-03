@@ -56,8 +56,9 @@ kubectl delete deployments --all
 
 删除所有 Pods（如果有必要）：
 
-````bash
+```bash
 kubectl delete pods --all --force --grace-period=0
+```
 
 删除镜像
 
@@ -66,7 +67,7 @@ docker rmi --force registry.k8s.io/kube-apiserver:v1.27.2
 docker rmi --force registry.k8s.io/kube-controller-manager:v1.27.2
 docker rmi --force registry.k8s.io/kube-scheduler:v1.27.2
 docker rmi --force registry.k8s.io/kube-proxy:v1.27.2
-````
+```
 
 强制停止所有容器
 
@@ -379,3 +380,9 @@ kubectl logs deployments hello-kubernetes
 ```bash
 curl http://localhost:30000
 ```
+
+## 進階應用與注意事項
+
+- **部署最佳化：** 部署前請確認容器映像已更新，必要時搭配滾動更新確保不中斷服務。
+- **資源監控：** 使用 `kubectl get pods --watch` 持續監控資源狀態，及早發現異常。
+- **安全性：** 在生產環境中，請確保 API 金鑰、憑證等敏感資訊妥善管理。
