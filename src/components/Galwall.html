@@ -4,29 +4,43 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Galwall</title>
     <style>
-      #container1,
-      #container2 {
+      #containerFront,
+      #containerBack {
         position: absolute;
-        top: 50px;
         left: 0;
         display: flex;
         overflow: hidden;
+        height: 400px;
       }
 
-      #container1 {
+      #containerFront {
+        top: 50px;  /* 第一個容器的位置 */
+        z-index: 2;
+      }
+
+      #containerBack {
+        top: 50px;  /* 調整第二個容器的位置，確保有足夠間距 */
         z-index: 1;
       }
 
-      #container2 {
-        z-index: 2;
-        left: 250px;
+      .ad-front {
+        width: 300px;  /* 保持固定寬度 300px */
+        height: 400px;
+        margin-right: -50px; 
+        transition: transform 3s ease-in-out;
+        display: flex;
+        align-items: center;
+        animation: none;
       }
 
-      .ad {
-        min-width: 60px;
-        height: auto;
-        margin-right: -100px;
-        transition: transform 1s ease-in-out; /* 添加過渡效果 */
+      .ad-back {
+        width: 300px;  /* 設定固定寬度 */
+        height: 400px;
+        margin-right: -150px;  
+        transition: transform 10s ease-in-out;
+        display: flex;
+        align-items: center;
+        animation: none;
       }
 
       @keyframes slideLeft {
@@ -38,20 +52,29 @@
         }
       }
 
+      @keyframes slideLeftSlow {  
+        0% {
+          transform: translateX(0%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
       img {
+        width: 100%;
         height: 100%;
-        width: auto;
-        margin: 0;
+        object-fit: contain; /* 保持圖片比例並完整顯示 */
       }
     </style>
   </head>
   <body>
-    <div id="container1"></div>
-    <div id="container2"></div>
+    <div id="containerFront"></div>
+    <div id="containerBack"></div>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const imageList1 = [
+        const frontList = [
           "/tymultiverse/assets/person/Miku.png",
           "/tymultiverse/assets/person/Wavo.png",
           "/tymultiverse/assets/person/Sorane.png",
@@ -64,11 +87,16 @@
           "/tymultiverse/assets/person/Hitomi.png",
           "/tymultiverse/assets/person/Kamira.png",
           "/tymultiverse/assets/person/KamiraPeeing.png",
+
+        ];
+
+        const backList = [
           "/tymultiverse/assets/person/Mayo.png",
           "/tymultiverse/assets/person/MayoPumped.png",
           "/tymultiverse/assets/person/Spoke.png",
           "/tymultiverse/assets/person/SpokeTied.png",
           "/tymultiverse/assets/person/Yuko.png",
+          "/tymultiverse/assets/person/Eris.png",
           "/tymultiverse/assets/person/Medicis.png",
           "/tymultiverse/assets/person/Azusa.png",
           "/tymultiverse/assets/person/Kristae.png",
@@ -96,78 +124,53 @@
           "/tymultiverse/assets/person/Ann.png",
           "/tymultiverse/assets/person/Shuan.png",
           "/tymultiverse/assets/person/Miyako.png",
-        ];
+        ]
 
-        const container1 = document.getElementById("container1");
-        const container2 = document.getElementById("container2");
+        const containerFront = document.getElementById("containerFront");
+        const containerBack = document.getElementById("containerBack");
 
-        // 新增 shuffle 函數來隨機排序陣列
-        function shuffleArray(array) {
-          for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-          }
-          return array;
-        }
-
-        const numVisibleAds = imageList1.length;
-        const imageList3 = [
-          // any images for container2 if needed
-        ];
-
-        function createAdDiv(imageURL) {
+        function createAdDiv(imageURL, isFront) {
           const adDiv = document.createElement("div");
-          adDiv.className = "ad";
+          adDiv.className = isFront ? "ad-front" : "ad-back";
           const adImage = document.createElement("img");
           adImage.src = imageURL;
-          adImage.width = 200;
           adDiv.appendChild(adImage);
           return adDiv;
         }
 
-        function loadAds(imageList, container, numAds) {
+        function loadAds(imageList, container, isFront) {
           container.innerHTML = "";
+          const numAds = imageList.length; // 使用實際的列表長度
           for (let i = 0; i < numAds; i++) {
-            const imageURL = imageList[i % imageList.length];
-            const adDiv = createAdDiv(imageURL);
+            const imageURL = imageList[i];
+            const adDiv = createAdDiv(imageURL, isFront);
             container.appendChild(adDiv);
           }
         }
 
-        // 初始載入
-        loadAds(imageList1, container1, numVisibleAds);
-        loadAds(imageList3, container2, imageList3.length);
-
-        // 設定每 5 秒重新排序圖片順序
-        setInterval(() => {
-          const adDivs = Array.from(container1.children);
-          shuffleArrayWithAnimation(adDivs);
-        }, 5000);
-
-        // Adjust the width of container1
-        container1.style.width = (200 + (numVisibleAds - 1) * 100) + "px";
-
-        // 保留原有的滑動動畫
-        container1.style.animation = "slideLeft 180s linear infinite alternate";
-
-        // 新增 shuffleArrayWithAnimation 函數來實現動畫效果
-        function shuffleArrayWithAnimation(array) {
-          const shuffled = shuffleArray(array);
-
-          // 計算每個元素的最終位置
-          shuffled.forEach((div, index) => {
-            const targetPosition = index * 100; // 每個元素間隔 100px
-            div.style.transform = `translateX(${targetPosition}px)`;
-          });
-
-          // 過渡結束後更新 DOM 順序
-          setTimeout(() => {
-            shuffled.forEach((div) => {
-              div.style.transform = ""; // 清除 transform
-              container1.appendChild(div); // 重新附加元素
-            });
-          }, 1000); // 等待過渡完成 (1s)
+        function animateContainer(container, imageList, isFront) {
+          const duration = isFront ? 400 : 400;
+          
+          function startAnimation() {
+            // 重置容器位置
+            container.style.transform = 'translateX(0)';
+            container.style.animation = `${isFront ? 'slideLeft' : 'slideLeftSlow'} ${duration}s linear infinite`;
+          }
+          
+          startAnimation();
         }
+
+        // 初始載入
+        loadAds(frontList, containerFront, true);
+        loadAds(backList, containerBack, false);
+
+        // 設置容器寬度，使用各自的列表長度
+        containerFront.style.width = (300 * frontList.length) + "px";
+        containerBack.style.width = (300 * backList.length) + "px";
+
+        // 分別啟動動畫
+        animateContainer(containerFront, frontList, true);
+        animateContainer(containerBack, backList, false);
       });
     </script>
   </body>
