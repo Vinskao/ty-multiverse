@@ -7,6 +7,7 @@ import ContactCTA from '../components/ContactCTA.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
 import Hero from '../components/Hero.astro';
 import Grid from '../components/Grid.astro';
+import BlackJack from '../components/BlackJack.html';
 
 const projects = (await getCollection('work')).sort(
 	(a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
@@ -33,6 +34,7 @@ const links = [
 				tagline="技術隨筆"
 				align="start"
 			/>
+			<BlackJack />
 			<Grid variant="offset">
 				{
 					projects.map((project, index) => (
