@@ -1,0 +1,276 @@
+---
+const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .game-sections {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px; /* 添加左右间距 */
+        }
+        .cards {
+            margin: 10px 0;
+            width: 300px; /* 新增固定寬度 */
+            min-height: 150px; /* 新增最小高度 */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px; /* 卡片間距 */
+            flex-direction: column;
+            align-items: center; /* 新增：使內容居中 */
+            justify-content: center; /* 新增：使卡片水平居中 */
+        }
+        .cards .card-container {
+            display: flex;
+            flex-wrap: wrap; /* 允許卡片換行 */
+            gap: 5px;
+            justify-content: center; /* 卡片水平居中 */
+        }
+        .cards p {
+            width: 100%; /* 使總分顯示在單獨一行 */
+            text-align: center; /* 使總分居中 */
+            margin: 10px 0 0 0; /* 添加與卡片的間距 */
+            order: 1; /* Ensures the <p> appears at the bottom */
+        }
+        .button-group {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            color: white; /* 白色文字 */
+            border: none;
+            border-radius: 5px; /* 圓角 */
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button[onclick="startGame()"] {
+            background-color: #4CAF50; /* 綠色背景 */
+        }
+        button[onclick="hit()"] {
+            background-color: #2196F3; /* 藍色背景 */
+        }
+        button[onclick="stand()"] {
+            background-color: #f44336; /* 紅色背景 */
+        }
+        button:hover {
+            opacity: 0.9; /* 滑鼠懸停時變淡 */
+        }
+        button:disabled {
+            background-color: #cccccc; /* 禁用時灰色 */
+            cursor: not-allowed;
+        }
+        .centered-title {
+            text-align: center;
+        }
+        .centered-subtitle {
+            text-align: center;
+        }
+        #game-status {
+            text-align: center;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #3c647254;
+            border: 1px solid #dddddd00;
+            border-radius: 5px;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="centered-title">Black Jack</h1>
+        <div class="game-sections">
+            <div class="player-section">
+                <h3 class="centered-subtitle">You</h3>
+                <div id="player-cards" class="cards"></div>
+            </div>
+
+            <div class="dealer-section">
+                <h3 class="centered-subtitle">Dealer</h3>
+                <div id="dealer-cards" class="cards"></div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="startGame()">New Game</button>
+            <button onclick="hit()">Hit</button>
+            <button onclick="stand()">Stand</button>
+        </div>
+
+        <div id="game-status"></div>
+    </div>
+
+    <script type="module" define:vars={{ deckOfCardsUrl }}>
+        const axios = window.axios; // 使用全局 Axios
+        const API_BASE_URL = (window.ENV?.API_BASE_URL || deckOfCardsUrl) + '/blackjack';
+        console.log('Client-side API_BASE_URL:', API_BASE_URL);
+
+        // Use deckOfCardsUrl for asset paths
+        const BASE_URL = deckOfCardsUrl || '/';
+        
+        // 開始新遊戲的函數
+        async function startGame() {
+            try {
+                const playerCardsDiv = document.getElementById('player-cards');
+                const dealerCardsDiv = document.getElementById('dealer-cards');
+                playerCardsDiv.innerHTML = 'Player Cards: ';
+                dealerCardsDiv.innerHTML = 'Dealer Cards: ';
+
+                const response = await axios.post(`${API_BASE_URL}/start`);
+                updateGameDisplay(response.data);
+
+                const hitButton = document.querySelector('button[onclick="hit()"]');
+                const standButton = document.querySelector('button[onclick="stand()"]');
+                hitButton.disabled = false;
+                standButton.disabled = false;
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        // 玩家選擇要牌的函數
+        async function hit() {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/hit`);
+                updateGameDisplay(response.data);
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        // 玩家選擇停牌的函數
+        async function stand() {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/stand`);
+                updateGameDisplay(response.data);
+
+                const hitButton = document.querySelector('button[onclick="hit()"]');
+                const standButton = document.querySelector('button[onclick="stand()"]');
+                hitButton.disabled = true;
+                standButton.disabled = true;
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        // 獲取當前遊戲狀態的函數
+        async function getGameStatus() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/status`);
+                updateGameDisplay(response.data);
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        // 更新遊戲顯示的函數
+        function updateGameDisplay(gameData) {
+            console.log('gameData:', gameData);
+            
+            // 統一處理遊戲數據結構
+            let playerHand, dealerHand, playerScore, dealerScore, gameState, message;
+            
+            // 檢查數據結構並適當提取數據
+            if (gameData.gameState) {
+                // 新的API結構
+                playerHand = { cards: gameData.gameState.playerCards || [] };
+                dealerHand = { cards: gameData.gameState.dealerCards || [] };
+                playerScore = gameData.gameState.playerScore || 0;
+                dealerScore = gameData.gameState.dealerScore || 0;
+                gameState = gameData.gameState.gameState || 'IN_PROGRESS';
+                message = gameData.message || gameData.gameState.message || '進行中';
+            } else {
+                // 舊的API結構
+                playerHand = gameData.playerHand || {};
+                dealerHand = gameData.dealerHand || {};
+                playerScore = gameData.playerScore || 0;
+                dealerScore = gameData.dealerScore || 0;
+                gameState = gameData.state || 'IN_PROGRESS';
+                message = gameData.message || '進行中';
+            }
+
+            // 更新按鈕狀態
+            const hitButton = document.querySelector('button[onclick="hit()"]');
+            const standButton = document.querySelector('button[onclick="stand()"]');
+            
+            // 如果遊戲結束，禁用按鈕
+            if (gameState !== 'IN_PROGRESS' && gameState !== 'PLAYER_TURN') {
+                hitButton.disabled = true;
+                standButton.disabled = true;
+            } else {
+                hitButton.disabled = false;
+                standButton.disabled = false;
+            }
+
+            // 更新玩家卡牌
+            const playerCardsDiv = document.getElementById('player-cards');
+            playerCardsDiv.innerHTML = `
+                <div class="card-container">
+                    ${(playerHand.cards || []).map(card => {
+                        const suitIndex = ['SPADES', 'HEARTS', 'DIAMONDS', 'CLUBS'].indexOf(card.suit);
+                        const rankIndex = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING'].indexOf(card.rank);
+                        const imageIndex = suitIndex * 13 + rankIndex;
+                        return `<img src="/tymultiverse/assets/poker/${imageIndex}.jpg" alt="${card.rank} of ${card.suit}" style="height: 100px; margin: 5px;">`;
+                    }).join('')}
+                </div>
+                <p>Total: ${playerScore}</p>
+            `;
+
+            // 更新莊家卡牌
+            const dealerCardsDiv = document.getElementById('dealer-cards');
+            dealerCardsDiv.innerHTML = `
+                <div class="card-container">
+                    ${(dealerHand.cards || []).map((card, index) => {
+                        // 如果是第一張牌且遊戲進行中，顯示背面
+                        if (index === 0 && (gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN')) {
+                            return `<img src="/tymultiverse/assets/person/Ashe.png" alt="Hidden Card" style="height: 100px; margin: 5px;">`;
+                        } else {
+                            const suitIndex = ['SPADES', 'HEARTS', 'DIAMONDS', 'CLUBS'].indexOf(card.suit);
+                            const rankIndex = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING'].indexOf(card.rank);
+                            const imageIndex = suitIndex * 13 + rankIndex;
+                            return `<img src="/tymultiverse/assets/poker/${imageIndex}.jpg" alt="${card.rank} of ${card.suit}" style="height: 100px; margin: 5px;">`;
+                        }
+                    }).join('')}
+                </div>
+                <p>Total: ${gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN' ? '?' : dealerScore}</p>
+            `;
+
+            // 更新遊戲狀態訊息
+            let gameStatusDiv = document.getElementById('game-status');
+            gameStatusDiv.textContent = message;
+        }
+
+        // 顯示錯誤信息的函數
+        function showError(error) {
+            const gameStatusDiv = document.getElementById('game-status');
+            gameStatusDiv.textContent = `Error: ${error.response?.data || error.message}`;
+            const hitButton = document.querySelector('button[onclick="hit()"]');
+            const standButton = document.querySelector('button[onclick="stand()"]');
+            hitButton.disabled = true;
+            standButton.disabled = true;
+        }
+
+        window.onload = getGameStatus;
+        
+        // Expose functions to global scope so they're accessible from HTML onclick attributes
+        window.startGame = startGame;
+        window.hit = hit;
+        window.stand = stand;
+    </script>
+</body>
+</html>
