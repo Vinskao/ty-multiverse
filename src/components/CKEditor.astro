@@ -1,0 +1,397 @@
+---
+// 從環境變數獲取 API 基礎 URL
+const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
+---
+
+<!-- 編輯器標題 -->
+<h2 style="text-align: center; color: #e0e0e0;">請留言給我</h2>
+<h5 style="text-align: center; color: #e0e0e0;">(不要刪別人留言)</h5>
+
+<!-- 編輯器容器 - 包含兩層，外層控制整體佈局，內層是 CKEditor 的掛載點 -->
+<div id="editor-container">
+    <div id="editor"></div>
+</div>
+
+<!-- 狀態提示區域 - 顯示保存狀態和錯誤訊息 -->
+<div id="editor-status" style="margin-top: 5px; font-size: 14px; color: #aaa;"></div>
+
+<!-- 保存狀態指示器 - 顯示文檔是否已保存 -->
+<div id="save-indicator" style="margin-top: 2px; font-size: 12px; font-weight: bold;"></div>
+
+<!-- 引入外部庫 -->
+<script is:inline src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- 樣式設定 -->
+<style>
+    /* 全局暗色主題 */
+    :root {
+        --ck-color-base-foreground: #2a2a2a !important;
+        --ck-color-base-background: #333 !important;
+        --ck-color-base-border: #444 !important;
+        --ck-color-text: #e0e0e0 !important;
+        --ck-color-focus-border: #666 !important;
+        --ck-color-button-default-background: #333 !important;
+        --ck-color-button-default-hover-background: #444 !important;
+        --ck-color-button-on-background: #555 !important;
+        --ck-color-button-on-hover-background: #666 !important;
+    }
+    
+    body {
+        background-color: #222;
+        color: #e0e0e0;
+    }
+
+    /* 編輯器容器的樣式 */
+    #editor-container {
+        width: 100%;
+        margin: 15px 0 5px 0;
+    }
+    
+    /* 超強力覆蓋 */
+    /* 編輯器主容器 */
+    .ck.ck-editor__main {
+        background-color: #2a2a2a !important;
+        color: #e0e0e0 !important;
+    }
+
+    /* 編輯區域 - 最關鍵的部分 */
+    .ck-editor__editable_inline {
+        background-color: #2a2a2a !important;
+        color: #e0e0e0 !important;
+        border-color: #444 !important;
+    }
+
+    .ck.ck-content, 
+    .ck-editor__editable,
+    .ck.ck-editor__editable,
+    .ck.ck-editor__editable.ck-focused,
+    .ck.ck-editor__editable_inline,
+    .ck.ck-editor__editable_inline.ck-focused {
+        background-color: #2a2a2a !important;
+        color: #e0e0e0 !important;
+        border-color: #444 !important;
+    }
+
+    /* 工具欄全覆蓋 */
+    .ck.ck-toolbar,
+    .ck.ck-toolbar__items {
+        background-color: #333 !important;
+        border-color: #444 !important;
+        color: #e0e0e0 !important;
+    }
+
+    /* 按鈕全覆蓋 */
+    .ck.ck-button,
+    .ck.ck-splitbutton .ck-splitbutton__action {
+        background-color: #333 !important;
+        color: #ccc !important;
+        border-color: #444 !important;
+    }
+
+    .ck.ck-button:hover,
+    .ck.ck-splitbutton .ck-splitbutton__action:hover {
+        background-color: #444 !important;
+        color: #fff !important;
+    }
+
+    .ck.ck-button.ck-on,
+    .ck.ck-splitbutton.ck-splitbutton_open > .ck-splitbutton__action {
+        background-color: #555 !important;
+        color: #fff !important;
+    }
+
+    /* 下拉菜單 */
+    .ck.ck-dropdown__panel {
+        background-color: #333 !important;
+        border-color: #444 !important;
+    }
+
+    .ck.ck-dropdown__panel .ck-list__item {
+        color: #ccc !important;
+    }
+
+    .ck.ck-dropdown__panel .ck-list__item:hover,
+    .ck.ck-dropdown__panel .ck-list__item:focus {
+        background-color: #444 !important;
+    }
+    
+    .ck.ck-dropdown__panel .ck-list__item.ck-on {
+        background-color: #555 !important;
+    }
+
+    /* 下拉箭頭 */
+    .ck.ck-dropdown .ck-dropdown__arrow {
+        color: #ccc !important;
+    }
+
+    /* 彈出框和對話框 */
+    .ck.ck-balloon-panel {
+        background-color: #333 !important;
+        border-color: #444 !important;
+    }
+    
+    .ck.ck-balloon-panel .ck-button {
+        color: #ccc !important;
+        background: #444 !important;
+    }
+    
+    .ck.ck-balloon-panel .ck-button:hover {
+        background-color: #555 !important;
+    }
+
+    /* ========== 恢復狀態顯示區域的樣式 ========== */
+    /* 編輯器狀態提示的樣式 */
+    #editor-status {
+        transition: opacity 0.5s ease-in-out;
+        text-align: center; /* 文字置中 */
+        margin-top: 5px;
+        color: #aaa;
+    }
+    .success {
+        color: #4caf50 !important;
+    }
+    .error {
+        color: #ff5252 !important;
+    }
+    .loading {
+        color: #999 !important;
+    }
+    .warning {
+        color: #ffc107 !important;
+    }
+
+    /* 保存狀態指示器樣式 */
+    #save-indicator {
+        padding: 2px 8px; /* 減少上下內邊距 */
+        border-radius: 3px;
+        display: block;  /* 改為區塊元素 */
+        text-align: center; /* 文字置中 */
+        width: 100px;    /* 設定固定寬度 */
+        margin: 2px auto 0;  /* 水平置中，減少上邊距 */
+    }
+    #save-indicator.saved {
+        background-color: #1e3b2a;
+        color: #4caf50;
+    }
+    #save-indicator.unsaved {
+        background-color: #3e3417;
+        color: #ffc107;
+    }
+</style>
+
+<script define:vars={{ hostUrl, EDITOR_ID: '1' }}>
+    // 確保DOM載入後再執行
+    document.addEventListener('DOMContentLoaded', () => {
+        // 直接使用 Astro 提供的 hostUrl 變數，不要重新定義它
+        const API_BASE_URL = hostUrl;
+        
+        // 配置 axios 實例
+        const apiClient = axios.create({
+            baseURL: API_BASE_URL,
+            timeout: 10000,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            auth: {
+                username: 'admin',
+                password: 'admin'
+            }
+        });
+        
+        // 狀態提示函數
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('editor-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = type;
+                statusEl.style.opacity = '1';
+            }
+            
+            setTimeout(() => {
+                if (statusEl) {
+                    statusEl.style.opacity = '0';
+                }
+            }, 5000);
+        }
+
+        // 從後端獲取編輯器內容
+        async function fetchContent() {
+            try {
+                showStatus('正在載入內容...', 'loading');
+                
+                const response = await apiClient.post('/ckeditor/get-content', {
+                    editor: EDITOR_ID
+                });
+                
+                showStatus('內容載入成功', 'success');
+                return response.data.content || '';
+            } catch (error) {
+                console.error('獲取內容失敗:', error);
+                
+                if (error.response) {
+                    showStatus(`獲取內容失敗: 伺服器錯誤 ${error.response.status}`, 'error');
+                } else if (error.request) {
+                    showStatus('獲取內容失敗: 未收到伺服器響應', 'error');
+                } else {
+                    showStatus(`獲取內容失敗: ${error.message}`, 'error');
+                }
+                
+                return localStorage.getItem('editorContent') || '';
+            }
+        }
+
+        function updateSaveIndicator(isSaved) {
+            const indicator = document.getElementById('save-indicator');
+            if (indicator) {
+                if (isSaved) {
+                    indicator.textContent = '已儲存';
+                    indicator.className = 'saved';
+                } else {
+                    indicator.textContent = '未儲存';
+                    indicator.className = 'unsaved';
+                }
+            }
+        }
+
+        async function saveContent(content) {
+            try {
+                showStatus('正在儲存...', 'loading');
+                
+                const response = await apiClient.post('/ckeditor/save-content', {
+                    editor: EDITOR_ID,
+                    content: content
+                });
+                
+                const currentTime = new Date().toLocaleTimeString();
+                showStatus(`內容已儲存 (${currentTime})`, 'success');
+                updateSaveIndicator(true);
+                
+                localStorage.setItem('editorContent', content);
+                return true;
+            } catch (error) {
+                console.error('保存內容失敗:', error);
+                
+                if (error.response) {
+                    if (error.response.status === 401) {
+                        showStatus('儲存失敗: 未授權訪問。只儲存到本地', 'warning');
+                    } else {
+                        showStatus(`儲存失敗: 伺服器錯誤 ${error.response.status}。已備份到本地`, 'error');
+                    }
+                } else if (error.request) {
+                    showStatus('儲存失敗: 未收到伺服器響應。已備份到本地', 'error');
+                } else {
+                    showStatus(`儲存失敗: ${error.message}。已備份到本地`, 'error');
+                }
+                
+                localStorage.setItem('editorContent', content);
+                return false;
+            }
+        }
+        
+        // 初始化編輯器
+        const editorElement = document.getElementById('editor');
+        if (!editorElement) return;
+        
+        ClassicEditor.create(editorElement, {
+            toolbar: [
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'link',
+                'bulletedList',
+                'numberedList',
+                '|',
+                'outdent',
+                'indent',
+                '|',
+                'blockQuote',
+                'insertTable',
+                'undo',
+                'redo'
+            ],
+            // 增加額外配置以支持暗色主題
+            ui: {
+                viewportOffset: {
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            }
+        }).then(async (editor) => {
+            // 額外添加強制應用黑色主題的代碼
+            try {
+                // 強制設置背景色
+                const editorContainer = document.querySelector('.ck.ck-editor__main');
+                if (editorContainer) {
+                    editorContainer.style.backgroundColor = '#2a2a2a';
+                    editorContainer.style.color = '#e0e0e0';
+                }
+                
+                const editorArea = document.querySelector('.ck.ck-editor__editable');
+                if (editorArea) {
+                    editorArea.style.backgroundColor = '#2a2a2a';
+                    editorArea.style.color = '#e0e0e0';
+                }
+            } catch (e) {
+                console.error('設置黑色主題時出錯:', e);
+            }
+            
+            const initialContent = await fetchContent();
+            if (initialContent) {
+                editor.setData(initialContent);
+            }
+
+            let saveTimeout;
+            editor.model.document.on('change:data', () => {
+                updateSaveIndicator(false);
+                
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    const data = editor.getData();
+                    saveContent(data);
+                }, 2000);
+            });
+            
+            window.addEventListener('beforeunload', (event) => {
+                if (saveTimeout) {
+                    const data = editor.getData();
+                    localStorage.setItem('editorContent', data);
+                    
+                    event.preventDefault();
+                    event.returnValue = '有未儲存的更改，確定要離開嗎？';
+                }
+            });
+            
+            updateSaveIndicator(true);
+            
+            showStatus('編輯器準備就緒', 'success');
+        }).catch(error => {
+            console.error('編輯器初始化失敗:', error);
+            showStatus(`編輯器初始化失敗: ${error.message}`, 'error');
+            
+            const editorContainer = document.getElementById('editor-container');
+            if (!editorContainer) return;
+            
+            const storedContent = localStorage.getItem('editorContent') || '';
+            editorContainer.innerHTML = `
+                <textarea id="fallback-editor" style="width: 100%; min-height: 300px; padding: 10px; color: #e0e0e0; background-color: #2a2a2a; border: 1px solid #444;">${storedContent}</textarea>
+                <button id="save-fallback" style="margin-top: 10px; padding: 5px 10px; background-color: #333; color: #e0e0e0; border: 1px solid #555;">儲存內容</button>
+            `;
+            
+            const saveButton = document.getElementById('save-fallback');
+            if (saveButton) {
+                saveButton.addEventListener('click', () => {
+                    const textArea = document.getElementById('fallback-editor');
+                    if (textArea instanceof HTMLTextAreaElement) {
+                        const content = textArea.value;
+                        localStorage.setItem('editorContent', content);
+                        saveContent(content);
+                    }
+                });
+            }
+        });
+    });
+</script>
