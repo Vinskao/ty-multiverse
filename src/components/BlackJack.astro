@@ -200,8 +200,8 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
                 dealerHand = gameData.dealerHand || {};
                 playerScore = gameData.playerScore || 0;
                 dealerScore = gameData.dealerScore || 0;
-                gameState = gameData.state || 'IN_PROGRESS';
-                message = gameData.message || '進行中';
+                gameState = gameData.state || 'PLAYER_TURN';
+                message = gameData.messageText || gameData.message || '進行中';
             }
 
             // 更新按鈕狀態

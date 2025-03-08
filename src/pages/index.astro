@@ -401,8 +401,6 @@ h5 {
     background-color: #146e66;
 }
 
-
-
 </style>
 </head>
 
@@ -444,6 +442,8 @@ h5 {
 								<span class="pill pill1 shade1">Java</span>
 								<span class="pill pill1 shade3">Python</span>
 								<span class="pill pill1 shade3">Node.js
+								</span>
+								<span class="pill pill1 shade4">PHP
 								</span>
 								<span class="pill pill1 shade5">Rust</span>
 								<span class="pill pill1 shade3">Spring</span>
@@ -527,6 +527,12 @@ h5 {
 								<span class="pill pill7 shade5">GCP</span>
 							</div>
 
+							<!-- 項目 8 -->
+							<div class="category">
+								<h5>Tool</h5>
+								<span class="pill pill8 shade3">WordPress</span>
+							</div>
+
 							<!-- 項目 9 -->
 							<div class="category">
 								<h5>Security</h5>
@@ -537,8 +543,6 @@ h5 {
 								</span>
 							</div>
 						</div>
-						
-						  
 					</div>
 					
 					<!-- <div class="barchart" style="width: 600px; height: 330px; background-image: url('/tymultiverse/assets/barchart-background.jpg'); background-position: center; border-radius: 50px; overflow: hidden;">
@@ -772,32 +776,38 @@ function hslToHex(h: number, s: number, l: number): string {
     return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 
-// 調整飽和度的函數 (使用 HSL)
-function adjustSaturation(hex, saturationFactor) {
+// 調整顏色的函數 (從原色到黑色漸層)
+function adjustColorToBlack(hex, shadeLevel) {
     const rgb = hexToRgb(hex);
-    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-    hsl.s *= saturationFactor; // 調整飽和度
-    return hslToHex(hsl.h, hsl.s, hsl.l);
+    
+    // 計算漸層比例 (shade1 = 0%, shade5 = 100%)
+    const factor = (shadeLevel - 1) / 4;
+    
+    // 將顏色向黑色漸變
+    return {
+        r: Math.round(rgb.r * (1 - factor)),
+        g: Math.round(rgb.g * (1 - factor)),
+        b: Math.round(rgb.b * (1 - factor))
+    };
 }
 
 // 初始化 shade 與 pill 顏色
 function applyShadesToPills() {
-    const pills = document.querySelectorAll('.pill') as NodeListOf<HTMLElement>; // 顯式轉換為 HTMLElement
+    const pills = document.querySelectorAll('.pill') as NodeListOf<HTMLElement>;
 
     pills.forEach((pill) => {
-        const baseColor = getComputedStyle(pill).backgroundColor; // 取得基礎顏色
-        const shadeClass = [...pill.classList].find((cls) => cls.startsWith('shade')); // 找到 shade 類別
+        const baseColor = getComputedStyle(pill).backgroundColor;
+        const shadeClass = [...pill.classList].find((cls) => cls.startsWith('shade'));
         if (shadeClass) {
-            const shadeLevel = parseInt(shadeClass.replace('shade', ''), 10); // 取得 shade 等級
-            const saturationFactor = 1 - (shadeLevel - 1) * 0.2; // 根據 shade 調整飽和度
-            const adjustedColor = adjustSaturation(rgbToHex(baseColor), saturationFactor); // 調整飽和度
-            pill.style.backgroundColor = adjustedColor; // 更新背景顏色
+            const shadeLevel = parseInt(shadeClass.replace('shade', ''), 10);
+            const adjustedColor = adjustColorToBlack(rgbToHex(baseColor), shadeLevel);
+            pill.style.backgroundColor = `rgb(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b})`;
         }
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    applyShadesToPills(); // 應用樣式
+    applyShadesToPills();
 });
 
 // 將 RGB 顏色轉為 HEX 的輔助函數

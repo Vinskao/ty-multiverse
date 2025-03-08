@@ -87,7 +87,6 @@
           "/tymultiverse/assets/person/Hitomi.png",
           "/tymultiverse/assets/person/Kamira.png",
           "/tymultiverse/assets/person/KamiraPeeing.png",
-
         ];
 
         const backList = [
@@ -100,7 +99,9 @@
           "/tymultiverse/assets/person/Medicis.png",
           "/tymultiverse/assets/person/Siyu.png",
           "/tymultiverse/assets/person/Azusa.png",
+          "/tymultiverse/assets/person/Sofia.png",
           "/tymultiverse/assets/person/Kristae.png",
+          "/tymultiverse/assets/person/Ashe.png",
           "/tymultiverse/assets/person/Aile.png",
           "/tymultiverse/assets/person/Taisy.png",
           "/tymultiverse/assets/person/Doire.png",
@@ -139,12 +140,15 @@
           return adDiv;
         }
 
+        // 載入Girls
         function loadAds(imageList, container, isFront) {
           container.innerHTML = "";
           const numAds = imageList.length; // 使用實際的列表長度
           for (let i = 0; i < numAds; i++) {
             const imageURL = imageList[i];
+            // 創建div  
             const adDiv = createAdDiv(imageURL, isFront);
+            // 添加到容器
             container.appendChild(adDiv);
           }
         }
