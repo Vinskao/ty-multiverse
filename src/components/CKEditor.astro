@@ -183,7 +183,7 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
 <script define:vars={{ hostUrl, EDITOR_ID: '1' }}>
     // 確保DOM載入後再執行
     document.addEventListener('DOMContentLoaded', () => {
-        // 直接使用 Astro 提供的 hostUrl 變數，不要重新定義它
+        // 直接使用 Astro 提供的 hostUrl 變數
         const API_BASE_URL = hostUrl;
         
         // 配置 axios 實例
@@ -198,6 +198,39 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 password: 'admin'
             }
         });
+        
+        // Base64 上傳適配器 - 直接將圖片轉換為 base64 而不上傳到服務器
+        class Base64UploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+
+            // 將圖片轉換為 base64
+            upload() {
+                return this.loader.file
+                    .then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.addEventListener('load', () => {
+                            resolve({ default: reader.result });
+                        });
+                        reader.addEventListener('error', err => {
+                            reject(err);
+                        });
+                        reader.readAsDataURL(file);
+                    }));
+            }
+
+            abort() {
+                // 不需要實現
+            }
+        }
+
+        // 上傳適配器工廠函數
+        function Base64UploadAdapterPlugin(editor) {
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                return new Base64UploadAdapter(loader);
+            };
+        }
         
         // 狀態提示函數
         function showStatus(message, type = 'info') {
@@ -294,6 +327,7 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
         if (!editorElement) return;
         
         ClassicEditor.create(editorElement, {
+            extraPlugins: [Base64UploadAdapterPlugin],
             toolbar: [
                 'heading',
                 '|',
@@ -308,9 +342,19 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 '|',
                 'blockQuote',
                 'insertTable',
+                'imageUpload',
                 'undo',
                 'redo'
             ],
+            // 圖片工具欄配置
+            image: {
+                toolbar: [
+                    'imageTextAlternative',
+                    'imageStyle:inline',
+                    'imageStyle:block',
+                    'imageStyle:side'
+                ]
+            },
             // 增加額外配置以支持暗色主題
             ui: {
                 viewportOffset: {
