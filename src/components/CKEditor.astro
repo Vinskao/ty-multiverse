@@ -22,6 +22,9 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
 <script is:inline src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
+<!-- 額外引入字體大小和顏色插件 -->
+<script is:inline src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/translations/zh.js"></script>
+
 <!-- 樣式設定 -->
 <style>
     /* 全局暗色主題 */
@@ -331,6 +334,10 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
             toolbar: [
                 'heading',
                 '|',
+                'fontSize',
+                'fontColor',
+                'fontBackgroundColor',
+                '|',
                 'bold',
                 'italic',
                 'link',
@@ -346,6 +353,45 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 'undo',
                 'redo'
             ],
+            // 配置字體大小選項
+            fontSize: {
+                options: [
+                    'tiny',
+                    'small',
+                    'default',
+                    'big',
+                    'huge'
+                ],
+                supportAllValues: true
+            },
+            // 配置字體顏色選項 - 暗色主題友好的顏色
+            fontColor: {
+                colors: [
+                    { color: '#f44336', label: '紅色' },
+                    { color: '#ff9800', label: '橙色' },
+                    { color: '#ffeb3b', label: '黃色' },
+                    { color: '#4caf50', label: '綠色' },
+                    { color: '#2196f3', label: '藍色' },
+                    { color: '#9c27b0', label: '紫色' },
+                    { color: '#e0e0e0', label: '白色' },
+                    { color: '#bdbdbd', label: '淺灰' },
+                    { color: '#757575', label: '灰色' }
+                ]
+            },
+            // 配置字體背景顏色選項
+            fontBackgroundColor: {
+                colors: [
+                    { color: '#f443361a', label: '淡紅' },
+                    { color: '#ff98001a', label: '淡橙' },
+                    { color: '#ffeb3b1a', label: '淡黃' },
+                    { color: '#4caf501a', label: '淡綠' },
+                    { color: '#2196f31a', label: '淡藍' },
+                    { color: '#9c27b01a', label: '淡紫' },
+                    { color: '#2a2a2a', label: '背景色' },
+                    { color: '#3a3a3a', label: '淺暗' },
+                    { color: '#111111', label: '深暗' }
+                ]
+            },
             // 圖片工具欄配置
             image: {
                 toolbar: [

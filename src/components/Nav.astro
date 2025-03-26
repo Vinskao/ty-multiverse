@@ -3,10 +3,19 @@ import Icon from "./Icon.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import type { iconPaths } from "./IconPaths";
 
+// 獲取 URL 參數
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const email = url.searchParams.get('email');
+const token = url.searchParams.get('token');
+
 /** Main menu items */
 const textLinks: { label: string; href: string }[] = [
   { label: "Home", href: "/tymultiverse/" },
-  { label: "Login", href: "/tymultiverse/login" },
+  { 
+    label: username ? "Logout" : "Login", 
+    href: username ? "#" : "/tymultiverse/login" 
+  },
   { label: "Work", href: "/tymultiverse/work/" },
   { label: "About", href: "/tymultiverse/about/" },
   { label: "Control", href: "/tymultiverse/control/" },
@@ -173,6 +182,60 @@ const iconLinks: {
     }
   }
   customElements.define("menu-button", MenuButton);
+
+  // 添加登出功能
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoutLink = document.querySelector('a[href="#"]');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        // 從 cookie 中獲取 refreshToken
+        const cookies = document.cookie.split(';');
+        const refreshTokenCookie = cookies.find(cookie => cookie.trim().startsWith('refreshToken='));
+        const refreshToken = refreshTokenCookie ? refreshTokenCookie.split('=')[1] : null;
+
+        if (refreshToken) {
+          try {
+            // 使用 GET 方法，並添加必要的參數
+            const response = await fetch(
+              `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(refreshToken)}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json',
+                },
+                credentials: 'include',
+                mode: 'cors'
+              }
+            );
+
+            if (response.ok) {
+              // 清除所有相關的 cookies
+              document.cookie = "refreshToken=; Path=/; Max-Age=0";
+              document.cookie = "authorizationCode=; Path=/; Max-Age=0";
+              
+              // 重定向到主頁
+              window.location.href = '/tymultiverse/';
+            } else {
+              console.error('Logout failed with status:', response.status);
+              // 即使請求失敗也清除 cookies 並重定向
+              document.cookie = "refreshToken=; Path=/; Max-Age=0";
+              document.cookie = "authorizationCode=; Path=/; Max-Age=0";
+              window.location.href = '/tymultiverse/';
+            }
+          } catch (error) {
+            console.error('Logout failed:', error);
+            // 發生錯誤時也清除 cookies 並重定向
+            document.cookie = "refreshToken=; Path=/; Max-Age=0";
+            document.cookie = "authorizationCode=; Path=/; Max-Age=0";
+            window.location.href = '/tymultiverse/';
+          }
+        }
+      });
+    }
+  });
 </script>
 
 <style>

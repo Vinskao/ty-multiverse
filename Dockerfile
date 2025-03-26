@@ -1,4 +1,7 @@
-FROM --platform=linux/arm64 node:20-alpine AS base
+# Define platform as a build argument
+ARG PLATFORM=linux/arm64
+
+FROM --platform=${PLATFORM} node:20-alpine AS base
 WORKDIR /app
 
 # By copying only the package.json and package-lock.json here, we ensure that the following `-deps` steps are independent of the source code.

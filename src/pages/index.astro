@@ -21,6 +21,15 @@ const projects = (await getCollection('work'))
 	.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
 	.slice(0, 4);
 
+// 修改服務器啟動時間的處理
+let serverStartTime = new Date().toISOString();
+try {
+    // 使用環境變量或默認值
+    serverStartTime = import.meta.env.SERVER_START_TIME || serverStartTime;
+} catch (error) {
+    console.error('Error getting server start time:', error);
+}
+
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
 ---
@@ -95,22 +104,6 @@ const projects = (await getCollection('work'))
 	  transform: scale(1.5); 
   }
 
-  /* .barchart {
-	  width: 800px;
-	  height: 320px;
-	  background-color: #AB83E5;
-	  overflow: hidden;
-	  transition: border 0.3s ease;
-	  border: 10px solid transparent; 
-	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease;
-  } */
-
-  /* .barchart:hover {
-	  border: 10px solid #AB83E5; 
-	  transform: scale(1.15); 
-	  z-index: 999;
-	  transition: transform 0.3s ease;
-  } */
   .video-container {
 	  position: relative; 
   }
@@ -160,20 +153,6 @@ const projects = (await getCollection('work'))
 	  top: 33%; 
 	  left: -10%; 
   }
-  
-  /* .roles-image {
-	  transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
-	  z-index: 999;
-	  width: 30%; 
-	  height: auto; 
-	  overflow: hidden;
-	  margin-right: 20px;
-  } */
-  
-  /* .roles-image:hover {
-	  transform: scale(1.2);
-	  transition: transform 0.3s ease;
-  } */
 
   @keyframes fadeIn {
 	  from {
@@ -419,11 +398,31 @@ h5 {
 			<header class="hero">
 				
 				<Hero
-					title="TY's home"
+					title="TY's Outerspace"
 					tagline="The Future is Now"
 					align="start"
 				>
-				
+					<div id="version-display" style="font-size: 0.65em; color: #888; margin-top: -1rem; margin-bottom: 1rem;">
+						version 2.0<br>人次: 0
+					</div>
+					<script define:vars={{ serverStartTime }}>
+						// 初始版本號
+						const baseVersion = 2.0;
+						
+						// 從 localStorage 獲取訪問次數
+						let visits = parseInt(localStorage.getItem('visitCount') || '0');
+						visits++;
+						localStorage.setItem('visitCount', visits.toString());
+						
+						// 計算經過的天數
+						const daysPassed = Math.floor((new Date().getTime() - new Date(serverStartTime).getTime()) / (1000 * 60 * 60 * 24));
+						const versionIncrement = Math.floor(daysPassed / 5) * 0.1; // 每5天增加0.1
+						const newVersion = (baseVersion + versionIncrement).toFixed(1);
+						
+						// 更新顯示
+						document.getElementById('version-display').innerHTML = 
+							`version ${newVersion}<br>人次: ${visits}`;
+					</script>
 					<div class="roles">
 						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
 						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
@@ -443,15 +442,17 @@ h5 {
 								<span class="pill pill1 shade3">Python</span>
 								<span class="pill pill1 shade3">Node.js
 								</span>
-								<span class="pill pill1 shade4">PHP
+								<span class="pill pill1 shade3">PHP
 								</span>
 								<span class="pill pill1 shade5">Rust</span>
 								<span class="pill pill1 shade3">Spring</span>
+								<span class="pill pill1 shade3">Quarkus</span>
 								<span class="pill pill1 shade2">Spring Boot</span>
 								<span class="pill pill1 shade4">Django Rest</span>
 								<span class="pill pill1 shade1">JPA</span>
 								<span class="pill pill1 shade1">Mybatis</span>
 								<span class="pill pill1 shade1">JDBCTemplate</span>
+								<span class="pill pill1 shade1">Java Keystore</span>
 								<span class="pill pill1 shade1">Swagger</span>
 								<span class="pill pill1 shade2">JUnit</span>
 								<span class="pill pill1 shade3">Mokito</span>
@@ -496,6 +497,7 @@ h5 {
 							<div class="category">
 								<h5>Infra</h5>
 								<span class="pill pill5 shade1">Docker</span>
+								<span class="pill pill5 shade1">Podman</span>
 								<span class="pill pill5 shade1">Linux</span>
 								<span class="pill pill5 shade2">JBoss</span>
 								<span class="pill pill5 shade4">Terraform</span>
@@ -529,13 +531,16 @@ h5 {
 							<!-- 項目 8 -->
 							<div class="category">
 								<h5>Tool</h5>
-								<span class="pill pill8 shade3">WordPress</span>
+								<span class="pill pill8 shade2">WordPress</span>
 							</div>
 
 							<!-- 項目 9 -->
 							<div class="category">
 								<h5>Security</h5>
-								<span class="pill pill9 shade1">Keycloak SSO</span>
+								<span class="pill pill9 shade2">Keycloak</span>
+								<span class="pill pill9 shade4">Keycloak SPI</span>
+								<span class="pill pill9 shade3">RedHat SSO</span>
+								<span class="pill pill9 shade2">Authorization Code Flow</span>
 								<span class="pill pill9 shade2">JWT</span>
 								<span class="pill pill9 shade3">Spring Security</span>
 								<span class="pill pill9 shade3">Digital Signature</span>
@@ -543,18 +548,13 @@ h5 {
 							</div>
 						</div>
 					</div>
-					
-					<!-- <div class="barchart" style="width: 600px; height: 330px; background-image: url('/tymultiverse/assets/barchart-background.jpg'); background-position: center; border-radius: 50px; overflow: hidden;">
-						<iframe src="https://peoplesystem.tatdvsonorth.com/github-contribution/" width="600" height="320" frameborder="0" frameborder="0" scrolling="no"></iframe>
-					</div> -->
-					
 
 				</Hero>
 				<div class="video-container">
 					<div class="github-graph">
 						<h5>Github Contributions</h5>
 						<div>
-							<img src="http://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" style="object-fit: contain;"/>
+							<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" style="object-fit: contain;"/>
 						</div>
 					</div>
 					<video autoplay loop muted playsinline style="width: 100%; height: auto; border-radius: 2.5rem; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4); object-fit: contain;">
@@ -637,12 +637,45 @@ h5 {
 document.addEventListener("DOMContentLoaded", () => {
     // 定義提示文字
     const shadeDescriptions = {
-        shade1: "Savage",
-        shade2: "Sufficient",
-        shade3: "Understood",
-        shade4: "Tried a Bit",
-        shade5: "Figuring Out",
+        shade1: "Score 5 Strong",
+        shade2: "Score 4 Sufficient",
+        shade3: "Score 3 Understood",
+        shade4: "Score 2 Applicable",
+        shade5: "Score 1 Basic",
     };
+
+    // 分數映射
+    const shadeScores = {
+        shade1: 5,
+        shade2: 4,
+        shade3: 3,
+        shade4: 2,
+        shade5: 1,
+    };
+
+    // 計算每個類別的總分數
+    function calculateCategoryScores() {
+        const categories = document.querySelectorAll('.category');
+        
+        categories.forEach((category) => {
+            const pills = category.querySelectorAll('.pill');
+            let totalScore = 0;
+            
+            pills.forEach((pill) => {
+                const shadeClass = [...pill.classList].find((cls) => cls.startsWith("shade"));
+                if (shadeClass && shadeScores[shadeClass]) {
+                    totalScore += shadeScores[shadeClass];
+                }
+            });
+            
+            // 找到類別標題
+            const title = category.querySelector('h5');
+            if (title) {
+                // 添加總分 - 改為小字格式
+                title.innerHTML = `${title.textContent} <sup style="font-size: 0.65em; color: #888; margin-left: 4px;">${totalScore}</sup>`;
+            }
+        });
+    }
 
     // 建立提示框元素
     const tooltip = document.createElement("div");
@@ -683,6 +716,9 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     });
+
+    // 計算並顯示分數
+    calculateCategoryScores();
 });
 
 
