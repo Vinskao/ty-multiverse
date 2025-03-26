@@ -1,9 +1,14 @@
 ---
+// 獲取環境變數
+const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+const SSO_URL = import.meta.env.PUBLIC_SSO_URL;
+const FRONTEND_URL = import.meta.env.PUBLIC_FRONTEND_URL;
+
 const clientId = "peoplesystem";
-const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
+const redirectUri = `${TYMB_URL}/keycloak/redirect`;
 
 // 生成 Keycloak 的授權 URL
-const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+const authorizationUrl = `${SSO_URL}/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
   redirectUri
 )}`;
 
@@ -23,8 +28,8 @@ function redirectToLogin() {
     // 在頁面載入時立即執行跳轉
     window.onload = () => {
       const clientId = "peoplesystem";
-      const redirectUri = "https://peoplesystem.tatdvsonorth.com/tymb/keycloak/redirect";
-      const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const redirectUri = `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/redirect`;
+      const authorizationUrl = `${import.meta.env.PUBLIC_SSO_URL}/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
       window.location.href = authorizationUrl;
     };
   </script>
