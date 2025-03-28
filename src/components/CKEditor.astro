@@ -1,22 +1,30 @@
 ---
 // 從環境變數獲取 API 基礎 URL
 const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
+
+// 獲取 URL 參數來檢查登入狀態
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
 ---
 
 <!-- 編輯器標題 -->
-<h2 style="text-align: center; color: #e0e0e0;">請留言給我</h2>
+<h2 style="text-align: center; color: #e0e0e0;">請登入後留言給我</h2>
 <h5 style="text-align: center; color: #e0e0e0;">(不要刪別人留言)</h5>
 
 <!-- 編輯器容器 - 包含兩層，外層控制整體佈局，內層是 CKEditor 的掛載點 -->
 <div id="editor-container">
     <div id="editor"></div>
+    <div id="login-prompt" style="text-align: center; margin-top: 10px; color: #ff9800; display: none;">
+        請先登入後再留言
+    </div>
 </div>
-
-<!-- 狀態提示區域 - 顯示保存狀態和錯誤訊息 -->
-<div id="editor-status" style="margin-top: 5px; font-size: 14px; color: #aaa;"></div>
 
 <!-- 保存狀態指示器 - 顯示文檔是否已保存 -->
 <div id="save-indicator" style="margin-top: 2px; font-size: 12px; font-weight: bold;"></div>
+
+<!-- 狀態提示區域 - 顯示保存狀態和錯誤訊息 -->
+<div id="editor-status" style="margin-top: 5px; font-size: 14px; color: #aaa;"></div>
 
 <!-- 引入外部庫 -->
 <script is:inline src="https://cdn.ckeditor.com/ckeditor5/34.0.0/classic/ckeditor.js"></script>
@@ -43,6 +51,11 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
     body {
         background-color: #222;
         color: #e0e0e0;
+    }
+
+    /* 未登入時隱藏工具欄 */
+    .not-logged-in .ck.ck-toolbar {
+        display: none !important;
     }
 
     /* 編輯器容器的樣式 */
@@ -166,12 +179,12 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
 
     /* 保存狀態指示器樣式 */
     #save-indicator {
-        padding: 2px 8px; /* 減少上下內邊距 */
+        padding: 2px 8px;
         border-radius: 3px;
-        display: block;  /* 改為區塊元素 */
-        text-align: center; /* 文字置中 */
-        width: 100px;    /* 設定固定寬度 */
-        margin: 2px auto 0;  /* 水平置中，減少上邊距 */
+        display: block;
+        text-align: center;
+        width: 100px;
+        margin: 0 auto;  /* 移除上邊距，只保留水平置中 */
     }
     #save-indicator.saved {
         background-color: #1e3b2a;
@@ -181,11 +194,44 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
         background-color: #3e3417;
         color: #ffc107;
     }
+
+    /* 添加登入提示的樣式 */
+    #login-prompt {
+        background-color: rgba(255, 152, 0, 0.1);
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
 </style>
 
-<script define:vars={{ hostUrl, EDITOR_ID: '1' }}>
+<script define:vars={{ hostUrl, EDITOR_ID: '1', username, token }}>
     // 確保DOM載入後再執行
     document.addEventListener('DOMContentLoaded', () => {
+        // 檢查登入狀態 - 增加更多的檢查條件
+        const isLoggedIn = username || localStorage.getItem('username') || document.cookie.includes('refreshToken');
+        const loginPrompt = document.getElementById('login-prompt');
+        const editorContainer = document.getElementById('editor-container');
+        const saveIndicator = document.getElementById('save-indicator');
+        
+        // 如果沒有登入，重定向到登入頁面
+        if (!isLoggedIn) {
+            if (loginPrompt) {
+                loginPrompt.style.display = 'block';
+            }
+            if (editorContainer) {
+                editorContainer.classList.add('not-logged-in');
+            }
+            if (saveIndicator) {
+                saveIndicator.style.display = 'none';
+            }
+            // 重定向到登入頁面
+            window.location.href = '/tymultiverse/login';
+        } else {
+            if (loginPrompt) {
+                loginPrompt.style.display = 'none';
+            }
+        }
+        
         // 直接使用 Astro 提供的 hostUrl 變數
         const API_BASE_URL = hostUrl;
         
@@ -208,7 +254,6 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 this.loader = loader;
             }
 
-            // 將圖片轉換為 base64
             upload() {
                 return this.loader.file
                     .then(file => new Promise((resolve, reject) => {
@@ -277,9 +322,14 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
             }
         }
 
+        // 更新儲存指示器
         function updateSaveIndicator(isSaved) {
             const indicator = document.getElementById('save-indicator');
             if (indicator) {
+                if (!isLoggedIn) {
+                    indicator.style.display = 'none';
+                    return;
+                }
                 if (isSaved) {
                     indicator.textContent = '已儲存';
                     indicator.className = 'saved';
@@ -290,7 +340,13 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
             }
         }
 
+        // 儲存內容
         async function saveContent(content) {
+            if (!isLoggedIn) {
+                showStatus('請先登入後再儲存', 'warning');
+                return false;
+            }
+
             try {
                 showStatus('正在儲存...', 'loading');
                 
@@ -331,7 +387,8 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
         
         ClassicEditor.create(editorElement, {
             extraPlugins: [Base64UploadAdapterPlugin],
-            toolbar: [
+            // 工具欄配置
+            toolbar: isLoggedIn ? [
                 'heading',
                 '|',
                 'fontSize',
@@ -352,7 +409,8 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 'imageUpload',
                 'undo',
                 'redo'
-            ],
+            ] : [],
+            removePlugins: isLoggedIn ? [] : ['toolbar'],
             // 配置字體大小選項
             fontSize: {
                 options: [
@@ -411,6 +469,11 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 }
             }
         }).then(async (editor) => {
+            // 根據登入狀態設置編輯器的可編輯性
+            if (!isLoggedIn) {
+                editor.enableReadOnlyMode('login-required');
+            }
+            
             // 額外添加強制應用黑色主題的代碼
             try {
                 // 強制設置背景色
@@ -429,13 +492,21 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 console.error('設置黑色主題時出錯:', e);
             }
             
+            // 初始化內容
             const initialContent = await fetchContent();
             if (initialContent) {
                 editor.setData(initialContent);
             }
 
+            // 監聽內容變化
             let saveTimeout;
             editor.model.document.on('change:data', () => {
+                if (!isLoggedIn) {
+                    showStatus('請先登入後再編輯', 'warning');
+                    editor.setData(initialContent); // 恢復原始內容
+                    return;
+                }
+                
                 updateSaveIndicator(false);
                 
                 clearTimeout(saveTimeout);
@@ -445,6 +516,7 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
                 }, 2000);
             });
             
+            // 離開頁面時儲存內容
             window.addEventListener('beforeunload', (event) => {
                 if (saveTimeout) {
                     const data = editor.getData();
@@ -462,15 +534,18 @@ const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
             console.error('編輯器初始化失敗:', error);
             showStatus(`編輯器初始化失敗: ${error.message}`, 'error');
             
+            // 如果沒有編輯器容器，則返回
             const editorContainer = document.getElementById('editor-container');
             if (!editorContainer) return;
             
+            // 如果沒有編輯器，則顯示備用編輯器
             const storedContent = localStorage.getItem('editorContent') || '';
             editorContainer.innerHTML = `
                 <textarea id="fallback-editor" style="width: 100%; min-height: 300px; padding: 10px; color: #e0e0e0; background-color: #2a2a2a; border: 1px solid #444;">${storedContent}</textarea>
                 <button id="save-fallback" style="margin-top: 10px; padding: 5px 10px; background-color: #333; color: #e0e0e0; border: 1px solid #555;">儲存內容</button>
             `;
             
+            // 儲存按鈕
             const saveButton = document.getElementById('save-fallback');
             if (saveButton) {
                 saveButton.addEventListener('click', () => {
