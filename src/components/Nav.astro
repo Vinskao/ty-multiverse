@@ -13,8 +13,8 @@ const token = url.searchParams.get('token');
 const textLinks: { label: string; href: string }[] = [
   { label: "Home", href: "/tymultiverse/" },
   { 
-    label: username ? "Logout" : "Login", 
-    href: username ? "#" : "/tymultiverse/login" 
+    label: "Login", 
+    href: "/tymultiverse/login" 
   },
   { label: "Work", href: "/tymultiverse/work/" },
   { label: "About", href: "/tymultiverse/about/" },
@@ -183,8 +183,41 @@ const iconLinks: {
   }
   customElements.define("menu-button", MenuButton);
 
-  // 添加登出功能
+  // 添加登入狀態管理
   document.addEventListener('DOMContentLoaded', () => {
+    // 保存登入狀態到 localStorage 和 cookie
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username');
+    const token = urlParams.get('token');
+    
+    if (username && token) {
+      localStorage.setItem('username', username);
+      localStorage.setItem('token', token);
+      // 設置 cookie，有效期為 7 天
+      document.cookie = `username=${username}; path=/; max-age=${7 * 24 * 60 * 60}`;
+      document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`;
+    }
+
+    // 更新導航欄的登入/登出狀態
+    const updateLoginState = () => {
+      const isLoggedIn = localStorage.getItem('username') || document.cookie.includes('username=');
+      const loginLink = document.querySelector('a[href="/tymultiverse/login"]') as HTMLAnchorElement;
+      
+      if (loginLink) {
+        if (isLoggedIn) {
+          loginLink.textContent = 'Logout';
+          loginLink.href = '#';
+        } else {
+          loginLink.textContent = 'Login';
+          loginLink.href = '/tymultiverse/login';
+        }
+      }
+    };
+
+    // 初始更新登入狀態
+    updateLoginState();
+
+    // 監聽登出按鈕點擊
     const logoutLink = document.querySelector('a[href="#"]');
     if (logoutLink) {
       logoutLink.addEventListener('click', async (e) => {
@@ -197,7 +230,6 @@ const iconLinks: {
 
         if (refreshToken) {
           try {
-            // 使用 GET 方法，並添加必要的參數
             const response = await fetch(
               `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(refreshToken)}`,
               {
@@ -211,25 +243,32 @@ const iconLinks: {
               }
             );
 
-            if (response.ok) {
-              // 清除所有相關的 cookies
-              document.cookie = "refreshToken=; Path=/; Max-Age=0";
-              document.cookie = "authorizationCode=; Path=/; Max-Age=0";
-              
-              // 重定向到主頁
-              window.location.href = '/tymultiverse/';
-            } else {
-              console.error('Logout failed with status:', response.status);
-              // 即使請求失敗也清除 cookies 並重定向
-              document.cookie = "refreshToken=; Path=/; Max-Age=0";
-              document.cookie = "authorizationCode=; Path=/; Max-Age=0";
-              window.location.href = '/tymultiverse/';
-            }
-          } catch (error) {
-            console.error('Logout failed:', error);
-            // 發生錯誤時也清除 cookies 並重定向
+            // 清除所有相關的 cookies 和 localStorage
             document.cookie = "refreshToken=; Path=/; Max-Age=0";
             document.cookie = "authorizationCode=; Path=/; Max-Age=0";
+            document.cookie = "username=; Path=/; Max-Age=0";
+            document.cookie = "token=; Path=/; Max-Age=0";
+            localStorage.removeItem('username');
+            localStorage.removeItem('token');
+            
+            // 更新導航欄狀態
+            updateLoginState();
+            
+            // 重定向到主頁
+            window.location.href = '/tymultiverse/';
+          } catch (error) {
+            console.error('Logout failed:', error);
+            // 即使請求失敗也清除所有狀態
+            document.cookie = "refreshToken=; Path=/; Max-Age=0";
+            document.cookie = "authorizationCode=; Path=/; Max-Age=0";
+            document.cookie = "username=; Path=/; Max-Age=0";
+            document.cookie = "token=; Path=/; Max-Age=0";
+            localStorage.removeItem('username');
+            localStorage.removeItem('token');
+            
+            // 更新導航欄狀態
+            updateLoginState();
+            
             window.location.href = '/tymultiverse/';
           }
         }

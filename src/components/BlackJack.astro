@@ -118,7 +118,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
     <script type="module" define:vars={{ deckOfCardsUrl }}>
         const axios = window.axios; // 使用全局 Axios
         const API_BASE_URL = (window.ENV?.API_BASE_URL || deckOfCardsUrl) + '/blackjack';
-        console.log('Client-side API_BASE_URL:', API_BASE_URL);
+        // console.log('Client-side API_BASE_URL:', API_BASE_URL);
 
         // Use deckOfCardsUrl for asset paths
         const BASE_URL = deckOfCardsUrl || '/';
@@ -180,7 +180,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
 
         // 更新遊戲顯示的函數
         function updateGameDisplay(gameData) {
-            console.log('gameData:', gameData);
+            // console.log('gameData:', gameData);
             
             // 統一處理遊戲數據結構
             let playerHand, dealerHand, playerScore, dealerScore, gameState, message;
