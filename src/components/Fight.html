@@ -12,37 +12,56 @@
       }
       .fightercontainer {
         display: flex;
-        width: 1800px;
-        height: 400px;
-        padding-top: 50px;
-        padding-bottom: 50px;
+        width: 100%;
+        max-width: 1800px;
+        height: 600px;
+        padding-top: 20px;
+        padding-bottom: 20px;
         margin: 0 auto;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
       }
       .half {
-        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         margin: 0;
+        width: 180px;
+        height: 600px;
+        flex: none;
+        gap: 20px;
       }
       .imagefighter {
-        max-width: 100%;
-        max-height: 900px;
+        width: auto;
+        height: 300px;
         border: 1px solid #000;
-        margin-bottom: 10px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+        position: relative;
+        top: 0;
+        background-color: rgba(0, 0, 0, 0.1);
       }
       .button-container {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        max-width: 100%;
+        max-width: 180px;
+        width: 100%;
+        height: 150px;
+        overflow-y: auto;
+        margin-top: auto;
+        background-color: rgba(255, 255, 255, 0.9);
+        z-index: 2;
       }
       .button {
         padding: 2px 5px;
         font-size: 10px;
         cursor: pointer;
         margin: 1px;
+        width: 80px;
       }
       .button.disabled {
         opacity: 0.5;
@@ -52,26 +71,52 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 10px;
+        width: 100%;
+        min-height: 80px;
+        max-height: 120px;
+        background-color: rgba(255, 255, 255, 0.9);
+        z-index: 1;
+        padding: 5px 0;
+        overflow-y: auto;
       }
       .info-row {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         justify-content: center;
-        margin-bottom: 5px;
+        margin-bottom: 2px;
+        width: 100%;
+        gap: 1px;
       }
       .info {
-        margin: 0 10px;
-        font-size: 14px;
+        margin: 0;
+        font-size: 11px;
+        text-align: center;
+        width: 100%;
+        white-space: nowrap;
+        color: #0066ff;
+        line-height: 1.2;
       }
       /* 縮小 Total Power 的字體 */
       .info-container #leftTotalPower,
       .info-container #rightTotalPower {
         font-size: 12px;
         opacity: 0.8;
+        color: #0066ff;
+      }
+      /* 添加響應式字體大小 */
+      @media screen and (max-width: 1200px) {
+        .info {
+          font-size: 12px;
+        }
+      }
+      @media screen and (max-width: 900px) {
+        .info {
+          font-size: 10px;
+        }
       }
       .fightbutton {
-        width: 1800px;
+        width: 100%;
+        max-width: 1800px;
         display: flex;
         justify-content: center;
         margin-bottom: 20px;
@@ -84,24 +129,74 @@
       }
       .result {
         font-weight: bold;
-        margin-top: 5px;
-        font-size: 70%; /* 縮小結果顯示的字體 */
+        margin-top: 2px;
+        margin-bottom: 2px;
+        font-size: 40%;
+        line-height: 1;
       }
       .win {
         color: green;
-        font-size: 24px; /* 從60px縮小到24px */
+        font-size: 14px;
       }
       .defeated {
         color: rgb(146, 1, 1);
-        font-size: 24px; /* 從60px縮小到24px */
+        font-size: 14px;
       }
       .fdefeated {
         color: rgb(255, 41, 41);
-        font-size: 24px; /* 從60px縮小到24px */
+        font-size: 14px;
       }
       .sdefeated {
         color: rgb(255, 85, 85);
-        font-size: 24px; /* 從60px縮小到24px */
+        font-size: 14px;
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+      @keyframes shakeHard {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-15px); }
+        75% { transform: translateX(15px); }
+      }
+      @keyframes shakeExtreme {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-25px); }
+        75% { transform: translateX(25px); }
+      }
+      .shake {
+        animation: shake 0.5s ease-in-out;
+      }
+      .shake-hard {
+        animation: shakeHard 0.5s ease-in-out;
+      }
+      .shake-extreme {
+        animation: shakeExtreme 0.5s ease-in-out;
+      }
+      @keyframes glow {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.2); }
+        100% { filter: brightness(1); }
+      }
+      @keyframes glowStrong {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.4); }
+        100% { filter: brightness(1); }
+      }
+      @keyframes glowExtreme {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.6); }
+        100% { filter: brightness(1); }
+      }
+      .glow {
+        animation: glow 0.5s ease-in-out;
+      }
+      .glow-strong {
+        animation: glowStrong 0.5s ease-in-out;
+      }
+      .glow-extreme {
+        animation: glowExtreme 0.5s ease-in-out;
       }
     </style>
   </head>
@@ -222,6 +317,20 @@
         if (fighters[otherSide].image && getNameFromPath(fighters[otherSide].image) === selectedName) {
           return; // 不允許兩邊選擇相同角色
         }
+        
+        // 清除所有狀態效果
+        const leftImage = document.getElementById("leftImage");
+        const rightImage = document.getElementById("rightImage");
+        const leftName = document.getElementById("leftName");
+        const rightName = document.getElementById("rightName");
+        
+        // 移除所有動畫效果
+        leftImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
+        rightImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
+        
+        // 清除結果文本
+        leftName.innerHTML = fighters.left.name || "";
+        rightName.innerHTML = fighters.right.name || "";
         
         // 更新選擇
         fighters[side].image = imagePath;
@@ -391,9 +500,9 @@
                           `${fighter.name} (${fighter.nameOriginal})` : fighter.name;
         
         document.getElementById(`${side}Name`).textContent = displayName || "N/A";
-        document.getElementById(`${side}PhysicPower`).textContent = `Physic Power: ${physicPower || "N/A"}`;
-        document.getElementById(`${side}MagicPower`).textContent = `Magic Power: ${magicPower || "N/A"}`;
-        document.getElementById(`${side}UtilityPower`).textContent = `Utility Power: ${utilityPower || "N/A"}`;
+        document.getElementById(`${side}PhysicPower`).textContent = `Physic Power: ${physicPower}`;
+        document.getElementById(`${side}MagicPower`).textContent = `Magic Power: ${magicPower}`;
+        document.getElementById(`${side}UtilityPower`).textContent = `Utility Power: ${utilityPower}`;
         
         // 顯示屬性及其他信息
         let attributesText = fighter.attributes || "N/A";
@@ -472,9 +581,9 @@
           rightResult.textContent = "Draw";
           // 直接使用保存的角色名稱
           document.getElementById("leftName").innerHTML = 
-            `${fighters.left.name} <span class='result'>draw</span>`;
+            `${fighters.left.name}<br><span class='result'>draw</span>`;
           document.getElementById("rightName").innerHTML = 
-            `${fighters.right.name} <span class='result'>draw</span>`;
+            `${fighters.right.name}<br><span class='result'>draw</span>`;
         }
       }
       
@@ -486,6 +595,8 @@
         const loserResult = document.getElementById(`${loserSide}Result`);
         const winnerName = document.getElementById(`${winnerSide}Name`);
         const loserName = document.getElementById(`${loserSide}Name`);
+        const loserImage = document.getElementById(`${loserSide}Image`);
+        const winnerImage = document.getElementById(`${winnerSide}Image`);
         
         // 設置樣式
         winnerElement.classList.add("win");
@@ -498,21 +609,32 @@
         winnerResult.textContent = "Winner";
         loserResult.textContent = `${lossPercentage}% Defeated`;
         
-        // 根據差距程度顯示不同結果
-        // 直接使用保存的名稱，而不是從圖片路徑中提取
+        // 根據差距程度顯示不同結果和效果
         const winnerCharName = fighters[winnerSide].name;
         const loserCharName = fighters[loserSide].name;
         
         if (difference > 0.4) {
-          winnerName.innerHTML = `${winnerCharName} <span class='result win'>Dominating</span>`;
-          loserName.innerHTML = `${loserCharName} <span class='result defeated'>Ravished</span>`;
+          winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Dominating</span>`;
+          loserName.innerHTML = `${loserCharName}<br><span class='result defeated'>Ravished</span>`;
+          loserImage.classList.add('shake-extreme');
+          winnerImage.classList.add('glow-extreme');
         } else if (difference > 0.1) {
-          winnerName.innerHTML = `${winnerCharName} <span class='result win'>Destroying</span>`;
-          loserName.innerHTML = `${loserCharName} <span class='result fdefeated'>Fucked Up</span>`;
+          winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Destroying</span>`;
+          loserName.innerHTML = `${loserCharName}<br><span class='result fdefeated'>Fucked Up</span>`;
+          loserImage.classList.add('shake-hard');
+          winnerImage.classList.add('glow-strong');
         } else {
-          winnerName.innerHTML = `${winnerCharName} <span class='result win'>Barely Succeed</span>`;
-          loserName.innerHTML = `${loserCharName} <span class='result sdefeated'>Slightly Defeated</span>`;
+          winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Barely Succeed</span>`;
+          loserName.innerHTML = `${loserCharName}<br><span class='result sdefeated'>Slightly Defeated</span>`;
+          loserImage.classList.add('shake');
+          winnerImage.classList.add('glow');
         }
+
+        // 動畫結束後移除效果
+        setTimeout(() => {
+          loserImage.classList.remove('shake', 'shake-hard', 'shake-extreme');
+          winnerImage.classList.remove('glow', 'glow-strong', 'glow-extreme');
+        }, 500);
       }
       
       // 頁面載入時初始化

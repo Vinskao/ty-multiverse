@@ -213,7 +213,7 @@ const token = url.searchParams.get('token');
         const editorContainer = document.getElementById('editor-container');
         const saveIndicator = document.getElementById('save-indicator');
         
-        // 如果沒有登入，重定向到登入頁面
+        // 如果沒有登入，顯示提示並禁用編輯器
         if (!isLoggedIn) {
             if (loginPrompt) {
                 loginPrompt.style.display = 'block';
@@ -224,8 +224,6 @@ const token = url.searchParams.get('token');
             if (saveIndicator) {
                 saveIndicator.style.display = 'none';
             }
-            // 重定向到登入頁面
-            window.location.href = '/tymultiverse/login';
         } else {
             if (loginPrompt) {
                 loginPrompt.style.display = 'none';
@@ -387,7 +385,7 @@ const token = url.searchParams.get('token');
         
         ClassicEditor.create(editorElement, {
             extraPlugins: [Base64UploadAdapterPlugin],
-            // 工具欄配置
+            // 工具欄配置 - 只在登入時顯示
             toolbar: isLoggedIn ? [
                 'heading',
                 '|',
@@ -410,7 +408,8 @@ const token = url.searchParams.get('token');
                 'undo',
                 'redo'
             ] : [],
-            removePlugins: isLoggedIn ? [] : ['toolbar'],
+            // 未登入時移除所有插件
+            removePlugins: isLoggedIn ? [] : ['toolbar', 'heading', 'fontSize', 'fontColor', 'fontBackgroundColor', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'outdent', 'indent', 'blockQuote', 'insertTable', 'imageUpload', 'undo', 'redo'],
             // 配置字體大小選項
             fontSize: {
                 options: [
