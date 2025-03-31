@@ -19,8 +19,8 @@ const textLinks: { label: string; href: string }[] = [
   { label: "About", href: "/tymultiverse/about/" },
   { label: "Control", href: "/tymultiverse/control/" },
   ...(isLoggedIn ? [
-    { label: "Wildland", href: "/tymultiverse/wildland/" },
-    { label: "Palais", href: "/tymultiverse/palais/" }
+    { label: "Wildland", href: `/tymultiverse/wildland/?username=${username}&token=${token}` },
+    { label: "Palais", href: `/tymultiverse/palais/?username=${username}&token=${token}` }
   ] : [])
 ];
 
@@ -301,6 +301,25 @@ const iconLinks: {
         }
       });
     }
+
+    // 更新所有導航連結以包含登入參數
+    const updateNavLinks = () => {
+      if (username && token) {
+        const links = document.querySelectorAll('a[href^="/tymultiverse/"]');
+        links.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && !href.includes('login') && !href.includes('#')) {
+            const url = new URL(href, window.location.origin);
+            url.searchParams.set('username', username);
+            url.searchParams.set('token', token);
+            link.setAttribute('href', url.pathname + url.search);
+          }
+        });
+      }
+    };
+
+    // 初始更新導航連結
+    updateNavLinks();
   });
 </script>
 

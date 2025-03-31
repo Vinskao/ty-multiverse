@@ -4,14 +4,14 @@ import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.html";
 import Org from  "../components/Org.html";
 import Fight from  "../components/Fight.html";
-import GalTable from  "../components/GalTable.html";
 
 // 檢查登入狀態
-const cookies = Astro.request.headers.get('cookie');
-const hasValidSession = cookies?.includes('username=') || cookies?.includes('token=');
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
 
 // 如果未登入，重定向到首頁
-if (!hasValidSession) {
+if (!username || !token) {
   return Astro.redirect('/tymultiverse/');
 }
 ---
@@ -32,6 +32,7 @@ if (!hasValidSession) {
         margin-bottom: 600px;
         position: relative;
         z-index: 2;
+        margin-top: 300px;
       }
       #system {
         align-items: center;
@@ -171,9 +172,10 @@ if (!hasValidSession) {
       src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js">
     </script>
     <script>
+      const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
       document.addEventListener("DOMContentLoaded", function () {
-        fetch("https://peoplesystem.tatdvsonorth.com/tymb/people/get-all", {
-          method: "POST",
+        fetch(`${TYMB_URL}/people/get-all`, {
+          method: "POST", 
           headers: {
             "Content-Type": "application/json"
           },
@@ -268,7 +270,9 @@ if (!hasValidSession) {
             tagline="Welcome to Lily Palais."
             align="start"
           />
-          
+          <div class="system-container">
+            <Fight />
+          </div>
           <div class="container">
             <div class="left-container">
               <div id="cardInfoContainer">
@@ -281,12 +285,7 @@ if (!hasValidSession) {
               </ul>
             </div>
           </div>
-          <div class="system-container">
-            <Fight />
-          </div>
-          <div class="system-container">
-            <GalTable />
-          </div>
+
           <div class="system-container">
             <Org />
           </div>
