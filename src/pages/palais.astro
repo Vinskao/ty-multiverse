@@ -5,6 +5,15 @@ import Galwall from "../components/Galwall.html";
 import Org from  "../components/Org.html";
 import Fight from  "../components/Fight.html";
 import GalTable from  "../components/GalTable.html";
+
+// 檢查登入狀態
+const cookies = Astro.request.headers.get('cookie');
+const hasValidSession = cookies?.includes('username=') || cookies?.includes('token=');
+
+// 如果未登入，重定向到首頁
+if (!hasValidSession) {
+  return Astro.redirect('/tymultiverse/');
+}
 ---
 
 <!DOCTYPE html>
@@ -14,13 +23,15 @@ import GalTable from  "../components/GalTable.html";
     <style>
       .galwall-container {
         position: relative;
-        z-index: 1000;
+        z-index: 1;
       }
 
       .system-container {
         display: flex;
         flex-wrap: wrap;
         margin-bottom: 600px;
+        position: relative;
+        z-index: 2;
       }
       #system {
         align-items: center;
@@ -258,55 +269,29 @@ import GalTable from  "../components/GalTable.html";
             align="start"
           />
           
-            <div class="container">
-              <div class="left-container">
-                <div id="cardInfoContainer">
-                  <!-- 卡片信息将在这里生成 -->
-                </div>
-              </div>
-              <div class="right-container">
-                <ul id="cardList">
-                  <!-- 卡片将在这里生成 -->
-                </ul>
+          <div class="container">
+            <div class="left-container">
+              <div id="cardInfoContainer">
+                <!-- 卡片信息将在这里生成 -->
               </div>
             </div>
-            <div class="system-container">
-              <Fight />
-            </div>1
-            <div class="system-container">
-              <GalTable />
+            <div class="right-container">
+              <ul id="cardList">
+                <!-- 卡片将在这里生成 -->
+              </ul>
             </div>
-
-
-            <div class="system-container">
-              <Org />
-            </div>
-
-          </Hero>
+          </div>
+          <div class="system-container">
+            <Fight />
+          </div>
+          <div class="system-container">
+            <GalTable />
+          </div>
+          <div class="system-container">
+            <Org />
+          </div>
         </main>
       </div>
     </BaseLayout>
-
-    <!-- 全屏遮罩 -->
-
-    <div class="overlay" id="passwordOverlay">
-      <script>
-        var isAuthenticated = false;
-
-        if (!isAuthenticated) {
-          var password = prompt("請輸入密碼", "");
-          if (password === "1") {
-            isAuthenticated = true;
-            document.getElementById("passwordOverlay").style.display = "none";
-          } else {
-            alert("請再輸入一次密碼");
-            location.href = "examples/javascript/16ex2.html";
-          }
-        }
-      </script>
-    </div>
-
-    
-
   </body>
 </html>

@@ -30,6 +30,9 @@ try {
     console.error('Error getting server start time:', error);
 }
 
+// 檢查是否需要顯示登入提示
+const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
+
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
 ---
@@ -391,6 +394,18 @@ h5 {
 <div id="fb-customer-chat" class="fb-customerchat">
 </div>
 <BaseLayout>
+	{showLoginAlert && 
+		<script is:inline>
+			document.addEventListener('DOMContentLoaded', function() {
+				window.Swal.fire({
+					title: '請先登入',
+					icon: 'info',
+					timer: 1000,
+					showConfirmButton: false
+				});
+			});
+		</script>
+	}
 	<div class="stack gap-20 lg:gap-48">
 		
 		<div class="wrapper stack gap-20 lg:gap-50">
