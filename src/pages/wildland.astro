@@ -4,11 +4,12 @@ import Hero from "../components/Hero.astro";
 import Gallery from  "../components/Gallery.html";
 
 // 檢查登入狀態
-const cookies = Astro.request.headers.get('cookie');
-const hasValidSession = cookies?.includes('username=') || cookies?.includes('token=');
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
 
 // 如果未登入，重定向到首頁
-if (!hasValidSession) {
+if (!username || !token) {
   return Astro.redirect('/tymultiverse/');
 }
 ---

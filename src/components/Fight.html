@@ -262,7 +262,7 @@
         "Riuri", "Samui", "Z", "Yuko", "Yui", "Valmet", "Uiobbeci", "Taisy", 
         "Sorane", "Shuan", "Sayuri", "Paprika", "Nianca", "Medicis", "Miyu", 
         "Mesoyei", "Masako", "Lucrece", "Kyu", "Kristae", "Kazuko", "Kamira", 
-        "Etsuko", "Delsa", "Chiaki", "Caleigh", "Branwen", "Ann", "Isina"
+        "Etsuko", "Delsa", "Chiaki", "Caleigh", "Branwen", "Ann", "Isina", "Zexu"
       ];
 
       // 生成圖片路徑
@@ -363,124 +363,30 @@
           const name = getNameFromPath(imagePath);
           console.log(`正在獲取角色資訊: ${name} (從圖片路徑: ${imagePath})`);
           
-          // 測試數據 - 擴充的角色數據庫
-          const testData = {
-            // 原始角色
-            "Miku": { physicPower: 85, magicPower: 75, utilityPower: 90, attributes: "Cute, Singer" },
-            "Wavo": { physicPower: 95, magicPower: 65, utilityPower: 70, attributes: "Strong, Brave" },
-            "Azusa": { physicPower: 70, magicPower: 95, utilityPower: 85, attributes: "Magical, Smart" },
-            "Spoke": { physicPower: 90, magicPower: 80, utilityPower: 60, attributes: "Tactical, Fast" },
-            "Hitomi": { physicPower: 75, magicPower: 90, utilityPower: 75, attributes: "Precise, Agile" },
-            
-            // 新增角色
-            "Cleopatra": { physicPower: 70, magicPower: 90, utilityPower: 95, attributes: "Royal, Charismatic" },
-            "Sofia": { physicPower: 85, magicPower: 75, utilityPower: 80, attributes: "Intelligent, Strategic" },
-            "Ashe": { physicPower: 92, magicPower: 60, utilityPower: 78, attributes: "Athletic, Determined" },
-            "Siyu": { physicPower: 65, magicPower: 95, utilityPower: 85, attributes: "Mystical, Wise" },
-            "Eris": { physicPower: 85, magicPower: 90, utilityPower: 95, attributes: "Chaotic, Powerful" },
-            "SayuriRuined": { physicPower: 60, magicPower: 100, utilityPower: 90, attributes: "Corrupted, Unstable" },
-            "Sayuri": { physicPower: 75, magicPower: 85, utilityPower: 80, attributes: "Graceful, Skilled" },
-            "MasakoEntering": { physicPower: 80, magicPower: 85, utilityPower: 70, attributes: "Curious, Adventurous" },
-            "Masako": { physicPower: 85, magicPower: 80, utilityPower: 75, attributes: "Balanced, Disciplined" },
-            "SpokeTied": { physicPower: 70, magicPower: 85, utilityPower: 65, attributes: "Restrained, Vulnerable" },
-            "Natsumi": { physicPower: 88, magicPower: 72, utilityPower: 80, attributes: "Energetic, Friendly" },
-            "Draeny": { physicPower: 95, magicPower: 70, utilityPower: 75, attributes: "Powerful, Draconic" },
-            "Aile": { physicPower: 80, magicPower: 85, utilityPower: 90, attributes: "Swift, Adaptable" },
-            "MayoPumped": { physicPower: 95, magicPower: 65, utilityPower: 75, attributes: "Enhanced, Strong" },
-            "Mayo": { physicPower: 75, magicPower: 80, utilityPower: 85, attributes: "Skilled, Versatile" },
-            "Miyako": { physicPower: 70, magicPower: 95, utilityPower: 80, attributes: "Mystical, Elegant" },
-            "Doire": { physicPower: 92, magicPower: 60, utilityPower: 85, attributes: "Natural, Wild" },
-            "Monroe": { physicPower: 75, magicPower: 85, utilityPower: 90, attributes: "Charming, Iconic" },
-            "KamiraPeeing": { physicPower: 60, magicPower: 70, utilityPower: 65, attributes: "Vulnerable, Embarrassed" },
-            "Kamira": { physicPower: 80, magicPower: 85, utilityPower: 75, attributes: "Balanced, Focused" },
-            "Riuri": { physicPower: 85, magicPower: 70, utilityPower: 90, attributes: "Quick, Resourceful" },
-            "Samui": { physicPower: 75, magicPower: 80, utilityPower: 85, attributes: "Cool, Collected" },
-            "Z": { physicPower: 95, magicPower: 65, utilityPower: 80, attributes: "Mysterious, Powerful" },
-            "Yuko": { physicPower: 80, magicPower: 75, utilityPower: 85, attributes: "Friendly, Helpful" },
-            "Yui": { physicPower: 70, magicPower: 90, utilityPower: 85, attributes: "Intelligent, Analytical" },
-            "Valmet": { physicPower: 95, magicPower: 60, utilityPower: 85, attributes: "Military, Precise" },
-            "Uiobbeci": { physicPower: 85, magicPower: 90, utilityPower: 75, attributes: "Complex, Layered" },
-            "Taisy": { physicPower: 90, magicPower: 75, utilityPower: 80, attributes: "Resolute, Brave" },
-            "Sorane": { physicPower: 70, magicPower: 95, utilityPower: 85, attributes: "Sky-touched, Free" },
-            "Shuan": { physicPower: 85, magicPower: 75, utilityPower: 80, attributes: "Traditional, Grounded" },
-            "Paprika": { physicPower: 75, magicPower: 90, utilityPower: 80, attributes: "Spicy, Vibrant" },
-            "Nianca": { physicPower: 80, magicPower: 85, utilityPower: 75, attributes: "Balanced, Smooth" },
-            "Medicis": { physicPower: 70, magicPower: 95, utilityPower: 85, attributes: "Healing, Supportive" },
-            "Miyu": { physicPower: 75, magicPower: 90, utilityPower: 80, attributes: "Beautiful, Elegant" },
-            "Mesoyei": { physicPower: 85, magicPower: 80, utilityPower: 75, attributes: "Mysterious, Ancient" },
-            "Lucrece": { physicPower: 80, magicPower: 85, utilityPower: 90, attributes: "Noble, Refined" },
-            "Kyu": { physicPower: 90, magicPower: 75, utilityPower: 80, attributes: "Strong, Direct" },
-            "Kristae": { physicPower: 75, magicPower: 90, utilityPower: 85, attributes: "Crystal, Pure" },
-            "Kazuko": { physicPower: 85, magicPower: 80, utilityPower: 75, attributes: "Harmonious, Peaceful" },
-            "Etsuko": { physicPower: 70, magicPower: 95, utilityPower: 80, attributes: "Child-like, Innocent" },
-            "Delsa": { physicPower: 80, magicPower: 85, utilityPower: 90, attributes: "Refined, Cultured" },
-            "Chiaki": { physicPower: 75, magicPower: 90, utilityPower: 80, attributes: "Bright, Intelligent" },
-            "Caleigh": { physicPower: 85, magicPower: 75, utilityPower: 90, attributes: "Spirited, Energetic" },
-            "Branwen": { physicPower: 80, magicPower: 90, utilityPower: 75, attributes: "Raven, Mystical" },
-            "Ann": { physicPower: 90, magicPower: 70, utilityPower: 85, attributes: "Simple, Strong" }
-          };
+          // 使用 API 獲取數據
+          const apiName = name; // 使用從圖片路徑提取的名稱作為API查詢參數
+          console.log(`API查詢參數: ${apiName}`);
           
-          // 嘗試從 API 獲取數據 - 使用從PNG檔名提取的名稱
-          try {
-            const apiName = name; // 使用從圖片路徑提取的名稱作為API查詢參數
-            console.log(`API查詢參數: ${apiName}`);
-            
-            const response = await fetch(config.apiEndpoint, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name: apiName }), // 確保使用正確的參數名稱
-              credentials: 'include'
-            });
-            
-            if (!response.ok) {
-              throw new Error(`API 返回錯誤: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            // 處理API回傳數據
-            if (data && data.name) {
-              console.log("從API獲取角色數據:", data);
-              updateFighterInfo(side, data);
-              return;
-            }
-            throw new Error("API 沒有返回有效數據");
-          } catch (apiError) {
-            console.warn(`API 請求失敗: ${apiError.message}，使用測試數據`);
-            
-            // 如果 API 失敗，使用測試數據
-            if (testData[name]) {
-              const mockFighter = {
-                name: name,
-                physicPower: testData[name].physicPower,
-                magicPower: testData[name].magicPower,
-                utilityPower: testData[name].utilityPower,
-                attributes: testData[name].attributes,
-                // 添加額外屬性，以防顯示需要
-                nameOriginal: name,
-                race: "Unknown",
-                gender: "Unknown"
-              };
-              updateFighterInfo(side, mockFighter);
-              return;
-            }
-            
-            // 如果沒有測試數據，生成隨機數據
-            const randomPower = () => Math.floor(Math.random() * 30) + 70; // 生成70-100之間的數字，更合理
-            const mockFighter = {
-              name: name,
-              physicPower: randomPower(),
-              magicPower: randomPower(),
-              utilityPower: randomPower(),
-              attributes: "Unknown",
-              nameOriginal: name,
-              race: "Unknown",
-              gender: "Unknown"
-            };
-            
-            console.log(`為 ${name} 生成隨機數據:`, mockFighter);
-            updateFighterInfo(side, mockFighter);
+          const response = await fetch(config.apiEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: apiName }),
+            credentials: 'include'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`API 返回錯誤: ${response.status}`);
           }
+          
+          const data = await response.json();
+          
+          // 處理API回傳數據
+          if (data && data.name) {
+            console.log("從API獲取角色數據:", data);
+            updateFighterInfo(side, data);
+            return;
+          }
+          throw new Error("API 沒有返回有效數據");
         } catch (error) {
           console.error("獲取角色資訊失敗:", error);
           clearFighterInfo(side);
@@ -495,11 +401,10 @@
         const utilityPower = parseInt(fighter.utilityPower || 0, 10);
         const totalPower = physicPower + magicPower + utilityPower;
         
-        // 顯示角色名稱，如果有原始名稱則顯示，否則使用name
-        const displayName = fighter.nameOriginal && fighter.nameOriginal !== fighter.name ? 
-                          `${fighter.name} (${fighter.nameOriginal})` : fighter.name;
-        
+        // 顯示角色名稱，優先使用 nameOriginal
+        const displayName = fighter.nameOriginal || fighter.name;
         document.getElementById(`${side}Name`).textContent = displayName || "N/A";
+        
         document.getElementById(`${side}PhysicPower`).textContent = `Physic Power: ${physicPower}`;
         document.getElementById(`${side}MagicPower`).textContent = `Magic Power: ${magicPower}`;
         document.getElementById(`${side}UtilityPower`).textContent = `Utility Power: ${utilityPower}`;
@@ -522,7 +427,7 @@
         
         // 調試輸出，檢查力量值
         console.log(`${side} fighter power:`, {
-          name: fighter.name,
+          name: displayName,
           physicPower,
           magicPower,
           utilityPower,
@@ -579,11 +484,11 @@
           // 平局
           leftResult.textContent = "Draw";
           rightResult.textContent = "Draw";
-          // 直接使用保存的角色名稱
+          // 使用 nameOriginal 顯示角色名稱
           document.getElementById("leftName").innerHTML = 
-            `${fighters.left.name}<br><span class='result'>draw</span>`;
+            `${fighters.left.nameOriginal || fighters.left.name}<br><span class='result'>draw</span>`;
           document.getElementById("rightName").innerHTML = 
-            `${fighters.right.name}<br><span class='result'>draw</span>`;
+            `${fighters.right.nameOriginal || fighters.right.name}<br><span class='result'>draw</span>`;
         }
       }
       
@@ -610,8 +515,8 @@
         loserResult.textContent = `${lossPercentage}% Defeated`;
         
         // 根據差距程度顯示不同結果和效果
-        const winnerCharName = fighters[winnerSide].name;
-        const loserCharName = fighters[loserSide].name;
+        const winnerCharName = fighters[winnerSide].nameOriginal || fighters[winnerSide].name;
+        const loserCharName = fighters[loserSide].nameOriginal || fighters[loserSide].name;
         
         if (difference > 0.4) {
           winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Dominating</span>`;
