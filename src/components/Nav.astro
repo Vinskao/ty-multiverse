@@ -6,30 +6,10 @@ import type { iconPaths } from "./IconPaths";
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
-const email = url.searchParams.get('email');
 const token = url.searchParams.get('token');
 
 // 檢查登入狀態
-const cookies = Astro.request.headers.get('cookie');
-// console.log('Current cookies:', cookies); // 調試用
-
-// 解析 cookies
-const parseCookies = (cookieStr: string | null) => {
-  const cookies = {};
-  if (cookieStr) {
-    cookieStr.split(';').forEach(cookie => {
-      const [key, value] = cookie.split('=').map(c => c.trim());
-      cookies[key] = value;
-    });
-  }
-  return cookies;
-};
-
-const cookieObj = parseCookies(cookies);
-// console.log('Parsed cookies:', cookieObj); // 調試用
-
-const isLoggedIn = cookieObj.hasOwnProperty('username') || cookieObj.hasOwnProperty('token');
-console.log('Login status:', isLoggedIn); // 調試用
+const isLoggedIn = !!username && !!token;
 
 /** Main menu items */
 const textLinks: { label: string; href: string }[] = [
@@ -206,26 +186,51 @@ const iconLinks: {
 
   // 添加登入狀態管理
   document.addEventListener('DOMContentLoaded', () => {
-    // 保存登入狀態到 localStorage 和 cookie
+    const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+    
+    // 從 URL 參數中取得登入資訊
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('username');
     const token = urlParams.get('token');
-    
-    if (username && token) {
-      localStorage.setItem('username', username);
-      localStorage.setItem('token', token);
-      // 設置 cookie，有效期為 7 天
-      document.cookie = `username=${username}; path=/; max-age=${7 * 24 * 60 * 60}`;
-      document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`;
-      
-      // 移除 URL 參數並重新載入頁面
-      const newUrl = window.location.pathname;
-      window.location.href = newUrl;
+
+    // 驗證 token 是否有效
+    async function verifyToken(token: string) {
+      try {
+        const response = await fetch(
+          `${TYMB_URL}/keycloak/introspect?token=${encodeURIComponent(token)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+            credentials: 'include',
+            mode: 'cors'
+          }
+        );
+
+        if (response.ok) {
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        return false;
+      }
     }
 
     // 更新導航欄的登入/登出狀態
-    const updateLoginState = () => {
-      const isLoggedIn = localStorage.getItem('username') || document.cookie.includes('username=');
+    const updateLoginState = async () => {
+      if (token) {
+        const isValid = await verifyToken(token);
+        if (!isValid) {
+          // Token 無效，重定向到登入頁面
+          window.location.href = '/tymultiverse/login';
+          return;
+        }
+      }
+
+      const isLoggedIn = !!username && !!token;
       const loginLink = document.querySelector('a[href="/tymultiverse/login"]') as HTMLAnchorElement;
       
       if (loginLink) {
@@ -236,6 +241,29 @@ const iconLinks: {
           loginLink.textContent = 'Login';
           loginLink.href = '/tymultiverse/login';
         }
+      }
+
+      // 更新導航選項
+      const navItems = document.querySelectorAll('.nav-items li');
+      const wildlandLink = Array.from(navItems).find(item => item.textContent?.includes('Wildland'));
+      const palaisLink = Array.from(navItems).find(item => item.textContent?.includes('Palais'));
+
+      if (isLoggedIn) {
+        // 如果已登入但沒有這些選項，添加它們
+        if (!wildlandLink) {
+          const wildlandLi = document.createElement('li');
+          wildlandLi.innerHTML = '<a href="/tymultiverse/wildland/" class="link">Wildland</a>';
+          navItems[navItems.length - 1].after(wildlandLi);
+        }
+        if (!palaisLink) {
+          const palaisLi = document.createElement('li');
+          palaisLi.innerHTML = '<a href="/tymultiverse/palais/" class="link">Palais</a>';
+          navItems[navItems.length - 1].after(palaisLi);
+        }
+      } else {
+        // 如果未登入但有這些選項，移除它們
+        if (wildlandLink) wildlandLink.remove();
+        if (palaisLink) palaisLink.remove();
       }
     };
 
@@ -248,15 +276,10 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        // 從 cookie 中獲取 refreshToken
-        const cookies = document.cookie.split(';');
-        const refreshTokenCookie = cookies.find(cookie => cookie.trim().startsWith('refreshToken='));
-        const refreshToken = refreshTokenCookie ? refreshTokenCookie.split('=')[1] : null;
-
-        if (refreshToken) {
+        if (token) {
           try {
             const response = await fetch(
-              `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(refreshToken)}`,
+              `${TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(token)}`,
               {
                 method: 'GET',
                 headers: {
@@ -268,32 +291,11 @@ const iconLinks: {
               }
             );
 
-            // 清除所有相關的 cookies 和 localStorage
-            document.cookie = "refreshToken=; Path=/; Max-Age=0";
-            document.cookie = "authorizationCode=; Path=/; Max-Age=0";
-            document.cookie = "username=; Path=/; Max-Age=0";
-            document.cookie = "token=; Path=/; Max-Age=0";
-            localStorage.removeItem('username');
-            localStorage.removeItem('token');
-            
-            // 更新導航欄狀態
-            updateLoginState();
-            
             // 重定向到主頁
             window.location.href = '/tymultiverse/';
           } catch (error) {
             console.error('Logout failed:', error);
-            // 即使請求失敗也清除所有狀態
-            document.cookie = "refreshToken=; Path=/; Max-Age=0";
-            document.cookie = "authorizationCode=; Path=/; Max-Age=0";
-            document.cookie = "username=; Path=/; Max-Age=0";
-            document.cookie = "token=; Path=/; Max-Age=0";
-            localStorage.removeItem('username');
-            localStorage.removeItem('token');
-            
-            // 更新導航欄狀態
-            updateLoginState();
-            
+            // 即使請求失敗也重定向到主頁
             window.location.href = '/tymultiverse/';
           }
         }
