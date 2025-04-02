@@ -1,0 +1,218 @@
+---
+// 檢查登入狀態
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+// 如果未登入，重定向到首頁
+if (!username || !token) {
+  return Astro.redirect('/tymultiverse/');
+}
+---
+
+<div id="group-container"></div>
+
+<style>
+  #group-container {
+    margin: 5%;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .army-container {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .army-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .character-info {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    z-index: 1000;
+    max-width: 80%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .character-info.show {
+    display: block;
+  }
+
+  .character-info img {
+    width: 300px;
+    height: auto;
+    float: right;
+    margin-left: 20px;
+    border-radius: 8px;
+  }
+
+  .character-info p {
+    margin: 5px 0;
+    font-size: 16px;
+  }
+
+  .character-info .name {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #ffd700;
+  }
+
+  .character-info .army {
+    font-size: 20px;
+    color: #ffa500;
+    margin-bottom: 10px;
+  }
+
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px 10px;
+  }
+
+  .close-button:hover {
+    color: #ffd700;
+  }
+</style>
+
+<script>
+  const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch(`${TYMB_URL}/people/get-all`, {
+      method: "POST", 
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      const armyGroups = {};
+      (data as any[]).forEach(character => {
+        const army = character.armyName || 'Unknown Army';
+        if (!armyGroups[army]) {
+          armyGroups[army] = [];
+        }
+        armyGroups[army].push(character);
+      });
+
+      const mainContainer = document.createElement('div');
+      mainContainer.className = 'army-groups';
+
+      Object.entries(armyGroups).forEach(([army, characters]) => {
+        const armyContainer = document.createElement('div');
+        armyContainer.className = 'army-container';
+
+        const armyTitle = document.createElement('h2');
+        armyTitle.className = 'army-title';
+        armyTitle.textContent = army;
+
+        const charactersGrid = document.createElement('div');
+        charactersGrid.className = 'box-container';
+        charactersGrid.style.width = '960px';
+        charactersGrid.style.margin = '0 auto';
+
+        (characters as any[]).forEach(character => {
+            const img = document.createElement('img');
+            img.style.width = '12.5%'; // 100% / 8 = 12.5%
+            img.style.height = 'auto';
+            img.style.display = 'inline-block';
+            img.style.marginLeft = '-4px';
+            img.style.objectFit = 'contain';
+            img.src = `/tymultiverse/assets/person/${character.name || 'default'}.png`;
+            img.alt = character.nameOriginal;
+            img.onerror = function() {
+              this.src = '/tymultiverse/assets/person/default.png';
+            };
+            img.addEventListener('mouseover', () => showCharacterInfo(character));
+            charactersGrid.appendChild(img);
+        });
+
+        armyContainer.appendChild(armyTitle);
+        armyContainer.appendChild(charactersGrid);
+        mainContainer.appendChild(armyContainer);
+      });
+
+      const container = document.getElementById('group-container');
+      if (container) {
+        container.appendChild(mainContainer);
+      }
+    })
+    .catch(error => console.error('Error fetching data:', error));
+  });
+
+  function showCharacterInfo(character) {
+    let infoContainer = document.querySelector('.character-info');
+    if (!infoContainer) {
+      infoContainer = document.createElement('div');
+      infoContainer.className = 'character-info';
+      document.getElementById('group-container').appendChild(infoContainer);
+    }
+
+    const imageName = character.name || 'default';
+    const infoContent = document.createElement('div');
+    infoContent.className = 'info-content';
+    infoContent.innerHTML = `
+      <button class="close-button">&times;</button>
+      <p class="name">${character.nameOriginal}</p>
+      <p class="army">Army: ${character.originArmyName} => ${character.armyName}</p>
+      <p>Physic Power: ${character.physicPower}</p>
+      <p>Magic Power: ${character.magicPower}</p>
+      <p>Utility Power: ${character.utilityPower}</p>
+      <p>Attributes: ${character.attributes}</p>
+      <p>Ass Size: ${character.assSize}</p>
+      <p>Boobs Size: ${character.boobsSize}</p>
+      <p>${character.heightCm}(cm)</p>
+      <p>${character.weightKg}(kg)</p>
+      <p>${character.profession}</p>
+      <p>Job: ${character.job}</p>
+      <p>Combat: ${character.combat}</p>
+      <p>Concubine: ${character.concubine}</p>
+      <p>Main Weapon: ${character.mainWeapon}</p>
+      <p>Sub Weapon: ${character.subWeapon}</p>
+      <p>Dept: ${character.deptName}</p>
+      <p>Faction: ${character.faction}</p>
+      <p>Gave Birth: ${character.gaveBirth}</p>
+    `;
+
+    infoContainer.innerHTML = '';
+    infoContainer.appendChild(infoContent);
+    infoContainer.classList.add('show');
+
+    const closeButton = infoContainer.querySelector('.close-button');
+    closeButton.addEventListener('click', () => {
+      infoContainer.classList.remove('show');
+    });
+
+    document.addEventListener('click', function closeInfo(e) {
+      if (!infoContainer.contains(e.target as Node)) {
+        infoContainer.classList.remove('show');
+        document.removeEventListener('click', closeInfo);
+      }
+    });
+  }
+</script>
