@@ -3,7 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.html";
 import Org from  "../components/Org.html";
-import Fight from  "../components/Fight.html";
+import Fight from  "../components/Fight.astro";
+import Group from  "../components/Group.astro";
 
 // 檢查登入狀態
 const url = new URL(Astro.request.url);
@@ -24,16 +25,27 @@ if (!username || !token) {
       .galwall-container {
         position: relative;
         z-index: 1;
+        height: 450px;
+        margin-bottom: 50px;
       }
 
       .system-container {
         display: flex;
         flex-wrap: wrap;
-        margin-bottom: 600px;
+        margin-bottom: 0;
         position: relative;
         z-index: 2;
-        margin-top: 300px;
+        margin-top: 0;
       }
+
+      .system-container:first-of-type {
+        margin-top: 0;
+      }
+
+      .system-container:last-of-type {
+        margin-bottom: 600px;
+      }
+
       #system {
         align-items: center;
         padding-left: -50px;
@@ -46,12 +58,8 @@ if (!username || !token) {
         display: flex;
         z-index: 999;
         padding-left: 30px;
+      }
 
-      }
-      #cardList li {
-        margin: 0;
-        list-style-type: none;
-      }
       .container {
         display: flex;
         flex-direction: row;
@@ -59,75 +67,7 @@ if (!username || !token) {
         columns: 2;
         margin-top: 250px;
       }
-
-      .left-container {
-        width: 40%;
-        position: static;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        /* border: 1px solid rgb(70, 147, 80); */
-      }
-      .right-container {
-        width: 40%;
-        position: relative;
-        z-index: 0;
-        /* border: 1px solid rgb(141, 38, 38); */
-        columns: 3;
-        font-size: smaller;
-        column-gap: 0px;
-        font-size: 1.5vw;
-      }
-      .right-container ul {
-        width: 120%;
-        position: relative;
-        margin-left: 0;
-        list-style-type: none;
-      }
-      .right-container p:hover {
-      }
-      .powers-container {
-        font-size: 10px;
-        text-align: center;
-      }
-      #attrHagisun,
-      #attrHagishi,
-      #attrRapeharem,
-      #attrMutav,
-      #attrLibertad {
-        margin: 0;
-        padding: 0;
-      }
-      #totalPhysicPowerHagishi,
-      #totalMagicPowerHagishi,
-      #totalUtilityPowerHagishi,
-      #totalPhysicPowerHagisun,
-      #totalMagicPowerHagisun,
-      #totalUtilityPowerHagisun,
-      #totalPhysicPowerRapeharem,
-      #totalMagicPowerRapeharem,
-      #totalUtilityPowerRapeharem,
-      #totalPhysicPowerMutav,
-      #totalMagicPowerMutav,
-      #totalUtilityPowerMutav,
-      #totalHagishi,
-      #totalHagisun,
-      #totalRapeharem,
-      #totalMutav,
-      #attrHagisun,
-      #attrHagishi,
-      #attrRapeharem,
-      #attrMutav,
-      #totalPhysicPowerLibertad,
-      #totalMagicPowerLibertad,
-      #totalUtilityPowerLibertad,
-      #totalLibertad,
-      #attrLibertad {
-        flex: 1;
-        font-size: 12px;
-        margin: 0;
-        padding: 0;
-      }
+    
       main.wrapper {
         margin: 5%;
         padding: 0;
@@ -136,30 +76,6 @@ if (!username || !token) {
       main.wrapper .stack {
         gap: 10px;
       }
-      .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.99);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 999;
-      }
-      #cardImagesLibertad,
-      #cardImagesRapeharem,
-      #cardImagesHagisun,
-      #cardImagesHagishi,
-      #cardImagesMutav,
-      #cardImagesAll {
-        white-space: nowrap;
-        overflow-x: auto;
-        padding-right: 90px;
-      }
-      
     </style>
 
     <script
@@ -171,125 +87,24 @@ if (!username || !token) {
       defer
       src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js">
     </script>
-    <script>
-      const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-      document.addEventListener("DOMContentLoaded", function () {
-        fetch(`${TYMB_URL}/people/get-all`, {
-          method: "POST", 
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(data => {
-          const cardList = document.getElementById("cardList");
-          const cardInfoContainer = document.getElementById("cardInfoContainer");
-
-          // Generate card list items
-          data.forEach((item) => {
-            const listItem = document.createElement("li");
-            listItem.textContent = item.nameOriginal;
-            listItem.style.cursor = "pointer";
-            listItem.style.paddingLeft = "5px";
-            listItem.style.listStyleType = "none";
-            listItem.style.marginRight = "auto";
-            listItem.style.border = "1px solid #ffffff";
-            listItem.style.display = "block";
-            listItem.style.marginBottom = "0px";
-            listItem.style.float = "right";
-            listItem.style.lineHeight = "1";
-            listItem.style.letterSpacing = "0px";
-            listItem.style.textAlign = "left";
-            listItem.style.textIndent = "-10px";
-            listItem.addEventListener("mouseover", function () {
-              displayCardInfo(item);
-              listItem.style.backgroundColor = "rgba(78, 112, 112, 0.304)";
-              listItem.style.color = "orange";
-            });
-
-            // Mouse out event
-            listItem.addEventListener("mouseout", function () {
-              clearCardInfo();
-              listItem.style.backgroundColor = "";
-              listItem.style.color = "";
-            });
-
-            cardList.appendChild(listItem);
-          });
-
-          function displayCardInfo(card) {
-            const cardInfoElement = document.createElement("div");
-            cardInfoElement.className = "card-info";
-            const imageName = card.name ? card.name : "default";
-            cardInfoElement.innerHTML = `
-              <p style="font-weight: bold; font-size: 50px;">${card.nameOriginal}</p>
-              <p style="font-size: 20px;">Army: ${card.originArmyName} => ${card.armyName} </p>
-              <p>Physic Power: ${card.physicPower}</p>
-              <p>Magic Power: ${card.magicPower}</p>
-              <p>Utility Power: ${card.utilityPower}</p>
-              <p>Attributes: ${card.attributes}</p>
-              <p>Ass Size: ${card.assSize}</p>
-              <p>Boobs Size: ${card.boobsSize}</p>
-              <p>${card.heightCm}(cm)</p>
-              <p>${card.weightKg}(kg)</p>
-              <p>${card.profession}</p>
-              <p>Job: ${card.job}</p>
-              <p>Combat: ${card.combat}</p>
-              <p>Concubine: ${card.concubine}</p>
-              <p>Main Weapon: ${card.mainWeapon}</p>
-              <p>Sub Weapon: ${card.subWeapon}</p>
-              <p>Dept: ${card.deptName}</p>
-              <p>Faction: ${card.faction}</p>
-              <p>Gave Birth: ${card.gaveBirth}</p>
-
-              <img src="/tymultiverse/assets/person/${imageName}.png" alt="${card.nameOriginal}" onerror="this.onerror=null;this.src='/tymultiverse/assets/person/default.png';"
-              style="width: 300px; height: auto; margin: -380px 0 0 0; float: right; position: static">
-            `;
-            cardInfoContainer.innerHTML = ""; // Clear container
-            cardInfoContainer.appendChild(cardInfoElement);
-          }
-
-          function clearCardInfo() {
-            cardInfoContainer.innerHTML = ""; // Clear card info container
-          }
-        })
-        .catch(error => console.error('Error fetching data:', error));
-      });
-    </script>
   </head>
   <body>
     <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
       <div class="stack gap-20">
         <main class="wrapper stack gap-8">
-          <div class="galwall-container">
-            <Galwall />
-          </div>
           <Hero
             title="Palais"
             tagline="Welcome to Lily Palais."
             align="start"
           />
+          <div class="galwall-container">
+            <Galwall />
+          </div>
           <div class="system-container">
             <Fight />
           </div>
-          <div class="container">
-            <div class="left-container">
-              <div id="cardInfoContainer">
-                <!-- 卡片信息将在这里生成 -->
-              </div>
-            </div>
-            <div class="right-container">
-              <ul id="cardList">
-                <!-- 卡片将在这里生成 -->
-              </ul>
-            </div>
-          </div>
-
-          <div class="system-container">
-            <Org />
-          </div>
         </main>
+        <Group />
       </div>
     </BaseLayout>
   </body>

@@ -1,16 +1,10 @@
 ---
-// 使用 Astro 的文件系統 API 獲取所有圖片
-const personImages = await Astro.glob('/src/assets/person/*.png');
-const characterNames = personImages.map(image => {
-  // 從路徑中提取文件名（不含擴展名）
-  const path = image.default;
-  const fileName = path.split('/').pop()?.replace('.png', '') || '';
-  return fileName;
-});
+// 不再使用 Astro.glob，而是直接從 API 獲取角色列表
+const characterNames = ['default']; // 初始化為默認值，實際角色列表將從 API 獲取
 ---
 
 <div class="fightbutton">
-  <button onclick="startFight()">Fight</button>
+  <button id="fightButton">Fight</button>
 </div>
 <div class="fightercontainer">
   <div class="half">
@@ -76,11 +70,34 @@ const characterNames = personImages.map(image => {
     defaultImage: "/tymultiverse/assets/person/default.png"
   };
   
-  // 使用從後端獲取的字符名稱列表
-  const characterNames = JSON.parse(document.currentScript?.getAttribute('data-characters') || '[]');
+  // 初始化角色列表
+  let characterNames = ['default'];
   
-  // 生成圖片路徑
-  const imagePaths = characterNames.map((name: string) => `${config.baseImagePath}${name}.png`);
+  // 從 API 獲取角色列表
+  async function fetchCharacterList() {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch character list');
+      }
+      
+      const data = await response.json();
+      characterNames = data.map(char => char.name || 'default');
+      
+      // 更新按鈕
+      createButtons("leftButtons", "left");
+      createButtons("rightButtons", "right");
+    } catch (error) {
+      console.error('Error fetching character list:', error);
+    }
+  }
   
   // 紀錄選擇的角色
   const fighters: Fighters = {
@@ -98,8 +115,7 @@ const characterNames = personImages.map(image => {
   
   // 初始化函數
   function init() {
-    createButtons("leftButtons", "left");
-    createButtons("rightButtons", "right");
+    fetchCharacterList();  // 獲取角色列表
   }
   
   // 創建角色選擇按鈕
@@ -109,28 +125,22 @@ const characterNames = personImages.map(image => {
     
     container.innerHTML = "";
     
-    imagePaths.forEach(imagePath => {
-      const name = getNameFromPath(imagePath);
+    characterNames.forEach(name => {
       const button = document.createElement("button");
       button.textContent = name;
       button.className = "button";
-      button.onclick = () => selectFighter(side, imagePath);
+      button.onclick = () => selectFighter(side, `${config.baseImagePath}${name}.png`);
       container.appendChild(button);
     });
-  }
-  
-  // 從路徑中提取名稱
-  function getNameFromPath(path: string): string {
-    return path.split("/").pop()?.split(".")[0] || '';
   }
   
   // 選擇角色
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
-    const selectedName = getNameFromPath(imagePath);
+    const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]);
     
     // 檢查是否與另一邊選擇相同的角色
-    if (fighters[otherSide].image && getNameFromPath(fighters[otherSide].image!) === selectedName) {
+    if (fighters[otherSide].image && selectedName === fighters[otherSide].name) {
       return; // 不允許兩邊選擇相同角色
     }
     
@@ -159,8 +169,8 @@ const characterNames = personImages.map(image => {
   
   // 更新按鈕狀態 (禁用已選擇的角色)
   function updateButtonStates() {
-    const leftName = fighters.left.image ? getNameFromPath(fighters.left.image) : null;
-    const rightName = fighters.right.image ? getNameFromPath(fighters.right.image) : null;
+    const leftName = fighters.left.image ? characterNames.find(name => name === fighters.left.image.split("/").pop()?.split(".")[0]) : null;
+    const rightName = fighters.right.image ? characterNames.find(name => name === fighters.right.image.split("/").pop()?.split(".")[0]) : null;
     
     // 更新左側按鈕狀態
     document.querySelectorAll("#leftButtons .button").forEach(button => {
@@ -177,12 +187,12 @@ const characterNames = personImages.map(image => {
   async function fetchFighterInfo(side: 'left' | 'right', imagePath: string) {
     try {
       // 從圖片路徑提取出正確的名稱
-      const name = getNameFromPath(imagePath);
-      console.log(`正在獲取角色資訊: ${name} (從圖片路徑: ${imagePath})`);
+      const name = characterNames.find(n => n === imagePath.split("/").pop()?.split(".")[0]);
+      // console.log(`正在獲取角色資訊: ${name} (從圖片路徑: ${imagePath})`);
       
       // 使用 API 獲取數據
       const apiName = name; // 使用從圖片路徑提取的名稱作為API查詢參數
-      console.log(`API查詢參數: ${apiName}`);
+      // console.log(`API查詢參數: ${apiName}`);
       
       const response = await fetch(config.apiEndpoint, {
         method: "POST",
@@ -199,7 +209,7 @@ const characterNames = personImages.map(image => {
       
       // 處理API回傳數據
       if (data && data.name) {
-        console.log("從API獲取角色數據:", data);
+        // console.log("從API獲取角色數據:", data);
         updateFighterInfo(side, data);
         return;
       }
@@ -251,13 +261,13 @@ const characterNames = personImages.map(image => {
     fighters[side].nameOriginal = fighter.nameOriginal;
     
     // 調試輸出，檢查力量值
-    console.log(`${side} fighter power:`, {
-      name: displayName,
-      physicPower,
-      magicPower,
-      utilityPower,
-      totalPower
-    });
+    // console.log(`${side} fighter power:`, {
+    //   name: displayName,
+    //   physicPower,
+    //   magicPower,
+    //   utilityPower,
+    //   totalPower
+    // });
   }
   
   // 清除角色資訊
@@ -286,7 +296,7 @@ const characterNames = personImages.map(image => {
     const rightPower = parseInt(String(fighters.right.totalPower || 0), 10);
     
     // 調試輸出
-    console.log("Fight powers:", { leftPower, rightPower });
+    // console.log("Fight powers:", { leftPower, rightPower });
     
     const leftResult = document.getElementById("leftResult");
     const rightResult = document.getElementById("rightResult");
@@ -307,7 +317,7 @@ const characterNames = personImages.map(image => {
     
     // 計算差距百分比
     const percentageDifference = Math.abs(leftPower - rightPower) / Math.max(leftPower, rightPower, 1);
-    console.log("Percentage difference:", percentageDifference);
+    // console.log("Percentage difference:", percentageDifference);
     
     // 確定勝負
     if (leftPower > rightPower) {
@@ -339,9 +349,31 @@ const characterNames = personImages.map(image => {
     const loserImage = document.getElementById(`${loserSide}Image`) as HTMLImageElement;
     const winnerImage = document.getElementById(`${winnerSide}Image`) as HTMLImageElement;
     
-    // 設置樣式
-    if (winnerElement) winnerElement.classList.add("win");
-    if (loserElement) loserElement.classList.add("defeated");
+    // 重設樣式
+    if (winnerElement) {
+      winnerElement.classList.remove("defeated");
+      winnerElement.classList.add("win");
+      // 根據差距設置強度
+      if (difference > 0.4) {
+        winnerElement.setAttribute("data-intensity", "high");
+      } else if (difference > 0.1) {
+        winnerElement.setAttribute("data-intensity", "medium");
+      } else {
+        winnerElement.setAttribute("data-intensity", "low");
+      }
+    }
+    if (loserElement) {
+      loserElement.classList.remove("win");
+      loserElement.classList.add("defeated");
+      // 根據差距設置強度
+      if (difference > 0.4) {
+        loserElement.setAttribute("data-intensity", "high");
+      } else if (difference > 0.1) {
+        loserElement.setAttribute("data-intensity", "medium");
+      } else {
+        loserElement.setAttribute("data-intensity", "low");
+      }
+    }
     
     // 計算失敗百分比
     const lossPercentage = ((winnerPower - loserPower) / winnerPower * 100).toFixed(2);
@@ -355,18 +387,30 @@ const characterNames = personImages.map(image => {
     const loserCharName = fighters[loserSide].nameOriginal || fighters[loserSide].name;
     
     if (difference > 0.4) {
-      if (winnerName) winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Dominating</span>`;
-      if (loserName) loserName.innerHTML = `${loserCharName}<br><span class='result defeated'>Ravished</span>`;
+      if (winnerName) {
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="high">Destroying</span>`;
+      }
+      if (loserName) {
+        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="high">Fucked Up</span>`;
+      }
       if (loserImage) loserImage.classList.add('shake-extreme');
       if (winnerImage) winnerImage.classList.add('glow-extreme');
     } else if (difference > 0.1) {
-      if (winnerName) winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Destroying</span>`;
-      if (loserName) loserName.innerHTML = `${loserCharName}<br><span class='result fdefeated'>Fucked Up</span>`;
+      if (winnerName) {
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="medium">Destroying</span>`;
+      }
+      if (loserName) {
+        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="medium">Fucked Up</span>`;
+      }
       if (loserImage) loserImage.classList.add('shake-hard');
       if (winnerImage) winnerImage.classList.add('glow-strong');
     } else {
-      if (winnerName) winnerName.innerHTML = `${winnerCharName}<br><span class='result win'>Barely Succeed</span>`;
-      if (loserName) loserName.innerHTML = `${loserCharName}<br><span class='result sdefeated'>Slightly Defeated</span>`;
+      if (winnerName) {
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="low">Destroying</span>`;
+      }
+      if (loserName) {
+        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="low">Fucked Up</span>`;
+      }
       if (loserImage) loserImage.classList.add('shake');
       if (winnerImage) winnerImage.classList.add('glow');
     }
@@ -379,7 +423,14 @@ const characterNames = personImages.map(image => {
   }
   
   // 頁面載入時初始化
-  window.onload = init;
+  window.onload = () => {
+    init();
+    // 添加 Fight 按鈕的點擊事件監聽器
+    const fightButton = document.getElementById('fightButton');
+    if (fightButton) {
+      fightButton.addEventListener('click', startFight);
+    }
+  };
 </script>
 
 <script define:vars={{ characterNames }}>
@@ -397,13 +448,15 @@ const characterNames = personImages.map(image => {
     display: flex;
     width: 100%;
     max-width: 1800px;
-    height: 600px;
+    min-height: 1200px;  /* 增加最小高度 */
     padding-top: 20px;
     padding-bottom: 20px;
     margin: 0 auto;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;  /* 改為頂部對齊 */
     gap: 5px;
+    position: relative;
+    z-index: 50;
   }
   .half {
     display: flex;
@@ -411,91 +464,167 @@ const characterNames = personImages.map(image => {
     align-items: center;
     justify-content: flex-start;
     margin: 0;
-    width: 180px;
-    height: 600px;
+    width: 400px;
+    min-height: 1200px;  /* 增加最小高度 */
     flex: none;
-    gap: 20px;
+    gap: 10px;  /* 減少元素間距 */
+    position: relative;
+    z-index: 50;
   }
   .imagefighter {
-    width: auto;
-    height: 300px;
-    border: 1px solid #000;
+    width: 400px;
+    height: 400px;
     object-fit: contain;
+    border: 1px solid #000;
     display: block;
     margin: 0 auto;
     position: relative;
     top: 0;
     background-color: rgba(0, 0, 0, 0.1);
+    z-index: 50;
   }
-  .button-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 180px;
+  .imagefighter img {
     width: 100%;
-    height: 150px;
-    overflow-y: auto;
-    margin-top: auto;
-    background-color: rgba(255, 255, 255, 0.9);
-    z-index: 2;
-  }
-  .button {
-    padding: 2px 5px;
-    font-size: 10px;
-    cursor: pointer;
-    margin: 1px;
-    width: 80px;
-  }
-  .button.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    height: 100%;
+    object-fit: contain;
   }
   .info-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    min-height: 80px;
-    max-height: 120px;
-    background-color: rgba(255, 255, 255, 0.9);
-    z-index: 1;
-    padding: 5px 0;
+    min-height: 200px;
+    max-height: 200px;
+    background: linear-gradient(135deg, rgba(207, 157, 165, 0.11), rgba(218, 203, 205, 0.048));
+    z-index: 50;
+    padding: 10px 0;
     overflow-y: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(255, 192, 203, 0.3);
+    border: 1px solid rgba(255, 192, 203, 0.5);
   }
   .info-row {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-bottom: 2px;
+    margin-bottom: 1px;  /* 減少間距 */
     width: 100%;
-    gap: 1px;
+    gap: 1px;  /* 減少間距 */
   }
   .info {
     margin: 0;
-    font-size: 11px;
+    font-size: 14px;  /* 增加字體大小 */
     text-align: center;
     width: 100%;
     white-space: nowrap;
     color: #0066ff;
-    line-height: 1.2;
+    line-height: 1.2;  /* 稍微增加行高 */
+    padding: 1px 0;  /* 減少內邊距 */
   }
-  /* 縮小 Total Power 的字體 */
   .info-container #leftTotalPower,
   .info-container #rightTotalPower {
-    font-size: 12px;
-    opacity: 0.8;
-    color: #0066ff;
+    font-size: 16px;
+    font-weight: bold;
+    opacity: 1;
+    margin-top: 2px;
+    padding: 2px;
+    border-radius: 5px;
+    width: 90%;
+    transition: all 0.3s ease;
   }
-  /* 添加響應式字體大小 */
-  @media screen and (max-width: 1200px) {
-    .info {
-      font-size: 12px;
-    }
+
+  .info-container #leftTotalPower.win[data-intensity="high"],
+  .info-container #rightTotalPower.win[data-intensity="high"] {
+    color: #00ff00;
+    background: rgba(0, 255, 0, 0.2);
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
   }
-  @media screen and (max-width: 900px) {
-    .info {
-      font-size: 10px;
-    }
+
+  .info-container #leftTotalPower.win[data-intensity="medium"],
+  .info-container #rightTotalPower.win[data-intensity="medium"] {
+    color: #00cc00;
+    background: rgba(0, 204, 0, 0.15);
+    text-shadow: 0 0 6px rgba(0, 204, 0, 0.4);
+  }
+
+  .info-container #leftTotalPower.win[data-intensity="low"],
+  .info-container #rightTotalPower.win[data-intensity="low"] {
+    color: #009900;
+    background: rgba(0, 153, 0, 0.1);
+    text-shadow: 0 0 4px rgba(0, 153, 0, 0.3);
+  }
+
+  .info-container #leftTotalPower.defeated[data-intensity="high"],
+  .info-container #rightTotalPower.defeated[data-intensity="high"] {
+    color: #ff0000;
+    background: rgba(255, 0, 0, 0.2);
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+  }
+
+  .info-container #leftTotalPower.defeated[data-intensity="medium"],
+  .info-container #rightTotalPower.defeated[data-intensity="medium"] {
+    color: #cc0000;
+    background: rgba(204, 0, 0, 0.15);
+    text-shadow: 0 0 6px rgba(204, 0, 0, 0.4);
+  }
+
+  .info-container #leftTotalPower.defeated[data-intensity="low"],
+  .info-container #rightTotalPower.defeated[data-intensity="low"] {
+    color: #990000;
+    background: rgba(153, 0, 0, 0.1);
+    text-shadow: 0 0 4px rgba(153, 0, 0, 0.3);
+  }
+  .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 400px;
+    width: 100%;
+    height: 300px;
+    overflow-y: auto;
+    margin-top: 0;
+    background: linear-gradient(135deg, rgba(255, 192, 203, 0.15), rgba(255, 182, 193, 0.1));
+    z-index: 50;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(255, 192, 203, 0.2);
+    border: 1px solid rgba(255, 192, 203, 0.3);
+    padding: 15px;
+    gap: 5px;
+  }
+  .button {
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 5px;
+    width: 110px;
+    background: linear-gradient(135deg, #ffd1dc, #ffb6c1);
+    border: 2px solid #ff99ac;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.3);
+    color: #4a4a4a;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+  }
+  .button:hover:not(.disabled) {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 182, 193, 0.4);
+    background: linear-gradient(135deg, #ffb6c1, #ff99ac);
+    border-color: #ff8da1;
+    color: #2a2a2a;
+  }
+  .button:active:not(.disabled) {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 4px rgba(255, 182, 193, 0.2);
+  }
+  .button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+    border-color: #ddd;
+    color: #999;
+    box-shadow: none;
   }
   .fightbutton {
     width: 100%;
@@ -503,35 +632,90 @@ const characterNames = personImages.map(image => {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
-    z-index: 1000;
+    z-index: 100;
   }
   .fightbutton button {
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 15px 40px;
+    font-size: 24px;
+    font-weight: bold;
     cursor: pointer;
+    position: relative;
+    z-index: 100;
+    background: linear-gradient(45deg, #ff4d4d, #ff0000);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .fightbutton button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+  }
+  .fightbutton button:active {
+    transform: translateY(1px);
   }
   .result {
     font-weight: bold;
-    margin-top: 2px;
-    margin-bottom: 2px;
-    font-size: 40%;
-    line-height: 1;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    font-size: 14px;  /* 增加結果字體大小 */
+    line-height: 1.2;
   }
   .win {
-    color: green;
-    font-size: 14px;
+    color: #00cc00;
+    font-size: 18px;
+    text-shadow: 0 0 5px rgba(0, 204, 0, 0.3);
   }
+
+  .win[data-intensity="high"] {
+    color: #00ff00;
+    text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+  }
+
+  .win[data-intensity="medium"] {
+    color: #00cc00;
+    text-shadow: 0 0 6px rgba(0, 204, 0, 0.4);
+  }
+
+  .win[data-intensity="low"] {
+    color: #009900;
+    text-shadow: 0 0 4px rgba(0, 153, 0, 0.3);
+  }
+
   .defeated {
-    color: rgb(146, 1, 1);
-    font-size: 14px;
+    color: #cc0000;
+    font-size: 18px;
+    text-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
   }
+
+  .defeated[data-intensity="high"] {
+    color: #ff0000;
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+  }
+
+  .defeated[data-intensity="medium"] {
+    color: #cc0000;
+    text-shadow: 0 0 6px rgba(204, 0, 0, 0.4);
+  }
+
+  .defeated[data-intensity="low"] {
+    color: #990000;
+    text-shadow: 0 0 4px rgba(153, 0, 0, 0.3);
+  }
+
   .fdefeated {
-    color: rgb(255, 41, 41);
-    font-size: 14px;
+    color: #ff3333;
+    font-size: 18px;
+    text-shadow: 0 0 5px rgba(255, 51, 51, 0.3);
   }
+
   .sdefeated {
-    color: rgb(255, 85, 85);
-    font-size: 14px;
+    color: #ff6666;
+    font-size: 18px;
+    text-shadow: 0 0 5px rgba(255, 102, 102, 0.3);
   }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -580,5 +764,33 @@ const characterNames = personImages.map(image => {
   }
   .glow-extreme {
     animation: glowExtreme 0.5s ease-in-out;
+  }
+  .result-image {
+    position: relative;
+    z-index: 100;
+    font-size: 14px;  /* 增加結果圖片字體大小 */
+    font-weight: bold;
+    margin: 1px 0;  /* 減少間距 */
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  /* 自定義滾動條樣式 */
+  .button-container::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .button-container::-webkit-scrollbar-track {
+    background: rgba(255, 192, 203, 0.1);
+    border-radius: 4px;
+  }
+
+  .button-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 182, 193, 0.5);
+    border-radius: 4px;
+  }
+
+  .button-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 182, 193, 0.7);
   }
 </style> 

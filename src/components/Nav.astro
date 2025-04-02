@@ -235,9 +235,9 @@ const iconLinks: {
           
           // 檢查 token 是否有效
           if (data.active) {
-            // 檢查用戶是否具有 peoplesystem-admin 角色
-            const hasAccess = data.realm_access?.roles?.includes('peoplesystem-admin') || false;
-            console.log('User has admin access:', hasAccess);
+            // 檢查 preferred_username 是否為 chiaki 或 sorane
+            const hasAccess = data.preferred_username === 'chiaki' || data.preferred_username === 'sorane';
+            console.log('User has access:', hasAccess, 'Username:', data.preferred_username);
             
             return {
               isValid: true,
