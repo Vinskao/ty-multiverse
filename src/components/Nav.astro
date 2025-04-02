@@ -193,77 +193,110 @@ const iconLinks: {
     const username = urlParams.get('username');
     const token = urlParams.get('token');
 
-    // 驗證 token 是否有效
+    // 驗證 token 是否有效並獲取用戶角色
     async function verifyToken(token: string) {
       try {
-        const response = await fetch(
-          `${TYMB_URL}/keycloak/introspect?token=${encodeURIComponent(token)}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json',
-            },
-            credentials: 'include',
-            mode: 'cors'
-          }
-        );
+        // 從 URL 參數中獲取 refresh token
+        const urlParams = new URLSearchParams(window.location.search);
+        const refreshToken = urlParams.get('refresh_token');
+
+        // 構建 API URL，包含可選的 refresh token
+        const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
+        apiUrl.searchParams.set('token', token);
+        if (refreshToken) {
+          apiUrl.searchParams.set('refreshToken', refreshToken);
+        }
+
+        const response = await fetch(apiUrl.toString(), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          credentials: 'include',
+          mode: 'cors'
+        });
 
         if (response.ok) {
-          return true;
+          const data = await response.json();
+          console.log('Token introspection data:', data);
+          
+          // 檢查是否是新刷新的 token
+          if (data.refreshed) {
+            // 更新 URL 中的 token
+            const newToken = data.access_token;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('token', newToken);
+            if (data.refresh_token) {
+              currentUrl.searchParams.set('refresh_token', data.refresh_token);
+            }
+            window.history.replaceState({}, '', currentUrl.toString());
+          }
+          
+          // 檢查 token 是否有效
+          if (data.active) {
+            // 檢查用戶是否具有 peoplesystem-admin 角色
+            const hasAccess = data.realm_access?.roles?.includes('peoplesystem-admin') || false;
+            console.log('User has admin access:', hasAccess);
+            
+            return {
+              isValid: true,
+              hasAccess
+            };
+          }
         }
-        return false;
+        return {
+          isValid: false,
+          hasAccess: false
+        };
       } catch (error) {
         console.error('Token verification failed:', error);
-        return false;
+        return {
+          isValid: false,
+          hasAccess: false
+        };
       }
     }
 
     // 更新導航欄的登入/登出狀態
     const updateLoginState = async () => {
       if (token) {
-        const isValid = await verifyToken(token);
+        const { isValid, hasAccess } = await verifyToken(token);
         if (!isValid) {
-          // Token 無效，重定向到登入頁面
           window.location.href = '/tymultiverse/login';
           return;
         }
-      }
-
-      const isLoggedIn = !!username && !!token;
-      const loginLink = document.querySelector('a[href="/tymultiverse/login"]') as HTMLAnchorElement;
-      
-      if (loginLink) {
-        if (isLoggedIn) {
+        
+        const loginLink = document.querySelector('a[href="/tymultiverse/login"]') as HTMLAnchorElement;
+        if (loginLink) {
           loginLink.textContent = 'Logout';
           loginLink.href = '#';
+        }
+
+        // 只有當用戶具有 peoplesystem-admin 角色時才顯示特定選項
+        if (hasAccess) {
+          const navItems = document.querySelectorAll('.nav-items li');
+          const wildlandLink = Array.from(navItems).find(item => item.textContent?.includes('Wildland'));
+          const palaisLink = Array.from(navItems).find(item => item.textContent?.includes('Palais'));
+
+          if (!wildlandLink) {
+            const wildlandLi = document.createElement('li');
+            wildlandLi.innerHTML = `<a href="/tymultiverse/wildland/?username=${username}&token=${token}" class="link">Wildland</a>`;
+            navItems[navItems.length - 1].after(wildlandLi);
+          }
+          if (!palaisLink) {
+            const palaisLi = document.createElement('li');
+            palaisLi.innerHTML = `<a href="/tymultiverse/palais/?username=${username}&token=${token}" class="link">Palais</a>`;
+            navItems[navItems.length - 1].after(palaisLi);
+          }
         } else {
-          loginLink.textContent = 'Login';
-          loginLink.href = '/tymultiverse/login';
+          // 如果用戶沒有權限，移除這些選項
+          const wildlandLink = Array.from(document.querySelectorAll('.nav-items li')).find(item => item.textContent?.includes('Wildland'));
+          const palaisLink = Array.from(document.querySelectorAll('.nav-items li')).find(item => item.textContent?.includes('Palais'));
+          
+          if (wildlandLink) wildlandLink.remove();
+          if (palaisLink) palaisLink.remove();
         }
-      }
-
-      // 更新導航選項
-      const navItems = document.querySelectorAll('.nav-items li');
-      const wildlandLink = Array.from(navItems).find(item => item.textContent?.includes('Wildland'));
-      const palaisLink = Array.from(navItems).find(item => item.textContent?.includes('Palais'));
-
-      if (isLoggedIn) {
-        // 如果已登入但沒有這些選項，添加它們
-        if (!wildlandLink) {
-          const wildlandLi = document.createElement('li');
-          wildlandLi.innerHTML = '<a href="/tymultiverse/wildland/" class="link">Wildland</a>';
-          navItems[navItems.length - 1].after(wildlandLi);
-        }
-        if (!palaisLink) {
-          const palaisLi = document.createElement('li');
-          palaisLi.innerHTML = '<a href="/tymultiverse/palais/" class="link">Palais</a>';
-          navItems[navItems.length - 1].after(palaisLi);
-        }
-      } else {
-        // 如果未登入但有這些選項，移除它們
-        if (wildlandLink) wildlandLink.remove();
-        if (palaisLink) palaisLink.remove();
       }
     };
 
@@ -276,12 +309,15 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        if (token) {
+        // 獲取 refresh token
+        const refreshToken = urlParams.get('refresh_token');
+        
+        if (refreshToken) {
           try {
             const response = await fetch(
-              `${TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(token)}`,
+              `${TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(refreshToken)}`,
               {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                   'Content-Type': 'application/x-www-form-urlencoded',
                   'Accept': 'application/json',
@@ -291,13 +327,22 @@ const iconLinks: {
               }
             );
 
-            // 重定向到主頁
-            window.location.href = '/tymultiverse/';
+            if (response.ok) {
+              // 登出成功，重定向到主頁
+              window.location.href = '/tymultiverse/';
+            } else {
+              console.error('Logout failed:', await response.text());
+              // 即使請求失敗也重定向到主頁
+              window.location.href = '/tymultiverse/';
+            }
           } catch (error) {
             console.error('Logout failed:', error);
             // 即使請求失敗也重定向到主頁
             window.location.href = '/tymultiverse/';
           }
+        } else {
+          // 如果沒有 refresh token，直接重定向到主頁
+          window.location.href = '/tymultiverse/';
         }
       });
     }
