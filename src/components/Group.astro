@@ -30,7 +30,6 @@ if (!username || !token) {
   .army-title {
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 15px;
     color: #fff;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
@@ -126,30 +125,99 @@ if (!username || !token) {
       Object.entries(armyGroups).forEach(([army, characters]) => {
         const armyContainer = document.createElement('div');
         armyContainer.className = 'army-container';
+        armyContainer.style.marginTop = '50px';
 
         const armyTitle = document.createElement('h2');
         armyTitle.className = 'army-title';
         armyTitle.textContent = army;
+        armyTitle.style.marginBottom = '15px';
 
         const charactersGrid = document.createElement('div');
         charactersGrid.className = 'box-container';
-        charactersGrid.style.width = '960px';
         charactersGrid.style.margin = '0 auto';
 
         (characters as any[]).forEach(character => {
+            const characterContainer = document.createElement('div');
+            characterContainer.style.display = 'inline-block';
+            characterContainer.style.width = '200px';
+            characterContainer.style.height = '300px';
+            characterContainer.style.textAlign = 'center';
+            characterContainer.style.marginLeft = '-100px';
+            characterContainer.style.position = 'relative';
+            characterContainer.style.zIndex = '1';
+
             const img = document.createElement('img');
-            img.style.width = '12.5%'; // 100% / 8 = 12.5%
-            img.style.height = 'auto';
-            img.style.display = 'inline-block';
-            img.style.marginLeft = '-4px';
+            img.style.width = '200px';
+            img.style.height = '300px';
+            img.style.display = 'block';
             img.style.objectFit = 'contain';
+            img.style.margin = '0 auto';
+            img.style.padding = '0';
+            img.style.border = 'none';
+            img.style.position = 'absolute';
+            img.style.top = '50%';
+            img.style.left = '50%';
+            img.style.transform = 'translate(-50%, -50%)';
+            img.style.zIndex = '2';
             img.src = `/tymultiverse/assets/person/${character.name || 'default'}.png`;
             img.alt = character.nameOriginal;
             img.onerror = function() {
               this.src = '/tymultiverse/assets/person/default.png';
             };
-            img.addEventListener('mouseover', () => showCharacterInfo(character));
-            charactersGrid.appendChild(img);
+            img.addEventListener('mouseover', () => {
+              img.style.zIndex = '3';
+              showCharacterInfo(character);
+            });
+            img.addEventListener('mouseout', () => {
+              img.style.zIndex = '2';
+            });
+
+            const infoContainer = document.createElement('div');
+            infoContainer.style.padding = '2px';
+            infoContainer.style.color = '#fff';
+            infoContainer.style.textShadow = '0 0 2px rgba(0,0,0,0.5)';
+            infoContainer.style.width = '200px';
+            infoContainer.style.position = 'absolute';
+            infoContainer.style.bottom = '-40px';
+            infoContainer.style.left = '0';
+            infoContainer.style.overflow = 'hidden';
+            infoContainer.style.fontSize = '12px';
+            infoContainer.style.zIndex = '4';
+            infoContainer.style.backgroundColor = 'transparent';
+            infoContainer.style.padding = '5px';
+            infoContainer.style.borderRadius = '5px';
+
+            const nameText = document.createElement('p');
+            nameText.textContent = character.nameOriginal;
+            nameText.style.margin = '0';
+            nameText.style.fontWeight = 'bold';
+            nameText.style.fontSize = 'clamp(8px, 1.2vw, 10px)';
+            nameText.style.whiteSpace = 'nowrap';
+            nameText.style.overflow = 'hidden';
+            nameText.style.textOverflow = 'ellipsis';
+
+            const attributesText = document.createElement('p');
+            attributesText.textContent = `Attributes: ${character.attributes}`;
+            attributesText.style.margin = '0';
+            attributesText.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
+            attributesText.style.whiteSpace = 'nowrap';
+            attributesText.style.overflow = 'hidden';
+            attributesText.style.textOverflow = 'ellipsis';
+
+            const sizeText = document.createElement('p');
+            sizeText.textContent = `${character.heightCm}cm / ${character.weightKg}kg`;
+            sizeText.style.margin = '0';
+            sizeText.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
+            sizeText.style.whiteSpace = 'nowrap';
+            sizeText.style.overflow = 'hidden';
+            sizeText.style.textOverflow = 'ellipsis';
+
+            infoContainer.appendChild(nameText);
+            infoContainer.appendChild(attributesText);
+            infoContainer.appendChild(sizeText);
+            characterContainer.appendChild(img);
+            characterContainer.appendChild(infoContainer);
+            charactersGrid.appendChild(characterContainer);
         });
 
         armyContainer.appendChild(armyTitle);
