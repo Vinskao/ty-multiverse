@@ -8,12 +8,32 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 </div>
 <div class="fightercontainer">
   <div class="half">
-    <img
-      id="leftImage"
-      class="imagefighter"
-      src="/tymultiverse/assets/person/default.png"
-      alt="Left Image"
-    />
+    <div class="image-container">
+      <img
+        id="leftImage"
+        class="imagefighter"
+        src="/tymultiverse/assets/person/default.png"
+        alt="Left Image"
+      />
+      <img
+        id="leftOverlay1"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingWavo.png"
+        alt="Left Overlay 1"
+      />
+      <img
+        id="leftOverlay2"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingYui.png"
+        alt="Left Overlay 2"
+      />
+      <img
+        id="leftOverlay3"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingMiku.png"
+        alt="Left Overlay 3"
+      />
+    </div>
     <div id="leftInfo" class="info-container">
       <div class="info" id="leftName"></div>
       <div id="leftResult" class="result-image"></div>
@@ -28,12 +48,32 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     <div class="button-container" id="leftButtons"></div>
   </div>
   <div class="half">
-    <img
-      id="rightImage"
-      class="imagefighter"
-      src="/tymultiverse/assets/person/default.png"
-      alt="Right Image"
-    />
+    <div class="image-container">
+      <img
+        id="rightImage"
+        class="imagefighter"
+        src="/tymultiverse/assets/person/default.png"
+        alt="Right Image"
+      />
+      <img
+        id="rightOverlay1"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingWavo.png"
+        alt="Right Overlay 1"
+      />
+      <img
+        id="rightOverlay2"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingYui.png"
+        alt="Right Overlay 2"
+      />
+      <img
+        id="rightOverlay3"
+        class="overlay-image"
+        src="/tymultiverse/assets/person/RavishingMiku.png"
+        alt="Right Overlay 3"
+      />
+    </div>
     <div id="rightInfo" class="info-container">
       <div class="info" id="rightName"></div>
       <div id="rightResult" class="result-image"></div>
@@ -150,9 +190,41 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     const leftName = document.getElementById("leftName");
     const rightName = document.getElementById("rightName");
     
-    // 移除所有動畫效果
+    // 移除所有動畫效果和疊加圖像
     leftImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
     rightImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
+    
+    // 移除疊加圖像
+    const leftOverlay1 = document.getElementById("leftOverlay1");
+    const leftOverlay2 = document.getElementById("leftOverlay2");
+    const leftOverlay3 = document.getElementById("leftOverlay3");
+    const rightOverlay1 = document.getElementById("rightOverlay1");
+    const rightOverlay2 = document.getElementById("rightOverlay2");
+    const rightOverlay3 = document.getElementById("rightOverlay3");
+    if (leftOverlay1) {
+      leftOverlay1.classList.remove('active', 'slide-in-right');
+      leftOverlay1.style.transform = 'translateX(100%)';
+    }
+    if (leftOverlay2) {
+      leftOverlay2.classList.remove('active', 'slide-in-left');
+      leftOverlay2.style.transform = 'translateX(-100%)';
+    }
+    if (leftOverlay3) {
+      leftOverlay3.classList.remove('active', 'scale-in');
+      leftOverlay3.style.transform = 'scale(1.5)';
+    }
+    if (rightOverlay1) {
+      rightOverlay1.classList.remove('active', 'slide-in-right');
+      rightOverlay1.style.transform = 'translateX(100%)';
+    }
+    if (rightOverlay2) {
+      rightOverlay2.classList.remove('active', 'slide-in-left');
+      rightOverlay2.style.transform = 'translateX(-100%)';
+    }
+    if (rightOverlay3) {
+      rightOverlay3.classList.remove('active', 'scale-in');
+      rightOverlay3.style.transform = 'scale(1.5)';
+    }
     
     // 清除結果文本
     if (leftName) leftName.innerHTML = fighters.left.name || "";
@@ -160,11 +232,11 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     
     // 更新選擇
     fighters[side].image = imagePath;
-    fighters[side].name = selectedName; // 保存角色名稱
+    fighters[side].name = selectedName;
     const sideImage = document.getElementById(`${side}Image`) as HTMLImageElement;
     if (sideImage) sideImage.src = imagePath;
     updateButtonStates();
-    fetchFighterInfo(side, imagePath); // 傳遞完整圖片路徑，確保正確提取名稱
+    fetchFighterInfo(side, imagePath);
   }
   
   // 更新按鈕狀態 (禁用已選擇的角色)
@@ -386,30 +458,49 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     const winnerCharName = fighters[winnerSide].nameOriginal || fighters[winnerSide].name;
     const loserCharName = fighters[loserSide].nameOriginal || fighters[loserSide].name;
     
+    // 添加疊加圖像
+    const loserOverlay1 = document.getElementById(`${loserSide}Overlay1`) as HTMLImageElement;
+    const loserOverlay2 = document.getElementById(`${loserSide}Overlay2`) as HTMLImageElement;
+    const loserOverlay3 = document.getElementById(`${loserSide}Overlay3`) as HTMLImageElement;
+    if (loserOverlay1 && loserOverlay2 && loserOverlay3) {
+      // 先添加左側滑入的圖像
+      loserOverlay2.classList.add('active', 'slide-in-left');
+      
+      // 延遲添加右側滑入的圖像
+      setTimeout(() => {
+        loserOverlay1.classList.add('active', 'slide-in-right');
+      }, 250); // 延遲 250ms，讓第一張圖滑入一半時第二張圖開始滑入
+
+      // 延遲添加第三張圖像（從後方縮放出現）
+      setTimeout(() => {
+        loserOverlay3.classList.add('active', 'scale-in');
+      }, 500); // 延遲 500ms，讓前兩張圖完全滑入後再顯示第三張
+    }
+    
     if (difference > 0.4) {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="high">Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #ff0000; text-shadow: 0 0 8px rgba(255, 0, 0, 0.5); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="high">Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #00ff00; text-shadow: 0 0 8px rgba(0, 255, 0, 0.5); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake-extreme');
       if (winnerImage) winnerImage.classList.add('glow-extreme');
     } else if (difference > 0.1) {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="medium">Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #cc0000; text-shadow: 0 0 6px rgba(204, 0, 0, 0.4); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="medium">Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #00cc00; text-shadow: 0 0 6px rgba(0, 204, 0, 0.4); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake-hard');
       if (winnerImage) winnerImage.classList.add('glow-strong');
     } else {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result win' data-intensity="low">Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #990000; text-shadow: 0 0 4px rgba(153, 0, 0, 0.3); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result defeated' data-intensity="low">Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #009900; text-shadow: 0 0 4px rgba(0, 153, 0, 0.3); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake');
       if (winnerImage) winnerImage.classList.add('glow');
@@ -465,28 +556,101 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     justify-content: flex-start;
     margin: 0;
     width: 400px;
-    min-height: 1200px;  /* 增加最小高度 */
+    min-height: 1200px;
     flex: none;
-    gap: 10px;  /* 減少元素間距 */
+    gap: 10px;
     position: relative;
     z-index: 50;
   }
-  .imagefighter {
+  .image-container {
+    position: relative;
     width: 400px;
     height: 400px;
+  }
+  .imagefighter {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     border: 1px solid #000;
     display: block;
     margin: 0 auto;
     position: relative;
-    top: 0;
     background-color: rgba(0, 0, 0, 0.1);
     z-index: 50;
   }
-  .imagefighter img {
+  .overlay-image {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
+    z-index: 51;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.5s ease;
+  }
+  .overlay-image.active {
+    opacity: 1;
+  }
+  #leftOverlay1, #rightOverlay1 {
+    transform: translateX(100%);
+  }
+  #leftOverlay2, #rightOverlay2 {
+    transform: translateX(-100%);
+  }
+  #leftOverlay1.active, #rightOverlay1.active {
+    transform: translateX(0);
+  }
+  #leftOverlay2.active, #rightOverlay2.active {
+    transform: translateX(0);
+  }
+  #leftOverlay3, #rightOverlay3 {
+    transform: scale(1.5);
+    z-index: 45;  // 降低 z-index，確保在所有圖片後面
+  }
+  #leftOverlay3.active, #rightOverlay3.active {
+    transform: scale(1);
+    opacity: 1;
+  }
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  @keyframes scaleIn {
+    from {
+      transform: scale(1.5);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  .slide-in-right {
+    animation: slideInRight 0.5s ease forwards;
+  }
+  .slide-in-left {
+    animation: slideInLeft 0.5s ease forwards;
+  }
+  .scale-in {
+    animation: scaleIn 0.5s ease forwards;
   }
   .info-container {
     display: flex;

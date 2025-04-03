@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
-import Galwall from "../components/Galwall.html";
+import Galwall from "../components/Galwall.astro";
 import Org from  "../components/Org.html";
 import Fight from  "../components/Fight.astro";
 import Group from  "../components/Group.astro";
@@ -35,7 +35,7 @@ if (!username || !token) {
         margin-bottom: 0;
         position: relative;
         z-index: 2;
-        margin-top: 0;
+        margin-top: 100px;
       }
 
       .system-container:first-of-type {

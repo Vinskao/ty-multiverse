@@ -1,0 +1,169 @@
+---
+// 檢查登入狀態
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+// 如果未登入，重定向到首頁
+if (!username || !token) {
+  return Astro.redirect('/tymultiverse/');
+}
+---
+
+<div id="containerFront"></div>
+<div id="containerBack"></div>
+
+<style>
+  #containerFront,
+  #containerBack {
+    position: absolute;
+    left: 0;
+    display: flex;
+    overflow: hidden;
+    height: 550px;
+  }
+
+  #containerFront {
+    top: 0;
+    z-index: 2;
+  }
+
+  #containerBack {
+    top: 0;
+    z-index: 1;
+  }
+
+  @keyframes slideLeft {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes slideLeftSlow {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+</style>
+
+<script>
+  let frontList: string[] = [];
+  let backList: string[] = [];
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // 預定義的圖片列表
+    const allImages = [
+      "Kamira.png", "Wavo.png", "Sorane.png","Gara.png", "Draeny.png", "Masako.png",
+      "Sayuri.png", "Isina.png", "Chiaki.png", "Hitomi.png", "Siyu.png",
+      "Azusa.png", "Zexu.png", "Medicis.png", "Aile.png", "Taisy.png",
+      "Mayo.png", "MayoPumped.png", "Spoke.png", "SpokeTied.png", "Yuko.png",
+      "Eris.png", "MasakoEntering.png", "Sofia.png", "Miku.png", "Kristae.png",
+      "Ashe.png", "Doire.png", "Delsa.png", "Etsuko.png", "Kyu.png",
+      "Riuri.png", "Natsumi.png", "Kazuko.png", "SayuriRuined.png", "Miyu.png",
+      "Valmet.png", "Samui.png", "Paprika.png", "Caleigh.png", "KamiraPeeing.png",
+      "Z.png", "Branwen.png", "Lucrece.png", "Uiobbeci.png", "Nianca.png",
+      "Yui.png", "Mesoyei.png", "Ann.png", "Cleopatra.png", "Shuan.png",
+      "Miyako.png"
+    ].map(name => `/tymultiverse/assets/person/${name}`);
+
+    const imagePromises = allImages.map(imagePath => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ path: imagePath, valid: true });
+        img.onerror = () => resolve({ path: imagePath, valid: false });
+        img.src = imagePath;
+      });
+    });
+
+    Promise.all(imagePromises).then((results: Array<{valid: boolean, path: string}>) => {
+      const validImages = results
+        .filter(result => result.valid)
+        .map(result => result.path);
+
+      // 分配圖片到 front 和 back 列表
+      const totalImages = validImages.length;
+      const frontCount = Math.ceil(totalImages / 3);
+      
+      frontList = validImages.slice(0, frontCount);
+      backList = validImages.slice(frontCount);
+
+      // 初始化動畫
+      const containerFront = document.getElementById("containerFront");
+      const containerBack = document.getElementById("containerBack");
+
+      function createAdDiv(imageURL, isFront) {
+        const adDiv = document.createElement("div");
+        adDiv.className = isFront ? "ad-front" : "ad-back";
+        
+        // 動態添加樣式
+        Object.assign(adDiv.style, {
+          width: '300px',
+          height: '550px',
+          marginRight: isFront ? '-50px' : '-150px', // back 圖片更擠
+          transition: 'transform 3s ease-in-out',
+          display: 'flex',
+          alignItems: 'center',
+          animation: 'none'
+        });
+
+        const adImage = document.createElement("img");
+        Object.assign(adImage.style, {
+          width: 'auto',
+          height: '550px',
+          maxWidth: '300px',
+          maxHeight: '550px',
+          objectFit: 'contain',
+          display: 'block'
+        });
+        adImage.src = imageURL;
+        adDiv.appendChild(adImage);
+        return adDiv;
+      }
+
+      function loadAds(imageList, container, isFront) {
+        container.innerHTML = "";
+        const numAds = imageList.length;
+        for (let i = 0; i < numAds; i++) {
+          const imageURL = imageList[i];
+          const adDiv = createAdDiv(imageURL, isFront);
+          container.appendChild(adDiv);
+        }
+      }
+
+      function animateContainer(container, imageList, isFront) {
+        const duration = isFront ? 200 : 600;
+        
+        function startAnimation() {
+          container.style.transform = 'translateX(0)';
+          container.style.animation = `${isFront ? 'slideLeft' : 'slideLeftSlow'} ${duration}s linear infinite`;
+        }
+        
+        startAnimation();
+
+        // 監聽動畫結束事件，重新排列圖片
+        container.addEventListener('animationend', () => {
+          // 隨機打亂圖片順序
+          const shuffledImages = [...imageList].sort(() => Math.random() - 0.5);
+          loadAds(shuffledImages, container, isFront);
+          container.style.width = (300 * shuffledImages.length) + "px";
+          startAnimation();
+        });
+      }
+
+      loadAds(frontList, containerFront, true);
+      loadAds(backList, containerBack, false);
+
+      containerFront.style.width = (300 * frontList.length) + "px";
+      containerBack.style.width = (300 * backList.length) + "px";
+
+      animateContainer(containerFront, frontList, true);
+      animateContainer(containerBack, backList, false);
+    });
+  });
+</script> 
