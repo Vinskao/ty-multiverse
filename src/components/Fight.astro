@@ -7,7 +7,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   <button id="fightButton">Fight</button>
 </div>
 <div class="fightercontainer">
-  <div class="half">
+  <div class="half left-container">
     <div class="image-container">
       <img
         id="leftImage"
@@ -47,7 +47,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     </div>
     <div class="button-container" id="leftButtons"></div>
   </div>
-  <div class="half">
+  <div class="half right-container">
     <div class="image-container">
       <img
         id="rightImage"
@@ -96,18 +96,29 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     totalPower: number;
     name: string | null;
     nameOriginal?: string;
+    physicPower?: number;
+    magicPower?: number;
+    utilityPower?: number;
+    attributes?: string;
+  }
+
+  interface SideFighters {
+    main: Fighter;
+    left?: Fighter;
+    right?: Fighter;
   }
 
   interface Fighters {
-    left: Fighter;
-    right: Fighter;
+    left: SideFighters;
+    right: SideFighters;
   }
 
   // 全局設置與狀態
   const config = {
     baseImagePath: "/tymultiverse/assets/person/",
     apiEndpoint: `${import.meta.env.PUBLIC_TYMB_URL}/people/get-by-name`,
-    defaultImage: "/tymultiverse/assets/person/default.png"
+    defaultImage: "/tymultiverse/assets/person/default.png",
+    sideOffset: 75 // 側邊角色的偏移量
   };
   
   // 初始化角色列表
@@ -272,8 +283,16 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   
   // 紀錄選擇的角色
   const fighters: Fighters = {
-    left: { image: null, totalPower: 0, name: null },
-    right: { image: null, totalPower: 0, name: null }
+    left: {
+      main: { image: null, totalPower: 0, name: null },
+      left: undefined,
+      right: undefined
+    },
+    right: {
+      main: { image: null, totalPower: 0, name: null },
+      left: undefined,
+      right: undefined
+    }
   };
   
   // DOM 元素快速訪問
@@ -287,6 +306,8 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   // 初始化函數
   function init() {
     fetchCharacterList();  // 獲取角色列表
+    createSideContainers('left');
+    createSideContainers('right');
   }
   
   // 創建角色選擇按鈕
@@ -305,94 +326,183 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     });
   }
   
+  // 創建側邊角色容器
+  function createSideContainers(side: 'left' | 'right') {
+    const mainContainer = document.querySelector(`.${side}-container`);
+    if (!mainContainer) return;
+
+    // 創建左側容器
+    const leftContainer = document.createElement('div');
+    leftContainer.className = `${side}-side-container left-side`;
+    leftContainer.style.position = 'absolute';
+    leftContainer.style.left = `-${config.sideOffset}px`;
+    leftContainer.style.top = '0';
+    leftContainer.style.width = '400px';
+    leftContainer.style.height = '400px';
+    leftContainer.style.zIndex = '40';
+
+    // 創建右側容器
+    const rightContainer = document.createElement('div');
+    rightContainer.className = `${side}-side-container right-side`;
+    rightContainer.style.position = 'absolute';
+    rightContainer.style.right = `-${config.sideOffset}px`;
+    rightContainer.style.top = '0';
+    rightContainer.style.width = '400px';
+    rightContainer.style.height = '400px';
+    rightContainer.style.zIndex = '40';
+
+    // 創建圖片元素
+    const leftImage = document.createElement('img');
+    leftImage.className = 'imagefighter side-image';
+    leftImage.style.width = '100%';
+    leftImage.style.height = '100%';
+    leftImage.style.objectFit = 'contain';
+    leftImage.style.display = 'none';
+
+    const rightImage = document.createElement('img');
+    rightImage.className = 'imagefighter side-image';
+    rightImage.style.width = '100%';
+    rightImage.style.height = '100%';
+    rightImage.style.objectFit = 'contain';
+    rightImage.style.display = 'none';
+
+    leftContainer.appendChild(leftImage);
+    rightContainer.appendChild(rightImage);
+
+    mainContainer.appendChild(leftContainer);
+    mainContainer.appendChild(rightContainer);
+  }
+  
+  // 清除所有效果
+  function clearAllEffects() {
+    const sides = ['left', 'right'];
+    sides.forEach(side => {
+      // 清除角色圖片效果
+      const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
+      const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
+
+      [mainImage, leftImage, rightImage].forEach(image => {
+        if (image) {
+          image.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
+        }
+      });
+
+      // 清除疊加圖片效果
+      const overlays = [
+        document.getElementById(`${side}Overlay1`),
+        document.getElementById(`${side}Overlay2`),
+        document.getElementById(`${side}Overlay3`)
+      ];
+      
+      overlays.forEach(overlay => {
+        if (overlay) {
+          overlay.classList.remove('active', 'slide-in-right', 'slide-in-left', 'scale-in');
+          overlay.style.transform = '';
+          overlay.style.opacity = '0';
+        }
+      });
+    });
+  }
+
   // 選擇角色
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
     const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]);
     
-    // 檢查是否與另一邊選擇相同的角色
-    if (fighters[otherSide].image && selectedName === fighters[otherSide].name) {
-      return; // 不允許兩邊選擇相同角色
+    if (isCharacterSelected(otherSide, selectedName)) {
+      return;
     }
+
+    clearAllEffects();
     
-    // 清除所有狀態效果
-    const leftImage = document.getElementById("leftImage") as HTMLImageElement;
-    const rightImage = document.getElementById("rightImage") as HTMLImageElement;
-    const leftName = document.getElementById("leftName");
-    const rightName = document.getElementById("rightName");
-    
-    // 移除所有動畫效果和疊加圖像
-    leftImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
-    rightImage.classList.remove('shake', 'shake-hard', 'shake-extreme', 'glow', 'glow-strong', 'glow-extreme');
-    
-    // 移除疊加圖像
-    const leftOverlay1 = document.getElementById("leftOverlay1");
-    const leftOverlay2 = document.getElementById("leftOverlay2");
-    const leftOverlay3 = document.getElementById("leftOverlay3");
-    const rightOverlay1 = document.getElementById("rightOverlay1");
-    const rightOverlay2 = document.getElementById("rightOverlay2");
-    const rightOverlay3 = document.getElementById("rightOverlay3");
-    if (leftOverlay1) {
-      leftOverlay1.classList.remove('active', 'slide-in-right');
-      leftOverlay1.style.transform = 'translateX(100%)';
+    if (!fighters[side].main.image) {
+      fighters[side].main.image = imagePath;
+      fighters[side].main.name = selectedName;
+      const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      if (mainImage) mainImage.src = imagePath;
+    } else if (!fighters[side].left?.image) {
+      fighters[side].left = { image: imagePath, totalPower: 0, name: selectedName };
+      const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
+      if (leftImage) {
+        leftImage.src = imagePath;
+        leftImage.style.display = 'block';
+      }
+    } else if (!fighters[side].right?.image) {
+      fighters[side].right = { image: imagePath, totalPower: 0, name: selectedName };
+      const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
+      if (rightImage) {
+        rightImage.src = imagePath;
+        rightImage.style.display = 'block';
+      }
+    } else {
+      resetSideSelection(side);
+      fighters[side].main.image = imagePath;
+      fighters[side].main.name = selectedName;
+      const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      if (mainImage) mainImage.src = imagePath;
     }
-    if (leftOverlay2) {
-      leftOverlay2.classList.remove('active', 'slide-in-left');
-      leftOverlay2.style.transform = 'translateX(-100%)';
-    }
-    if (leftOverlay3) {
-      leftOverlay3.classList.remove('active', 'scale-in');
-      leftOverlay3.style.transform = 'scale(1.5)';
-    }
-    if (rightOverlay1) {
-      rightOverlay1.classList.remove('active', 'slide-in-right');
-      rightOverlay1.style.transform = 'translateX(100%)';
-    }
-    if (rightOverlay2) {
-      rightOverlay2.classList.remove('active', 'slide-in-left');
-      rightOverlay2.style.transform = 'translateX(-100%)';
-    }
-    if (rightOverlay3) {
-      rightOverlay3.classList.remove('active', 'scale-in');
-      rightOverlay3.style.transform = 'scale(1.5)';
-    }
-    
-    // 清除結果文本
-    if (leftName) leftName.innerHTML = fighters.left.name || "";
-    if (rightName) rightName.innerHTML = fighters.right.name || "";
-    
-    // 更新選擇
-    fighters[side].image = imagePath;
-    fighters[side].name = selectedName;
-    const sideImage = document.getElementById(`${side}Image`) as HTMLImageElement;
-    if (sideImage) sideImage.src = imagePath;
+
     updateButtonStates();
     fetchFighterInfo(side, imagePath);
   }
   
-  // 更新按鈕狀態 (禁用已選擇的角色)
+  // 檢查角色是否已被選擇
+  function isCharacterSelected(side: 'left' | 'right', name: string | undefined): boolean {
+    if (!name) return false;
+    // 檢查所有已選擇的角色（包括兩邊）
+    return fighters.left.main.name === name || 
+           fighters.left.left?.name === name || 
+           fighters.left.right?.name === name ||
+           fighters.right.main.name === name || 
+           fighters.right.left?.name === name || 
+           fighters.right.right?.name === name;
+  }
+
+  // 重置一側的所有選擇
+  function resetSideSelection(side: 'left' | 'right') {
+    fighters[side].main = { image: null, totalPower: 0, name: null, physicPower: 0, magicPower: 0, utilityPower: 0, attributes: "" };
+    fighters[side].left = undefined;
+    fighters[side].right = undefined;
+
+    const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+    const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
+    const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
+
+    if (mainImage) mainImage.src = config.defaultImage;
+    if (leftImage) {
+      leftImage.src = '';
+      leftImage.style.display = 'none';
+    }
+    if (rightImage) {
+      rightImage.src = '';
+      rightImage.style.display = 'none';
+    }
+
+    // 清除 localStorage 數據
+    clearLocalStorage(side);
+  }
+  
+  // 更新按鈕狀態
   function updateButtonStates() {
-    const leftName = fighters.left.image ? characterNames.find(name => name === fighters.left.image.split("/").pop()?.split(".")[0]) : null;
-    const rightName = fighters.right.image ? characterNames.find(name => name === fighters.right.image.split("/").pop()?.split(".")[0]) : null;
+    const selectedNames = new Set([
+      fighters.left.main.name,
+      fighters.left.left?.name,
+      fighters.left.right?.name,
+      fighters.right.main.name,
+      fighters.right.left?.name,
+      fighters.right.right?.name
+    ].filter(Boolean));
     
-    // 更新左側按鈕狀態
-    document.querySelectorAll("#leftButtons .button").forEach(button => {
-      button.classList.toggle("disabled", button.textContent === rightName);
-    });
-    
-    // 更新右側按鈕狀態
-    document.querySelectorAll("#rightButtons .button").forEach(button => {
-      button.classList.toggle("disabled", button.textContent === leftName);
+    document.querySelectorAll("#leftButtons .button, #rightButtons .button").forEach(button => {
+      button.classList.toggle("disabled", selectedNames.has(button.textContent));
     });
   }
   
   // 獲取角色資訊
   async function fetchFighterInfo(side: 'left' | 'right', imagePath: string) {
     try {
-      // 從圖片路徑提取出正確的名稱
       const name = characterNames.find(n => n === imagePath.split("/").pop()?.split(".")[0]);
-      
-      // 使用 API 獲取數據
       const apiName = name;
       
       const token = await getValidToken();
@@ -417,7 +527,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
           if (!newToken) {
             return;
           }
-          // 重試請求
           return fetchFighterInfo(side, imagePath);
         }
         throw new Error(`API 返回錯誤: ${response.status}`);
@@ -425,9 +534,10 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       
       const data = await response.json();
       
-      // 處理API回傳數據
       if (data && data.name) {
         updateFighterInfo(side, data);
+        // 儲存到 localStorage
+        saveToLocalStorage(side, data);
         return;
       }
       throw new Error("API 沒有返回有效數據");
@@ -439,16 +549,37 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   
   // 更新角色資訊
   function updateFighterInfo(side: 'left' | 'right', fighter: any) {
-    // 確保所有力量值都是數字，不是字符串
-    const physicPower = parseInt(String(fighter.physicPower || 0), 10);
-    const magicPower = parseInt(String(fighter.magicPower || 0), 10);
-    const utilityPower = parseInt(String(fighter.utilityPower || 0), 10);
+    // 從 localStorage 獲取累加的值
+    const storageKey = `fighters_${side}`;
+    const storedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    // 獲取當前顯示的角色列表
+    const displayedCharacters = [];
+    if (fighters[side].main.image) {
+      const mainName = fighters[side].main.image.split("/").pop()?.split(".")[0];
+      if (mainName) displayedCharacters.push(mainName);
+    }
+    if (fighters[side].left?.image) {
+      const leftName = fighters[side].left.image.split("/").pop()?.split(".")[0];
+      if (leftName) displayedCharacters.push(leftName);
+    }
+    if (fighters[side].right?.image) {
+      const rightName = fighters[side].right.image.split("/").pop()?.split(".")[0];
+      if (rightName) displayedCharacters.push(rightName);
+    }
+
+    // 使用 localStorage 中的值，如果沒有則使用當前角色的值
+    const physicPower = storedData.physicPower || parseInt(String(fighter.physicPower || 0), 10);
+    const magicPower = storedData.magicPower || parseInt(String(fighter.magicPower || 0), 10);
+    const utilityPower = storedData.utilityPower || parseInt(String(fighter.utilityPower || 0), 10);
     const totalPower = physicPower + magicPower + utilityPower;
     
-    // 顯示角色名稱，優先使用 nameOriginal
-    const displayName = fighter.nameOriginal || fighter.name;
+    // 顯示角色名稱，使用 localStorage 中的名稱列表
     const nameElement = document.getElementById(`${side}Name`);
-    if (nameElement) nameElement.textContent = displayName || "N/A";
+    if (nameElement) {
+      const names = storedData.nameOriginal || [];
+      nameElement.textContent = names.join('、') || (fighter.nameOriginal || fighter.name) || "N/A";
+    }
     
     const physicPowerElement = document.getElementById(`${side}PhysicPower`);
     const magicPowerElement = document.getElementById(`${side}MagicPower`);
@@ -458,33 +589,20 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     if (magicPowerElement) magicPowerElement.textContent = `Magic Power: ${magicPower}`;
     if (utilityPowerElement) utilityPowerElement.textContent = `Utility Power: ${utilityPower}`;
     
-    // 顯示屬性及其他信息
-    let attributesText = fighter.attributes || "N/A";
-    if (fighter.race && fighter.race !== "Unknown") {
-      attributesText += ` | ${fighter.race}`;
-    }
-    if (fighter.gender && fighter.gender !== "Unknown") {
-      attributesText += ` | ${fighter.gender}`;
-    }
+    // 顯示屬性，使用 localStorage 中的屬性列表
     const attributesElement = document.getElementById(`${side}Attributes`);
-    if (attributesElement) attributesElement.textContent = `Attributes: ${attributesText}`;
+    if (attributesElement) {
+      const attributes = storedData.attributes || [];
+      attributesElement.textContent = `Attributes: ${attributes.join('、') || (fighter.attributes || "N/A")}`;
+    }
     
-    // 使Total Power顯示更小
+    // 顯示總力量
     const totalPowerElement = document.getElementById(`${side}TotalPower`);
     if (totalPowerElement) totalPowerElement.textContent = `Total Power: ${totalPower}`;
     
     // 確保存儲的總力量是數字
-    fighters[side].totalPower = totalPower;
-    fighters[side].nameOriginal = fighter.nameOriginal;
-    
-    // 調試輸出，檢查力量值
-    // console.log(`${side} fighter power:`, {
-    //   name: displayName,
-    //   physicPower,
-    //   magicPower,
-    //   utilityPower,
-    //   totalPower
-    // });
+    fighters[side].main.totalPower = totalPower;
+    fighters[side].main.nameOriginal = fighter.nameOriginal;
   }
   
   // 清除角色資訊
@@ -503,17 +621,32 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       if (element) element.textContent = "";
     });
     
-    fighters[side].totalPower = 0;
-    fighters[side].nameOriginal = undefined;
+    fighters[side].main.totalPower = 0;
+    fighters[side].main.nameOriginal = undefined;
+  }
+  
+  // 檢查並載入戰鬥版本的圖片
+  async function loadFightingImage(side: 'left' | 'right', originalImagePath: string): Promise<string> {
+    try {
+      const originalName = originalImagePath.split("/").pop()?.split(".")[0];
+      if (!originalName) return originalImagePath;
+
+      const fightingImagePath = originalImagePath.replace(originalName, `${originalName}Fighting`);
+      const response = await fetch(fightingImagePath);
+      
+      if (response.ok) {
+        return fightingImagePath;
+      }
+    } catch (error) {
+      console.error(`Error loading fighting image for ${side}:`, error);
+    }
+    return originalImagePath;
   }
   
   // 開始戰鬥
-  function startFight() {
-    const leftPower = parseInt(String(fighters.left.totalPower || 0), 10);
-    const rightPower = parseInt(String(fighters.right.totalPower || 0), 10);
-    
-    // 調試輸出
-    // console.log("Fight powers:", { leftPower, rightPower });
+  async function startFight() {
+    const leftPower = parseInt(String(fighters.left.main.totalPower || 0), 10);
+    const rightPower = parseInt(String(fighters.right.main.totalPower || 0), 10);
     
     const leftResult = document.getElementById("leftResult");
     const rightResult = document.getElementById("rightResult");
@@ -527,14 +660,17 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     if (rightTotalPower) rightTotalPower.classList.remove("win", "defeated");
     
     // 如果任一方未選擇角色或力量為0，顯示提示
-    if (!fighters.left.image || !fighters.right.image) {
+    if (!fighters.left.main.image || !fighters.right.main.image) {
       alert("請先選擇兩邊的角色");
       return;
     }
+
+    // 載入戰鬥版本的圖片
+    await loadFightingImages('left');
+    await loadFightingImages('right');
     
     // 計算差距百分比
     const percentageDifference = Math.abs(leftPower - rightPower) / Math.max(leftPower, rightPower, 1);
-    // console.log("Percentage difference:", percentageDifference);
     
     // 確定勝負
     if (leftPower > rightPower) {
@@ -549,9 +685,31 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       const leftName = document.getElementById("leftName");
       const rightName = document.getElementById("rightName");
       if (leftName) leftName.innerHTML = 
-        `${fighters.left.nameOriginal || fighters.left.name}<br><span class='result'>draw</span>`;
+        `${fighters.left.main.nameOriginal || fighters.left.main.name}<br><span class='result'>draw</span>`;
       if (rightName) rightName.innerHTML = 
-        `${fighters.right.nameOriginal || fighters.right.name}<br><span class='result'>draw</span>`;
+        `${fighters.right.main.nameOriginal || fighters.right.main.name}<br><span class='result'>draw</span>`;
+    }
+  }
+  
+  // 載入戰鬥版本的圖片
+  async function loadFightingImages(side: 'left' | 'right') {
+    const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+    const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
+    const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
+
+    if (mainImage && fighters[side].main.image) {
+      const mainFightingImage = await loadFightingImage(side, fighters[side].main.image);
+      mainImage.src = mainFightingImage;
+    }
+
+    if (leftImage && fighters[side].left?.image) {
+      const leftFightingImage = await loadFightingImage(side, fighters[side].left.image);
+      leftImage.src = leftFightingImage;
+    }
+
+    if (rightImage && fighters[side].right?.image) {
+      const rightFightingImage = await loadFightingImage(side, fighters[side].right.image);
+      rightImage.src = rightFightingImage;
     }
   }
   
@@ -600,8 +758,8 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     if (loserResult) loserResult.textContent = `${lossPercentage}% Defeated`;
     
     // 根據差距程度顯示不同結果和效果
-    const winnerCharName = fighters[winnerSide].nameOriginal || fighters[winnerSide].name;
-    const loserCharName = fighters[loserSide].nameOriginal || fighters[loserSide].name;
+    const winnerCharName = fighters[winnerSide].main.nameOriginal || fighters[winnerSide].main.name;
+    const loserCharName = fighters[loserSide].main.nameOriginal || fighters[loserSide].main.name;
     
     // 添加疊加圖像
     const loserOverlay1 = document.getElementById(`${loserSide}Overlay1`) as HTMLImageElement;
@@ -624,28 +782,28 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     
     if (difference > 0.4) {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #ff0000; text-shadow: 0 0 8px rgba(255, 0, 0, 0.5); font-size: 18px; font-weight: bold;'>Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #00ff00; text-shadow: 0 0 8px rgba(0, 255, 0, 0.5); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #00ff00; text-shadow: 0 0 8px rgba(0, 255, 0, 0.5); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #ff0000; text-shadow: 0 0 8px rgba(255, 0, 0, 0.5); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake-extreme');
       if (winnerImage) winnerImage.classList.add('glow-extreme');
     } else if (difference > 0.1) {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #cc0000; text-shadow: 0 0 6px rgba(204, 0, 0, 0.4); font-size: 18px; font-weight: bold;'>Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #00cc00; text-shadow: 0 0 6px rgba(0, 204, 0, 0.4); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #00cc00; text-shadow: 0 0 6px rgba(0, 204, 0, 0.4); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #cc0000; text-shadow: 0 0 6px rgba(204, 0, 0, 0.4); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake-hard');
       if (winnerImage) winnerImage.classList.add('glow-strong');
     } else {
       if (winnerName) {
-        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #990000; text-shadow: 0 0 4px rgba(153, 0, 0, 0.3); font-size: 18px; font-weight: bold;'>Destroying</span>`;
+        winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #009900; text-shadow: 0 0 4px rgba(0, 153, 0, 0.3); font-size: 18px; font-weight: bold;'>Destroying</span>`;
       }
       if (loserName) {
-        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #009900; text-shadow: 0 0 4px rgba(0, 153, 0, 0.3); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
+        loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #990000; text-shadow: 0 0 4px rgba(153, 0, 0, 0.3); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
       if (loserImage) loserImage.classList.add('shake');
       if (winnerImage) winnerImage.classList.add('glow');
@@ -667,6 +825,59 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       fightButton.addEventListener('click', startFight);
     }
   };
+
+  // 儲存到 localStorage
+  function saveToLocalStorage(side: 'left' | 'right', fighter: any) {
+    const storageKey = `fighters_${side}`;
+    let currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    
+    // 初始化數據結構
+    if (!currentData.physicPower) currentData.physicPower = 0;
+    if (!currentData.magicPower) currentData.magicPower = 0;
+    if (!currentData.utilityPower) currentData.utilityPower = 0;
+    if (!currentData.nameOriginal) currentData.nameOriginal = [];
+    if (!currentData.attributes) currentData.attributes = [];
+
+    // 獲取當前選擇的角色名稱
+    const currentName = fighter.nameOriginal || fighter.name;
+    if (!currentName) return;
+
+    // 檢查當前角色是否已經在列表中
+    const isAlreadyAdded = currentData.nameOriginal.includes(currentName);
+    
+    // 如果角色已經存在，不重複添加
+    if (!isAlreadyAdded) {
+      // 累加數值
+      currentData.physicPower += parseInt(String(fighter.physicPower || 0), 10);
+      currentData.magicPower += parseInt(String(fighter.magicPower || 0), 10);
+      currentData.utilityPower += parseInt(String(fighter.utilityPower || 0), 10);
+
+      // 添加名稱和屬性
+      currentData.nameOriginal.push(currentName);
+      const attributes = fighter.attributes;
+      if (attributes && !currentData.attributes.includes(attributes)) {
+        currentData.attributes.push(attributes);
+      }
+
+      // 儲存回 localStorage
+      localStorage.setItem(storageKey, JSON.stringify(currentData));
+
+      // 輸出到控制台以便檢查
+      console.log(`${side} side localStorage data:`, currentData);
+      console.log(`Added character: ${currentName}`);
+
+      // 立即更新顯示
+      updateFighterInfo(side, currentData);
+    } else {
+      console.log(`Character ${currentName} already exists in localStorage`);
+    }
+  }
+
+  // 清除 localStorage 數據
+  function clearLocalStorage(side: 'left' | 'right') {
+    localStorage.removeItem(`fighters_${side}`);
+    console.log(`Cleared ${side} side localStorage data`);
+  }
 </script>
 
 <script define:vars={{ characterNames }}>
@@ -711,6 +922,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     position: relative;
     width: 400px;
     height: 400px;
+    margin: 0 auto;
   }
   .imagefighter {
     width: 100%;
@@ -730,7 +942,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     width: 100%;
     height: 100%;
     object-fit: contain;
-    z-index: 51;
     pointer-events: none;
     opacity: 0;
     transition: all 0.5s ease;
@@ -740,19 +951,21 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   }
   #leftOverlay1, #rightOverlay1 {
     transform: translateX(100%);
+    z-index: 53;
   }
   #leftOverlay2, #rightOverlay2 {
     transform: translateX(-100%);
+    z-index: 52;
   }
   #leftOverlay1.active, #rightOverlay1.active {
-    transform: translateX(0);
+    transform: translateX(50px);
   }
   #leftOverlay2.active, #rightOverlay2.active {
-    transform: translateX(0);
+    transform: translateX(-50px);
   }
   #leftOverlay3, #rightOverlay3 {
     transform: scale(1.5);
-    z-index: 45;  // 降低 z-index，確保在所有圖片後面
+    z-index: 40;  // 降低 z-index，確保在所有圖片後面
   }
   #leftOverlay3.active, #rightOverlay3.active {
     transform: scale(1);
@@ -764,7 +977,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       opacity: 0;
     }
     to {
-      transform: translateX(0);
+      transform: translateX(50px);
       opacity: 1;
     }
   }
@@ -774,7 +987,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       opacity: 0;
     }
     to {
-      transform: translateX(0);
+      transform: translateX(-50px);
       opacity: 1;
     }
   }

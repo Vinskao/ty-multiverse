@@ -358,6 +358,16 @@ const iconLinks: {
             url.searchParams.set('username', username);
             url.searchParams.set('token', token);
             link.setAttribute('href', url.pathname + url.search);
+
+            // 為 Palais 頁面添加點擊事件
+            if (href.includes('palais')) {
+              link.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.clear();
+                console.log('Cleared all localStorage data before navigating to Palais');
+                window.location.href = url.pathname + url.search;
+              });
+            }
           }
         });
       }
