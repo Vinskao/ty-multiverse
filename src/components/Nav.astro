@@ -14,7 +14,7 @@ const isLoggedIn = !!username && !!token;
 /** Main menu items */
 const textLinks: { label: string; href: string }[] = [
   { label: "Home", href: "/tymultiverse/" },
-  { label: isLoggedIn ? "Logout" : "Login", href: isLoggedIn ? "#" : "/tymultiverse/login" },
+  { label: isLoggedIn ? "Logout" : "Login", href: isLoggedIn ? "#" : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}` },
   { label: "Work", href: "/tymultiverse/work/" },
   { label: "About", href: "/tymultiverse/about/" },
   { label: "Control", href: "/tymultiverse/control/" },
@@ -370,6 +370,13 @@ const iconLinks: {
             }
           }
         });
+      } else {
+        // 如果未登入，更新登入連結以包含當前頁面 URL
+        const loginLink = document.querySelector('a[href^="/tymultiverse/login"]');
+        if (loginLink) {
+          const currentUrl = window.location.pathname + window.location.search;
+          loginLink.setAttribute('href', `/tymultiverse/login?redirect=${encodeURIComponent(currentUrl)}`);
+        }
       }
     };
 
