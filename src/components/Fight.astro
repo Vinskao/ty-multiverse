@@ -510,6 +510,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
         return;
       }
       
+      // 獲取角色資訊
       const response = await fetch(config.apiEndpoint, {
         method: "POST",
         headers: { 
@@ -535,6 +536,53 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       const data = await response.json();
       
       if (data && data.name) {
+        // 獲取武器資訊
+        const weaponName = name?.toLowerCase() || '';
+        const weaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${weaponName}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json"
+          },
+          credentials: 'include'
+        });
+
+        if (weaponResponse.ok) {
+          const weaponData = await weaponResponse.json();
+          
+          // 計算武器傷害
+          let totalUtilityPower = parseInt(String(data.utilityPower || 0), 10);
+          totalUtilityPower += parseInt(String(weaponData.baseDamage || 0), 10);
+
+          // 檢查是否需要添加額外傷害
+          if (weaponData.bonusAttributes && weaponData.bonusAttributes.includes(data.attributes)) {
+            totalUtilityPower += parseInt(String(weaponData.bonusDamage || 0), 10);
+            
+            // 添加狀態效果
+            if (weaponData.stateAttributes) {
+              const otherSide = side === 'left' ? 'right' : 'left';
+              const otherImage = document.getElementById(`${otherSide}Image`) as HTMLImageElement;
+              if (otherImage) {
+                weaponData.stateAttributes.forEach((state: string) => {
+                  const stateOverlay = document.createElement('div');
+                  stateOverlay.className = 'state-overlay';
+                  stateOverlay.textContent = state;
+                  otherImage.parentElement?.appendChild(stateOverlay);
+                  
+                  // 1秒後移除狀態效果
+                  setTimeout(() => {
+                    stateOverlay.remove();
+                  }, 1000);
+                });
+              }
+            }
+          }
+
+          // 更新數據中的 utilityPower
+          data.utilityPower = totalUtilityPower;
+        }
+
         updateFighterInfo(side, data);
         // 儲存到 localStorage
         saveToLocalStorage(side, data);
@@ -1340,5 +1388,25 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 
   .fightercontainer::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 182, 193, 0.7);
+  }
+
+  .state-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ff0000;
+    font-weight: bold;
+    font-size: 24px;
+    z-index: 100;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: stateFadeInOut 1s ease-in-out;
+  }
+
+  @keyframes stateFadeInOut {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
   }
 </style> 
