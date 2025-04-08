@@ -1,0 +1,475 @@
+body,
+html {
+margin: 0;
+padding: 0;
+}
+.fightercontainer {
+display: flex;
+width: 100%;
+max-width: 1800px;
+min-height: 1200px;
+padding: 20px 0;  /* 只保留上下padding */
+margin: 0;  /* 移除左右margin */
+justify-content: flex-start;  /* 改為左對齊 */
+align-items: flex-start;
+gap: 5px;
+position: relative;
+z-index: 50;
+overflow-x: auto;
+scroll-behavior: smooth;
+-webkit-overflow-scrolling: touch;
+}
+.half {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+margin: 0;
+width: 400px;
+min-height: 1200px;
+flex: 0 0 auto;
+gap: 10px;
+position: relative;
+z-index: 50;
+padding: 0 10px;  /* 添加左右padding */
+}
+.image-container {
+position: relative;
+width: 400px;
+height: 400px;
+margin: 0 auto;
+}
+.imagefighter {
+width: 100%;
+height: 100%;
+object-fit: contain;
+border: 1px solid #000;
+display: block;
+margin: 0 auto;
+position: relative;
+background-color: rgba(0, 0, 0, 0.1);
+z-index: 50;
+}
+.overlay-image {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+object-fit: contain;
+pointer-events: none;
+opacity: 0;
+transition: all 0.5s ease;
+}
+.overlay-image.active {
+opacity: 1;
+}
+#leftOverlay1, #rightOverlay1 {
+transform: translateX(100%);
+z-index: 53;
+}
+#leftOverlay2, #rightOverlay2 {
+transform: translateX(-100%);
+z-index: 52;
+}
+#leftOverlay1.active, #rightOverlay1.active {
+transform: translateX(50px);
+}
+#leftOverlay2.active, #rightOverlay2.active {
+transform: translateX(-50px);
+}
+#leftOverlay3, #rightOverlay3 {
+transform: scale(1.5);
+z-index: 40;
+}
+#leftOverlay3.active, #rightOverlay3.active {
+transform: scale(1);
+opacity: 1;
+}
+@keyframes slideInRight {
+from {
+    transform: translateX(100%);
+    opacity: 0;
+}
+to {
+    transform: translateX(50px);
+    opacity: 1;
+}
+}
+@keyframes slideInLeft {
+from {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+to {
+    transform: translateX(-50px);
+    opacity: 1;
+}
+}
+@keyframes scaleIn {
+from {
+    transform: scale(1.5);
+    opacity: 0;
+}
+to {
+    transform: scale(1);
+    opacity: 1;
+}
+}
+.slide-in-right {
+animation: slideInRight 0.5s ease forwards;
+}
+.slide-in-left {
+animation: slideInLeft 0.5s ease forwards;
+}
+.scale-in {
+animation: scaleIn 0.5s ease forwards;
+}
+.info-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+width: 100%;
+min-height: 200px;
+max-height: 200px;
+background: linear-gradient(135deg, rgba(207, 157, 165, 0.11), rgba(218, 203, 205, 0.048));
+z-index: 50;
+padding: 10px 0;
+overflow-y: auto;
+border-radius: 10px;
+box-shadow: 0 4px 15px rgba(255, 192, 203, 0.3);
+border: 1px solid rgba(255, 192, 203, 0.5);
+}
+.info-row {
+display: flex;
+flex-direction: column;
+justify-content: center;
+margin-bottom: 1px;  /* 減少間距 */
+width: 100%;
+gap: 1px;  /* 減少間距 */
+}
+.info {
+margin: 0;
+font-size: 14px;  /* 增加字體大小 */
+text-align: center;
+width: 100%;
+white-space: nowrap;
+color: #0066ff;
+line-height: 1.2;  /* 稍微增加行高 */
+padding: 1px 0;  /* 減少內邊距 */
+}
+.info-container #leftTotalPower,
+.info-container #rightTotalPower {
+font-size: 16px;
+font-weight: bold;
+opacity: 1;
+margin-top: 2px;
+padding: 2px;
+border-radius: 5px;
+width: 90%;
+transition: all 0.3s ease;
+}
+
+.info-container #leftTotalPower.win[data-intensity="high"],
+.info-container #rightTotalPower.win[data-intensity="high"] {
+color: #00ff00;
+background: rgba(0, 255, 0, 0.2);
+text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+.info-container #leftTotalPower.win[data-intensity="medium"],
+.info-container #rightTotalPower.win[data-intensity="medium"] {
+color: #00cc00;
+background: rgba(0, 204, 0, 0.15);
+text-shadow: 0 0 6px rgba(0, 204, 0, 0.4);
+}
+
+.info-container #leftTotalPower.win[data-intensity="low"],
+.info-container #rightTotalPower.win[data-intensity="low"] {
+color: #009900;
+background: rgba(0, 153, 0, 0.1);
+text-shadow: 0 0 4px rgba(0, 153, 0, 0.3);
+}
+
+.info-container #leftTotalPower.defeated[data-intensity="high"],
+.info-container #rightTotalPower.defeated[data-intensity="high"] {
+color: #ff0000;
+background: rgba(255, 0, 0, 0.2);
+text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+}
+
+.info-container #leftTotalPower.defeated[data-intensity="medium"],
+.info-container #rightTotalPower.defeated[data-intensity="medium"] {
+color: #cc0000;
+background: rgba(204, 0, 0, 0.15);
+text-shadow: 0 0 6px rgba(204, 0, 0, 0.4);
+}
+
+.info-container #leftTotalPower.defeated[data-intensity="low"],
+.info-container #rightTotalPower.defeated[data-intensity="low"] {
+color: #990000;
+background: rgba(153, 0, 0, 0.1);
+text-shadow: 0 0 4px rgba(153, 0, 0, 0.3);
+}
+.button-container {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+max-width: 400px;
+width: 100%;
+height: 300px;
+overflow-y: auto;
+margin-top: 0;
+background: linear-gradient(135deg, rgba(255, 192, 203, 0.15), rgba(255, 182, 193, 0.1));
+z-index: 50;
+border-radius: 12px;
+box-shadow: 0 4px 15px rgba(255, 192, 203, 0.2);
+border: 1px solid rgba(255, 192, 203, 0.3);
+padding: 15px;
+gap: 5px;
+}
+.button {
+padding: 10px 15px;
+font-size: 14px;
+cursor: pointer;
+margin: 5px;
+width: 110px;
+background: linear-gradient(135deg, #ffd1dc, #ffb6c1);
+border: 2px solid #ff99ac;
+border-radius: 8px;
+transition: all 0.3s ease;
+box-shadow: 0 2px 8px rgba(255, 182, 193, 0.3);
+color: #4a4a4a;
+font-weight: 500;
+text-transform: capitalize;
+letter-spacing: 0.5px;
+}
+.button:hover:not(.disabled) {
+transform: translateY(-2px) scale(1.05);
+box-shadow: 0 4px 12px rgba(255, 182, 193, 0.4);
+background: linear-gradient(135deg, #ffb6c1, #ff99ac);
+border-color: #ff8da1;
+color: #2a2a2a;
+}
+.button:active:not(.disabled) {
+transform: translateY(1px) scale(0.98);
+box-shadow: 0 2px 4px rgba(255, 182, 193, 0.2);
+}
+.button.disabled {
+opacity: 0.5;
+cursor: not-allowed;
+background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+border-color: #ddd;
+color: #999;
+box-shadow: none;
+}
+.fightbutton {
+width: 100%;
+max-width: 1800px;
+display: flex;
+justify-content: center;
+margin: 0 0 20px 0;  /* 只保留底部margin */
+z-index: 100;
+overflow-x: auto;
+scroll-behavior: smooth;
+-webkit-overflow-scrolling: touch;
+padding: 0 10px;  /* 添加左右padding */
+}
+.fightbutton button {
+padding: 15px 40px;
+font-size: 24px;
+font-weight: bold;
+cursor: pointer;
+position: relative;
+z-index: 100;
+background: linear-gradient(45deg, #ff4d4d, #ff0000);
+color: white;
+border: none;
+border-radius: 30px;
+box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+transition: all 0.3s ease;
+text-transform: uppercase;
+letter-spacing: 2px;
+}
+.fightbutton button:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+}
+.fightbutton button:active {
+transform: translateY(1px);
+}
+.result {
+font-weight: bold;
+margin-top: 1px;
+margin-bottom: 1px;
+font-size: 14px;  /* 增加結果字體大小 */
+line-height: 1.2;
+}
+.win {
+color: #00cc00;
+font-size: 18px;
+text-shadow: 0 0 5px rgba(0, 204, 0, 0.3);
+}
+
+.win[data-intensity="high"] {
+color: #00ff00;
+text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+.win[data-intensity="medium"] {
+color: #00cc00;
+text-shadow: 0 0 6px rgba(0, 204, 0, 0.4);
+}
+
+.win[data-intensity="low"] {
+color: #009900;
+text-shadow: 0 0 4px rgba(0, 153, 0, 0.3);
+}
+
+.defeated {
+color: #cc0000;
+font-size: 18px;
+text-shadow: 0 0 5px rgba(204, 0, 0, 0.3);
+}
+
+.defeated[data-intensity="high"] {
+color: #ff0000;
+text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+}
+
+.defeated[data-intensity="medium"] {
+color: #cc0000;
+text-shadow: 0 0 6px rgba(204, 0, 0, 0.4);
+}
+
+.defeated[data-intensity="low"] {
+color: #990000;
+text-shadow: 0 0 4px rgba(153, 0, 0, 0.3);
+}
+
+.fdefeated {
+color: #ff3333;
+font-size: 18px;
+text-shadow: 0 0 5px rgba(255, 51, 51, 0.3);
+}
+
+.sdefeated {
+color: #ff6666;
+font-size: 18px;
+text-shadow: 0 0 5px rgba(255, 102, 102, 0.3);
+}
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-5px); }
+75% { transform: translateX(5px); }
+}
+@keyframes shakeHard {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-15px); }
+75% { transform: translateX(15px); }
+}
+@keyframes shakeExtreme {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-25px); }
+75% { transform: translateX(25px); }
+}
+.shake {
+animation: shake 0.5s ease-in-out;
+}
+.shake-hard {
+animation: shakeHard 0.5s ease-in-out;
+}
+.shake-extreme {
+animation: shakeExtreme 0.5s ease-in-out;
+}
+@keyframes glow {
+0% { filter: brightness(1); }
+50% { filter: brightness(1.2); }
+100% { filter: brightness(1); }
+}
+@keyframes glowStrong {
+0% { filter: brightness(1); }
+50% { filter: brightness(1.4); }
+100% { filter: brightness(1); }
+}
+@keyframes glowExtreme {
+0% { filter: brightness(1); }
+50% { filter: brightness(1.6); }
+100% { filter: brightness(1); }
+}
+.glow {
+animation: glow 0.5s ease-in-out;
+}
+.glow-strong {
+animation: glowStrong 0.5s ease-in-out;
+}
+.glow-extreme {
+animation: glowExtreme 0.5s ease-in-out;
+}
+.result-image {
+position: relative;
+z-index: 100;
+font-size: 14px;  /* 增加結果圖片字體大小 */
+font-weight: bold;
+margin: 1px 0;  /* 減少間距 */
+padding: 1px 6px;
+border-radius: 5px;
+background: rgba(255, 255, 255, 0.2);
+}
+/* 自定義滾動條樣式 */
+.button-container::-webkit-scrollbar {
+width: 8px;
+}
+
+.button-container::-webkit-scrollbar-track {
+background: rgba(255, 192, 203, 0.1);
+border-radius: 4px;
+}
+
+.button-container::-webkit-scrollbar-thumb {
+background: rgba(255, 182, 193, 0.5);
+border-radius: 4px;
+}
+
+.button-container::-webkit-scrollbar-thumb:hover {
+background: rgba(255, 182, 193, 0.7);
+}
+
+/* 添加水平滾動條樣式 */
+.fightercontainer::-webkit-scrollbar {
+height: 8px;
+}
+
+.fightercontainer::-webkit-scrollbar-track {
+background: rgba(255, 192, 203, 0.1);
+border-radius: 4px;
+}
+
+.fightercontainer::-webkit-scrollbar-thumb {
+background: rgba(255, 182, 193, 0.5);
+border-radius: 4px;
+}
+
+.fightercontainer::-webkit-scrollbar-thumb:hover {
+background: rgba(255, 182, 193, 0.7);
+}
+
+.state-overlay {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+color: #ff0000;
+font-weight: bold;
+font-size: 24px;
+z-index: 100;
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+animation: stateFadeInOut 1s ease-in-out;
+}
+
+@keyframes stateFadeInOut {
+0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+}
