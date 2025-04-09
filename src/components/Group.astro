@@ -159,10 +159,10 @@ if (!username || !token) {
             img.style.left = '50%';
             img.style.transform = 'translate(-50%, -50%)';
             img.style.zIndex = '2';
-            img.src = `/tymultiverse/assets/person/${character.name || 'default'}.png`;
+            img.src = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
             img.alt = character.nameOriginal;
             img.onerror = function() {
-              this.src = '/tymultiverse/assets/person/default.png';
+              this.src = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/default.png`;
             };
             img.addEventListener('mouseover', () => {
               img.style.zIndex = '3';
