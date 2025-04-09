@@ -70,7 +70,7 @@ if (!username || !token) {
       "Z.png", "Branwen.png", "Lucrece.png", "Uiobbeci.png", "Nianca.png",
       "Yui.png", "Mesoyei.png", "Ann.png", "Cleopatra.png", "Shuan.png",
       "Miyako.png"
-    ].map(name => `/tymultiverse/assets/person/${name}`);
+    ].map(name => `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${name}`);
 
     const imagePromises = allImages.map(imagePath => {
       return new Promise((resolve) => {

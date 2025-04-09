@@ -393,7 +393,7 @@
                   totalPhysicPower += selectedCard.physic_power;
                   totalMagicPower += selectedCard.magic_power;
                   totalUtilityPower += selectedCard.utility_power;
-                  var imageUrl = `/tymultiverse/assets/person/${selectedImageName}`;
+                  var imageUrl = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${selectedImageName}`;
                   var imageContainer = document.getElementById(containerId);
                   var image = document.createElement("img");
                   image.src = imageUrl;

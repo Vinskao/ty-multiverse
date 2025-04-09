@@ -13,25 +13,25 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       <img
         id="leftImage"
         class="imagefighter"
-        src="/tymultiverse/assets/person/default.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/default.png"}
         alt="Left Image"
       />
       <img
         id="leftOverlay1"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingWavo.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingWavo.png"}
         alt="Left Overlay 1"
       />
       <img
         id="leftOverlay2"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingYui.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingYui.png"}
         alt="Left Overlay 2"
       />
       <img
         id="leftOverlay3"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingMiku.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingMiku.png"}
         alt="Left Overlay 3"
       />
     </div>
@@ -53,25 +53,25 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       <img
         id="rightImage"
         class="imagefighter"
-        src="/tymultiverse/assets/person/default.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/default.png"}
         alt="Right Image"
       />
       <img
         id="rightOverlay1"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingWavo.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingWavo.png"}
         alt="Right Overlay 1"
       />
       <img
         id="rightOverlay2"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingYui.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingYui.png"}
         alt="Right Overlay 2"
       />
       <img
         id="rightOverlay3"
         class="overlay-image"
-        src="/tymultiverse/assets/person/RavishingMiku.png"
+        src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/RavishingMiku.png"}
         alt="Right Overlay 3"
       />
     </div>
@@ -116,9 +116,9 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 
   // 全局設置與狀態
   const config = {
-    baseImagePath: "/tymultiverse/assets/person/",
+    baseImagePath: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/",
     apiEndpoint: `${import.meta.env.PUBLIC_TYMB_URL}/people/get-by-name`,
-    defaultImage: "/tymultiverse/assets/person/default.png",
+    defaultImage: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/default.png",
     sideOffset: 75 // 側邊角色的偏移量
   };
   
@@ -667,7 +667,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       const originalName = originalImagePath.split("/").pop()?.split(".")[0];
       if (!originalName) return originalImagePath;
 
-      const fightingImagePath = originalImagePath.replace(originalName, `${originalName}Fighting`);
+      const fightingImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${originalName}Fighting.png`;
       const response = await fetch(fightingImagePath);
       
       if (response.ok) {
