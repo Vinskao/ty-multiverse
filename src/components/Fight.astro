@@ -451,7 +451,7 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       });
     });
   }
-
+  
   // 選擇角色
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
@@ -729,7 +729,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   async function loadRuinedImage(side: 'left' | 'right', currentImagePath: string): Promise<string> {
     try {
       // 從當前圖片路徑中提取角色名稱
-      // 可能是 xxxFighting.png 或 xxx.png
       const imageName = currentImagePath.split("/").pop()?.split(".")[0] || "";
       const baseName = imageName.replace("Fighting", "");
       

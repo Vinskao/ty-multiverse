@@ -11,14 +11,52 @@ const token = url.searchParams.get('token');
 // 檢查登入狀態
 const isLoggedIn = !!username && !!token;
 
+// 檢查是否為管理員
+const isAdmin = username === 'chiaki' || username === 'sorane';
+
+// 獲取當前路徑
+const currentPath = Astro.url.pathname;
+
 /** Main menu items */
-const textLinks: { label: string; href: string }[] = [
-  { label: "Home", href: "/tymultiverse/" },
-  { label: isLoggedIn ? "Logout" : "Login", href: isLoggedIn ? "#" : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}` },
-  { label: "Work", href: "/tymultiverse/work/" },
-  { label: "About", href: "/tymultiverse/about/" },
+const textLinks: { label: string; href: string; isActive: boolean }[] = [
+  { 
+    label: "Home", 
+    href: "/tymultiverse/", 
+    isActive: currentPath === "/tymultiverse/" || currentPath === "/tymultiverse/index.html"
+  },
+  { 
+    label: isLoggedIn ? "Logout" : "Login", 
+    href: isLoggedIn ? "#" : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    isActive: currentPath === "/tymultiverse/login"
+  },
+  { 
+    label: "Work", 
+    href: "/tymultiverse/work/", 
+    isActive: currentPath.startsWith("/tymultiverse/work")
+  },
+  { 
+    label: "About", 
+    href: "/tymultiverse/about/", 
+    isActive: currentPath.startsWith("/tymultiverse/about")
+  },
   ...(isLoggedIn ? [
-    { label: "Control", href: `/tymultiverse/control/?username=${username}&token=${token}` }
+    { 
+      label: "Control", 
+      href: `/tymultiverse/control/?username=${username}&token=${token}`,
+      isActive: currentPath.startsWith("/tymultiverse/control")
+    },
+    ...(isAdmin ? [
+      { 
+        label: "Wildland", 
+        href: `/tymultiverse/wildland/?username=${username}&token=${token}`,
+        isActive: currentPath.startsWith("/tymultiverse/wildland")
+      },
+      { 
+        label: "Palais", 
+        href: `/tymultiverse/palais/?username=${username}&token=${token}`,
+        isActive: currentPath.startsWith("/tymultiverse/palais")
+      }
+    ] : [])
   ] : [])
 ];
 
@@ -69,16 +107,14 @@ const iconLinks: {
   <noscript>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href }) => (
+        textLinks.map(({ label, href, isActive }) => (
           <li>
             <a
-              aria-current={Astro.url.pathname === href}
+              aria-current={isActive ? "page" : "false"}
               class:list={[
                 "link",
                 {
-                  active:
-                    Astro.url.pathname === href ||
-                    (href !== "/" && Astro.url.pathname.startsWith(href)),
+                  active: isActive
                 },
               ]}
               href={href}
@@ -107,16 +143,14 @@ const iconLinks: {
   <div id="menu-content" hidden>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href }) => (
+        textLinks.map(({ label, href, isActive }) => (
           <li>
             <a
-              aria-current={Astro.url.pathname === href}
+              aria-current={isActive ? "page" : "false"}
               class:list={[
                 "link",
                 {
-                  active:
-                    Astro.url.pathname === href ||
-                    (href !== "/" && Astro.url.pathname.startsWith(href)),
+                  active: isActive
                 },
               ]}
               href={href}
@@ -271,30 +305,56 @@ const iconLinks: {
           loginLink.href = '#';
         }
 
-        // 只有當用戶具有 peoplesystem-admin 角色時才顯示 Wildland 和 Palais 選項
-        if (hasAccess) {
-          const navItems = document.querySelectorAll('.nav-items li');
-          const wildlandLink = Array.from(navItems).find(item => item.textContent?.includes('Wildland'));
-          const palaisLink = Array.from(navItems).find(item => item.textContent?.includes('Palais'));
+        // 更新所有導航項目的樣式
+        const updateActiveState = () => {
+          const currentPath = window.location.pathname;
+          console.log('Current path:', currentPath); // 調試用
 
-          if (!wildlandLink) {
-            const wildlandLi = document.createElement('li');
-            wildlandLi.innerHTML = `<a href="/tymultiverse/wildland/?username=${username}&token=${token}" class="link">Wildland</a>`;
-            navItems[navItems.length - 1].after(wildlandLi);
-          }
-          if (!palaisLink) {
-            const palaisLi = document.createElement('li');
-            palaisLi.innerHTML = `<a href="/tymultiverse/palais/?username=${username}&token=${token}" class="link">Palais</a>`;
-            navItems[navItems.length - 1].after(palaisLi);
-          }
-        } else {
-          // 如果用戶沒有權限，移除這些選項
-          const wildlandLink = Array.from(document.querySelectorAll('.nav-items li')).find(item => item.textContent?.includes('Wildland'));
-          const palaisLink = Array.from(document.querySelectorAll('.nav-items li')).find(item => item.textContent?.includes('Palais'));
-          
-          if (wildlandLink) wildlandLink.remove();
-          if (palaisLink) palaisLink.remove();
-        }
+          document.querySelectorAll('.nav-items .link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== '#') {
+              // 移除查詢參數進行比較
+              const cleanHref = href.split('?')[0];
+              const cleanCurrentPath = currentPath.split('?')[0];
+              
+              console.log('Comparing:', cleanHref, 'with', cleanCurrentPath); // 調試用
+              
+              let isActive = false;
+              
+              // 特殊處理首頁
+              if (cleanHref === '/tymultiverse/') {
+                isActive = cleanCurrentPath === '/tymultiverse/' || cleanCurrentPath === '/tymultiverse/index.html';
+              } 
+              // 特殊處理登入頁
+              else if (cleanHref === '/tymultiverse/login') {
+                isActive = cleanCurrentPath === '/tymultiverse/login';
+              }
+              // 處理其他頁面
+              else {
+                isActive = cleanCurrentPath.startsWith(cleanHref);
+              }
+              
+              console.log('Is active:', isActive); // 調試用
+              
+              link.classList.toggle('active', isActive);
+              link.setAttribute('aria-current', isActive ? 'page' : 'false');
+            }
+          });
+        };
+
+        // 初始更新活動狀態
+        updateActiveState();
+
+        // 監聽 URL 變化
+        window.addEventListener('popstate', updateActiveState);
+        
+        // 監聽導航點擊
+        document.querySelectorAll('.nav-items .link').forEach(link => {
+          link.addEventListener('click', () => {
+            // 延遲一下更新活動狀態，確保 URL 已經更新
+            setTimeout(updateActiveState, 100);
+          });
+        });
       }
     };
 
@@ -390,8 +450,13 @@ const iconLinks: {
           const href = link.getAttribute('href');
           if (href && !href.includes('login') && !href.includes('#')) {
             const url = new URL(href, window.location.origin);
-            url.searchParams.set('username', username);
-            url.searchParams.set('token', token);
+            // 確保不覆蓋已經存在的查詢參數
+            if (!url.searchParams.has('username')) {
+              url.searchParams.set('username', username);
+            }
+            if (!url.searchParams.has('token')) {
+              url.searchParams.set('token', token);
+            }
             link.setAttribute('href', url.pathname + url.search);
 
             // 為 Palais 頁面添加點擊事件
@@ -499,10 +564,21 @@ const iconLinks: {
     display: inline-block;
     color: var(--gray-300);
     text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 999rem;
+    transition: color var(--theme-transition),
+      background-color var(--theme-transition);
+  }
+
+  .link:hover,
+  .link:focus {
+    color: var(--gray-100);
+    background-color: var(--accent-subtle-overlay);
   }
 
   .link.active {
-    color: var(--gray-0);
+    color: var(--accent-text-over);
+    background-color: var(--accent-regular);
   }
 
   .menu-footer {
