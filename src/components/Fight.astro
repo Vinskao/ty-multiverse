@@ -90,52 +90,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   </div>
 </div>
 
-<style>
-  /* 現有的 CSS 樣式 */
-  
-  /* 戰敗效果 */
-  .ruined-effect {
-    animation: ruined 1.5s ease-in-out;
-    filter: grayscale(70%) brightness(80%);
-  }
-  
-  @keyframes ruined {
-    0% {
-      transform: scale(1);
-      filter: grayscale(0%) brightness(100%);
-    }
-    50% {
-      transform: scale(1.05) rotate(-2deg);
-      filter: grayscale(50%) brightness(90%);
-    }
-    100% {
-      transform: scale(1);
-      filter: grayscale(70%) brightness(80%);
-    }
-  }
-  
-  /* 勝利效果 */
-  .victory-effect {
-    animation: victory 1.5s ease-in-out;
-    filter: brightness(120%) saturate(120%);
-  }
-  
-  @keyframes victory {
-    0% {
-      transform: scale(1);
-      filter: brightness(100%) saturate(100%);
-    }
-    50% {
-      transform: scale(1.1) rotate(2deg);
-      filter: brightness(130%) saturate(130%);
-    }
-    100% {
-      transform: scale(1);
-      filter: brightness(120%) saturate(120%);
-    }
-  }
-</style>
-
 <script>
   // 定義類型
   interface Fighter {
@@ -170,6 +124,9 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   
   // 初始化角色列表
   let characterNames = ['default'];
+  
+  // 添加戰鬥狀態追蹤
+  let fightCompleted = false;
   
   // 刷新 token 的函數
   async function refreshToken() {
@@ -457,6 +414,39 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     const otherSide = side === "left" ? "right" : "left";
     const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]);
     
+    // 如果戰鬥已經完成，選擇新角色時清除所有角色
+    if (fightCompleted) {
+      resetSideSelection('left');
+      resetSideSelection('right');
+      fightCompleted = false;
+      
+      // 啟用 Fight 按鈕
+      const fightButton = document.getElementById('fightButton') as HTMLButtonElement;
+      if (fightButton) {
+        fightButton.disabled = false;
+        fightButton.style.opacity = '1';
+        fightButton.style.cursor = 'pointer';
+      }
+      
+      // 清除所有按鈕的禁用狀態
+      document.querySelectorAll("#leftButtons .button, #rightButtons .button").forEach(button => {
+        button.classList.remove("disabled");
+      });
+      
+      // 直接選擇新角色，不檢查是否已被選擇
+      clearAllEffects();
+      
+      fighters[side].main.image = imagePath;
+      fighters[side].main.name = selectedName;
+      const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      if (mainImage) mainImage.src = imagePath;
+      
+      updateButtonStates();
+      fetchFighterInfo(side, imagePath);
+      return;
+    }
+    
+    // 如果戰鬥未完成，則檢查角色是否已被選擇
     if (isCharacterSelected(otherSide, selectedName)) {
       return;
     }
@@ -710,6 +700,12 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   // 檢查並載入戰鬥版本的圖片
   async function loadFightingImage(side: 'left' | 'right', originalImagePath: string): Promise<string> {
     try {
+      // 檢查當前圖片是否已經是 ruined 圖片
+      const currentImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      if (currentImage && currentImage.src.includes('Ruined.png')) {
+        return currentImage.src; // 如果已經是 ruined 圖片，直接返回當前圖片路徑
+      }
+
       const originalName = originalImagePath.split("/").pop()?.split(".")[0];
       if (!originalName) return originalImagePath;
 
@@ -728,6 +724,12 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   // 檢查並載入戰敗版本的圖片
   async function loadRuinedImage(side: 'left' | 'right', currentImagePath: string): Promise<string> {
     try {
+      // 檢查當前圖片是否已經是 ruined 圖片
+      const currentImage = document.getElementById(`${side}Image`) as HTMLImageElement;
+      if (currentImage && currentImage.src.includes('Ruined.png')) {
+        return currentImage.src; // 如果已經是 ruined 圖片，直接返回當前圖片路徑
+      }
+
       // 從當前圖片路徑中提取角色名稱
       const imageName = currentImagePath.split("/").pop()?.split(".")[0] || "";
       const baseName = imageName.replace("Fighting", "");
@@ -742,6 +744,27 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       }
     } catch (error) {
       console.error(`Error loading ruined image for ${side}:`, error);
+    }
+    return currentImagePath;
+  }
+  
+  // 為夥伴載入戰敗版本的圖片
+  async function loadPartnerRuinedImage(side: 'left' | 'right', currentImagePath: string): Promise<string> {
+    try {
+      // 從當前圖片路徑中提取角色名稱
+      const imageName = currentImagePath.split("/").pop()?.split(".")[0] || "";
+      const baseName = imageName.replace("Fighting", "");
+      
+      if (!baseName) return currentImagePath;
+
+      const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
+      const response = await fetch(ruinedImagePath);
+      
+      if (response.ok) {
+        return ruinedImagePath;
+      }
+    } catch (error) {
+      console.error(`Error loading partner ruined image for ${side}:`, error);
     }
     return currentImagePath;
   }
@@ -786,6 +809,19 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     // 如果任一方未選擇角色或力量為0，顯示提示
     if (!fighters.left.main.image || !fighters.right.main.image) {
       alert("請先選擇兩邊的角色");
+      return;
+    }
+
+    // 檢查角色是否已經處於 ruined 狀態
+    const leftImage = document.getElementById("leftImage") as HTMLImageElement;
+    const rightImage = document.getElementById("rightImage") as HTMLImageElement;
+    
+    const leftIsRuined = leftImage && leftImage.src.includes('Ruined.png');
+    const rightIsRuined = rightImage && rightImage.src.includes('Ruined.png');
+    
+    // 如果雙方都已經處於 ruined 狀態，顯示提示
+    if (leftIsRuined && rightIsRuined) {
+      alert("雙方角色都已經戰敗，無法再次戰鬥");
       return;
     }
 
@@ -894,6 +930,17 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     const loserImage = document.getElementById(`${loserSide}Image`) as HTMLImageElement;
     const winnerImage = document.getElementById(`${winnerSide}Image`) as HTMLImageElement;
     
+    // 獲取勝利方和失敗方的夥伴圖片
+    const winnerLeftImage = document.querySelector(`.${winnerSide}-side-container.left-side .side-image`) as HTMLImageElement;
+    const winnerRightImage = document.querySelector(`.${winnerSide}-side-container.right-side .side-image`) as HTMLImageElement;
+    const loserLeftImage = document.querySelector(`.${loserSide}-side-container.left-side .side-image`) as HTMLImageElement;
+    const loserRightImage = document.querySelector(`.${loserSide}-side-container.right-side .side-image`) as HTMLImageElement;
+    
+    // 檢查失敗方是否已經處於 ruined 狀態
+    const loserIsRuined = loserImage && loserImage.src.includes('Ruined.png');
+    const loserLeftIsRuined = loserLeftImage && loserLeftImage.style.display !== 'none' && loserLeftImage.src.includes('Ruined.png');
+    const loserRightIsRuined = loserRightImage && loserRightImage.style.display !== 'none' && loserRightImage.src.includes('Ruined.png');
+    
     // 重設樣式
     if (winnerElement) {
       winnerElement.classList.remove("defeated");
@@ -942,12 +989,51 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       // 延遲添加右側滑入的圖像
       setTimeout(() => {
         loserOverlay1.classList.add('active', 'slide-in-right');
-      }, 250); // 延遲 250ms，讓第一張圖滑入一半時第二張圖開始滑入
+      }, 250);
 
       // 延遲添加第三張圖像（從後方縮放出現）
       setTimeout(() => {
         loserOverlay3.classList.add('active', 'scale-in');
-      }, 500); // 延遲 500ms，讓前兩張圖完全滑入後再顯示第三張
+      }, 500);
+    }
+    
+    // 清除之前的動畫類
+    if (winnerImage) {
+      winnerImage.classList.remove('glow', 'glow-strong', 'glow-extreme', 'victory-effect');
+      // 強制重新應用動畫
+      void winnerImage.offsetWidth; // 觸發重排
+      winnerImage.classList.add('victory-jump');
+    }
+    
+    if (winnerLeftImage && winnerLeftImage.style.display !== 'none') {
+      winnerLeftImage.classList.remove('victory-jump');
+      void winnerLeftImage.offsetWidth; // 觸發重排
+      winnerLeftImage.classList.add('victory-jump');
+    }
+    
+    if (winnerRightImage && winnerRightImage.style.display !== 'none') {
+      winnerRightImage.classList.remove('victory-jump');
+      void winnerRightImage.offsetWidth; // 觸發重排
+      winnerRightImage.classList.add('victory-jump');
+    }
+
+    // 為失敗的角色和其夥伴添加晃動效果
+    if (loserImage) {
+      loserImage.classList.remove('shake', 'shake-hard', 'shake-extreme');
+      void loserImage.offsetWidth; // 觸發重排
+      loserImage.classList.add('defeat-shake');
+    }
+
+    if (loserLeftImage && loserLeftImage.style.display !== 'none') {
+      loserLeftImage.classList.remove('defeat-shake');
+      void loserLeftImage.offsetWidth; // 觸發重排
+      loserLeftImage.classList.add('defeat-shake');
+    }
+
+    if (loserRightImage && loserRightImage.style.display !== 'none') {
+      loserRightImage.classList.remove('defeat-shake');
+      void loserRightImage.offsetWidth; // 觸發重排
+      loserRightImage.classList.add('defeat-shake');
     }
     
     if (difference > 0.4) {
@@ -957,8 +1043,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       if (loserName) {
         loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #ff0000; text-shadow: 0 0 8px rgba(255, 0, 0, 0.5); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
-      if (loserImage) loserImage.classList.add('shake-extreme');
-      if (winnerImage) winnerImage.classList.add('glow-extreme');
     } else if (difference > 0.1) {
       if (winnerName) {
         winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #00cc00; text-shadow: 0 0 6px rgba(0, 204, 0, 0.4); font-size: 18px; font-weight: bold;'>Destroying</span>`;
@@ -966,8 +1050,6 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       if (loserName) {
         loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #cc0000; text-shadow: 0 0 6px rgba(204, 0, 0, 0.4); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
-      if (loserImage) loserImage.classList.add('shake-hard');
-      if (winnerImage) winnerImage.classList.add('glow-strong');
     } else {
       if (winnerName) {
         winnerName.innerHTML = `${winnerCharName}<br><span class='result' style='color: #009900; text-shadow: 0 0 4px rgba(0, 153, 0, 0.3); font-size: 18px; font-weight: bold;'>Destroying</span>`;
@@ -975,31 +1057,85 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       if (loserName) {
         loserName.innerHTML = `${loserCharName}<br><span class='result' style='color: #990000; text-shadow: 0 0 4px rgba(153, 0, 0, 0.3); font-size: 18px; font-weight: bold;'>Fucked Up</span>`;
       }
-      if (loserImage) loserImage.classList.add('shake');
-      if (winnerImage) winnerImage.classList.add('glow');
     }
 
     // 動畫結束後移除效果
     setTimeout(() => {
-      if (loserImage) loserImage.classList.remove('shake', 'shake-hard', 'shake-extreme');
-      if (winnerImage) winnerImage.classList.remove('glow', 'glow-strong', 'glow-extreme');
+      if (loserImage) loserImage.classList.remove('defeat-shake');
+      if (loserLeftImage) loserLeftImage.classList.remove('defeat-shake');
+      if (loserRightImage) loserRightImage.classList.remove('defeat-shake');
+      if (winnerImage) winnerImage.classList.remove('victory-jump');
+      if (winnerLeftImage) winnerLeftImage.classList.remove('victory-jump');
+      if (winnerRightImage) winnerRightImage.classList.remove('victory-jump');
     }, 500);
     
     // 等待 2 秒後顯示戰敗/戰勝效果
     setTimeout(async () => {
-      // 為輸家載入戰敗圖片
-      if (loserImage) {
+      // 為輸家的主角色載入戰敗圖片，但只有在不是已經處於 ruined 狀態時才載入
+      if (loserImage && !loserIsRuined) {
         const currentSrc = loserImage.src;
         const ruinedImagePath = await loadRuinedImage(loserSide, currentSrc);
         if (ruinedImagePath !== currentSrc) {
           loserImage.src = ruinedImagePath;
           loserImage.classList.add('ruined-effect');
+          // 移除持續的戰敗效果
+          // loserImage.style.filter = 'brightness(80%) saturate(80%)';
         }
       }
       
-      // 為贏家添加勝利效果
-      if (winnerImage) {
-        winnerImage.classList.add('victory-effect');
+      // 為輸家的左側夥伴載入戰敗圖片，但只有在不是已經處於 ruined 狀態時才載入
+      if (loserLeftImage && loserLeftImage.style.display !== 'none' && !loserLeftIsRuined) {
+        const currentSrc = loserLeftImage.src;
+        // 從當前圖片路徑中提取角色名稱
+        const imageName = currentSrc.split("/").pop()?.split(".")[0] || "";
+        const baseName = imageName.replace("Fighting", "");
+        
+        if (baseName) {
+          const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
+          try {
+            const response = await fetch(ruinedImagePath);
+            if (response.ok && ruinedImagePath !== currentSrc) {
+              loserLeftImage.src = ruinedImagePath;
+              loserLeftImage.classList.add('ruined-effect');
+              // 移除持續的戰敗效果
+              // loserLeftImage.style.filter = 'brightness(80%) saturate(80%)';
+            }
+          } catch (error) {
+            console.error(`Error loading partner ruined image for ${loserSide} left:`, error);
+          }
+        }
+      }
+      
+      // 為輸家的右側夥伴載入戰敗圖片，但只有在不是已經處於 ruined 狀態時才載入
+      if (loserRightImage && loserRightImage.style.display !== 'none' && !loserRightIsRuined) {
+        const currentSrc = loserRightImage.src;
+        // 從當前圖片路徑中提取角色名稱
+        const imageName = currentSrc.split("/").pop()?.split(".")[0] || "";
+        const baseName = imageName.replace("Fighting", "");
+        
+        if (baseName) {
+          const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
+          try {
+            const response = await fetch(ruinedImagePath);
+            if (response.ok && ruinedImagePath !== currentSrc) {
+              loserRightImage.src = ruinedImagePath;
+              loserRightImage.classList.add('ruined-effect');
+              // 移除持續的戰敗效果
+              // loserRightImage.style.filter = 'brightness(80%) saturate(80%)';
+            }
+          } catch (error) {
+            console.error(`Error loading partner ruined image for ${loserSide} right:`, error);
+          }
+        }
+      }
+      
+      // 戰鬥完成後禁用 Fight 按鈕
+      fightCompleted = true;
+      const fightButton = document.getElementById('fightButton') as HTMLButtonElement;
+      if (fightButton) {
+        fightButton.disabled = true;
+        fightButton.style.opacity = '0.5';
+        fightButton.style.cursor = 'not-allowed';
       }
     }, 2000);
   }
