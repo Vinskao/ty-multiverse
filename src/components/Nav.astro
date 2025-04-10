@@ -307,43 +307,76 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        // 獲取 access token 和 refresh token
-        const accessToken = urlParams.get('token');
-        const refreshToken = urlParams.get('refresh_token');
-        
         try {
-          // 構建登出 API URL
-          const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
+          // 從 URL 參數中獲取 refreshToken
+          const urlParams = new URLSearchParams(window.location.search);
+          const refreshToken = urlParams.get('refreshToken');
           
-          // 發送登出請求，包含兩個 token
+          if (!refreshToken) {
+            console.error('No refresh token available');
+            // 即使沒有 refreshToken 也清除本地數據
+            localStorage.clear();
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i];
+              const eqPos = cookie.indexOf('=');
+              const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+              document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+            }
+            window.location.href = '/tymultiverse/';
+            return;
+          }
+
+          // 構建登出 URL，包含 refreshToken 參數
+          const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
+          logoutUrl.searchParams.set('refreshToken', refreshToken);
+          
+          console.log('Sending logout request to:', logoutUrl.toString());
+          
+          // 發送登出請求
           const response = await fetch(logoutUrl.toString(), {
-            method: 'POST',
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: JSON.stringify({
-              accessToken: accessToken,
-              refreshToken: refreshToken
-            }),
             credentials: 'include',
             mode: 'cors'
           });
 
+          console.log('Logout response status:', response.status);
+
+          // 無論登出請求是否成功，都清除本地數據
+          localStorage.clear();
+          
+          // 清除所有 cookie
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf('=');
+            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          }
+
           if (response.ok) {
             console.log('Logout successful');
-            // 清除本地存儲的敏感信息
-            localStorage.clear();
-            // 登出成功，重定向到主頁
-            window.location.href = '/tymultiverse/';
           } else {
             console.error('Logout failed:', await response.text());
-            // 即使請求失敗也重定向到主頁
-            window.location.href = '/tymultiverse/';
           }
+
+          // 重定向到主頁
+          window.location.href = '/tymultiverse/';
         } catch (error) {
           console.error('Logout failed:', error);
-          // 即使請求失敗也重定向到主頁
+          // 即使發生錯誤也清除本地數據
+          localStorage.clear();
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf('=');
+            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          }
           window.location.href = '/tymultiverse/';
         }
       });
