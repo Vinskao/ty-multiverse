@@ -3,7 +3,7 @@
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
 const SSO_URL = import.meta.env.PUBLIC_SSO_URL;
 const FRONTEND_URL = import.meta.env.PUBLIC_FRONTEND_URL;
-
+const PEOPLE_IMG_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
 const clientId = "peoplesystem";
 const redirectUri = `${TYMB_URL}/keycloak/redirect`;
 
@@ -94,12 +94,13 @@ function redirectToLogin() {
 <body>
   <p>Redirecting to login...</p>
   <div class="character-container">
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Ann.png"} alt="Ann" class="character-image" />
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Ashe.png"} alt="Ashe" class="character-image" />
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Draeny.png"} alt="Draeny" class="character-image" />
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Miyu.png"} alt="Miyu" class="character-image" />
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Nianca.png"} alt="Nianca" class="character-image" />
-    <img src={import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/Zexu.png"} alt="Zexu" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Ann.png"} alt="Ann" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Ashe.png"} alt="Ashe" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Draeny.png"} alt="Draeny" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Miyu.png"} alt="Miyu" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Nianca.png"} alt="Nianca" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/Zexu.png"} alt="Zexu" class="character-image" />
+    <img src={PEOPLE_IMG_URL + "/SamuiFighting.png"} alt="SamuiFighting" class="character-image" />
   </div>
 </body>
 </html>

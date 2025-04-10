@@ -90,6 +90,52 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
   </div>
 </div>
 
+<style>
+  /* 現有的 CSS 樣式 */
+  
+  /* 戰敗效果 */
+  .ruined-effect {
+    animation: ruined 1.5s ease-in-out;
+    filter: grayscale(70%) brightness(80%);
+  }
+  
+  @keyframes ruined {
+    0% {
+      transform: scale(1);
+      filter: grayscale(0%) brightness(100%);
+    }
+    50% {
+      transform: scale(1.05) rotate(-2deg);
+      filter: grayscale(50%) brightness(90%);
+    }
+    100% {
+      transform: scale(1);
+      filter: grayscale(70%) brightness(80%);
+    }
+  }
+  
+  /* 勝利效果 */
+  .victory-effect {
+    animation: victory 1.5s ease-in-out;
+    filter: brightness(120%) saturate(120%);
+  }
+  
+  @keyframes victory {
+    0% {
+      transform: scale(1);
+      filter: brightness(100%) saturate(100%);
+    }
+    50% {
+      transform: scale(1.1) rotate(2deg);
+      filter: brightness(130%) saturate(130%);
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(120%) saturate(120%);
+    }
+  }
+</style>
+
 <script>
   // 定義類型
   interface Fighter {
@@ -679,6 +725,28 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
     return originalImagePath;
   }
   
+  // 檢查並載入戰敗版本的圖片
+  async function loadRuinedImage(side: 'left' | 'right', currentImagePath: string): Promise<string> {
+    try {
+      // 從當前圖片路徑中提取角色名稱
+      // 可能是 xxxFighting.png 或 xxx.png
+      const imageName = currentImagePath.split("/").pop()?.split(".")[0] || "";
+      const baseName = imageName.replace("Fighting", "");
+      
+      if (!baseName) return currentImagePath;
+
+      const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
+      const response = await fetch(ruinedImagePath);
+      
+      if (response.ok) {
+        return ruinedImagePath;
+      }
+    } catch (error) {
+      console.error(`Error loading ruined image for ${side}:`, error);
+    }
+    return currentImagePath;
+  }
+  
   // 添加狀態效果
   function addStateEffect(side: 'left' | 'right', states: string[]) {
     const targetImage = document.getElementById(`${side}Image`) as HTMLImageElement;
@@ -917,6 +985,24 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       if (loserImage) loserImage.classList.remove('shake', 'shake-hard', 'shake-extreme');
       if (winnerImage) winnerImage.classList.remove('glow', 'glow-strong', 'glow-extreme');
     }, 500);
+    
+    // 等待 2 秒後顯示戰敗/戰勝效果
+    setTimeout(async () => {
+      // 為輸家載入戰敗圖片
+      if (loserImage) {
+        const currentSrc = loserImage.src;
+        const ruinedImagePath = await loadRuinedImage(loserSide, currentSrc);
+        if (ruinedImagePath !== currentSrc) {
+          loserImage.src = ruinedImagePath;
+          loserImage.classList.add('ruined-effect');
+        }
+      }
+      
+      // 為贏家添加勝利效果
+      if (winnerImage) {
+        winnerImage.classList.add('victory-effect');
+      }
+    }, 2000);
   }
   
   // 頁面載入時初始化

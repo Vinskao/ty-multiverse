@@ -17,10 +17,8 @@ const textLinks: { label: string; href: string }[] = [
   { label: isLoggedIn ? "Logout" : "Login", href: isLoggedIn ? "#" : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}` },
   { label: "Work", href: "/tymultiverse/work/" },
   { label: "About", href: "/tymultiverse/about/" },
-  { label: "Control", href: "/tymultiverse/control/" },
   ...(isLoggedIn ? [
-    { label: "Wildland", href: `/tymultiverse/wildland/?username=${username}&token=${token}` },
-    { label: "Palais", href: `/tymultiverse/palais/?username=${username}&token=${token}` }
+    { label: "Control", href: `/tymultiverse/control/?username=${username}&token=${token}` }
   ] : [])
 ];
 
@@ -273,7 +271,7 @@ const iconLinks: {
           loginLink.href = '#';
         }
 
-        // 只有當用戶具有 peoplesystem-admin 角色時才顯示特定選項
+        // 只有當用戶具有 peoplesystem-admin 角色時才顯示 Wildland 和 Palais 選項
         if (hasAccess) {
           const navItems = document.querySelectorAll('.nav-items li');
           const wildlandLink = Array.from(navItems).find(item => item.textContent?.includes('Wildland'));
@@ -309,39 +307,43 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        // 獲取 refresh token
+        // 獲取 access token 和 refresh token
+        const accessToken = urlParams.get('token');
         const refreshToken = urlParams.get('refresh_token');
         
-        if (refreshToken) {
-          try {
-            const response = await fetch(
-              `${TYMB_URL}/keycloak/logout?refreshToken=${encodeURIComponent(refreshToken)}`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'Accept': 'application/json',
-                },
-                credentials: 'include',
-                mode: 'cors'
-              }
-            );
+        try {
+          // 構建登出 API URL
+          const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
+          
+          // 發送登出請求，包含兩個 token
+          const response = await fetch(logoutUrl.toString(), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              accessToken: accessToken,
+              refreshToken: refreshToken
+            }),
+            credentials: 'include',
+            mode: 'cors'
+          });
 
-            if (response.ok) {
-              // 登出成功，重定向到主頁
-              window.location.href = '/tymultiverse/';
-            } else {
-              console.error('Logout failed:', await response.text());
-              // 即使請求失敗也重定向到主頁
-              window.location.href = '/tymultiverse/';
-            }
-          } catch (error) {
-            console.error('Logout failed:', error);
+          if (response.ok) {
+            console.log('Logout successful');
+            // 清除本地存儲的敏感信息
+            localStorage.clear();
+            // 登出成功，重定向到主頁
+            window.location.href = '/tymultiverse/';
+          } else {
+            console.error('Logout failed:', await response.text());
             // 即使請求失敗也重定向到主頁
             window.location.href = '/tymultiverse/';
           }
-        } else {
-          // 如果沒有 refresh token，直接重定向到主頁
+        } catch (error) {
+          console.error('Logout failed:', error);
+          // 即使請求失敗也重定向到主頁
           window.location.href = '/tymultiverse/';
         }
       });
@@ -590,6 +592,81 @@ const iconLinks: {
       gap: 0;
     }
   }
+  
+  /* 新增手機版 RWD 樣式 */
+  @media (max-width: 49.99em) {
+    nav {
+      padding: 1rem;
+    }
+    
+    .menu-header {
+      padding: 0.5rem;
+    }
+    
+    .nav-items {
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE and Edge */
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+    
+    .nav-items::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .link {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 999rem;
+      background: radial-gradient(var(--gray-900), var(--gray-800) 150%);
+      box-shadow: var(--shadow-sm);
+      transition: color var(--theme-transition),
+        background-color var(--theme-transition);
+    }
+    
+    .link.active {
+      color: var(--accent-text-over);
+      background-color: var(--accent-regular);
+    }
+    
+    .menu-footer {
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    .socials {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    
+    .theme-toggle {
+      margin-top: 0.5rem;
+    }
+  }
+  
+  /* 新增小螢幕手機版 RWD 樣式 */
+  @media (max-width: 30em) {
+    .nav-items {
+      flex-direction: column;
+      overflow-x: visible;
+      white-space: normal;
+      padding: 0.5rem;
+    }
+    
+    .link {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+  }
+  
   @media (forced-colors: active) {
     .link.active {
       color: SelectedItem;

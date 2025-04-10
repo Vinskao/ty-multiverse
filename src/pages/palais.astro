@@ -1,18 +1,49 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
-import Galwall from "../components/Galwall.astro";
-import Org from  "../components/Org.html";
-import Fight from  "../components/Fight.astro";
-import Group from  "../components/Group.astro";
+import Gallery from  "../components/Gallery.html";
 
 // 檢查登入狀態
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
 const token = url.searchParams.get('token');
 
-// 如果未登入，重定向到首頁
+// 如果未登入，重定向到登入頁面
 if (!username || !token) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+
+// 檢查用戶是否有特殊權限
+const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+let hasAccess = false;
+
+try {
+  // 構建 API URL
+  const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
+  apiUrl.searchParams.set('token', token);
+  
+  // 使用 fetch 同步檢查權限
+  const response = await fetch(apiUrl.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+    },
+    credentials: 'include',
+    mode: 'cors'
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    // 檢查 preferred_username 是否為 chiaki 或 sorane
+    hasAccess = data.preferred_username === 'chiaki' || data.preferred_username === 'sorane';
+  }
+} catch (error) {
+  console.error('Token verification failed:', error);
+}
+
+// 如果用戶沒有特殊權限，重定向到首頁
+if (!hasAccess) {
   return Astro.redirect('/tymultiverse/');
 }
 ---
@@ -22,89 +53,30 @@ if (!username || !token) {
 <html>
   <head>
     <style>
-      .galwall-container {
-        position: relative;
-        z-index: 1;
-        height: 450px;
-        margin-bottom: 50px;
-      }
-
-      .system-container {
-        display: flex;
-        flex-wrap: wrap;
-        margin-bottom: 0;
-        position: relative;
-        z-index: 2;
-        margin-top: 100px;
-      }
-
-      .system-container:first-of-type {
-        margin-top: 0;
-      }
-
-      .system-container:last-of-type {
-        margin-bottom: 600px;
-      }
-
       #system {
-        align-items: center;
-        padding-left: -50px;
-        margin-left: -50px;
-      }
-
-      .title {
         text-align: center;
-        flex-direction: row;
-        display: flex;
-        z-index: 999;
-        padding-left: 30px;
       }
-
-      .container {
-        display: flex;
-        flex-direction: row;
-        position: relative;
-        columns: 2;
-        margin-top: 250px;
-      }
-    
-      main.wrapper {
-        margin: 5%;
-        padding: 0;
-        max-width: 100%;
-      }
-      main.wrapper .stack {
-        gap: 10px;
+      #settle {
+        font-size: 100px;
+        font-weight: bold;
+        color: rgb(81, 167, 247);
       }
     </style>
-
-    <script
-      async
-      src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-    ></script>
-    <script
-      async
-      defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js">
-    </script>
   </head>
   <body>
-    <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
+    <BaseLayout
+      title="Palais | Wavo Yuropha"
+      description="Learn about TY's most recent projects"
+    >
       <div class="stack gap-20">
         <main class="wrapper stack gap-8">
           <Hero
             title="Palais"
-            tagline="Welcome to Lily Palais."
+            tagline="Designed by Tianyi in Taipei."
             align="start"
           />
-          <div class="galwall-container">
-            <Galwall />
-          </div>
-          <div class="system-container">
-            <Fight />
-          </div>
+          <Gallery />
         </main>
-        <Group />
       </div>
     </BaseLayout>
   </body>
