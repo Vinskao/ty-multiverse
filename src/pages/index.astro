@@ -417,27 +417,6 @@ h5 {
 					tagline="The Future is Now"
 					align="start"
 				>
-					<div id="version-display" style="font-size: 0.65em; color: #888; margin-top: -1rem; margin-bottom: 1rem;">
-						version 2.0<br>人次: 0
-					</div>
-					<script define:vars={{ serverStartTime }}>
-						// 初始版本號
-						const baseVersion = 2.0;
-						
-						// 從 localStorage 獲取訪問次數
-						let visits = parseInt(localStorage.getItem('visitCount') || '0');
-						visits++;
-						localStorage.setItem('visitCount', visits.toString());
-						
-						// 計算經過的天數
-						const daysPassed = Math.floor((new Date().getTime() - new Date(serverStartTime).getTime()) / (1000 * 60 * 60 * 24));
-						const versionIncrement = Math.floor(daysPassed / 5) * 0.1; // 每5天增加0.1
-						const newVersion = (baseVersion + versionIncrement).toFixed(1);
-						
-						// 更新顯示
-						document.getElementById('version-display').innerHTML = 
-							`version ${newVersion}<br>人次: ${visits}`;
-					</script>
 					<div class="roles">
 						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
 						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>

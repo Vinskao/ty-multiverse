@@ -7,7 +7,6 @@ padding: 0;
 display: flex;
 width: 100%;
 max-width: 1800px;
-min-height: 1200px;
 padding: 20px 0;  /* 只保留上下padding */
 margin: 0;  /* 移除左右margin */
 justify-content: flex-start;  /* 改為左對齊 */
@@ -26,7 +25,6 @@ align-items: center;
 justify-content: flex-start;
 margin: 0;
 width: 400px;
-min-height: 1200px;
 flex: 0 0 auto;
 gap: 10px;
 position: relative;
@@ -545,4 +543,19 @@ overflow: visible;
   100% {
     transform: scale(1);
   }
+}
+
+.left-container, .right-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  width: 400px;
+  min-height: 800px;
+  flex: 0 0 auto;
+  gap: 10px;
+  position: relative;
+  z-index: 50;
+  padding: 0 10px;  /* 添加左右padding */
 }

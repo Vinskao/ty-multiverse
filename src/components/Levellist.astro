@@ -123,6 +123,8 @@ if (!username || !token) {
 </style>
 
 <script>
+  import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
+  
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
   
@@ -185,7 +187,7 @@ if (!username || !token) {
   }
 
   // 驗證 token 是否有效
-  async function verifyToken(token: string) {
+  async function verifyToken(token) {
     try {
       const response = await fetch(`${TYMB_URL}/keycloak/introspect?token=${token}`, {
         method: 'GET',
@@ -273,17 +275,15 @@ if (!username || !token) {
             });
 
             let totalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
+            let hasBonus = false;
             
             if (weaponResponse.ok) {
               const weaponData = await weaponResponse.json();
               
-              // 計算武器傷害
-              totalUtilityPower += parseInt(String(weaponData.baseDamage || 0), 10);
-
-              // 檢查是否需要添加額外傷害
-              if (weaponData.bonusAttributes && weaponData.bonusAttributes.includes(character.attributes)) {
-                totalUtilityPower += parseInt(String(weaponData.bonusDamage || 0), 10);
-              }
+              // 使用 weapon.js 中的函數計算武器傷害
+              const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponData);
+              totalUtilityPower = updatedCharacter.utilityPower;
+              hasBonus = bonusApplied;
             }
 
             // 計算總戰力
@@ -296,7 +296,8 @@ if (!username || !token) {
               totalPower,
               physicPower,
               magicPower,
-              utilityPower: totalUtilityPower
+              utilityPower: totalUtilityPower,
+              hasBonus
             };
           } catch (error) {
             console.error(`Error fetching weapon info for ${character.name}:`, error);
@@ -307,7 +308,8 @@ if (!username || !token) {
                           parseInt(String(character.utilityPower || 0), 10),
               physicPower: parseInt(String(character.physicPower || 0), 10),
               magicPower: parseInt(String(character.magicPower || 0), 10),
-              utilityPower: parseInt(String(character.utilityPower || 0), 10)
+              utilityPower: parseInt(String(character.utilityPower || 0), 10),
+              hasBonus: false
             };
           }
         })
@@ -528,16 +530,16 @@ if (!username || !token) {
           });
           
           img.addEventListener('mouseover', () => {
-            img.style.zIndex = '3';
+            (img as HTMLImageElement).style.zIndex = '3';
             if (img.nextElementSibling && img.nextElementSibling.tagName === 'IMG') {
-              img.nextElementSibling.style.zIndex = '3';
+              (img.nextElementSibling as HTMLImageElement).style.zIndex = '3';
             }
             showCharacterInfo(character, level.name);
           });
           img.addEventListener('mouseout', () => {
-            img.style.zIndex = '2';
+            (img as HTMLImageElement).style.zIndex = '2';
             if (img.nextElementSibling && img.nextElementSibling.tagName === 'IMG') {
-              img.nextElementSibling.style.zIndex = '2';
+              (img.nextElementSibling as HTMLImageElement).style.zIndex = '2';
             }
           });
 
@@ -581,6 +583,15 @@ if (!username || !token) {
           powerText.style.overflow = 'hidden';
           powerText.style.textOverflow = 'ellipsis';
           powerText.style.color = level.color;
+
+          // 如果有武器加成，添加特殊標記
+          if (character.hasBonus) {
+            const bonusBadge = document.createElement('span');
+            bonusBadge.textContent = '⚔️';
+            bonusBadge.style.marginLeft = '5px';
+            bonusBadge.style.fontSize = '14px';
+            powerText.appendChild(bonusBadge);
+          }
 
           infoContainer.appendChild(nameText);
           infoContainer.appendChild(attributesText);
