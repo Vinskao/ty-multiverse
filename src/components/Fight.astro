@@ -91,6 +91,8 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 </div>
 
 <script>
+import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
+
   // 定義類型
   interface Fighter {
     image: string | null;
@@ -594,17 +596,16 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
         if (weaponResponse.ok) {
           const weaponData = await weaponResponse.json();
           
-          // 計算武器傷害
-          let totalUtilityPower = parseInt(String(data.utilityPower || 0), 10);
-          totalUtilityPower += parseInt(String(weaponData.baseDamage || 0), 10);
-
-          // 檢查是否需要添加額外傷害
-          if (weaponData.bonusAttributes && weaponData.bonusAttributes.includes(data.attributes)) {
-            totalUtilityPower += parseInt(String(weaponData.bonusDamage || 0), 10);
-          }
-
+          // 使用新的武器傷害計算邏輯
+          const { character: updatedCharacter, hasBonus } = applyWeaponDamage(data, weaponData);
+          
           // 更新數據中的 utilityPower
-          data.utilityPower = totalUtilityPower;
+          data.utilityPower = updatedCharacter.utilityPower;
+          
+          // 如果有加成，顯示狀態效果
+          if (hasBonus && weaponData.stateAttributes) {
+            addStateEffect(side === 'left' ? 'right' : 'left', weaponData.stateAttributes);
+          }
         }
 
         updateFighterInfo(side, data);
@@ -847,7 +848,9 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 
         if (leftWeaponResponse.ok) {
           const leftWeaponData = await leftWeaponResponse.json();
-          if (leftWeaponData.stateAttributes && Array.isArray(leftWeaponData.stateAttributes)) {
+          const { hasBonus } = calculateWeaponDamage(fighters.left.main, leftWeaponData);
+          
+          if (hasBonus && leftWeaponData.stateAttributes && Array.isArray(leftWeaponData.stateAttributes)) {
             addStateEffect('right', leftWeaponData.stateAttributes);
           }
         }
@@ -866,7 +869,9 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
 
         if (rightWeaponResponse.ok) {
           const rightWeaponData = await rightWeaponResponse.json();
-          if (rightWeaponData.stateAttributes && Array.isArray(rightWeaponData.stateAttributes)) {
+          const { hasBonus } = calculateWeaponDamage(fighters.right.main, rightWeaponData);
+          
+          if (hasBonus && rightWeaponData.stateAttributes && Array.isArray(rightWeaponData.stateAttributes)) {
             addStateEffect('left', rightWeaponData.stateAttributes);
           }
         }
