@@ -119,6 +119,8 @@ if (!username || !token) {
     font-size: 14px;
     font-weight: bold;
     margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
   }
 </style>
 
@@ -130,13 +132,65 @@ if (!username || !token) {
   
   // 定義基本戰力等級 (使用絕對數值級距)
   const BASE_POWER_LEVELS = [
-    { name: "Level S", min: 1000, max: 1499, color: "#FFD700" },
-    { name: "Level A", min: 800, max: 999, color: "#00FF00" },
-    { name: "Level B", min: 500, max: 799, color: "#00FFFF" },
-    { name: "Level C", min: 200, max: 499, color: "#0000FF" },
-    { name: "Level D", min: 50, max: 199, color: "#800080" },
+    { name: "Level S", min: 2600, max: 3599, color: "#FFD700" },
+    { name: "Level A", min: 1600, max: 2599, color: "#00FF00" },
+    { name: "Level B", min: 900, max: 1599, color: "#00FFFF" },
+    { name: "Level C", min: 400, max: 899, color: "#0000FF" },
+    { name: "Level D", min: 50, max: 399, color: "#800080" },
     { name: "Level F", min: 0, max: 49, color: "#808080" }
   ];
+
+  // 預定義顏色列表，用於動態分配給軍隊
+  const COLOR_PALETTE = [
+    "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
+    "#FFA500", "#800080", "#008000", "#800000", "#008080", "#000080",
+    "#FFC0CB", "#DDA0DD", "#F0E68C", "#E6E6FA", "#20B2AA", "#FF6347",
+    "#7CFC00", "#FFD700", "#FF69B4", "#00FA9A", "#4169E1", "#8B4513",
+    "#CD853F", "#DEB887", "#5F9EA0", "#7FFF00", "#D2691E", "#FF7F50",
+    "#6495ED", "#DC143C", "#00008B", "#008B8B", "#B8860B", "#006400",
+    "#8B008B", "#556B2F", "#8B0000", "#483D8B", "#2F4F4F", "#9400D3",
+    "#FF1493", "#00BFFF", "#696969", "#1E90FF", "#B22222", "#FFFAF0",
+    "#228B22", "#DCDCDC", "#F0FFF0", "#FF69B4", "#F0FFFF", "#E6E6FA",
+    "#FFF0F5", "#7CFC00", "#FFFACD", "#ADD8E6", "#F08080", "#E0FFFF",
+    "#FAFAD2", "#D3D3D3", "#90EE90", "#FFB6C1", "#FFA07A", "#98FB98",
+    "#87CEFA", "#DDA0DD", "#F0E68C", "#E6E6FA", "#20B2AA", "#FF6347"
+  ];
+
+  // 定義軍隊顏色映射
+  const ARMY_COLORS = {
+    "Red Army": "#FF0000",
+    "Blue Army": "#0000FF",
+    "Green Army": "#00FF00",
+    "Yellow Army": "#FFFF00",
+    "Purple Army": "#800080",
+    "Orange Army": "#FFA500",
+    "Black Army": "#000000",
+    "White Army": "#FFFFFF",
+    "Gray Army": "#808080",
+    "Brown Army": "#8B4513",
+    "Pink Army": "#FFC0CB",
+    "Cyan Army": "#00FFFF",
+    "Magenta Army": "#FF00FF",
+    "Lime Army": "#00FF00",
+    "Teal Army": "#008080",
+    "Navy Army": "#000080",
+    "Maroon Army": "#800000",
+    "Olive Army": "#808000",
+    "Aqua Army": "#00FFFF",
+    "Silver Army": "#C0C0C0",
+    "Gold Army": "#FFD700",
+    "Bronze Army": "#CD7F32",
+    "Copper Army": "#B87333",
+    "Platinum Army": "#E5E4E2",
+    "Steel Army": "#71797E",
+    "Iron Army": "#4A4A4A",
+    "Titanium Army": "#878681",
+    "Aluminum Army": "#848789",
+    "Zinc Army": "#7B7B7B",
+    "Lead Army": "#43464B",
+    "Mercury Army": "#B5B5B5",
+    "Default": "#FFFFFF" // 默認顏色
+  };
 
   // 刷新 token 的函數
   async function refreshToken() {
@@ -287,8 +341,8 @@ if (!username || !token) {
             }
 
             // 計算總戰力
-            const physicPower = parseInt(String(character.physicPower || 0), 10);
-            const magicPower = parseInt(String(character.magicPower || 0), 10);
+            const physicPower = parseInt(String(character?.physicPower || 0), 10);
+            const magicPower = parseInt(String(character?.magicPower || 0), 10);
             const totalPower = physicPower + magicPower + totalUtilityPower;
 
             return {
@@ -336,6 +390,22 @@ if (!username || !token) {
 
       // 按戰力排序
       filteredCharacters.sort((a, b) => b.totalPower - a.totalPower);
+      
+      // 收集所有軍隊名稱並分配顏色
+      const armyColorMap = {};
+      let colorIndex = 0;
+      
+      // 遍歷所有角色，收集軍隊名稱
+      filteredCharacters.forEach(character => {
+        if (character.armyName && !armyColorMap[character.armyName]) {
+          // 為新的軍隊名稱分配顏色
+          armyColorMap[character.armyName] = COLOR_PALETTE[colorIndex % COLOR_PALETTE.length];
+          colorIndex++;
+        }
+      });
+      
+      // 添加默認顏色
+      armyColorMap["Default"] = "#FFFFFF";
 
       // 動態生成SS及以上等級
       const POWER_LEVELS = [...BASE_POWER_LEVELS];
@@ -343,14 +413,14 @@ if (!username || !token) {
       // 找出最高戰力值
       const maxPower = filteredCharacters.length > 0 ? filteredCharacters[0].totalPower : 0;
       
-      // 從S級開始，每次增加500，並乘以1.2倍
-      let currentMin = 1500; // S級的上限
+      // 從S級開始，每次增加1000，並乘以1.2倍
+      let currentMin = 3600; // S級的上限
       let levelIndex = 1; // 用於生成SS, SSS, SSSS等名稱
       let multiplier = 1.0;
       
       while (currentMin <= maxPower) {
         multiplier *= 1.2;
-        const levelSize = Math.floor(500 * multiplier);
+        const levelSize = Math.floor(1000 * multiplier);
         const levelMax = currentMin + levelSize - 1;
         
         // 生成等級名稱 (SS, SSS, SSSS, SSSSS, ...)
@@ -412,6 +482,8 @@ if (!username || !token) {
         const levelBadge = document.createElement('div');
         levelBadge.className = 'level-badge';
         levelBadge.style.backgroundColor = level.color;
+        levelBadge.style.width = '100%';
+        levelBadge.style.textAlign = 'center';
         
         // 使用預定義的級距範圍
         if (level.max === Infinity) {
@@ -566,6 +638,12 @@ if (!username || !token) {
           nameText.style.whiteSpace = 'nowrap';
           nameText.style.overflow = 'hidden';
           nameText.style.textOverflow = 'ellipsis';
+          
+          // 根據軍隊名稱設置顏色
+          const armyName = character.armyName || "Default";
+          const armyColor = armyColorMap[armyName] || armyColorMap["Default"];
+          nameText.style.color = armyColor;
+          nameText.style.textShadow = `0 0 2px rgba(0,0,0,0.5)`;
 
           const attributesText = document.createElement('p');
           attributesText.textContent = `Attributes: ${character.attributes}`;
@@ -574,6 +652,15 @@ if (!username || !token) {
           attributesText.style.whiteSpace = 'nowrap';
           attributesText.style.overflow = 'hidden';
           attributesText.style.textOverflow = 'ellipsis';
+          
+          // 如果有武器加成，添加特殊標記到屬性文字旁邊
+          if (character.hasBonus) {
+            const bonusBadge = document.createElement('span');
+            bonusBadge.textContent = '⚔️';
+            bonusBadge.style.marginLeft = '5px';
+            bonusBadge.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
+            attributesText.appendChild(bonusBadge);
+          }
 
           const powerText = document.createElement('p');
           powerText.textContent = `Total Power: ${character.totalPower}`;
@@ -583,15 +670,6 @@ if (!username || !token) {
           powerText.style.overflow = 'hidden';
           powerText.style.textOverflow = 'ellipsis';
           powerText.style.color = level.color;
-
-          // 如果有武器加成，添加特殊標記
-          if (character.hasBonus) {
-            const bonusBadge = document.createElement('span');
-            bonusBadge.textContent = '⚔️';
-            bonusBadge.style.marginLeft = '5px';
-            bonusBadge.style.fontSize = '14px';
-            powerText.appendChild(bonusBadge);
-          }
 
           infoContainer.appendChild(nameText);
           infoContainer.appendChild(attributesText);
