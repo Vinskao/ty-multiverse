@@ -602,10 +602,10 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
           // 更新數據中的 utilityPower
           data.utilityPower = updatedCharacter.utilityPower;
           
-          // 如果有加成，顯示狀態效果
-          if (hasBonus && weaponData.stateAttributes) {
-            addStateEffect(side === 'left' ? 'right' : 'left', weaponData.stateAttributes);
-          }
+          // 不再在這裡顯示狀態效果，而是在戰鬥開始時顯示
+          // 將武器數據保存到角色數據中，以便戰鬥時使用
+          data.weaponData = weaponData;
+          data.hasBonus = hasBonus;
         }
 
         updateFighterInfo(side, data);
@@ -832,50 +832,141 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     // 檢查並應用狀態效果
     try {
-      const token = await getValidToken();
-      if (token) {
-        // 檢查左方角色的武器效果
-        const leftName = fighters.left.main.name?.toLowerCase() || '';
-        const leftWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftName}`, {
-          method: "GET",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json"
-          },
-          credentials: 'include'
-        });
-
-        if (leftWeaponResponse.ok) {
-          const leftWeaponData = await leftWeaponResponse.json();
-          const { hasBonus } = calculateWeaponDamage(fighters.left.main, leftWeaponData);
+      // 從 localStorage 獲取角色數據
+      const leftStorageKey = 'fighters_left';
+      const rightStorageKey = 'fighters_right';
+      const leftData = JSON.parse(localStorage.getItem(leftStorageKey) || '{}');
+      const rightData = JSON.parse(localStorage.getItem(rightStorageKey) || '{}');
+      
+      // 收集左方所有角色的狀態效果
+      const leftSideStates: string[] = [];
+      
+      // 檢查左方主角色的武器效果
+      if (leftData.weaponData && leftData.hasBonus && leftData.weaponData.stateAttributes) {
+        leftSideStates.push(...leftData.weaponData.stateAttributes);
+      }
+      
+      // 檢查左方左側夥伴的武器效果
+      if (fighters.left.left?.name) {
+        const leftPartnerName = fighters.left.left.name.toLowerCase();
+        const token = await getValidToken();
+        if (token) {
+          const leftPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftPartnerName}`, {
+            method: "GET",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            },
+            credentials: 'include'
+          });
           
-          if (hasBonus && leftWeaponData.stateAttributes && Array.isArray(leftWeaponData.stateAttributes)) {
-            addStateEffect('right', leftWeaponData.stateAttributes);
-          }
-        }
-
-        // 檢查右方角色的武器效果
-        const rightName = fighters.right.main.name?.toLowerCase() || '';
-        const rightWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightName}`, {
-          method: "GET",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json"
-          },
-          credentials: 'include'
-        });
-
-        if (rightWeaponResponse.ok) {
-          const rightWeaponData = await rightWeaponResponse.json();
-          const { hasBonus } = calculateWeaponDamage(fighters.right.main, rightWeaponData);
-          
-          if (hasBonus && rightWeaponData.stateAttributes && Array.isArray(rightWeaponData.stateAttributes)) {
-            addStateEffect('left', rightWeaponData.stateAttributes);
+          if (leftPartnerWeaponResponse.ok) {
+            const leftPartnerWeaponData = await leftPartnerWeaponResponse.json();
+            const { hasBonus } = calculateWeaponDamage(fighters.left.left, leftPartnerWeaponData);
+            
+            if (hasBonus && leftPartnerWeaponData.stateAttributes && Array.isArray(leftPartnerWeaponData.stateAttributes)) {
+              leftSideStates.push(...leftPartnerWeaponData.stateAttributes);
+            }
           }
         }
       }
+      
+      // 檢查左方右側夥伴的武器效果
+      if (fighters.left.right?.name) {
+        const leftRightPartnerName = fighters.left.right.name.toLowerCase();
+        const token = await getValidToken();
+        if (token) {
+          const leftRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftRightPartnerName}`, {
+            method: "GET",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            },
+            credentials: 'include'
+          });
+          
+          if (leftRightPartnerWeaponResponse.ok) {
+            const leftRightPartnerWeaponData = await leftRightPartnerWeaponResponse.json();
+            const { hasBonus } = calculateWeaponDamage(fighters.left.right, leftRightPartnerWeaponData);
+            
+            if (hasBonus && leftRightPartnerWeaponData.stateAttributes && Array.isArray(leftRightPartnerWeaponData.stateAttributes)) {
+              leftSideStates.push(...leftRightPartnerWeaponData.stateAttributes);
+            }
+          }
+        }
+      }
+      
+      // 收集右方所有角色的狀態效果
+      const rightSideStates: string[] = [];
+      
+      // 檢查右方主角色的武器效果
+      if (rightData.weaponData && rightData.hasBonus && rightData.weaponData.stateAttributes) {
+        rightSideStates.push(...rightData.weaponData.stateAttributes);
+      }
+      
+      // 檢查右方左側夥伴的武器效果
+      if (fighters.right.left?.name) {
+        const rightPartnerName = fighters.right.left.name.toLowerCase();
+        const token = await getValidToken();
+        if (token) {
+          const rightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightPartnerName}`, {
+            method: "GET",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            },
+            credentials: 'include'
+          });
+          
+          if (rightPartnerWeaponResponse.ok) {
+            const rightPartnerWeaponData = await rightPartnerWeaponResponse.json();
+            const { hasBonus } = calculateWeaponDamage(fighters.right.left, rightPartnerWeaponData);
+            
+            if (hasBonus && rightPartnerWeaponData.stateAttributes && Array.isArray(rightPartnerWeaponData.stateAttributes)) {
+              rightSideStates.push(...rightPartnerWeaponData.stateAttributes);
+            }
+          }
+        }
+      }
+      
+      // 檢查右方右側夥伴的武器效果
+      if (fighters.right.right?.name) {
+        const rightRightPartnerName = fighters.right.right.name.toLowerCase();
+        const token = await getValidToken();
+        if (token) {
+          const rightRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightRightPartnerName}`, {
+            method: "GET",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            },
+            credentials: 'include'
+          });
+          
+          if (rightRightPartnerWeaponResponse.ok) {
+            const rightRightPartnerWeaponData = await rightRightPartnerWeaponResponse.json();
+            const { hasBonus } = calculateWeaponDamage(fighters.right.right, rightRightPartnerWeaponData);
+            
+            if (hasBonus && rightRightPartnerWeaponData.stateAttributes && Array.isArray(rightRightPartnerWeaponData.stateAttributes)) {
+              rightSideStates.push(...rightRightPartnerWeaponData.stateAttributes);
+            }
+          }
+        }
+      }
+      
+      // 一次性顯示所有狀態效果
+      if (leftSideStates.length > 0) {
+        addStateEffect('right', leftSideStates);
+      }
+      
+      if (rightSideStates.length > 0) {
+        addStateEffect('left', rightSideStates);
+      }
+      
     } catch (error) {
       console.error("檢查武器狀態效果失敗:", error);
     }
@@ -1187,6 +1278,14 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       if (attributes && !currentData.attributes.includes(attributes)) {
         currentData.attributes.push(attributes);
       }
+      
+      // 保存武器數據和加成狀態
+      if (fighter.weaponData) {
+        currentData.weaponData = fighter.weaponData;
+      }
+      if (fighter.hasBonus !== undefined) {
+        currentData.hasBonus = fighter.hasBonus;
+      }
 
       // 儲存回 localStorage
       localStorage.setItem(storageKey, JSON.stringify(currentData));
@@ -1213,4 +1312,6 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 將角色名稱列表傳遞給客戶端腳本
   document.currentScript?.setAttribute('data-characters', JSON.stringify(characterNames));
 </script>
+
+
 
