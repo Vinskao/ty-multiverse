@@ -1,4 +1,6 @@
 ---
+import '../styles/levellist.css';
+
 // 檢查登入狀態
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -12,125 +14,13 @@ if (!username || !token) {
 
 <div id="level-container"></div>
 
-<style>
-  #level-container {
-    margin: 5%;
-    padding: 0;
-    max-width: 100%;
-  }
-
-  .level-container {
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .level-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  }
-
-  .character-info {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 20px;
-    border-radius: 15px;
-    color: white;
-    z-index: 1000;
-    max-width: 80%;
-    max-height: 80vh;
-    overflow-y: auto;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .character-info.show {
-    display: block;
-  }
-
-  .character-info img {
-    width: 300px;
-    height: auto;
-    float: right;
-    margin-left: 20px;
-    border-radius: 8px;
-  }
-
-  .character-info p {
-    margin: 5px 0;
-    font-size: 16px;
-  }
-
-  .character-info .name {
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #ffd700;
-  }
-
-  .character-info .level {
-    font-size: 20px;
-    color: #ffa500;
-    margin-bottom: 10px;
-  }
-
-  .close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 5px 10px;
-  }
-
-  .close-button:hover {
-    color: #ffd700;
-  }
-
-  .power-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 5;
-  }
-
-  .level-badge {
-    display: inline-block;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    width: 100%;
-    text-align: center;
-  }
-</style>
-
 <script>
-  import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
+  import { applyWeaponDamage } from "../scripts/weapon";
   
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
   
-  // 定義基本戰力等級 (使用絕對數值級距)
+  // 定義基本戰力等級
   const BASE_POWER_LEVELS = [
     { name: "Level S", min: 2600, max: 3599, color: "#FFD700" },
     { name: "Level A", min: 1600, max: 2599, color: "#00FF00" },
@@ -140,62 +30,27 @@ if (!username || !token) {
     { name: "Level F", min: 0, max: 49, color: "#808080" }
   ];
 
-  // 預定義顏色列表，用於動態分配給軍隊
-  const COLOR_PALETTE = [
-    "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
-    "#FFA500", "#800080", "#008000", "#800000", "#008080", "#000080",
-    "#FFC0CB", "#DDA0DD", "#F0E68C", "#E6E6FA", "#20B2AA", "#FF6347",
-    "#7CFC00", "#FFD700", "#FF69B4", "#00FA9A", "#4169E1", "#8B4513",
-    "#CD853F", "#DEB887", "#5F9EA0", "#7FFF00", "#D2691E", "#FF7F50",
-    "#6495ED", "#DC143C", "#00008B", "#008B8B", "#B8860B", "#006400",
-    "#8B008B", "#556B2F", "#8B0000", "#483D8B", "#2F4F4F", "#9400D3",
-    "#FF1493", "#00BFFF", "#696969", "#1E90FF", "#B22222", "#FFFAF0",
-    "#228B22", "#DCDCDC", "#F0FFF0", "#FF69B4", "#F0FFFF", "#E6E6FA",
-    "#FFF0F5", "#7CFC00", "#FFFACD", "#ADD8E6", "#F08080", "#E0FFFF",
-    "#FAFAD2", "#D3D3D3", "#90EE90", "#FFB6C1", "#FFA07A", "#98FB98",
-    "#87CEFA", "#DDA0DD", "#F0E68C", "#E6E6FA", "#20B2AA", "#FF6347"
-  ];
-
   // 定義軍隊顏色映射
   const ARMY_COLORS = {
-    "Red Army": "#FF0000",
-    "Blue Army": "#0000FF",
-    "Green Army": "#00FF00",
-    "Yellow Army": "#FFFF00",
-    "Purple Army": "#800080",
-    "Orange Army": "#FFA500",
-    "Black Army": "#000000",
-    "White Army": "#FFFFFF",
-    "Gray Army": "#808080",
-    "Brown Army": "#8B4513",
-    "Pink Army": "#FFC0CB",
-    "Cyan Army": "#00FFFF",
-    "Magenta Army": "#FF00FF",
-    "Lime Army": "#00FF00",
-    "Teal Army": "#008080",
-    "Navy Army": "#000080",
-    "Maroon Army": "#800000",
-    "Olive Army": "#808000",
-    "Aqua Army": "#00FFFF",
-    "Silver Army": "#C0C0C0",
-    "Gold Army": "#FFD700",
-    "Bronze Army": "#CD7F32",
-    "Copper Army": "#B87333",
-    "Platinum Army": "#E5E4E2",
-    "Steel Army": "#71797E",
-    "Iron Army": "#4A4A4A",
-    "Titanium Army": "#878681",
-    "Aluminum Army": "#848789",
-    "Zinc Army": "#7B7B7B",
-    "Lead Army": "#43464B",
-    "Mercury Army": "#B5B5B5",
-    "Default": "#FFFFFF" // 默認顏色
+    "八食": "#46A3FF",      
+    "初桑": "#FFA500",      
+    "Buse": "#AD5A5A",      
+    "Phénix": "#FFFF00",    
+    "姦閥": "#808080",      
+    "姦囚": "#FFC0CB",      
+    "Regalos": "#00FF00",   
+    "天際女孩": "#00BFFF",  
+    "外界": "#000080",      
+    "王": "#FF0000",        
+    "Intouchable": "#8B4513",
+    "塵民": "#008080",      
+    "獄族": "#800080",      
+    "Default": "#FFFFFF"    
   };
 
   // 刷新 token 的函數
   async function refreshToken() {
     try {
-      // 從 URL 參數中獲取 refresh token
       const urlParams = new URLSearchParams(window.location.search);
       const refreshToken = urlParams.get('refresh_token');
       
@@ -223,7 +78,6 @@ if (!username || !token) {
 
       const data = await response.json();
       if (data.token) {
-        // 更新 URL 中的 token
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('token', data.token);
         if (data.refresh_token) {
@@ -284,17 +138,145 @@ if (!username || !token) {
       return null;
     }
 
-    // 重新獲取更新後的 token
     const newUrlParams = new URLSearchParams(window.location.search);
     return newUrlParams.get('token');
   }
 
+  // 檢查圖片是否存在
+  async function checkImageExists(imagePath) {
+    try {
+      const response = await fetch(imagePath);
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  // 創建角色卡片
+  function createCharacterCard(character, levelColor) {
+    const characterContainer = document.createElement('div');
+    characterContainer.style.cssText = 'display:inline-block;width:200px;height:300px;text-align:center;margin-left:-100px;position:relative;z-index:1;';
+
+    const img = document.createElement('img');
+    img.style.cssText = 'width:200px;height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:opacity 0.5s ease-in-out;';
+    img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+    img.alt = character.nameOriginal;
+    img.onerror = function() {
+      this.src = `${PEOPLE_IMAGE_URL}/default.png`;
+    };
+
+    // 檢查戰鬥圖片
+    checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`).then(hasFightingImage => {
+      if (hasFightingImage) {
+        const fightingImg = document.createElement('img');
+        fightingImg.style.cssText = img.style.cssText + 'opacity:0;';
+        fightingImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
+        fightingImg.alt = `${character.nameOriginal} Fighting`;
+        characterContainer.appendChild(fightingImg);
+
+        let isRegularImage = true;
+        setInterval(() => {
+          img.style.opacity = isRegularImage ? '0' : '1';
+          fightingImg.style.opacity = isRegularImage ? '1' : '0';
+          isRegularImage = !isRegularImage;
+        }, 2000);
+      }
+    });
+
+    // 添加懸停事件
+    img.addEventListener('mouseover', () => {
+      (img as HTMLImageElement).style.zIndex = '3';
+      if (img.nextElementSibling?.tagName === 'IMG') {
+        (img.nextElementSibling as HTMLImageElement).style.zIndex = '3';
+      }
+    });
+    img.addEventListener('mouseout', () => {
+      (img as HTMLImageElement).style.zIndex = '2';
+      if (img.nextElementSibling?.tagName === 'IMG') {
+        (img.nextElementSibling as HTMLImageElement).style.zIndex = '2';
+      }
+    });
+
+    // 創建信息容器
+    const infoContainer = document.createElement('div');
+    infoContainer.style.cssText = 'padding:5px;color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:200px;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;border-radius:5px;';
+
+    // 添加名稱
+    const nameText = document.createElement('p');
+    nameText.textContent = character.nameOriginal;
+    nameText.style.cssText = 'margin:0;font-weight:bold;font-size:clamp(12px,1.2vw,14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    const armyName = character.armyName || "Default";
+    nameText.style.color = ARMY_COLORS[armyName] || ARMY_COLORS["Default"];
+    nameText.style.textShadow = '0 0 2px rgba(0,0,0,0.5)';
+
+    // 添加屬性
+    const attributesText = document.createElement('p');
+    attributesText.textContent = `Attributes: ${character.attributes}`;
+    attributesText.style.cssText = 'margin:0;font-size:clamp(6px,0.8vw,8px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    if (character.hasBonus) {
+      const bonusBadge = document.createElement('span');
+      bonusBadge.textContent = '⚔️';
+      bonusBadge.style.cssText = 'margin-left:5px;font-size:clamp(6px,0.8vw,8px);';
+      attributesText.appendChild(bonusBadge);
+    }
+
+    // 添加戰力
+    const powerText = document.createElement('p');
+    powerText.textContent = `Total Power: ${character.totalPower}`;
+    powerText.style.cssText = 'margin:0;font-size:clamp(12px,0.8vw,14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    powerText.style.color = levelColor;
+
+    infoContainer.appendChild(nameText);
+    infoContainer.appendChild(attributesText);
+    infoContainer.appendChild(powerText);
+    characterContainer.appendChild(img);
+    characterContainer.appendChild(infoContainer);
+    return characterContainer;
+  }
+
+  // 創建等級容器
+  function createLevelContainer(level, characters) {
+    const levelContainer = document.createElement('div');
+    levelContainer.className = 'level-container';
+    levelContainer.style.marginTop = '50px';
+    levelContainer.style.borderColor = level.color;
+
+    const levelTitle = document.createElement('h2');
+    levelTitle.className = 'level-title';
+    levelTitle.textContent = level.name;
+    levelTitle.style.marginBottom = '15px';
+    levelTitle.style.color = level.color;
+
+    const levelBadge = document.createElement('div');
+    levelBadge.className = 'level-badge';
+    levelBadge.style.backgroundColor = level.color;
+    levelBadge.style.width = '100%';
+    levelBadge.style.textAlign = 'center';
+    levelBadge.textContent = `戰力: ${level.min} - ${level.max}`;
+    levelBadge.style.color = level.color.includes('rgb') ? '#FFFFFF' : 
+      (parseInt(level.color.substr(1, 2), 16) * 299 + 
+       parseInt(level.color.substr(3, 2), 16) * 587 + 
+       parseInt(level.color.substr(5, 2), 16) * 114) / 1000 > 128 ? '#000000' : '#FFFFFF';
+
+    const charactersGrid = document.createElement('div');
+    charactersGrid.className = 'box-container';
+    charactersGrid.style.margin = '0 auto';
+
+    characters.forEach(character => {
+      charactersGrid.appendChild(createCharacterCard(character, level.color));
+    });
+
+    levelContainer.appendChild(levelTitle);
+    levelContainer.appendChild(levelBadge);
+    levelContainer.appendChild(charactersGrid);
+    return levelContainer;
+  }
+
+  // 主函數
   document.addEventListener("DOMContentLoaded", async function () {
     try {
       const token = await getValidToken();
-      if (!token) {
-        return;
-      }
+      if (!token) return;
 
       const response = await fetch(`${TYMB_URL}/people/get-all`, {
         method: "POST", 
@@ -306,9 +288,7 @@ if (!username || !token) {
         credentials: 'include'
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch character list');
-      }
+      if (!response.ok) throw new Error('Failed to fetch character list');
       
       const data = await response.json();
       
@@ -316,7 +296,6 @@ if (!username || !token) {
       const charactersWithPower = await Promise.all(
         data.map(async (character) => {
           try {
-            // 獲取武器資訊
             const weaponName = character.name?.toLowerCase() || '';
             const weaponResponse = await fetch(`${TYMB_URL}/weapons/${weaponName}`, {
               method: "GET",
@@ -333,14 +312,11 @@ if (!username || !token) {
             
             if (weaponResponse.ok) {
               const weaponData = await weaponResponse.json();
-              
-              // 使用 weapon.js 中的函數計算武器傷害
               const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponData);
               totalUtilityPower = updatedCharacter.utilityPower;
               hasBonus = bonusApplied;
             }
 
-            // 計算總戰力
             const physicPower = parseInt(String(character?.physicPower || 0), 10);
             const magicPower = parseInt(String(character?.magicPower || 0), 10);
             const totalPower = physicPower + magicPower + totalUtilityPower;
@@ -372,65 +348,30 @@ if (!username || !token) {
       // 過濾掉戰力為0的角色和沒有圖片的角色
       const validCharacters = await Promise.all(
         charactersWithPower.filter(char => char.totalPower > 0).map(async (character) => {
-          try {
-            const imagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
-            const imgResponse = await fetch(imagePath);
-            if (imgResponse.ok) {
-              return character;
-            }
-            return null;
-          } catch {
-            return null;
-          }
+          const imagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+          const hasImage = await checkImageExists(imagePath);
+          return hasImage ? character : null;
         })
       );
       
-      // 過濾掉null值（沒有圖片的角色）
       const filteredCharacters = validCharacters.filter(char => char !== null);
-
-      // 按戰力排序
       filteredCharacters.sort((a, b) => b.totalPower - a.totalPower);
-      
-      // 收集所有軍隊名稱並分配顏色
-      const armyColorMap = {};
-      let colorIndex = 0;
-      
-      // 遍歷所有角色，收集軍隊名稱
-      filteredCharacters.forEach(character => {
-        if (character.armyName && !armyColorMap[character.armyName]) {
-          // 為新的軍隊名稱分配顏色
-          armyColorMap[character.armyName] = COLOR_PALETTE[colorIndex % COLOR_PALETTE.length];
-          colorIndex++;
-        }
-      });
-      
-      // 添加默認顏色
-      armyColorMap["Default"] = "#FFFFFF";
 
       // 動態生成SS及以上等級
       const POWER_LEVELS = [...BASE_POWER_LEVELS];
-      
-      // 找出最高戰力值
       const maxPower = filteredCharacters.length > 0 ? filteredCharacters[0].totalPower : 0;
-      
-      // 從S級開始，每次增加1000，並乘以1.2倍
-      let currentMin = 3600; // S級的上限
-      let levelIndex = 1; // 用於生成SS, SSS, SSSS等名稱
+      let currentMin = 3600;
+      let levelIndex = 1;
       let multiplier = 1.0;
       
       while (currentMin <= maxPower) {
         multiplier *= 1.2;
         const levelSize = Math.floor(1000 * multiplier);
         const levelMax = currentMin + levelSize - 1;
-        
-        // 生成等級名稱 (SS, SSS, SSSS, SSSSS, ...)
         const levelName = "Level " + "S".repeat(levelIndex + 1);
-        
-        // 生成顏色 (從紅色開始，逐漸變暗)
         const redValue = Math.max(50, 255 - (levelIndex * 20));
         const color = `rgb(${redValue}, 0, 0)`;
         
-        // 添加到等級列表
         POWER_LEVELS.unshift({
           name: levelName,
           min: currentMin,
@@ -438,12 +379,11 @@ if (!username || !token) {
           color: color
         });
         
-        // 更新下一個等級的最小值
         currentMin = levelMax + 1;
         levelIndex++;
       }
 
-      // 將角色分配到各個等級 (使用絕對數值級距)
+      // 將角色分配到各個等級
       const levelGroups = {};
       POWER_LEVELS.forEach(level => {
         levelGroups[level.name] = [];
@@ -465,224 +405,8 @@ if (!username || !token) {
       // 從低到高顯示等級，跳過沒有角色的等級
       POWER_LEVELS.reverse().forEach(level => {
         const characters = levelGroups[level.name];
-        if (characters.length === 0) return; // 跳過沒有角色的等級
-
-        const levelContainer = document.createElement('div');
-        levelContainer.className = 'level-container';
-        levelContainer.style.marginTop = '50px';
-        levelContainer.style.borderColor = level.color;
-
-        const levelTitle = document.createElement('h2');
-        levelTitle.className = 'level-title';
-        levelTitle.textContent = level.name;
-        levelTitle.style.marginBottom = '15px';
-        levelTitle.style.color = level.color;
-
-        // 添加等級戰力範圍標籤
-        const levelBadge = document.createElement('div');
-        levelBadge.className = 'level-badge';
-        levelBadge.style.backgroundColor = level.color;
-        levelBadge.style.width = '100%';
-        levelBadge.style.textAlign = 'center';
-        
-        // 使用預定義的級距範圍
-        if (level.max === Infinity) {
-          levelBadge.textContent = `戰力: ${level.min}+`;
-        } else {
-          levelBadge.textContent = `戰力: ${level.min} - ${level.max}`;
-        }
-        
-        // 設置對比色文字
-        if (level.color.includes('rgb')) {
-          // 對於紅色系列，使用白色文字
-          levelBadge.style.color = '#FFFFFF';
-        } else {
-          // 對於其他顏色，計算對比色
-          const hexColor = level.color;
-          const r = parseInt(hexColor.substr(1, 2), 16);
-          const g = parseInt(hexColor.substr(3, 2), 16);
-          const b = parseInt(hexColor.substr(5, 2), 16);
-          
-          // 計算亮度
-          const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-          
-          // 根據背景亮度選擇文字顏色
-          levelBadge.style.color = brightness > 128 ? '#000000' : '#FFFFFF';
-        }
-
-        const charactersGrid = document.createElement('div');
-        charactersGrid.className = 'box-container';
-        charactersGrid.style.margin = '0 auto';
-
-        characters.forEach(character => {
-          const characterContainer = document.createElement('div');
-          characterContainer.style.display = 'inline-block';
-          characterContainer.style.width = '200px';
-          characterContainer.style.height = '300px';
-          characterContainer.style.textAlign = 'center';
-          characterContainer.style.marginLeft = '-100px';
-          characterContainer.style.position = 'relative';
-          characterContainer.style.zIndex = '1';
-
-          const img = document.createElement('img');
-          img.style.width = '200px';
-          img.style.height = '300px';
-          img.style.display = 'block';
-          img.style.objectFit = 'contain';
-          img.style.margin = '0 auto';
-          img.style.padding = '0';
-          img.style.border = 'none';
-          img.style.position = 'absolute';
-          img.style.top = '50%';
-          img.style.left = '50%';
-          img.style.transform = 'translate(-50%, -50%)';
-          img.style.zIndex = '2';
-          img.style.transition = 'opacity 0.5s ease-in-out';
-          img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
-          img.alt = character.nameOriginal;
-          img.onerror = function() {
-            this.src = `${PEOPLE_IMAGE_URL}/default.png`;
-          };
-          
-          // 檢查是否有戰鬥圖片
-          const checkFightingImage = async () => {
-            try {
-              const fightingImagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
-              const response = await fetch(fightingImagePath);
-              if (response.ok) {
-                return true;
-              }
-              return false;
-            } catch {
-              return false;
-            }
-          };
-          
-          // 設置圖片交替顯示
-          checkFightingImage().then(hasFightingImage => {
-            if (hasFightingImage) {
-              const regularImagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
-              const fightingImagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
-              
-              // 創建第二張圖片元素
-              const fightingImg = document.createElement('img');
-              fightingImg.style.width = '200px';
-              fightingImg.style.height = '300px';
-              fightingImg.style.display = 'block';
-              fightingImg.style.objectFit = 'contain';
-              fightingImg.style.margin = '0 auto';
-              fightingImg.style.padding = '0';
-              fightingImg.style.border = 'none';
-              fightingImg.style.position = 'absolute';
-              fightingImg.style.top = '50%';
-              fightingImg.style.left = '50%';
-              fightingImg.style.transform = 'translate(-50%, -50%)';
-              fightingImg.style.zIndex = '2';
-              fightingImg.style.transition = 'opacity 0.5s ease-in-out';
-              fightingImg.style.opacity = '0';
-              fightingImg.src = fightingImagePath;
-              fightingImg.alt = `${character.nameOriginal} Fighting`;
-              
-              // 添加到容器
-              characterContainer.appendChild(fightingImg);
-              
-              // 設置交替顯示
-              let isRegularImage = true;
-              setInterval(() => {
-                if (isRegularImage) {
-                  img.style.opacity = '0';
-                  fightingImg.style.opacity = '1';
-                } else {
-                  img.style.opacity = '1';
-                  fightingImg.style.opacity = '0';
-                }
-                isRegularImage = !isRegularImage;
-              }, 2000);
-            }
-          });
-          
-          img.addEventListener('mouseover', () => {
-            (img as HTMLImageElement).style.zIndex = '3';
-            if (img.nextElementSibling && img.nextElementSibling.tagName === 'IMG') {
-              (img.nextElementSibling as HTMLImageElement).style.zIndex = '3';
-            }
-            showCharacterInfo(character, level.name);
-          });
-          img.addEventListener('mouseout', () => {
-            (img as HTMLImageElement).style.zIndex = '2';
-            if (img.nextElementSibling && img.nextElementSibling.tagName === 'IMG') {
-              (img.nextElementSibling as HTMLImageElement).style.zIndex = '2';
-            }
-          });
-
-          const infoContainer = document.createElement('div');
-          infoContainer.style.padding = '2px';
-          infoContainer.style.color = '#fff';
-          infoContainer.style.textShadow = '0 0 2px rgba(0,0,0,0.5)';
-          infoContainer.style.width = '200px';
-          infoContainer.style.position = 'absolute';
-          infoContainer.style.bottom = '-40px';
-          infoContainer.style.left = '0';
-          infoContainer.style.overflow = 'hidden';
-          infoContainer.style.fontSize = '12px';
-          infoContainer.style.zIndex = '4';
-          infoContainer.style.backgroundColor = 'transparent';
-          infoContainer.style.padding = '5px';
-          infoContainer.style.borderRadius = '5px';
-
-          const nameText = document.createElement('p');
-          nameText.textContent = character.nameOriginal;
-          nameText.style.margin = '0';
-          nameText.style.fontWeight = 'bold';
-          nameText.style.fontSize = 'clamp(12px, 1.2vw, 14px)';
-          nameText.style.whiteSpace = 'nowrap';
-          nameText.style.overflow = 'hidden';
-          nameText.style.textOverflow = 'ellipsis';
-          
-          // 根據軍隊名稱設置顏色
-          const armyName = character.armyName || "Default";
-          const armyColor = armyColorMap[armyName] || armyColorMap["Default"];
-          nameText.style.color = armyColor;
-          nameText.style.textShadow = `0 0 2px rgba(0,0,0,0.5)`;
-
-          const attributesText = document.createElement('p');
-          attributesText.textContent = `Attributes: ${character.attributes}`;
-          attributesText.style.margin = '0';
-          attributesText.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
-          attributesText.style.whiteSpace = 'nowrap';
-          attributesText.style.overflow = 'hidden';
-          attributesText.style.textOverflow = 'ellipsis';
-          
-          // 如果有武器加成，添加特殊標記到屬性文字旁邊
-          if (character.hasBonus) {
-            const bonusBadge = document.createElement('span');
-            bonusBadge.textContent = '⚔️';
-            bonusBadge.style.marginLeft = '5px';
-            bonusBadge.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
-            attributesText.appendChild(bonusBadge);
-          }
-
-          const powerText = document.createElement('p');
-          powerText.textContent = `Total Power: ${character.totalPower}`;
-          powerText.style.margin = '0';
-          powerText.style.fontSize = 'clamp(12px, 0.8vw, 14px)';
-          powerText.style.whiteSpace = 'nowrap';
-          powerText.style.overflow = 'hidden';
-          powerText.style.textOverflow = 'ellipsis';
-          powerText.style.color = level.color;
-
-          infoContainer.appendChild(nameText);
-          infoContainer.appendChild(attributesText);
-          infoContainer.appendChild(powerText);
-          characterContainer.appendChild(img);
-          characterContainer.appendChild(infoContainer);
-          charactersGrid.appendChild(characterContainer);
-        });
-
-        levelContainer.appendChild(levelTitle);
-        levelContainer.appendChild(levelBadge);
-        levelContainer.appendChild(charactersGrid);
-        mainContainer.appendChild(levelContainer);
+        if (characters.length === 0) return;
+        mainContainer.appendChild(createLevelContainer(level, characters));
       });
 
       const container = document.getElementById('level-container');
@@ -693,9 +417,4 @@ if (!username || !token) {
       console.error('Error:', error);
     }
   });
-
-  function showCharacterInfo(character, levelName) {
-    // 移除詳細資訊顯示功能
-    console.log(`Character: ${character.nameOriginal}, Level: ${levelName}`);
-  }
 </script>
