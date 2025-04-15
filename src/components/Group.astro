@@ -100,139 +100,94 @@ if (!username || !token) {
 
 <script>
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-  document.addEventListener("DOMContentLoaded", function () {
-    fetch(`${TYMB_URL}/people/get-all`, {
-      method: "POST", 
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(data => {
-      const armyGroups = {};
-      (data as any[]).forEach(character => {
-        const army = character.armyName || 'Unknown Army';
-        if (!armyGroups[army]) {
-          armyGroups[army] = [];
-        }
-        armyGroups[army].push(character);
-      });
+  const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+  
+  // 定義軍隊顏色映射
+  const ARMY_COLORS = {
+    "八食": "#46A3FF",      
+    "初桑": "#FFA500",      
+    "Buse": "#AD5A5A",      
+    "Phénix": "#FFFF00",    
+    "姦閥": "#808080",      
+    "姦囚": "#FFC0CB",      
+    "Regalos": "#00FF00",   
+    "天際女孩": "#00BFFF",  
+    "外界": "#000080",      
+    "王": "#FF0000",        
+    "Intouchable": "#8B4513",
+    "塵民": "#008080",      
+    "獄族": "#800080",      
+    "Default": "#FFFFFF"    
+  };
 
-      const mainContainer = document.createElement('div');
-      mainContainer.className = 'army-groups';
+  // 創建角色卡片
+  function createCharacterCard(character) {
+    const characterContainer = document.createElement('div');
+    characterContainer.style.cssText = 'display:inline-block;width:200px;height:300px;text-align:center;margin-left:-100px;position:relative;z-index:1;';
 
-      Object.entries(armyGroups).forEach(([army, characters]) => {
-        const armyContainer = document.createElement('div');
-        armyContainer.className = 'army-container';
-        armyContainer.style.marginTop = '50px';
+    const img = document.createElement('img');
+    img.style.cssText = 'width:200px;height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;';
+    img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+    img.alt = character.nameOriginal;
+    img.onerror = function() {
+      this.src = `${PEOPLE_IMAGE_URL}/default.png`;
+    };
+    img.addEventListener('mouseover', () => {
+      img.style.zIndex = '3';
+      showCharacterInfo(character);
+    });
+    img.addEventListener('mouseout', () => {
+      img.style.zIndex = '2';
+    });
 
-        const armyTitle = document.createElement('h2');
-        armyTitle.className = 'army-title';
-        armyTitle.textContent = army;
-        armyTitle.style.marginBottom = '15px';
+    const infoContainer = document.createElement('div');
+    infoContainer.style.cssText = 'padding:2px;color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:200px;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;padding:5px;border-radius:5px;';
 
-        const charactersGrid = document.createElement('div');
-        charactersGrid.className = 'box-container';
-        charactersGrid.style.margin = '0 auto';
+    const nameText = document.createElement('p');
+    nameText.textContent = character.nameOriginal;
+    nameText.style.cssText = 'margin:0;font-weight:bold;font-size:clamp(8px,1.2vw,10px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
-        (characters as any[]).forEach(character => {
-            const characterContainer = document.createElement('div');
-            characterContainer.style.display = 'inline-block';
-            characterContainer.style.width = '200px';
-            characterContainer.style.height = '300px';
-            characterContainer.style.textAlign = 'center';
-            characterContainer.style.marginLeft = '-100px';
-            characterContainer.style.position = 'relative';
-            characterContainer.style.zIndex = '1';
+    const attributesText = document.createElement('p');
+    attributesText.textContent = `Attributes: ${character.attributes}`;
+    attributesText.style.cssText = 'margin:0;font-size:clamp(6px,0.8vw,8px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
-            const img = document.createElement('img');
-            img.style.width = '200px';
-            img.style.height = '300px';
-            img.style.display = 'block';
-            img.style.objectFit = 'contain';
-            img.style.margin = '0 auto';
-            img.style.padding = '0';
-            img.style.border = 'none';
-            img.style.position = 'absolute';
-            img.style.top = '50%';
-            img.style.left = '50%';
-            img.style.transform = 'translate(-50%, -50%)';
-            img.style.zIndex = '2';
-            img.src = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
-            img.alt = character.nameOriginal;
-            img.onerror = function() {
-              this.src = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/default.png`;
-            };
-            img.addEventListener('mouseover', () => {
-              img.style.zIndex = '3';
-              showCharacterInfo(character);
-            });
-            img.addEventListener('mouseout', () => {
-              img.style.zIndex = '2';
-            });
+    const sizeText = document.createElement('p');
+    sizeText.textContent = `${character.heightCm}cm / ${character.weightKg}kg`;
+    sizeText.style.cssText = 'margin:0;font-size:clamp(6px,0.8vw,8px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
-            const infoContainer = document.createElement('div');
-            infoContainer.style.padding = '2px';
-            infoContainer.style.color = '#fff';
-            infoContainer.style.textShadow = '0 0 2px rgba(0,0,0,0.5)';
-            infoContainer.style.width = '200px';
-            infoContainer.style.position = 'absolute';
-            infoContainer.style.bottom = '-40px';
-            infoContainer.style.left = '0';
-            infoContainer.style.overflow = 'hidden';
-            infoContainer.style.fontSize = '12px';
-            infoContainer.style.zIndex = '4';
-            infoContainer.style.backgroundColor = 'transparent';
-            infoContainer.style.padding = '5px';
-            infoContainer.style.borderRadius = '5px';
+    infoContainer.appendChild(nameText);
+    infoContainer.appendChild(attributesText);
+    infoContainer.appendChild(sizeText);
+    characterContainer.appendChild(img);
+    characterContainer.appendChild(infoContainer);
+    return characterContainer;
+  }
 
-            const nameText = document.createElement('p');
-            nameText.textContent = character.nameOriginal;
-            nameText.style.margin = '0';
-            nameText.style.fontWeight = 'bold';
-            nameText.style.fontSize = 'clamp(8px, 1.2vw, 10px)';
-            nameText.style.whiteSpace = 'nowrap';
-            nameText.style.overflow = 'hidden';
-            nameText.style.textOverflow = 'ellipsis';
+  // 創建軍隊容器
+  function createArmyContainer(army, characters) {
+    const armyContainer = document.createElement('div');
+    armyContainer.className = 'army-container';
+    armyContainer.style.marginTop = '50px';
 
-            const attributesText = document.createElement('p');
-            attributesText.textContent = `Attributes: ${character.attributes}`;
-            attributesText.style.margin = '0';
-            attributesText.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
-            attributesText.style.whiteSpace = 'nowrap';
-            attributesText.style.overflow = 'hidden';
-            attributesText.style.textOverflow = 'ellipsis';
+    const armyTitle = document.createElement('h2');
+    armyTitle.className = 'army-title';
+    armyTitle.textContent = army;
+    armyTitle.style.marginBottom = '15px';
 
-            const sizeText = document.createElement('p');
-            sizeText.textContent = `${character.heightCm}cm / ${character.weightKg}kg`;
-            sizeText.style.margin = '0';
-            sizeText.style.fontSize = 'clamp(6px, 0.8vw, 8px)';
-            sizeText.style.whiteSpace = 'nowrap';
-            sizeText.style.overflow = 'hidden';
-            sizeText.style.textOverflow = 'ellipsis';
+    const charactersGrid = document.createElement('div');
+    charactersGrid.className = 'box-container';
+    charactersGrid.style.margin = '0 auto';
 
-            infoContainer.appendChild(nameText);
-            infoContainer.appendChild(attributesText);
-            infoContainer.appendChild(sizeText);
-            characterContainer.appendChild(img);
-            characterContainer.appendChild(infoContainer);
-            charactersGrid.appendChild(characterContainer);
-        });
+    characters.forEach(character => {
+      charactersGrid.appendChild(createCharacterCard(character));
+    });
 
-        armyContainer.appendChild(armyTitle);
-        armyContainer.appendChild(charactersGrid);
-        mainContainer.appendChild(armyContainer);
-      });
+    armyContainer.appendChild(armyTitle);
+    armyContainer.appendChild(charactersGrid);
+    return armyContainer;
+  }
 
-      const container = document.getElementById('group-container');
-      if (container) {
-        container.appendChild(mainContainer);
-      }
-    })
-    .catch(error => console.error('Error fetching data:', error));
-  });
-
+  // 顯示角色詳細資訊
   function showCharacterInfo(character) {
     let infoContainer = document.querySelector('.character-info');
     if (!infoContainer) {
@@ -241,7 +196,6 @@ if (!username || !token) {
       document.getElementById('group-container').appendChild(infoContainer);
     }
 
-    const imageName = character.name || 'default';
     const infoContent = document.createElement('div');
     infoContent.className = 'info-content';
     infoContent.innerHTML = `
@@ -275,7 +229,6 @@ if (!username || !token) {
     closeButton.addEventListener('click', () => {
       infoContainer.classList.remove('show');
     });
-
     document.addEventListener('click', function closeInfo(e) {
       if (!infoContainer.contains(e.target as Node)) {
         infoContainer.classList.remove('show');
@@ -283,4 +236,39 @@ if (!username || !token) {
       }
     });
   }
+
+  // 初始化頁面
+  document.addEventListener("DOMContentLoaded", function () {
+    fetch(`${TYMB_URL}/people/get-all`, {
+      method: "POST", 
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      const armyGroups = {};
+      data.forEach(character => {
+        const army = character.armyName || 'Unknown Army';
+        if (!armyGroups[army]) {
+          armyGroups[army] = [];
+        }
+        armyGroups[army].push(character);
+      });
+
+      const mainContainer = document.createElement('div');
+      mainContainer.className = 'army-groups';
+
+      Object.entries(armyGroups).forEach(([army, characters]) => {
+        mainContainer.appendChild(createArmyContainer(army, characters));
+      });
+
+      const container = document.getElementById('group-container');
+      if (container) {
+        container.appendChild(mainContainer);
+      }
+    })
+    .catch(error => console.error('Error fetching data:', error));
+  });
 </script>
