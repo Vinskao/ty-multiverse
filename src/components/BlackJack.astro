@@ -9,87 +9,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blackjack Game</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <style>
-        .game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .game-sections {
-            display: flex;
-            justify-content: space-between;
-            gap: 40px; /* 添加左右间距 */
-        }
-        .cards {
-            margin: 10px 0;
-            width: 300px; /* 新增固定寬度 */
-            min-height: 150px; /* 新增最小高度 */
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px; /* 卡片間距 */
-            flex-direction: column;
-            align-items: center; /* 新增：使內容居中 */
-            justify-content: center; /* 新增：使卡片水平居中 */
-        }
-        .cards .card-container {
-            display: flex;
-            flex-wrap: wrap; /* 允許卡片換行 */
-            gap: 5px;
-            justify-content: center; /* 卡片水平居中 */
-        }
-        .cards p {
-            width: 100%; /* 使總分顯示在單獨一行 */
-            text-align: center; /* 使總分居中 */
-            margin: 10px 0 0 0; /* 添加與卡片的間距 */
-            order: 1; /* Ensures the <p> appears at the bottom */
-        }
-        .button-group {
-            margin: 20px 0;
-            text-align: center;
-        }
-        button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            color: white; /* 白色文字 */
-            border: none;
-            border-radius: 5px; /* 圓角 */
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button[onclick="startGame()"] {
-            background-color: #4CAF50; /* 綠色背景 */
-        }
-        button[onclick="hit()"] {
-            background-color: #2196F3; /* 藍色背景 */
-        }
-        button[onclick="stand()"] {
-            background-color: #f44336; /* 紅色背景 */
-        }
-        button:hover {
-            opacity: 0.9; /* 滑鼠懸停時變淡 */
-        }
-        button:disabled {
-            background-color: #cccccc; /* 禁用時灰色 */
-            cursor: not-allowed;
-        }
-        .centered-title {
-            text-align: center;
-        }
-        .centered-subtitle {
-            text-align: center;
-        }
-        #game-status {
-            text-align: center;
-            margin: 20px auto;
-            padding: 15px;
-            background-color: #3c647254;
-            border: 1px solid #dddddd00;
-            border-radius: 5px;
-            max-width: 400px;
-        }
-    </style>
+    <link rel="stylesheet" href="../styles/bj.css">
 </head>
 <body>
     <div class="game-container">
@@ -238,7 +158,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
                     ${(dealerHand.cards || []).map((card, index) => {
                         // 如果是第一張牌且遊戲進行中，顯示背面
                         if (index === 0 && (gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN')) {
-                            return `<img src="${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/Ashe.png" alt="Hidden Card" style="height: 100px; margin: 5px;">`;
+                            return `<img src="${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/cardback.png" alt="Hidden Card" style="height: 100px; margin: 5px;">`;
                         } else {
                             const suitIndex = ['SPADES', 'HEARTS', 'DIAMONDS', 'CLUBS'].indexOf(card.suit);
                             const rankIndex = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING'].indexOf(card.rank);

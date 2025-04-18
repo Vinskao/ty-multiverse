@@ -6,5 +6,6 @@
       "jquery"
     ],
     "jsx": "preserve"
-  }
+  },
+  "exclude": ["**/*.astro"]
 }

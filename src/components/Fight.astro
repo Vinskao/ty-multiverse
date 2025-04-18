@@ -3,7 +3,6 @@
 import '../styles/fight.css';
 const characterNames = ['default']; // 初始化為默認值，實際角色列表將從 API 獲取
 ---
-
 <div class="fightbutton">
   <button id="fightButton">Fight</button>
 </div>
@@ -414,7 +413,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 選擇角色
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
-    const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]);
+    const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]) || null;
     
     // 如果戰鬥已經完成，選擇新角色時清除所有角色
     if (fightCompleted) {
@@ -493,7 +492,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   }
   
   // 檢查角色是否已被選擇
-  function isCharacterSelected(side: 'left' | 'right', name: string | undefined): boolean {
+  function isCharacterSelected(side: 'left' | 'right', name: string | null): boolean {
     if (!name) return false;
     // 檢查所有已選擇的角色（包括兩邊）
     return fighters.left.main.name === name || 
@@ -627,7 +626,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     const storedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
     
     // 獲取當前顯示的角色列表
-    const displayedCharacters = [];
+    const displayedCharacters: string[] = [];
     if (fighters[side].main.image) {
       const mainName = fighters[side].main.image.split("/").pop()?.split(".")[0];
       if (mainName) displayedCharacters.push(mainName);

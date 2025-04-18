@@ -1,0 +1,60 @@
+#containerFront,
+#containerBack {
+position: absolute;
+left: 0;
+display: flex;
+overflow: hidden;
+height: 550px;
+}
+
+#containerFront {
+top: 0;
+z-index: 2;
+}
+
+#containerBack {
+top: 0;
+z-index: 1;
+}
+
+.ad-front,
+.ad-back {
+width: 300px;
+height: 550px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.ad-front {
+margin-right: -50px;
+}
+
+.ad-back {
+margin-right: -150px;
+}
+
+.ad-image {
+width: 300px;
+height: 550px;
+object-fit: contain;
+display: block;
+}
+
+@keyframes slideLeft {
+0% {
+    transform: translateX(0%);
+}
+100% {
+    transform: translateX(-100%);
+}
+}
+
+@keyframes slideLeftSlow {
+0% {
+    transform: translateX(0%);
+}
+100% {
+    transform: translateX(-100%);
+}
+}
