@@ -8,162 +8,156 @@ const token = url.searchParams.get('token');
 if (!username || !token) {
   return Astro.redirect('/tymultiverse/');
 }
+import '../styles/galwall.css';
 ---
-
 <div id="containerFront"></div>
 <div id="containerBack"></div>
-
-<style>
-  #containerFront,
-  #containerBack {
-    position: absolute;
-    left: 0;
-    display: flex;
-    overflow: hidden;
-    height: 550px;
-  }
-
-  #containerFront {
-    top: 0;
-    z-index: 2;
-  }
-
-  #containerBack {
-    top: 0;
-    z-index: 1;
-  }
-
-  @keyframes slideLeft {
-    0% {
-      transform: translateX(0%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
-  }
-
-  @keyframes slideLeftSlow {
-    0% {
-      transform: translateX(0%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
-  }
-</style>
 
 <script>
   let frontList: string[] = [];
   let backList: string[] = [];
+  const baseImagePath = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/";
 
-  document.addEventListener("DOMContentLoaded", function () {
-    // 預定義的圖片列表
-    const allImages = [
-      "Kamira.png", "Wavo.png", "Sorane.png","Gara.png", "Draeny.png", "Masako.png",
-      "Sayuri.png", "Isina.png", "Chiaki.png", "Hitomi.png", "Siyu.png",
-      "Azusa.png", "Zexu.png", "Medicis.png", "Aile.png", "Taisy.png",
-      "Mayo.png", "MayoPumped.png", "Spoke.png", "SpokeTied.png", "Yuko.png",
-      "Eris.png", "MasakoEntering.png", "Sofia.png", "Miku.png", "Kristae.png",
-      "Ashe.png", "Doire.png", "Delsa.png", "Etsuko.png", "Kyu.png",
-      "Riuri.png", "Natsumi.png", "Kazuko.png", "SayuriRuined.png", "Miyu.png",
-      "Valmet.png", "Samui.png", "Paprika.png", "Caleigh.png", "KamiraPeeing.png",
-      "Z.png", "Branwen.png", "Lucrece.png", "Uiobbeci.png", "Nianca.png",
-      "Yui.png", "Mesoyei.png", "Ann.png", "Cleopatra.png", "Shuan.png",
-      "Miyako.png"
-    ].map(name => `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${name}`);
+  // 檢查圖片是否存在
+  async function checkImageExists(imagePath) {
+    try {
+      const response = await fetch(imagePath);
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
 
-    const imagePromises = allImages.map(imagePath => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ path: imagePath, valid: true });
-        img.onerror = () => resolve({ path: imagePath, valid: false });
-        img.src = imagePath;
+  // 獲取角色列表
+  async function fetchCharacterList() {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: 'include'
       });
-    });
-
-    Promise.all(imagePromises).then((results: Array<{valid: boolean, path: string}>) => {
-      const validImages = results
-        .filter(result => result.valid)
-        .map(result => result.path);
-
-      // 分配圖片到 front 和 back 列表
-      const totalImages = validImages.length;
-      const frontCount = Math.ceil(totalImages / 3);
       
-      frontList = validImages.slice(0, frontCount);
-      backList = validImages.slice(frontCount);
-
-      // 初始化動畫
-      const containerFront = document.getElementById("containerFront");
-      const containerBack = document.getElementById("containerBack");
-
-      function createAdDiv(imageURL, isFront) {
-        const adDiv = document.createElement("div");
-        adDiv.className = isFront ? "ad-front" : "ad-back";
-        
-        // 動態添加樣式
-        Object.assign(adDiv.style, {
-          width: '300px',
-          height: '550px',
-          marginRight: isFront ? '-50px' : '-150px', // back 圖片更擠
-          transition: 'transform 3s ease-in-out',
-          display: 'flex',
-          alignItems: 'center',
-          animation: 'none'
-        });
-
-        const adImage = document.createElement("img");
-        Object.assign(adImage.style, {
-          width: 'auto',
-          height: '550px',
-          maxWidth: '300px',
-          maxHeight: '550px',
-          objectFit: 'contain',
-          display: 'block'
-        });
-        adImage.src = imageURL;
-        adDiv.appendChild(adImage);
-        return adDiv;
+      if (!response.ok) {
+        throw new Error('Failed to fetch character list');
       }
+      
+      const data = await response.json();
+      return data.map(char => char.name);
+    } catch (error) {
+      console.error('Error fetching character list:', error);
+      return [];
+    }
+  }
 
-      function loadAds(imageList, container, isFront) {
-        container.innerHTML = "";
-        const numAds = imageList.length;
-        for (let i = 0; i < numAds; i++) {
-          const imageURL = imageList[i];
-          const adDiv = createAdDiv(imageURL, isFront);
-          container.appendChild(adDiv);
-        }
-      }
+  // 檢查三種圖片類型
+  async function checkImageTypes(characterName) {
+    const normalPath = `${baseImagePath}${characterName}.png`;
+    const fightingPath = `${baseImagePath}${characterName}Fighting.png`;
+    const ruinedPath = `${baseImagePath}${characterName}Ruined.png`;
+    
+    const [normalExists, fightingExists, ruinedExists] = await Promise.all([
+      checkImageExists(normalPath),
+      checkImageExists(fightingPath),
+      checkImageExists(ruinedPath)
+    ]);
+    
+    return {
+      name: characterName,
+      normalPath: normalExists ? normalPath : null,
+      fightingPath: fightingExists ? fightingPath : null,
+      ruinedPath: ruinedExists ? ruinedPath : null
+    };
+  }
 
-      function animateContainer(container, imageList, isFront) {
-        const duration = isFront ? 200 : 600;
-        
-        function startAnimation() {
-          container.style.transform = 'translateX(0)';
-          container.style.animation = `${isFront ? 'slideLeft' : 'slideLeftSlow'} ${duration}s linear infinite`;
-        }
-        
-        startAnimation();
-
-        // 監聽動畫結束事件，重新排列圖片
-        container.addEventListener('animationend', () => {
-          // 隨機打亂圖片順序
-          const shuffledImages = [...imageList].sort(() => Math.random() - 0.5);
-          loadAds(shuffledImages, container, isFront);
-          container.style.width = (300 * shuffledImages.length) + "px";
-          startAnimation();
-        });
-      }
-
-      loadAds(frontList, containerFront, true);
-      loadAds(backList, containerBack, false);
-
-      containerFront.style.width = (300 * frontList.length) + "px";
-      containerBack.style.width = (300 * backList.length) + "px";
-
-      animateContainer(containerFront, frontList, true);
-      animateContainer(containerBack, backList, false);
+  document.addEventListener("DOMContentLoaded", async function () {
+    // 獲取角色列表
+    const characterNames = await fetchCharacterList();
+    
+    // 檢查每個角色的圖片
+    const imagePromises = characterNames.map(name => checkImageTypes(name));
+    const imageResults = await Promise.all(imagePromises);
+    
+    // 收集所有有效的圖片路徑
+    const validImages = imageResults.flatMap(result => {
+      const paths: string[] = [];
+      if (result.normalPath) paths.push(result.normalPath);
+      if (result.fightingPath) paths.push(result.fightingPath);
+      if (result.ruinedPath) paths.push(result.ruinedPath);
+      return paths;
     });
+
+    // 分配圖片到 front 和 back 列表
+    const totalImages = validImages.length;
+    const frontCount = Math.ceil(totalImages / 3);
+    
+    frontList = validImages.slice(0, frontCount);
+    backList = validImages.slice(frontCount);
+
+    // 初始化動畫
+    const containerFront = document.getElementById("containerFront");
+    const containerBack = document.getElementById("containerBack");
+
+    function createAdDiv(imageURL, isFront) {
+      const adDiv = document.createElement("div");
+      adDiv.className = isFront ? "ad-front" : "ad-back";
+      
+      const adImage = document.createElement("img");
+      adImage.className = "ad-image";
+      adImage.src = imageURL;
+      adDiv.appendChild(adImage);
+      return adDiv;
+    }
+
+    function loadAds(imageList, container, isFront) {
+      container.innerHTML = "";
+      const numAds = imageList.length;
+      for (let i = 0; i < numAds; i++) {
+        const imageURL = imageList[i];
+        const adDiv = createAdDiv(imageURL, isFront);
+        container.appendChild(adDiv);
+      }
+    }
+
+    function animateContainer(container, imageList, isFront) {
+      const duration = isFront ? 200 : 600;
+      
+      function startAnimation() {
+        container.style.transform = 'translateX(0)';
+        container.style.animation = `${isFront ? 'slideLeft' : 'slideLeftSlow'} ${duration}s linear infinite`;
+      }
+      
+      startAnimation();
+
+      // 監聽動畫結束事件，重新排列圖片
+      container.addEventListener('animationend', () => {
+        // 隨機打亂圖片順序
+        const shuffledImages = [...imageList].sort(() => Math.random() - 0.5);
+        loadAds(shuffledImages, container, isFront);
+        container.style.width = (300 * shuffledImages.length) + "px";
+        startAnimation();
+      });
+    }
+
+    loadAds(frontList, containerFront, true);
+    loadAds(backList, containerBack, false);
+
+    if (containerFront) {
+      containerFront.style.width = (300 * frontList.length) + "px";
+    }
+    
+    if (containerBack) {
+      containerBack.style.width = (300 * backList.length) + "px";
+    }
+
+    if (containerFront) {
+      animateContainer(containerFront, frontList, true);
+    }
+    
+    if (containerBack) {
+      animateContainer(containerBack, backList, false);
+    }
   });
 </script> 
