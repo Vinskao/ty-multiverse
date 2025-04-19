@@ -23,7 +23,7 @@ if (!username || !token) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  import { applyWeaponDamage } from "../scripts/weapon";
+  import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
@@ -364,6 +364,9 @@ if (!username || !token) {
     // 按總戰力排序
     const sortedCharacters = [...characters].sort((a, b) => b.totalPower - a.totalPower);
     
+    // 創建一個 Map 來存儲每個角色的當前戰力值
+    const characterPowerMap = new Map();
+    
     sortedCharacters.forEach(character => {
       const row = document.createElement('tr');
       
@@ -448,13 +451,33 @@ if (!username || !token) {
       
       const updateButton = document.createElement('button');
       updateButton.textContent = '更新';
-      updateButton.style.padding = '2px 4px'; // 上下間距密集一點
-      updateButton.style.backgroundColor = '#4CAF50';
-      updateButton.style.color = 'white';
-      updateButton.style.border = 'none';
-      updateButton.style.borderRadius = '4px';
-      updateButton.style.cursor = 'pointer';
-      updateButton.style.fontSize = '11px'; // 字體小一點
+      updateButton.style.cssText = `
+        padding: 4px 8px;
+        background: linear-gradient(145deg, #4CAF50, #45a049);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      `;
+      
+      // 添加懸停效果
+      updateButton.addEventListener('mouseover', () => {
+        updateButton.style.background = 'linear-gradient(145deg, #45a049, #4CAF50)';
+        updateButton.style.transform = 'translateY(-1px)';
+        updateButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+      });
+      
+      updateButton.addEventListener('mouseout', () => {
+        updateButton.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
+        updateButton.style.transform = 'translateY(0)';
+        updateButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+      });
       
       // 儲存原始值
       const originalData = {
@@ -505,6 +528,81 @@ if (!username || !token) {
         hasBonus: character.hasBonus || false,
         weaponBonus: character.weaponBonus || 0
       };
+      
+      // 初始化角色戰力映射
+      characterPowerMap.set(character.name, {
+        physicPower: character.physicPower || 0,
+        magicPower: character.magicPower || 0,
+        utilityPower: character.originalUtilityPower || 0,
+        weaponBonus: character.weaponBonus || 0,
+        hasBonus: character.hasBonus || false,
+        totalPower: character.totalPower || 0,
+        attributes: character.attributes || '',
+        weaponData: character.weaponData || null
+      });
+      
+      // 添加輸入事件監聽器，實現動態計算總戰力
+      const updateTotalPower = async () => {
+        const currentData = characterPowerMap.get(character.name);
+        const physicPower = parseInt(physicInput.value) || 0;
+        const magicPower = parseInt(magicInput.value) || 0;
+        const utilityPower = parseInt(utilityInput.value) || 0;
+        
+        // 更新映射中的值
+        currentData.physicPower = physicPower;
+        currentData.magicPower = magicPower;
+        currentData.utilityPower = utilityPower;
+        
+        // 計算武器加成
+        let weaponBonus = 0;
+        let hasBonus = false;
+        
+        // 檢查角色是否有武器加成
+        if (currentData.hasBonus && currentData.weaponData) {
+          try {
+            // 使用 weapon.js 中的邏輯計算武器加成
+            const { totalDamage, hasBonus: bonusApplied } = calculateWeaponDamage(
+              { 
+                utilityPower: utilityPower,
+                attributes: currentData.attributes
+              }, 
+              currentData.weaponData
+            );
+            
+            weaponBonus = totalDamage;
+            hasBonus = bonusApplied;
+            
+            // 更新映射中的武器加成值
+            currentData.weaponBonus = weaponBonus;
+            currentData.hasBonus = hasBonus;
+            
+            // 更新武器加成顯示
+            totalUtilityCell.textContent = hasBonus ? 
+              `${weaponBonus} ⚔️` : 
+              '0';
+          } catch (error) {
+            console.error(`計算武器加成時出錯: ${error.message}`);
+            // 如果計算出錯，使用原始值
+            weaponBonus = currentData.weaponBonus || 0;
+            hasBonus = currentData.hasBonus || false;
+          }
+        }
+        
+        // 計算新的總戰力
+        const newTotalPower = physicPower + magicPower + utilityPower + weaponBonus;
+        currentData.totalPower = newTotalPower;
+        
+        // 更新總戰力顯示
+        totalCell.textContent = String(newTotalPower);
+        
+        // 將更新後的數據保存到 localStorage
+        saveToLocalStorage(character.name, currentData);
+      };
+      
+      // 為每個輸入框添加事件監聽器
+      physicInput.addEventListener('input', updateTotalPower);
+      magicInput.addEventListener('input', updateTotalPower);
+      utilityInput.addEventListener('input', updateTotalPower);
       
       // 更新按鈕點擊事件
       updateButton.addEventListener('click', async () => {
@@ -603,19 +701,10 @@ if (!username || !token) {
           originalData.magicPower = currentData.magicPower;
           originalData.utilityPower = currentData.utilityPower;
           
-          // 更新總戰力顯示
-          const newTotalPower = currentData.physicPower + currentData.magicPower + character.utilityPower;
-          totalCell.textContent = String(newTotalPower);
-          
           // 更新輸入框的原始值
           physicInput.dataset.originalValue = String(currentData.physicPower);
           magicInput.dataset.originalValue = String(currentData.magicPower);
           utilityInput.dataset.originalValue = String(currentData.utilityPower);
-          
-          // 更新武器加成顯示
-          totalUtilityCell.textContent = character.hasBonus ? 
-            `${character.weaponBonus || '0'} ⚔️` : 
-            '0';
           
         } catch (error) {
           console.error('更新角色能力時出錯:', error);
@@ -639,6 +728,37 @@ if (!username || !token) {
     table.appendChild(tbody);
     scrollContainer.appendChild(table);
     powerListContainer.appendChild(scrollContainer);
+  }
+
+  // 保存到 localStorage
+  function saveToLocalStorage(characterName, data) {
+    try {
+      // 獲取現有的暫存數據
+      const storageKey = 'character_power_cache';
+      let cachedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      
+      // 更新特定角色的數據
+      cachedData[characterName] = data;
+      
+      // 保存回 localStorage
+      localStorage.setItem(storageKey, JSON.stringify(cachedData));
+      
+      console.log(`已暫存 ${characterName} 的戰力數據`);
+    } catch (error) {
+      console.error('暫存戰力數據時出錯:', error);
+    }
+  }
+
+  // 從 localStorage 獲取暫存數據
+  function getFromLocalStorage(characterName) {
+    try {
+      const storageKey = 'character_power_cache';
+      const cachedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      return cachedData[characterName] || null;
+    } catch (error) {
+      console.error('獲取暫存戰力數據時出錯:', error);
+      return null;
+    }
   }
 
   // 主函數
@@ -665,6 +785,23 @@ if (!username || !token) {
       const charactersWithPower = await Promise.all(
         data.map(async (character) => {
           try {
+            // 檢查是否有暫存的戰力數據
+            const cachedData = getFromLocalStorage(character.name);
+            if (cachedData) {
+              console.log(`使用暫存的戰力數據: ${character.name}`);
+              return {
+                ...character,
+                totalPower: cachedData.totalPower,
+                physicPower: cachedData.physicPower,
+                magicPower: cachedData.magicPower,
+                utilityPower: cachedData.utilityPower + (cachedData.hasBonus ? cachedData.weaponBonus : 0),
+                originalUtilityPower: cachedData.utilityPower,
+                weaponBonus: cachedData.weaponBonus,
+                hasBonus: cachedData.hasBonus,
+                weaponData: cachedData.weaponData
+              };
+            }
+            
             const weaponName = character.name?.toLowerCase() || '';
             const weaponResponse = await fetch(`${TYMB_URL}/weapons/${weaponName}`, {
               method: "GET",
@@ -681,9 +818,10 @@ if (!username || !token) {
             let totalUtilityPower = originalUtilityPower;
             let hasBonus = false;
             let weaponBonus = 0;
+            let weaponData = null;
             
             if (weaponResponse.ok) {
-              const weaponData = await weaponResponse.json();
+              weaponData = await weaponResponse.json();
               const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponData);
               totalUtilityPower = updatedCharacter.utilityPower;
               hasBonus = bonusApplied;
@@ -706,7 +844,8 @@ if (!username || !token) {
               utilityPower: totalUtilityPower,
               originalUtilityPower, // 保存原始武器戰力值
               weaponBonus, // 保存武器加成值
-              hasBonus
+              hasBonus,
+              weaponData // 保存武器數據
             };
           } catch (error) {
             console.error(`Error fetching weapon info for ${character.name}:`, error);
@@ -721,7 +860,8 @@ if (!username || !token) {
               utilityPower: parseInt(String(character.utilityPower || 0), 10),
               originalUtilityPower, // 保存原始武器戰力值
               weaponBonus: 0, // 無武器加成
-              hasBonus: false
+              hasBonus: false,
+              weaponData: null
             };
           }
         })
