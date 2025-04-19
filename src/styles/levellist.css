@@ -115,3 +115,65 @@
   font-weight: bold;
   z-index: 5;
 }
+
+/* 戰力列表表格樣式 */
+#power-list-container {
+  margin: 20px 5%;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden; /* 確保內容不會溢出容器 */
+}
+
+#power-list {
+  width: 100%;
+  overflow-x: auto !important; /* 強制啟用水平滾動 */
+  -webkit-overflow-scrolling: touch; /* 在iOS上提供平滑滾動 */
+  display: block; /* 確保元素是塊級元素 */
+}
+
+#power-list > div {
+  overflow-x: auto !important; /* 確保內部容器也可以滾動 */
+  width: 100%;
+}
+
+#power-list table {
+  width: 100%;
+  min-width: 800px; /* 確保表格有最小寬度 */
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#power-list th, 
+#power-list td {
+  padding: 4px;
+  border: 1px solid #ddd;
+  text-align: left;
+  white-space: nowrap; /* 防止文字換行 */
+}
+
+#power-list th {
+  background-color: #f2f2f2;
+  position: sticky; /* 使表頭固定 */
+  top: 0;
+  z-index: 10;
+}
+
+#power-list input[type="number"] {
+  width: 50px;
+  padding: 2px;
+}
+
+#power-list button {
+  padding: 2px 4px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#power-list button:hover {
+  background-color: #45a049;
+}
