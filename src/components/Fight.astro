@@ -409,7 +409,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       });
     });
   }
-  
+
   // 選擇角色
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
@@ -789,7 +789,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       }, index * 1000); // 每個狀態效果間隔1秒
     });
   }
-
+  
   // 開始戰鬥
   async function startFight() {
     const leftPower = parseInt(String(fighters.left.main.totalPower || 0), 10);

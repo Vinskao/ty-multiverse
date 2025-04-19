@@ -12,7 +12,15 @@ if (!username || !token) {
 }
 ---
 
+<div id="power-list-container">
+  <h2>力表</h2>
+  <div id="power-list"></div>
+</div>
+
 <div id="level-container"></div>
+
+<!-- 引入 SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   import { applyWeaponDamage } from "../scripts/weapon";
@@ -48,6 +56,22 @@ if (!username || !token) {
     "Default": "#FFFFFF"    
   };
 
+  // 顯示提示訊息的函數
+  function showAlert(title, icon = 'success', timer = 1000) {
+    // 檢查 SweetAlert2 是否已載入
+    if (typeof (window as any).Swal !== 'undefined') {
+      (window as any).Swal.fire({
+        title: title,
+        icon: icon,
+        timer: timer,
+        showConfirmButton: false
+      });
+    } else {
+      // 如果 SweetAlert2 未載入，使用原生 alert
+      alert(title);
+    }
+  }
+
   // 刷新 token 的函數
   async function refreshToken() {
     try {
@@ -56,6 +80,14 @@ if (!username || !token) {
       
       if (!refreshToken) {
         console.error('No refresh token available');
+        if (typeof (window as any).Swal !== 'undefined') {
+          (window as any).Swal.fire({
+            title: '無法獲取有效的 token',
+            icon: 'error',
+            timer: 0,
+            showConfirmButton: true
+          });
+        }
         window.location.href = '/tymultiverse/login';
         return false;
       }
@@ -124,6 +156,14 @@ if (!username || !token) {
     
     if (!token) {
       console.error('No token available');
+      if (typeof (window as any).Swal !== 'undefined') {
+        (window as any).Swal.fire({
+          title: '無法獲取有效的 token',
+          icon: 'error',
+          timer: 0,
+          showConfirmButton: true
+        });
+      }
       window.location.href = '/tymultiverse/login';
       return null;
     }
@@ -272,6 +312,335 @@ if (!username || !token) {
     return levelContainer;
   }
 
+  // 創建戰力列表
+  function createPowerList(characters) {
+    const powerListContainer = document.getElementById('power-list');
+    if (!powerListContainer) return;
+    
+    // 創建一個可滾動的容器
+    const scrollContainer = document.createElement('div');
+    scrollContainer.style.width = '100%';
+    scrollContainer.style.overflowX = 'auto';
+    scrollContainer.style.marginBottom = '20px';
+    scrollContainer.style.position = 'relative'; // 添加相對定位
+    scrollContainer.style.maxWidth = '100%'; // 確保容器不會超出父元素
+    
+    // 創建表格
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.style.minWidth = '800px'; // 確保表格有最小寬度
+    table.style.tableLayout = 'fixed'; // 使用固定表格布局
+    table.style.fontSize = '12px'; // 字體小一點
+    
+    // 創建表頭
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['角色名稱', '物理戰力', '魔法戰力', '武器戰力', '武器加成', '總戰力', '操作'];
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      th.style.padding = '4px'; // 上下間距密集一點
+      th.style.border = '1px solid #ddd';
+      th.style.backgroundColor = '#f2f2f2';
+      th.style.textAlign = 'left';
+      th.style.whiteSpace = 'nowrap'; // 防止表頭換行
+      th.style.overflow = 'hidden'; // 防止內容溢出
+      th.style.textOverflow = 'ellipsis'; // 超出顯示省略號
+      th.style.color = '#FF4500'; // 表頭字體顏色設為鮮豔的橙紅色
+      th.style.fontWeight = 'bold'; // 表頭字體加粗
+      th.style.fontSize = '14px'; // 表頭字體稍大
+      th.style.textShadow = '0 0 1px rgba(0,0,0,0.3)'; // 添加文字陰影增加對比度
+      headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // 創建表格內容
+    const tbody = document.createElement('tbody');
+    
+    // 按總戰力排序
+    const sortedCharacters = [...characters].sort((a, b) => b.totalPower - a.totalPower);
+    
+    sortedCharacters.forEach(character => {
+      const row = document.createElement('tr');
+      
+      // 角色名稱
+      const nameCell = document.createElement('td');
+      nameCell.textContent = character.nameOriginal || character.name || 'Unknown';
+      nameCell.style.padding = '4px'; // 上下間距密集一點
+      nameCell.style.border = '1px solid #ddd';
+      nameCell.style.whiteSpace = 'nowrap'; // 防止文字換行
+      nameCell.style.overflow = 'hidden'; // 防止內容溢出
+      nameCell.style.textOverflow = 'ellipsis'; // 超出顯示省略號
+      row.appendChild(nameCell);
+      
+      // 物理戰力
+      const physicCell = document.createElement('td');
+      const physicInput = document.createElement('input');
+      physicInput.type = 'number';
+      physicInput.value = character.physicPower || '0';
+      physicInput.style.width = '50px'; // 寬度小一點
+      physicInput.style.padding = '2px'; // 上下間距密集一點
+      physicInput.dataset.originalValue = character.physicPower || '0';
+      physicCell.appendChild(physicInput);
+      physicCell.style.padding = '4px'; // 上下間距密集一點
+      physicCell.style.border = '1px solid #ddd';
+      row.appendChild(physicCell);
+      
+      // 魔法戰力
+      const magicCell = document.createElement('td');
+      const magicInput = document.createElement('input');
+      magicInput.type = 'number';
+      magicInput.value = character.magicPower || '0';
+      magicInput.style.width = '50px'; // 寬度小一點
+      magicInput.style.padding = '2px'; // 上下間距密集一點
+      magicInput.dataset.originalValue = character.magicPower || '0';
+      magicCell.appendChild(magicInput);
+      magicCell.style.padding = '4px'; // 上下間距密集一點
+      magicCell.style.border = '1px solid #ddd';
+      row.appendChild(magicCell);
+      
+      // 武器戰力 (可編輯)
+      const utilityCell = document.createElement('td');
+      const utilityInput = document.createElement('input');
+      utilityInput.type = 'number';
+      utilityInput.value = character.originalUtilityPower || '0';
+      utilityInput.style.width = '50px'; // 寬度小一點
+      utilityInput.style.padding = '2px'; // 上下間距密集一點
+      utilityInput.dataset.originalValue = character.originalUtilityPower || '0';
+      utilityCell.appendChild(utilityInput);
+      utilityCell.style.padding = '4px'; // 上下間距密集一點
+      utilityCell.style.border = '1px solid #ddd';
+      row.appendChild(utilityCell);
+      
+      // 武器加成 (不可編輯，顯示武器加成值)
+      const totalUtilityCell = document.createElement('td');
+      // 顯示武器加成值
+      totalUtilityCell.textContent = character.hasBonus ? 
+        `${character.weaponBonus || '0'} ⚔️` : 
+        '0';
+      totalUtilityCell.style.padding = '4px'; // 上下間距密集一點
+      totalUtilityCell.style.border = '1px solid #ddd';
+      totalUtilityCell.style.whiteSpace = 'nowrap'; // 防止文字換行
+      totalUtilityCell.style.overflow = 'hidden'; // 防止內容溢出
+      totalUtilityCell.style.textOverflow = 'ellipsis'; // 超出顯示省略號
+      row.appendChild(totalUtilityCell);
+      
+      // 總戰力
+      const totalCell = document.createElement('td');
+      totalCell.textContent = character.totalPower || '0';
+      totalCell.style.padding = '4px'; // 上下間距密集一點
+      totalCell.style.border = '1px solid #ddd';
+      totalCell.style.fontWeight = 'bold';
+      totalCell.style.whiteSpace = 'nowrap'; // 防止文字換行
+      totalCell.style.overflow = 'hidden'; // 防止內容溢出
+      totalCell.style.textOverflow = 'ellipsis'; // 超出顯示省略號
+      row.appendChild(totalCell);
+      
+      // 操作按鈕
+      const actionCell = document.createElement('td');
+      actionCell.style.padding = '4px'; // 上下間距密集一點
+      actionCell.style.border = '1px solid #ddd';
+      actionCell.style.whiteSpace = 'nowrap'; // 防止文字換行
+      
+      const updateButton = document.createElement('button');
+      updateButton.textContent = '更新';
+      updateButton.style.padding = '2px 4px'; // 上下間距密集一點
+      updateButton.style.backgroundColor = '#4CAF50';
+      updateButton.style.color = 'white';
+      updateButton.style.border = 'none';
+      updateButton.style.borderRadius = '4px';
+      updateButton.style.cursor = 'pointer';
+      updateButton.style.fontSize = '11px'; // 字體小一點
+      
+      // 儲存原始值
+      const originalData = {
+        id: character.id || 0,
+        name: character.name || '',
+        baseAttributes: character.baseAttributes || '',
+        bonusAttributes: character.bonusAttributes || '',
+        stateAttributes: character.stateAttributes || '',
+        nameOriginal: character.nameOriginal || '',
+        codeName: character.codeName || '',
+        physicPower: character.physicPower || 0,
+        magicPower: character.magicPower || 0,
+        utilityPower: character.utilityPower || 0,
+        dob: character.dob || '',
+        race: character.race || '',
+        attributes: character.attributes || '',
+        gender: character.gender || '',
+        assSize: character.assSize || '',
+        boobsSize: character.boobsSize || '',
+        heightCm: character.heightCm || 0,
+        weightKg: character.weightKg || 0,
+        profession: character.profession || '',
+        combat: character.combat || '',
+        favoriteFoods: character.favoriteFoods || '',
+        job: character.job || '',
+        physics: character.physics || '',
+        knownAs: character.knownAs || '',
+        personally: character.personally || '',
+        interest: character.interest || '',
+        likes: character.likes || '',
+        dislikes: character.dislikes || '',
+        concubine: character.concubine || '',
+        faction: character.faction || '',
+        armyId: character.armyId || 0,
+        armyName: character.armyName || '',
+        deptId: character.deptId || 0,
+        deptName: character.deptName || '',
+        originArmyId: character.originArmyId || 0,
+        originArmyName: character.originArmyName || '',
+        gaveBirth: character.gaveBirth || false,
+        email: character.email || '',
+        age: character.age || 0,
+        proxy: character.proxy || '',
+        hei: character.hei || '',
+        physicsFallout4: character.physicsFallout4 || '',
+        version: character.version || 0,
+        hrratio: character.hrratio || '',
+        hasBonus: character.hasBonus || false,
+        weaponBonus: character.weaponBonus || 0
+      };
+      
+      // 更新按鈕點擊事件
+      updateButton.addEventListener('click', async () => {
+        try {
+          const token = await getValidToken();
+          if (!token) {
+            if (typeof (window as any).Swal !== 'undefined') {
+              (window as any).Swal.fire({
+                title: '無法獲取有效的 token',
+                icon: 'error',
+                timer: 0,
+                showConfirmButton: true
+              });
+            }
+            return;
+          }
+          
+          // 獲取當前輸入值
+          const currentData = {
+            id: 0, // 直接設置 ID 為 0
+            name: character.name || '',
+            baseAttributes: character.baseAttributes || '',
+            bonusAttributes: character.bonusAttributes || '',
+            stateAttributes: character.stateAttributes || '',
+            nameOriginal: character.nameOriginal || '',
+            codeName: character.codeName || '',
+            physicPower: parseInt(physicInput.value) || 0,
+            magicPower: parseInt(magicInput.value) || 0,
+            utilityPower: parseInt(utilityInput.value) || 0,
+            dob: character.dob || '',
+            race: character.race || '',
+            attributes: character.attributes || '',
+            gender: character.gender || '',
+            assSize: character.assSize || '',
+            boobsSize: character.boobsSize || '',
+            heightCm: character.heightCm || 0,
+            weightKg: character.weightKg || 0,
+            profession: character.profession || '',
+            combat: character.combat || '',
+            favoriteFoods: character.favoriteFoods || '',
+            job: character.job || '',
+            physics: character.physics || '',
+            knownAs: character.knownAs || '',
+            personally: character.personally || '',
+            interest: character.interest || '',
+            likes: character.likes || '',
+            dislikes: character.dislikes || '',
+            concubine: character.concubine || '',
+            faction: character.faction || '',
+            armyId: character.armyId || 0,
+            armyName: character.armyName || '',
+            deptId: character.deptId || 0,
+            deptName: character.deptName || '',
+            originArmyId: character.originArmyId || 0,
+            originArmyName: character.originArmyName || '',
+            gaveBirth: character.gaveBirth || false,
+            email: character.email || '',
+            age: character.age || 0,
+            proxy: character.proxy || '',
+            hei: character.hei || '',
+            physicsFallout4: character.physicsFallout4 || '',
+            version: character.version || 1, // 確保 version 不為 null
+            hrratio: character.hrratio || ''
+          };
+          
+          // 發送更新請求
+          const response = await fetch(`${TYMB_URL}/people/update`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(currentData),
+            credentials: 'include'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`更新失敗: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          
+          // 使用 SweetAlert2 顯示成功訊息
+          if (typeof (window as any).Swal !== 'undefined') {
+            (window as any).Swal.fire({
+              title: '更新成功！',
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          }
+          
+          // 更新原始值
+          originalData.physicPower = currentData.physicPower;
+          originalData.magicPower = currentData.magicPower;
+          originalData.utilityPower = currentData.utilityPower;
+          
+          // 更新總戰力顯示
+          const newTotalPower = currentData.physicPower + currentData.magicPower + character.utilityPower;
+          totalCell.textContent = String(newTotalPower);
+          
+          // 更新輸入框的原始值
+          physicInput.dataset.originalValue = String(currentData.physicPower);
+          magicInput.dataset.originalValue = String(currentData.magicPower);
+          utilityInput.dataset.originalValue = String(currentData.utilityPower);
+          
+          // 更新武器加成顯示
+          totalUtilityCell.textContent = character.hasBonus ? 
+            `${character.weaponBonus || '0'} ⚔️` : 
+            '0';
+          
+        } catch (error) {
+          console.error('更新角色能力時出錯:', error);
+          if (typeof (window as any).Swal !== 'undefined') {
+            (window as any).Swal.fire({
+              title: '更新失敗: ' + error.message,
+              icon: 'error',
+              timer: 0,
+              showConfirmButton: true
+            });
+          }
+        }
+      });
+      
+      actionCell.appendChild(updateButton);
+      row.appendChild(actionCell);
+      
+      tbody.appendChild(row);
+    });
+    
+    table.appendChild(tbody);
+    scrollContainer.appendChild(table);
+    powerListContainer.appendChild(scrollContainer);
+  }
+
   // 主函數
   document.addEventListener("DOMContentLoaded", async function () {
     try {
@@ -307,14 +676,22 @@ if (!username || !token) {
               credentials: 'include'
             });
 
-            let totalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
+            // 保存原始武器戰力值
+            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
+            let totalUtilityPower = originalUtilityPower;
             let hasBonus = false;
+            let weaponBonus = 0;
             
             if (weaponResponse.ok) {
               const weaponData = await weaponResponse.json();
               const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponData);
               totalUtilityPower = updatedCharacter.utilityPower;
               hasBonus = bonusApplied;
+              
+              // 計算武器加成值
+              if (hasBonus) {
+                weaponBonus = totalUtilityPower - originalUtilityPower;
+              }
             }
 
             const physicPower = parseInt(String(character?.physicPower || 0), 10);
@@ -327,10 +704,13 @@ if (!username || !token) {
               physicPower,
               magicPower,
               utilityPower: totalUtilityPower,
+              originalUtilityPower, // 保存原始武器戰力值
+              weaponBonus, // 保存武器加成值
               hasBonus
             };
           } catch (error) {
             console.error(`Error fetching weapon info for ${character.name}:`, error);
+            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
             return {
               ...character,
               totalPower: parseInt(String(character.physicPower || 0), 10) + 
@@ -339,6 +719,8 @@ if (!username || !token) {
               physicPower: parseInt(String(character.physicPower || 0), 10),
               magicPower: parseInt(String(character.magicPower || 0), 10),
               utilityPower: parseInt(String(character.utilityPower || 0), 10),
+              originalUtilityPower, // 保存原始武器戰力值
+              weaponBonus: 0, // 無武器加成
               hasBonus: false
             };
           }
@@ -356,6 +738,9 @@ if (!username || !token) {
       
       const filteredCharacters = validCharacters.filter(char => char !== null);
       filteredCharacters.sort((a, b) => b.totalPower - a.totalPower);
+
+      // 創建戰力列表
+      createPowerList(charactersWithPower);
 
       // 動態生成SS及以上等級
       const POWER_LEVELS = [...BASE_POWER_LEVELS];

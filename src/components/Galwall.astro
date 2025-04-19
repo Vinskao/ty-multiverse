@@ -107,6 +107,10 @@ import '../styles/galwall.css';
       const adImage = document.createElement("img");
       adImage.className = "ad-image";
       adImage.src = imageURL;
+      // 設置固定高度和寬度，保持比例
+      adImage.style.height = "300px";
+      adImage.style.width = "auto";
+      adImage.style.objectFit = "contain";
       adDiv.appendChild(adImage);
       return adDiv;
     }

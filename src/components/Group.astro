@@ -193,7 +193,10 @@ if (!username || !token) {
     if (!infoContainer) {
       infoContainer = document.createElement('div');
       infoContainer.className = 'character-info';
-      document.getElementById('group-container').appendChild(infoContainer);
+      const groupContainer = document.getElementById('group-container');
+      if (groupContainer) {
+        groupContainer.appendChild(infoContainer);
+      }
     }
 
     const infoContent = document.createElement('div');
@@ -214,8 +217,6 @@ if (!username || !token) {
       <p>Job: ${character.job}</p>
       <p>Combat: ${character.combat}</p>
       <p>Concubine: ${character.concubine}</p>
-      <p>Main Weapon: ${character.mainWeapon}</p>
-      <p>Sub Weapon: ${character.subWeapon}</p>
       <p>Dept: ${character.deptName}</p>
       <p>Faction: ${character.faction}</p>
       <p>Gave Birth: ${character.gaveBirth}</p>
@@ -226,9 +227,11 @@ if (!username || !token) {
     infoContainer.classList.add('show');
 
     const closeButton = infoContainer.querySelector('.close-button');
-    closeButton.addEventListener('click', () => {
-      infoContainer.classList.remove('show');
-    });
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        infoContainer.classList.remove('show');
+      });
+    }
     document.addEventListener('click', function closeInfo(e) {
       if (!infoContainer.contains(e.target as Node)) {
         infoContainer.classList.remove('show');
