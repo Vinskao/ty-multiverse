@@ -195,14 +195,23 @@ if (!username || !token) {
   // 創建角色卡片
   function createCharacterCard(character, levelColor) {
     const characterContainer = document.createElement('div');
-    characterContainer.style.cssText = 'display:inline-block;width:200px;height:300px;text-align:center;margin-left:-100px;position:relative;z-index:1;';
+    characterContainer.style.cssText = 'display:inline-block;height:300px;text-align:center;position:relative;z-index:1;';
 
     const img = document.createElement('img');
-    img.style.cssText = 'width:200px;height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:opacity 0.5s ease-in-out;';
+    img.style.cssText = 'height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:opacity 0.5s ease-in-out;';
     img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
     img.alt = character.nameOriginal;
     img.onerror = function() {
       this.src = `${PEOPLE_IMAGE_URL}/default.png`;
+    };
+
+    // 圖片加載完成後設置容器寬度
+    img.onload = function() {
+      const imgElement = this as HTMLImageElement;
+      const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+      const containerWidth = 300 * aspectRatio;
+      characterContainer.style.width = `${containerWidth}px`;
+      characterContainer.style.marginLeft = `-${containerWidth/2}px`;
     };
 
     // 檢查戰鬥圖片
@@ -212,6 +221,16 @@ if (!username || !token) {
         fightingImg.style.cssText = img.style.cssText + 'opacity:0;';
         fightingImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
         fightingImg.alt = `${character.nameOriginal} Fighting`;
+        
+        // 戰鬥圖片加載完成後也設置容器寬度
+        fightingImg.onload = function() {
+          const imgElement = this as HTMLImageElement;
+          const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+          const containerWidth = 300 * aspectRatio;
+          characterContainer.style.width = `${containerWidth}px`;
+          characterContainer.style.marginLeft = `-${containerWidth/2}px`;
+        };
+        
         characterContainer.appendChild(fightingImg);
 
         let isRegularImage = true;
@@ -566,7 +585,7 @@ if (!username || !token) {
                 utilityPower: utilityPower,
                 attributes: currentData.attributes
               }, 
-              currentData.weaponData
+              currentData.weaponData ? [currentData.weaponData] : []
             );
             
             weaponBonus = totalDamage;
@@ -802,6 +821,14 @@ if (!username || !token) {
               };
             }
             
+            // 保存原始武器戰力值
+            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
+            let totalUtilityPower = originalUtilityPower;
+            let hasBonus = false;
+            let weaponBonus = 0;
+            let weaponData: any = null;
+            
+            // 獲取角色的所有武器
             const weaponName = character.name?.toLowerCase() || '';
             const weaponResponse = await fetch(`${TYMB_URL}/weapons/${weaponName}`, {
               method: "GET",
@@ -812,17 +839,16 @@ if (!username || !token) {
               },
               credentials: 'include'
             });
-
-            // 保存原始武器戰力值
-            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
-            let totalUtilityPower = originalUtilityPower;
-            let hasBonus = false;
-            let weaponBonus = 0;
-            let weaponData = null;
             
             if (weaponResponse.ok) {
-              weaponData = await weaponResponse.json();
-              const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponData);
+              // 獲取所有武器數據
+              const weaponsData = await weaponResponse.json();
+              
+              // 確保 weaponsData 是數組
+              const weaponsArray = Array.isArray(weaponsData) ? weaponsData : [weaponsData];
+              
+              // 使用所有武器計算加成
+              const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponsArray);
               totalUtilityPower = updatedCharacter.utilityPower;
               hasBonus = bonusApplied;
               
@@ -830,6 +856,9 @@ if (!username || !token) {
               if (hasBonus) {
                 weaponBonus = totalUtilityPower - originalUtilityPower;
               }
+              
+              // 保存所有武器數據
+              weaponData = weaponsArray;
             }
 
             const physicPower = parseInt(String(character?.physicPower || 0), 10);
