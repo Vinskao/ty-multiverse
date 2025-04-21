@@ -356,7 +356,7 @@ if (!username || !token) {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     
-    const headers = ['角色名稱', '物理戰力', '魔法戰力', '武器戰力', '武器加成', '總戰力', '操作'];
+    const headers = ['排行', '角色名稱', '物理戰力', '魔法戰力', '武器戰力', '武器加成', '總戰力', '操作'];
     headers.forEach(headerText => {
       const th = document.createElement('th');
       th.textContent = headerText;
@@ -386,8 +386,43 @@ if (!username || !token) {
     // 創建一個 Map 來存儲每個角色的當前戰力值
     const characterPowerMap = new Map();
     
-    sortedCharacters.forEach(character => {
+    sortedCharacters.forEach((character, index) => {
       const row = document.createElement('tr');
+      
+      // 排行
+      const rankCell = document.createElement('td');
+      rankCell.textContent = `${index + 1}`;
+      rankCell.style.padding = '4px'; // 上下間距密集一點
+      rankCell.style.border = '1px solid #ddd';
+      rankCell.style.textAlign = 'center'; // 置中對齊
+      rankCell.style.fontWeight = 'bold'; // 加粗
+      
+      // 根據排名設置不同顏色
+      if (index < 3) {
+        rankCell.style.color = '#FF4500'; // 前三名用紅色
+      } else if (index < 10) {
+        rankCell.style.color = '#FF8C00'; // 4-10名用橙色
+      } else if (index < 20) {
+        rankCell.style.color = '#FFD700'; // 11-20名用金色
+      } else if (index < 30) {
+        rankCell.style.color = '#32CD32'; // 21-30名用綠色
+      } else if (index < 40) {
+        rankCell.style.color = '#1E90FF'; // 31-40名用藍色
+      } else if (index < 50) {
+        rankCell.style.color = '#9370DB'; // 41-50名用紫色
+      } else if (index < 60) {
+        rankCell.style.color = '#FF69B4'; // 51-60名用粉色
+      } else if (index < 70) {
+        rankCell.style.color = '#20B2AA'; // 61-70名用淺海綠
+      } else if (index < 80) {
+        rankCell.style.color = '#FF6347'; // 71-80名用番茄紅
+      } else if (index < 90) {
+        rankCell.style.color = '#7B68EE'; // 81-90名用中紫色
+      } else {
+        rankCell.style.color = '#A0522D'; // 91名以上用棕色
+      }
+      
+      row.appendChild(rankCell);
       
       // 角色名稱
       const nameCell = document.createElement('td');
@@ -404,9 +439,16 @@ if (!username || !token) {
       const physicInput = document.createElement('input');
       physicInput.type = 'number';
       physicInput.value = character.physicPower || '0';
-      physicInput.style.width = '50px'; // 寬度小一點
+      physicInput.style.minWidth = '50px'; // 最小寬度
+      physicInput.style.width = 'auto'; // 自動調整寬度
       physicInput.style.padding = '2px'; // 上下間距密集一點
       physicInput.dataset.originalValue = character.physicPower || '0';
+      // 添加輸入事件來調整寬度
+      physicInput.addEventListener('input', function() {
+        this.style.width = `${Math.max(50, this.value.length * 10)}px`;
+      });
+      // 初始化寬度
+      physicInput.style.width = `${Math.max(50, (character.physicPower || '0').toString().length * 10)}px`;
       physicCell.appendChild(physicInput);
       physicCell.style.padding = '4px'; // 上下間距密集一點
       physicCell.style.border = '1px solid #ddd';
@@ -417,9 +459,16 @@ if (!username || !token) {
       const magicInput = document.createElement('input');
       magicInput.type = 'number';
       magicInput.value = character.magicPower || '0';
-      magicInput.style.width = '50px'; // 寬度小一點
+      magicInput.style.minWidth = '50px'; // 最小寬度
+      magicInput.style.width = 'auto'; // 自動調整寬度
       magicInput.style.padding = '2px'; // 上下間距密集一點
       magicInput.dataset.originalValue = character.magicPower || '0';
+      // 添加輸入事件來調整寬度
+      magicInput.addEventListener('input', function() {
+        this.style.width = `${Math.max(50, this.value.length * 10)}px`;
+      });
+      // 初始化寬度
+      magicInput.style.width = `${Math.max(50, (character.magicPower || '0').toString().length * 10)}px`;
       magicCell.appendChild(magicInput);
       magicCell.style.padding = '4px'; // 上下間距密集一點
       magicCell.style.border = '1px solid #ddd';
@@ -430,9 +479,16 @@ if (!username || !token) {
       const utilityInput = document.createElement('input');
       utilityInput.type = 'number';
       utilityInput.value = character.originalUtilityPower || '0';
-      utilityInput.style.width = '50px'; // 寬度小一點
+      utilityInput.style.minWidth = '50px'; // 最小寬度
+      utilityInput.style.width = 'auto'; // 自動調整寬度
       utilityInput.style.padding = '2px'; // 上下間距密集一點
       utilityInput.dataset.originalValue = character.originalUtilityPower || '0';
+      // 添加輸入事件來調整寬度
+      utilityInput.addEventListener('input', function() {
+        this.style.width = `${Math.max(50, this.value.length * 10)}px`;
+      });
+      // 初始化寬度
+      utilityInput.style.width = `${Math.max(50, (character.originalUtilityPower || '0').toString().length * 10)}px`;
       utilityCell.appendChild(utilityInput);
       utilityCell.style.padding = '4px'; // 上下間距密集一點
       utilityCell.style.border = '1px solid #ddd';
@@ -605,6 +661,33 @@ if (!username || !token) {
             weaponBonus = currentData.weaponBonus || 0;
             hasBonus = currentData.hasBonus || false;
           }
+        } else if (currentData.weaponData) {
+          // 如果沒有 hasBonus 標記但有武器數據，嘗試計算
+          try {
+            const { totalDamage, hasBonus: bonusApplied } = calculateWeaponDamage(
+              { 
+                utilityPower: utilityPower,
+                attributes: currentData.attributes
+              }, 
+              currentData.weaponData
+            );
+            
+            if (totalDamage > 0) {
+              weaponBonus = totalDamage;
+              hasBonus = bonusAppliedg;
+              
+              // 更新映射中的武器加成值
+              currentData.weaponBonus = weaponBonus;
+              currentData.hasBonus = hasBonus;
+              
+              // 更新武器加成顯示
+              totalUtilityCell.textContent = hasBonus ? 
+                `${weaponBonus} ⚔️` : 
+                '0';
+            }
+          } catch (error) {
+            console.error(`嘗試計算武器加成時出錯: ${error.message}`);
+          }
         }
         
         // 計算新的總戰力
@@ -618,16 +701,25 @@ if (!username || !token) {
         saveToLocalStorage(character.name, currentData);
       };
       
-      // 為每個輸入框添加事件監聽器
+      // 為每個輸入框添加事件監聽器，實現動態計算總戰力
       physicInput.addEventListener('input', updateTotalPower);
       magicInput.addEventListener('input', updateTotalPower);
       utilityInput.addEventListener('input', updateTotalPower);
       
+      // 添加失焦事件監聽器，在輸入完成後更新排行
+      const updateRankingsOnBlur = () => {
+        updateRankings();
+      };
+      
+      physicInput.addEventListener('blur', updateRankingsOnBlur);
+      magicInput.addEventListener('blur', updateRankingsOnBlur);
+      utilityInput.addEventListener('blur', updateRankingsOnBlur);
+      
       // 更新按鈕點擊事件
       updateButton.addEventListener('click', async () => {
-        try {
-          const token = await getValidToken();
-          if (!token) {
+    try {
+      const token = await getValidToken();
+      if (!token) {
             if (typeof (window as any).Swal !== 'undefined') {
               (window as any).Swal.fire({
                 title: '無法獲取有效的 token',
@@ -636,8 +728,8 @@ if (!username || !token) {
                 showConfirmButton: true
               });
             }
-            return;
-          }
+        return;
+      }
           
           // 獲取當前輸入值
           const currentData = {
@@ -725,6 +817,12 @@ if (!username || !token) {
           magicInput.dataset.originalValue = String(currentData.magicPower);
           utilityInput.dataset.originalValue = String(currentData.utilityPower);
           
+          // 添加成功閃爍效果
+          row.classList.add('save-success');
+          setTimeout(() => {
+            row.classList.remove('save-success');
+          }, 1000);
+          
         } catch (error) {
           console.error('更新角色能力時出錯:', error);
           if (typeof (window as any).Swal !== 'undefined') {
@@ -780,9 +878,87 @@ if (!username || !token) {
     }
   }
 
+  // 更新排行
+  function updateRankings() {
+    const tbody = document.querySelector('#power-list table tbody');
+    if (!tbody) return;
+    
+    // 獲取所有行
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    // 根據總戰力排序行
+    rows.sort((a, b) => {
+      const aTotalPowerCell = a.querySelector('td:nth-child(7)');
+      const bTotalPowerCell = b.querySelector('td:nth-child(7)');
+      
+      const aTotalPower = aTotalPowerCell ? parseInt(aTotalPowerCell.textContent || '0') : 0;
+      const bTotalPower = bTotalPowerCell ? parseInt(bTotalPowerCell.textContent || '0') : 0;
+      
+      return bTotalPower - aTotalPower;
+    });
+    
+    // 清空表格
+    while (tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+    
+    // 重新添加排序後的行
+    rows.forEach((row, index) => {
+      // 更新排行
+      const rankCell = row.querySelector('td:first-child');
+      if (rankCell) {
+        rankCell.textContent = `${index + 1}`;
+        if (rankCell instanceof HTMLElement) {
+          // 根據排名設置不同顏色
+          if (index < 3) {
+            rankCell.style.color = '#FF4500'; // 前三名用紅色
+          } else if (index < 10) {
+            rankCell.style.color = '#FF8C00'; // 4-10名用橙色
+          } else if (index < 20) {
+            rankCell.style.color = '#FFD700'; // 11-20名用金色
+          } else if (index < 30) {
+            rankCell.style.color = '#32CD32'; // 21-30名用綠色
+          } else if (index < 40) {
+            rankCell.style.color = '#1E90FF'; // 31-40名用藍色
+          } else if (index < 50) {
+            rankCell.style.color = '#9370DB'; // 41-50名用紫色
+          } else if (index < 60) {
+            rankCell.style.color = '#FF69B4'; // 51-60名用粉色
+          } else if (index < 70) {
+            rankCell.style.color = '#20B2AA'; // 61-70名用淺海綠
+          } else if (index < 80) {
+            rankCell.style.color = '#FF6347'; // 71-80名用番茄紅
+          } else if (index < 90) {
+            rankCell.style.color = '#7B68EE'; // 81-90名用中紫色
+          } else {
+            rankCell.style.color = '#A0522D'; // 91名以上用棕色
+          }
+        }
+      }
+      
+      // 添加行到表格
+      tbody.appendChild(row);
+    });
+  }
+
   // 主函數
   document.addEventListener("DOMContentLoaded", async function () {
     try {
+      // 添加 CSS 樣式
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes saveSuccess {
+          0% { background-color: transparent; }
+          30% { background-color: rgba(76, 175, 80, 0.3); }
+          100% { background-color: transparent; }
+        }
+        
+        .save-success {
+          animation: saveSuccess 1s ease-in-out;
+        }
+      `;
+      document.head.appendChild(style);
+      
       const token = await getValidToken();
       if (!token) return;
 
@@ -899,7 +1075,7 @@ if (!username || !token) {
       // 過濾掉戰力為0的角色和沒有圖片的角色
       const validCharacters = await Promise.all(
         charactersWithPower.filter(char => char.totalPower > 0).map(async (character) => {
-          const imagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+            const imagePath = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
           const hasImage = await checkImageExists(imagePath);
           return hasImage ? character : null;
         })

@@ -10,13 +10,13 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.0.0",
+    "@astrojs/node": "^9.2.0",
     "@firebase/auth": "^1.9.1",
     "@firebase/firestore": "^4.7.9",
     "@firebase/functions": "^0.12.3",
     "@firebase/storage": "^0.13.7",
     "@google-cloud/storage": "^7.5.0",
-    "astro": "^5.0.5",
+    "astro": "^5.7.4",
     "axios": "^1.6.2",
     "bootstrap": "^5.3.2",
     "cors": "^2.8.5",
