@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ty-multiverse-frontend-config
+  namespace: default
+data:
+  PUBLIC_DECKOFCARDS_URL: "https://peoplesystem.tatdvsonorth.com/deckofcards"
+  PUBLIC_TYMB_URL: "https://peoplesystem.tatdvsonorth.com/tymb"
+  PUBLIC_SSO_URL: "https://peoplesystem.tatdvsonorth.com/sso"
+  PUBLIC_FRONTEND_URL: "https://peoplesystem.tatdvsonorth.com/tymultiverse" 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ty-multiverse-frontend
+  labels:
+    app.kubernetes.io/name: ty-multiverse-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ty-multiverse-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ty-multiverse-frontend
+    spec:
+      containers:
+      - name: ty-multiverse-frontend
+        image: papakao/ty-multiverse-frontend:latest
+        ports:
+        - containerPort: 4321
+        envFrom:
+        - configMapRef:
+            name: ty-multiverse-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ty-multiverse-frontend
+  labels:
+    app.kubernetes.io/name: ty-multiverse-frontend
+  namespace: default
+spec:
+  selector:
+    app.kubernetes.io/name: ty-multiverse-frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 4321
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ty-multiverse-frontend-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/certificate-name: peoplesystem-tls
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - peoplesystem.tatdvsonorth.com
+    secretName: peoplesystem-tls
+  rules:
+  - host: peoplesystem.tatdvsonorth.com
+    http:
+      paths:
+      - path: /tymultiverse
+        pathType: Prefix
+        backend:
+          service:
+            name: ty-multiverse-frontend
+            port:
+              number: 80

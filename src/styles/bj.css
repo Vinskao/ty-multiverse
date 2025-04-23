@@ -12,7 +12,7 @@
 }
 .cards {
     margin: 10px 0;
-    width: 300px; /* 新增固定寬度 */
+    width: 100%;
     min-height: 150px; /* 新增最小高度 */
     display: flex;
     flex-wrap: wrap;
