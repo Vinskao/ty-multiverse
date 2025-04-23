@@ -1,4 +1,6 @@
 ---
+import { config } from '../services/config';
+import '../styles/bj.css';
 const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
 ---
 
@@ -9,7 +11,6 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blackjack Game</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" href="../styles/bj.css">
 </head>
 <body>
     <div class="game-container">
@@ -35,10 +36,10 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
         <div id="game-status"></div>
     </div>
 
-    <script type="module" define:vars={{ deckOfCardsUrl }}>
+    <script type="module" define:vars={{ deckOfCardsUrl, config }}>
         const axios = window.axios; // 使用全局 Axios
         const API_BASE_URL = (window.ENV?.API_BASE_URL || deckOfCardsUrl) + '/blackjack';
-        // console.log('Client-side API_BASE_URL:', API_BASE_URL);
+        const PEOPLE_IMAGE_URL = config.resources.peopleImageUrl;
 
         // Use deckOfCardsUrl for asset paths
         const BASE_URL = deckOfCardsUrl || '/';
@@ -148,7 +149,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
                         return `<img src="/tymultiverse/assets/poker/${imageIndex}.jpg" alt="${card.rank} of ${card.suit}" style="height: 100px; margin: 5px;">`;
                     }).join('')}
                 </div>
-                <p>Total: ${playerScore}</p>
+                <br><p>Total: ${playerScore}</p>
             `;
 
             // 更新莊家卡牌
@@ -158,7 +159,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
                     ${(dealerHand.cards || []).map((card, index) => {
                         // 如果是第一張牌且遊戲進行中，顯示背面
                         if (index === 0 && (gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN')) {
-                            return `<img src="${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/cardback.png" alt="Hidden Card" style="height: 100px; margin: 5px;">`;
+                            return `<img src="${PEOPLE_IMAGE_URL}/Ashe.png" alt="Hidden Card" style="height: 100px; margin: 5px;">`;
                         } else {
                             const suitIndex = ['SPADES', 'HEARTS', 'DIAMONDS', 'CLUBS'].indexOf(card.suit);
                             const rankIndex = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING'].indexOf(card.rank);
@@ -167,7 +168,7 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
                         }
                     }).join('')}
                 </div>
-                <p>Total: ${gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN' ? '?' : dealerScore}</p>
+                <br><p>Total: ${gameState === 'IN_PROGRESS' || gameState === 'PLAYER_TURN' ? '?' : dealerScore}</p>
             `;
 
             // 更新遊戲狀態訊息
