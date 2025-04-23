@@ -1,13 +1,4 @@
 ---
-// 檢查登入狀態
-const url = new URL(Astro.request.url);
-const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
-
-// 如果未登入，重定向到首頁
-if (!username || !token) {
-  return Astro.redirect('/tymultiverse/');
-}
 import '../styles/galwall.css';
 ---
 <div id="containerFront"></div>

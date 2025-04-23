@@ -4,11 +4,12 @@ const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
 const SSO_URL = import.meta.env.PUBLIC_SSO_URL;
 const FRONTEND_URL = import.meta.env.PUBLIC_FRONTEND_URL;
 const PEOPLE_IMG_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-const clientId = "peoplesystem";
+const clientId = import.meta.env.PUBLIC_CLIENT_ID;
+const realm = import.meta.env.PUBLIC_REALM;
 const redirectUri = `${TYMB_URL}/keycloak/redirect`;
 
 // 生成 Keycloak 的授權 URL
-const authorizationUrl = `${SSO_URL}/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+const authorizationUrl = `${SSO_URL}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
   redirectUri
 )}`;
 
@@ -84,9 +85,16 @@ function redirectToLogin() {
   <script>
     // 在頁面載入時立即執行跳轉
     window.onload = () => {
-      const clientId = "peoplesystem";
+      // 使用 auth 服務進行登入
+      const clientId = import.meta.env.PUBLIC_CLIENT_ID || "peoplesystem";
+      const realm = import.meta.env.PUBLIC_REALM || "PeopleSystem";
       const redirectUri = `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/redirect`;
-      const authorizationUrl = `${import.meta.env.PUBLIC_SSO_URL}/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const ssoUrl = import.meta.env.PUBLIC_SSO_URL;
+      
+      // 構建授權 URL
+      const authorizationUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      
+      // 重定向到授權頁面
       window.location.href = authorizationUrl;
     };
   </script>

@@ -705,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             // 滑鼠移動
-            pill.addEventListener("mousemove", (e: MouseEvent) => {
+            pill.addEventListener("mousemove", (e: any) => {
                 tooltip.style.left = `${e.pageX}px`;
                 tooltip.style.top = `${e.pageY - tooltip.offsetHeight - 5}px`;
             });
