@@ -2,6 +2,7 @@
 import Icon from "./Icon.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import type { iconPaths } from "./IconPaths";
+import { storageService } from '../services/storageService';
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
@@ -181,6 +182,18 @@ const iconLinks: {
 </nav>
 
 <script>
+  import { storageService } from '../services/storageService';
+  
+  // 定義全局類型
+  declare global {
+    interface Window {
+      storageService: typeof storageService;
+    }
+  }
+  
+  // 將 storageService 掛載到 window 對象上
+  window.storageService = storageService;
+  
   class MenuButton extends HTMLElement {
     constructor() {
       super();
@@ -367,6 +380,9 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
+        // 保存當前主題設置
+        const currentTheme = storageService.get(storageService.KEYS.THEME);
+        
         try {
           // 從 URL 參數中獲取 refreshToken
           const urlParams = new URLSearchParams(window.location.search);
@@ -374,8 +390,12 @@ const iconLinks: {
           
           if (!refreshToken) {
             console.error('No refresh token available');
-            // 即使沒有 refreshToken 也清除本地數據
-            localStorage.clear();
+            // 清除除了主題以外的所有數據
+            Object.keys(localStorage).forEach(key => {
+              if (key !== window.storageService.KEYS.THEME) {
+                localStorage.removeItem(key);
+              }
+            });
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
               const cookie = cookies[i];
@@ -389,25 +409,29 @@ const iconLinks: {
 
           // 構建登出 URL，包含 refreshToken 參數
           const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
-          logoutUrl.searchParams.set('refreshToken', refreshToken);
           
           console.log('Sending logout request to:', logoutUrl.toString());
           
           // 發送登出請求
           const response = await fetch(logoutUrl.toString(), {
-            method: 'GET',
+            method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
               'Accept': 'application/json',
             },
-            credentials: 'include',
-            mode: 'cors'
+            body: new URLSearchParams({
+              refreshToken: refreshToken
+            }).toString()
           });
 
           console.log('Logout response status:', response.status);
 
-          // 無論登出請求是否成功，都清除本地數據
-          localStorage.clear();
+          // 清除除了主題以外的所有數據
+          Object.keys(localStorage).forEach(key => {
+            if (key !== window.storageService.KEYS.THEME) {
+              localStorage.removeItem(key);
+            }
+          });
           
           // 清除所有 cookie
           const cookies = document.cookie.split(';');
@@ -428,8 +452,12 @@ const iconLinks: {
           window.location.href = '/tymultiverse/';
         } catch (error) {
           console.error('Logout failed:', error);
-          // 即使發生錯誤也清除本地數據
-          localStorage.clear();
+          // 即使發生錯誤也清除除了主題以外的所有數據
+          Object.keys(localStorage).forEach(key => {
+            if (key !== window.storageService.KEYS.THEME) {
+              localStorage.removeItem(key);
+            }
+          });
           const cookies = document.cookie.split(';');
           for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i];
@@ -463,8 +491,13 @@ const iconLinks: {
             if (href.includes('palais')) {
               link.addEventListener('click', (e) => {
                 e.preventDefault();
-                localStorage.clear();
-                console.log('Cleared all localStorage data before navigating to Palais');
+                // 清除除了主題以外的所有數據
+                Object.keys(localStorage).forEach(key => {
+                  if (key !== window.storageService.KEYS.THEME) {
+                    localStorage.removeItem(key);
+                  }
+                });
+                console.log('Cleared localStorage data while preserving theme');
                 window.location.href = url.pathname + url.search;
               });
             }
