@@ -45,3 +45,26 @@ const {
 		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 	}
 </script>
+
+<script>
+	// 在客戶端加載 storageService
+	import { storageService } from '../services/storageService';
+	
+	// 定義全局類型
+	declare global {
+		interface Window {
+			storageService: typeof storageService;
+		}
+	}
+	
+	// 將 storageService 掛載到 window 對象上，使其在客戶端可用
+	window.storageService = storageService;
+	
+	// 使用 storageService 同步主題設置
+	document.addEventListener('DOMContentLoaded', () => {
+		const theme = window.storageService.get(window.storageService.KEYS.THEME);
+		if (theme) {
+			document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+		}
+	});
+</script>
