@@ -1,15 +1,5 @@
 ---
 import '../styles/levellist.css';
-
-// 檢查登入狀態
-const url = new URL(Astro.request.url);
-const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
-
-// 如果未登入，重定向到首頁
-if (!username || !token) {
-  return Astro.redirect('/tymultiverse/');
-}
 ---
 
 <div id="power-list-container">
@@ -70,116 +60,6 @@ if (!username || !token) {
       // 如果 SweetAlert2 未載入，使用原生 alert
       alert(title);
     }
-  }
-
-  // 刷新 token 的函數
-  async function refreshToken() {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const refreshToken = urlParams.get('refresh_token');
-      
-      if (!refreshToken) {
-        console.error('No refresh token available');
-        if (typeof (window as any).Swal !== 'undefined') {
-          (window as any).Swal.fire({
-            title: '無法獲取有效的 token',
-            icon: 'error',
-            timer: 0,
-            showConfirmButton: true
-          });
-        }
-        window.location.href = '/tymultiverse/login';
-        return false;
-      }
-
-      const response = await fetch(`${TYMB_URL}/keycloak/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error('Token refresh failed:', response.status);
-        window.location.href = '/tymultiverse/login';
-        return false;
-      }
-
-      const data = await response.json();
-      if (data.token) {
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('token', data.token);
-        if (data.refresh_token) {
-          currentUrl.searchParams.set('refresh_token', data.refresh_token);
-        }
-        window.history.replaceState({}, '', currentUrl.toString());
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      window.location.href = '/tymultiverse/login';
-      return false;
-    }
-  }
-
-  // 驗證 token 是否有效
-  async function verifyToken(token) {
-    try {
-      const response = await fetch(`${TYMB_URL}/keycloak/introspect?token=${token}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.active;
-      }
-      return false;
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return false;
-    }
-  }
-
-  // 獲取有效的 token
-  async function getValidToken() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (!token) {
-      console.error('No token available');
-      if (typeof (window as any).Swal !== 'undefined') {
-        (window as any).Swal.fire({
-          title: '無法獲取有效的 token',
-          icon: 'error',
-          timer: 0,
-          showConfirmButton: true
-        });
-      }
-      window.location.href = '/tymultiverse/login';
-      return null;
-    }
-
-    const isValid = await verifyToken(token);
-    if (isValid) {
-      return token;
-    }
-
-    const refreshed = await refreshToken();
-    if (!refreshed) {
-      return null;
-    }
-
-    const newUrlParams = new URLSearchParams(window.location.search);
-    return newUrlParams.get('token');
   }
 
   // 檢查圖片是否存在
@@ -718,18 +598,6 @@ if (!username || !token) {
       // 更新按鈕點擊事件
       updateButton.addEventListener('click', async () => {
     try {
-      const token = await getValidToken();
-      if (!token) {
-            if (typeof (window as any).Swal !== 'undefined') {
-              (window as any).Swal.fire({
-                title: '無法獲取有效的 token',
-                icon: 'error',
-                timer: 0,
-                showConfirmButton: true
-              });
-            }
-        return;
-      }
           
           // 獲取當前輸入值
           const currentData = {
@@ -784,7 +652,6 @@ if (!username || !token) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
               'Accept': 'application/json'
             },
             body: JSON.stringify(currentData),
@@ -958,15 +825,10 @@ if (!username || !token) {
         }
       `;
       document.head.appendChild(style);
-      
-      const token = await getValidToken();
-      if (!token) return;
-
       const response = await fetch(`${TYMB_URL}/people/get-all`, {
         method: "POST", 
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
           "Accept": "application/json"
         },
         credentials: 'include'
@@ -1010,7 +872,6 @@ if (!username || !token) {
               method: "GET",
               headers: { 
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
                 "Accept": "application/json"
               },
               credentials: 'include'

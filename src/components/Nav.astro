@@ -3,14 +3,16 @@ import Icon from "./Icon.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import type { iconPaths } from "./IconPaths";
 import { storageService } from '../services/storageService';
+import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/auth';
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
 const token = url.searchParams.get('token');
+const refreshToken = url.searchParams.get('refresh_token');
 
 // 檢查登入狀態
-const isLoggedIn = !!username && !!token;
+const isLoggedIn = !!username;
 
 // 檢查是否為管理員
 const isAdmin = username === 'chiaki' || username === 'sorane';
@@ -22,7 +24,7 @@ const currentPath = Astro.url.pathname;
 const textLinks: { label: string; href: string; isActive: boolean }[] = [
   { 
     label: "Home", 
-    href: "/tymultiverse/", 
+    href: isLoggedIn ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}` : "/tymultiverse/", 
     isActive: currentPath === "/tymultiverse/" || currentPath === "/tymultiverse/index.html"
   },
   { 
@@ -32,12 +34,12 @@ const textLinks: { label: string; href: string; isActive: boolean }[] = [
   },
   { 
     label: "Work", 
-    href: "/tymultiverse/work/", 
+    href: isLoggedIn ? `/tymultiverse/work/?username=${username}&token=${token}` : "/tymultiverse/work/", 
     isActive: currentPath.startsWith("/tymultiverse/work")
   },
   { 
     label: "About", 
-    href: "/tymultiverse/about/", 
+    href: isLoggedIn ? `/tymultiverse/about/?username=${username}&token=${token}` : "/tymultiverse/about/", 
     isActive: currentPath.startsWith("/tymultiverse/about")
   },
   ...(isLoggedIn ? [
@@ -49,12 +51,12 @@ const textLinks: { label: string; href: string; isActive: boolean }[] = [
     ...(isAdmin ? [
       { 
         label: "Wildland", 
-        href: `/tymultiverse/wildland/?username=${username}&token=${token}`,
+        href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
         isActive: currentPath.startsWith("/tymultiverse/wildland")
       },
       { 
         label: "Palais", 
-        href: `/tymultiverse/palais/?username=${username}&token=${token}`,
+        href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
         isActive: currentPath.startsWith("/tymultiverse/palais")
       }
     ] : [])
@@ -183,6 +185,7 @@ const iconLinks: {
 
 <script>
   import { storageService } from '../services/storageService';
+  import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/auth';
   
   // 定義全局類型
   declare global {
@@ -229,150 +232,89 @@ const iconLinks: {
   }
   customElements.define("menu-button", MenuButton);
 
-  // 添加登入狀態管理
-  document.addEventListener('DOMContentLoaded', () => {
-    const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-    
-    // 從 URL 參數中取得登入資訊
+  // 獲取 URL 參數
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('username');
     const token = urlParams.get('token');
-
-    // 驗證 token 是否有效並獲取用戶角色
-    async function verifyToken(token: string) {
-      try {
-        // 從 URL 參數中獲取 refresh token
-        const urlParams = new URLSearchParams(window.location.search);
         const refreshToken = urlParams.get('refresh_token');
 
-        // 構建 API URL，包含可選的 refresh token
-        const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
-        apiUrl.searchParams.set('token', token);
-        if (refreshToken) {
-          apiUrl.searchParams.set('refreshToken', refreshToken);
-        }
+  // 添加調試信息
+  console.log('Nav - Current URL:', window.location.href);
+  console.log('Nav - Username:', username);
+  console.log('Nav - Token:', token);
+  console.log('Nav - Refresh Token:', refreshToken);
+  console.log('Nav - All URL Parameters:', Object.fromEntries(urlParams));
 
-        const response = await fetch(apiUrl.toString(), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          mode: 'cors'
-        });
+  // 檢查登入狀態
+  const isLoggedIn = !!username;
+  const isAdmin = username === 'chiaki' || username === 'sorane';
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Token introspection data:', data);
-          
-          // 檢查是否是新刷新的 token
-          if (data.refreshed) {
-            // 更新 URL 中的 token
-            const newToken = data.access_token;
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('token', newToken);
-            if (data.refresh_token) {
-              currentUrl.searchParams.set('refresh_token', data.refresh_token);
-            }
-            window.history.replaceState({}, '', currentUrl.toString());
-          }
-          
-          // 檢查 token 是否有效
-          if (data.active) {
-            // 檢查 preferred_username 是否為 chiaki 或 sorane
-            const hasAccess = data.preferred_username === 'chiaki' || data.preferred_username === 'sorane';
-            console.log('User has access:', hasAccess, 'Username:', data.preferred_username);
-            
-            return {
-              isValid: true,
-              hasAccess
-            };
-          }
-        }
-        return {
-          isValid: false,
-          hasAccess: false
-        };
-      } catch (error) {
-        console.error('Token verification failed:', error);
-        return {
-          isValid: false,
-          hasAccess: false
-        };
+  // 更新導航連結
+  const updateNavLinks = () => {
+    // 更新登入/登出按鈕
+    const loginLink = document.querySelector('a[href^="/tymultiverse/login"]') as HTMLElement;
+    const logoutLink = document.querySelector('a[href="#"]') as HTMLElement;
+    const workLink = document.querySelector('a[href^="/tymultiverse/work"]') as HTMLAnchorElement;
+    const aboutLink = document.querySelector('a[href^="/tymultiverse/about"]') as HTMLAnchorElement;
+    const controlLink = document.querySelector('a[href^="/tymultiverse/control"]') as HTMLElement;
+    const wildlandLink = document.querySelector('a[href^="/tymultiverse/wildland"]') as HTMLAnchorElement;
+    const palaisLink = document.querySelector('a[href^="/tymultiverse/palais"]') as HTMLAnchorElement;
+
+    if (loginLink) {
+      loginLink.style.display = isLoggedIn ? 'none' : 'block';
+    }
+    if (logoutLink) {
+      logoutLink.style.display = isLoggedIn ? 'block' : 'none';
+    }
+    if (workLink && isLoggedIn) {
+      workLink.href = `/tymultiverse/work/?username=${username}&token=${token}`;
+    }
+    if (aboutLink && isLoggedIn) {
+      aboutLink.href = `/tymultiverse/about/?username=${username}&token=${token}`;
+    }
+    if (controlLink) {
+      controlLink.style.display = isLoggedIn ? 'block' : 'none';
+    }
+    if (wildlandLink) {
+      wildlandLink.style.display = isAdmin ? 'block' : 'none';
+      if (wildlandLink && isLoggedIn) {
+        wildlandLink.href = `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken}`;
+      }
+    }
+    if (palaisLink) {
+      palaisLink.style.display = isAdmin ? 'block' : 'none';
+      if (palaisLink && isLoggedIn) {
+        palaisLink.href = `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken}`;
       }
     }
 
-    // 更新導航欄的登入/登出狀態
-    const updateLoginState = async () => {
-      if (token) {
-        const { isValid, hasAccess } = await verifyToken(token);
-        if (!isValid) {
-          window.location.href = '/tymultiverse/login';
-          return;
+  };
+
+  // 初始化導航
+  updateNavLinks();
+
+  // 如果已登入，開始驗證 token
+  if (isLoggedIn && token) {
+    startTokenVerification(token, refreshToken || '',
+      // token 刷新時的回調
+      (newToken, newRefreshToken) => {
+        console.log('Token refreshed');
+        // 更新 URL 參數
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('token', newToken);
+        if (newRefreshToken) {
+          newUrl.searchParams.set('refresh_token', newRefreshToken);
         }
-        
-        const loginLink = document.querySelector('a[href="/tymultiverse/login"]') as HTMLAnchorElement;
-        if (loginLink) {
-          loginLink.textContent = 'Logout';
-          loginLink.href = '#';
-        }
-
-        // 更新所有導航項目的樣式
-        const updateActiveState = () => {
-          const currentPath = window.location.pathname;
-          console.log('Current path:', currentPath); // 調試用
-
-          document.querySelectorAll('.nav-items .link').forEach(link => {
-            const href = link.getAttribute('href');
-            if (href && href !== '#') {
-              // 移除查詢參數進行比較
-              const cleanHref = href.split('?')[0];
-              const cleanCurrentPath = currentPath.split('?')[0];
-              
-              console.log('Comparing:', cleanHref, 'with', cleanCurrentPath); // 調試用
-              
-              let isActive = false;
-              
-              // 特殊處理首頁
-              if (cleanHref === '/tymultiverse/') {
-                isActive = cleanCurrentPath === '/tymultiverse/' || cleanCurrentPath === '/tymultiverse/index.html';
-              } 
-              // 特殊處理登入頁
-              else if (cleanHref === '/tymultiverse/login') {
-                isActive = cleanCurrentPath === '/tymultiverse/login';
-              }
-              // 處理其他頁面
-              else {
-                isActive = cleanCurrentPath.startsWith(cleanHref);
-              }
-              
-              console.log('Is active:', isActive); // 調試用
-              
-              link.classList.toggle('active', isActive);
-              link.setAttribute('aria-current', isActive ? 'page' : 'false');
-            }
-          });
-        };
-
-        // 初始更新活動狀態
-        updateActiveState();
-
-        // 監聽 URL 變化
-        window.addEventListener('popstate', updateActiveState);
-        
-        // 監聽導航點擊
-        document.querySelectorAll('.nav-items .link').forEach(link => {
-          link.addEventListener('click', () => {
-            // 延遲一下更新活動狀態，確保 URL 已經更新
-            setTimeout(updateActiveState, 100);
-          });
-        });
+        window.history.replaceState({}, '', newUrl);
+      },
+      // token 無效時的回調
+      () => {
+        console.log('Token invalid');
+        // 清除登入狀態
+        window.location.href = '/tymultiverse/';
       }
-    };
-
-    // 初始更新登入狀態
-    updateLoginState();
+    );
+  }
 
     // 監聽登出按鈕點擊
     const logoutLink = document.querySelector('a[href="#"]');
@@ -380,140 +322,40 @@ const iconLinks: {
       logoutLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        // 保存當前主題設置
-        const currentTheme = storageService.get(storageService.KEYS.THEME);
+      try {
+        // 從 URL 參數中獲取 refreshToken
+        const urlParams = new URLSearchParams(window.location.search);
+        const refreshToken = urlParams.get('refreshToken');
         
-        try {
-          // 從 URL 參數中獲取 refreshToken
-          const urlParams = new URLSearchParams(window.location.search);
-          const refreshToken = urlParams.get('refreshToken');
-          
-          if (!refreshToken) {
-            console.error('No refresh token available');
-            // 清除除了主題以外的所有數據
-            Object.keys(localStorage).forEach(key => {
-              if (key !== window.storageService.KEYS.THEME) {
-                localStorage.removeItem(key);
-              }
-            });
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i];
-              const eqPos = cookie.indexOf('=');
-              const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-              document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-            }
-            window.location.href = '/tymultiverse/';
-            return;
-          }
-
-          // 構建登出 URL，包含 refreshToken 參數
-          const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
-          
-          console.log('Sending logout request to:', logoutUrl.toString());
-          
-          // 發送登出請求
-          const response = await fetch(logoutUrl.toString(), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json',
-            },
-            body: new URLSearchParams({
-              refreshToken: refreshToken
-            }).toString()
-          });
-
-          console.log('Logout response status:', response.status);
-
+        if (!refreshToken) {
+          console.error('No refresh token available');
           // 清除除了主題以外的所有數據
           Object.keys(localStorage).forEach(key => {
-            if (key !== window.storageService.KEYS.THEME) {
+            if (key !== storageService.KEYS.THEME) {
               localStorage.removeItem(key);
             }
           });
-          
-          // 清除所有 cookie
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i];
-            const eqPos = cookie.indexOf('=');
-            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-          }
-
-          if (response.ok) {
-            console.log('Logout successful');
-          } else {
-            console.error('Logout failed:', await response.text());
-          }
-
-          // 重定向到主頁
-          window.location.href = '/tymultiverse/';
-        } catch (error) {
-          console.error('Logout failed:', error);
-          // 即使發生錯誤也清除除了主題以外的所有數據
-          Object.keys(localStorage).forEach(key => {
-            if (key !== window.storageService.KEYS.THEME) {
-              localStorage.removeItem(key);
-            }
-          });
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i];
-            const eqPos = cookie.indexOf('=');
-            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-          }
-          window.location.href = '/tymultiverse/';
+            window.location.href = '/tymultiverse/';
+          return;
         }
-      });
-    }
 
-    // 更新所有導航連結以包含登入參數
-    const updateNavLinks = () => {
-      if (username && token) {
-        const links = document.querySelectorAll('a[href^="/tymultiverse/"]');
-        links.forEach(link => {
-          const href = link.getAttribute('href');
-          if (href && !href.includes('login') && !href.includes('#')) {
-            const url = new URL(href, window.location.origin);
-            // 確保不覆蓋已經存在的查詢參數
-            if (!url.searchParams.has('username')) {
-              url.searchParams.set('username', username);
-            }
-            if (!url.searchParams.has('token')) {
-              url.searchParams.set('token', token);
-            }
-            link.setAttribute('href', url.pathname + url.search);
-
-            // 為 Palais 頁面添加點擊事件
-            if (href.includes('palais')) {
-              link.addEventListener('click', (e) => {
-                e.preventDefault();
-                // 清除除了主題以外的所有數據
-                Object.keys(localStorage).forEach(key => {
-                  if (key !== window.storageService.KEYS.THEME) {
-                    localStorage.removeItem(key);
-                  }
-                });
-                console.log('Cleared localStorage data while preserving theme');
-                window.location.href = url.pathname + url.search;
-              });
-            }
+        // 使用 auth 服務執行登出
+        const success = await logout(refreshToken);
+        if (success) {
+          window.location.href = '/tymultiverse/';
+        } else {
+          console.error('Logout failed');
+        }
+      } catch (error) {
+        console.error('Error during logout:', error);
+        window.location.href = '/tymultiverse/';
           }
         });
-      } else {
-        // 如果未登入，更新登入連結以包含當前頁面 URL
-        const loginLink = document.querySelector('a[href^="/tymultiverse/login"]');
-        if (loginLink) {
-          const currentUrl = window.location.pathname + window.location.search;
-          loginLink.setAttribute('href', `/tymultiverse/login?redirect=${encodeURIComponent(currentUrl)}`);
-        }
       }
-    };
 
-    // 初始更新導航連結
+  // 在頁面加載時更新鏈接
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Nav - DOMContentLoaded event fired');
     updateNavLinks();
   });
 </script>

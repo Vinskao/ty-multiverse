@@ -129,130 +129,19 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 添加戰鬥狀態追蹤
   let fightCompleted = false;
   
-  // 刷新 token 的函數
-  async function refreshToken() {
-    try {
-      // 從 URL 參數中獲取 refresh token
-      const urlParams = new URLSearchParams(window.location.search);
-      const refreshToken = urlParams.get('refresh_token');
-      
-      if (!refreshToken) {
-        console.error('No refresh token available');
-        window.location.href = '/tymultiverse/login';
-        return false;
-      }
-
-      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/keycloak/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error('Token refresh failed:', response.status);
-        window.location.href = '/tymultiverse/login';
-        return false;
-      }
-
-      const data = await response.json();
-      if (data.token) {
-        // 更新 URL 中的 token
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('token', data.token);
-        if (data.refresh_token) {
-          currentUrl.searchParams.set('refresh_token', data.refresh_token);
-        }
-        window.history.replaceState({}, '', currentUrl.toString());
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      window.location.href = '/tymultiverse/login';
-      return false;
-    }
-  }
-
-  // 驗證 token 是否有效
-  async function verifyToken(token: string) {
-    try {
-      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/keycloak/introspect?token=${token}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.active;
-      }
-      return false;
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return false;
-    }
-  }
-
-  // 獲取有效的 token
-  async function getValidToken() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (!token) {
-      console.error('No token available');
-      window.location.href = '/tymultiverse/login';
-      return null;
-    }
-
-    const isValid = await verifyToken(token);
-    if (isValid) {
-      return token;
-    }
-
-    const refreshed = await refreshToken();
-    if (!refreshed) {
-      return null;
-    }
-
-    // 重新獲取更新後的 token
-    const newUrlParams = new URLSearchParams(window.location.search);
-    return newUrlParams.get('token');
-  }
-  
   // 從 API 獲取角色列表
   async function fetchCharacterList() {
     try {
-      const token = await getValidToken();
-      if (!token) {
-        return;
-      }
-
       const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
           "Accept": "application/json"
         },
         credentials: 'include'
       });
       
       if (!response.ok) {
-        if (response.status === 401) {
-          const newToken = await getValidToken();
-          if (!newToken) {
-            return;
-          }
-          // 重試請求
-          return fetchCharacterList();
-        }
         throw new Error('Failed to fetch character list');
       }
       
@@ -549,17 +438,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       const name = characterNames.find(n => n === imagePath.split("/").pop()?.split(".")[0]);
       const apiName = name;
       
-      const token = await getValidToken();
-      if (!token) {
-        return;
-      }
-      
       // 獲取角色資訊
       const response = await fetch(config.apiEndpoint, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
           "Accept": "application/json"
         },
         body: JSON.stringify({ name: apiName }),
@@ -567,13 +450,6 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       });
       
       if (!response.ok) {
-        if (response.status === 401) {
-          const newToken = await getValidToken();
-          if (!newToken) {
-            return;
-          }
-          return fetchFighterInfo(side, imagePath);
-        }
         throw new Error(`API 返回錯誤: ${response.status}`);
       }
       
@@ -586,7 +462,6 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
           method: "GET",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
             "Accept": "application/json"
           },
           credentials: 'include'
@@ -848,25 +723,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       // 檢查左方左側夥伴的武器效果
       if (fighters.left.left?.name) {
         const leftPartnerName = fighters.left.left.name.toLowerCase();
-        const token = await getValidToken();
-        if (token) {
-          const leftPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftPartnerName}`, {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/json"
-            },
-            credentials: 'include'
-          });
+        const leftPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftPartnerName}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include'
+        });
+        
+        if (leftPartnerWeaponResponse.ok) {
+          const leftPartnerWeaponData = await leftPartnerWeaponResponse.json();
+          const { hasBonus } = calculateWeaponDamage(fighters.left.left, leftPartnerWeaponData);
           
-          if (leftPartnerWeaponResponse.ok) {
-            const leftPartnerWeaponData = await leftPartnerWeaponResponse.json();
-            const { hasBonus } = calculateWeaponDamage(fighters.left.left, leftPartnerWeaponData);
-            
-            if (hasBonus && leftPartnerWeaponData.stateAttributes && Array.isArray(leftPartnerWeaponData.stateAttributes)) {
-              leftSideStates.push(...leftPartnerWeaponData.stateAttributes);
-            }
+          if (hasBonus && leftPartnerWeaponData.stateAttributes && Array.isArray(leftPartnerWeaponData.stateAttributes)) {
+            leftSideStates.push(...leftPartnerWeaponData.stateAttributes);
           }
         }
       }
@@ -874,25 +745,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       // 檢查左方右側夥伴的武器效果
       if (fighters.left.right?.name) {
         const leftRightPartnerName = fighters.left.right.name.toLowerCase();
-        const token = await getValidToken();
-        if (token) {
-          const leftRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftRightPartnerName}`, {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/json"
-            },
-            credentials: 'include'
-          });
+        const leftRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftRightPartnerName}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include'
+        });
+        
+        if (leftRightPartnerWeaponResponse.ok) {
+          const leftRightPartnerWeaponData = await leftRightPartnerWeaponResponse.json();
+          const { hasBonus } = calculateWeaponDamage(fighters.left.right, leftRightPartnerWeaponData);
           
-          if (leftRightPartnerWeaponResponse.ok) {
-            const leftRightPartnerWeaponData = await leftRightPartnerWeaponResponse.json();
-            const { hasBonus } = calculateWeaponDamage(fighters.left.right, leftRightPartnerWeaponData);
-            
-            if (hasBonus && leftRightPartnerWeaponData.stateAttributes && Array.isArray(leftRightPartnerWeaponData.stateAttributes)) {
-              leftSideStates.push(...leftRightPartnerWeaponData.stateAttributes);
-            }
+          if (hasBonus && leftRightPartnerWeaponData.stateAttributes && Array.isArray(leftRightPartnerWeaponData.stateAttributes)) {
+            leftSideStates.push(...leftRightPartnerWeaponData.stateAttributes);
           }
         }
       }
@@ -908,25 +775,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       // 檢查右方左側夥伴的武器效果
       if (fighters.right.left?.name) {
         const rightPartnerName = fighters.right.left.name.toLowerCase();
-        const token = await getValidToken();
-        if (token) {
-          const rightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightPartnerName}`, {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/json"
-            },
-            credentials: 'include'
-          });
+        const rightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightPartnerName}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include'
+        });
+        
+        if (rightPartnerWeaponResponse.ok) {
+          const rightPartnerWeaponData = await rightPartnerWeaponResponse.json();
+          const { hasBonus } = calculateWeaponDamage(fighters.right.left, rightPartnerWeaponData);
           
-          if (rightPartnerWeaponResponse.ok) {
-            const rightPartnerWeaponData = await rightPartnerWeaponResponse.json();
-            const { hasBonus } = calculateWeaponDamage(fighters.right.left, rightPartnerWeaponData);
-            
-            if (hasBonus && rightPartnerWeaponData.stateAttributes && Array.isArray(rightPartnerWeaponData.stateAttributes)) {
-              rightSideStates.push(...rightPartnerWeaponData.stateAttributes);
-            }
+          if (hasBonus && rightPartnerWeaponData.stateAttributes && Array.isArray(rightPartnerWeaponData.stateAttributes)) {
+            rightSideStates.push(...rightPartnerWeaponData.stateAttributes);
           }
         }
       }
@@ -934,25 +797,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       // 檢查右方右側夥伴的武器效果
       if (fighters.right.right?.name) {
         const rightRightPartnerName = fighters.right.right.name.toLowerCase();
-        const token = await getValidToken();
-        if (token) {
-          const rightRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightRightPartnerName}`, {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-              "Accept": "application/json"
-            },
-            credentials: 'include'
-          });
+        const rightRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightRightPartnerName}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          credentials: 'include'
+        });
+        
+        if (rightRightPartnerWeaponResponse.ok) {
+          const rightRightPartnerWeaponData = await rightRightPartnerWeaponResponse.json();
+          const { hasBonus } = calculateWeaponDamage(fighters.right.right, rightRightPartnerWeaponData);
           
-          if (rightRightPartnerWeaponResponse.ok) {
-            const rightRightPartnerWeaponData = await rightRightPartnerWeaponResponse.json();
-            const { hasBonus } = calculateWeaponDamage(fighters.right.right, rightRightPartnerWeaponData);
-            
-            if (hasBonus && rightRightPartnerWeaponData.stateAttributes && Array.isArray(rightRightPartnerWeaponData.stateAttributes)) {
-              rightSideStates.push(...rightRightPartnerWeaponData.stateAttributes);
-            }
+          if (hasBonus && rightRightPartnerWeaponData.stateAttributes && Array.isArray(rightRightPartnerWeaponData.stateAttributes)) {
+            rightSideStates.push(...rightRightPartnerWeaponData.stateAttributes);
           }
         }
       }

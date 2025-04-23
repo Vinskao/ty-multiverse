@@ -10,13 +10,24 @@ export const storageService = {
     USERNAME: 'username',
     
     // 戰鬥相關
-    FIGHTERS_LEFT: 'fighters_left',
-    FIGHTERS_RIGHT: 'fighters_right',
-    CHARACTER_POWER_CACHE: 'character_power_cache',
+    FIGHTERS_LEFT: 'fightersLeft',
+    FIGHTERS_RIGHT: 'fightersRight',
+    CHARACTER_POWER_CACHE: 'characterPowerCache',
+    TOKEN: 'token',
+    REFRESH_TOKEN: 'refreshToken'
+  },
+
+  // 檢查是否在瀏覽器環境
+  isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
   },
 
   // 設置數據
   set(key: string, value: any): void {
+    if (!this.isBrowser()) {
+      console.log('StorageService - Not in browser environment, skipping set');
+      return;
+    }
     try {
       const serializedValue = JSON.stringify(value);
       localStorage.setItem(key, serializedValue);
@@ -27,9 +38,21 @@ export const storageService = {
 
   // 獲取數據
   get<T>(key: string, defaultValue: T | null = null): T | null {
+    if (!this.isBrowser()) {
+      console.log('StorageService - Not in browser environment, returning default value');
+      return defaultValue;
+    }
     try {
       const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      if (!item) return defaultValue;
+      
+      // 嘗試解析為 JSON，如果失敗則返回原始字符串
+      try {
+        return JSON.parse(item) as T;
+      } catch (parseError) {
+        // 如果不是有效的 JSON，則返回原始字符串
+        return item as unknown as T;
+      }
     } catch (error) {
       console.error('Error reading from localStorage:', error);
       return defaultValue;
@@ -38,6 +61,10 @@ export const storageService = {
 
   // 移除數據
   remove(key: string): void {
+    if (!this.isBrowser()) {
+      console.log('StorageService - Not in browser environment, skipping remove');
+      return;
+    }
     try {
       localStorage.removeItem(key);
     } catch (error) {
@@ -47,6 +74,10 @@ export const storageService = {
 
   // 清除所有數據
   clear(): void {
+    if (!this.isBrowser()) {
+      console.log('StorageService - Not in browser environment, skipping clear');
+      return;
+    }
     try {
       localStorage.clear();
     } catch (error) {
@@ -56,6 +87,10 @@ export const storageService = {
 
   // 清除特定前綴的所有數據
   clearByPrefix(prefix: string): void {
+    if (!this.isBrowser()) {
+      console.log('StorageService - Not in browser environment, skipping clearByPrefix');
+      return;
+    }
     try {
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith(prefix)) {
