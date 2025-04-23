@@ -14,8 +14,14 @@ pnpm-debug.log*
 
 
 # environment variables
-# .env
-# .env.production
+.env.development
+.env.production
 
 # macOS-specific files
 .DS_Store
+
+# 忽略所有 .log 文件
+*.log
+
+# 忽略所有 .log 文件
+*.log
