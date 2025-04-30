@@ -22,6 +22,17 @@ const { title, description } = Astro.props;
 
 <html lang="en">
 	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>TY Multiverse</title>
+		<script is:inline>
+			// 在頁面加載前設置主題
+			(function() {
+				const theme = localStorage.getItem('theme') || 
+					(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+				document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+			})();
+		</script>
 		<MainHead title={title} description={description} />
 		
 	</head>
@@ -33,7 +44,7 @@ const { title, description } = Astro.props;
 		</div>
 
 		<script>
-			// Add “loaded” class once the document has completely loaded.
+			// Add "loaded" class once the document has completely loaded.
 			addEventListener('load', () => document.documentElement.classList.add('loaded'));
 		</script>
 

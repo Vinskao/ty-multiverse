@@ -10,7 +10,10 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/mdx": "^4.2.5",
     "@astrojs/node": "^9.2.0",
+    "@astrojs/react": "^4.2.6",
+    "@astrojs/sitemap": "^3.3.1",
     "@firebase/auth": "^1.9.1",
     "@firebase/firestore": "^4.7.9",
     "@firebase/functions": "^0.12.3",

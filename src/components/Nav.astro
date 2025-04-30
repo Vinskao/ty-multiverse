@@ -1,6 +1,6 @@
 ---
 import Icon from "./Icon.astro";
-import ThemeToggle from "./ThemeToggle.astro";
+// import { ThemeToggle } from './ThemeToggle';
 import type { iconPaths } from "./IconPaths";
 import { storageService } from '../services/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/auth';
@@ -174,10 +174,6 @@ const iconLinks: {
             </a>
           ))
         }
-      </div>
-
-      <div class="theme-toggle">
-        <ThemeToggle />
       </div>
     </div>
   </div>

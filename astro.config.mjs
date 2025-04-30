@@ -1,5 +1,8 @@
 import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
+import react from '@astrojs/react';
+import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   output: 'server',
@@ -7,4 +10,12 @@ export default defineConfig({
     mode: 'standalone',
   }),
   base: '/tymultiverse',
+  integrations: [react(), mdx(), sitemap()],
+  site: 'https://tianyikao.com',
+  markdown: {
+    remarkPlugins: []
+  },
+  devToolbar: {
+    enabled: false
+  }
 });

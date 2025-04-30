@@ -37,7 +37,8 @@
     margin: 20px 0;
     text-align: center;
 }
-button {
+/* 修改為只影響 Blackjack 遊戲中的按鈕 */
+.button-group button {
     margin: 0 10px;
     padding: 10px 20px;
     color: white; /* 白色文字 */
@@ -46,19 +47,19 @@ button {
     cursor: pointer;
     transition: background-color 0.3s;
 }
-button[onclick="startGame()"] {
+.button-group button[onclick="startGame()"] {
     background-color: #4CAF50; /* 綠色背景 */
 }
-button[onclick="hit()"] {
+.button-group button[onclick="hit()"] {
     background-color: #2196F3; /* 藍色背景 */
 }
-button[onclick="stand()"] {
+.button-group button[onclick="stand()"] {
     background-color: #f44336; /* 紅色背景 */
 }
-button:hover {
+.button-group button:hover {
     opacity: 0.9; /* 滑鼠懸停時變淡 */
 }
-button:disabled {
+.button-group button:disabled {
     background-color: #cccccc; /* 禁用時灰色 */
     cursor: not-allowed;
 }
