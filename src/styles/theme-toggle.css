@@ -1,0 +1,162 @@
+/* 主題切換按鈕樣式 */
+.theme-toggle {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  background-color: rgba(7, 137, 197, 0.378);
+  border-radius: 999rem;
+  box-shadow: none;
+  padding: 0.5rem;
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.theme-dark .theme-toggle {
+  animation: pulse-dark 2s infinite;
+}
+
+@keyframes pulse-dark {
+  0% {
+    box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(30, 58, 138, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(30, 58, 138, 0);
+  }
+}
+
+/* 在小螢幕上調整位置 */
+@media (max-width: 50em) {
+  .theme-toggle {
+    bottom: 1rem;
+    right: 1rem;
+  }
+}
+
+/* 在更小的螢幕上調整位置 */
+@media (max-width: 30em) {
+  .theme-toggle {
+    bottom: 1rem;
+    right: 1rem;
+  }
+}
+
+.theme-toggle button {
+  display: flex;
+  border: 0;
+  border-radius: 999rem;
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  width: 100%;
+  height: 100%;
+}
+
+.theme-toggle button:hover {
+  transform: scale(1.1);
+}
+
+/* 控制圖標的基礎樣式 */
+.theme-toggle .icon {
+  position: absolute;
+  inset: 0;
+  display: none; /* 默認隱藏圖標 */
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, transform 0.3s ease; /* 添加透明度和變換過渡 */
+  opacity: 0; /* 默認透明 */
+  z-index: 1; /* 確保圖標在滑軌之上 */
+}
+
+/* 顯示活動狀態的圖標 */
+.theme-toggle .icon.active {
+  display: flex; /* 顯示活動圖標 */
+  opacity: 1; /* 完全不透明 */
+}
+
+/* 滑軌樣式 - Light 模式下為太陽黃 */
+.theme-toggle button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FFD700; /* 太陽黃 */
+  border-radius: 999rem;
+  z-index: 0; /* 確保滑軌在圖標之下 */
+  transform: translateX(0);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 暗色主題時滑軌位置和顏色 - Dark 模式下為闇夜藍 */
+.theme-dark .theme-toggle button::before {
+  transform: translateX(100%);
+  background-color: #1E3A8A; /* 闇夜藍 */
+  animation: rotate-reverse 10s linear infinite;
+}
+
+@keyframes rotate-reverse {
+  from {
+    transform: rotate(360deg) translateX(100%);
+  }
+  to {
+    transform: rotate(0deg) translateX(100%);
+  }
+}
+
+/* 圖標顏色控制 */
+.theme-dark .theme-toggle .icon.dark {
+  color: #FFFFFF; 
+}
+
+html:not(.theme-dark) .theme-toggle .icon.light {
+  color: #000000; 
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-toggle .icon,
+  .theme-toggle button::before {
+    transition:
+      transform var(--theme-transition),
+      color var(--theme-transition),
+      background-color var(--theme-transition);
+  }
+}
+
+@media (forced-colors: active) {
+  /* 移除了 ::before 相關規則 */
+} 

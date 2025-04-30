@@ -1,5 +1,8 @@
 ---
 import '../styles/global.css';
+import '../styles/theme-toggle.css';
+import { ThemeProvider } from '../components/ThemeProvider';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 interface Props {
 	title?: string | undefined;
@@ -25,46 +28,7 @@ const {
 	href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,700;1,400&family=Rubik:wght@500;600&display=swap"
 	rel="stylesheet"
 />
-<script is:inline>
-	// This code is inlined in the head to make dark mode instant & blocking.
-	const getThemePreference = () => {
-		if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-			return localStorage.getItem('theme');
-		}
-		return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-	};
-	const isDark = getThemePreference() === 'dark';
-	document.documentElement.classList[isDark ? 'add' : 'remove']('theme-dark');
 
-	if (typeof localStorage !== 'undefined') {
-		// Watch the document element and persist user preference when it changes.
-		const observer = new MutationObserver(() => {
-			const isDark = document.documentElement.classList.contains('theme-dark');
-			localStorage.setItem('theme', isDark ? 'dark' : 'light');
-		});
-		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-	}
-</script>
-
-<script>
-	// 在客戶端加載 storageService
-	import { storageService } from '../services/storageService';
-	
-	// 定義全局類型
-	declare global {
-		interface Window {
-			storageService: typeof storageService;
-		}
-	}
-	
-	// 將 storageService 掛載到 window 對象上，使其在客戶端可用
-	window.storageService = storageService;
-	
-	// 使用 storageService 同步主題設置
-	document.addEventListener('DOMContentLoaded', () => {
-		const theme = window.storageService.get(window.storageService.KEYS.THEME);
-		if (theme) {
-			document.documentElement.classList.toggle('theme-dark', theme === 'dark');
-		}
-	});
-</script>
+<ThemeProvider client:load>
+	<ThemeToggle client:visible />
+</ThemeProvider>

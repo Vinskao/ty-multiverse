@@ -37,7 +37,6 @@ const { variant } = Astro.props;
 
 		.grid.offset {
 			--row-offset: 7.5rem;
-			padding-bottom: var(--row-offset);
 		}
 
 		/* Shift first item in each row vertically to create staggered effect. */
@@ -48,7 +47,6 @@ const { variant } = Astro.props;
 		/* If last row contains only one item, display it in the second column. */
 		.grid.offset > :global(:last-child:nth-child(odd)) {
 			grid-column: 2 / 3;
-			transform: none;
 		}
 
 		.grid.small {
