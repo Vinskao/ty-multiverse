@@ -2,7 +2,7 @@
 .theme-toggle {
   position: fixed;
   bottom: 1rem;
-  right: 1rem;
+  right: 2rem;
   z-index: 9999;
   background-color: rgba(7, 137, 197, 0.378);
   border-radius: 999rem;

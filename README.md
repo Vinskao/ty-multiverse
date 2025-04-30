@@ -137,3 +137,40 @@ docker push papakao/ty-multiverse-frontend:latest
 docker build -t papakao/ty-multiverse-frontend:latest .
 docker push papakao/ty-multiverse-frontend:latest
 ```
+
+## 架構圖
+
+```mermaid
+graph TD
+    A[Astro Pages<br>.astro<br>頁面路由和整體布局<br>可導入 React 組件] --> B[Astro Components<br>.astro<br>純 Astro 組件<br>可與 React 混合使用]
+    A --> C[React Components<br>.tsx<br>提供交互功能<br>可導入到 Astro 組件]
+    B --> D[Icon.tsx<br>React<br>圖標渲染組件<br>被 Astro 和 React 共用]
+    C --> D
+    D --> E[IconPaths.ts<br>Shared<br>定義所有圖標的 SVG 路徑<br>被 Icon.tsx 使用]
+    
+    subgraph "Astro"
+        A
+        B
+    end
+    
+    subgraph "React"
+        C
+        D
+    end
+    
+    subgraph "Shared"
+        E
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#fbb,stroke:#333,stroke-width:2px
+    style E fill:#ff9,stroke:#333,stroke-width:2px
+```
+
+### 組件交互流程
+
+1. Astro 頁面導入 React 組件
+2. React 組件使用共享資源
+3. 組件渲染結果被整合到最終的 HTML 輸出中

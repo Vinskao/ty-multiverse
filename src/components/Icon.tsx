@@ -17,13 +17,14 @@ export function Icon({ icon, color = 'currentColor', size = '1em', gradient = fa
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
-      viewBox="0 0 256 256"
+      viewBox="0 0 24 24"
       fill="none"
       stroke={color}
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={gradient ? 'gradient' : ''}
+      style={{ display: 'block' }}
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />
   );
