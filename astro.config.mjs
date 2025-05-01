@@ -11,7 +11,6 @@ export default defineConfig({
   }),
   base: '/tymultiverse',
   integrations: [react(), mdx(), sitemap()],
-  site: 'https://tianyikao.com',
   markdown: {
     remarkPlugins: []
   },
