@@ -24,6 +24,9 @@ import Hero from "../components/Hero.astro";
     display: flex;
     flex-direction: column;
     gap: 3.5rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   img {
@@ -37,6 +40,9 @@ import Hero from "../components/Hero.astro";
     flex-direction: column;
     gap: 0.5rem;
     color: var(--gray-200);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .section-title {
@@ -47,6 +53,11 @@ import Hero from "../components/Hero.astro";
 
   .content {
     grid-column: 2 / 4;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .content :global(a) {
@@ -63,16 +74,23 @@ import Hero from "../components/Hero.astro";
   @media (min-width: 50em) {
     .about {
       display: grid;
-      grid-template-columns: 1fr 90% 1fr;
+      grid-template-columns: 1fr minmax(0, 90%) 1fr;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .about > :global(:first-child) {
       grid-column-start: 2;
+      width: 100%;
+      max-width: 100%;
     }
 
     section {
       display: contents;
       font-size: var(--text-lg);
+      width: 100%;
+      max-width: 100%;
     }
   }
 
