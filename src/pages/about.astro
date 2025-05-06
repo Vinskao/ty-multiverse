@@ -3,119 +3,32 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
+import '../styles/about.css';
 
 ---
 
 <meta charset="UTF-8" />
-<style>
 
-  .ad {
-    flex: 0 0 auto;
-    margin-right: 10px;
-    transition: transform 0.3s;
-    width: 200px;
-  }
-
-  h3 {
-    color: #514695;
-  }
-
-  .about {
-    display: flex;
-    flex-direction: column;
-    gap: 3.5rem;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  img {
-    margin-top: 1.5rem;
-    border-radius: 1.5rem;
-    box-shadow: var(--shadow-md);
-  }
-
-  section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    color: var(--gray-200);
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-
-  .section-title {
-    grid-column-start: 1;
-    font-size: var(--text-xl);
-    color: var(--gray-0);
-  }
-
-  .content {
-    grid-column: 2 / 4;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    word-wrap: break-word;
-    word-break: break-word;
-  }
-
-  .content :global(a) {
-    text-decoration: 1px solid underline transparent;
-    text-underline-offset: 0.25em;
-    transition: text-decoration-color var(--theme-transition);
-  }
-
-  .content :global(a:hover),
-  .content :global(a:focus) {
-    text-decoration-color: currentColor;
-  }
-
-  @media (min-width: 50em) {
-    .about {
-      display: grid;
-      grid-template-columns: 1fr minmax(0, 90%) 1fr;
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    .about > :global(:first-child) {
-      grid-column-start: 2;
-      width: 100%;
-      max-width: 100%;
-    }
-
-    section {
-      display: contents;
-      font-size: var(--text-lg);
-      width: 100%;
-      max-width: 100%;
-    }
-  }
-
-</style>
 <body>
-
   <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
     <div class="stack gap-20">
       <main class="wrapper about">
-
-        <Hero
-          title="About"
-          tagline="Memories"
-        >
-          <div class="content">
-
-          </div>
-          
+        <div class="hero-section">
+          <Hero
+            title="About"
+            tagline="Memories"
+          >
+            <div class="content">
+            </div>
+          </Hero>
           <img
             width="1553"
             height="873"
             src="/tymultiverse/assets/at-work.jpg"
             alt="Tianyi Kao at work with a colleague"
+            class="work-photo"
           />
-        </Hero>
+        </div>
 
         <section>
           <h2 class="section-title">Background</h2>
