@@ -109,22 +109,21 @@ pipeline {
                     script {
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                             sh '''
-                                # 確認當前目錄
-                                pwd
-                                ls -la
-                                
-                                # 登入 Docker Hub
+                                cd /home/jenkins/agent/workspace/TYF/ty-multiverse-frontend-deploy
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-                                
+                                # 確認 Dockerfile 存在
+                                ls -la
+                                if [ ! -f "Dockerfile" ]; then
+                                    echo "Error: Dockerfile not found!"
+                                    exit 1
+                                fi
                                 # 構建 Docker 鏡像
                                 docker build \
                                     --build-arg BUILDKIT_INLINE_CACHE=1 \
                                     --cache-from ${DOCKER_IMAGE}:latest \
                                     -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
                                     -t ${DOCKER_IMAGE}:latest \
-                                    /home/jenkins/agent
-                                
-                                # 推送鏡像
+                                    .
                                 docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                                 docker push ${DOCKER_IMAGE}:latest
                             '''
