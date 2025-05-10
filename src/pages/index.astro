@@ -44,12 +44,17 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
           
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
 <style>
+  .video-container {
+	  position: relative; 
+  }
+
   .github-graph {
     width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
   }
+
   .icon-container div .tooltip {
 	  opacity: 0; 
 	  position: absolute;
@@ -105,65 +110,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
   .icon-container img:hover {
 	  transform: scale(1.5); 
-  }
-
-  .video-container {
-	  position: relative; 
-  }
-
-  .text-overlay {
-	  position: absolute; 
-	  top: 33%; 
-	  left: -10%; 
-	  transform: translate(-135%, -42%); 
-	  color: #fafafa;  
-	  padding: 10px; 
-	  z-index: 1; 
-	  font-size: 20px;
-	  width: 55%;
-	  font-weight: bold;
-	  font-family: 'Kalam', cursive;
-	  opacity: 0; 
-	  background: linear-gradient(
-	  166deg, 
-	  rgba(51, 2, 125, 0.65) 0%, 
-	  rgba(128, 0, 128, 0.25) 15%, 
-	  rgba(128, 0, 128, 0.55) 30%, 
-	  rgba(128, 0, 128, 0.15) 45%, 
-	  rgba(128, 0, 128, 0.65) 60%, 
-	  rgba(128, 0, 128, 0.40) 75%, 
-	  rgba(64, 9, 146, 0.9) 100%
-	  );
-	  background-size: cover; 
-	  background-repeat: no-repeat; 
-	  border-radius: 30px; 
-	  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-		 animation: fadeIn 1s ease-in forwards;
-	  backdrop-filter: blur(10px);
-	  padding: 25px;
-	  word-spacing: 10px;
-	  box-shadow: 0 0 40px rgba(128, 0, 128, 0.5);
-	  transition: top 0.5s ease, left 10s ease;
-	  letter-spacing: 1.5px;
-	  transform: scale(1); 
-		 transition: transform 0.3s ease, top 0.5s ease, left 10s ease; 
-	  
-  }
-
-  .text-overlay:hover {
-	  transform: scale(1.2);
-	  transition: transform 0.3s ease;
-	  top: 33%; 
-	  left: -10%; 
-  }
-
-  @keyframes fadeIn {
-	  from {
-		  opacity: 0; 
-	  }
-	  to {
-		  opacity: 1; 
-	  }
   }
 
   .hero {
@@ -423,6 +369,7 @@ h5 {
 				>
 					<div class="roles">
 						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
+						<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
 						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
 						<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
 						
@@ -569,17 +516,46 @@ h5 {
 							<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" style="object-fit: contain;"/>
 						</div>
 					</div>
+
 					<video autoplay loop muted playsinline style="width: 100%; height: auto; border-radius: 2.5rem; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4); object-fit: contain;">
 						<source src="/tymultiverse/assets/protrait.mp4" type="video/mp4">
 						Your browser does not support the video tag.
 					</video>
-					<div class="text-overlay">
-						WhoAmI: 
-						</br>
-						Hello TY!
+					<div class="leetcode-graph" style="margin-top: 2rem;">
+						<h5>LeetCode Stats</h5>
+						<div id="leetcode-stats" class="leetcode-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem;">
+							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
+								<h6>Total Solved</h6>
+								<p id="total-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
+								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
+									<div id="total-progress" style="height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								</div>
+							</div>
+							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
+								<h6>Easy</h6>
+								<p id="easy-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
+								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
+									<div id="easy-progress" style="height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								</div>
+							</div>
+							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
+								<h6>Medium</h6>
+								<p id="medium-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
+								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
+									<div id="medium-progress" style="height: 100%; background: linear-gradient(90deg, #FFC107, #FF9800); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								</div>
+							</div>
+							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
+								<h6>Hard</h6>
+								<p id="hard-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
+								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
+									<div id="hard-progress" style="height: 100%; background: linear-gradient(90deg, #F44336, #FF5722); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-
 				</div>
+
 				
 			</header>
 
@@ -870,4 +846,60 @@ function rgbToHex(rgb: string): string {
             .toUpperCase()
     );
 }
+
+// LeetCode API Integration
+async function fetchLeetCodeStats() {
+    const username = 'Vinskao';
+    try {
+        const response = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`);
+        const data = await response.json();
+        
+        // Update the stats in the DOM with null checks
+        const totalSolved = document.getElementById('total-solved');
+        const easySolved = document.getElementById('easy-solved');
+        const mediumSolved = document.getElementById('medium-solved');
+        const hardSolved = document.getElementById('hard-solved');
+        
+        const totalProgress = document.getElementById('total-progress');
+        const easyProgress = document.getElementById('easy-progress');
+        const mediumProgress = document.getElementById('medium-progress');
+        const hardProgress = document.getElementById('hard-progress');
+        
+        if (totalSolved) totalSolved.textContent = data.totalSolved;
+        if (easySolved) easySolved.textContent = data.easySolved;
+        if (mediumSolved) mediumSolved.textContent = data.mediumSolved;
+        if (hardSolved) hardSolved.textContent = data.hardSolved;
+        
+        // Update progress bars
+        if (totalProgress) totalProgress.style.width = `${(data.totalSolved / 2000) * 100}%`;
+        if (easyProgress) easyProgress.style.width = `${(data.easySolved / 1000) * 100}%`;
+        if (mediumProgress) mediumProgress.style.width = `${(data.mediumSolved / 800) * 100}%`;
+        if (hardProgress) hardProgress.style.width = `${(data.hardSolved / 200) * 100}%`;
+        
+        // Add some animation
+        const cards = document.querySelectorAll('.leetcode-card');
+        cards.forEach((card, index) => {
+            const element = card as HTMLElement;
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                element.style.transition = 'all 0.5s ease';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    } catch (error) {
+        console.error('Error fetching LeetCode stats:', error);
+        const leetcodeStats = document.getElementById('leetcode-stats');
+        if (leetcodeStats) {
+            leetcodeStats.innerHTML = '<p style="text-align: center; color: var(--gray-300);">Failed to load LeetCode stats</p>';
+        }
+    }
+}
+
+// Call the function when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    fetchLeetCodeStats();
+    // ... existing code ...
+});
 </script>
