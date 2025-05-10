@@ -12,20 +12,6 @@ stringData:
   PUBLIC_CLIENT: "${{ secrets.PUBLIC_CLIENT }}"
   PUBLIC_REALM: "${{ secrets.PUBLIC_REALM }}"
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ty-multiverse-frontend-config
-  namespace: default
-data:
-  PUBLIC_DECKOFCARDS_URL: "https://peoplesystem.tatdvsonorth.com/deckofcards"
-  PUBLIC_TYMB_URL: "https://peoplesystem.tatdvsonorth.com/tymb"
-  PUBLIC_SSO_URL: "https://peoplesystem.tatdvsonorth.com/sso"
-  PUBLIC_FRONTEND_URL: "https://peoplesystem.tatdvsonorth.com/tymultiverse"
-  PUBLIC_PEOPLE_IMAGE_URL: "https://peoplesystem.tatdvsonorth.com/images/people"
-  PUBLIC_CLIENT: "peoplesystem"
-  PUBLIC_REALM: "PeopleSystem"
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:

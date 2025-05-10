@@ -4,6 +4,24 @@ ARG PLATFORM=linux/arm64
 FROM --platform=${PLATFORM} node:20-alpine AS base
 WORKDIR /app
 
+# Add build arguments for environment variables
+ARG PUBLIC_DECKOFCARDS_URL
+ARG PUBLIC_TYMB_URL
+ARG PUBLIC_SSO_URL
+ARG PUBLIC_FRONTEND_URL
+ARG PUBLIC_PEOPLE_IMAGE_URL
+ARG PUBLIC_CLIENT
+ARG PUBLIC_REALM
+
+# Set environment variables
+ENV PUBLIC_DECKOFCARDS_URL=${PUBLIC_DECKOFCARDS_URL}
+ENV PUBLIC_TYMB_URL=${PUBLIC_TYMB_URL}
+ENV PUBLIC_SSO_URL=${PUBLIC_SSO_URL}
+ENV PUBLIC_FRONTEND_URL=${PUBLIC_FRONTEND_URL}
+ENV PUBLIC_PEOPLE_IMAGE_URL=${PUBLIC_PEOPLE_IMAGE_URL}
+ENV PUBLIC_CLIENT=${PUBLIC_CLIENT}
+ENV PUBLIC_REALM=${PUBLIC_REALM}
+
 # By copying only the package.json and package-lock.json here, we ensure that the following `-deps` steps are independent of the source code.
 # Therefore, the `-deps` steps will be skipped if only the source code changes.
 COPY package.json package-lock.json ./
