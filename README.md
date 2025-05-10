@@ -239,3 +239,22 @@ src/
 - 支持 Markdown 格式的內容管理
 - 可以添加自定義元數據（frontmatter）
 - 支持內容預覽和草稿模式
+
+## CI/CD Pipeline
+
+### 1. Pipeline Overview
+```mermaid
+graph LR
+    A[GitHub Repository] --> B[Clone and Setup]
+    B --> C[Build with Node.js]
+    C --> D[Build Docker Image with BuildKit]
+    D --> E[Push to Docker Hub]
+    E --> F[Deploy to Kubernetes]
+```
+
+### 2. Pipeline Components
+
+#### 2.1 Agent Configuration
+- **Node Container**: `node:18`
+- **Docker Container**: `docker:23-dind`
+- **Kubectl Container**: `bitnami/kubectl:1.30.7`
