@@ -8,7 +8,7 @@ pipeline {
                   serviceAccountName: jenkins-admin
                   containers:
                   - name: node
-                    image: node:20-alpine
+                    image: node:18
                     command: ["cat"]
                     tty: true
                     volumeMounts:
@@ -55,30 +55,31 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'papakao/ty-multiverse-frontend'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        NODE_ENV = "production"
     }
     stages {
         stage('Clone and Setup') {
             steps {
-                script {
-                    container('node') {
-                        sh '''
-                            # 確認 Dockerfile 存在
-                            ls -la
-                            if [ ! -f "Dockerfile" ]; then
-                                echo "Error: Dockerfile not found!"
-                                exit 1
-                            fi
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
                 container('node') {
-                    sh 'npm install'
+                    script {
+                        withCredentials([
+                            string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
+                            string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
+                            string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
+                            string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
+                            string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
+                            string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
+                        ]) {
+                            sh '''
+                                # 確認 Dockerfile 存在
+                                ls -la
+                                if [ ! -f "Dockerfile" ]; then
+                                    echo "Error: Dockerfile not found!"
+                                    exit 1
+                                fi
+                            '''
+                        }
+                    }
                 }
             }
         }
@@ -86,7 +87,18 @@ pipeline {
         stage('Build') {
             steps {
                 container('node') {
-                    sh 'npm run build'
+                    withCredentials([
+                        string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
+                        string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
+                        string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
+                        string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
+                        string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
+                        string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                        string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
+                    ]) {
+                        sh 'npm install'
+                        sh 'npm run build'
+                    }
                 }
             }
         }
@@ -97,16 +109,10 @@ pipeline {
                     script {
                         withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                             sh '''
+                                cd /home/jenkins/agent
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-                                # 確認 Dockerfile 存在
-                                ls -la
-                                if [ ! -f "Dockerfile" ]; then
-                                    echo "Error: Dockerfile not found!"
-                                    exit 1
-                                fi
                                 # 構建 Docker 鏡像
                                 docker build \
-                                    --build-arg PLATFORM=linux/arm64 \
                                     --build-arg BUILDKIT_INLINE_CACHE=1 \
                                     --cache-from ${DOCKER_IMAGE}:latest \
                                     -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
@@ -116,6 +122,17 @@ pipeline {
                                 docker push ${DOCKER_IMAGE}:latest
                             '''
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Debug Environment') {
+            steps {
+                container('kubectl') {
+                    script {
+                        echo "=== Listing all environment variables ==="
+                        sh 'printenv | sort'
                     }
                 }
             }
