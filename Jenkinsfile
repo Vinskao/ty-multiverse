@@ -107,7 +107,16 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        withCredentials([
+                            usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD'),
+                            string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
+                            string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
+                            string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
+                            string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
+                            string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
+                            string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
+                        ]) {
                             sh '''
                                 cd /home/jenkins/agent/workspace/TYF/ty-multiverse-frontend-deploy
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
@@ -120,6 +129,13 @@ pipeline {
                                 # 構建 Docker 鏡像
                                 docker build \
                                     --build-arg BUILDKIT_INLINE_CACHE=1 \
+                                    --build-arg PUBLIC_DECKOFCARDS_URL="${PUBLIC_DECKOFCARDS_URL}" \
+                                    --build-arg PUBLIC_TYMB_URL="${PUBLIC_TYMB_URL}" \
+                                    --build-arg PUBLIC_SSO_URL="${PUBLIC_SSO_URL}" \
+                                    --build-arg PUBLIC_FRONTEND_URL="${PUBLIC_FRONTEND_URL}" \
+                                    --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
+                                    --build-arg PUBLIC_CLIENT="${PUBLIC_CLIENT}" \
+                                    --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
                                     --cache-from ${DOCKER_IMAGE}:latest \
                                     -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
                                     -t ${DOCKER_IMAGE}:latest \
