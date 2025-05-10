@@ -60,7 +60,7 @@ pipeline {
         stage('Clone and Setup') {
             steps {
                 container('node') {
-                    script {
+                script {
                         withCredentials([
                             string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
                             string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
@@ -70,16 +70,16 @@ pipeline {
                             string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
                         ]) {
-                            sh '''
-                                # 確認 Dockerfile 存在
-                                ls -la
-                                if [ ! -f "Dockerfile" ]; then
-                                    echo "Error: Dockerfile not found!"
-                                    exit 1
-                                fi
-                            '''
-                        }
+                        sh '''
+                            # 確認 Dockerfile 存在
+                            ls -la
+                            if [ ! -f "Dockerfile" ]; then
+                                echo "Error: Dockerfile not found!"
+                                exit 1
+                            fi
+                        '''
                     }
+                }
                 }
             }
         }
@@ -97,7 +97,7 @@ pipeline {
                         string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
                     ]) {
                         sh 'npm install'
-                        sh 'npm run build'
+                    sh 'npm run build'
                     }
                 }
             }
