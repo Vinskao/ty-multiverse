@@ -1,4 +1,18 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: ty-multiverse-frontend-secrets
+type: Opaque
+stringData:
+  PUBLIC_DECKOFCARDS_URL: "${{ secrets.PUBLIC_DECKOFCARDS_URL }}"
+  PUBLIC_TYMB_URL: "${{ secrets.PUBLIC_TYMB_URL }}"
+  PUBLIC_SSO_URL: "${{ secrets.PUBLIC_SSO_URL }}"
+  PUBLIC_FRONTEND_URL: "${{ secrets.PUBLIC_FRONTEND_URL }}"
+  PUBLIC_PEOPLE_IMAGE_URL: "${{ secrets.PUBLIC_PEOPLE_IMAGE_URL }}"
+  PUBLIC_CLIENT: "${{ secrets.PUBLIC_CLIENT }}"
+  PUBLIC_REALM: "${{ secrets.PUBLIC_REALM }}"
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ty-multiverse-frontend-config
@@ -7,7 +21,10 @@ data:
   PUBLIC_DECKOFCARDS_URL: "https://peoplesystem.tatdvsonorth.com/deckofcards"
   PUBLIC_TYMB_URL: "https://peoplesystem.tatdvsonorth.com/tymb"
   PUBLIC_SSO_URL: "https://peoplesystem.tatdvsonorth.com/sso"
-  PUBLIC_FRONTEND_URL: "https://peoplesystem.tatdvsonorth.com/tymultiverse" 
+  PUBLIC_FRONTEND_URL: "https://peoplesystem.tatdvsonorth.com/tymultiverse"
+  PUBLIC_PEOPLE_IMAGE_URL: "https://peoplesystem.tatdvsonorth.com/images/people"
+  PUBLIC_CLIENT: "peoplesystem"
+  PUBLIC_REALM: "PeopleSystem"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,9 +47,42 @@ spec:
         image: papakao/ty-multiverse-frontend:latest
         ports:
         - containerPort: 4321
-        envFrom:
-        - configMapRef:
-            name: ty-multiverse-frontend-config
+        env:
+        - name: PUBLIC_DECKOFCARDS_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_DECKOFCARDS_URL
+        - name: PUBLIC_TYMB_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_TYMB_URL
+        - name: PUBLIC_SSO_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_SSO_URL
+        - name: PUBLIC_FRONTEND_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_FRONTEND_URL
+        - name: PUBLIC_PEOPLE_IMAGE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_PEOPLE_IMAGE_URL
+        - name: PUBLIC_CLIENT
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_CLIENT
+        - name: PUBLIC_REALM
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_REALM
 ---
 apiVersion: v1
 kind: Service
