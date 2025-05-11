@@ -15,7 +15,7 @@ import PortfolioPreview from '../components/PortfolioPreview.astro';
 // Page section components
 import ContactCTA from '../components/ContactCTA.astro';
 import Skills from '../components/Skills.astro';
-
+import '../styles/index.css';
 // Content Fetching: List four most recent work projects
 const projects = (await getCollection('work'))
 	.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
@@ -43,297 +43,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
           
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
-<style>
-  .video-container {
-	  position: relative; 
-  }
 
-  .github-graph {
-    width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .icon-container div .tooltip {
-	  opacity: 0; 
-	  position: absolute;
-	  background-color: rgba(75, 0, 130, 0.7);
-	  color: white;
-	  padding: 4px 8px;
-	  border-radius: 10px;
-	  font-size: 18px;
-	  white-space: nowrap;
-	  top: 5px;
-	  left: 110%; 
-	  transition: opacity 0.3s ease;
-	  z-index: 999;
-  }
-
-  .horizontal-icons div:hover .tooltip {
-	  opacity: 1;
-  }
-  
-  .horizontal-icons {
-	  display: flex;
-	  position: relative;
-	  background-image: url('/tymultiverse/assets/barchart-background.jpg');
-	  background-position: bottom;
-	  border-radius: 20px;
-	  margin-top: 1px;
-	  padding-right: 8px;
-	  z-index: 998;
-  }
-
-  .horizontal-icons:hover {
-	  transform: scale(1.2);
-	  transition: transform 0.3s ease;
-  }
-
-  .icon-container {
-	  position: relative; 
-	  margin-left: 20px;
-	  display: flex;
-	  flex-direction: column;
-	  justify-content: flex-start;
-	  position: relative;
-		  
-  }
-
-  .icon-container img {
-	  width: 30px;
-	  margin-left: 5px;
-	  transition: transform 0.3s ease;
-	  cursor: pointer;
-	  
-  }
-
-  .icon-container img:hover {
-	  transform: scale(1.5); 
-  }
-
-  .hero {
-	  display: flex;
-	  flex-direction: column;
-	  align-items: center;
-	  gap: 2rem;
-  }
-
-  .roles {
-	  display: none;
-  }
-
-  .hero img {
-	  object-fit: cover;
-	  object-position: top;
-	  border-radius: 1rem;
-	  box-shadow: var(--shadow-md);
-  }
-
-  @media (min-width: 50em) {
-	  .hero {
-		  display: grid;
-		  grid-template-columns: 6fr 4fr;
-		  padding-inline: 2.5rem;
-		  gap: 3.75rem;
-	  }
-
-	  .roles {
-		  margin-top: 0.5rem;
-		  display: flex;
-		  gap: 0.5rem;
-	  }
-
-	  .hero img {
-		  border-radius: 1rem;
-		  object-fit: cover;
-	  }
-  }
-
-  /* ====================================================== */
-
-  .section {
-	  display: grid;
-	  gap: 2rem;
-  }
-
-  .with-background {
-	  position: relative;
-  }
-
-  .with-background::before {
-	  --hero-bg: var(--bg-image-subtle-2);
-
-	  content: '';
-	  position: absolute;
-	  pointer-events: none;
-	  left: 50%;
-	  width: 100vw;
-	  aspect-ratio: calc(2.25 / var(--bg-scale));
-	  top: 0;
-	  transform: translateY(-75%) translateX(-50%);
-	  background:
-		  url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
-		  var(--hero-bg) center center / var(--bg-gradient-size) no-repeat,
-		  var(--gray-999);
-	  background-blend-mode: overlay, normal, normal, normal;
-	  mix-blend-mode: var(--bg-blend-mode);
-	  z-index: -1;
-  }
-
-  .with-background.bg-variant::before {
-	  --hero-bg: var(--bg-image-subtle-1);
-  }
-
-  .section-header {
-	  justify-self: center;
-	  text-align: center;
-	  max-width: 50ch;
-	  font-size: var(--text-md);
-	  color: var(--gray-300);
-  }
-
-  .section-header h5 {
-	  font-size: var(--text-2xl);
-  }
-
-  @media (min-width: 50em) {
-	  .section {
-		  grid-template-columns: repeat(4, 1fr);
-		  grid-template-areas: 'header header header header' 'gallery gallery gallery gallery';
-		  gap: 5rem;
-	  }
-
-	  .section.with-cta {
-		  grid-template-areas: 'header header header cta' 'gallery gallery gallery gallery';
-	  }
-
-	  .section-header {
-		  grid-area: header;
-		  font-size: var(--text-lg);
-	  }
-
-	  .section-header h5 {
-		  font-size: var(--text-4xl);
-	  }
-
-	  .with-cta .section-header {
-		  justify-self: flex-start;
-		  text-align: left;
-	  }
-
-	  .gallery {
-		  grid-area: gallery;
-	  }
-
-	  .cta {
-		  grid-area: cta;
-	  }
-  }
-
-  /* ====================================================== */
-
-  .mention-card {
-	  display: flex;
-	  height: 7rem;
-	  justify-content: center;
-	  align-items: center;
-	  text-align: center;
-	  border: 1px solid var(--gray-800);
-	  border-radius: 1.5rem;
-	  color: var(--gray-300);
-	  background: var(--gradient-subtle);
-	  box-shadow: var(--shadow-sm);
-  }
-
-  @media (min-width: 50em) {
-	  .mention-card {
-		  border-radius: 1.5rem;
-		  height: 9.5rem;
-	  }
-  }
-
-.categories {
-    font-family: Arial, sans-serif;
-	max-width: 40%;
-	width: 100%; 
-}
-.categories .category h5 {
-    margin-bottom: -5px; 
-	margin-top: 5px; 
-}
-
-.categories .pill {
-    margin: 1px 1px 1px 0; 
-}
-h5 {
-    color: #6e6e6e;
-    margin-bottom: 10px;
-}
-
-.pill {
-    display: inline-block;
-    margin: 5px 10px 5px 0;
-    padding: 5px 10px;
-    border-radius: 20px;
-    color: #fff;
-    font-size: 14px;
-	transition: transform 0.3s ease;
-}
-
-.pill:hover {
-    transform: scale(1.2); 
-}
-
-:root {
-    --shade1: #e0f7ff;
-    --shade2: #b3e8ff;
-    --shade3: #80d8ff;
-    --shade4: #4dc9ff;
-    --shade5: #1abfff; 
-}
-
-.pill1 {
-    background-color: #b06c13;
-}
-
-.pill2 {
-    background-color: #b7a414;
-}
-
-.pill3 {
-    background-color: #306998;
-}
-
-.pill4 {
-    background-color: #47a248;
-}
-
-.pill5 {
-    background-color: #2496ed;
-}
-
-.pill6 {
-    background-color: #0052cc;
-}
-
-.pill7 {
-    background-color: #671f74;
-}
-
-.pill8 {
-    background-color: #6e1431;
-}
-
-.pill9 {
-    background-color: #146e66;
-}
-
-.pill10 {
-    background-color: #2b5797;  /* Jenkins blue color */
-}
-
-</style>
 </head>
 
 <body>
@@ -360,196 +70,210 @@ h5 {
 		
 		<div class="wrapper stack gap-20 lg:gap-50">
 			
-			<header class="hero">
-				
-				<Hero
-					title="TY's Outerspace"
-					tagline="The Future is Now"
-					align="start"
-				>
-					<div class="roles">
-						<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
-						<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
-						<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
-						<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
-						
+			<header class="hero stack hero-layout">
+				<div class="hero-main">
+					<div class="hero-header">
+						<h1>TY's Outerspace</h1>
+						<p>The Future is Now</p>
 					</div>
-
-					<div style="display: flex; align-items: flex-start; gap: 20px; width: 100%;">
-						<div style="display: flex; flex-direction: column; gap: 10px; width: 40%; overflow: hidden; position: relative; margin-top: -10px;">
-							<div class="roles-image" style="width: 100%; display: flex; justify-content: center;">
-								<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=vinskao&layout=compact&hide=astro" alt="Top Languages">
-							</div>
-							<div class="roles-image" style="width: 100%; display: flex; justify-content: center; transform-origin: center;">
+					<div class="hero-content">
+						<div class="github-stats">
+							<div class="roles-image">
 								<img src="https://github-readme-stats.vercel.app/api?username=vinskao&show_icons=true&theme=light" alt="GitHub Stats">
 							</div>
+							<div class="roles-image">
+								<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=vinskao&layout=compact&hide=astro" alt="Top Languages">
+							</div>
 						</div>
-						<div class="categories" style="width: 60%;">
-							<!-- 項目 1 -->
+
+						<div class="categories">
 							<div class="category">
 								<h5>Backend</h5>
-								<span class="pill pill1 shade1">Java</span>
-								<span class="pill pill1 shade3">Python</span>
-								<span class="pill pill1 shade3">Node.js
-								</span>
-								<span class="pill pill1 shade3">PHP
-								</span>
-								<span class="pill pill1 shade5">Rust</span>
-								<span class="pill pill1 shade3">Spring</span>
-								<span class="pill pill1 shade3">Quarkus</span>
-								<span class="pill pill1 shade2">Spring Boot</span>
-								<span class="pill pill1 shade4">Django Rest</span>
-								<span class="pill pill1 shade1">JPA</span>
-								<span class="pill pill1 shade1">Mybatis</span>
-								<span class="pill pill1 shade1">JDBCTemplate</span>
-								<span class="pill pill1 shade1">Java Keystore</span>
-								<span class="pill pill1 shade1">Swagger</span>
-								<span class="pill pill1 shade2">JUnit</span>
-								<span class="pill pill1 shade3">Mokito</span>
-								<span class="pill pill1 shade4">Mongoose.js</span>
-								<span class="pill pill1 shade4">Express.js
-								</span>
+								<div class="pills-container">
+									<span class="pill pill1 shade1">Java</span>
+									<span class="pill pill1 shade3">Python</span>
+									<span class="pill pill1 shade3">Node.js</span>
+									<span class="pill pill1 shade3">PHP</span>
+									<span class="pill pill1 shade5">Rust</span>
+									<span class="pill pill1 shade3">Spring</span>
+									<span class="pill pill1 shade3">Quarkus</span>
+									<span class="pill pill1 shade2">Spring Boot</span>
+									<span class="pill pill1 shade4">Django Rest</span>
+									<span class="pill pill1 shade1">JPA</span>
+									<span class="pill pill1 shade1">Mybatis</span>
+									<span class="pill pill1 shade1">JDBCTemplate</span>
+									<span class="pill pill1 shade1">Java Keystore</span>
+									<span class="pill pill1 shade1">Swagger</span>
+									<span class="pill pill1 shade2">JUnit</span>
+									<span class="pill pill1 shade3">Mokito</span>
+									<span class="pill pill1 shade4">Mongoose.js</span>
+									<span class="pill pill1 shade4">Express.js</span>
+								</div>
 							</div>
 						
 							<!-- 項目 2 -->
 							<div class="category">
 								<h5>Frontend</h5>
-								<span class="pill pill2 shade1">JavaScript</span>
-								<span class="pill pill2 shade2">Vue.js</span>
-								<span class="pill pill2 shade3">React.js</span>
-								<span class="pill pill2 shade1">jQuery</span>
-								<span class="pill pill2 shade1">AJAX</span>
-								<span class="pill pill2 shade5">Jest</span>
-								<span class="pill pill2 shade2">Astro</span>
-								<span class="pill pill2 shade2">Handlebars</span>
-								<span class="pill pill2 shade2">Thymeleaf</span>
-								<span class="pill pill2 shade2">CKEditor</span>
+								<div class="pills-container">
+									<span class="pill pill2 shade1">JavaScript</span>
+									<span class="pill pill2 shade2">Vue.js</span>
+									<span class="pill pill2 shade3">React.js</span>
+									<span class="pill pill2 shade1">jQuery</span>
+									<span class="pill pill2 shade1">AJAX</span>
+									<span class="pill pill2 shade5">Jest</span>
+									<span class="pill pill2 shade2">Astro</span>
+									<span class="pill pill2 shade2">Handlebars</span>
+									<span class="pill pill2 shade2">Thymeleaf</span>
+									<span class="pill pill2 shade2">CKEditor</span>
+								</div>
 							</div>
 						
 							<!-- 項目 3 -->
 							<div class="category">
 								<h5>AI</h5>
-								<span class="pill pill3 shade5">LangChain</span>
-								<span class="pill pill3 shade5">Ollama</span>
-								<span class="pill pill3 shade4">OpenAI API</span>
+								<div class="pills-container">
+									<span class="pill pill3 shade5">LangChain</span>
+									<span class="pill pill3 shade5">Ollama</span>
+									<span class="pill pill3 shade4">OpenAI API</span>
+								</div>
 							</div>
 						
 							<!-- 項目 4 -->
 							<div class="category">
 								<h5>DB</h5>
-								<span class="pill pill4 shade4">Firebase</span>
-								<span class="pill pill4 shade4">MongoDB</span>
-								<span class="pill pill4 shade1">PostgreSQL</span>
-								<span class="pill pill4 shade1">MSSQL</span>
-								<span class="pill pill4 shade1">SQLite</span>
+								<div class="pills-container">
+									<span class="pill pill4 shade4">Firebase</span>
+									<span class="pill pill4 shade4">MongoDB</span>
+									<span class="pill pill4 shade1">PostgreSQL</span>
+									<span class="pill pill4 shade1">MSSQL</span>
+									<span class="pill pill4 shade1">SQLite</span>
+								</div>
 							</div>
 						
 							<!-- 項目 5 -->
 							<div class="category">
 								<h5>Infra</h5>
-								<span class="pill pill5 shade1">Docker</span>
-								<span class="pill pill5 shade1">Podman</span>
-								<span class="pill pill5 shade1">Linux</span>
-								<span class="pill pill5 shade2">JBoss</span>
-								<span class="pill pill5 shade4">Terraform</span>
-								<span class="pill pill5 shade2">Bare Metal K8S</span>
-								<span class="pill pill5 shade5">OCP K8S</span>
-								<span class="pill pill5 shade4">Ansible</span>
-								<span class="pill pill5 shade3">Tomcat</span>
-								<span class="pill pill5 shade4">Grafana</span>
-								<span class="pill pill5 shade4">Prometheus</span>
-								<span class="pill pill5 shade4">Kiali</span>
-								<span class="pill pill5 shade3">Jolokia</span>
+								<div class="pills-container">
+									<span class="pill pill5 shade1">Docker</span>
+									<span class="pill pill5 shade1">Podman</span>
+									<span class="pill pill5 shade1">Linux</span>
+									<span class="pill pill5 shade2">JBoss</span>
+									<span class="pill pill5 shade4">Terraform</span>
+									<span class="pill pill5 shade2">Bare Metal K8S</span>
+									<span class="pill pill5 shade5">OCP K8S</span>
+									<span class="pill pill5 shade4">Ansible</span>
+									<span class="pill pill5 shade3">Tomcat</span>
+									<span class="pill pill5 shade4">Grafana</span>
+									<span class="pill pill5 shade4">Prometheus</span>
+									<span class="pill pill5 shade4">Kiali</span>
+									<span class="pill pill5 shade3">Jolokia</span>
+								</div>
 							</div>
 
 							<!-- 項目 10 -->
 							<div class="category">
 								<h5>CICD</h5>
-								<span class="pill pill10 shade3">Jenkins</span>
-								<span class="pill pill10 shade5">Docker BuildKit</span>
-
+								<div class="pills-container">
+									<span class="pill pill10 shade3">Jenkins</span>
+									<span class="pill pill10 shade5">Docker BuildKit</span>
+								</div>
 							</div>
 						
 							<!-- 項目 6 -->
 							<div class="category">
 								<h5>Network</h5>
-								<span class="pill pill6 shade4">Istio</span>
-								<span class="pill pill6 shade1">Ingress</span>
-								<span class="pill pill6 shade2">Nginx Ingress Controller</span>
-								<span class="pill pill6 shade3">Nginx Static File Server</span>
-								<span class="pill pill6 shade3">WebSocket</span>
+								<div class="pills-container">
+									<span class="pill pill6 shade4">Istio</span>
+									<span class="pill pill6 shade1">Ingress</span>
+									<span class="pill pill6 shade2">Nginx Ingress Controller</span>
+									<span class="pill pill6 shade3">Nginx Static File Server</span>
+									<span class="pill pill6 shade3">WebSocket</span>
+								</div>
 							</div>
 
 							<!-- 項目 7 -->
 							<div class="category">
 								<h5>Cloud</h5>
-								<span class="pill pill7 shade3">OCI</span>
-								<span class="pill pill7 shade5">GCP</span>
+								<div class="pills-container">
+									<span class="pill pill7 shade3">OCI</span>
+									<span class="pill pill7 shade5">GCP</span>
+								</div>
 							</div>
 
 							<!-- 項目 8 -->
 							<div class="category">
 								<h5>Tool</h5>
-								<span class="pill pill8 shade2">WordPress</span>
+								<div class="pills-container">
+									<span class="pill pill8 shade2">WordPress</span>
+								</div>
 							</div>
 
 							<!-- 項目 9 -->
 							<div class="category">
 								<h5>Security</h5>
-								<span class="pill pill9 shade2">Keycloak</span>
-								<span class="pill pill9 shade4">Keycloak SPI</span>
-								<span class="pill pill9 shade3">RedHat SSO</span>
-								<span class="pill pill9 shade2">Authorization Code Flow</span>
-								<span class="pill pill9 shade2">JWT</span>
-								<span class="pill pill9 shade3">Spring Security</span>
-								<span class="pill pill9 shade3">Digital Signature</span>
-								</span>
+								<div class="pills-container">
+									<span class="pill pill9 shade2">Keycloak</span>
+									<span class="pill pill9 shade4">Keycloak SPI</span>
+									<span class="pill pill9 shade3">RedHat SSO</span>
+									<span class="pill pill9 shade2">Authorization Code Flow</span>
+									<span class="pill pill9 shade2 jwt">JWT</span>
+									<span class="pill pill9 shade3 spring-security">Spring Security</span>
+									<span class="pill pill9 shade3">Digital Signature</span>
+								</div>
 							</div>
 						</div>
 					</div>
+				</div>
 
-				</Hero>
-				<div class="video-container">
-					<div class="github-graph">
-						<h5>Github Contributions</h5>
-						<div>
-							<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" style="object-fit: contain;"/>
+				<div class="hero-side">
+					<div class="video-container">
+						<div class="roles">
+							<Pill><Icon icon="code" size="1.33em" /> Backend</Pill>
+							<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
+							<Pill><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
+							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
 						</div>
-					</div>
+						<div class="github-graph">
+							<h5>Github Contributions</h5>
+							<div>
+								<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
+							</div>
+						</div>
 
-					<video autoplay loop muted playsinline style="width: 100%; height: auto; border-radius: 2.5rem; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4); object-fit: contain;">
-						<source src="/tymultiverse/assets/protrait.mp4" type="video/mp4">
-						Your browser does not support the video tag.
-					</video>
-					<div class="leetcode-graph" style="margin-top: 2rem;">
-						<h5>LeetCode Stats</h5>
-						<div id="leetcode-stats" class="leetcode-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem;">
-							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
-								<h6>Total Solved</h6>
-								<p id="total-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
-								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
-									<div id="total-progress" style="height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+						<video autoplay loop muted playsinline>
+							<source src="/tymultiverse/assets/protrait.mp4" type="video/mp4">
+							Your browser does not support the video tag.
+						</video>
+						<div class="leetcode-graph">
+							<h5>LeetCode Stats</h5>
+							<div id="leetcode-stats" class="leetcode-container">
+								<div class="leetcode-card">
+									<h6>Total Solved</h6>
+									<p id="total-solved">Loading...</p>
+									<div class="progress-bar">
+										<div id="total-progress"></div>
+									</div>
 								</div>
-							</div>
-							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
-								<h6>Easy</h6>
-								<p id="easy-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
-								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
-									<div id="easy-progress" style="height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								<div class="leetcode-card">
+									<h6>Easy</h6>
+									<p id="easy-solved">Loading...</p>
+									<div class="progress-bar">
+										<div id="easy-progress"></div>
+									</div>
 								</div>
-							</div>
-							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
-								<h6>Medium</h6>
-								<p id="medium-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
-								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
-									<div id="medium-progress" style="height: 100%; background: linear-gradient(90deg, #FFC107, #FF9800); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								<div class="leetcode-card">
+									<h6>Medium</h6>
+									<p id="medium-solved">Loading...</p>
+									<div class="progress-bar">
+										<div id="medium-progress"></div>
+									</div>
 								</div>
-							</div>
-							<div class="leetcode-card" style="background: var(--gradient-subtle); border-radius: 1rem; padding: 1rem; text-align: center;">
-								<h6>Hard</h6>
-								<p id="hard-solved" style="font-size: 2rem; font-weight: bold; margin: 0.5rem 0;">Loading...</p>
-								<div class="progress-bar" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0.5rem 0;">
-									<div id="hard-progress" style="height: 100%; background: linear-gradient(90deg, #F44336, #FF5722); border-radius: 2px; width: 0%; transition: width 1s ease;"></div>
+								<div class="leetcode-card">
+									<h6>Hard</h6>
+									<p id="hard-solved">Loading...</p>
+									<div class="progress-bar">
+										<div id="hard-progress"></div>
+									</div>
 								</div>
 							</div>
 						</div>
