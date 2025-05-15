@@ -33,7 +33,11 @@ try {
 // 檢查是否需要顯示登入提示
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
-const algorithmsUsed = ["Kadane's Algorithm"];
+const algorithmsUsed = [
+    { name: "Kadane's Algorithm", explanation: "在一次掃描中找到一維數組中具有最大和的連續子數組。它會追蹤當前子數組的最大和以及目前為止找到的全局最大和。" }
+    // Add more algorithms here in the future, e.g.:
+    // { name: "Dijkstra's Algorithm", explanation: "迪杰斯特拉算法：計算圖中單源最短路徑。" }
+];
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
@@ -280,16 +284,14 @@ const algorithmsUsed = ["Kadane's Algorithm"];
 							</div>
 						</div>
 
-                        {/* <!-- NEW ALGORITHMS SECTION --> */}
                         <div class="algorithms-section">
                             <h5>Algorithms Used</h5>
                             <div class="algorithms-list">
                                 {algorithmsUsed.map((algo) => (
-                                    <span class="pill algo-pill">{algo}</span>
+                                    <span class="pill algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
                                 ))}
                             </div>
                         </div>
-                        {/* <!-- END NEW ALGORITHMS SECTION --> */}
 					</div>
 				</div>
 
@@ -418,11 +420,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // 處理 hover 事件
     const pills = document.querySelectorAll(".pill");
     pills.forEach((pill) => {
-        const shadeClass = [...pill.classList].find((cls) => cls.startsWith("shade"));
-        if (shadeClass && shadeDescriptions[shadeClass]) {
+        let tooltipTextValue: string | null = null;
+        if (pill.hasAttribute('data-explanation')) {
+            tooltipTextValue = pill.getAttribute('data-explanation');
+        } else {
+            const shadeClass = [...pill.classList].find((cls) => cls.startsWith("shade"));
+            if (shadeClass && shadeDescriptions[shadeClass]) {
+                tooltipTextValue = shadeDescriptions[shadeClass];
+            }
+        }
+
+        if (tooltipTextValue !== null) {
+            const finalTooltipText = tooltipTextValue; // Ensures non-null string for closure
             // 滑鼠進入
             pill.addEventListener("mouseenter", (e) => {
-                tooltip.textContent = shadeDescriptions[shadeClass];
+                tooltip.textContent = finalTooltipText;
                 tooltip.style.display = "block";
                 const rect = (e.target as HTMLElement).getBoundingClientRect();
                 tooltip.style.left = `${rect.left + window.scrollX}px`;
