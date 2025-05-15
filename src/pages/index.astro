@@ -34,7 +34,8 @@ try {
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 const algorithmsUsed = [
-    { name: "Kadane's Algorithm", explanation: "在一次掃描中找到一維數組中具有最大和的連續子數組。它會追蹤當前子數組的最大和以及目前為止找到的全局最大和。" }
+    { name: "Kadane's Algorithm", explanation: "一路掃過去，看看哪一段連起來的數字加總最大。它會邊走邊記住目前這段的最大值，和整條路下來看過的最大總和。" },
+    { name: "Quick Sort", explanation: "選個「基準點」，小的放左邊，大的放右邊，然後兩邊再各自重複，很快就排好了！" }
     // Add more algorithms here in the future, e.g.:
     // { name: "Dijkstra's Algorithm", explanation: "迪杰斯特拉算法：計算圖中單源最短路徑。" }
 ];
@@ -246,10 +247,8 @@ const algorithmsUsed = [
 							</div>
 						</div>
 
-						<video autoplay loop muted playsinline>
-							<source src="/tymultiverse/assets/protrait.mp4" type="video/mp4">
-							Your browser does not support the video tag.
-						</video>
+						<img src="/tymultiverse/assets/protrait.jpeg" alt="Portrait" class="portrait-image" />
+
 						<div class="leetcode-graph">
 							<h5>LeetCode Stats</h5>
 							<div id="leetcode-stats" class="leetcode-container">
