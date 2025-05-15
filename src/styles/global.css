@@ -309,5 +309,43 @@ h5 {
 @media (max-width: 768px) {
   .stack.hero-layout {
     flex-direction: column;
+    align-items: stretch;
   }
+}
+
+/* Styles for Algorithms Used section */
+.algorithms-section {
+  margin-top: 1.5rem; 
+}
+
+/* Combined and updated styles for titles within video-container */
+.video-container .github-graph h5,
+.video-container .leetcode-graph h5,
+.video-container .algorithms-section h5 {
+  text-align: center;     /* Center align the titles */
+  margin-bottom: 0.75rem;  /* Consistent bottom margin */
+  /* Font size, color, etc., are inherited from global h5 styles */
+}
+
+.algorithms-list {
+  display: flex;
+  flex-wrap: wrap; /* Allow pills to wrap */
+  gap: 0.5rem 0.75rem; /* row-gap column-gap */
+}
+
+/* Styling for individual algorithm pills */
+.algo-pill {
+  padding: 0.4em 0.8em;
+  border-radius: 1em;
+  background-color: var(--accent-dark);
+  color: var(--accent-text-over); /* Ensures good contrast on both themes */
+  font-size: var(--text-sm);
+  line-height: 1.2;
+  text-align: center;
+  display: inline-block;
+  transition: background-color var(--theme-transition);
+}
+
+.algo-pill:hover {
+  background-color: var(--accent-regular);
 }
