@@ -16,10 +16,10 @@
   --gray-999_40: hsla(var(--gray-999-basis), 0.4);
   --gray-999: #ffffff;
 
-  --accent-light: #c561f6;
-  --accent-regular: #7611a6;
-  --accent-dark: #1c0056;
-  --accent-overlay: hsla(280, 89%, 67%, 0.33);
+  --accent-light: #61f6ea;
+  --accent-regular: #255187;
+  --accent-dark: #001a56;
+  --accent-overlay: hsla(204, 89%, 67%, 0.33);
   --accent-subtle-overlay: var(--accent-overlay);
   --accent-text-over: var(--gray-999);
 
@@ -96,15 +96,15 @@
   --gray-999: #090b11;
 
   --accent-light: #1c0056;
-  --accent-regular: #7611a6;
-  --accent-dark: #c561f6;
-  --accent-overlay: hsla(280, 89%, 67%, 0.33);
-  --accent-subtle-overlay: hsla(281, 81%, 36%, 0.33);
+  --accent-regular: #2711a6;
+  --accent-dark: #1ba42b;
+  --accent-overlay: hsla(74, 67%, 47%, 0.33);
+  --accent-subtle-overlay: hsla(199, 81%, 36%, 0.33);
   --accent-text-over: var(--gray-0);
 
   --link-color: var(--accent-dark);
 
-  --gradient-stop-1: #4c11c6;
+  --gradient-stop-1: #1141c6;
   --gradient-subtle: linear-gradient(
     150deg,
     var(--gray-900) 19%,
@@ -348,4 +348,14 @@ h5 {
 
 .algo-pill:hover {
   background-color: var(--accent-regular);
+}
+
+/* Styling for the portrait image */
+.portrait-image {
+  display: block;         /* Allows margin auto for centering */
+  width: 100%;            /* Responsive, takes full width of container up to max-width */
+  max-width: 280px;       /* Controls the maximum size, making it smaller */
+  height: auto;           /* Maintains aspect ratio */
+  margin: 1rem auto;      /* Adds some vertical spacing and centers it horizontally */
+  border-radius: 8px;     /* Adds slightly rounded corners */
 }
