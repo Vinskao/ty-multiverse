@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import algorithmsData from '../storages/algorithmsUsed.json';
 
 // Layout import — provides basic page elements: <head>, <nav>, <footer> etc.
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -33,12 +34,7 @@ try {
 // 檢查是否需要顯示登入提示
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
-const algorithmsUsed = [
-    { name: "Kadane's Algorithm", explanation: "一路掃過去，看看哪一段連起來的數字加總最大。它會邊走邊記住目前這段的最大值，和整條路下來看過的最大總和。" },
-    { name: "Quick Sort", explanation: "選個「基準點」，小的放左邊，大的放右邊，然後兩邊再各自重複，很快就排好了！" }
-    // Add more algorithms here in the future, e.g.:
-    // { name: "Dijkstra's Algorithm", explanation: "迪杰斯特拉算法：計算圖中單源最短路徑。" }
-];
+const algorithmsUsed = algorithmsData.algorithms;
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
