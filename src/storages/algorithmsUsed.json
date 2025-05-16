@@ -1,0 +1,17 @@
+{
+    "algorithms": [
+      {
+        "name": "Kadane's Algorithm",
+        "explanation": "一路走過去，累加數字。如果加到一半變負的就重新開始，因為負數只會拖後腿。它會記住目前最好的連續總和。"
+      },
+      {
+        "name": "Quick Sort",
+        "explanation": "從陣列中挑一個基準點，把比它小的放左邊，比它大的放右邊，再對左右兩邊重複同樣的事，整體就會排序完成。"
+      },
+      {
+        "name": "Quick Select",
+        "explanation": "跟 Quick Sort 很像，但目標是找第 K 小（或大）的值。每次切左右時，只往答案可能會在的那一半繼續找，省下不必要的排序。"
+      }
+    ]
+}
+  
