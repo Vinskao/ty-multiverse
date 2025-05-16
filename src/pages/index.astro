@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import algorithmsData from '../storages/algorithmsUsed.json';
+import skillsData from '../storages/skills.json';
 
 // Layout import — provides basic page elements: <head>, <nav>, <footer> etc.
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -35,6 +36,7 @@ try {
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 const algorithmsUsed = algorithmsData.algorithms;
+const skillsCategories = skillsData.categories;
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
@@ -90,140 +92,18 @@ const algorithmsUsed = algorithmsData.algorithms;
 						</div>
 
 						<div class="categories">
-							<div class="category">
-								<h5>Backend</h5>
-								<div class="pills-container">
-									<span class="pill pill1 shade1">Java</span>
-									<span class="pill pill1 shade3">Python</span>
-									<span class="pill pill1 shade3">Node.js</span>
-									<span class="pill pill1 shade3">PHP</span>
-									<span class="pill pill1 shade5">Rust</span>
-									<span class="pill pill1 shade3">Spring</span>
-									<span class="pill pill1 shade3">Quarkus</span>
-									<span class="pill pill1 shade2">Spring Boot</span>
-									<span class="pill pill1 shade4">Django Rest</span>
-									<span class="pill pill1 shade1">JPA</span>
-									<span class="pill pill1 shade1">Mybatis</span>
-									<span class="pill pill1 shade1">JDBCTemplate</span>
-									<span class="pill pill1 shade1">Java Keystore</span>
-									<span class="pill pill1 shade1">Swagger</span>
-									<span class="pill pill1 shade2">JUnit</span>
-									<span class="pill pill1 shade3">Mokito</span>
-									<span class="pill pill1 shade4">Mongoose.js</span>
-									<span class="pill pill1 shade4">Express.js</span>
+							{skillsCategories.map((category) => (
+								<div class="category">
+									<h5>{category.name}</h5>
+									<div class="pills-container">
+										{category.skills.map((skill) => (
+											<span class={`pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
+												{skill.name}
+											</span>
+										))}
+									</div>
 								</div>
-							</div>
-						
-							<!-- 項目 2 -->
-							<div class="category">
-								<h5>Frontend</h5>
-								<div class="pills-container">
-									<span class="pill pill2 shade1">JavaScript</span>
-									<span class="pill pill2 shade2">Vue.js</span>
-									<span class="pill pill2 shade3">React.js</span>
-									<span class="pill pill2 shade1">jQuery</span>
-									<span class="pill pill2 shade1">AJAX</span>
-									<span class="pill pill2 shade5">Jest</span>
-									<span class="pill pill2 shade2">Astro</span>
-									<span class="pill pill2 shade2">Handlebars</span>
-									<span class="pill pill2 shade2">Thymeleaf</span>
-									<span class="pill pill2 shade2">CKEditor</span>
-								</div>
-							</div>
-						
-							<!-- 項目 3 -->
-							<div class="category">
-								<h5>AI</h5>
-								<div class="pills-container">
-									<span class="pill pill3 shade5">LangChain</span>
-									<span class="pill pill3 shade5">Ollama</span>
-									<span class="pill pill3 shade4">OpenAI API</span>
-								</div>
-							</div>
-						
-							<!-- 項目 4 -->
-							<div class="category">
-								<h5>DB</h5>
-								<div class="pills-container">
-									<span class="pill pill4 shade4">Firebase</span>
-									<span class="pill pill4 shade4">MongoDB</span>
-									<span class="pill pill4 shade1">PostgreSQL</span>
-									<span class="pill pill4 shade1">MSSQL</span>
-									<span class="pill pill4 shade1">SQLite</span>
-								</div>
-							</div>
-						
-							<!-- 項目 5 -->
-							<div class="category">
-								<h5>Infra</h5>
-								<div class="pills-container">
-									<span class="pill pill5 shade1">Docker</span>
-									<span class="pill pill5 shade1">Podman</span>
-									<span class="pill pill5 shade1">Linux</span>
-									<span class="pill pill5 shade2">JBoss</span>
-									<span class="pill pill5 shade4">Terraform</span>
-									<span class="pill pill5 shade2">Bare Metal K8S</span>
-									<span class="pill pill5 shade5">OCP K8S</span>
-									<span class="pill pill5 shade4">Ansible</span>
-									<span class="pill pill5 shade3">Tomcat</span>
-									<span class="pill pill5 shade4">Grafana</span>
-									<span class="pill pill5 shade4">Prometheus</span>
-									<span class="pill pill5 shade4">Kiali</span>
-									<span class="pill pill5 shade3">Jolokia</span>
-								</div>
-							</div>
-
-							<!-- 項目 10 -->
-							<div class="category">
-								<h5>CICD</h5>
-								<div class="pills-container">
-									<span class="pill pill10 shade3">Jenkins</span>
-									<span class="pill pill10 shade5">Docker BuildKit</span>
-								</div>
-							</div>
-						
-							<!-- 項目 6 -->
-							<div class="category">
-								<h5>Network</h5>
-								<div class="pills-container">
-									<span class="pill pill6 shade4">Istio</span>
-									<span class="pill pill6 shade1">Ingress</span>
-									<span class="pill pill6 shade2">Nginx Ingress Controller</span>
-									<span class="pill pill6 shade3">Nginx Static File Server</span>
-									<span class="pill pill6 shade3">WebSocket</span>
-								</div>
-							</div>
-
-							<!-- 項目 7 -->
-							<div class="category">
-								<h5>Cloud</h5>
-								<div class="pills-container">
-									<span class="pill pill7 shade3">OCI</span>
-									<span class="pill pill7 shade5">GCP</span>
-								</div>
-							</div>
-
-							<!-- 項目 8 -->
-							<div class="category">
-								<h5>Tool</h5>
-								<div class="pills-container">
-									<span class="pill pill8 shade2">WordPress</span>
-								</div>
-							</div>
-
-							<!-- 項目 9 -->
-							<div class="category">
-								<h5>Security</h5>
-								<div class="pills-container">
-									<span class="pill pill9 shade2">Keycloak</span>
-									<span class="pill pill9 shade4">Keycloak SPI</span>
-									<span class="pill pill9 shade3">RedHat SSO</span>
-									<span class="pill pill9 shade2">Authorization Code Flow</span>
-									<span class="pill pill9 shade2 jwt">JWT</span>
-									<span class="pill pill9 shade3 spring-security">Spring Security</span>
-									<span class="pill pill9 shade3">Digital Signature</span>
-								</div>
-							</div>
+							))}
 						</div>
 					</div>
 				</div>

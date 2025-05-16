@@ -1,0 +1,130 @@
+{
+  "categories": [
+    {
+      "name": "Backend",
+      "pillClass": "pill1",
+      "skills": [
+        { "name": "Java 8 11 17", "level": "shade1" },
+        { "name": "Python 3", "level": "shade3" },
+        { "name": "Node.js", "level": "shade3" },
+        { "name": "PHP", "level": "shade3" },
+        { "name": "Rust", "level": "shade5" },
+        { "name": "Spring Framework 6", "level": "shade3" },
+        { "name": "Quarkus", "level": "shade3" },
+        { "name": "Spring Boot 2 3", "level": "shade2" },
+        { "name": "Django Rest", "level": "shade4" },
+        { "name": "JPA", "level": "shade1" },
+        { "name": "Mybatis 3", "level": "shade1" },
+        { "name": "JDBCTemplate", "level": "shade1" },
+        { "name": "Java Keystore", "level": "shade1" },
+        { "name": "Swagger", "level": "shade1" },
+        { "name": "JUnit 5", "level": "shade2" },
+        { "name": "Mokito", "level": "shade3" },
+        { "name": "Mongoose.js", "level": "shade4" },
+        { "name": "Express.js", "level": "shade4" }
+      ]
+    },
+    {
+      "name": "Frontend",
+      "pillClass": "pill2",
+      "skills": [
+        { "name": "JavaScript", "level": "shade1" },
+        { "name": "Vue.js 2 3", "level": "shade2" },
+        { "name": "React.js", "level": "shade3" },
+        { "name": "jQuery", "level": "shade1" },
+        { "name": "AJAX", "level": "shade1" },
+        { "name": "Jest", "level": "shade5" },
+        { "name": "Astro", "level": "shade2" },
+        { "name": "Handlebars", "level": "shade2" },
+        { "name": "Thymeleaf", "level": "shade2" },
+        { "name": "CKEditor 5", "level": "shade2" }
+      ]
+    },
+    {
+      "name": "AI",
+      "pillClass": "pill3",
+      "skills": [
+        { "name": "LangChain", "level": "shade5" },
+        { "name": "Ollama", "level": "shade5" },
+        { "name": "OpenAI API", "level": "shade4" }
+      ]
+    },
+    {
+      "name": "DB",
+      "pillClass": "pill4",
+      "skills": [
+        { "name": "Firebase", "level": "shade4" },
+        { "name": "MongoDB", "level": "shade4" },
+        { "name": "PostgreSQL", "level": "shade1" },
+        { "name": "MSSQL", "level": "shade1" },
+        { "name": "SQLite", "level": "shade1" }
+      ]
+    },
+    {
+      "name": "Infra",
+      "pillClass": "pill5",
+      "skills": [
+        { "name": "Docker", "level": "shade1" },
+        { "name": "Podman", "level": "shade1" },
+        { "name": "Linux", "level": "shade1" },
+        { "name": "JBoss", "level": "shade2" },
+        { "name": "Terraform", "level": "shade4" },
+        { "name": "Bare Metal K8S", "level": "shade2" },
+        { "name": "OCP K8S", "level": "shade5" },
+        { "name": "Ansible", "level": "shade4" },
+        { "name": "Tomcat", "level": "shade3" },
+        { "name": "Grafana", "level": "shade4" },
+        { "name": "Prometheus", "level": "shade4" },
+        { "name": "Kiali", "level": "shade4" },
+        { "name": "Jolokia", "level": "shade3" }
+      ]
+    },
+    {
+      "name": "CICD",
+      "pillClass": "pill10",
+      "skills": [
+        { "name": "Jenkins", "level": "shade3" },
+        { "name": "Docker BuildKit", "level": "shade5" }
+      ]
+    },
+    {
+      "name": "Network",
+      "pillClass": "pill6",
+      "skills": [
+        { "name": "Istio", "level": "shade4" },
+        { "name": "Ingress", "level": "shade1" },
+        { "name": "Nginx Ingress Controller", "level": "shade2" },
+        { "name": "Nginx Static File Server", "level": "shade3" },
+        { "name": "WebSocket", "level": "shade3" }
+      ]
+    },
+    {
+      "name": "Cloud",
+      "pillClass": "pill7",
+      "skills": [
+        { "name": "OCI", "level": "shade3" },
+        { "name": "GCP", "level": "shade5" }
+      ]
+    },
+    {
+      "name": "Tool",
+      "pillClass": "pill8",
+      "skills": [
+        { "name": "WordPress", "level": "shade2" }
+      ]
+    },
+    {
+      "name": "Security",
+      "pillClass": "pill9",
+      "skills": [
+        { "name": "Keycloak 18 26", "level": "shade2" },
+        { "name": "Keycloak SPI", "level": "shade4" },
+        { "name": "RedHat SSO 7", "level": "shade3" },
+        { "name": "Authorization Code Flow", "level": "shade2" },
+        { "name": "JWT", "level": "shade2", "specialClass": "jwt" },
+        { "name": "Spring Security", "level": "shade3", "specialClass": "spring-security" },
+        { "name": "Digital Signature", "level": "shade3" }
+      ]
+    }
+  ]
+}
