@@ -9,6 +9,16 @@ tags:
   - AOP
 ---
 
+## Spring Boot IOC 實作
+
+在 Spring Boot 啟動階段，會自動掃描所有有標註的元件（如 @Service、@Controller 等），並將它們建立成 Bean 放入 IoC 容器中。
+
+之後在執行期間，當某個類別需要用到其他元件時（透過 @Autowired 或建構子參數），Spring 就會自動從 IoC 容器中取出對應的 Bean 來注入，省去手動 new 物件的麻煩，這就是控制反轉（IoC）。
+
+「Bean」指的是：
+
+一個被 Spring IoC 容器管理的物件。
+
 ## Spring Boot AOP 實作
 
 ### 概述
