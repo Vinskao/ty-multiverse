@@ -99,12 +99,30 @@ Spring 提供兩種代理實作方式：
 Spring 中的 @Transactional 是 AOP 應用的經典範例。當方法或類別標註 @Transactional 時：
 
 1. Spring 建立代理類別（使用 JDK Proxy 或 CGLIB）
+   - 資料庫：此時資料庫尚未有任何動作
+
 2. 方法呼叫流程：
    - 方法執行「前」開啟交易（begin transaction）
+     - 資料庫：建立一個新的交易（transaction）
+     - 資料庫：設定交易隔離層級（isolation level）
+     - 資料庫：開始記錄所有 SQL 操作到交易日誌（transaction log）
+
    - 呼叫 method.invoke(target, args) 執行實際方法
+     - 資料庫：執行所有 SQL 操作（INSERT/UPDATE/DELETE）
+     - 資料庫：將操作結果暫存在交易緩衝區（transaction buffer）
+     - 資料庫：持續記錄操作到交易日誌
+
    - 方法執行「後」根據結果：
      - 若無例外 → 提交交易（commit）
+       - 資料庫：將交易緩衝區的變更寫入實際資料表
+       - 資料庫：釋放交易鎖定（transaction locks）
+       - 資料庫：標記交易為已完成
+
      - 若拋出例外 → 回滾交易（rollback）
+       - 資料庫：讀取交易日誌
+       - 資料庫：將所有變更還原到交易開始前的狀態
+       - 資料庫：釋放交易鎖定
+       - 資料庫：標記交易為已回滾
 
 當你呼叫 rollback()，資料庫會自動把「在這個交易中做的所有變更」都撤銷掉。
 不會造成「再寫一次」，也不需要「自己重寫 SQL」。

@@ -15,6 +15,43 @@ tags:
   - Java
 ---
 
+### HTTP 請求標準格式
+
+```bash
+# 請求行（Request Line）
+METHOD /path?query=value HTTP/1.1
+
+# 請求標頭（Headers）
+Host: example.com
+Content-Type: application/json
+Authorization: Bearer token
+Accept: application/json
+
+# 請求主體（Body）- 僅 POST、PUT、PATCH 等方法需要
+{
+    "key": "value"
+}
+```
+
+#### 格式說明
+
+1. **請求行**
+   - METHOD：HTTP 方法（GET、POST、PUT 等）
+   - /path：資源路徑
+   - ?query=value：查詢參數（可選）
+   - HTTP/1.1：HTTP 版本
+
+2. **請求標頭**
+   - Host：目標主機
+   - Content-Type：內容類型
+   - Authorization：認證資訊
+   - Accept：期望的回應格式
+
+3. **請求主體**
+   - 用於傳送資料
+   - 通常為 JSON 或 XML 格式
+   - GET 和 DELETE 方法通常不需要
+
 #### HTTP 方法
 
 HTTP 方法是指定在與 Web 伺服器或其他資源進行通訊時所採取的操作，是 HTTP 協定的一部分，用於定義客戶端對伺服器進行的請求的性質，常見的 HTTP 方法包括 GET、POST、PUT、DELETE 等。

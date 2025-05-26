@@ -1,5 +1,5 @@
 ---
-title: SQL WHERE & HAVING Clauses
+title: SQL Clauses
 publishDate: 2024-03-04 15:00:00
 img: /tymultiverse/assets/SQL.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
@@ -140,3 +140,7 @@ HAVING AVG(salary) IS NOT NULL;
 ## Conclusion
 
 `WHERE` 和 `HAVING` 各自用於不同階段的資料篩選，合理使用這兩個子句可以有效提升 SQL 查詢的準確性與效能。
+
+
+## SQL Injection
+SQL Injection 是「把惡意 SQL 當作使用者輸入」，讓程式錯誤地執行攻擊者想要的查詢。
