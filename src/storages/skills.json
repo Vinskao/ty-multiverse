@@ -68,6 +68,8 @@
         { "name": "Docker", "level": "shade1" },
         { "name": "Podman", "level": "shade1" },
         { "name": "Linux", "level": "shade1" },
+        { "name": "JBoss EAP 7 Runtime Image", "level": "shade2" },
+        { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
         { "name": "Yum Repository", "level": "shade3" },
         { "name": "Satellite", "level": "shade4" },
         { "name": "JBoss", "level": "shade2" },
