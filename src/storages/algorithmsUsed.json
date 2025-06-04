@@ -6,11 +6,11 @@
       },
       {
         "name": "Sliding Window",
-        "explanation": "使用兩個指標來遍歷陣列，通常用於解決數組或字串的問題。"
+        "explanation": "維護一個固定大小的窗口，通過滑動窗口來解決數組或字串的問題。"
       },
       {
         "name": "Binary Search",
-        "explanation": "在已排序的陣列中，通過不斷縮小搜尋範圍來找到特定元素。"
+        "explanation": "在已排序的陣列中，設定left、right、mid，每次都確認target是否在mid的左邊或右邊，通過不斷縮小搜尋範圍來找到特定元素。"
       },
       {
         "name": "Leaner Search",
