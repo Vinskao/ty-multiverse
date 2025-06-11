@@ -532,3 +532,15 @@
 	box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.4);
 	object-fit: contain;
 }
+
+.visit-counter {
+	font-size: 1.2em;
+	color: var(--gray-300);
+	margin-top: 0.5rem;
+	font-style: italic;
+}
+
+.visit-counter #visit-count {
+	font-weight: bold;
+	color: var(--gray-100);
+}
