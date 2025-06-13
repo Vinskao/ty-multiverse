@@ -290,11 +290,12 @@ async function updateVisitCount() {
         
         if (!sessionCookie) {
             // If no session cookie exists, increment the counter
-            await fetch('https://peoplesystem.tatdvsonorth.com/voyeur/increment/', {
+            await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/push/`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'value=1'
             });
             
             // Set a session cookie that expires in 30 minutes
@@ -302,7 +303,7 @@ async function updateVisitCount() {
         }
 
         // Get the current count regardless of whether we incremented
-        const response = await fetch('https://peoplesystem.tatdvsonorth.com/voyeur/count/');
+        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/count/`);
         const data = await response.json();
         
         // Update the counter in the DOM

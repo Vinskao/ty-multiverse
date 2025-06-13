@@ -11,6 +11,7 @@ stringData:
   PUBLIC_PEOPLE_IMAGE_URL: "${{ secrets.PUBLIC_PEOPLE_IMAGE_URL }}"
   PUBLIC_CLIENT: "${{ secrets.PUBLIC_CLIENT }}"
   PUBLIC_REALM: "${{ secrets.PUBLIC_REALM }}"
+  PUBLIC_API_BASE_URL: "${{ secrets.PUBLIC_API_BASE_URL }}"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -69,6 +70,11 @@ spec:
             secretKeyRef:
               name: ty-multiverse-frontend-secrets
               key: PUBLIC_REALM
+        - name: PUBLIC_API_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: ty-multiverse-frontend-secrets
+              key: PUBLIC_API_BASE_URL
 ---
 apiVersion: v1
 kind: Service

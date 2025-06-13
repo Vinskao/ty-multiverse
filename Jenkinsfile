@@ -115,7 +115,8 @@ pipeline {
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
                             string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
-                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
+                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
+                            string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL')
                         ]) {
                             sh '''
                                 cd /home/jenkins/agent/workspace/TYF/ty-multiverse-frontend-deploy
@@ -136,6 +137,7 @@ pipeline {
                                     --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
                                     --build-arg PUBLIC_CLIENT="${PUBLIC_CLIENT}" \
                                     --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
+                                    --build-arg PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL}" \
                                     --cache-from ${DOCKER_IMAGE}:latest \
                                     -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
                                     -t ${DOCKER_IMAGE}:latest \
