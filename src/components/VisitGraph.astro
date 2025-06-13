@@ -1,0 +1,176 @@
+<div class="visit-graph">
+    <div id="mermaid-diagram"></div>
+  </div>
+  
+  <script>
+    declare const mermaid: any;
+  
+    const diagramSteps = [
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List
+          Consumer->>Mongo: 4. Update Increment in Document`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List
+          Consumer->>Mongo: 4. Update Increment in Document
+          Frontend->>Django: 5. Call Count API`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List
+          Consumer->>Mongo: 4. Update Increment in Document
+          Frontend->>Django: 5. Call Count API
+          Django->>Mongo: 6. Query Count from Document`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List
+          Consumer->>Mongo: 4. Update Increment in Document
+          Frontend->>Django: 5. Call Count API
+          Django->>Mongo: 6. Query Count from Document
+          Mongo-->>Django: Return Count`,
+  
+      `sequenceDiagram
+          participant Frontend as Frontend
+          participant Django as Django API
+          participant Redis as Redis Queue
+          participant Consumer as Consumer Service
+          participant Mongo as MongoDB
+  
+          Frontend->>Django: 1. Call Push API
+          Django->>Redis: 2. Push to Redis List
+          Consumer->>Redis: 3. Pop from Redis List
+          Consumer->>Mongo: 4. Update Increment in Document
+          Frontend->>Django: 5. Call Count API
+          Django->>Mongo: 6. Query Count from Document
+          Mongo-->>Django: Return Count
+          Django-->>Frontend: Return Count
+  
+          Note over Frontend,Mongo: 異步處理訪問計數
+          Note over Redis,Consumer: 使用 Consumer YAML 配置`
+    ];
+  
+    let currentStep = 0;
+    const diagramElement = document.getElementById('mermaid-diagram');
+  
+    async function updateDiagram() {
+      if (diagramElement) {
+        const { svg } = await mermaid.render(`diagram-step-${currentStep}`, diagramSteps[currentStep]);
+        diagramElement.innerHTML = svg;
+        
+        // If this is the last step, wait longer
+        if (currentStep === diagramSteps.length - 1) {
+          setTimeout(() => {
+            currentStep = 0;
+            updateDiagram();
+          }, 3000);
+        } else {
+          currentStep = (currentStep + 1) % diagramSteps.length;
+        }
+      }
+    }
+  
+    // Wait for Mermaid to be loaded
+    function initMermaid() {
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+        });
+        updateDiagram();
+        setInterval(updateDiagram, 1000);
+      } else {
+        setTimeout(initMermaid, 100);
+      }
+    }
+  
+    // Start initialization
+    initMermaid();
+  </script>
+  
+  <style>
+    .visit-graph {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+  
+    #mermaid-diagram {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      min-height: 200px;
+    }
+  </style>
