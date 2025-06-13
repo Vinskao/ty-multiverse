@@ -13,6 +13,7 @@ import Hero from '../components/Hero.astro';
 import { Icon } from '../components/Icon';
 import Pill from '../components/Pill.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
+import VisitGraph from '../components/VisitGraph.astro';
 
 // Page section components
 import ContactCTA from '../components/ContactCTA.astro';
@@ -48,6 +49,7 @@ const skillsCategories = skillsData.categories;
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
           
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
 
 </head>
 
@@ -80,7 +82,10 @@ const skillsCategories = skillsData.categories;
 					<div class="hero-header">
 						<h1>TY's Outerspace</h1>
 						<p>The Future is Now</p>
-						<p class="visit-counter">You are the <span id="visit-count">...</span> visitor!</p>
+						<div class="visitor-counter-box">
+							<p class="visit-counter">You are the <span id="visit-count">...</span> visitor!</p>
+						</div>
+						<VisitGraph />
 					</div>
 					<div class="hero-content">
 						<div class="github-stats">
@@ -232,4 +237,25 @@ const skillsCategories = skillsData.categories;
 </BaseLayout>
 
 <script src="../scripts/index.js"></script>
+
+<style>
+	.visitor-counter-box {
+		display: inline-block;
+		padding: 0.5rem 1rem;
+		border: 2px solid #666;
+		border-radius: 8px;
+		margin-bottom: 1rem;
+		position: relative;
+	}
+
+	.visitor-counter-box::after {
+		content: '';
+		position: absolute;
+		bottom: -50px;
+		left: 50%;
+		width: 2px;
+		height: 50px;
+		background: #666;
+	}
+</style>
 </body>

@@ -122,7 +122,7 @@ graph TD
     API --> TokenCache
 ```
 
-### 訪問計數隊列流程
+### 訪問計數隊列流程(你是第幾個訪問者)
 
 ```mermaid
 sequenceDiagram
@@ -136,7 +136,10 @@ sequenceDiagram
     Django->>Redis: 2. Push to Redis List
     Consumer->>Redis: 3. Pop from Redis List
     Consumer->>Mongo: 4. Update Increment in Document
-    Frontend->>Mongo: 5. Get Count Directly
+    Frontend->>Django: 5. Call Count API
+    Django->>Mongo: 6. Query Count from Document
+    Mongo-->>Django: Return Count
+    Django-->>Frontend: Return Count
 
     Note over Frontend,Mongo: 異步處理訪問計數
     Note over Redis,Consumer: 使用 Consumer YAML 配置
