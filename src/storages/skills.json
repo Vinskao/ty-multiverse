@@ -58,7 +58,8 @@
         { "name": "MongoDB", "level": "shade4" },
         { "name": "PostgreSQL", "level": "shade1" },
         { "name": "MSSQL", "level": "shade1" },
-        { "name": "SQLite", "level": "shade1" }
+        { "name": "SQLite", "level": "shade1" },
+        { "name": "Redis", "level": "shade3" }
       ]
     },
     {
@@ -115,7 +116,8 @@
       "name": "Tool",
       "pillClass": "pill8",
       "skills": [
-        { "name": "WordPress", "level": "shade2" }
+        { "name": "WordPress", "level": "shade2" },
+        { "name": "Cursor", "level": "shade1" }
       ]
     },
     {
