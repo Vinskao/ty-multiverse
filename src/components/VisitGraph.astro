@@ -124,16 +124,7 @@
       if (diagramElement) {
         const { svg } = await mermaid.render(`diagram-step-${currentStep}`, diagramSteps[currentStep]);
         diagramElement.innerHTML = svg;
-        
-        // If this is the last step, wait longer
-        if (currentStep === diagramSteps.length - 1) {
-          setTimeout(() => {
-            currentStep = 0;
-            updateDiagram();
-          }, 3000);
-        } else {
-          currentStep = (currentStep + 1) % diagramSteps.length;
-        }
+        currentStep = (currentStep + 1) % diagramSteps.length;
       }
     }
   
