@@ -4,7 +4,7 @@ import { storageService } from './storageService';
 // 驗證狀態追踪
 let isVerifying = false;
 let lastVerifyTime = 0;
-const VERIFY_COOLDOWN = 5000; // 5秒冷卻時間
+const VERIFY_COOLDOWN = 7000;
 let lastToken = null; // 追踪上一次驗證的 token
 let verificationInterval = null; // 追踪定期驗證的 interval
 
