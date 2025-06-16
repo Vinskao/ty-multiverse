@@ -14,6 +14,8 @@
         { "name": "Rust", "level": "shade5" },
         { "name": "Quarkus", "level": "shade3" },
         { "name": "Django Rest", "level": "shade4" },
+        { "name": "FastAPI", "level": "shade3" },
+        { "name": "Poetry", "level": "shade3" },
         { "name": "JPA", "level": "shade1" },
         { "name": "Mybatis 3", "level": "shade1" },
         { "name": "JDBCTemplate", "level": "shade1" },
