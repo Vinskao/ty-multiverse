@@ -5,14 +5,14 @@
       "pillClass": "pill1",
       "skills": [
         { "name": "Java 8 11 17", "level": "shade1" },
-        { "name": "Spring Boot 2 3", "level": "shade2" },
+        { "name": "Spring Boot 2 3", "level": "shade1" },
         { "name": "Servlet 5", "level": "shade3" },
         { "name": "Spring Framework 6", "level": "shade3" },
-        { "name": "Python 3", "level": "shade3" },
+        { "name": "Maven", "level": "shade2" },
         { "name": "Node.js", "level": "shade3" },
-        { "name": "PHP", "level": "shade3" },
         { "name": "Rust", "level": "shade5" },
         { "name": "Quarkus", "level": "shade3" },
+        { "name": "Python 3", "level": "shade3" },
         { "name": "Django Rest", "level": "shade4" },
         { "name": "FastAPI", "level": "shade3" },
         { "name": "Poetry", "level": "shade3" },
@@ -24,7 +24,9 @@
         { "name": "JUnit 5", "level": "shade2" },
         { "name": "Mokito", "level": "shade3" },
         { "name": "Mongoose.js", "level": "shade4" },
-        { "name": "Express.js", "level": "shade4" }
+        { "name": "Express.js", "level": "shade4" },
+        { "name": "PHP 12", "level": "shade3" },
+        { "name": "Laravel", "level": "shade3" }
       ]
     },
     {
@@ -48,7 +50,6 @@
       "pillClass": "pill3",
       "skills": [
         { "name": "LangChain", "level": "shade5" },
-        { "name": "Ollama", "level": "shade5" },
         { "name": "OpenAI API", "level": "shade4" }
       ]
     },
