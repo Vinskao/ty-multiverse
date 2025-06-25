@@ -13,7 +13,7 @@
         "explanation": "在已排序的陣列中，設定left、right、mid，每次都確認target是否在mid的左邊或右邊，通過不斷縮小搜尋範圍來找到特定元素。"
       },
       {
-        "name": "Leaner Search",
+        "name": "Linear Search",
         "explanation": "從陣列的頭開始，逐個檢查元素，直到找到目標元素或遍歷完所有元素。"
       },
       {
