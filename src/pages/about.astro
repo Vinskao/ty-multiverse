@@ -5,6 +5,10 @@ import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import '../styles/about.css';
 
+// Import the JSON data
+import aboutData from '../storages/about.json';
+import skillsData from '../storages/skills.json';
+
 ---
 
 <meta charset="UTF-8" />
@@ -32,59 +36,222 @@ import '../styles/about.css';
 
         <section>
           <h2 class="section-title">Background</h2>
-          <div class="content">
-            <p>
-              In the financial industry, as the trend towards transforming into
-              a technology-driven sector through data empowerment continues, I
-              believe that moving towards becoming a developer is more like
-              enhancing my own abilities. While my Fintech background helps with
-              my choice of web-based backend and cloud development, my real
-              drive comes from years of self-exploration and a passion for
-              technology. I look forward to collaborating with you to overcome
-              any challenges and create something exceptional.
+          <div class="content background-content">
+            <div class="name-section">
+              <h1 class="majestic-name">KAO TIAN YI</h1>
+              <p class="email">tianyikao@gmail.com</p>
+            </div>
+            <p set:html={aboutData.background.replace(/\n/g, '<br>')}>
             </p>
           </div>
         </section>
+        
+        <section>
+          <h2 class="section-title">Experience</h2>
+          <div class="content">
+            {aboutData.experience.map((job) => (
+              <div class="experience-item">
+                <div class="job-header">
+                  <h3>{job.title}</h3>
+                  <div class="job-meta">
+                    <span class="company">{job.company}</span>
+                    <span class="period">{job.period}</span>
+                  </div>
+                </div>
+                
+                {job.projectExperience && (
+                  <div class="project-experience">
+                    <h4>Project Experience</h4>
+                    <ul>
+                      {job.projectExperience.map((project) => (
+                        <li>{project}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {job.responsibilities && (
+                  <div class="responsibilities">
+                    <ul>
+                      {job.responsibilities.map((responsibility) => (
+                        <li>{responsibility}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {job.title === "Open Source Backend Engineer" && (
+                  <div class="skills-section">
+                    {skillsData.categories.map((category) => (
+                      <div class="skill-category">
+                        <h5>{category.name}</h5>
+                        {category.subcategories ? (
+                          category.subcategories.map((subcategory) => (
+                            <div class="skill-subcategory">
+                              <h6>{subcategory.name}</h6>
+                              <div class="skill-tags">
+                                {subcategory.skills.map((skill) => {
+                                  const gradeMap = {
+                                    'shade1': 'S',
+                                    'shade2': 'A', 
+                                    'shade3': 'B',
+                                    'shade4': 'C',
+                                    'shade5': 'D'
+                                  };
+                                  return (
+                                    <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
+                                          data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                      {skill.name}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                              {(subcategory as any).description && (subcategory as any).description.length > 0 && (
+                                <p class="skill-subdescription">
+                                  {(subcategory as any).description.map((desc: string, index: number) => (
+                                    <span set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #007bff; text-decoration: underline;">$1</a>')}>
+                                    </span>
+                                  ))}
+                                </p>
+                              )}
+                              
+                    
+                              {subcategory.name === "Frameworks & Libraries" && (
+                                <div class="mermaid-diagram">
+                                  <pre class="mermaid">
+                                    sequenceDiagram
+                                        participant Service
+                                        participant Factory
+                                        participant Cache
+                                        participant ApplicationContext
+                                        participant Repository
+                                        
+                                        Service->>Factory: Request Instance
+                                        Factory->>Cache: Check Cache
+                                        alt Cache Hit
+                                            Cache-->>Factory: Return Cached Instance
+                                        else Cache Miss
+                                            Factory->>ApplicationContext: Get Bean
+                                            ApplicationContext-->>Factory: Return Bean
+                                            Factory->>Cache: Store in Cache
+                                        end
+                                        Factory-->>Service: Return Instance
+                                        Service->>Repository: Use Instance
+                                  </pre>
+                                </div>
+                              )}
+                              {subcategory.name === "Platforms" && (
+                                <div class="mermaid-diagram">
+                                  <pre class="mermaid">
+                                    graph TB
+                                        Internet[Internet]
+                                        
+                                        subgraph OCI_VCN_10_0_0_0_16["OCI VCN (10.0.0.0/16)"]
+                                            subgraph Public_Subnet_10_0_0_0_24["Public Subnet (10.0.0.0/24)"]
+                                                node1[node1\nControlPlane\n10.0.0.11\n+ Public IP]
+                                                node2[node2\nWorker\n10.0.0.12\n+ Public IP]
+                                                node3[node3\nWorker\n10.0.0.13\n+ Public IP]
+                                                node4[node4\nWorker\n10.0.0.14\n+ Public IP]
+                                            end
+
+                                            IG[Internet Gateway]
+                                            SL[Security List\nIngress: 0.0.0.0/0\nEgress: 0.0.0.0/0]
+                                        end
+
+                                        Internet --> IG
+                                        IG --> SL
+                                        SL --> node1
+                                        SL --> node2
+                                        SL --> node3
+                                        SL --> node4
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div class="skill-tags">
+                            {category.skills.map((skill) => {
+                              const gradeMap = {
+                                'shade1': 'S',
+                                'shade2': 'A', 
+                                'shade3': 'B',
+                                'shade4': 'C',
+                                'shade5': 'D'
+                              };
+                              return (
+                                <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
+                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                  {skill.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {(category as any).description && (category as any).description.length > 0 && (
+                          <p class="skill-description">
+                            {(category as any).description.map((desc: string, index: number) => (
+                              <span set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #007bff; text-decoration: underline;">$1</a>')}>
+                              </span>
+                            ))}
+                          </p>
+                        )}
+                        
+                        {category.name === "CI/CD" && (
+                          <div class="mermaid-diagram">
+                            <pre class="mermaid">
+                              graph LR
+                                  A[GitHub Repository] --> B[Clone and Setup]
+                                  B --> C[Build with Node.js]
+                                  C --> D[Build Docker Image with BuildKit]
+                                  D --> E[Push to Docker Hub]
+                                  E --> F[Deploy to Kubernetes]
+                            </pre>
+                          </div>
+                        )}
+                        
+                        {category.name === "Security & Authentication" && (
+                          <div class="mermaid-diagram">
+                            <pre class="mermaid">
+                              sequenceDiagram
+                                  participant User as User
+                                  participant App as Application
+                                  participant Auth as Authorization Server
+                                  participant API as Resource Server
+                                  
+                                  User->>App: 1. Access Application
+                                  App->>Auth: 2. Redirect to Authorization Page
+                                  User->>Auth: 3. Login and Authorize
+                                  Auth->>App: 4. Return Authorization Code
+                                  App->>Auth: 5. Exchange Code for Token
+                                  Auth->>App: 6. Return Access Token
+                                  App->>API: 7. Access Resources with Token
+                                  API->>App: 8. Return Protected Resources
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section>
           <h2 class="section-title">Education</h2>
           <div class="content">
-            <div class="education-item" id="iSpan">
-              <h3>RedHat</h3>
-              <ul>
-                <li>Red Hat JBoss Application Administration I (AD248)</li>
-              </ul>
-            </div>
-            <div class="education-item" id="iSpan">
-              <h3>iSpan</h3>
-              <ul>
-                <li>JavaEE Career Development Program</li>
-              </ul>
-            </div>
-            <div class="education-item">
-              <h3>FreeCodeCamp.com</h3>
-              <ul>
-                <li>JavaScript Algorithms and Data Structures</li>
-                <li>Data Visualization</li>
-              </ul>
-            </div>
-            <div class="education-item">
-              <h3>Hong Kong Polytechnic University</h3>
-              <ul>
-                <li>Master of Finance in Investment Management</li>
-              </ul>
-            </div>
-            <div class="education-item">
-              <h3>Fu Jen Catholic University</h3>
-              <ul>
-                <li>B.B.A. in Finance and International Business</li>
-              </ul>
-            </div>
-            <div class="education-item">
-              <h3>Temple University</h3>
-              <ul>
-                <li>Global Exchange Program</li>
-              </ul>
-            </div>
+            {aboutData.education.map((item) => (
+              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
+                <h3>{item.institution}</h3>
+                <ul>
+                  {item.programs.map((program) => (
+                    <li>{program}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </section>
         
@@ -92,6 +259,27 @@ import '../styles/about.css';
 
       <ContactCTA />
     </div>
+    
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ 
+        startOnLoad: true,
+        theme: 'default',
+        flowchart: {
+          useMaxWidth: false,
+          htmlLabels: true
+        },
+        classDiagram: {
+          useMaxWidth: false,
+          htmlLabels: true
+        },
+        sequence: {
+          useMaxWidth: false,
+          htmlLabels: true
+        }
+      });
+    </script>
   </BaseLayout>
 
 </body>
+</rewritten_file>

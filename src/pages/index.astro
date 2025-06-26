@@ -98,18 +98,25 @@ const skillsCategories = skillsData.categories;
 						</div>
 
 						<div class="categories">
-							{skillsCategories.map((category) => (
-								<div class="category">
-									<h5>{category.name}</h5>
-									<div class="pills-container">
-										{category.skills.map((skill) => (
-											<span class={`pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
-												{skill.name}
-											</span>
-										))}
+							{skillsCategories.map((category) => {
+								// Flatten skills from subcategories if they exist, otherwise use direct skills
+								const allSkills = category.subcategories 
+									? category.subcategories.flatMap(sub => sub.skills)
+									: category.skills || [];
+								
+								return (
+									<div class="category">
+										<h5>{category.name}</h5>
+										<div class="pills-container">
+											{allSkills.map((skill) => (
+												<span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`}>
+													{skill.name}
+												</span>
+											))}
+										</div>
 									</div>
-								</div>
-							))}
+								);
+							})}
 						</div>
 					</div>
 				</div>
@@ -242,20 +249,29 @@ const skillsCategories = skillsData.categories;
 	.visitor-counter-box {
 		display: inline-block;
 		padding: 0.5rem 1rem;
-		border: 2px solid #666;
+		border: 5px solid #12a8ee;
 		border-radius: 8px;
 		margin-bottom: 1rem;
 		position: relative;
+		background: white;
+		box-shadow: 0 2px 4px rgba(11, 211, 201, 0.1);
+		animation: borderPulse 2s infinite;
 	}
 
-	.visitor-counter-box::after {
-		content: '';
-		position: absolute;
-		bottom: -50px;
-		left: 50%;
-		width: 2px;
-		height: 50px;
-		background: #666;
+	@keyframes borderPulse {
+		0% {
+			border-color: #2b7cd8;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		50% {
+			border-color: #bcdf21;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+		}
+		100% {
+			border-color: #2b7cd8;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
 	}
+
 </style>
 </body>
