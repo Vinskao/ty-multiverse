@@ -1,0 +1,89 @@
+{
+  "background": "Transitioned from finance to technology with deep expertise in computer science and software engineering.\n\n\"The ability to shift perspectives is like gaining 80 extra IQ points.\"\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/",
+  "experience": [
+    {
+      "title": "Open Source Backend Engineer",
+      "company": "Mercuries Life Insurance",
+      "period": "2024/3~Present",
+      "projectExperience": [
+        "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
+        "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
+        "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
+        "API Development & Integration: Built WebSocket and RESTful APIs for seamless frontend-backend communication",
+        "Quality Assurance & Observability: Developed comprehensive unit testing framework (JUnit5, Mockito) and implemented monitoring dashboards using Grafana and Prometheus"
+      ]
+    },
+    {
+      "title": "Fintech PM, MA Program",
+      "company": "Far Eastern Int'l Bank",
+      "period": "2022/9~2023/1",
+      "responsibilities": [
+        "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
+        "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
+        "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
+        "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations"
+      ]
+    },
+    {
+      "title": "Macro Associate",
+      "company": "Tarobo Investment Advisors",
+      "period": "2022/9~2023/1",
+      "responsibilities": [
+        "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis",
+        "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies",
+        "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis"
+      ]
+    },
+    {
+      "title": "Auditor",
+      "company": "EY",
+      "period": "2019/9~2020/3",
+      "responsibilities": [
+        "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
+        "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
+        "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
+        "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
+        "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements ensuring regulatory compliance"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "RedHat",
+      "programs": [
+        "Red Hat JBoss Application Administration I (AD248)"
+      ]
+    },
+    {
+      "institution": "iSpan",
+      "programs": [
+        "JavaEE Career Development Program"
+      ]
+    },
+    {
+      "institution": "FreeCodeCamp.com",
+      "programs": [
+        "JavaScript Algorithms and Data Structures",
+        "Data Visualization"
+      ]
+    },
+    {
+      "institution": "Hong Kong Polytechnic University",
+      "programs": [
+        "Master of Finance in Investment Management"
+      ]
+    },
+    {
+      "institution": "Fu Jen Catholic University",
+      "programs": [
+        "B.B.A. in Finance and International Business"
+      ]
+    },
+    {
+      "institution": "Temple University",
+      "programs": [
+        "Global Exchange Program"
+      ]
+    }
+  ]
+}

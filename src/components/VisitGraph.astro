@@ -155,6 +155,26 @@
       padding: 1rem;
       position: relative;
       z-index: 1;
+      border: 5px solid #12a8ee;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(11, 211, 201, 0.1);
+      animation: borderPulse 2s infinite;
+    }
+  
+    @keyframes borderPulse {
+      0% {
+        border-color: #666;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      50% {
+        border-color: #999;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+      100% {
+        border-color: #666;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
     }
   
     #mermaid-diagram {

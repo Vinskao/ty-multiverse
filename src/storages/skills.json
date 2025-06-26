@@ -1,37 +1,70 @@
 {
   "categories": [
     {
-      "name": "Backend",
+      "name": "Backend Development",
       "pillClass": "pill1",
-      "skills": [
-        { "name": "Java 8 11 17", "level": "shade1" },
-        { "name": "Spring Boot 2 3", "level": "shade1" },
-        { "name": "Servlet 5", "level": "shade3" },
-        { "name": "Spring Framework 6", "level": "shade3" },
-        { "name": "Maven", "level": "shade2" },
-        { "name": "Node.js", "level": "shade3" },
-        { "name": "Rust", "level": "shade5" },
-        { "name": "Quarkus", "level": "shade3" },
-        { "name": "Python 3", "level": "shade3" },
-        { "name": "Django Rest", "level": "shade4" },
-        { "name": "FastAPI", "level": "shade3" },
-        { "name": "Poetry", "level": "shade3" },
-        { "name": "JPA", "level": "shade1" },
-        { "name": "Mybatis 3", "level": "shade1" },
-        { "name": "JDBCTemplate", "level": "shade1" },
-        { "name": "Java Keystore", "level": "shade1" },
-        { "name": "Swagger", "level": "shade1" },
-        { "name": "JUnit 5", "level": "shade2" },
-        { "name": "Mokito", "level": "shade3" },
-        { "name": "Mongoose.js", "level": "shade4" },
-        { "name": "Express.js", "level": "shade4" },
-        { "name": "PHP 12", "level": "shade3" },
-        { "name": "Laravel", "level": "shade3" }
+      "description": [
+      ],
+      "subcategories": [
+        {
+          "name": "Languages",
+          "description": [
+            "Implemented factory design pattern for decoupling - https://github.com/Vinskao?tab=repositories"
+          ],
+          "skills": [
+            { "name": "Java 8 11 17", "level": "shade1" },
+            { "name": "Python 3", "level": "shade3" },
+            { "name": "Node.js", "level": "shade3" },
+            { "name": "PHP 12", "level": "shade3" }
+          ]
+        },
+        {
+          "name": "Frameworks & Libraries",
+          "description": [
+            "Developed CRUD APIs using Spring Boot framework with SSO server integration",
+            "Building Knowledge Management QA System with FastAPI and LangChain integration"
+          ],
+          "skills": [
+            { "name": "Spring Framework 6", "level": "shade3" },
+            { "name": "Spring Boot 2 3", "level": "shade1" },
+            { "name": "Quarkus", "level": "shade3" },
+            { "name": "Django Rest", "level": "shade4" },
+            { "name": "Express.js", "level": "shade4" },
+            { "name": "Laravel", "level": "shade3" },
+            { "name": "FastAPI", "level": "shade3" }
+          ]
+        },
+        {
+          "name": "Data Access",
+          "description": [
+          ],
+          "skills": [
+            { "name": "JPA", "level": "shade1" },
+            { "name": "Mybatis 3", "level": "shade1" },
+            { "name": "JDBCTemplate", "level": "shade1" },
+            { "name": "Mongoose.js", "level": "shade4" }          ]
+        },
+        {
+          "name": "API Development & Testing",
+          "description": [],
+          "skills": [
+            { "name": "Swagger", "level": "shade1" },
+            { "name": "RESTful API", "level": "shade1" },
+            { "name": "JUnit 5", "level": "shade2" },
+            { "name": "Mokito", "level": "shade3" },
+            { "name": "Servlet 5", "level": "shade3" },
+            { "name": "Maven", "level": "shade2" },
+            { "name": "Poetry", "level": "shade3" }
+          ]
+        }
       ]
     },
     {
-      "name": "Frontend",
+      "name": "Frontend Development",
       "pillClass": "pill2",
+      "description": [
+        "Built Astro website with React useState integration"
+      ],
       "skills": [
         { "name": "JavaScript", "level": "shade1" },
         { "name": "Vue.js 2 3", "level": "shade2" },
@@ -46,51 +79,83 @@
       ]
     },
     {
-      "name": "AI",
-      "pillClass": "pill3",
-      "skills": [
-        { "name": "LangChain", "level": "shade5" },
-        { "name": "OpenAI API", "level": "shade4" }
-      ]
-    },
-    {
-      "name": "DB",
+      "name": "Database",
       "pillClass": "pill4",
-      "skills": [
-        { "name": "Firebase", "level": "shade4" },
-        { "name": "MongoDB", "level": "shade4" },
-        { "name": "PostgreSQL", "level": "shade1" },
-        { "name": "MSSQL", "level": "shade1" },
-        { "name": "SQLite", "level": "shade1" },
-        { "name": "Redis", "level": "shade3" }
+      "description": [
+      ],
+      "subcategories": [
+        {
+          "name": "Relational",
+          "description": [],
+          "skills": [
+            { "name": "PostgreSQL", "level": "shade1" },
+            { "name": "MSSQL", "level": "shade1" },
+            { "name": "SQLite", "level": "shade1" },
+            { "name": "MySQL", "level": "shade3" },
+            { "name": "Informix", "level": "shade5" }
+          ]
+        },
+        {
+          "name": "NoSQL",
+          "description": [],
+          "skills": [
+            { "name": "MongoDB", "level": "shade4" },
+            { "name": "Firebase", "level": "shade4" },
+            { "name": "Redis", "level": "shade3" }
+          ]
+        }
       ]
     },
     {
-      "name": "Infra",
+      "name": "Infrastructure & Deployment",
       "pillClass": "pill5",
-      "skills": [
-        { "name": "Docker", "level": "shade1" },
-        { "name": "Podman", "level": "shade1" },
-        { "name": "Linux", "level": "shade1" },
-        { "name": "JBoss EAP 7 Runtime Image", "level": "shade2" },
-        { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
-        { "name": "Yum Repository", "level": "shade3" },
-        { "name": "Satellite", "level": "shade4" },
-        { "name": "JBoss", "level": "shade2" },
-        { "name": "Terraform", "level": "shade4" },
-        { "name": "Bare Metal K8S", "level": "shade2" },
-        { "name": "OCP K8S", "level": "shade5" },
-        { "name": "Ansible", "level": "shade4" },
-        { "name": "Tomcat", "level": "shade3" },
-        { "name": "Grafana", "level": "shade4" },
-        { "name": "Prometheus", "level": "shade4" },
-        { "name": "Kiali", "level": "shade4" },
-        { "name": "Jolokia", "level": "shade3" }
+      "description": [],
+      "subcategories": [
+        {
+          "name": "Containerization & Orchestration",
+          "description": [],
+          "skills": [
+            { "name": "Docker", "level": "shade1" },
+            { "name": "Podman", "level": "shade1" },
+            { "name": "Kubernetes", "level": "shade1" },
+            { "name": "Bare Metal K8S", "level": "shade2" },
+            { "name": "OCP K8S", "level": "shade5" }
+          ]
+        },
+        {
+          "name": "IaC & Automation",
+          "description": [],
+          "skills": [
+            { "name": "Terraform", "level": "shade4" },
+            { "name": "Ansible", "level": "shade4" }
+          ]
+        },
+        {
+          "name": "Servers & Middleware",
+          "description": [],
+          "skills": [
+            { "name": "JBoss EAP 7 Runtime Image", "level": "shade2" },
+            { "name": "JBoss", "level": "shade2" },
+            { "name": "Tomcat", "level": "shade3" },
+            { "name": "Bare Metal", "level": "shade2" }
+          ]
+        },
+        {
+          "name": "Monitoring & Visualization",
+          "description": [],
+          "skills": [
+            { "name": "Grafana", "level": "shade4" },
+            { "name": "Prometheus", "level": "shade4" },
+            { "name": "Kiali", "level": "shade4" },
+            { "name": "Jolokia", "level": "shade3" }
+          ]
+        }
       ]
     },
     {
-      "name": "CICD",
+      "name": "CI/CD",
       "pillClass": "pill10",
+      "description": ["Built Jenkins Server and implemented CI/CD pipelines using Jenkins and Jenkins Credentials for Spring Boot, Django, Laravel, and Astro projects"],
       "skills": [
         { "name": "Jenkins", "level": "shade3" },
         { "name": "Docker BuildKit", "level": "shade5" }
@@ -99,33 +164,84 @@
     {
       "name": "Network",
       "pillClass": "pill6",
-      "skills": [
-        { "name": "Istio", "level": "shade4" },
-        { "name": "Ingress", "level": "shade1" },
-        { "name": "Nginx Ingress Controller", "level": "shade2" },
-        { "name": "Nginx Static File Server", "level": "shade3" },
-        { "name": "WebSocket", "level": "shade3" }
+      "description": [],
+      "subcategories": [
+        {
+          "name": "Protocols",
+          "description": [],
+          "skills": [
+            { "name": "HTTP", "level": "shade1" },
+            { "name": "WebSocket", "level": "shade3" },
+            { "name": "SSL/TLS", "level": "shade1" }
+          ]
+        },
+        {
+          "name": "Service Mesh & Load Balancing",
+          "description": [],
+          "skills": [
+            { "name": "Istio", "level": "shade4" },
+            { "name": "Ingress", "level": "shade1" },
+            { "name": "Nginx Ingress Controller", "level": "shade2" },
+            { "name": "Nginx Static File Server", "level": "shade3" },
+            { "name": "LoadBalancer", "level": "shade1" }
+          ]
+        }
       ]
     },
     {
       "name": "Cloud",
       "pillClass": "pill7",
-      "skills": [
-        { "name": "OCI", "level": "shade3" },
-        { "name": "GCP", "level": "shade5" }
+      "description": [],
+      "subcategories": [
+        {
+          "name": "Platforms",
+          "description": ["Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE"],
+          "skills": [
+            { "name": "OCI", "level": "shade3" },
+            { "name": "GCP", "level": "shade5" }
+          ]
+        }
       ]
     },
     {
-      "name": "Tool",
+      "name": "Tools",
       "pillClass": "pill8",
-      "skills": [
-        { "name": "WordPress", "level": "shade2" },
-        { "name": "Cursor", "level": "shade1" }
+      "description": [],
+      "subcategories": [
+        {
+          "name": "Systems",
+          "description": [],
+          "skills": [
+            { "name": "Linux", "level": "shade1" },
+            { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
+            { "name": "Ubuntu", "level": "shade1" }
+          ]
+        },
+        {
+          "name": "Scripting",
+          "description": [],
+          "skills": [
+            { "name": "Shell", "level": "shade1" },
+            { "name": "Bash", "level": "shade1" },
+            { "name": "Python", "level": "shade1" }
+          ]
+        },
+        {
+          "name": "Others",
+          "description": [],
+          "skills": [
+            { "name": "WordPress", "level": "shade2" },
+            { "name": "Cursor", "level": "shade1" },
+            { "name": "Yum Repository", "level": "shade3" },
+            { "name": "Satellite", "level": "shade4" }
+          ]
+        }
       ]
     },
     {
-      "name": "Security",
+      "name": "Security & Authentication",
       "pillClass": "pill9",
+      "description": ["Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo"],
       "skills": [
         { "name": "Keycloak 18 26", "level": "shade2" },
         { "name": "Keycloak SPI", "level": "shade4" },
@@ -133,7 +249,24 @@
         { "name": "Authorization Code Flow", "level": "shade2" },
         { "name": "JWT", "level": "shade2", "specialClass": "jwt" },
         { "name": "Spring Security", "level": "shade3", "specialClass": "spring-security" },
-        { "name": "Digital Signature", "level": "shade3" }
+        { "name": "Digital Signature", "level": "shade3" },
+        { "name": "OAuth2", "level": "shade2" },
+        { "name": "Java Keystore", "level": "shade1" }
+      ]
+    },
+    {
+      "name": "AI",
+      "pillClass": "pill3",
+      "description": [],
+      "subcategories": [
+        {
+          "name": "Frameworks & APIs",
+          "description": [],
+          "skills": [
+            { "name": "LangChain", "level": "shade5" },
+            { "name": "OpenAI API", "level": "shade4" }
+          ]
+        }
       ]
     }
   ]
