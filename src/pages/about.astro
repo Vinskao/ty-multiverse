@@ -115,82 +115,81 @@ import skillsData from '../storages/skills.json';
                                 </p>
                               )}
                               
-                              ${subcategory.description ? `<p class="skill-subdescription">${subcategory.description}</p>` : ''}
-                              ${subcategory.name === "Frameworks & Libraries" ? `
+                              {subcategory.name === "Frameworks & Libraries" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
-sequenceDiagram
-    participant Service
-    participant Factory
-    participant Cache
-    participant ApplicationContext
-    participant Repository
-    
-    Service->>Factory: Request Instance
-    Factory->>Cache: Check Cache
-    alt Cache Hit
-        Cache-->>Factory: Return Cached Instance
-    else Cache Miss
-        Factory->>ApplicationContext: Get Bean
-        ApplicationContext-->>Factory: Return Bean
-        Factory->>Cache: Store in Cache
-    end
-    Factory-->>Service: Return Instance
-    Service->>Repository: Use Instance
+                                    sequenceDiagram
+                                        participant Service
+                                        participant Factory
+                                        participant Cache
+                                        participant ApplicationContext
+                                        participant Repository
+                                        
+                                        Service->>Factory: Request Instance
+                                        Factory->>Cache: Check Cache
+                                        alt Cache Hit
+                                            Cache-->>Factory: Return Cached Instance
+                                        else Cache Miss
+                                            Factory->>ApplicationContext: Get Bean
+                                            ApplicationContext-->>Factory: Return Bean
+                                            Factory->>Cache: Store in Cache
+                                        end
+                                        Factory-->>Service: Return Instance
+                                        Service->>Repository: Use Instance
                                   </pre>
                                 </div>
-                              ` : ''}
-                              ${subcategory.name === "Platforms" ? `
+                              )}
+                              {subcategory.name === "Platforms" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
-graph TB
-    Internet[Internet]
-    
-    subgraph OCI_VCN_10_0_0_0_16["OCI VCN (10.0.0.0/16)"]
-        subgraph Public_Subnet_10_0_0_0_24["Public Subnet (10.0.0.0/24)"]
-            node1[node1\nControlPlane\n10.0.0.11\n+ Public IP]
-            node2[node2\nWorker\n10.0.0.12\n+ Public IP]
-            node3[node3\nWorker\n10.0.0.13\n+ Public IP]
-            node4[node4\nWorker\n10.0.0.14\n+ Public IP]
-        end
+                                    graph TB
+                                        Internet[Internet]
+                                        
+                                        subgraph OCI_VCN_10_0_0_0_16["OCI VCN (10.0.0.0/16)"]
+                                            subgraph Public_Subnet_10_0_0_0_24["Public Subnet (10.0.0.0/24)"]
+                                                node1[node1\nControlPlane\n10.0.0.11\n+ Public IP]
+                                                node2[node2\nWorker\n10.0.0.12\n+ Public IP]
+                                                node3[node3\nWorker\n10.0.0.13\n+ Public IP]
+                                                node4[node4\nWorker\n10.0.0.14\n+ Public IP]
+                                            end
 
-        IG[Internet Gateway]
-        SL[Security List\nIngress: 0.0.0.0/0\nEgress: 0.0.0.0/0]
-    end
+                                            IG[Internet Gateway]
+                                            SL[Security List\nIngress: 0.0.0.0/0\nEgress: 0.0.0.0/0]
+                                        end
 
-    Internet --> IG
-    IG --> SL
-    SL --> node1
-    SL --> node2
-    SL --> node3
-    SL --> node4
+                                        Internet --> IG
+                                        IG --> SL
+                                        SL --> node1
+                                        SL --> node2
+                                        SL --> node3
+                                        SL --> node4
                                   </pre>
                                 </div>
-                              ` : ''}
-                              ${subcategory.name === "NoSQL" ? `
+                              )}
+                              {subcategory.name === "NoSQL" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
-sequenceDiagram
-    participant Frontend as Frontend
-    participant Django as Django API
-    participant Redis as Redis Queue
-    participant Consumer as Consumer Service
-    participant Mongo as MongoDB
+                                    sequenceDiagram
+                                        participant Frontend as Frontend
+                                        participant Django as Django API
+                                        participant Redis as Redis Queue
+                                        participant Consumer as Consumer Service
+                                        participant Mongo as MongoDB
 
-    Frontend->>Django: 1. Call Push API
-    Django->>Redis: 2. Push to Redis List
-    Consumer->>Redis: 3. Pop from Redis List
-    Consumer->>Mongo: 4. Update Increment in Document
-    Frontend->>Django: 5. Call Count API
-    Django->>Mongo: 6. Query Count from Document
-    Mongo-->>Django: Return Count
-    Django-->>Frontend: Return Count
+                                        Frontend->>Django: 1. Call Push API
+                                        Django->>Redis: 2. Push to Redis List
+                                        Consumer->>Redis: 3. Pop from Redis List
+                                        Consumer->>Mongo: 4. Update Increment in Document
+                                        Frontend->>Django: 5. Call Count API
+                                        Django->>Mongo: 6. Query Count from Document
+                                        Mongo-->>Django: Return Count
+                                        Django-->>Frontend: Return Count
 
-    Note over Frontend,Mongo: Asynchronous Visit Count Processing
-    Note over Redis,Consumer: Using Consumer YAML Configuration
+                                        Note over Frontend,Mongo: Asynchronous Visit Count Processing
+                                        Note over Redis,Consumer: Using Consumer YAML Configuration
                                   </pre>
                                 </div>
-                              ` : ''}
+                              )}
                             </div>
                           ))
                         ) : (
@@ -221,39 +220,39 @@ sequenceDiagram
                           </p>
                         )}
                         
-                        {category.name === "CI/CD" ? `
+                        {category.name === "CI/CD" && (
                           <div class="mermaid-diagram">
                             <pre class="mermaid">
-graph LR
-    A[GitHub Repository] --> B[Clone and Setup]
-    B --> C[Build with Node.js]
-    C --> D[Build Docker Image with BuildKit]
-    D --> E[Push to Docker Hub]
-    E --> F[Deploy to Kubernetes]
+                              graph LR
+                                  A[GitHub Repository] --> B[Clone and Setup]
+                                  B --> C[Build with Node.js]
+                                  C --> D[Build Docker Image with BuildKit]
+                                  D --> E[Push to Docker Hub]
+                                  E --> F[Deploy to Kubernetes]
                             </pre>
                           </div>
-                        ` : ''}
+                        )}
                         
-                        {category.name === "Security & Authentication" ? `
+                        {category.name === "Security & Authentication" && (
                           <div class="mermaid-diagram">
                             <pre class="mermaid">
-sequenceDiagram
-    participant User as User
-    participant App as Application
-    participant Auth as Authorization Server
-    participant API as Resource Server
-    
-    User->>App: 1. Access Application
-    App->>Auth: 2. Redirect to Authorization Page
-    User->>Auth: 3. Login and Authorize
-    Auth->>App: 4. Return Authorization Code
-    App->>Auth: 5. Exchange Code for Token
-    Auth->>App: 6. Return Access Token
-    App->>API: 7. Access Resources with Token
-    API->>App: 8. Return Protected Resources
+                              sequenceDiagram
+                                  participant User as User
+                                  participant App as Application
+                                  participant Auth as Authorization Server
+                                  participant API as Resource Server
+                                  
+                                  User->>App: 1. Access Application
+                                  App->>Auth: 2. Redirect to Authorization Page
+                                  User->>Auth: 3. Login and Authorize
+                                  Auth->>App: 4. Return Authorization Code
+                                  App->>Auth: 5. Exchange Code for Token
+                                  Auth->>App: 6. Return Access Token
+                                  App->>API: 7. Access Resources with Token
+                                  API->>App: 8. Return Protected Resources
                             </pre>
                           </div>
-                        ` : ''}
+                        )}
                       </div>
                     ))}
                   </div>
@@ -265,10 +264,13 @@ sequenceDiagram
 
         <section>
           <h2 class="section-title">Education</h2>
-          <div class="content">
+          <div class="content education-container" style="max-height: 25vh; overflow-y: auto;">
             {aboutData.education.map((item) => (
               <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
-                <h3>{item.institution}</h3>
+                <div class="education-header">
+                  <h3>{item.institution}</h3>
+                  <span class="education-period">{item.period}</span>
+                </div>
                 <ul>
                   {item.programs.map((program) => (
                     <li>{program}</li>
@@ -288,22 +290,30 @@ sequenceDiagram
       <ContactCTA />
     </div>
     
-    <script type="module">
-      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-      mermaid.initialize({ 
-        startOnLoad: true,
-        theme: 'default',
-        flowchart: {
-          useMaxWidth: false,
-          htmlLabels: true
-        },
-        classDiagram: {
-          useMaxWidth: false,
-          htmlLabels: true
-        },
-        sequence: {
-          useMaxWidth: false,
-          htmlLabels: true
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+      // TypeScript declaration for mermaid
+      declare const mermaid: any;
+      
+      // Initialize Mermaid after the script is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof mermaid !== 'undefined') {
+          mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+              useMaxWidth: false,
+              htmlLabels: true
+            },
+            classDiagram: {
+              useMaxWidth: false,
+              htmlLabels: true
+            },
+            sequence: {
+              useMaxWidth: false,
+              htmlLabels: true
+            }
+          });
         }
       });
     </script>
@@ -374,6 +384,7 @@ sequenceDiagram
           });
           const educationItems = aboutData.education.map(item => ({
             institution: item.institution,
+            period: item.period,
             programs: item.programs
           }));
 
@@ -428,10 +439,12 @@ sequenceDiagram
                 .shade3 { opacity: 0.6; }
                 .shade4 { opacity: 0.4; }
                 .shade5 { opacity: 0.2; }
-                .education-item { margin-bottom: 0.1rem; padding: 1.5rem; background: #f9f9f9; border-radius: 12px; }
-                .education-item h3 { margin-bottom: 0.5rem; color: #514695; font-size: 1.5rem; font-weight: 600; }
-                .education-item ul { list-style-type: none; padding-left: 0; }
-                .education-item li { position: relative; padding-left: 1.5rem; margin-bottom: 0.1rem; color: #333; }
+                .education-item { margin-bottom: 0.1rem; padding: 0.4rem; background: #f9f9f9; border-radius: 8px; }
+                .education-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1rem; }
+                .education-header h3 { margin-bottom: 0; color: #514695; font-size: 1.2rem; font-weight: 600; }
+                .education-period { font-size: 0.8rem; color: #666; font-style: italic; }
+                .education-item ul { list-style-type: none; padding-left: 0; margin: 0; }
+                .education-item li { position: relative; padding-left: 1rem; margin-bottom: 0.1rem; color: #333; font-size: 0.9rem; }
                 .education-item li::before { content: '→'; position: absolute; left: 0; color: #514695; }
                 .mermaid-diagram { margin-top: 0.8rem; padding: 0.5rem; background: #f5f5f5; border-radius: 12px; border: 1px solid rgba(81, 70, 149, 0.2); overflow-x: auto; }
                 .mermaid-diagram .mermaid { display: flex; justify-content: center; align-items: center; min-height: 120px; }
@@ -582,7 +595,10 @@ sequenceDiagram
                 <div class="content">
                   ${educationItems.map((item) => `
                     <div class="education-item">
-                      <h3>${item.institution}</h3>
+                      <div class="education-header">
+                        <h3>${item.institution}</h3>
+                        <span class="education-period">${item.period}</span>
+                      </div>
                       <ul>
                         ${item.programs.map((program) => `<li>${program}</li>`).join('')}
                       </ul>

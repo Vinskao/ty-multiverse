@@ -153,9 +153,29 @@ color: #3a2f6b;
   line-height: 1;
 }
 
+.education-container {
+max-height: 33vh; /* 1/3 of viewport height */
+overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: rgba(81, 70, 149, 0.3) transparent;
+}
+
+.education-container::-webkit-scrollbar {
+width: 6px;
+}
+
+.education-container::-webkit-scrollbar-track {
+background: transparent;
+}
+
+.education-container::-webkit-scrollbar-thumb {
+background-color: rgba(81, 70, 149, 0.3);
+border-radius: 3px;
+}
+
 .education-item {
-margin-bottom: 0.1rem;
-padding: 1.5rem;
+margin-bottom: 0.3rem;
+padding: 0.8rem;
 background: rgba(255, 255, 255, 0.03);
 border-radius: 12px;
 transition: transform 0.3s ease;
@@ -166,9 +186,22 @@ text-align: left;
 transform: translateX(5px);
 }
 
-.education-item h3 {
-margin-bottom: 0.5rem;
+.education-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 0.3rem;
+}
+
+.education-header h3 {
+margin-bottom: 0;
 text-align: left;
+}
+
+.education-period {
+font-size: 0.9rem;
+color: var(--gray-300);
+font-style: italic;
 }
 
 .education-item ul {
@@ -180,7 +213,7 @@ text-align: left;
 .education-item li {
 position: relative;
 padding-left: 1.5rem;
-margin-bottom: 0.1rem;
+margin-bottom: 0.2rem;
 text-align: left;
 }
 
