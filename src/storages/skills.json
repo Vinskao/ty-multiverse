@@ -22,7 +22,7 @@
           "name": "Frameworks & Libraries",
           "description": [
             "Developed CRUD APIs using Spring Boot framework with SSO server integration",
-            "Building Knowledge Management QA System with FastAPI and LangChain integration"
+            "Building Knowledge Management QA System with FastAPI and LangChain integration, using Laravel APIs to collect data from frontend, saving to PostgreSQL and transforming to vector database for retrieval"
           ],
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
@@ -63,7 +63,9 @@
       "name": "Frontend Development",
       "pillClass": "pill2",
       "description": [
-        "Built Astro website with React useState integration"
+        "Built Astro website with React useState integration",
+        "Developed Thymeleaf MVC and Handlebars CRUD APIs",
+        "Developed Vue.js 2 3 with Vuex integration"
       ],
       "skills": [
         { "name": "JavaScript", "level": "shade1" },
@@ -86,9 +88,14 @@
       "subcategories": [
         {
           "name": "Relational",
-          "description": [],
+          "description": [
+            "Integrated PostgreSQL with Keycloak SSO, LangChain, and multiple backend REST API frameworks",
+            "Maintained DB Access Layer for MSSQL in JBoss EAP",
+            "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers"
+          ],
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
+            {"name":"PGVector", "level": "shade5"},
             { "name": "MSSQL", "level": "shade1" },
             { "name": "SQLite", "level": "shade1" },
             { "name": "MySQL", "level": "shade3" },
@@ -97,7 +104,9 @@
         },
         {
           "name": "NoSQL",
-          "description": [],
+          "description": [
+            "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests"
+          ],
           "skills": [
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
@@ -113,7 +122,9 @@
       "subcategories": [
         {
           "name": "Containerization & Orchestration",
-          "description": [],
+          "description": [
+            "Implemented PV and PVC for database data persistence"
+          ],
           "skills": [
             { "name": "Docker", "level": "shade1" },
             { "name": "Podman", "level": "shade1" },
@@ -127,17 +138,20 @@
           "description": [],
           "skills": [
             { "name": "Terraform", "level": "shade4" },
-            { "name": "Ansible", "level": "shade4" }
+            { "name": "Ansible", "level": "shade4" },
+            { "name": "Helm", "level": "shade5" }
           ]
         },
         {
           "name": "Servers & Middleware",
-          "description": [],
+          "description": [
+            "Set up volumes for containerized JBoss EAP 7 for real-time configuration updates",
+            "Configured systemctl for JBoss EAP 8 and JBoss containers for auto-start on restart"
+          ],
           "skills": [
-            { "name": "JBoss EAP 7 Runtime Image", "level": "shade2" },
-            { "name": "JBoss", "level": "shade2" },
-            { "name": "Tomcat", "level": "shade3" },
-            { "name": "Bare Metal", "level": "shade2" }
+            { "name": "JBoss EAP 7 Runtime Image", "level": "shade1" },
+            { "name": "JBoss EAP 7 8", "level": "shade1" },
+            { "name": "Tomcat", "level": "shade3" }
           ]
         },
         {
@@ -147,7 +161,8 @@
             { "name": "Grafana", "level": "shade4" },
             { "name": "Prometheus", "level": "shade4" },
             { "name": "Kiali", "level": "shade4" },
-            { "name": "Jolokia", "level": "shade3" }
+            { "name": "Jolokia", "level": "shade3" },
+            { "name": "Instana", "level": "shade4" }
           ]
         }
       ]
@@ -168,16 +183,21 @@
       "subcategories": [
         {
           "name": "Protocols",
-          "description": [],
+          "description": [
+            "Built chat room and Spring Boot Actuator metrics exporter with WebSocket, using STOMP for message broker"
+          ],
           "skills": [
             { "name": "HTTP", "level": "shade1" },
-            { "name": "WebSocket", "level": "shade3" },
+            { "name": "Web Socket", "level": "shade3" },
+            { "name": "STOMP", "level": "shade4" },
             { "name": "SSL/TLS", "level": "shade1" }
           ]
         },
         {
           "name": "Service Mesh & Load Balancing",
-          "description": [],
+          "description": [
+            "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files"
+          ],
           "skills": [
             { "name": "Istio", "level": "shade4" },
             { "name": "Ingress", "level": "shade1" },
@@ -195,7 +215,9 @@
       "subcategories": [
         {
           "name": "Platforms",
-          "description": ["Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE"],
+          "description": [
+            "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database"
+          ],
           "skills": [
             { "name": "OCI", "level": "shade3" },
             { "name": "GCP", "level": "shade5" }
@@ -210,7 +232,9 @@
       "subcategories": [
         {
           "name": "Systems",
-          "description": [],
+          "description": [
+            "Upgraded RHEL from 7 to 8 for 20+ servers"
+          ],
           "skills": [
             { "name": "Linux", "level": "shade1" },
             { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
@@ -228,7 +252,10 @@
         },
         {
           "name": "Others",
-          "description": [],
+          "description": [
+            "Used Yum Repository and Satellite to get files for upgrading RHEL",
+            "Developed WordPress plugin to crawl double-layered data in Elementor ecommerce form"
+          ],
           "skills": [
             { "name": "WordPress", "level": "shade2" },
             { "name": "Cursor", "level": "shade1" },
@@ -241,7 +268,12 @@
     {
       "name": "Security & Authentication",
       "pillClass": "pill9",
-      "description": ["Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo"],
+      "description": [
+        "Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo",
+        "Updated Keycloak 18 to 26 on K8S, persisted data to PostgreSQL",
+        "Updated Keycloak SPI to Quarkus 3 from Quarkus 2, and implemented Keycloak username-password authentication flow using Informix stored procedure",
+        "Implemented CDI to inject entity manager to DAO layer"
+      ],
       "skills": [
         { "name": "Keycloak 18 26", "level": "shade2" },
         { "name": "Keycloak SPI", "level": "shade4" },
