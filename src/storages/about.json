@@ -50,18 +50,21 @@
   "education": [
     {
       "institution": "RedHat",
+      "period": "2024/12",
       "programs": [
         "Red Hat JBoss Application Administration I (AD248)"
       ]
     },
     {
       "institution": "iSpan",
+      "period": "2023/10~2024/2",
       "programs": [
         "JavaEE Career Development Program"
       ]
     },
     {
       "institution": "FreeCodeCamp.com",
+      "period": "2023/7~2023/9",
       "programs": [
         "JavaScript Algorithms and Data Structures",
         "Data Visualization"
@@ -69,18 +72,21 @@
     },
     {
       "institution": "Hong Kong Polytechnic University",
+      "period": "2020/9~2021/9",
       "programs": [
         "Master of Finance in Investment Management"
       ]
     },
     {
       "institution": "Fu Jen Catholic University",
+      "period": "2013/9-2018/6",
       "programs": [
         "B.B.A. in Finance and International Business"
       ]
     },
     {
       "institution": "Temple University",
+      "period": "2016/8-2017/5",
       "programs": [
         "Global Exchange Program"
       ]
