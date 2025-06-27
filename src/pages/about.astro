@@ -47,6 +47,25 @@ import skillsData from '../storages/skills.json';
         </section>
         
         <section>
+          <h2 class="section-title">Education</h2>
+          <div class="content education-container">
+            {aboutData.education.map((item) => (
+              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
+                <div class="education-header">
+                  <h3>{item.institution}</h3>
+                  <span class="education-period">{item.period}</span>
+                </div>
+                <ul>
+                  {item.programs.map((program) => (
+                    <li>{program}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+        
+        <section>
           <h2 class="section-title">Experience</h2>
           <div class="content">
             {aboutData.experience.map((job) => (
@@ -261,26 +280,6 @@ import skillsData from '../storages/skills.json';
             ))}
           </div>
         </section>
-
-        <section>
-          <h2 class="section-title">Education</h2>
-          <div class="content education-container" style="max-height: 25vh; overflow-y: auto;">
-            {aboutData.education.map((item) => (
-              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
-                <div class="education-header">
-                  <h3>{item.institution}</h3>
-                  <span class="education-period">{item.period}</span>
-                </div>
-                <ul>
-                  {item.programs.map((program) => (
-                    <li>{program}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-        
       </main>
 
       <div class="pdf-export-section">
@@ -465,6 +464,23 @@ import skillsData from '../storages/skills.json';
               </div>
 
               <div class="resume-section">
+                <h2 class="section-title">Education</h2>
+                <div class="content">
+                  ${educationItems.map((item) => `
+                    <div class="education-item">
+                      <div class="education-header">
+                        <h3>${item.institution}</h3>
+                        <span class="education-period">${item.period}</span>
+                      </div>
+                      <ul>
+                        ${item.programs.map((program) => `<li>${program}</li>`).join('')}
+                      </ul>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="resume-section">
                 <h2 class="section-title">Experience</h2>
                 <div class="content">
                   ${experienceItems.map((job) => `
@@ -585,23 +601,6 @@ sequenceDiagram
                           `).join('')}
                         </div>
                       ` : ''}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-
-              <div class="resume-section">
-                <h2 class="section-title">Education</h2>
-                <div class="content">
-                  ${educationItems.map((item) => `
-                    <div class="education-item">
-                      <div class="education-header">
-                        <h3>${item.institution}</h3>
-                        <span class="education-period">${item.period}</span>
-                      </div>
-                      <ul>
-                        ${item.programs.map((program) => `<li>${program}</li>`).join('')}
-                      </ul>
                     </div>
                   `).join('')}
                 </div>
