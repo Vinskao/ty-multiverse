@@ -31,8 +31,14 @@ async function getAllMarkdownFiles(): Promise<string[]> {
   const workDir = join(process.cwd(), 'src', 'content', 'work');
   const pattern = join(workDir, '**', '*.md');
   
+  console.log('Debug: Current working directory:', process.cwd());
+  console.log('Debug: Looking for files in:', workDir);
+  console.log('Debug: Pattern:', pattern);
+  
   try {
     const files = await glob(pattern, { windowsPathsNoEscape: true });
+    console.log('Debug: Found files:', files.length);
+    console.log('Debug: First few files:', files.slice(0, 3));
     return files;
   } catch (error) {
     console.error('Error finding markdown files:', error);
