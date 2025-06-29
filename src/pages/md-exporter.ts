@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import fs from 'fs';
-import path from 'path';
+import { readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { glob } from 'glob';
 
 interface ArticleData {
@@ -28,8 +28,8 @@ const API_BASE_URL = 'https://peoplesystem.tatdvsonorth.com/paprika/articles';
 
 // 獲取所有markdown文件
 async function getAllMarkdownFiles(): Promise<string[]> {
-  const workDir = path.join(process.cwd(), 'src', 'content', 'work');
-  const pattern = path.join(workDir, '**', '*.md');
+  const workDir = join(process.cwd(), 'src', 'content', 'work');
+  const pattern = join(workDir, '**', '*.md');
   
   try {
     const files = await glob(pattern, { windowsPathsNoEscape: true });
@@ -43,7 +43,7 @@ async function getAllMarkdownFiles(): Promise<string[]> {
 // 讀取文件內容
 function readFileContent(filePath: string): string {
   try {
-    return fs.readFileSync(filePath, 'utf-8');
+    return readFileSync(filePath, 'utf-8');
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
     return '';
@@ -53,7 +53,7 @@ function readFileContent(filePath: string): string {
 // 獲取文件修改時間
 function getFileDate(filePath: string): string {
   try {
-    const stats = fs.statSync(filePath);
+    const stats = statSync(filePath);
     return stats.mtime.toISOString().split('T')[0] + ' ' + stats.mtime.toTimeString().split(' ')[0];
   } catch (error) {
     console.error(`Error getting file date for ${filePath}:`, error);
@@ -63,8 +63,8 @@ function getFileDate(filePath: string): string {
 
 // 將絕對路徑轉換為相對路徑
 function getRelativePath(filePath: string): string {
-  const workDir = path.join(process.cwd(), 'src', 'content', 'work');
-  const relativePath = path.relative(workDir, filePath);
+  const workDir = join(process.cwd(), 'src', 'content', 'work');
+  const relativePath = filePath.replace(workDir, '').replace(/^[\\\/]/, '');
   return relativePath.replace(/\\/g, '/'); // 統一使用正斜線
 }
 
