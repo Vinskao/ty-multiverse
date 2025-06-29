@@ -186,8 +186,16 @@ pipeline {
                                     fi
                                 '''
                                 
+                                // 部署 CronJob
+                                sh '''
+                                    echo "Deploying article sync CronJob..."
+                                    kubectl apply -f k8s/cronjob-sync-articles.yaml
+                                    echo "CronJob deployed successfully"
+                                '''
+                                
                                 // 檢查部署狀態
                                 sh 'kubectl get deployments -n default'
+                                sh 'kubectl get cronjobs -n default'
                                 sh 'kubectl rollout status deployment/ty-multiverse-frontend'
                             } catch (Exception e) {
                                 echo "Error during deployment: ${e.message}"

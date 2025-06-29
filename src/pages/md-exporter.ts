@@ -1,0 +1,286 @@
+import type { APIRoute } from 'astro';
+import fs from 'fs';
+import path from 'path';
+import { glob } from 'glob';
+
+interface ArticleData {
+  file_path: string;
+  content: string;
+  file_date: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
+}
+
+interface ExistingArticle {
+  id: number;
+  file_path: string;
+  content: string;
+  file_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const API_BASE_URL = 'https://peoplesystem.tatdvsonorth.com/paprika/articles';
+
+// 獲取所有markdown文件
+async function getAllMarkdownFiles(): Promise<string[]> {
+  const workDir = path.join(process.cwd(), 'src', 'content', 'work');
+  const pattern = path.join(workDir, '**', '*.md');
+  
+  try {
+    const files = await glob(pattern, { windowsPathsNoEscape: true });
+    return files;
+  } catch (error) {
+    console.error('Error finding markdown files:', error);
+    return [];
+  }
+}
+
+// 讀取文件內容
+function readFileContent(filePath: string): string {
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    console.error(`Error reading file ${filePath}:`, error);
+    return '';
+  }
+}
+
+// 獲取文件修改時間
+function getFileDate(filePath: string): string {
+  try {
+    const stats = fs.statSync(filePath);
+    return stats.mtime.toISOString().split('T')[0] + ' ' + stats.mtime.toTimeString().split(' ')[0];
+  } catch (error) {
+    console.error(`Error getting file date for ${filePath}:`, error);
+    return new Date().toISOString().split('T')[0] + ' 00:00:00';
+  }
+}
+
+// 將絕對路徑轉換為相對路徑
+function getRelativePath(filePath: string): string {
+  const workDir = path.join(process.cwd(), 'src', 'content', 'work');
+  const relativePath = path.relative(workDir, filePath);
+  return relativePath.replace(/\\/g, '/'); // 統一使用正斜線
+}
+
+// 獲取現有文章列表
+async function getExistingArticles(): Promise<ExistingArticle[]> {
+  try {
+    const response = await fetch(API_BASE_URL);
+    const result: ApiResponse = await response.json();
+    
+    if (result.success && result.data) {
+      return result.data;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching existing articles:', error);
+    return [];
+  }
+}
+
+// 創建或更新文章
+async function createOrUpdateArticle(articleData: ArticleData): Promise<ApiResponse> {
+  try {
+    const response = await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(articleData),
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating/updating article:', error);
+    return { success: false, message: 'Failed to create/update article' };
+  }
+}
+
+// 檢查文件是否有差異
+function hasContentChanged(localContent: string, remoteContent: string): boolean {
+  return localContent.trim() !== remoteContent.trim();
+}
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    const { action = 'sync' } = await request.json();
+    
+    if (action === 'sync') {
+      // 獲取所有本地markdown文件
+      const markdownFiles = await getAllMarkdownFiles();
+      
+      // 獲取現有文章列表
+      const existingArticles = await getExistingArticles();
+      const existingArticlesMap = new Map(
+        existingArticles.map(article => [article.file_path, article])
+      );
+      
+      const results = {
+        created: 0,
+        updated: 0,
+        unchanged: 0,
+        errors: 0,
+        details: [] as any[]
+      };
+      
+      // 處理每個markdown文件
+      for (const filePath of markdownFiles) {
+        const relativePath = getRelativePath(filePath);
+        const content = readFileContent(filePath);
+        const fileDate = getFileDate(filePath);
+        
+        if (!content) {
+          results.errors++;
+          results.details.push({
+            file_path: relativePath,
+            status: 'error',
+            message: 'Failed to read file content'
+          });
+          continue;
+        }
+        
+        const articleData: ArticleData = {
+          file_path: relativePath,
+          content,
+          file_date: fileDate
+        };
+        
+        const existingArticle = existingArticlesMap.get(relativePath);
+        
+        if (!existingArticle) {
+          // 新文件，創建
+          const result = await createOrUpdateArticle(articleData);
+          if (result.success) {
+            results.created++;
+            results.details.push({
+              file_path: relativePath,
+              status: 'created',
+              message: 'Article created successfully'
+            });
+          } else {
+            results.errors++;
+            results.details.push({
+              file_path: relativePath,
+              status: 'error',
+              message: result.message || 'Failed to create article'
+            });
+          }
+        } else if (hasContentChanged(content, existingArticle.content)) {
+          // 內容有變化，更新
+          const result = await createOrUpdateArticle(articleData);
+          if (result.success) {
+            results.updated++;
+            results.details.push({
+              file_path: relativePath,
+              status: 'updated',
+              message: 'Article updated successfully'
+            });
+          } else {
+            results.errors++;
+            results.details.push({
+              file_path: relativePath,
+              status: 'error',
+              message: result.message || 'Failed to update article'
+            });
+          }
+        } else {
+          // 內容無變化
+          results.unchanged++;
+          results.details.push({
+            file_path: relativePath,
+            status: 'unchanged',
+            message: 'No changes detected'
+          });
+        }
+      }
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Sync completed',
+        data: results
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Invalid action'
+    }), {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+  } catch (error) {
+    console.error('API Error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Internal server error'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+};
+
+export const GET: APIRoute = async () => {
+  try {
+    const markdownFiles = await getAllMarkdownFiles();
+    const existingArticles = await getExistingArticles();
+    
+    const fileStatus = markdownFiles.map(filePath => {
+      const relativePath = getRelativePath(filePath);
+      const content = readFileContent(filePath);
+      const fileDate = getFileDate(filePath);
+      const existingArticle = existingArticles.find(article => article.file_path === relativePath);
+      
+      return {
+        file_path: relativePath,
+        local_content_length: content.length,
+        local_file_date: fileDate,
+        exists_remotely: !!existingArticle,
+        remote_content_length: existingArticle?.content.length || 0,
+        has_changes: existingArticle ? hasContentChanged(content, existingArticle.content) : true
+      };
+    });
+    
+    return new Response(JSON.stringify({
+      success: true,
+      data: {
+        total_files: markdownFiles.length,
+        existing_articles: existingArticles.length,
+        file_status: fileStatus
+      }
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+  } catch (error) {
+    console.error('API Error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Internal server error'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+}; 
