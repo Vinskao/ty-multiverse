@@ -60,10 +60,23 @@ function readFileContent(filePath: string): string {
 function getFileDate(filePath: string): string {
   try {
     const stats = statSync(filePath);
-    return stats.mtime.toISOString().split('T')[0] + ' ' + stats.mtime.toTimeString().split(' ')[0];
+    // 確保日期格式為 "YYYY-MM-DD HH:mm:ss"
+    const date = stats.mtime;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch (error) {
     console.error(`Error getting file date for ${filePath}:`, error);
-    return new Date().toISOString().split('T')[0] + ' 00:00:00';
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day} 00:00:00`;
   }
 }
 
@@ -93,6 +106,8 @@ async function getExistingArticles(): Promise<ExistingArticle[]> {
 // 創建或更新文章
 async function createOrUpdateArticle(articleData: ArticleData): Promise<ApiResponse> {
   try {
+    console.log('Debug: Sending data to external API:', JSON.stringify(articleData, null, 2));
+    
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
       headers: {
@@ -101,7 +116,10 @@ async function createOrUpdateArticle(articleData: ArticleData): Promise<ApiRespo
       body: JSON.stringify(articleData),
     });
     
-    return await response.json();
+    const result = await response.json();
+    console.log('Debug: External API response:', JSON.stringify(result, null, 2));
+    
+    return result;
   } catch (error) {
     console.error('Error creating/updating article:', error);
     return { success: false, message: 'Failed to create/update article' };
