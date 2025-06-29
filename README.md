@@ -287,3 +287,175 @@ graph LR
 - **Node Container**: `node:18`
 - **Docker Container**: `docker:23-dind`
 - **Kubectl Container**: `bitnami/kubectl:1.30.7`
+
+## Article Sync API 測試文檔
+
+### API 端點
+
+#### 本地開發測試
+
+**Linux/macOS (curl):**
+```bash
+# 檢查文件狀態 (GET)
+curl -X GET "http://localhost:4321/tymultiverse/md-exporter"
+
+# 執行同步 (POST)
+curl -X POST "http://localhost:4321/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "sync"}'
+```
+
+**Windows PowerShell:**
+```powershell
+# 檢查文件狀態 (GET)
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method GET
+
+# 執行同步 (POST)
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}'
+```
+
+#### 生產環境測試
+
+**Linux/macOS (curl):**
+```bash
+# 檢查文件狀態 (GET)
+curl -X GET "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter"
+
+# 執行同步 (POST)
+curl -X POST "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "sync"}'
+```
+
+**Windows PowerShell:**
+```powershell
+# 檢查文件狀態 (GET)
+Invoke-RestMethod -Uri "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" -Method GET
+
+# 執行同步 (POST)
+Invoke-RestMethod -Uri "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}'
+```
+
+### 測試步驟
+
+#### 步驟 1: 檢查當前狀態
+
+**Linux/macOS:**
+```bash
+# 本地測試
+curl -X GET "http://localhost:4321/tymultiverse/md-exporter" | jq
+
+# 生產環境測試
+curl -X GET "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" | jq
+```
+
+**Windows PowerShell:**
+```powershell
+# 本地測試
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method GET | ConvertTo-Json -Depth 10
+
+# 生產環境測試
+Invoke-RestMethod -Uri "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" -Method GET | ConvertTo-Json -Depth 10
+```
+
+預期回應：
+```json
+{
+  "success": true,
+  "data": {
+    "total_files": 35,
+    "existing_articles": 3,
+    "file_status": [
+      {
+        "file_path": "interview-20250526.md",
+        "local_content_length": 9123,
+        "local_file_date": "2025-01-27 10:30:00",
+        "exists_remotely": false,
+        "remote_content_length": 0,
+        "has_changes": true
+      }
+    ]
+  }
+}
+```
+
+#### 步驟 2: 執行同步
+
+**Linux/macOS:**
+```bash
+# 本地測試
+curl -X POST "http://localhost:4321/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "sync"}' | jq
+
+# 生產環境測試
+curl -X POST "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "sync"}' | jq
+```
+
+**Windows PowerShell:**
+```powershell
+# 本地測試
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}' | ConvertTo-Json -Depth 10
+
+# 生產環境測試
+Invoke-RestMethod -Uri "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}' | ConvertTo-Json -Depth 10
+```
+
+預期回應：
+```json
+{
+  "success": true,
+  "message": "Sync completed",
+  "data": {
+    "created": 35,
+    "updated": 0,
+    "unchanged": 0,
+    "errors": 0,
+    "details": [
+      {
+        "file_path": "interview-20250526.md",
+        "status": "created",
+        "message": "Article created successfully"
+      }
+    ]
+  }
+}
+```
+
+### 自動化部署
+
+#### Kubernetes CronJob
+- 每天凌晨 2:00 自動執行同步
+- 部署文件：`k8s/cronjob-sync-articles.yaml`
+- 通過 Jenkins 自動部署
+
+#### 手動觸發 CronJob
+```bash
+# 查看 CronJob 狀態
+kubectl get cronjobs -n default
+
+# 手動觸發一次同步
+kubectl create job --from=cronjob/ty-multiverse-article-sync manual-sync-$(date +%s) -n default
+
+# 查看執行日誌
+kubectl logs job/manual-sync-$(date +%s) -n default
+```
+
+### 監控和日誌
+
+#### 查看同步日誌
+```bash
+# 查看最近的同步任務
+kubectl get jobs -n default | grep ty-multiverse-article-sync
+
+# 查看特定任務的日誌
+kubectl logs job/ty-multiverse-article-sync-<timestamp> -n default
+```
+
+#### 檢查同步結果
+```bash
+# 檢查外部 API 的文章列表
+curl -X GET "https://peoplesystem.tatdvsonorth.com/paprika/articles" | jq
+```
