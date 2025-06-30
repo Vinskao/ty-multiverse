@@ -24,7 +24,7 @@ interface ExistingArticle {
   updated_at: string;
 }
 
-const API_BASE_URL = 'https://peoplesystem.tatdvsonorth.com/paprika/articles';
+const API_BASE_URL = 'https://peoplesystem.tatdvsonorth.com/paprika/articles/sync';
 
 // 獲取所有markdown文件
 async function getAllMarkdownFiles(): Promise<string[]> {
@@ -113,7 +113,9 @@ async function createOrUpdateArticle(articleData: ArticleData): Promise<ApiRespo
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(articleData),
+      body: JSON.stringify({
+        articles: [articleData] // 包裝成陣列格式
+      }),
     });
     
     const result = await response.json();
