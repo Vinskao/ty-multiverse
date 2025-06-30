@@ -24,7 +24,7 @@ interface ExistingArticle {
   updated_at: string;
 }
 
-const API_BASE_URL = 'https://peoplesystem.tatdvsonorth.com/paprika/articles/sync';
+const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL+'/paprika/articles/sync';
 
 // 獲取所有markdown文件
 async function getAllMarkdownFiles(): Promise<string[]> {
@@ -171,58 +171,69 @@ export const POST: APIRoute = async ({ request }) => {
           continue;
         }
         
-        const articleData: ArticleData = {
-          file_path: relativePath,
-          content,
-          file_date: fileDate
-        };
-        
-        const existingArticle = existingArticlesMap.get(relativePath);
-        
-        if (!existingArticle) {
-          // 新文件，創建
-          const result = await createOrUpdateArticle(articleData);
-          if (result.success) {
-            results.created++;
-            results.details.push({
-              file_path: relativePath,
-              status: 'created',
-              message: 'Article created successfully'
-            });
+        // 處理每個markdown文件
+        try {
+          const articleData: ArticleData = {
+            file_path: relativePath,
+            content,
+            file_date: fileDate
+          };
+          
+          const existingArticle = existingArticlesMap.get(relativePath);
+          
+          if (!existingArticle) {
+            // 新文件，創建
+            const result = await createOrUpdateArticle(articleData);
+            if (result.success) {
+              results.created++;
+              results.details.push({
+                file_path: relativePath,
+                status: 'created',
+                message: 'Article created successfully'
+              });
+            } else {
+              results.errors++;
+              results.details.push({
+                file_path: relativePath,
+                status: 'error',
+                message: result.message || 'Failed to create article'
+              });
+            }
+          } else if (hasContentChanged(content, existingArticle.content)) {
+            // 內容有變化，更新
+            const result = await createOrUpdateArticle(articleData);
+            if (result.success) {
+              results.updated++;
+              results.details.push({
+                file_path: relativePath,
+                status: 'updated',
+                message: 'Article updated successfully'
+              });
+            } else {
+              results.errors++;
+              results.details.push({
+                file_path: relativePath,
+                status: 'error',
+                message: result.message || 'Failed to update article'
+              });
+            }
           } else {
-            results.errors++;
+            // 內容無變化
+            results.unchanged++;
             results.details.push({
               file_path: relativePath,
-              status: 'error',
-              message: result.message || 'Failed to create article'
+              status: 'unchanged',
+              message: 'No changes detected'
             });
           }
-        } else if (hasContentChanged(content, existingArticle.content)) {
-          // 內容有變化，更新
-          const result = await createOrUpdateArticle(articleData);
-          if (result.success) {
-            results.updated++;
-            results.details.push({
-              file_path: relativePath,
-              status: 'updated',
-              message: 'Article updated successfully'
-            });
-          } else {
-            results.errors++;
-            results.details.push({
-              file_path: relativePath,
-              status: 'error',
-              message: result.message || 'Failed to update article'
-            });
-          }
-        } else {
-          // 內容無變化
-          results.unchanged++;
+        } catch (error) {
+          results.errors++;
           results.details.push({
             file_path: relativePath,
-            status: 'unchanged',
-            message: 'No changes detected'
+            status: 'error',
+            message: `Failed to process article: ${error instanceof Error ? error.message : 'Unknown error'}`
           });
+          continue;
         }
       }
       
