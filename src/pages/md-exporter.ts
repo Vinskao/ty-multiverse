@@ -133,6 +133,35 @@ function hasContentChanged(localContent: string, remoteContent: string): boolean
   return localContent.trim() !== remoteContent.trim();
 }
 
+// 檢查內容是否有效（防止空值或過短內容覆蓋）
+function isValidContent(content: string): boolean {
+  const trimmedContent = content.trim();
+  // 至少需要50個字符才算有效內容，避免過短的內容覆蓋
+  return trimmedContent.length >= 50;
+}
+
+// 檢查是否應該更新文章（防止無效內容覆蓋有效內容）
+// 注意：此函數只檢查 content 欄位，不檢查其他欄位（如 embedding 等）
+function shouldUpdateArticle(localContent: string, remoteContent: string): boolean {
+  // 如果本地內容無效，絕對不應該更新
+  if (!isValidContent(localContent)) {
+    return false;
+  }
+  
+  // 如果遠程內容為空但本地有有效內容，應該更新
+  if (!isValidContent(remoteContent) && isValidContent(localContent)) {
+    return true;
+  }
+  
+  // 如果兩邊都有有效內容，只檢查 content 欄位是否有實際變化
+  // 其他欄位（如 embedding）不會被此檢查影響
+  if (isValidContent(remoteContent) && isValidContent(localContent)) {
+    return hasContentChanged(localContent, remoteContent);
+  }
+  
+  return false;
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { action = 'sync' } = await request.json();
@@ -161,6 +190,8 @@ export const POST: APIRoute = async ({ request }) => {
         const content = readFileContent(filePath);
         const fileDate = getFileDate(filePath);
         
+        console.log(`Processing: ${relativePath}, content length: ${content.length}, valid: ${isValidContent(content)}`);
+        
         if (!content) {
           results.errors++;
           results.details.push({
@@ -182,14 +213,25 @@ export const POST: APIRoute = async ({ request }) => {
           const existingArticle = existingArticlesMap.get(relativePath);
           
           if (!existingArticle) {
-            // 新文件，創建
+            // 新文件，創建（確保內容有效）
+            if (!isValidContent(content)) {
+              results.errors++;
+              results.details.push({
+                file_path: relativePath,
+                status: 'error',
+                message: 'Cannot create article with invalid content (too short or empty)'
+              });
+              continue;
+            }
+            
             const result = await createOrUpdateArticle(articleData);
             if (result.success) {
               results.created++;
               results.details.push({
                 file_path: relativePath,
                 status: 'created',
-                message: 'Article created successfully'
+                message: 'Article created successfully',
+                content_length: content.length
               });
             } else {
               results.errors++;
@@ -199,7 +241,7 @@ export const POST: APIRoute = async ({ request }) => {
                 message: result.message || 'Failed to create article'
               });
             }
-          } else if (hasContentChanged(content, existingArticle.content)) {
+          } else if (shouldUpdateArticle(content, existingArticle.content)) {
             // 內容有變化，更新
             const result = await createOrUpdateArticle(articleData);
             if (result.success) {
@@ -207,7 +249,9 @@ export const POST: APIRoute = async ({ request }) => {
               results.details.push({
                 file_path: relativePath,
                 status: 'updated',
-                message: 'Article updated successfully'
+                message: 'Article updated successfully',
+                local_content_length: content.length,
+                remote_content_length: existingArticle.content.length
               });
             } else {
               results.errors++;
@@ -218,12 +262,19 @@ export const POST: APIRoute = async ({ request }) => {
               });
             }
           } else {
-            // 內容無變化
+            // 內容無變化或本地內容無效
+            const reason = !isValidContent(content) ? 'Local content is invalid (too short)' : 
+                          !isValidContent(existingArticle.content) ? 'Remote content is empty, skipping update' :
+                          'No changes detected';
             results.unchanged++;
             results.details.push({
               file_path: relativePath,
               status: 'unchanged',
-              message: 'No changes detected'
+              message: reason,
+              local_content_length: content.length,
+              remote_content_length: existingArticle.content.length,
+              local_content_valid: isValidContent(content),
+              remote_content_valid: isValidContent(existingArticle.content)
             });
           }
         } catch (error) {
@@ -287,10 +338,13 @@ export const GET: APIRoute = async () => {
       return {
         file_path: relativePath,
         local_content_length: content.length,
+        local_content_valid: isValidContent(content),
         local_file_date: fileDate,
         exists_remotely: !!existingArticle,
         remote_content_length: existingArticle?.content.length || 0,
-        has_changes: existingArticle ? hasContentChanged(content, existingArticle.content) : true
+        remote_content_valid: existingArticle ? isValidContent(existingArticle.content) : false,
+        has_changes: existingArticle ? hasContentChanged(content, existingArticle.content) : true,
+        should_update: existingArticle ? shouldUpdateArticle(content, existingArticle.content) : isValidContent(content)
       };
     });
     
