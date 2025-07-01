@@ -180,7 +180,7 @@ import '../styles/qabot.css';
       try {
         console.log('載入聊天歷史，用戶ID:', this.userId);
         
-        const response = await fetch(`https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/chat-history/${this.userId}`);
+        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/chat-history/${this.userId}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -221,7 +221,7 @@ import '../styles/qabot.css';
     // 載入更多歷史記錄
     async loadMoreHistory() {
       try {
-        const response = await fetch(`https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/chat-history/${this.userId}`);
+        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/chat-history/${this.userId}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -294,7 +294,7 @@ import '../styles/qabot.css';
       console.log('QA API: 調用遠程服務，用戶ID:', this.userId);
       
       // 調用遠程QA服務，帶上用戶ID
-      const response = await fetch('https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/query', {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
