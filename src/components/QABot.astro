@@ -111,6 +111,9 @@ import '../styles/qabot.css';
       console.log('QABot: 用戶ID:', this.userId);
       
       this.setupEventListeners();
+      
+      // 初始化時載入聊天歷史
+      this.loadChatHistory();
     }
 
     setupEventListeners() {
@@ -201,7 +204,9 @@ import '../styles/qabot.css';
           // 載入前5條歷史記錄
           const historyToShow = result.history.slice(0, this.historyItemsPerPage);
           historyToShow.forEach(item => {
-            this.addHistoryMessage(item.user_message, item.ai_answer, []);
+            // 使用歷史記錄中的sources，如果沒有則使用空陣列
+            const sources = item.sources || [];
+            this.addHistoryMessage(item.user_message, item.ai_answer, sources);
           });
           
           // 如果還有更多記錄，顯示載入更多按鈕
@@ -236,7 +241,9 @@ import '../styles/qabot.css';
           
           // 在載入更多按鈕前插入歷史記錄
           historyToShow.forEach(item => {
-            this.addHistoryMessage(item.user_message, item.ai_answer, []);
+            // 使用歷史記錄中的sources，如果沒有則使用空陣列
+            const sources = item.sources || [];
+            this.addHistoryMessage(item.user_message, item.ai_answer, sources);
           });
           
           this.currentHistoryPage++;
