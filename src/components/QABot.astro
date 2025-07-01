@@ -1,0 +1,679 @@
+---
+// QABot組件
+import '../styles/qabot.css';
+---
+
+<!-- 浮動聊天按鈕 -->
+<div class="qa-bot-toggle" id="qaBotToggle">
+  <img src="/tymultiverse/assets/sawamayo.jpeg" alt="Sawa Maya" class="toggle-image" />
+  <span class="toggle-text">真夜</span>
+</div>
+
+<!-- 聊天對話框 -->
+<div class="qa-bot-container" id="qaBotContainer">
+  <div class="chat-header">
+    <div class="header-content">
+      <img src="/tymultiverse/assets/sawamayo.jpeg" alt="佐和 真夜" class="header-avatar" />
+      <div class="header-text">
+        <h3>佐和 真夜</h3>
+        <p>TY的智慧庫</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button class="history-button" id="historyButton" title="查看聊天歷史">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </button>
+      <button class="close-button" id="closeButton">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  
+  <div class="chat-messages" id="chatMessages">
+    <div class="message bot-message">
+      <div class="message-avatar">
+        <img src="/tymultiverse/assets/sawamayo.jpeg" alt="真夜" class="bot-avatar" />
+      </div>
+      <div class="message-content-wrapper">
+        <div class="message-header">
+          <span class="ai-name">真夜</span>
+        </div>
+        <div class="message-content">
+          <p>Hi！我是真夜，想了解TY的智慧庫內容嗎？儘管問我！</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+    <button class="load-more-button" id="loadMoreButton">
+      載入更多歷史記錄
+    </button>
+  </div>
+  
+  <div class="chat-input-container">
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="請輸入您的問題..."
+        class="chat-input"
+        maxlength="500"
+      />
+      <button 
+        id="sendButton" 
+        class="send-button"
+        disabled
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-status" id="inputStatus"></div>
+  </div>
+</div>
+
+<script>
+  class QABot {
+    private userInput: HTMLInputElement;
+    private sendButton: HTMLButtonElement;
+    private chatMessages: HTMLDivElement;
+    private inputStatus: HTMLDivElement;
+    private qaBotToggle: HTMLDivElement;
+    private qaBotContainer: HTMLDivElement;
+    private closeButton: HTMLButtonElement;
+    private historyButton: HTMLButtonElement;
+    private loadMoreButton: HTMLButtonElement;
+    private loadMoreContainer: HTMLDivElement;
+    private userId: string;
+    private currentHistoryPage: number = 0;
+    private historyItemsPerPage: number = 5;
+
+    constructor() {
+      this.userInput = document.getElementById('userInput') as HTMLInputElement;
+      this.sendButton = document.getElementById('sendButton') as HTMLButtonElement;
+      this.chatMessages = document.getElementById('chatMessages') as HTMLDivElement;
+      this.inputStatus = document.getElementById('inputStatus') as HTMLDivElement;
+      this.qaBotToggle = document.getElementById('qaBotToggle') as HTMLDivElement;
+      this.qaBotContainer = document.getElementById('qaBotContainer') as HTMLDivElement;
+      this.closeButton = document.getElementById('closeButton') as HTMLButtonElement;
+      this.historyButton = document.getElementById('historyButton') as HTMLButtonElement;
+      this.loadMoreButton = document.getElementById('loadMoreButton') as HTMLButtonElement;
+      this.loadMoreContainer = document.getElementById('loadMoreContainer') as HTMLDivElement;
+      
+      // 生成或獲取用戶ID
+      this.userId = this.getOrCreateUserId();
+      console.log('QABot: 用戶ID:', this.userId);
+      
+      this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+      // 切換對話框事件
+      this.qaBotToggle.addEventListener('click', () => {
+        this.toggleChat();
+      });
+
+      this.closeButton.addEventListener('click', () => {
+        this.hideChat();
+      });
+
+      // 歷史按鈕事件
+      this.historyButton.addEventListener('click', () => {
+        this.loadChatHistory();
+      });
+
+      // 載入更多按鈕事件
+      this.loadMoreButton.addEventListener('click', () => {
+        this.loadMoreHistory();
+      });
+
+      // 輸入框事件
+      this.userInput.addEventListener('input', () => {
+        this.updateSendButton();
+      });
+
+      this.userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.sendMessage();
+        }
+      });
+
+      // 發送按鈕事件
+      this.sendButton.addEventListener('click', () => {
+        this.sendMessage();
+      });
+    }
+
+    updateSendButton() {
+      const hasText = this.userInput.value.trim().length > 0;
+      this.sendButton.disabled = !hasText;
+    }
+
+    // 生成或獲取用戶ID
+    getOrCreateUserId(): string {
+      const storageKey = 'qabot_user_id';
+      let userId = localStorage.getItem(storageKey);
+      
+      if (!userId) {
+        // 生成新的用戶ID：時間戳 + 隨機數
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        userId = `user_${timestamp}_${random}`;
+        localStorage.setItem(storageKey, userId);
+        console.log('QABot: 生成新用戶ID:', userId);
+      }
+      
+      return userId;
+    }
+
+
+
+    // 載入聊天歷史
+    async loadChatHistory() {
+      try {
+        console.log('載入聊天歷史，用戶ID:', this.userId);
+        
+        const response = await fetch(`https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/chat-history/${this.userId}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.history && result.history.length > 0) {
+          // 重置分頁
+          this.currentHistoryPage = 0;
+          
+          // 清空當前聊天記錄
+          this.chatMessages.innerHTML = '';
+          
+          // 添加歡迎消息
+          this.addMessage('Hi！我是真夜，想了解TY的智慧庫內容嗎？儘管問我！', 'bot');
+          
+          // 載入前5條歷史記錄
+          const historyToShow = result.history.slice(0, this.historyItemsPerPage);
+          historyToShow.forEach(item => {
+            this.addHistoryMessage(item.user_message, item.ai_answer, []);
+          });
+          
+          // 如果還有更多記錄，顯示載入更多按鈕
+          if (result.history.length > this.historyItemsPerPage) {
+            this.loadMoreContainer.style.display = 'block';
+            this.currentHistoryPage = 1;
+          }
+        } else {
+
+        }
+      } catch (error) {
+        console.error('載入聊天歷史失敗:', error);
+        this.addErrorMessage('❌ 載入聊天歷史失敗，請稍後再試');
+      }
+    }
+
+    // 載入更多歷史記錄
+    async loadMoreHistory() {
+      try {
+        const response = await fetch(`https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/chat-history/${this.userId}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.history) {
+          const startIndex = this.currentHistoryPage * this.historyItemsPerPage;
+          const endIndex = startIndex + this.historyItemsPerPage;
+          const historyToShow = result.history.slice(startIndex, endIndex);
+          
+          // 在載入更多按鈕前插入歷史記錄
+          historyToShow.forEach(item => {
+            this.addHistoryMessage(item.user_message, item.ai_answer, []);
+          });
+          
+          this.currentHistoryPage++;
+          
+          // 如果沒有更多記錄，隱藏載入更多按鈕
+          if (endIndex >= result.history.length) {
+            this.loadMoreContainer.style.display = 'none';
+          }
+          
+
+        }
+      } catch (error) {
+        console.error('載入更多歷史記錄失敗:', error);
+        this.addErrorMessage('❌ 載入更多記錄失敗，請稍後再試');
+      }
+    }
+
+    async sendMessage() {
+      const userText = this.userInput.value.trim();
+      if (!userText) return;
+
+      // 清空輸入框和狀態
+      this.userInput.value = '';
+      this.updateSendButton();
+      this.inputStatus.textContent = '';
+
+      // 添加用戶消息
+      this.addMessage(userText, 'user');
+
+      // 添加載入消息
+      const loadingId = this.addLoadingMessage();
+
+      try {
+        // 調用API
+        const response = await this.callQAAPI(userText);
+        
+        // 移除載入消息
+        this.removeMessage(loadingId);
+
+        if (response.success) {
+          // 添加機器人回應
+          this.addBotResponse(response.answer, response.data);
+        } else {
+          // 添加錯誤消息
+          this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');
+        }
+      } catch (error) {
+        console.error('API調用錯誤:', error);
+        this.removeMessage(loadingId);
+        this.addErrorMessage('網絡錯誤，請檢查連接後重試。');
+      }
+    }
+
+    async callQAAPI(text) {
+      console.log('QA API: 調用遠程服務，用戶ID:', this.userId);
+      
+      // 調用遠程QA服務，帶上用戶ID
+      const response = await fetch('https://peoplesystem.tatdvsonorth.com/maya-sawa/qa/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          text,
+          user_id: this.userId
+        })
+      });
+
+      console.log('QA API: 響應狀態:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    addMessage(content, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}-message`;
+      
+      if (type === 'bot') {
+        // 添加頭像
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        const avatarImg = document.createElement('img');
+        avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+        avatarImg.alt = '真夜';
+        avatarImg.className = 'bot-avatar';
+        avatarDiv.appendChild(avatarImg);
+        messageDiv.appendChild(avatarDiv);
+        
+        // 添加內容包裝器
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'message-content-wrapper';
+        
+        // 添加消息頭部
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+        const aiName = document.createElement('span');
+        aiName.className = 'ai-name';
+        aiName.textContent = '真夜';
+        headerDiv.appendChild(aiName);
+        contentWrapper.appendChild(headerDiv);
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        if (typeof content === 'string') {
+          contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
+        } else {
+          contentDiv.appendChild(content);
+        }
+        
+        contentWrapper.appendChild(contentDiv);
+        messageDiv.appendChild(contentWrapper);
+      } else if (type === 'user') {
+        // 用戶消息保持原樣
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+        const userId = document.createElement('span');
+        userId.className = 'user-id';
+        userId.textContent = `ID: ${this.userId.substring(0, 8)}...`;
+        headerDiv.appendChild(userId);
+        messageDiv.appendChild(headerDiv);
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        if (typeof content === 'string') {
+          contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
+        } else {
+          contentDiv.appendChild(content);
+        }
+        
+        messageDiv.appendChild(contentDiv);
+      }
+      
+      this.chatMessages.appendChild(messageDiv);
+      
+      // 滾動到底部
+      this.scrollToBottom();
+      
+      return messageDiv;
+    }
+
+    // 添加歷史消息（不包含頭部）
+    addHistoryMessage(userMessage, aiAnswer, sources) {
+      // 添加用戶消息
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user-message';
+      
+      const userHeader = document.createElement('div');
+      userHeader.className = 'message-header';
+      const userUserId = document.createElement('span');
+      userUserId.className = 'user-id';
+      userUserId.textContent = `ID: ${this.userId.substring(0, 8)}...`;
+      userHeader.appendChild(userUserId);
+      userDiv.appendChild(userHeader);
+      
+      const userContent = document.createElement('div');
+      userContent.className = 'message-content';
+      userContent.innerHTML = `<p>${this.escapeHtml(userMessage)}</p>`;
+      userDiv.appendChild(userContent);
+      
+      this.chatMessages.appendChild(userDiv);
+      
+      // 添加AI回應
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      aiDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      const aiHeader = document.createElement('div');
+      aiHeader.className = 'message-header';
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      aiHeader.appendChild(aiName);
+      contentWrapper.appendChild(aiHeader);
+      
+      const aiContent = document.createElement('div');
+      aiContent.className = 'message-content';
+      
+      const answerP = document.createElement('p');
+      answerP.textContent = aiAnswer;
+      aiContent.appendChild(answerP);
+      
+      // 添加來源列表
+      if (sources && sources.length > 0) {
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.className = 'sources-list';
+        
+        const sourcesTitle = document.createElement('h4');
+        sourcesTitle.textContent = '📚 參考文檔：';
+        sourcesDiv.appendChild(sourcesTitle);
+        
+        sources.forEach(source => {
+          const sourceItem = document.createElement('div');
+          sourceItem.className = 'source-item';
+          
+          const link = document.createElement('a');
+          link.href = `/tymultiverse/work/${source.file_path.replace('.md', '')}`;
+          link.target = '_blank';
+          link.className = 'source-link';
+          link.innerHTML = `📄 ${this.escapeHtml(source.file_path)}`;
+          
+          const similaritySpan = document.createElement('span');
+          similaritySpan.className = 'similarity';
+          similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
+          
+          sourceItem.appendChild(link);
+          sourceItem.appendChild(similaritySpan);
+          sourcesDiv.appendChild(sourceItem);
+        });
+        
+        aiContent.appendChild(sourcesDiv);
+      }
+      
+      contentWrapper.appendChild(aiContent);
+      aiDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(aiDiv);
+      
+      this.scrollToBottom();
+    }
+
+    addLoadingMessage() {
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      loadingDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>正在思考中...</span>
+        </div>
+      `;
+      
+      contentWrapper.appendChild(contentDiv);
+      loadingDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(loadingDiv);
+      this.scrollToBottom();
+      
+      return loadingDiv;
+    }
+
+    addBotResponse(answer, sources) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      messageDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      
+      // 添加答案
+      const answerP = document.createElement('p');
+      answerP.textContent = answer;
+      contentDiv.appendChild(answerP);
+      
+      // 添加來源列表
+      if (sources && sources.length > 0) {
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.className = 'sources-list';
+        
+        const sourcesTitle = document.createElement('h4');
+        sourcesTitle.textContent = '📚 參考文檔：';
+        sourcesDiv.appendChild(sourcesTitle);
+        
+        sources.forEach(source => {
+          const sourceItem = document.createElement('div');
+          sourceItem.className = 'source-item';
+          
+          // 創建可點擊的連結
+          const link = document.createElement('a');
+          link.href = `/tymultiverse/work/${source.file_path.replace('.md', '')}`;
+          link.target = '_blank';
+          link.className = 'source-link';
+          link.innerHTML = `📄 ${this.escapeHtml(source.file_path)}`;
+          
+          const similaritySpan = document.createElement('span');
+          similaritySpan.className = 'similarity';
+          similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
+          
+          sourceItem.appendChild(link);
+          sourceItem.appendChild(similaritySpan);
+          sourcesDiv.appendChild(sourceItem);
+        });
+        
+        contentDiv.appendChild(sourcesDiv);
+      }
+      
+      contentWrapper.appendChild(contentDiv);
+      messageDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(messageDiv);
+      
+      // 滾動到底部
+      this.scrollToBottom();
+    }
+
+    addErrorMessage(message) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      messageDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = `<p style="color: #ffebee;">❌ ${this.escapeHtml(message)}</p>`;
+      
+      contentWrapper.appendChild(contentDiv);
+      messageDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(messageDiv);
+      
+      // 滾動到底部
+      this.scrollToBottom();
+    }
+
+    removeMessage(messageElement) {
+      if (messageElement && messageElement.parentNode) {
+        messageElement.parentNode.removeChild(messageElement);
+      }
+    }
+
+    scrollToBottom() {
+      this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    toggleChat() {
+      if (this.qaBotContainer.classList.contains('show')) {
+        this.hideChat();
+      } else {
+        this.showChat();
+      }
+    }
+
+    showChat() {
+      this.qaBotContainer.classList.add('show');
+      this.userInput.focus();
+    }
+
+    hideChat() {
+      this.qaBotContainer.classList.remove('show');
+    }
+
+
+  }
+
+  // 初始化QABot
+  document.addEventListener('DOMContentLoaded', () => {
+    new QABot();
+  });
+</script>
