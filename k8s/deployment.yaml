@@ -34,6 +34,19 @@ spec:
         image: papakao/ty-multiverse-frontend:latest
         ports:
         - containerPort: 4321
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                echo "Pod started, triggering initial article sync..."
+                sleep 10  # 等待應用程式完全啟動
+                curl -X POST \
+                  -H "Content-Type: application/json" \
+                  -d '{"action": "sync"}' \
+                  "http://localhost:4321/tymultiverse/md-exporter" || echo "Initial sync failed, will retry via CronJob"
         env:
         - name: PUBLIC_DECKOFCARDS_URL
           valueFrom:
