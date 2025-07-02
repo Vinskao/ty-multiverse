@@ -204,8 +204,8 @@ import '../styles/qabot.css';
           // 載入前5條歷史記錄
           const historyToShow = result.history.slice(0, this.historyItemsPerPage);
           historyToShow.forEach(item => {
-            // 使用歷史記錄中的sources，如果沒有則使用空陣列
-            const sources = item.sources || [];
+            // 使用歷史記錄中的reference_data作為sources
+            const sources = item.reference_data || [];
             this.addHistoryMessage(item.user_message, item.ai_answer, sources);
           });
           
@@ -241,8 +241,8 @@ import '../styles/qabot.css';
           
           // 在載入更多按鈕前插入歷史記錄
           historyToShow.forEach(item => {
-            // 使用歷史記錄中的sources，如果沒有則使用空陣列
-            const sources = item.sources || [];
+            // 使用歷史記錄中的reference_data作為sources
+            const sources = item.reference_data || [];
             this.addHistoryMessage(item.user_message, item.ai_answer, sources);
           });
           
