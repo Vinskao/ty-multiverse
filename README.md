@@ -566,26 +566,3 @@ sequenceDiagram
     MayaSawa-->>Astro: 返回回答
     Astro-->>User: 顯示回答
 ```
-
-### 技術組件說明
-
-#### 前端組件
-- **QABot.astro**: Astro 問答組件，提供用戶界面
-- **MD 文件集**: `src/content/work/` 目錄下的 Markdown 文件
-
-#### 後端服務
-- **Paprika (Laravel)**: 負責 MD 文件的接收和存儲
-- **Maya-Sawa (FastAPI)**: 提供問答 API 和 Embedding 處理
-- **PostgreSQL**: 向量資料庫，存儲原始內容和向量嵌入
-- **Redis**: 聊天記錄緩存，提升響應速度
-
-#### AI 服務
-- **OpenAI GPT-3.5-turbo**: 生成回答的核心 AI 模型
-- **Embedding 服務**: 將文本轉換為向量表示
-
-### 數據流程特點
-
-1. **異步處理**: MD 文件同步和 Embedding 處理分離
-2. **緩存優化**: Redis 緩存聊天記錄，減少重複計算
-3. **向量搜索**: 使用向量相似度快速找到相關內容
-4. **上下文增強**: 結合向量搜索結果和 AI 模型生成準確回答
