@@ -470,16 +470,17 @@ graph TD
     B --> C[後端 Paprika<br/>Laravel API]
     C --> D[PostgreSQL<br/>向量資料庫]
     
-    E[FastAPI Maya-Sawa<br/>定期任務] --> F[Embedding 處理]
-    F --> D
+    E[FastAPI Maya-Sawa<br/>定期任務] --> F[從 Paprika API<br/>取得 MD 文章]
+    F --> G[Embedding 處理]
+    G --> D
     
-    G[前端 Astro<br/>QABot 組件] --> H[後端 Maya-Sawa<br/>FastAPI]
-    H --> I[Redis<br/>聊天記錄緩存]
-    H --> J[OpenAI API<br/>GPT-3.5-turbo]
+    H[前端 Astro<br/>QABot 組件] --> I[後端 Maya-Sawa<br/>FastAPI]
+    I --> J[Redis<br/>聊天記錄緩存]
+    I --> K[OpenAI API<br/>GPT-3.5-turbo]
     
-    J --> K[回答生成]
-    K --> H
-    H --> G
+    K --> L[回答生成]
+    L --> I
+    I --> H
     
     subgraph "數據流程"
         A
@@ -491,14 +492,15 @@ graph TD
     subgraph "AI 處理"
         E
         F
+        G
     end
     
     subgraph "問答互動"
-        G
         H
         I
         J
         K
+        L
     end
     
     %% 顏色主題
@@ -506,10 +508,11 @@ graph TD
     style C fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#ffffff
     style D fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
     style E fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#ffffff
-    style G fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
-    style H fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
-    style I fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
-    style J fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#ffffff
+    style F fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
+    style H fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
+    style I fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
+    style J fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
+    style K fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#ffffff
 ```
 
 ### 詳細流程說明
@@ -530,15 +533,16 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant MayaSawa as Maya-Sawa FastAPI
+    participant Paprika as Paprika Laravel API
     participant PG as PostgreSQL
     participant Embedding as Embedding 服務
     
-    MayaSawa->>PG: 查詢未處理的 MD 內容
-    PG-->>MayaSawa: 返回原始內容
+    MayaSawa->>Paprika: 定期請求文章列表 API
+    Paprika-->>MayaSawa: 返回現有 MD 文章內容
     MayaSawa->>Embedding: 生成向量嵌入
     Embedding-->>MayaSawa: 返回向量數據
     MayaSawa->>PG: 更新向量資料庫
-    Note over MayaSawa,PG: 定期執行，確保向量資料最新
+    Note over MayaSawa,Paprika: 定期執行，從 Paprika API 取得最新文章
 ```
 
 #### 3. 問答互動階段
