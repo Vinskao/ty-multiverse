@@ -459,3 +459,129 @@ kubectl logs job/ty-multiverse-article-sync-<timestamp> -n default
 # 檢查外部 API 的文章列表
 curl -X GET "https://peoplesystem.tatdvsonorth.com/paprika/articles" | jq
 ```
+
+## 問答系統架構
+
+### 整體架構流程
+
+```mermaid
+graph TD
+    A[前端 MD 文件集<br/>src/content/work/] --> B[定期同步]
+    B --> C[後端 Paprika<br/>Laravel API]
+    C --> D[PostgreSQL<br/>向量資料庫]
+    
+    E[FastAPI Maya-Sawa<br/>定期任務] --> F[Embedding 處理]
+    F --> D
+    
+    G[前端 Astro<br/>QABot 組件] --> H[後端 Maya-Sawa<br/>FastAPI]
+    H --> I[Redis<br/>聊天記錄緩存]
+    H --> J[OpenAI API<br/>GPT-3.5-turbo]
+    
+    J --> K[回答生成]
+    K --> H
+    H --> G
+    
+    subgraph "數據流程"
+        A
+        B
+        C
+        D
+    end
+    
+    subgraph "AI 處理"
+        E
+        F
+    end
+    
+    subgraph "問答互動"
+        G
+        H
+        I
+        J
+        K
+    end
+    
+    %% 顏色主題
+    style A fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#ffffff
+    style C fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#ffffff
+    style D fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+    style E fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#ffffff
+    style G fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
+    style H fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
+    style I fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
+    style J fill:#6366f1,stroke:#4338ca,stroke-width:2px,color:#ffffff
+```
+
+### 詳細流程說明
+
+#### 1. 數據同步階段
+```mermaid
+sequenceDiagram
+    participant Frontend as 前端 MD 文件
+    participant Paprika as Paprika Laravel
+    participant PG as PostgreSQL
+    
+    Frontend->>Paprika: 定期同步 MD 文件
+    Paprika->>PG: 存儲原始 MD 內容
+    Note over Paprika,PG: 包含文件路徑、內容、時間戳
+```
+
+#### 2. Embedding 處理階段
+```mermaid
+sequenceDiagram
+    participant MayaSawa as Maya-Sawa FastAPI
+    participant PG as PostgreSQL
+    participant Embedding as Embedding 服務
+    
+    MayaSawa->>PG: 查詢未處理的 MD 內容
+    PG-->>MayaSawa: 返回原始內容
+    MayaSawa->>Embedding: 生成向量嵌入
+    Embedding-->>MayaSawa: 返回向量數據
+    MayaSawa->>PG: 更新向量資料庫
+    Note over MayaSawa,PG: 定期執行，確保向量資料最新
+```
+
+#### 3. 問答互動階段
+```mermaid
+sequenceDiagram
+    participant User as 用戶
+    participant Astro as Astro 前端
+    participant MayaSawa as Maya-Sawa API
+    participant Redis as Redis 緩存
+    participant OpenAI as OpenAI API
+    participant PG as PostgreSQL
+    
+    User->>Astro: 提交問題
+    Astro->>MayaSawa: 發送問題
+    MayaSawa->>Redis: 存儲聊天記錄
+    MayaSawa->>PG: 查詢相關向量資料
+    PG-->>MayaSawa: 返回相似內容
+    MayaSawa->>OpenAI: 發送問題 + 上下文
+    OpenAI-->>MayaSawa: 返回 AI 回答
+    MayaSawa->>Redis: 更新聊天記錄
+    MayaSawa-->>Astro: 返回回答
+    Astro-->>User: 顯示回答
+```
+
+### 技術組件說明
+
+#### 前端組件
+- **QABot.astro**: Astro 問答組件，提供用戶界面
+- **MD 文件集**: `src/content/work/` 目錄下的 Markdown 文件
+
+#### 後端服務
+- **Paprika (Laravel)**: 負責 MD 文件的接收和存儲
+- **Maya-Sawa (FastAPI)**: 提供問答 API 和 Embedding 處理
+- **PostgreSQL**: 向量資料庫，存儲原始內容和向量嵌入
+- **Redis**: 聊天記錄緩存，提升響應速度
+
+#### AI 服務
+- **OpenAI GPT-3.5-turbo**: 生成回答的核心 AI 模型
+- **Embedding 服務**: 將文本轉換為向量表示
+
+### 數據流程特點
+
+1. **異步處理**: MD 文件同步和 Embedding 處理分離
+2. **緩存優化**: Redis 緩存聊天記錄，減少重複計算
+3. **向量搜索**: 使用向量相似度快速找到相關內容
+4. **上下文增強**: 結合向量搜索結果和 AI 模型生成準確回答

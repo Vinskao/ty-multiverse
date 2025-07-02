@@ -260,7 +260,8 @@
             { "name": "WordPress", "level": "shade2" },
             { "name": "Cursor", "level": "shade1" },
             { "name": "Yum Repository", "level": "shade3" },
-            { "name": "Satellite", "level": "shade4" }
+            { "name": "Satellite", "level": "shade4" },
+            { "name": "Google Apps Script", "level": "shade3" }
           ]
         }
       ]
