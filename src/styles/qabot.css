@@ -233,6 +233,78 @@
   margin-bottom: 0;
 }
 
+/* 主題建議樣式 */
+.topic-suggestions {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topic-suggestions h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #ff6b9d;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(255, 107, 157, 0.3);
+}
+
+.suggestion-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* 當有5個按鈕時，最後一個按鈕佔據整行 */
+.suggestion-buttons .suggestion-btn:last-child {
+  grid-column: 1 / -1;
+}
+
+.suggestion-btn {
+  background: rgba(255, 107, 157, 0.15);
+  border: 1px solid rgba(255, 107, 157, 0.4);
+  color: #ff6b9d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(255, 107, 157, 0.2);
+}
+
+.suggestion-btn:hover {
+  background: rgba(255, 107, 157, 0.25);
+  border-color: rgba(255, 107, 157, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 157, 0.3);
+}
+
+.suggestion-btn:active {
+  transform: translateY(0);
+}
+
+/* 深色主題適配 */
+:root.theme-dark .topic-suggestions {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root.theme-dark .suggestion-btn {
+  background: rgba(255, 107, 157, 0.2);
+  border-color: rgba(255, 107, 157, 0.5);
+  box-shadow: 0 2px 4px rgba(255, 107, 157, 0.3);
+}
+
+:root.theme-dark .suggestion-btn:hover {
+  background: rgba(255, 107, 157, 0.3);
+  border-color: rgba(255, 107, 157, 0.7);
+  box-shadow: 0 4px 8px rgba(255, 107, 157, 0.4);
+}
+
 .sources-list {
   margin-top: 12px;
   padding-top: 12px;
