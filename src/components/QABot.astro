@@ -43,7 +43,19 @@ import '../styles/qabot.css';
           <span class="ai-name">真夜</span>
         </div>
         <div class="message-content">
-          <p>Hi！我是真夜，想了解TY的智慧庫內容嗎？儘管問我！</p>
+          <p>你有事？<br>問前想清楚，機會不是誰都有。</p>
+          
+          <!-- 主題建議 -->
+          <div class="topic-suggestions">
+            <h4>💡 建議主題：</h4>
+            <div class="suggestion-buttons">
+              <button class="suggestion-btn" data-topic="Java">☕ Java 開發</button>
+              <button class="suggestion-btn" data-topic="OOP及DI框架">🏗️ OOP及DI框架</button>
+              <button class="suggestion-btn" data-topic="部署實踐">🚀 部署實踐</button>
+              <button class="suggestion-btn" data-topic="網路問題">🌐 網路問題</button>
+              <button class="suggestion-btn" data-topic="了解真夜">💋 想多了解妳</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -93,6 +105,8 @@ import '../styles/qabot.css';
     private userId: string;
     private currentHistoryPage: number = 0;
     private historyItemsPerPage: number = 5;
+    private inactivityTimer: NodeJS.Timeout | null = null;
+    private hasShownInactivityMessage: boolean = false;
 
     constructor() {
       this.userInput = document.getElementById('userInput') as HTMLInputElement;
@@ -114,6 +128,9 @@ import '../styles/qabot.css';
       
       // 初始化時載入聊天歷史
       this.loadChatHistory();
+      
+      // 啟動不活躍計時器
+      this.startInactivityTimer();
     }
 
     setupEventListeners() {
@@ -136,6 +153,17 @@ import '../styles/qabot.css';
         this.loadMoreHistory();
       });
 
+      // 主題建議按鈕事件
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target && target.classList.contains('suggestion-btn')) {
+          const topic = target.getAttribute('data-topic');
+          if (topic) {
+            this.handleTopicSuggestion(topic);
+          }
+        }
+      });
+
       // 輸入框事件
       this.userInput.addEventListener('input', () => {
         this.updateSendButton();
@@ -152,11 +180,115 @@ import '../styles/qabot.css';
       this.sendButton.addEventListener('click', () => {
         this.sendMessage();
       });
+
+      // 重置不活躍計時器的事件
+      this.userInput.addEventListener('input', () => {
+        this.resetInactivityTimer();
+      });
+
+      this.userInput.addEventListener('keypress', () => {
+        this.resetInactivityTimer();
+      });
+
+      this.sendButton.addEventListener('click', () => {
+        this.resetInactivityTimer();
+      });
     }
 
     updateSendButton() {
       const hasText = this.userInput.value.trim().length > 0;
       this.sendButton.disabled = !hasText;
+    }
+
+    // 處理主題建議
+    handleTopicSuggestion(topic: string) {
+      const suggestions = {
+        'Java': '請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。',
+        'OOP及DI框架': '我想了解面向對象編程和依賴注入框架的設計原則和實現方式。',
+        '部署實踐': '請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。',
+        '網路問題': '我想了解網路編程、協議和常見網路問題的診斷與解決方法。',
+        '了解真夜': '想多了解妳，妳是什麼樣的人？有什麼特別的經歷或故事嗎？'
+      };
+
+      const suggestion = suggestions[topic as keyof typeof suggestions];
+      if (suggestion) {
+        this.userInput.value = suggestion;
+        this.updateSendButton();
+        this.userInput.focus();
+      }
+    }
+
+    // 添加歡迎消息（包含主題建議）
+    addWelcomeMessage() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      messageDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      
+      // 添加歡迎文字
+      const welcomeP = document.createElement('p');
+      welcomeP.innerHTML = '你有事？<br>問前想清楚，機會不是誰都有。';
+      contentDiv.appendChild(welcomeP);
+      
+      // 添加主題建議
+      const topicSuggestions = document.createElement('div');
+      topicSuggestions.className = 'topic-suggestions';
+      
+      const suggestionsTitle = document.createElement('h4');
+      suggestionsTitle.textContent = '💡 建議主題：';
+      topicSuggestions.appendChild(suggestionsTitle);
+      
+      const suggestionButtons = document.createElement('div');
+      suggestionButtons.className = 'suggestion-buttons';
+      
+      const topics = [
+        { key: 'Java', text: '☕ Java 開發' },
+        { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
+        { key: '部署實踐', text: '🚀 部署實踐' },
+        { key: '網路問題', text: '🌐 網路問題' },
+        { key: '了解真夜', text: '💋 想多了解妳' }
+      ];
+      
+      topics.forEach(topic => {
+        const button = document.createElement('button');
+        button.className = 'suggestion-btn';
+        button.setAttribute('data-topic', topic.key);
+        button.textContent = topic.text;
+        suggestionButtons.appendChild(button);
+      });
+      
+      topicSuggestions.appendChild(suggestionButtons);
+      contentDiv.appendChild(topicSuggestions);
+      
+      contentWrapper.appendChild(contentDiv);
+      messageDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(messageDiv);
+      
+      this.scrollToBottom();
     }
 
     // 生成或獲取用戶ID
@@ -198,8 +330,8 @@ import '../styles/qabot.css';
           // 清空當前聊天記錄
           this.chatMessages.innerHTML = '';
           
-          // 添加歡迎消息
-          this.addMessage('Hi！我是真夜，想了解TY的智慧庫內容嗎？儘管問我！', 'bot');
+          // 添加歡迎消息（包含主題建議）
+          this.addWelcomeMessage();
           
           // 載入前5條歷史記錄
           const historyToShow = result.history.slice(0, this.historyItemsPerPage);
@@ -215,7 +347,9 @@ import '../styles/qabot.css';
             this.currentHistoryPage = 1;
           }
         } else {
-
+          // 沒有歷史記錄時，顯示歡迎消息
+          this.chatMessages.innerHTML = '';
+          this.addWelcomeMessage();
         }
       } catch (error) {
         console.error('載入聊天歷史失敗:', error);
@@ -674,6 +808,64 @@ import '../styles/qabot.css';
 
     hideChat() {
       this.qaBotContainer.classList.remove('show');
+    }
+
+    // 啟動不活躍計時器
+    startInactivityTimer() {
+      this.inactivityTimer = setTimeout(() => {
+        if (!this.hasShownInactivityMessage) {
+          this.showInactivityMessage();
+          this.hasShownInactivityMessage = true;
+        }
+      }, 10000); // 10秒
+    }
+
+    // 重置不活躍計時器
+    resetInactivityTimer() {
+      if (this.inactivityTimer) {
+        clearTimeout(this.inactivityTimer);
+      }
+      this.hasShownInactivityMessage = false;
+      this.startInactivityTimer();
+    }
+
+    // 顯示不活躍提示消息
+    showInactivityMessage() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      messageDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = '<p>……嗯？還不說？</p>';
+      
+      contentWrapper.appendChild(contentDiv);
+      messageDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(messageDiv);
+      
+      this.scrollToBottom();
     }
 
 
