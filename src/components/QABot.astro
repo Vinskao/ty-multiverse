@@ -20,6 +20,9 @@ import '../styles/qabot.css';
       </div>
     </div>
     <div class="header-controls">
+      <button class="language-button" id="languageButton" title="切換語言">
+        <span class="language-text">中文</span>
+      </button>
       <button class="history-button" id="historyButton" title="查看聊天歷史">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -72,7 +75,7 @@ import '../styles/qabot.css';
       <input 
         type="text" 
         id="userInput" 
-        placeholder="請輸入您的問題..."
+        placeholder=""
         class="chat-input"
         maxlength="500"
       />
@@ -109,9 +112,11 @@ import '../styles/qabot.css';
     private hasShownInactivityMessage: boolean = false;
     private randomMessageTimer: NodeJS.Timeout | null = null;
     private lastSaucyMessage: string = ''; // 記錄上一個催促消息
+    private isThinking: boolean = false; // 記錄是否正在思考回答
+    private currentLanguage: string = 'chinese'; // 當前語言設置
     
-    // 歡迎消息陣列 - 10個版本
-    private welcomeMessages = [
+    // 歡迎消息陣列 - 中文版本 10個
+    private welcomeMessagesChinese = [
       "你有事？<br>問前想清楚，機會不是誰都有。",
       "哼～又來煩我了？<br>希望你的問題值得我回答。",
       "嘖嘖，又是你這個小傢伙？<br>別浪費我的時間。",
@@ -124,8 +129,22 @@ import '../styles/qabot.css';
       "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
     ];
     
-    // 催促用戶說話的騷氣回應陣列 - 10個版本
-    private saucyMessages = [
+    // 歡迎消息陣列 - 英文版本 10個
+    private welcomeMessagesEnglish = [
+      "What do you want?<br>Think carefully before asking, opportunities aren't for everyone.",
+      "Hmph~ bothering me again?<br>I hope your question is worth my time.",
+      "Tsk tsk, it's you again, little one?<br>Don't waste my time.",
+      "Oh my~ someone's looking for me again?<br>You'd better have a good reason.",
+      "Hehe, disturbing me again?<br>My time is precious.",
+      "Hmph~ you again?<br>Don't think I'll be nice to you.",
+      "Hmph, bothering me again?<br>I hope your question won't disappoint me.",
+      "Tsk, this guy again?<br>My patience is limited.",
+      "Oh my~ someone's looking for me again?<br>Get to the point quickly.",
+      "Hm? Still not talking?<br>My patience is very limited, little one~"
+    ];
+    
+    // 催促用戶說話的騷氣回應陣列 - 中文版本 10個
+    private saucyMessagesChinese = [
       "嗯？還不說？<br>我的耐心可是有限的哦～",
       "嘖嘖，打開聊天框又不說話？<br>有話快說，別浪費我的時間。",
       "既然來了就快點說重點。",
@@ -137,6 +156,30 @@ import '../styles/qabot.css';
       "別浪費我的時間，快點說重點。",
       "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
     ];
+    
+    // 催促用戶說話的騷氣回應陣列 - 英文版本 10個
+    private saucyMessagesEnglish = [
+      "Hm? Still not talking?<br>My patience is limited, you know~",
+      "Tsk tsk, opening the chat but not saying anything?<br>Speak up, don't waste my time.",
+      "Since you're here, get to the point quickly.",
+      "Don't just stare, say something.",
+      "Since you're here, don't waste time.",
+      "Don't think I'll wait for you forever, speak up.",
+      "My time is precious, you know? Hurry up and talk.",
+      "Don't just stare at me, say something.",
+      "Don't waste my time, get to the point quickly.",
+      "Hm? Still not talking?<br>My patience is very limited, little one~"
+    ];
+    
+    // 獲取當前語言的歡迎消息
+    get welcomeMessages() {
+      return this.currentLanguage === 'chinese' ? this.welcomeMessagesChinese : this.welcomeMessagesEnglish;
+    }
+    
+    // 獲取當前語言的騷氣消息
+    get saucyMessages() {
+      return this.currentLanguage === 'chinese' ? this.saucyMessagesChinese : this.saucyMessagesEnglish;
+    }
 
     constructor() {
       this.userInput = document.getElementById('userInput') as HTMLInputElement;
@@ -149,6 +192,12 @@ import '../styles/qabot.css';
       this.historyButton = document.getElementById('historyButton') as HTMLButtonElement;
       this.loadMoreButton = document.getElementById('loadMoreButton') as HTMLButtonElement;
       this.loadMoreContainer = document.getElementById('loadMoreContainer') as HTMLDivElement;
+      
+      // 初始化語言設置
+      this.initializeLanguage();
+      
+      // 設置輸入框佔位符
+      this.updateInputPlaceholder();
       
       // 生成或獲取用戶ID
       this.userId = this.getOrCreateUserId();
@@ -174,6 +223,12 @@ import '../styles/qabot.css';
 
       this.closeButton.addEventListener('click', () => {
         this.hideChat();
+      });
+
+      // 語言切換按鈕事件
+      const languageButton = document.getElementById('languageButton') as HTMLButtonElement;
+      languageButton.addEventListener('click', () => {
+        this.toggleLanguage();
       });
 
       // 歷史按鈕事件
@@ -235,12 +290,18 @@ import '../styles/qabot.css';
 
     // 處理主題建議
     handleTopicSuggestion(topic: string) {
-      const suggestions = {
+      const suggestions = this.currentLanguage === 'chinese' ? {
         'Java': '請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。',
         'OOP及DI框架': '我想了解面向對象編程和依賴注入框架的設計原則和實現方式。',
         '部署實踐': '請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。',
         '網路問題': '我想了解網路編程、協議和常見網路問題的診斷與解決方法。',
         '了解真夜': '妳是誰？'
+      } : {
+        'Java': 'Please tell me about Java development, including core concepts, best practices, and common problem solutions.',
+        'OOP及DI框架': 'I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.',
+        '部署實踐': 'Please share your experience with application deployment, containerization, and DevOps practices.',
+        '網路問題': 'I want to understand network programming, protocols, and diagnosis and solutions for common network issues.',
+        '了解真夜': 'Who are you?'
       };
 
       const suggestion = suggestions[topic as keyof typeof suggestions];
@@ -293,18 +354,24 @@ import '../styles/qabot.css';
       topicSuggestions.className = 'topic-suggestions';
       
       const suggestionsTitle = document.createElement('h4');
-      suggestionsTitle.textContent = '💡 建議主題：';
+      suggestionsTitle.textContent = this.currentLanguage === 'chinese' ? '💡 建議主題：' : '💡 Suggested Topics:';
       topicSuggestions.appendChild(suggestionsTitle);
       
       const suggestionButtons = document.createElement('div');
       suggestionButtons.className = 'suggestion-buttons';
       
-      const topics = [
+      const topics = this.currentLanguage === 'chinese' ? [
         { key: 'Java', text: '☕ Java 開發' },
         { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
         { key: '部署實踐', text: '🚀 部署實踐' },
         { key: '網路問題', text: '🌐 網路問題' },
         { key: '了解真夜', text: '想多了解妳' }
+      ] : [
+        { key: 'Java', text: '☕ Java Development' },
+        { key: 'OOP及DI框架', text: '🏗️ OOP & DI Frameworks' },
+        { key: '部署實踐', text: '🚀 Deployment Practices' },
+        { key: '網路問題', text: '🌐 Network Issues' },
+        { key: '了解真夜', text: 'Learn More About Maya' }
       ];
       
       topics.forEach(topic => {
@@ -466,9 +533,9 @@ import '../styles/qabot.css';
     }
 
     async callQAAPI(text) {
-      console.log('QA API: 調用遠程服務，用戶ID:', this.userId);
+      console.log('QA API: 調用遠程服務，用戶ID:', this.userId, '語言:', this.currentLanguage);
       
-      // 調用遠程QA服務，帶上用戶ID
+      // 調用遠程QA服務，帶上用戶ID和語言參數
       const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/query`, {
         method: 'POST',
         headers: {
@@ -476,7 +543,8 @@ import '../styles/qabot.css';
         },
         body: JSON.stringify({ 
           text,
-          user_id: this.userId
+          user_id: this.userId,
+          language: this.currentLanguage
         })
       });
 
@@ -651,6 +719,9 @@ import '../styles/qabot.css';
     }
 
     addLoadingMessage() {
+      // 設置思考狀態為 true
+      this.isThinking = true;
+      
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'message bot-message';
       
@@ -695,7 +766,32 @@ import '../styles/qabot.css';
       return loadingDiv;
     }
 
+    // 格式化AI回答，改善排版
+    formatAnswer(answer: string): string {
+      // 將 \n\n 轉換為段落分隔
+      let formattedAnswer = answer.replace(/\n\n/g, '</p><p>');
+      
+      // 將單個 \n 轉換為 <br>
+      formattedAnswer = formattedAnswer.replace(/\n/g, '<br>');
+      
+      // 包裝在段落標籤中
+      formattedAnswer = `<p>${formattedAnswer}</p>`;
+      
+      // 處理特殊格式
+      // 將「」包圍的內容加粗
+      formattedAnswer = formattedAnswer.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
+      
+      // 將角色名稱加粗
+      formattedAnswer = formattedAnswer.replace(/(吉国\s*[小千秋][百秋])/g, '<strong>$1</strong>');
+      formattedAnswer = formattedAnswer.replace(/(Sayuri|Chiaki)/g, '<strong>$1</strong>');
+      
+      return formattedAnswer;
+    }
+
     addBotResponse(answer, sources) {
+      // 重置思考狀態為 false
+      this.isThinking = false;
+      
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message bot-message';
       
@@ -726,10 +822,8 @@ import '../styles/qabot.css';
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
       
-      // 添加答案
-      const answerP = document.createElement('p');
-      answerP.textContent = answer;
-      contentDiv.appendChild(answerP);
+      // 添加格式化後的答案
+      contentDiv.innerHTML = this.formatAnswer(answer);
       
       // 添加來源列表
       if (sources && sources.length > 0) {
@@ -772,6 +866,9 @@ import '../styles/qabot.css';
     }
 
     addErrorMessage(message) {
+      // 重置思考狀態為 false
+      this.isThinking = false;
+      
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message bot-message';
       
@@ -847,7 +944,7 @@ import '../styles/qabot.css';
     // 啟動不活躍計時器
     startInactivityTimer() {
       this.inactivityTimer = setTimeout(() => {
-        if (!this.hasShownInactivityMessage) {
+        if (!this.hasShownInactivityMessage && !this.isThinking) {
           this.showInactivityMessage();
           this.hasShownInactivityMessage = true;
         }
@@ -905,25 +1002,35 @@ import '../styles/qabot.css';
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
       
-      // 使用不重複的隨機騷氣回應作為不活躍提示
-      const randomMessage = this.getRandomSaucyMessage();
-      contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+      // 先顯示"正在思考中..."
+      contentDiv.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>正在思考中...</span>
+        </div>
+      `;
       
       contentWrapper.appendChild(contentDiv);
       messageDiv.appendChild(contentWrapper);
       this.chatMessages.appendChild(messageDiv);
-      
       this.scrollToBottom();
+      
+      // 延遲1.5秒後顯示實際的催促消息
+      setTimeout(() => {
+        const randomMessage = this.getRandomSaucyMessage();
+        contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+        this.scrollToBottom();
+      }, 1500);
     }
 
     // 啟動隨機騷氣消息定時器
     startRandomMessageTimer() {
       this.randomMessageTimer = setInterval(() => {
-        // 只在聊天框顯示時才發送隨機消息
-        if (this.qaBotContainer.classList.contains('show')) {
+        // 只在聊天框顯示時且不在思考狀態時才發送隨機消息
+        if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
           this.sendRandomSaucyMessage();
         }
-      }, 60000); // 每60秒
+      }, 100000); // 每100秒
     }
 
     // 發送隨機騷氣消息
@@ -957,15 +1064,89 @@ import '../styles/qabot.css';
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
       
-      // 使用不重複的隨機騷氣消息
-      const randomMessage = this.getRandomSaucyMessage();
-      contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+      // 先顯示"正在思考中..."
+      contentDiv.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>正在思考中...</span>
+        </div>
+      `;
       
       contentWrapper.appendChild(contentDiv);
       messageDiv.appendChild(contentWrapper);
       this.chatMessages.appendChild(messageDiv);
-      
       this.scrollToBottom();
+      
+      // 延遲1.5秒後顯示實際的催促消息
+      setTimeout(() => {
+        const randomMessage = this.getRandomSaucyMessage();
+        contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+        this.scrollToBottom();
+      }, 1500);
+    }
+
+    // 初始化語言設置
+    initializeLanguage() {
+      // 從 localStorage 讀取保存的語言設置
+      const savedLanguage = localStorage.getItem('qabot_language');
+      if (savedLanguage) {
+        this.currentLanguage = savedLanguage;
+      }
+      this.updateLanguageButton();
+    }
+
+    // 切換語言
+    toggleLanguage() {
+      this.currentLanguage = this.currentLanguage === 'chinese' ? 'english' : 'chinese';
+      localStorage.setItem('qabot_language', this.currentLanguage);
+      this.updateLanguageButton();
+      
+      // 重新初始化對話
+      this.reinitializeChat();
+    }
+    
+    // 重新初始化聊天對話
+    reinitializeChat() {
+      // 清空當前聊天記錄
+      this.chatMessages.innerHTML = '';
+      
+      // 重置狀態
+      this.lastSaucyMessage = '';
+      this.hasShownInactivityMessage = false;
+      this.isThinking = false;
+      
+      // 更新輸入框佔位符
+      this.updateInputPlaceholder();
+      
+      // 添加新的歡迎消息（使用當前語言）
+      this.addWelcomeMessage();
+      
+      // 重置不活躍計時器
+      this.resetInactivityTimer();
+      
+      // 滾動到底部
+      this.scrollToBottom();
+    }
+
+    // 更新語言按鈕顯示
+    updateLanguageButton() {
+      const languageButton = document.getElementById('languageButton') as HTMLButtonElement;
+      const languageText = languageButton.querySelector('.language-text') as HTMLSpanElement;
+      
+      if (this.currentLanguage === 'chinese') {
+        languageText.textContent = '中文';
+        languageButton.title = '切換到英文';
+      } else {
+        languageText.textContent = 'English';
+        languageButton.title = 'Switch to Chinese';
+      }
+    }
+    
+    // 更新輸入框佔位符
+    updateInputPlaceholder() {
+      this.userInput.placeholder = this.currentLanguage === 'chinese' 
+        ? '請輸入您的問題...' 
+        : 'Please enter your question...';
     }
 
 

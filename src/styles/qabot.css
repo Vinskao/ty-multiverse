@@ -99,6 +99,31 @@
   align-items: center;
 }
 
+.language-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--gray-0);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  text-align: center;
+}
+
+.language-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.language-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .history-button {
   background: none;
   border: none;
@@ -227,11 +252,23 @@
 
 .message-content p {
   margin: 0 0 8px 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  text-align: justify;
 }
 
 .message-content p:last-child {
   margin-bottom: 0;
+}
+
+/* AI回答格式化樣式 */
+.message-content strong {
+  color: #ffeb3b;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(255, 235, 59, 0.3);
+}
+
+.message-content br {
+  margin-bottom: 4px;
 }
 
 /* 主題建議樣式 */
@@ -508,6 +545,17 @@
 :root.theme-dark .history-button,
 :root.theme-dark .close-button {
   color: var(--gray-0);
+}
+
+:root.theme-dark .language-button {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--gray-0);
+}
+
+:root.theme-dark .language-button:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 :root.theme-dark .history-button:hover,
