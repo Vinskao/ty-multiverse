@@ -53,7 +53,7 @@ import '../styles/qabot.css';
               <button class="suggestion-btn" data-topic="OOP及DI框架">🏗️ OOP及DI框架</button>
               <button class="suggestion-btn" data-topic="部署實踐">🚀 部署實踐</button>
               <button class="suggestion-btn" data-topic="網路問題">🌐 網路問題</button>
-              <button class="suggestion-btn" data-topic="了解真夜">💋 想多了解妳</button>
+              <button class="suggestion-btn" data-topic="了解真夜">想多了解妳</button>
             </div>
           </div>
         </div>
@@ -107,6 +107,36 @@ import '../styles/qabot.css';
     private historyItemsPerPage: number = 5;
     private inactivityTimer: NodeJS.Timeout | null = null;
     private hasShownInactivityMessage: boolean = false;
+    private randomMessageTimer: NodeJS.Timeout | null = null;
+    private lastSaucyMessage: string = ''; // 記錄上一個催促消息
+    
+    // 歡迎消息陣列 - 10個版本
+    private welcomeMessages = [
+      "你有事？<br>問前想清楚，機會不是誰都有。",
+      "哼～又來煩我了？<br>希望你的問題值得我回答。",
+      "嘖嘖，又是你這個小傢伙？<br>別浪費我的時間。",
+      "哎呀～又有人來找我了？<br>最好給我一個好理由。",
+      "呵呵，又來打擾我了？<br>我的時間很寶貴的。",
+      "嘁～又是你？<br>別以為我會對你客氣。",
+      "哼，又來煩我了？<br>希望你的問題不會讓我失望。",
+      "嘖，又是這個傢伙？<br>我的耐心可是有限的。",
+      "哎呀～又有人來找我了？<br>快點說重點。",
+      "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
+    ];
+    
+    // 催促用戶說話的騷氣回應陣列 - 10個版本
+    private saucyMessages = [
+      "嗯？還不說？<br>我的耐心可是有限的哦～",
+      "嘖嘖，打開聊天框又不說話？<br>有話快說，別浪費我的時間。",
+      "既然來了就快點說重點。",
+      "別光看著，有話就說。",
+      "既然來了就別浪費時間。",
+      "別以為我會一直等你，有話快說。",
+      "我的時間很寶貴的，知道嗎？快點說。",
+      "別光盯著我看，有話就說。",
+      "別浪費我的時間，快點說重點。",
+      "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
+    ];
 
     constructor() {
       this.userInput = document.getElementById('userInput') as HTMLInputElement;
@@ -131,6 +161,9 @@ import '../styles/qabot.css';
       
       // 啟動不活躍計時器
       this.startInactivityTimer();
+      
+      // 啟動隨機騷氣消息定時器
+      this.startRandomMessageTimer();
     }
 
     setupEventListeners() {
@@ -207,7 +240,7 @@ import '../styles/qabot.css';
         'OOP及DI框架': '我想了解面向對象編程和依賴注入框架的設計原則和實現方式。',
         '部署實踐': '請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。',
         '網路問題': '我想了解網路編程、協議和常見網路問題的診斷與解決方法。',
-        '了解真夜': '想多了解妳，妳是什麼樣的人？有什麼特別的經歷或故事嗎？'
+        '了解真夜': '妳是誰？'
       };
 
       const suggestion = suggestions[topic as keyof typeof suggestions];
@@ -249,9 +282,10 @@ import '../styles/qabot.css';
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
       
-      // 添加歡迎文字
+      // 添加歡迎文字 - 使用隨機歡迎消息
       const welcomeP = document.createElement('p');
-      welcomeP.innerHTML = '你有事？<br>問前想清楚，機會不是誰都有。';
+      const randomWelcome = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
+      welcomeP.innerHTML = randomWelcome;
       contentDiv.appendChild(welcomeP);
       
       // 添加主題建議
@@ -270,7 +304,7 @@ import '../styles/qabot.css';
         { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
         { key: '部署實踐', text: '🚀 部署實踐' },
         { key: '網路問題', text: '🌐 網路問題' },
-        { key: '了解真夜', text: '💋 想多了解妳' }
+        { key: '了解真夜', text: '想多了解妳' }
       ];
       
       topics.forEach(topic => {
@@ -829,6 +863,17 @@ import '../styles/qabot.css';
       this.startInactivityTimer();
     }
 
+    // 獲取不重複的隨機催促消息
+    getRandomSaucyMessage(): string {
+      let randomMessage: string;
+      do {
+        randomMessage = this.saucyMessages[Math.floor(Math.random() * this.saucyMessages.length)];
+      } while (randomMessage === this.lastSaucyMessage && this.saucyMessages.length > 1);
+      
+      this.lastSaucyMessage = randomMessage;
+      return randomMessage;
+    }
+
     // 顯示不活躍提示消息
     showInactivityMessage() {
       const messageDiv = document.createElement('div');
@@ -859,7 +904,62 @@ import '../styles/qabot.css';
       
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
-      contentDiv.innerHTML = '<p>……嗯？還不說？</p>';
+      
+      // 使用不重複的隨機騷氣回應作為不活躍提示
+      const randomMessage = this.getRandomSaucyMessage();
+      contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+      
+      contentWrapper.appendChild(contentDiv);
+      messageDiv.appendChild(contentWrapper);
+      this.chatMessages.appendChild(messageDiv);
+      
+      this.scrollToBottom();
+    }
+
+    // 啟動隨機騷氣消息定時器
+    startRandomMessageTimer() {
+      this.randomMessageTimer = setInterval(() => {
+        // 只在聊天框顯示時才發送隨機消息
+        if (this.qaBotContainer.classList.contains('show')) {
+          this.sendRandomSaucyMessage();
+        }
+      }, 60000); // 每60秒
+    }
+
+    // 發送隨機騷氣消息
+    sendRandomSaucyMessage() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      // 添加頭像
+      const avatarDiv = document.createElement('div');
+      avatarDiv.className = 'message-avatar';
+      const avatarImg = document.createElement('img');
+      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
+      avatarImg.alt = '真夜';
+      avatarImg.className = 'bot-avatar';
+      avatarDiv.appendChild(avatarImg);
+      messageDiv.appendChild(avatarDiv);
+      
+      // 添加內容包裝器
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = 'message-content-wrapper';
+      
+      // 添加消息頭部
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header';
+      const aiName = document.createElement('span');
+      aiName.className = 'ai-name';
+      aiName.textContent = '真夜';
+      headerDiv.appendChild(aiName);
+      contentWrapper.appendChild(headerDiv);
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      
+      // 使用不重複的隨機騷氣消息
+      const randomMessage = this.getRandomSaucyMessage();
+      contentDiv.innerHTML = `<p>${randomMessage}</p>`;
       
       contentWrapper.appendChild(contentDiv);
       messageDiv.appendChild(contentWrapper);

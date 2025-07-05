@@ -64,11 +64,12 @@
 }
 
 .chat-header {
-  background: #000000;
-  color: white;
+  background: var(--gray-999);
+  color: var(--gray-0);
   padding: 12px 20px;
   text-align: center;
   position: relative;
+  transition: background-color var(--theme-transition), color var(--theme-transition);
 }
 
 .header-content {
@@ -101,29 +102,29 @@
 .history-button {
   background: none;
   border: none;
-  color: white;
+  color: var(--gray-0);
   cursor: pointer;
   padding: 5px;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color var(--theme-transition);
 }
 
 .history-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .close-button {
   background: none;
   border: none;
-  color: white;
+  color: var(--gray-0);
   cursor: pointer;
   padding: 5px;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color var(--theme-transition);
 }
 
 .close-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .chat-header h3 {
@@ -497,6 +498,21 @@
 :root.theme-dark .chat-input-container {
   background: var(--gray-800);
   border-color: var(--gray-700);
+}
+
+:root.theme-dark .chat-header {
+  background: var(--gray-800);
+  color: var(--gray-0);
+}
+
+:root.theme-dark .history-button,
+:root.theme-dark .close-button {
+  color: var(--gray-0);
+}
+
+:root.theme-dark .history-button:hover,
+:root.theme-dark .close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* 響應式設計 */

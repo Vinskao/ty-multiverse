@@ -296,7 +296,7 @@
           "name": "Frameworks & APIs",
           "description": [],
           "skills": [
-            { "name": "LangChain", "level": "shade5" },
+            { "name": "LangChain", "level": "shade4" },
             { "name": "OpenAI API", "level": "shade4" }
           ]
         }
