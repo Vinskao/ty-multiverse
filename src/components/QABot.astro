@@ -98,6 +98,14 @@ import '../styles/qabot.css';
   </div>
 </div>
 
+<!-- 圖片放大模態框 -->
+<div class="image-modal" id="imageModal">
+  <div class="image-modal-content">
+    <button class="image-modal-close" id="imageModalClose">&times;</button>
+    <img id="modalImage" src="" alt="放大圖片" />
+  </div>
+</div>
+
 <script>
   class QABot {
     private userInput: HTMLInputElement;
@@ -122,6 +130,9 @@ import '../styles/qabot.css';
     private isFullscreen: boolean = false; // 全屏模式狀態
     private saucyMessageCount: number = 0; // 催促消息計數
     private maxSaucyMessages: number = 3; // 最大催促消息次數
+    private imageModal: HTMLDivElement; // 圖片模態框
+    private modalImage: HTMLImageElement; // 模態框中的圖片
+    private imageModalClose: HTMLButtonElement; // 關閉按鈕
     
     // 歡迎消息陣列 - 中文版本 10個
     private welcomeMessagesChinese = [
@@ -201,6 +212,11 @@ import '../styles/qabot.css';
       this.loadMoreButton = document.getElementById('loadMoreButton') as HTMLButtonElement;
       this.loadMoreContainer = document.getElementById('loadMoreContainer') as HTMLDivElement;
       
+      // 初始化圖片模態框
+      this.imageModal = document.getElementById('imageModal') as HTMLDivElement;
+      this.modalImage = document.getElementById('modalImage') as HTMLImageElement;
+      this.imageModalClose = document.getElementById('imageModalClose') as HTMLButtonElement;
+      
       // 初始化語言設置
       this.initializeLanguage();
       
@@ -221,6 +237,15 @@ import '../styles/qabot.css';
       
       // 啟動隨機騷氣消息定時器
       this.startRandomMessageTimer();
+
+      // 事件代理：圖片放大
+      this.chatMessages.addEventListener('click', (e) => {
+        const img = (e.target as HTMLElement).closest('.answer-image') as HTMLImageElement;
+        if (img) {
+          const imageSrc = img.getAttribute('data-src') || img.src;
+          this.showImageModal(imageSrc);
+        }
+      });
     }
 
     setupEventListeners() {
@@ -294,6 +319,25 @@ import '../styles/qabot.css';
 
       this.sendButton.addEventListener('click', () => {
         this.resetInactivityTimer();
+      });
+
+      // 圖片模態框事件
+      this.imageModalClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hideImageModal();
+      });
+
+      this.imageModal.addEventListener('click', (e) => {
+        if (e.target === this.imageModal) {
+          this.hideImageModal();
+        }
+      });
+
+      // ESC鍵關閉模態框
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.imageModal.classList.contains('show')) {
+          this.hideImageModal();
+        }
       });
     }
 
@@ -423,14 +467,14 @@ import '../styles/qabot.css';
       return userId;
     }
 
-
-
     // 載入聊天歷史
     async loadChatHistory() {
       try {
-        console.log('載入聊天歷史，用戶ID:', this.userId);
+        const apiBaseUrl = this.getApiBaseUrl();
+        const apiPathPrefix = this.getApiPathPrefix();
+        console.log('載入聊天歷史，用戶ID:', this.userId, 'API URL:', apiBaseUrl, '路徑前綴:', apiPathPrefix);
         
-        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/chat-history/${this.userId}`);
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.userId}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -475,7 +519,9 @@ import '../styles/qabot.css';
     // 載入更多歷史記錄
     async loadMoreHistory() {
       try {
-        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/chat-history/${this.userId}`);
+        const apiBaseUrl = this.getApiBaseUrl();
+        const apiPathPrefix = this.getApiPathPrefix();
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.userId}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -502,7 +548,6 @@ import '../styles/qabot.css';
             this.loadMoreContainer.style.display = 'none';
           }
           
-
         }
       } catch (error) {
         console.error('載入更多歷史記錄失敗:', error);
@@ -546,11 +591,33 @@ import '../styles/qabot.css';
       }
     }
 
+    // 獲取API基礎URL
+    getApiBaseUrl(): string {
+      // 檢查是否在開發環境
+      if (import.meta.env.DEV) {
+        return 'http://localhost:8000';
+      }
+      // 生產環境使用環境變數
+      return import.meta.env.PUBLIC_API_BASE_URL || '';
+    }
+
+    // 獲取API路徑前綴
+    getApiPathPrefix(): string {
+      // 檢查是否在開發環境
+      if (import.meta.env.DEV) {
+        return ''; // 開發環境沒有前綴
+      }
+      // 生產環境有 /maya-sawa 前綴
+      return '/maya-sawa';
+    }
+
     async callQAAPI(text) {
-      console.log('QA API: 調用遠程服務，用戶ID:', this.userId, '語言:', this.currentLanguage);
+      const apiBaseUrl = this.getApiBaseUrl();
+      const apiPathPrefix = this.getApiPathPrefix();
+      console.log('QA API: 調用服務，用戶ID:', this.userId, '語言:', this.currentLanguage, 'API URL:', apiBaseUrl, '路徑前綴:', apiPathPrefix);
       
-      // 調用遠程QA服務，帶上用戶ID和語言參數
-      const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/maya-sawa/qa/query`, {
+      // 調用QA服務，帶上用戶ID和語言參數
+      const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -568,7 +635,12 @@ import '../styles/qabot.css';
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('QA API: 完整響應數據:', JSON.stringify(result, null, 2));
+      console.log('QA API: answer 內容:', result.answer);
+      console.log('QA API: data 內容:', result.data);
+      
+      return result;
     }
 
     addMessage(content, type) {
@@ -799,12 +871,12 @@ import '../styles/qabot.css';
         console.log('Found image list:', imageList);
         const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
         console.log('Extracted URLs:', imageUrls);
-        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" onload="console.log('Image loaded:', this.src)" onerror="console.log('Image failed to load:', this.src); this.style.display='none'" /></div>`).join('')}</div>`;
+        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onload="console.log('Image loaded:', this.src)" onerror="console.log('Image failed to load:', this.src); this.style.display='none'" /></div>`).join('')}</div>`;
       });
       
       // 處理單個圖片連結
       formattedAnswer = formattedAnswer.replace(/圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi, 
-        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" onload="console.log(\'Image loaded:\', this.src)" onerror="console.log(\'Image failed to load:\', this.src); this.style.display=\'none\'" /></div>');
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onload="console.log(\'Image loaded:\', this.src)" onerror="console.log(\'Image failed to load:\', this.src); this.style.display=\'none\'" /></div>');
       
       // 將 \n\n 轉換為段落分隔
       formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>');
@@ -1251,6 +1323,18 @@ import '../styles/qabot.css';
       }
     }
 
+    // 顯示圖片模態框
+    showImageModal(imageSrc: string) {
+      this.modalImage.src = imageSrc;
+      this.imageModal.classList.add('show');
+      document.body.style.overflow = 'hidden'; // 防止背景滾動
+    }
+
+    // 隱藏圖片模態框
+    hideImageModal() {
+      this.imageModal.classList.remove('show');
+      document.body.style.overflow = ''; // 恢復背景滾動
+    }
 
   }
 
