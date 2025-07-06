@@ -784,57 +784,39 @@ import '../styles/qabot.css';
     formatAnswer(answer: string): string {
       console.log('formatAnswer input:', answer);
       
-      // 創建專門的解析器來處理圖片和文本
-      const segments: Array<{ type: 'text' | 'image'; content: string }> = [];
+      // 直接處理圖片連結 - 原封不動顯示
+      let formattedAnswer = answer;
       
-      // 處理新的圖片格式（列表形式）
-      let processedAnswer = answer;
-      const imageListRegex = /圖片連結：\s*\n((?:- [^：]+：\s*https?:\/\/[^\n]+\n?)+)/gi;
+      // 先處理特殊格式（在處理圖片之前）- 避免影響URL
+      formattedAnswer = formattedAnswer.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
+      formattedAnswer = formattedAnswer.replace(/(吉国\s*[小千秋][百秋])(?![^<]*\.png)/g, '<strong>$1</strong>');
+      formattedAnswer = formattedAnswer.replace(/(森築\s*空音)(?![^<]*\.png)/g, '<strong>$1</strong>');
+      formattedAnswer = formattedAnswer.replace(/(Sayuri|Chiaki|Sorane)(?![^<]*\.png)/g, '<strong>$1</strong>');
       
-      processedAnswer = processedAnswer.replace(imageListRegex, (match, imageList) => {
+      // 處理列表形式的圖片連結 - 調試版本
+      console.log('Looking for image lists in:', formattedAnswer);
+      formattedAnswer = formattedAnswer.replace(/圖片連結：\s*\n((?:- [^\n]+\n?)+)/gi, (match, imageList) => {
+        console.log('Found image list:', imageList);
         const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
-        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" onerror="this.style.display='none'" /></div>`).join('')}</div>`;
+        console.log('Extracted URLs:', imageUrls);
+        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" onload="console.log('Image loaded:', this.src)" onerror="console.log('Image failed to load:', this.src); this.style.display='none'" /></div>`).join('')}</div>`;
       });
       
-      // 處理單個圖片連結（舊格式）
-      const singleImageRegex = /圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi;
-      processedAnswer = processedAnswer.replace(singleImageRegex, 
-        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" onerror="this.style.display=\'none\'" /></div>');
+      // 處理單個圖片連結
+      formattedAnswer = formattedAnswer.replace(/圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi, 
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" onload="console.log(\'Image loaded:\', this.src)" onerror="console.log(\'Image failed to load:\', this.src); this.style.display=\'none\'" /></div>');
       
-      // 將處理後的文本分割成段落
-      const paragraphs = processedAnswer.split(/\n\n/);
-      paragraphs.forEach(paragraph => {
-        if (paragraph.trim()) {
-          segments.push({ type: 'text', content: paragraph });
-        }
-      });
+      // 將 \n\n 轉換為段落分隔
+      formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>');
       
-      // 構建最終的HTML
-      let result = '';
-      segments.forEach(segment => {
-        if (segment.type === 'text') {
-          // 處理文本
-          let textContent = segment.content;
-          // 將 \n\n 轉換為段落分隔
-          textContent = textContent.replace(/\n\n/g, '</p><p>');
-          // 將單個 \n 轉換為 <br>
-          textContent = textContent.replace(/\n/g, '<br>');
-          // 包裝在段落標籤中
-          textContent = `<p>${textContent}</p>`;
-          // 處理特殊格式
-          textContent = textContent.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
-          textContent = textContent.replace(/(吉国\s*[小千秋][百秋])/g, '<strong>$1</strong>');
-          textContent = textContent.replace(/(森築\s*空音)/g, '<strong>$1</strong>');
-          textContent = textContent.replace(/(Sayuri|Chiaki|Sorane)/g, '<strong>$1</strong>');
-          result += textContent;
-        } else if (segment.type === 'image') {
-          // 處理圖片 - 不包裝在p標籤內
-          result += `<div class="image-container"><img src="${segment.content}" alt="圖片" class="answer-image" onerror="this.style.display='none'" /></div>`;
-        }
-      });
+      // 將單個 \n 轉換為 <br>
+      formattedAnswer = formattedAnswer.replace(/\n/g, '<br>');
       
-      console.log('final formattedAnswer:', result);
-      return result;
+      // 包裝在段落標籤中
+      formattedAnswer = `<p>${formattedAnswer}</p>`;
+      
+      console.log('final formattedAnswer:', formattedAnswer);
+      return formattedAnswer;
     }
 
     addBotResponse(answer, sources) {
