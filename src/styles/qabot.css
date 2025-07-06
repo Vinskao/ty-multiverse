@@ -23,6 +23,21 @@
   overflow: hidden;
 }
 
+/* 全屏按鈕樣式 */
+.fullscreen-button {
+  background: none;
+  border: none;
+  color: var(--gray-0);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color var(--theme-transition);
+}
+
+.fullscreen-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
 .toggle-image {
   width: 40px;
   height: 40px;
@@ -61,6 +76,22 @@
 
 .qa-bot-container.show {
   display: flex;
+}
+
+/* 全屏模式樣式 */
+.qa-bot-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50vw;
+  height: 100vh;
+  bottom: auto;
+  border-radius: 0;
+  z-index: 10001;
+}
+
+.qa-bot-container.fullscreen .chat-messages {
+  height: calc(100vh - 140px);
 }
 
 .chat-header {
@@ -269,6 +300,41 @@
 
 .message-content br {
   margin-bottom: 4px;
+}
+
+/* 圖片容器樣式 */
+.image-container {
+  margin: 8px 0;
+  text-align: center;
+  display: inline-block;
+  width: calc(50% - 8px);
+  margin-right: 8px;
+  vertical-align: top;
+}
+
+.image-container:nth-child(even) {
+  margin-right: 0;
+}
+
+.answer-image {
+  width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+  object-fit: cover;
+}
+
+.answer-image:hover {
+  transform: scale(1.02);
+}
+
+/* 圖片容器包裝器 */
+.image-container-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
 }
 
 /* 主題建議樣式 */
@@ -571,6 +637,12 @@
     width: 50px;
     height: 50px;
     font-size: 0.6rem;
+  }
+  
+  /* 移動設備全屏模式 */
+  .qa-bot-container.fullscreen {
+    width: 100vw;
+    height: 100vh;
   }
 
   .toggle-image {

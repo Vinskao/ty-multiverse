@@ -20,6 +20,11 @@ import '../styles/qabot.css';
       </div>
     </div>
     <div class="header-controls">
+      <button class="fullscreen-button" id="fullscreenButton" title="切換全屏模式">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
       <button class="language-button" id="languageButton" title="切換語言">
         <span class="language-text">中文</span>
       </button>
@@ -114,6 +119,9 @@ import '../styles/qabot.css';
     private lastSaucyMessage: string = ''; // 記錄上一個催促消息
     private isThinking: boolean = false; // 記錄是否正在思考回答
     private currentLanguage: string = 'chinese'; // 當前語言設置
+    private isFullscreen: boolean = false; // 全屏模式狀態
+    private saucyMessageCount: number = 0; // 催促消息計數
+    private maxSaucyMessages: number = 3; // 最大催促消息次數
     
     // 歡迎消息陣列 - 中文版本 10個
     private welcomeMessagesChinese = [
@@ -223,6 +231,12 @@ import '../styles/qabot.css';
 
       this.closeButton.addEventListener('click', () => {
         this.hideChat();
+      });
+
+      // 全屏按鈕事件
+      const fullscreenButton = document.getElementById('fullscreenButton') as HTMLButtonElement;
+      fullscreenButton.addEventListener('click', () => {
+        this.toggleFullscreen();
       });
 
       // 語言切換按鈕事件
@@ -676,9 +690,9 @@ import '../styles/qabot.css';
       const aiContent = document.createElement('div');
       aiContent.className = 'message-content';
       
-      const answerP = document.createElement('p');
-      answerP.textContent = aiAnswer;
-      aiContent.appendChild(answerP);
+      // 格式化答案，包括圖片處理
+      const formattedAnswer = this.formatAnswer(aiAnswer);
+      aiContent.innerHTML = formattedAnswer;
       
       // 添加來源列表
       if (sources && sources.length > 0) {
@@ -768,24 +782,59 @@ import '../styles/qabot.css';
 
     // 格式化AI回答，改善排版
     formatAnswer(answer: string): string {
-      // 將 \n\n 轉換為段落分隔
-      let formattedAnswer = answer.replace(/\n\n/g, '</p><p>');
+      console.log('formatAnswer input:', answer);
       
-      // 將單個 \n 轉換為 <br>
-      formattedAnswer = formattedAnswer.replace(/\n/g, '<br>');
+      // 創建專門的解析器來處理圖片和文本
+      const segments: Array<{ type: 'text' | 'image'; content: string }> = [];
       
-      // 包裝在段落標籤中
-      formattedAnswer = `<p>${formattedAnswer}</p>`;
+      // 處理新的圖片格式（列表形式）
+      let processedAnswer = answer;
+      const imageListRegex = /圖片連結：\s*\n((?:- [^：]+：\s*https?:\/\/[^\n]+\n?)+)/gi;
       
-      // 處理特殊格式
-      // 將「」包圍的內容加粗
-      formattedAnswer = formattedAnswer.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
+      processedAnswer = processedAnswer.replace(imageListRegex, (match, imageList) => {
+        const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
+        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" onerror="this.style.display='none'" /></div>`).join('')}</div>`;
+      });
       
-      // 將角色名稱加粗
-      formattedAnswer = formattedAnswer.replace(/(吉国\s*[小千秋][百秋])/g, '<strong>$1</strong>');
-      formattedAnswer = formattedAnswer.replace(/(Sayuri|Chiaki)/g, '<strong>$1</strong>');
+      // 處理單個圖片連結（舊格式）
+      const singleImageRegex = /圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi;
+      processedAnswer = processedAnswer.replace(singleImageRegex, 
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" onerror="this.style.display=\'none\'" /></div>');
       
-      return formattedAnswer;
+      // 將處理後的文本分割成段落
+      const paragraphs = processedAnswer.split(/\n\n/);
+      paragraphs.forEach(paragraph => {
+        if (paragraph.trim()) {
+          segments.push({ type: 'text', content: paragraph });
+        }
+      });
+      
+      // 構建最終的HTML
+      let result = '';
+      segments.forEach(segment => {
+        if (segment.type === 'text') {
+          // 處理文本
+          let textContent = segment.content;
+          // 將 \n\n 轉換為段落分隔
+          textContent = textContent.replace(/\n\n/g, '</p><p>');
+          // 將單個 \n 轉換為 <br>
+          textContent = textContent.replace(/\n/g, '<br>');
+          // 包裝在段落標籤中
+          textContent = `<p>${textContent}</p>`;
+          // 處理特殊格式
+          textContent = textContent.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
+          textContent = textContent.replace(/(吉国\s*[小千秋][百秋])/g, '<strong>$1</strong>');
+          textContent = textContent.replace(/(森築\s*空音)/g, '<strong>$1</strong>');
+          textContent = textContent.replace(/(Sayuri|Chiaki|Sorane)/g, '<strong>$1</strong>');
+          result += textContent;
+        } else if (segment.type === 'image') {
+          // 處理圖片 - 不包裝在p標籤內
+          result += `<div class="image-container"><img src="${segment.content}" alt="圖片" class="answer-image" onerror="this.style.display='none'" /></div>`;
+        }
+      });
+      
+      console.log('final formattedAnswer:', result);
+      return result;
     }
 
     addBotResponse(answer, sources) {
@@ -957,6 +1006,7 @@ import '../styles/qabot.css';
         clearTimeout(this.inactivityTimer);
       }
       this.hasShownInactivityMessage = false;
+      this.saucyMessageCount = 0; // 重置催促消息計數
       this.startInactivityTimer();
     }
 
@@ -973,6 +1023,14 @@ import '../styles/qabot.css';
 
     // 顯示不活躍提示消息
     showInactivityMessage() {
+      // 檢查是否已達到最大次數
+      if (this.saucyMessageCount >= this.maxSaucyMessages) {
+        return;
+      }
+      
+      // 增加計數
+      this.saucyMessageCount++;
+      
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message bot-message';
       
@@ -1021,13 +1079,22 @@ import '../styles/qabot.css';
         contentDiv.innerHTML = `<p>${randomMessage}</p>`;
         this.scrollToBottom();
       }, 1500);
+      
+      // 如果還沒達到最大次數，設置下一次定時器（3倍時間）
+      if (this.saucyMessageCount < this.maxSaucyMessages) {
+        setTimeout(() => {
+          if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
+            this.showInactivityMessage();
+          }
+        }, 30000); // 30秒（3倍於原來的10秒）
+      }
     }
 
     // 啟動隨機騷氣消息定時器
     startRandomMessageTimer() {
       this.randomMessageTimer = setInterval(() => {
         // 只在聊天框顯示時且不在思考狀態時才發送隨機消息
-        if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
+        if (this.qaBotContainer.classList.contains('show') && !this.isThinking && this.saucyMessageCount < this.maxSaucyMessages) {
           this.sendRandomSaucyMessage();
         }
       }, 100000); // 每100秒
@@ -1035,6 +1102,14 @@ import '../styles/qabot.css';
 
     // 發送隨機騷氣消息
     sendRandomSaucyMessage() {
+      // 檢查是否已達到最大次數
+      if (this.saucyMessageCount >= this.maxSaucyMessages) {
+        return;
+      }
+      
+      // 增加計數
+      this.saucyMessageCount++;
+      
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message bot-message';
       
@@ -1083,6 +1158,15 @@ import '../styles/qabot.css';
         contentDiv.innerHTML = `<p>${randomMessage}</p>`;
         this.scrollToBottom();
       }, 1500);
+      
+      // 如果還沒達到最大次數，設置下一次定時器（3倍時間）
+      if (this.saucyMessageCount < this.maxSaucyMessages) {
+        setTimeout(() => {
+          if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
+            this.sendRandomSaucyMessage();
+          }
+        }, 300000); // 300秒 = 5分鐘（3倍於原來的100秒）
+      }
     }
 
     // 初始化語言設置
@@ -1114,6 +1198,7 @@ import '../styles/qabot.css';
       this.lastSaucyMessage = '';
       this.hasShownInactivityMessage = false;
       this.isThinking = false;
+      this.saucyMessageCount = 0; // 重置催促消息計數
       
       // 更新輸入框佔位符
       this.updateInputPlaceholder();
@@ -1147,6 +1232,41 @@ import '../styles/qabot.css';
       this.userInput.placeholder = this.currentLanguage === 'chinese' 
         ? '請輸入您的問題...' 
         : 'Please enter your question...';
+    }
+
+    // 切換全屏模式
+    toggleFullscreen() {
+      this.isFullscreen = !this.isFullscreen;
+      
+      if (this.isFullscreen) {
+        this.qaBotContainer.classList.add('fullscreen');
+        this.updateFullscreenButton(true);
+      } else {
+        this.qaBotContainer.classList.remove('fullscreen');
+        this.updateFullscreenButton(false);
+      }
+    }
+
+    // 更新全屏按鈕圖標
+    updateFullscreenButton(isFullscreen: boolean) {
+      const fullscreenButton = document.getElementById('fullscreenButton') as HTMLButtonElement;
+      const svg = fullscreenButton.querySelector('svg');
+      
+      if (svg) {
+        if (isFullscreen) {
+          // 顯示退出全屏圖標
+          svg.innerHTML = `
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+          `;
+          fullscreenButton.title = '退出全屏模式';
+        } else {
+          // 顯示進入全屏圖標
+          svg.innerHTML = `
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          `;
+          fullscreenButton.title = '切換全屏模式';
+        }
+      }
     }
 
 
