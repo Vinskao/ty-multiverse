@@ -108,273 +108,160 @@ import '../styles/qabot.css';
 
 <script>
   class QABot {
-    private userInput: HTMLInputElement;
-    private sendButton: HTMLButtonElement;
-    private chatMessages: HTMLDivElement;
-    private inputStatus: HTMLDivElement;
-    private qaBotToggle: HTMLDivElement;
-    private qaBotContainer: HTMLDivElement;
-    private closeButton: HTMLButtonElement;
-    private historyButton: HTMLButtonElement;
-    private loadMoreButton: HTMLButtonElement;
-    private loadMoreContainer: HTMLDivElement;
-    private userId: string;
-    private currentHistoryPage: number = 0;
-    private historyItemsPerPage: number = 5;
-    private inactivityTimer: NodeJS.Timeout | null = null;
-    private hasShownInactivityMessage: boolean = false;
-    private randomMessageTimer: NodeJS.Timeout | null = null;
-    private lastSaucyMessage: string = ''; // 記錄上一個催促消息
-    private isThinking: boolean = false; // 記錄是否正在思考回答
-    private currentLanguage: string = 'chinese'; // 當前語言設置
-    private isFullscreen: boolean = false; // 全屏模式狀態
-    private saucyMessageCount: number = 0; // 催促消息計數
-    private maxSaucyMessages: number = 3; // 最大催促消息次數
-    private imageModal: HTMLDivElement; // 圖片模態框
-    private modalImage: HTMLImageElement; // 模態框中的圖片
-    private imageModalClose: HTMLButtonElement; // 關閉按鈕
+    // DOM 元素
+    private elements: Record<string, HTMLElement> = {};
     
-    // 歡迎消息陣列 - 中文版本 10個
-    private welcomeMessagesChinese = [
-      "你有事？<br>問前想清楚，機會不是誰都有。",
-      "哼～又來煩我了？<br>希望你的問題值得我回答。",
-      "嘖嘖，又是你這個小傢伙？<br>別浪費我的時間。",
-      "哎呀～又有人來找我了？<br>最好給我一個好理由。",
-      "呵呵，又來打擾我了？<br>我的時間很寶貴的。",
-      "嘁～又是你？<br>別以為我會對你客氣。",
-      "哼，又來煩我了？<br>希望你的問題不會讓我失望。",
-      "嘖，又是這個傢伙？<br>我的耐心可是有限的。",
-      "哎呀～又有人來找我了？<br>快點說重點。",
-      "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
-    ];
+    // 狀態管理
+    private state = {
+      userId: '',
+      currentHistoryPage: 0,
+      historyItemsPerPage: 5,
+      currentLanguage: 'chinese',
+      isFullscreen: false,
+      isThinking: false,
+      saucyMessageCount: 0,
+      maxSaucyMessages: 3,
+      lastSaucyMessage: '',
+      hasShownInactivityMessage: false
+    };
     
-    // 歡迎消息陣列 - 英文版本 10個
-    private welcomeMessagesEnglish = [
-      "What do you want?<br>Think carefully before asking, opportunities aren't for everyone.",
-      "Hmph~ bothering me again?<br>I hope your question is worth my time.",
-      "Tsk tsk, it's you again, little one?<br>Don't waste my time.",
-      "Oh my~ someone's looking for me again?<br>You'd better have a good reason.",
-      "Hehe, disturbing me again?<br>My time is precious.",
-      "Hmph~ you again?<br>Don't think I'll be nice to you.",
-      "Hmph, bothering me again?<br>I hope your question won't disappoint me.",
-      "Tsk, this guy again?<br>My patience is limited.",
-      "Oh my~ someone's looking for me again?<br>Get to the point quickly.",
-      "Hm? Still not talking?<br>My patience is very limited, little one~"
-    ];
+    // 定時器
+    private timers = {
+      inactivity: null as NodeJS.Timeout | null,
+      randomMessage: null as NodeJS.Timeout | null
+    };
     
-    // 催促用戶說話的騷氣回應陣列 - 中文版本 10個
-    private saucyMessagesChinese = [
-      "嗯？還不說？<br>我的耐心可是有限的哦～",
-      "嘖嘖，打開聊天框又不說話？<br>有話快說，別浪費我的時間。",
-      "既然來了就快點說重點。",
-      "別光看著，有話就說。",
-      "既然來了就別浪費時間。",
-      "別以為我會一直等你，有話快說。",
-      "我的時間很寶貴的，知道嗎？快點說。",
-      "別光盯著我看，有話就說。",
-      "別浪費我的時間，快點說重點。",
-      "嗯？還不說？<br>我的耐心可是很有限的，小傢伙～"
-    ];
-    
-    // 催促用戶說話的騷氣回應陣列 - 英文版本 10個
-    private saucyMessagesEnglish = [
-      "Hm? Still not talking?<br>My patience is limited, you know~",
-      "Tsk tsk, opening the chat but not saying anything?<br>Speak up, don't waste my time.",
-      "Since you're here, get to the point quickly.",
-      "Don't just stare, say something.",
-      "Since you're here, don't waste time.",
-      "Don't think I'll wait for you forever, speak up.",
-      "My time is precious, you know? Hurry up and talk.",
-      "Don't just stare at me, say something.",
-      "Don't waste my time, get to the point quickly.",
-      "Hm? Still not talking?<br>My patience is very limited, little one~"
-    ];
-    
-    // 獲取當前語言的歡迎消息
-    get welcomeMessages() {
-      return this.currentLanguage === 'chinese' ? this.welcomeMessagesChinese : this.welcomeMessagesEnglish;
-    }
-    
-    // 獲取當前語言的騷氣消息
-    get saucyMessages() {
-      return this.currentLanguage === 'chinese' ? this.saucyMessagesChinese : this.saucyMessagesEnglish;
-    }
+        // 消息配置
+    private messages: any = null;
 
     constructor() {
-      this.userInput = document.getElementById('userInput') as HTMLInputElement;
-      this.sendButton = document.getElementById('sendButton') as HTMLButtonElement;
-      this.chatMessages = document.getElementById('chatMessages') as HTMLDivElement;
-      this.inputStatus = document.getElementById('inputStatus') as HTMLDivElement;
-      this.qaBotToggle = document.getElementById('qaBotToggle') as HTMLDivElement;
-      this.qaBotContainer = document.getElementById('qaBotContainer') as HTMLDivElement;
-      this.closeButton = document.getElementById('closeButton') as HTMLButtonElement;
-      this.historyButton = document.getElementById('historyButton') as HTMLButtonElement;
-      this.loadMoreButton = document.getElementById('loadMoreButton') as HTMLButtonElement;
-      this.loadMoreContainer = document.getElementById('loadMoreContainer') as HTMLDivElement;
-      
-      // 初始化圖片模態框
-      this.imageModal = document.getElementById('imageModal') as HTMLDivElement;
-      this.modalImage = document.getElementById('modalImage') as HTMLImageElement;
-      this.imageModalClose = document.getElementById('imageModalClose') as HTMLButtonElement;
-      
-      // 初始化語言設置
-      this.initializeLanguage();
-      
-      // 設置輸入框佔位符
-      this.updateInputPlaceholder();
-      
-      // 生成或獲取用戶ID
-      this.userId = this.getOrCreateUserId();
-      console.log('QABot: 用戶ID:', this.userId);
-      
+      this.initializeElements();
+      this.initializeState();
       this.setupEventListeners();
-      
-      // 初始化時載入聊天歷史
+      this.loadMessages().then(() => {
       this.loadChatHistory();
-      
-      // 啟動不活躍計時器
-      this.startInactivityTimer();
-      
-      // 啟動隨機騷氣消息定時器
-      this.startRandomMessageTimer();
+        this.startTimers();
+      });
+    }
 
-      // 事件代理：圖片放大
-      this.chatMessages.addEventListener('click', (e) => {
+    // 初始化 DOM 元素
+    private initializeElements() {
+      const elementIds = [
+        'userInput', 'sendButton', 'chatMessages', 'inputStatus', 'qaBotToggle', 
+        'qaBotContainer', 'closeButton', 'historyButton', 'loadMoreButton', 
+        'loadMoreContainer', 'imageModal', 'modalImage', 'imageModalClose'
+      ];
+      
+      elementIds.forEach(id => {
+        this.elements[id] = document.getElementById(id) as HTMLElement;
+      });
+    }
+
+    // 初始化狀態
+    private initializeState() {
+      this.state.userId = this.getOrCreateUserId();
+      this.state.currentLanguage = localStorage.getItem('qabot_language') || 'chinese';
+      this.updateLanguageButton();
+      this.updateInputPlaceholder();
+    }
+
+    // 載入消息配置
+    private async loadMessages() {
+      try {
+        const response = await fetch('/tymultiverse/src/storages/mayaMessages.json');
+        if (!response.ok) throw new Error('Failed to load messages');
+        this.messages = await response.json();
+      } catch (error) {
+        console.error('載入消息配置失敗:', error);
+        // 使用默認消息作為備用
+        this.messages = {
+          chinese: {
+            welcome: ["你有事？<br>問前想清楚，機會不是誰都有。"],
+            saucy: ["嗯？還不說？<br>我的耐心可是有限的哦～"],
+            topics: {}
+          },
+          english: {
+            welcome: ["What do you want?<br>Think carefully before asking, opportunities aren't for everyone."],
+            saucy: ["Hm? Still not talking?<br>My patience is limited, you know~"],
+            topics: {}
+          }
+        };
+      }
+    }
+
+    // 設置事件監聽器
+    private setupEventListeners() {
+      // 基本控制事件
+      this.elements.qaBotToggle.addEventListener('click', () => this.toggleChat());
+      this.elements.closeButton.addEventListener('click', () => this.hideChat());
+      this.elements.historyButton.addEventListener('click', () => this.loadChatHistory());
+      this.elements.loadMoreButton.addEventListener('click', () => this.loadMoreHistory());
+      
+      // 功能按鈕事件
+      (document.getElementById('fullscreenButton') as HTMLButtonElement).addEventListener('click', () => this.toggleFullscreen());
+      (document.getElementById('languageButton') as HTMLButtonElement).addEventListener('click', () => this.toggleLanguage());
+      
+      // 輸入相關事件
+      this.elements.userInput.addEventListener('input', () => {
+        this.updateSendButton();
+        this.resetInactivityTimer();
+      });
+
+      this.elements.userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.sendMessage();
+        }
+        this.resetInactivityTimer();
+      });
+
+      this.elements.sendButton.addEventListener('click', () => {
+        this.sendMessage();
+        this.resetInactivityTimer();
+      });
+
+      // 主題建議事件
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target?.classList.contains('suggestion-btn')) {
+          const topic = target.getAttribute('data-topic');
+          if (topic) this.handleTopicSuggestion(topic);
+        }
+      });
+
+      // 圖片模態框事件
+      this.elements.imageModalClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.hideImageModal();
+      });
+
+      this.elements.imageModal.addEventListener('click', (e) => {
+        if (e.target === this.elements.imageModal) this.hideImageModal();
+      });
+      
+      // 圖片點擊事件
+      this.elements.chatMessages.addEventListener('click', (e) => {
         const img = (e.target as HTMLElement).closest('.answer-image') as HTMLImageElement;
         if (img) {
           const imageSrc = img.getAttribute('data-src') || img.src;
           this.showImageModal(imageSrc);
         }
       });
-    }
-
-    setupEventListeners() {
-      // 切換對話框事件
-      this.qaBotToggle.addEventListener('click', () => {
-        this.toggleChat();
-      });
-
-      this.closeButton.addEventListener('click', () => {
-        this.hideChat();
-      });
-
-      // 全屏按鈕事件
-      const fullscreenButton = document.getElementById('fullscreenButton') as HTMLButtonElement;
-      fullscreenButton.addEventListener('click', () => {
-        this.toggleFullscreen();
-      });
-
-      // 語言切換按鈕事件
-      const languageButton = document.getElementById('languageButton') as HTMLButtonElement;
-      languageButton.addEventListener('click', () => {
-        this.toggleLanguage();
-      });
-
-      // 歷史按鈕事件
-      this.historyButton.addEventListener('click', () => {
-        this.loadChatHistory();
-      });
-
-      // 載入更多按鈕事件
-      this.loadMoreButton.addEventListener('click', () => {
-        this.loadMoreHistory();
-      });
-
-      // 主題建議按鈕事件
-      document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target && target.classList.contains('suggestion-btn')) {
-          const topic = target.getAttribute('data-topic');
-          if (topic) {
-            this.handleTopicSuggestion(topic);
-          }
-        }
-      });
-
-      // 輸入框事件
-      this.userInput.addEventListener('input', () => {
-        this.updateSendButton();
-      });
-
-      this.userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          this.sendMessage();
-        }
-      });
-
-      // 發送按鈕事件
-      this.sendButton.addEventListener('click', () => {
-        this.sendMessage();
-      });
-
-      // 重置不活躍計時器的事件
-      this.userInput.addEventListener('input', () => {
-        this.resetInactivityTimer();
-      });
-
-      this.userInput.addEventListener('keypress', () => {
-        this.resetInactivityTimer();
-      });
-
-      this.sendButton.addEventListener('click', () => {
-        this.resetInactivityTimer();
-      });
-
-      // 圖片模態框事件
-      this.imageModalClose.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.hideImageModal();
-      });
-
-      this.imageModal.addEventListener('click', (e) => {
-        if (e.target === this.imageModal) {
-          this.hideImageModal();
-        }
-      });
-
-      // ESC鍵關閉模態框
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && this.imageModal.classList.contains('show')) {
-          this.hideImageModal();
-        }
-      });
-    }
-
-    updateSendButton() {
-      const hasText = this.userInput.value.trim().length > 0;
-      this.sendButton.disabled = !hasText;
-    }
-
-    // 處理主題建議
-    handleTopicSuggestion(topic: string) {
-      const suggestions = this.currentLanguage === 'chinese' ? {
-        'Java': '請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。',
-        'OOP及DI框架': '我想了解面向對象編程和依賴注入框架的設計原則和實現方式。',
-        '部署實踐': '請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。',
-        '網路問題': '我想了解網路編程、協議和常見網路問題的診斷與解決方法。',
-        '了解真夜': '妳是誰？'
-      } : {
-        'Java': 'Please tell me about Java development, including core concepts, best practices, and common problem solutions.',
-        'OOP及DI框架': 'I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.',
-        '部署實踐': 'Please share your experience with application deployment, containerization, and DevOps practices.',
-        '網路問題': 'I want to understand network programming, protocols, and diagnosis and solutions for common network issues.',
-        '了解真夜': 'Who are you?'
-      };
-
-      const suggestion = suggestions[topic as keyof typeof suggestions];
-      if (suggestion) {
-        this.userInput.value = suggestion;
-        this.updateSendButton();
-        this.userInput.focus();
-      }
-    }
-
-    // 添加歡迎消息（包含主題建議）
-    addWelcomeMessage() {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message bot-message';
       
+      // ESC 鍵關閉模態框
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.elements.imageModal.classList.contains('show')) {
+          this.hideImageModal();
+        }
+      });
+    }
+
+    // 創建消息結構的通用方法
+    private createMessageStructure(type: 'bot' | 'user' | 'loading' = 'bot', content?: string) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}-message`;
+      
+      if (type === 'bot' || type === 'loading') {
       // 添加頭像
       const avatarDiv = document.createElement('div');
       avatarDiv.className = 'message-avatar';
@@ -401,24 +288,84 @@ import '../styles/qabot.css';
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
       
-      // 添加歡迎文字 - 使用隨機歡迎消息
-      const welcomeP = document.createElement('p');
-      const randomWelcome = this.welcomeMessages[Math.floor(Math.random() * this.welcomeMessages.length)];
-      welcomeP.innerHTML = randomWelcome;
-      contentDiv.appendChild(welcomeP);
+        if (type === 'loading') {
+          contentDiv.innerHTML = `
+            <div class="loading">
+              <div class="spinner"></div>
+              <span>正在思考中...</span>
+            </div>
+          `;
+        } else if (content) {
+          contentDiv.innerHTML = content;
+        }
+        
+        contentWrapper.appendChild(contentDiv);
+        messageDiv.appendChild(contentWrapper);
+      } else if (type === 'user' && content) {
+        // 用戶消息
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+        const userId = document.createElement('span');
+        userId.className = 'user-id';
+        userId.textContent = `ID: ${this.state.userId.substring(0, 8)}...`;
+        headerDiv.appendChild(userId);
+        messageDiv.appendChild(headerDiv);
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
+        messageDiv.appendChild(contentDiv);
+      }
+      
+      return messageDiv;
+    }
+
+    // 添加消息到聊天區域
+    private addMessage(content: string, type: 'bot' | 'user' | 'loading' = 'bot') {
+      const messageDiv = this.createMessageStructure(type, content);
+      this.elements.chatMessages.appendChild(messageDiv);
+      this.scrollToBottom();
+      return messageDiv;
+    }
+
+    // 添加載入消息
+    private addLoadingMessage() {
+      this.state.isThinking = true;
+      const loadingDiv = this.createMessageStructure('loading');
+      this.elements.chatMessages.appendChild(loadingDiv);
+      this.scrollToBottom();
+      return loadingDiv;
+    }
+
+    // 添加歡迎消息
+    private addWelcomeMessage() {
+      // 先顯示 loading 效果
+      const loadingDiv = this.createMessageStructure('loading');
+      this.elements.chatMessages.appendChild(loadingDiv);
+      this.scrollToBottom();
+      
+      // 延遲 1.5 秒後顯示實際的歡迎消息
+      setTimeout(() => {
+        this.removeMessage(loadingDiv);
+        
+        const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
+        const randomWelcome = currentMessages.welcome[Math.floor(Math.random() * currentMessages.welcome.length)];
+        
+        const messageDiv = this.createMessageStructure('bot', `<p>${randomWelcome}</p>`);
       
       // 添加主題建議
+        const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
       const topicSuggestions = document.createElement('div');
       topicSuggestions.className = 'topic-suggestions';
       
       const suggestionsTitle = document.createElement('h4');
-      suggestionsTitle.textContent = this.currentLanguage === 'chinese' ? '💡 建議主題：' : '💡 Suggested Topics:';
+        suggestionsTitle.textContent = this.state.currentLanguage === 'chinese' ? '💡 建議主題：' : '💡 Suggested Topics:';
       topicSuggestions.appendChild(suggestionsTitle);
       
       const suggestionButtons = document.createElement('div');
       suggestionButtons.className = 'suggestion-buttons';
       
-      const topics = this.currentLanguage === 'chinese' ? [
+        const topics = this.state.currentLanguage === 'chinese' ? [
         { key: 'Java', text: '☕ Java 開發' },
         { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
         { key: '部署實踐', text: '🚀 部署實踐' },
@@ -443,490 +390,55 @@ import '../styles/qabot.css';
       topicSuggestions.appendChild(suggestionButtons);
       contentDiv.appendChild(topicSuggestions);
       
-      contentWrapper.appendChild(contentDiv);
-      messageDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(messageDiv);
-      
+        this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
+      }, 1500);
     }
 
-    // 生成或獲取用戶ID
-    getOrCreateUserId(): string {
-      const storageKey = 'qabot_user_id';
-      let userId = localStorage.getItem(storageKey);
+    // 處理主題建議
+    private handleTopicSuggestion(topic: string) {
+      const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
+      const suggestion = currentMessages.topics[topic as keyof typeof currentMessages.topics];
       
-      if (!userId) {
-        // 生成新的用戶ID：時間戳 + 隨機數
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 15);
-        userId = `user_${timestamp}_${random}`;
-        localStorage.setItem(storageKey, userId);
-        console.log('QABot: 生成新用戶ID:', userId);
-      }
-      
-      return userId;
-    }
-
-    // 載入聊天歷史
-    async loadChatHistory() {
-      try {
-        const apiBaseUrl = this.getApiBaseUrl();
-        const apiPathPrefix = this.getApiPathPrefix();
-        console.log('載入聊天歷史，用戶ID:', this.userId, 'API URL:', apiBaseUrl, '路徑前綴:', apiPathPrefix);
-        
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.userId}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (result.success && result.history && result.history.length > 0) {
-          // 重置分頁
-          this.currentHistoryPage = 0;
-          
-          // 清空當前聊天記錄
-          this.chatMessages.innerHTML = '';
-          
-          // 添加歡迎消息（包含主題建議）
-          this.addWelcomeMessage();
-          
-          // 載入前5條歷史記錄
-          const historyToShow = result.history.slice(0, this.historyItemsPerPage);
-          historyToShow.forEach(item => {
-            // 使用歷史記錄中的reference_data作為sources
-            const sources = item.reference_data || [];
-            this.addHistoryMessage(item.user_message, item.ai_answer, sources);
-          });
-          
-          // 如果還有更多記錄，顯示載入更多按鈕
-          if (result.history.length > this.historyItemsPerPage) {
-            this.loadMoreContainer.style.display = 'block';
-            this.currentHistoryPage = 1;
-          }
-        } else {
-          // 沒有歷史記錄時，顯示歡迎消息
-          this.chatMessages.innerHTML = '';
-          this.addWelcomeMessage();
-        }
-      } catch (error) {
-        console.error('載入聊天歷史失敗:', error);
-        this.addErrorMessage('❌ 載入聊天歷史失敗，請稍後再試');
-      }
-    }
-
-    // 載入更多歷史記錄
-    async loadMoreHistory() {
-      try {
-        const apiBaseUrl = this.getApiBaseUrl();
-        const apiPathPrefix = this.getApiPathPrefix();
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.userId}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (result.success && result.history) {
-          const startIndex = this.currentHistoryPage * this.historyItemsPerPage;
-          const endIndex = startIndex + this.historyItemsPerPage;
-          const historyToShow = result.history.slice(startIndex, endIndex);
-          
-          // 在載入更多按鈕前插入歷史記錄
-          historyToShow.forEach(item => {
-            // 使用歷史記錄中的reference_data作為sources
-            const sources = item.reference_data || [];
-            this.addHistoryMessage(item.user_message, item.ai_answer, sources);
-          });
-          
-          this.currentHistoryPage++;
-          
-          // 如果沒有更多記錄，隱藏載入更多按鈕
-          if (endIndex >= result.history.length) {
-            this.loadMoreContainer.style.display = 'none';
-          }
-          
-        }
-      } catch (error) {
-        console.error('載入更多歷史記錄失敗:', error);
-        this.addErrorMessage('❌ 載入更多記錄失敗，請稍後再試');
-      }
-    }
-
-    async sendMessage() {
-      const userText = this.userInput.value.trim();
-      if (!userText) return;
-
-      // 清空輸入框和狀態
-      this.userInput.value = '';
+      if (suggestion) {
+        (this.elements.userInput as HTMLInputElement).value = suggestion;
       this.updateSendButton();
-      this.inputStatus.textContent = '';
-
-      // 添加用戶消息
-      this.addMessage(userText, 'user');
-
-      // 添加載入消息
-      const loadingId = this.addLoadingMessage();
-
-      try {
-        // 調用API
-        const response = await this.callQAAPI(userText);
-        
-        // 移除載入消息
-        this.removeMessage(loadingId);
-
-        if (response.success) {
-          // 添加機器人回應
-          this.addBotResponse(response.answer, response.data);
-        } else {
-          // 添加錯誤消息
-          this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');
-        }
-      } catch (error) {
-        console.error('API調用錯誤:', error);
-        this.removeMessage(loadingId);
-        this.addErrorMessage('網絡錯誤，請檢查連接後重試。');
+        (this.elements.userInput as HTMLInputElement).focus();
       }
     }
 
-    // 獲取API基礎URL
-    getApiBaseUrl(): string {
-      // 檢查是否在開發環境
-      if (import.meta.env.DEV) {
-        return 'http://localhost:8000';
-      }
-      // 生產環境使用環境變數
-      return import.meta.env.PUBLIC_API_BASE_URL || '';
-    }
-
-    // 獲取API路徑前綴
-    getApiPathPrefix(): string {
-      // 檢查是否在開發環境
-      if (import.meta.env.DEV) {
-        return ''; // 開發環境沒有前綴
-      }
-      // 生產環境有 /maya-sawa 前綴
-      return '/maya-sawa';
-    }
-
-    async callQAAPI(text) {
-      const apiBaseUrl = this.getApiBaseUrl();
-      const apiPathPrefix = this.getApiPathPrefix();
-      console.log('QA API: 調用服務，用戶ID:', this.userId, '語言:', this.currentLanguage, 'API URL:', apiBaseUrl, '路徑前綴:', apiPathPrefix);
-      
-      // 調用QA服務，帶上用戶ID和語言參數
-      const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          text,
-          user_id: this.userId,
-          language: this.currentLanguage
-        })
-      });
-
-      console.log('QA API: 響應狀態:', response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('QA API: 完整響應數據:', JSON.stringify(result, null, 2));
-      console.log('QA API: answer 內容:', result.answer);
-      console.log('QA API: data 內容:', result.data);
-      
-      return result;
-    }
-
-    addMessage(content, type) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${type}-message`;
-      
-      if (type === 'bot') {
-        // 添加頭像
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'message-avatar';
-        const avatarImg = document.createElement('img');
-        avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-        avatarImg.alt = '真夜';
-        avatarImg.className = 'bot-avatar';
-        avatarDiv.appendChild(avatarImg);
-        messageDiv.appendChild(avatarDiv);
-        
-        // 添加內容包裝器
-        const contentWrapper = document.createElement('div');
-        contentWrapper.className = 'message-content-wrapper';
-        
-        // 添加消息頭部
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'message-header';
-        const aiName = document.createElement('span');
-        aiName.className = 'ai-name';
-        aiName.textContent = '真夜';
-        headerDiv.appendChild(aiName);
-        contentWrapper.appendChild(headerDiv);
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        
-        if (typeof content === 'string') {
-          contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
-        } else {
-          contentDiv.appendChild(content);
-        }
-        
-        contentWrapper.appendChild(contentDiv);
-        messageDiv.appendChild(contentWrapper);
-      } else if (type === 'user') {
-        // 用戶消息保持原樣
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'message-header';
-        const userId = document.createElement('span');
-        userId.className = 'user-id';
-        userId.textContent = `ID: ${this.userId.substring(0, 8)}...`;
-        headerDiv.appendChild(userId);
-        messageDiv.appendChild(headerDiv);
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        
-        if (typeof content === 'string') {
-          contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
-        } else {
-          contentDiv.appendChild(content);
-        }
-        
-        messageDiv.appendChild(contentDiv);
-      }
-      
-      this.chatMessages.appendChild(messageDiv);
-      
-      // 滾動到底部
-      this.scrollToBottom();
-      
-      return messageDiv;
-    }
-
-    // 添加歷史消息（不包含頭部）
-    addHistoryMessage(userMessage, aiAnswer, sources) {
-      // 添加用戶消息
-      const userDiv = document.createElement('div');
-      userDiv.className = 'message user-message';
-      
-      const userHeader = document.createElement('div');
-      userHeader.className = 'message-header';
-      const userUserId = document.createElement('span');
-      userUserId.className = 'user-id';
-      userUserId.textContent = `ID: ${this.userId.substring(0, 8)}...`;
-      userHeader.appendChild(userUserId);
-      userDiv.appendChild(userHeader);
-      
-      const userContent = document.createElement('div');
-      userContent.className = 'message-content';
-      userContent.innerHTML = `<p>${this.escapeHtml(userMessage)}</p>`;
-      userDiv.appendChild(userContent);
-      
-      this.chatMessages.appendChild(userDiv);
-      
-      // 添加AI回應
-      const aiDiv = document.createElement('div');
-      aiDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      aiDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      const aiHeader = document.createElement('div');
-      aiHeader.className = 'message-header';
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      aiHeader.appendChild(aiName);
-      contentWrapper.appendChild(aiHeader);
-      
-      const aiContent = document.createElement('div');
-      aiContent.className = 'message-content';
-      
-      // 格式化答案，包括圖片處理
-      const formattedAnswer = this.formatAnswer(aiAnswer);
-      aiContent.innerHTML = formattedAnswer;
-      
-      // 添加來源列表
-      if (sources && sources.length > 0) {
-        const sourcesDiv = document.createElement('div');
-        sourcesDiv.className = 'sources-list';
-        
-        const sourcesTitle = document.createElement('h4');
-        sourcesTitle.textContent = '📚 參考文檔：';
-        sourcesDiv.appendChild(sourcesTitle);
-        
-        sources.forEach(source => {
-          const sourceItem = document.createElement('div');
-          sourceItem.className = 'source-item';
-          
-          const link = document.createElement('a');
-          link.href = `/tymultiverse/work/${source.file_path.replace('.md', '')}`;
-          link.target = '_blank';
-          link.className = 'source-link';
-          link.innerHTML = `📄 ${this.escapeHtml(source.file_path)}`;
-          
-          const similaritySpan = document.createElement('span');
-          similaritySpan.className = 'similarity';
-          similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
-          
-          sourceItem.appendChild(link);
-          sourceItem.appendChild(similaritySpan);
-          sourcesDiv.appendChild(sourceItem);
-        });
-        
-        aiContent.appendChild(sourcesDiv);
-      }
-      
-      contentWrapper.appendChild(aiContent);
-      aiDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(aiDiv);
-      
-      this.scrollToBottom();
-    }
-
-    addLoadingMessage() {
-      // 設置思考狀態為 true
-      this.isThinking = true;
-      
-      const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      loadingDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      contentDiv.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>正在思考中...</span>
-        </div>
-      `;
-      
-      contentWrapper.appendChild(contentDiv);
-      loadingDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(loadingDiv);
-      this.scrollToBottom();
-      
-      return loadingDiv;
-    }
-
-    // 格式化AI回答，改善排版
-    formatAnswer(answer: string): string {
-      console.log('formatAnswer input:', answer);
-      
-      // 直接處理圖片連結 - 原封不動顯示
+    // 格式化答案
+    private formatAnswer(answer: string): string {
       let formattedAnswer = answer;
       
-      // 先處理特殊格式（在處理圖片之前）- 避免影響URL
+      // 處理特殊格式
       formattedAnswer = formattedAnswer.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
       formattedAnswer = formattedAnswer.replace(/(吉国\s*[小千秋][百秋])(?![^<]*\.png)/g, '<strong>$1</strong>');
       formattedAnswer = formattedAnswer.replace(/(森築\s*空音)(?![^<]*\.png)/g, '<strong>$1</strong>');
       formattedAnswer = formattedAnswer.replace(/(Sayuri|Chiaki|Sorane)(?![^<]*\.png)/g, '<strong>$1</strong>');
       
-      // 處理列表形式的圖片連結 - 調試版本
-      console.log('Looking for image lists in:', formattedAnswer);
+      // 處理圖片連結
       formattedAnswer = formattedAnswer.replace(/圖片連結：\s*\n((?:- [^\n]+\n?)+)/gi, (match, imageList) => {
-        console.log('Found image list:', imageList);
         const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
-        console.log('Extracted URLs:', imageUrls);
-        return `<div class="image-container-wrapper">${imageUrls.map(url => `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onload="console.log('Image loaded:', this.src)" onerror="console.log('Image failed to load:', this.src); this.style.display='none'" /></div>`).join('')}</div>`;
+        return `<div class="image-container-wrapper">${imageUrls.map(url => 
+          `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" /></div>`
+        ).join('')}</div>`;
       });
       
-      // 處理單個圖片連結
       formattedAnswer = formattedAnswer.replace(/圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi, 
-        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onload="console.log(\'Image loaded:\', this.src)" onerror="console.log(\'Image failed to load:\', this.src); this.style.display=\'none\'" /></div>');
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onerror="this.style.display=\'none\'" /></div>');
       
-      // 將 \n\n 轉換為段落分隔
-      formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>');
-      
-      // 將單個 \n 轉換為 <br>
-      formattedAnswer = formattedAnswer.replace(/\n/g, '<br>');
-      
-      // 包裝在段落標籤中
-      formattedAnswer = `<p>${formattedAnswer}</p>`;
-      
-      console.log('final formattedAnswer:', formattedAnswer);
-      return formattedAnswer;
+      // 處理換行
+      formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      return `<p>${formattedAnswer}</p>`;
     }
 
-    addBotResponse(answer, sources) {
-      // 重置思考狀態為 false
-      this.isThinking = false;
+    // 添加機器人回應
+    private addBotResponse(answer: string, sources: any[]) {
+      this.state.isThinking = false;
       
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      messageDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      
-      // 添加格式化後的答案
-      contentDiv.innerHTML = this.formatAnswer(answer);
+      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answer));
+      const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
       
       // 添加來源列表
       if (sources && sources.length > 0) {
@@ -941,7 +453,6 @@ import '../styles/qabot.css';
           const sourceItem = document.createElement('div');
           sourceItem.className = 'source-item';
           
-          // 創建可點擊的連結
           const link = document.createElement('a');
           link.href = `/tymultiverse/work/${source.file_path.replace('.md', '')}`;
           link.target = '_blank';
@@ -960,319 +471,276 @@ import '../styles/qabot.css';
         contentDiv.appendChild(sourcesDiv);
       }
       
-      contentWrapper.appendChild(contentDiv);
-      messageDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(messageDiv);
-      
-      // 滾動到底部
+      this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
     }
 
-    addErrorMessage(message) {
-      // 重置思考狀態為 false
-      this.isThinking = false;
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      messageDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      contentDiv.innerHTML = `<p style="color: #ffebee;">❌ ${this.escapeHtml(message)}</p>`;
-      
-      contentWrapper.appendChild(contentDiv);
-      messageDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(messageDiv);
-      
-      // 滾動到底部
+    // 添加錯誤消息
+    private addErrorMessage(message: string) {
+      this.state.isThinking = false;
+      const messageDiv = this.createMessageStructure('bot', `<p style="color: #ffebee;">❌ ${this.escapeHtml(message)}</p>`);
+      this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
     }
 
-    removeMessage(messageElement) {
-      if (messageElement && messageElement.parentNode) {
-        messageElement.parentNode.removeChild(messageElement);
-      }
-    }
+    // 發送消息
+    private async sendMessage() {
+      const userText = (this.elements.userInput as HTMLInputElement).value.trim();
+      if (!userText) return;
 
-    scrollToBottom() {
-      this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    }
+      (this.elements.userInput as HTMLInputElement).value = '';
+      this.updateSendButton();
+      this.elements.inputStatus.textContent = '';
 
-    escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+      this.addMessage(userText, 'user');
+      const loadingId = this.addLoadingMessage();
 
-    toggleChat() {
-      if (this.qaBotContainer.classList.contains('show')) {
-        this.hideChat();
-      } else {
-        this.showChat();
-      }
-    }
+      try {
+        const response = await this.callQAAPI(userText);
+        this.removeMessage(loadingId);
 
-    showChat() {
-      this.qaBotContainer.classList.add('show');
-      this.userInput.focus();
-    }
-
-    hideChat() {
-      this.qaBotContainer.classList.remove('show');
-    }
-
-    // 啟動不活躍計時器
-    startInactivityTimer() {
-      this.inactivityTimer = setTimeout(() => {
-        if (!this.hasShownInactivityMessage && !this.isThinking) {
-          this.showInactivityMessage();
-          this.hasShownInactivityMessage = true;
+        if (response.success) {
+          this.addBotResponse(response.answer, response.data);
+        } else {
+          this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');
         }
-      }, 10000); // 10秒
+      } catch (error) {
+        console.error('API調用錯誤:', error);
+        this.removeMessage(loadingId);
+        this.addErrorMessage('網絡錯誤，請檢查連接後重試。');
+      }
+    }
+
+    // 調用 QA API
+    private async callQAAPI(text: string) {
+      const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+      const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+      
+      const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text,
+          user_id: this.state.userId,
+          language: this.state.currentLanguage
+        })
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    }
+
+    // 載入聊天歷史
+    private async loadChatHistory() {
+      try {
+        const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+        const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+        
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+        
+        this.elements.chatMessages.innerHTML = '';
+        this.addWelcomeMessage();
+        
+        if (result.success && result.history && result.history.length > 0) {
+          this.state.currentHistoryPage = 0;
+          const historyToShow = result.history.slice(0, this.state.historyItemsPerPage);
+          
+          historyToShow.forEach(item => {
+            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+          });
+          
+          if (result.history.length > this.state.historyItemsPerPage) {
+            this.elements.loadMoreContainer.style.display = 'block';
+            this.state.currentHistoryPage = 1;
+          }
+        }
+      } catch (error) {
+        console.error('載入聊天歷史失敗:', error);
+        this.addErrorMessage('❌ 載入聊天歷史失敗，請稍後再試');
+      }
+    }
+
+    // 載入更多歷史記錄
+    private async loadMoreHistory() {
+      try {
+        const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+        const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+        
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+        
+        if (result.success && result.history) {
+          const startIndex = this.state.currentHistoryPage * this.state.historyItemsPerPage;
+          const endIndex = startIndex + this.state.historyItemsPerPage;
+          const historyToShow = result.history.slice(startIndex, endIndex);
+          
+          historyToShow.forEach(item => {
+            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+          });
+          
+          this.state.currentHistoryPage++;
+          
+          if (endIndex >= result.history.length) {
+            this.elements.loadMoreContainer.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('載入更多歷史記錄失敗:', error);
+        this.addErrorMessage('❌ 載入更多記錄失敗，請稍後再試');
+      }
+    }
+
+    // 添加歷史消息
+    private addHistoryMessage(userMessage: string, aiAnswer: string, sources: any[]) {
+      this.addMessage(userMessage, 'user');
+      this.addBotResponse(aiAnswer, sources);
+    }
+
+    // 顯示催促消息
+    private showSaucyMessage() {
+      if (this.state.saucyMessageCount >= this.state.maxSaucyMessages) return;
+      
+      this.state.saucyMessageCount++;
+      const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
+      const randomMessage = currentMessages.saucy[Math.floor(Math.random() * currentMessages.saucy.length)];
+      
+      const messageDiv = this.createMessageStructure('loading');
+      this.elements.chatMessages.appendChild(messageDiv);
+      this.scrollToBottom();
+      
+      setTimeout(() => {
+        const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
+        contentDiv.innerHTML = `<p>${randomMessage}</p>`;
+      this.scrollToBottom();
+      }, 1500);
+    }
+
+    // 啟動定時器
+    private startTimers() {
+      // 啟動不活躍計時器（使用遞增間隔）
+      this.startInactivityTimer();
+
+      // 定期檢查是否需要發送催促消息
+      this.timers.randomMessage = setInterval(() => {
+        if (this.elements.qaBotContainer.classList.contains('show') && 
+            !this.state.isThinking && 
+            this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+          this.showSaucyMessage();
+        }
+      }, 100000); // 每100秒檢查一次
     }
 
     // 重置不活躍計時器
-    resetInactivityTimer() {
-      if (this.inactivityTimer) {
-        clearTimeout(this.inactivityTimer);
-      }
-      this.hasShownInactivityMessage = false;
-      this.saucyMessageCount = 0; // 重置催促消息計數
+    private resetInactivityTimer() {
+      if (this.timers.inactivity) clearTimeout(this.timers.inactivity);
+      this.state.hasShownInactivityMessage = false;
+      this.state.saucyMessageCount = 0;
+      
+      // 重新啟動定時器，使用遞增間隔
       this.startInactivityTimer();
     }
 
-    // 獲取不重複的隨機催促消息
-    getRandomSaucyMessage(): string {
-      let randomMessage: string;
-      do {
-        randomMessage = this.saucyMessages[Math.floor(Math.random() * this.saucyMessages.length)];
-      } while (randomMessage === this.lastSaucyMessage && this.saucyMessages.length > 1);
+    // 啟動不活躍計時器（使用遞增間隔）
+    private startInactivityTimer() {
+      const intervals = [3, 9, 27]; // 3分鐘, 9分鐘, 27分鐘
+      const currentInterval = intervals[this.state.saucyMessageCount] || intervals[intervals.length - 1];
       
-      this.lastSaucyMessage = randomMessage;
-      return randomMessage;
+      this.timers.inactivity = setTimeout(() => {
+        if (!this.state.hasShownInactivityMessage && !this.state.isThinking && this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+          this.showSaucyMessage();
+          this.state.hasShownInactivityMessage = true;
+          
+          // 如果還沒達到最大次數，設置下一次定時器
+          if (this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+      this.startInactivityTimer();
     }
-
-    // 顯示不活躍提示消息
-    showInactivityMessage() {
-      // 檢查是否已達到最大次數
-      if (this.saucyMessageCount >= this.maxSaucyMessages) {
-        return;
-      }
-      
-      // 增加計數
-      this.saucyMessageCount++;
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      messageDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      
-      // 先顯示"正在思考中..."
-      contentDiv.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>正在思考中...</span>
-        </div>
-      `;
-      
-      contentWrapper.appendChild(contentDiv);
-      messageDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(messageDiv);
-      this.scrollToBottom();
-      
-      // 延遲1.5秒後顯示實際的催促消息
-      setTimeout(() => {
-        const randomMessage = this.getRandomSaucyMessage();
-        contentDiv.innerHTML = `<p>${randomMessage}</p>`;
-        this.scrollToBottom();
-      }, 1500);
-      
-      // 如果還沒達到最大次數，設置下一次定時器（3倍時間）
-      if (this.saucyMessageCount < this.maxSaucyMessages) {
-        setTimeout(() => {
-          if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
-            this.showInactivityMessage();
-          }
-        }, 30000); // 30秒（3倍於原來的10秒）
-      }
-    }
-
-    // 啟動隨機騷氣消息定時器
-    startRandomMessageTimer() {
-      this.randomMessageTimer = setInterval(() => {
-        // 只在聊天框顯示時且不在思考狀態時才發送隨機消息
-        if (this.qaBotContainer.classList.contains('show') && !this.isThinking && this.saucyMessageCount < this.maxSaucyMessages) {
-          this.sendRandomSaucyMessage();
         }
-      }, 100000); // 每100秒
-    }
-
-    // 發送隨機騷氣消息
-    sendRandomSaucyMessage() {
-      // 檢查是否已達到最大次數
-      if (this.saucyMessageCount >= this.maxSaucyMessages) {
-        return;
-      }
-      
-      // 增加計數
-      this.saucyMessageCount++;
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message bot-message';
-      
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
-      avatarImg.className = 'bot-avatar';
-      avatarDiv.appendChild(avatarImg);
-      messageDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      
-      // 先顯示"正在思考中..."
-      contentDiv.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>正在思考中...</span>
-        </div>
-      `;
-      
-      contentWrapper.appendChild(contentDiv);
-      messageDiv.appendChild(contentWrapper);
-      this.chatMessages.appendChild(messageDiv);
-      this.scrollToBottom();
-      
-      // 延遲1.5秒後顯示實際的催促消息
-      setTimeout(() => {
-        const randomMessage = this.getRandomSaucyMessage();
-        contentDiv.innerHTML = `<p>${randomMessage}</p>`;
-        this.scrollToBottom();
-      }, 1500);
-      
-      // 如果還沒達到最大次數，設置下一次定時器（3倍時間）
-      if (this.saucyMessageCount < this.maxSaucyMessages) {
-        setTimeout(() => {
-          if (this.qaBotContainer.classList.contains('show') && !this.isThinking) {
-            this.sendRandomSaucyMessage();
-          }
-        }, 300000); // 300秒 = 5分鐘（3倍於原來的100秒）
-      }
-    }
-
-    // 初始化語言設置
-    initializeLanguage() {
-      // 從 localStorage 讀取保存的語言設置
-      const savedLanguage = localStorage.getItem('qabot_language');
-      if (savedLanguage) {
-        this.currentLanguage = savedLanguage;
-      }
-      this.updateLanguageButton();
+      }, currentInterval * 60 * 1000);
     }
 
     // 切換語言
-    toggleLanguage() {
-      this.currentLanguage = this.currentLanguage === 'chinese' ? 'english' : 'chinese';
-      localStorage.setItem('qabot_language', this.currentLanguage);
+    private toggleLanguage() {
+      this.state.currentLanguage = this.state.currentLanguage === 'chinese' ? 'english' : 'chinese';
+      localStorage.setItem('qabot_language', this.state.currentLanguage);
       this.updateLanguageButton();
-      
-      // 重新初始化對話
+      this.updateInputPlaceholder();
       this.reinitializeChat();
     }
-    
-    // 重新初始化聊天對話
-    reinitializeChat() {
-      // 清空當前聊天記錄
-      this.chatMessages.innerHTML = '';
-      
-      // 重置狀態
-      this.lastSaucyMessage = '';
-      this.hasShownInactivityMessage = false;
-      this.isThinking = false;
-      this.saucyMessageCount = 0; // 重置催促消息計數
-      
-      // 更新輸入框佔位符
-      this.updateInputPlaceholder();
-      
-      // 添加新的歡迎消息（使用當前語言）
+
+    // 重新初始化聊天
+    private reinitializeChat() {
+      this.elements.chatMessages.innerHTML = '';
+      this.state.lastSaucyMessage = '';
+      this.state.hasShownInactivityMessage = false;
+      this.state.isThinking = false;
+      this.state.saucyMessageCount = 0;
       this.addWelcomeMessage();
-      
-      // 重置不活躍計時器
       this.resetInactivityTimer();
-      
-      // 滾動到底部
       this.scrollToBottom();
     }
 
-    // 更新語言按鈕顯示
-    updateLanguageButton() {
+    // 切換全屏
+    private toggleFullscreen() {
+      this.state.isFullscreen = !this.state.isFullscreen;
+      this.elements.qaBotContainer.classList.toggle('fullscreen', this.state.isFullscreen);
+      this.updateFullscreenButton();
+    }
+
+    // 切換聊天框
+    private toggleChat() {
+      this.elements.qaBotContainer.classList.toggle('show');
+      if (this.elements.qaBotContainer.classList.contains('show')) {
+        (this.elements.userInput as HTMLInputElement).focus();
+      }
+    }
+
+    // 隱藏聊天框
+    private hideChat() {
+      this.elements.qaBotContainer.classList.remove('show');
+    }
+
+    // 顯示/隱藏圖片模態框
+    private showImageModal(imageSrc: string) {
+      (this.elements.modalImage as HTMLImageElement).src = imageSrc;
+      this.elements.imageModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    private hideImageModal() {
+      this.elements.imageModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // 工具方法
+    private getOrCreateUserId(): string {
+      const storageKey = 'qabot_user_id';
+      let userId = localStorage.getItem(storageKey);
+      
+      if (!userId) {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 15);
+        userId = `user_${timestamp}_${random}`;
+        localStorage.setItem(storageKey, userId);
+      }
+      
+      return userId;
+    }
+
+    private updateSendButton() {
+      const hasText = (this.elements.userInput as HTMLInputElement).value.trim().length > 0;
+      (this.elements.sendButton as HTMLButtonElement).disabled = !hasText;
+    }
+
+    private updateLanguageButton() {
       const languageButton = document.getElementById('languageButton') as HTMLButtonElement;
       const languageText = languageButton.querySelector('.language-text') as HTMLSpanElement;
       
-      if (this.currentLanguage === 'chinese') {
+      if (this.state.currentLanguage === 'chinese') {
         languageText.textContent = '中文';
         languageButton.title = '切換到英文';
       } else {
@@ -1281,61 +749,40 @@ import '../styles/qabot.css';
       }
     }
     
-    // 更新輸入框佔位符
-    updateInputPlaceholder() {
-      this.userInput.placeholder = this.currentLanguage === 'chinese' 
+    private updateInputPlaceholder() {
+      (this.elements.userInput as HTMLInputElement).placeholder = this.state.currentLanguage === 'chinese' 
         ? '請輸入您的問題...' 
         : 'Please enter your question...';
     }
 
-    // 切換全屏模式
-    toggleFullscreen() {
-      this.isFullscreen = !this.isFullscreen;
-      
-      if (this.isFullscreen) {
-        this.qaBotContainer.classList.add('fullscreen');
-        this.updateFullscreenButton(true);
-      } else {
-        this.qaBotContainer.classList.remove('fullscreen');
-        this.updateFullscreenButton(false);
-      }
-    }
-
-    // 更新全屏按鈕圖標
-    updateFullscreenButton(isFullscreen: boolean) {
+    private updateFullscreenButton() {
       const fullscreenButton = document.getElementById('fullscreenButton') as HTMLButtonElement;
       const svg = fullscreenButton.querySelector('svg');
       
       if (svg) {
-        if (isFullscreen) {
-          // 顯示退出全屏圖標
-          svg.innerHTML = `
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-          `;
-          fullscreenButton.title = '退出全屏模式';
-        } else {
-          // 顯示進入全屏圖標
-          svg.innerHTML = `
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-          `;
-          fullscreenButton.title = '切換全屏模式';
-        }
+        svg.innerHTML = this.state.isFullscreen 
+          ? '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>'
+          : '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+        
+        fullscreenButton.title = this.state.isFullscreen ? '退出全屏模式' : '切換全屏模式';
       }
     }
 
-    // 顯示圖片模態框
-    showImageModal(imageSrc: string) {
-      this.modalImage.src = imageSrc;
-      this.imageModal.classList.add('show');
-      document.body.style.overflow = 'hidden'; // 防止背景滾動
+    private removeMessage(messageElement: HTMLElement) {
+      if (messageElement?.parentNode) {
+        messageElement.parentNode.removeChild(messageElement);
+      }
     }
 
-    // 隱藏圖片模態框
-    hideImageModal() {
-      this.imageModal.classList.remove('show');
-      document.body.style.overflow = ''; // 恢復背景滾動
+    private scrollToBottom() {
+      this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
     }
 
+    private escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
   }
 
   // 初始化QABot

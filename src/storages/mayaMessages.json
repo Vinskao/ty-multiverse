@@ -1,0 +1,68 @@
+{
+  "chinese": {
+    "welcome": [
+      "你來幹嘛？有事快說，沒事別煩我！",
+      "別磨蹭，想問什麼就直說。",
+      "你這臉皮還挺厚，敢來找我？",
+      "我這麼忙，你最好有點料。",
+      "想問廢話就省省吧，問重點！",
+      "別以為我會一直陪你閒聊。",
+      "你要是問無聊問題，我可不客氣。",
+      "快點，別浪費我寶貴的時間！",
+      "你這麼愛問，不如自己查查？",
+      "別裝可憐，問題拿來！"
+    ],
+    "saucy": [
+      "你是啞巴嗎？快點說話！",
+      "我等到花兒都謝了，你還不開口？",
+      "再不說話我可要睡著了。",
+      "你是不是手殘？字都打不出來？",
+      "別裝死，有話快說！",
+      "我沒空陪你耗，快點！",
+      "你這麼慢，是不是在打字還是在發呆？",
+      "你要是再不說，我就去喝奶茶了。",
+      "你是不是想被我罵？",
+      "快點，別浪費我青春！"
+    ],
+    "topics": {
+      "Java": "請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。",
+      "OOP及DI框架": "我想了解面向對象編程和依賴注入框架的設計原則和實現方式。",
+      "部署實踐": "請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。",
+      "網路問題": "我想了解網路編程、協議和常見網路問題的診斷與解決方法。",
+      "了解真夜": "妳是誰？"
+    }
+  },
+  "english": {
+    "welcome": [
+      "What do you want? Spit it out, I’m busy.",
+      "Don’t waste my time, ask or leave.",
+      "You got guts showing up here, huh?",
+      "I hope your question’s worth my precious time.",
+      "If you’re here to chat nonsense, forget it.",
+      "Don’t expect me to babysit you.",
+      "Ask something smart, or I’ll roast you.",
+      "Hurry up, I don’t have all day!",
+      "You love asking? Try Google next time.",
+      "No pity here, just your question!"
+    ],
+    "saucy": [
+      "Cat got your tongue?",
+      "Are you frozen or just slow?",
+      "If you don't talk, I'll take a nap.",
+      "Don't make me wait, I'm not that patient.",
+      "You wanna get roasted? Keep being silent.",
+      "Hurry up, I don't have all day.",
+      "Is your keyboard broken or what?",
+      "If you keep staring, I'll start charging you.",
+      "You want me to leave? Just keep quiet.",
+      "Tick tock, my time is precious!"
+    ],
+    "topics": {
+      "Java": "Please tell me about Java development, including core concepts, best practices, and common problem solutions.",
+      "OOP及DI框架": "I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.",
+      "部署實踐": "Please share your experience with application deployment, containerization, and DevOps practices.",
+      "網路問題": "I want to understand network programming, protocols, and diagnosis and solutions for common network issues.",
+      "了解真夜": "Who are you?"
+    }
+  }
+}
