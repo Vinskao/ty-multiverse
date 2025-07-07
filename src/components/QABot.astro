@@ -514,7 +514,7 @@ import '../styles/qabot.css';
     // 添加錯誤消息
     private addErrorMessage(message: string) {
       this.state.isThinking = false;
-      const messageDiv = this.createMessageStructure('bot', `<p style="color: #ffebee;">❌ ${this.escapeHtml(message)}</p>`);
+      const messageDiv = this.createMessageStructure('bot', `<p style="color: #8B0000; font-weight: 500;">❌ ${this.escapeHtml(message)}</p>`);
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
     }
