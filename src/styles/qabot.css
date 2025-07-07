@@ -654,11 +654,13 @@
 }
 
 .error-message {
-  color: #dc3545;
+  color: #8B0000;
+  font-weight: 500;
 }
 
 .success-message {
-  color: #28a745;
+  color: #228B22;
+  font-weight: 500;
 }
 
 /* 土豪金主題特定樣式 */
