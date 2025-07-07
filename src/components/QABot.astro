@@ -257,7 +257,7 @@ import '../styles/qabot.css';
     }
 
     // 創建消息結構的通用方法
-    private createMessageStructure(type: 'bot' | 'user' | 'loading' = 'bot', content?: string) {
+    private createMessageStructure(type: 'bot' | 'user' | 'loading' = 'bot', content?: any) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${type}-message`;
       
@@ -296,6 +296,10 @@ import '../styles/qabot.css';
             </div>
           `;
         } else if (content) {
+          // 確保 content 是字符串類型
+          if (typeof content !== 'string') {
+            content = String(content || '');
+          }
           contentDiv.innerHTML = content;
         }
         
@@ -313,6 +317,10 @@ import '../styles/qabot.css';
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
+        // 確保 content 是字符串類型
+        if (typeof content !== 'string') {
+          content = String(content || '');
+        }
         contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
         messageDiv.appendChild(contentDiv);
       }
@@ -321,7 +329,13 @@ import '../styles/qabot.css';
     }
 
     // 添加消息到聊天區域
-    private addMessage(content: string, type: 'bot' | 'user' | 'loading' = 'bot') {
+    private addMessage(content: any, type: 'bot' | 'user' | 'loading' = 'bot') {
+      // 確保 content 是字符串類型
+      if (typeof content !== 'string') {
+        console.warn('addMessage: content is not a string:', content);
+        content = String(content || '');
+      }
+      
       const messageDiv = this.createMessageStructure(type, content);
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
@@ -434,10 +448,32 @@ import '../styles/qabot.css';
     }
 
     // 添加機器人回應
-    private addBotResponse(answer: string, sources: any[]) {
+    private addBotResponse(answer: any, sources: any[]) {
       this.state.isThinking = false;
       
-      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answer));
+      // 處理 answer 可能是對象的情況
+      let answerText = '';
+      if (typeof answer === 'object' && answer !== null) {
+        // 如果是對象，嘗試提取 text 字段
+        if (answer.text) {
+          answerText = answer.text;
+        } else if (answer.answer) {
+          answerText = answer.answer;
+        } else if (answer.response) {
+          answerText = answer.response;
+        } else {
+          // 如果沒有找到預期的字段，將整個對象轉換為字符串
+          answerText = JSON.stringify(answer);
+        }
+      } else if (typeof answer === 'string') {
+        answerText = answer;
+      } else {
+        answerText = String(answer || '');
+      }
+      
+      console.log('處理後的答案文本:', answerText);
+      
+      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answerText));
       const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
       
       // 添加來源列表
@@ -499,8 +535,15 @@ import '../styles/qabot.css';
         const response = await this.callQAAPI(userText);
         this.removeMessage(loadingId);
 
+        console.log('API響應:', response);
+
         if (response.success) {
-          this.addBotResponse(response.answer, response.data);
+          // 根據API響應結構，使用 response.text 或 response.answer
+          const answer = response.text || response.answer || response;
+          const sources = response.data || response.sources || [];
+          console.log('提取的答案:', answer);
+          console.log('提取的來源:', sources);
+          this.addBotResponse(answer, sources);
         } else {
           this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');
         }
@@ -596,7 +639,15 @@ import '../styles/qabot.css';
     }
 
     // 添加歷史消息
-    private addHistoryMessage(userMessage: string, aiAnswer: string, sources: any[]) {
+    private addHistoryMessage(userMessage: any, aiAnswer: any, sources: any[]) {
+      // 確保參數是字符串類型
+      if (typeof userMessage !== 'string') {
+        userMessage = String(userMessage || '');
+      }
+      if (typeof aiAnswer !== 'string') {
+        aiAnswer = String(aiAnswer || '');
+      }
+      
       this.addMessage(userMessage, 'user');
       this.addBotResponse(aiAnswer, sources);
     }
