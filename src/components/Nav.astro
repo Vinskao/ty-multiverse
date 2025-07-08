@@ -227,11 +227,11 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
         const refreshToken = urlParams.get('refresh_token');
 
   // 添加調試信息
-  console.log('Nav - Current URL:', window.location.href);
-  console.log('Nav - Username:', username);
-  console.log('Nav - Token:', token);
-  console.log('Nav - Refresh Token:', refreshToken);
-  console.log('Nav - All URL Parameters:', Object.fromEntries(urlParams));
+  // console.log('Nav - Current URL:', window.location.href);
+  // console.log('Nav - Username:', username);
+  // console.log('Nav - Token:', token);
+  // console.log('Nav - Refresh Token:', refreshToken);
+  // console.log('Nav - All URL Parameters:', Object.fromEntries(urlParams));
 
   // 檢查登入狀態
   const isLoggedIn = !!username;
@@ -343,7 +343,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 
   // 在頁面加載時更新鏈接
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('Nav - DOMContentLoaded event fired');
+    // console.log('Nav - DOMContentLoaded event fired');
     updateNavLinks();
   });
 </script>
