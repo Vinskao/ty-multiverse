@@ -364,15 +364,17 @@
 }
 
 .ai-name {
-  color: #DAA520;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(218, 165, 32, 0.3);
+  color: #B8860B;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(184, 134, 11, 0.5);
+  font-size: 0.85rem;
 }
 
 .user-id {
   color: #8B4513;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .message-content {
@@ -405,6 +407,20 @@
   margin: 0 0 8px 0;
   line-height: 1.6;
   text-align: justify;
+  color: #2F1B14;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.bot-message .message-content p {
+  color: #1A0F0A;
+  font-weight: 600;
+}
+
+.user-message .message-content p {
+  color: #8B4513;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 .message-content p:last-child {
@@ -413,9 +429,9 @@
 
 /* AI回答格式化樣式 */
 .message-content strong {
-  color: #DAA520;
-  font-weight: 600;
-  text-shadow: 0 0 4px rgba(218, 165, 32, 0.4);
+  color: #B8860B;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(184, 134, 11, 0.4);
 }
 
 .message-content br {
