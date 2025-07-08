@@ -261,32 +261,14 @@ import '../styles/qabot.css';
       // 主題建議事件
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
-        console.log('點擊事件觸發:', target);
-        console.log('目標類名:', target?.className);
-        console.log('目標標籤:', target?.tagName);
-        
         if (target?.classList.contains('suggestion-btn')) {
-          console.log('檢測到建議按鈕點擊:', target);
           const topic = target.getAttribute('data-topic');
-          console.log('主題:', topic);
           if (topic) {
-            console.log('調用 handleTopicSuggestion:', topic);
             this.handleTopicSuggestion(topic);
           }
         }
       });
       
-      // 額外的調試：檢查按鈕是否存在
-      setTimeout(() => {
-        const buttons = document.querySelectorAll('.suggestion-btn');
-        console.log('找到的建議按鈕數量:', buttons.length);
-        buttons.forEach((btn, index) => {
-          console.log(`按鈕 ${index}:`, btn);
-          console.log(`按鈕類名:`, btn.className);
-          console.log(`按鈕主題:`, btn.getAttribute('data-topic'));
-        });
-      }, 2000);
-
       // 圖片模態框事件
       this.elements.imageModalClose.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -469,39 +451,27 @@ import '../styles/qabot.css';
 
     // 處理主題建議
     private handleTopicSuggestion(topic: string) {
-      console.log('handleTopicSuggestion 被調用，主題:', topic);
-      console.log('當前語言:', this.state.currentLanguage);
-      console.log('消息配置:', this.messages);
-      
       if (!this.messages) {
         console.error('消息配置未載入');
         return;
       }
       
       const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
-      console.log('當前語言消息:', currentMessages);
       
       if (!currentMessages || !currentMessages.topics) {
         console.error('當前語言消息或topics不存在');
         return;
       }
       
-      console.log('可用的topics:', Object.keys(currentMessages.topics));
-      console.log('尋找的topic:', topic);
-      
       const suggestion = currentMessages.topics[topic as keyof typeof currentMessages.topics];
-      console.log('找到的建議:', suggestion);
       
       if (suggestion) {
-        console.log('設置輸入框值:', suggestion);
         (this.elements.userInput as HTMLInputElement).value = suggestion;
         this.updateSendButton();
         (this.elements.userInput as HTMLInputElement).focus();
       } else {
-        console.log('未找到對應的建議文本');
         // 嘗試使用備用文本
         const fallbackText = `請告訴我關於 ${topic} 的知識`;
-        console.log('使用備用文本:', fallbackText);
         (this.elements.userInput as HTMLInputElement).value = fallbackText;
         this.updateSendButton();
         (this.elements.userInput as HTMLInputElement).focus();
@@ -644,7 +614,7 @@ import '../styles/qabot.css';
     // 調用 QA API
     private async callQAAPI(text: string) {
       const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
-      const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+      const apiPathPrefix = '/maya-sawa';
       
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
@@ -664,7 +634,7 @@ import '../styles/qabot.css';
     private async loadChatHistory() {
       try {
         const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
-        const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+        const apiPathPrefix = '/maya-sawa';
         
         const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -697,7 +667,7 @@ import '../styles/qabot.css';
     private async loadMoreHistory() {
       try {
         const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
-        const apiPathPrefix = import.meta.env.DEV ? '' : '/maya-sawa';
+        const apiPathPrefix = '/maya-sawa';
         
         const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
