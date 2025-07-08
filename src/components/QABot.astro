@@ -168,22 +168,60 @@ import '../styles/qabot.css';
     // 載入消息配置
     private async loadMessages() {
       try {
-        const response = await fetch('/tymultiverse/src/storages/mayaMessages.json');
-        if (!response.ok) throw new Error('Failed to load messages');
-        this.messages = await response.json();
+        // 嘗試多個可能的路徑
+        const possiblePaths = [
+          '/tymultiverse/src/storages/mayaMessages.json',
+          '/src/storages/mayaMessages.json',
+          '/storages/mayaMessages.json',
+          './src/storages/mayaMessages.json'
+        ];
+        
+        let messages = null;
+        
+        for (const path of possiblePaths) {
+          try {
+            const response = await fetch(path);
+            if (response.ok) {
+              messages = await response.json();
+              console.log('成功載入消息配置從:', path);
+              break;
+            }
+          } catch (e) {
+            console.log('嘗試路徑失敗:', path, e);
+            continue;
+          }
+        }
+        
+        if (messages) {
+          this.messages = messages;
+        } else {
+          throw new Error('無法載入消息配置文件');
+        }
       } catch (error) {
         console.error('載入消息配置失敗:', error);
-        // 使用默認消息作為備用
+        // 使用默認消息作為備用，包含完整的 topics
         this.messages = {
           chinese: {
             welcome: ["你有事？<br>問前想清楚，機會不是誰都有。"],
             saucy: ["嗯？還不說？<br>我的耐心可是有限的哦～"],
-            topics: {}
+            topics: {
+              "Java": "請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。",
+              "OOP及DI框架": "我想了解面向對象編程和依賴注入框架的設計原則和實現方式。",
+              "部署實踐": "請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。",
+              "網路問題": "我想了解網路編程、協議和常見網路問題的診斷與解決方法。",
+              "了解真夜": "妳是誰？"
+            }
           },
           english: {
             welcome: ["What do you want?<br>Think carefully before asking, opportunities aren't for everyone."],
             saucy: ["Hm? Still not talking?<br>My patience is limited, you know~"],
-            topics: {}
+            topics: {
+              "Java": "Please tell me about Java development, including core concepts, best practices, and common problem solutions.",
+              "OOP及DI框架": "I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.",
+              "部署實踐": "Please share your experience with application deployment, containerization, and DevOps practices.",
+              "網路問題": "I want to understand network programming, protocols, and diagnosis and solutions for common network issues.",
+              "了解真夜": "Who are you?"
+            }
           }
         };
       }
@@ -435,8 +473,21 @@ import '../styles/qabot.css';
       console.log('當前語言:', this.state.currentLanguage);
       console.log('消息配置:', this.messages);
       
+      if (!this.messages) {
+        console.error('消息配置未載入');
+        return;
+      }
+      
       const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
       console.log('當前語言消息:', currentMessages);
+      
+      if (!currentMessages || !currentMessages.topics) {
+        console.error('當前語言消息或topics不存在');
+        return;
+      }
+      
+      console.log('可用的topics:', Object.keys(currentMessages.topics));
+      console.log('尋找的topic:', topic);
       
       const suggestion = currentMessages.topics[topic as keyof typeof currentMessages.topics];
       console.log('找到的建議:', suggestion);
@@ -448,6 +499,12 @@ import '../styles/qabot.css';
         (this.elements.userInput as HTMLInputElement).focus();
       } else {
         console.log('未找到對應的建議文本');
+        // 嘗試使用備用文本
+        const fallbackText = `請告訴我關於 ${topic} 的知識`;
+        console.log('使用備用文本:', fallbackText);
+        (this.elements.userInput as HTMLInputElement).value = fallbackText;
+        this.updateSendButton();
+        (this.elements.userInput as HTMLInputElement).focus();
       }
     }
 
@@ -688,7 +745,17 @@ import '../styles/qabot.css';
       
       this.state.saucyMessageCount++;
       const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
-      const randomMessage = currentMessages.saucy[Math.floor(Math.random() * currentMessages.saucy.length)];
+      
+      // 避免重複顯示相同的消息
+      let availableMessages = currentMessages.saucy.filter((msg: string) => msg !== this.state.lastSaucyMessage);
+      if (availableMessages.length === 0) {
+        // 如果所有消息都用過了，重置並使用所有消息
+        availableMessages = currentMessages.saucy;
+        this.state.lastSaucyMessage = '';
+      }
+      
+      const randomMessage = availableMessages[Math.floor(Math.random() * availableMessages.length)];
+      this.state.lastSaucyMessage = randomMessage;
       
       const messageDiv = this.createMessageStructure('loading');
       this.elements.chatMessages.appendChild(messageDiv);
@@ -697,7 +764,7 @@ import '../styles/qabot.css';
       setTimeout(() => {
         const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
         contentDiv.innerHTML = `<p>${randomMessage}</p>`;
-      this.scrollToBottom();
+        this.scrollToBottom();
       }, 1500);
     }
 

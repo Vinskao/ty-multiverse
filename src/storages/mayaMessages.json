@@ -13,6 +13,7 @@
       "別裝可憐，問題拿來！"
     ],
     "saucy": [
+      "嗯？還不說？我的耐心可是有限的哦～",
       "你是啞巴嗎？快點說話！",
       "我等到花兒都謝了，你還不開口？",
       "再不說話我可要睡著了。",
@@ -22,7 +23,16 @@
       "你這麼慢，是不是在打字還是在發呆？",
       "你要是再不說，我就去喝奶茶了。",
       "你是不是想被我罵？",
-      "快點，別浪費我青春！"
+      "快點，別浪費我青春！",
+      "喂～有人在嗎？還是你已經睡著了？",
+      "這麼安靜，我都要懷疑我的麥克風壞了。",
+      "你該不會是在想怎麼問我吧？",
+      "別想了，直接問就是了！",
+      "我數到三，你再不說我就走了。一、二...",
+      "你是不是在偷偷查資料？",
+      "別害羞，大膽問出來！",
+      "我保證不會笑你，快點問吧～",
+      "你這樣我很尷尬耶，說點什麼吧！"
     ],
     "topics": {
       "Java": "請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。",
@@ -34,18 +44,19 @@
   },
   "english": {
     "welcome": [
-      "What do you want? Spit it out, I’m busy.",
-      "Don’t waste my time, ask or leave.",
+      "What do you want? Spit it out, I'm busy.",
+      "Don't waste my time, ask or leave.",
       "You got guts showing up here, huh?",
-      "I hope your question’s worth my precious time.",
-      "If you’re here to chat nonsense, forget it.",
-      "Don’t expect me to babysit you.",
-      "Ask something smart, or I’ll roast you.",
-      "Hurry up, I don’t have all day!",
+      "I hope your question's worth my precious time.",
+      "If you're here to chat nonsense, forget it.",
+      "Don't expect me to babysit you.",
+      "Ask something smart, or I'll roast you.",
+      "Hurry up, I don't have all day!",
       "You love asking? Try Google next time.",
       "No pity here, just your question!"
     ],
     "saucy": [
+      "Hm? Still not talking? My patience is limited, you know~",
       "Cat got your tongue?",
       "Are you frozen or just slow?",
       "If you don't talk, I'll take a nap.",
@@ -55,7 +66,16 @@
       "Is your keyboard broken or what?",
       "If you keep staring, I'll start charging you.",
       "You want me to leave? Just keep quiet.",
-      "Tick tock, my time is precious!"
+      "Tick tock, my time is precious!",
+      "Hello? Anyone there? Or did you fall asleep?",
+      "It's so quiet, I'm starting to think my mic is broken.",
+      "Are you thinking about how to ask me?",
+      "Stop thinking, just ask already!",
+      "I'll count to three, then I'm leaving. One, two...",
+      "Are you secretly researching?",
+      "Don't be shy, just ask boldly!",
+      "I promise I won't laugh, just ask~",
+      "You're making me awkward, say something!"
     ],
     "topics": {
       "Java": "Please tell me about Java development, including core concepts, best practices, and common problem solutions.",
