@@ -183,7 +183,7 @@ import '../styles/qabot.css';
             const response = await fetch(path);
             if (response.ok) {
               messages = await response.json();
-              console.log('成功載入消息配置從:', path);
+              // console.log('成功載入消息配置從:', path);
               break;
             }
           } catch (e) {
@@ -527,8 +527,6 @@ import '../styles/qabot.css';
       } else {
         answerText = String(answer || '');
       }
-      
-      console.log('處理後的答案文本:', answerText);
       
       const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answerText));
       const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
