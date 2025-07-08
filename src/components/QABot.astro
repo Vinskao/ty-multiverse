@@ -533,35 +533,51 @@ import '../styles/qabot.css';
       const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answerText));
       const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
       
-      // 添加來源列表
-      if (sources && sources.length > 0) {
+      // 添加來源列表（僅在存在有效來源時）
+      if (sources && Array.isArray(sources) && sources.length > 0) {
         const sourcesDiv = document.createElement('div');
         sourcesDiv.className = 'sources-list';
-        
-        const sourcesTitle = document.createElement('h4');
-        sourcesTitle.textContent = '📚 參考文檔：';
-        sourcesDiv.appendChild(sourcesTitle);
-        
+
+        let hasValidSource = false;
+
         sources.forEach(source => {
+          // 取得檔案路徑（可能欄位名稱不同）
+          const filePath = (source && (source.file_path || source.path || source.file)) as string | undefined;
+          if (!filePath) return; // 無效來源直接跳過
+
+          // 第一次取得有效來源時，插入標題
+          if (!hasValidSource) {
+            const sourcesTitle = document.createElement('h4');
+            sourcesTitle.textContent = '📚 參考文檔：';
+            sourcesDiv.appendChild(sourcesTitle);
+            hasValidSource = true;
+          }
+
           const sourceItem = document.createElement('div');
           sourceItem.className = 'source-item';
-          
+
           const link = document.createElement('a');
-          link.href = `/tymultiverse/work/${source.file_path.replace('.md', '')}`;
+          link.href = `/tymultiverse/work/${filePath.replace('.md', '')}`;
           link.target = '_blank';
           link.className = 'source-link';
-          link.innerHTML = `📄 ${this.escapeHtml(source.file_path)}`;
-          
-          const similaritySpan = document.createElement('span');
-          similaritySpan.className = 'similarity';
-          similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
-          
+          link.innerHTML = `📄 ${this.escapeHtml(filePath)}`;
+
+          // 顯示相似度（若有）
+          if (source && typeof source.similarity === 'number') {
+            const similaritySpan = document.createElement('span');
+            similaritySpan.className = 'similarity';
+            similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
+            sourceItem.appendChild(similaritySpan);
+          }
+
           sourceItem.appendChild(link);
-          sourceItem.appendChild(similaritySpan);
           sourcesDiv.appendChild(sourceItem);
         });
-        
-        contentDiv.appendChild(sourcesDiv);
+
+        // 只有在確定有至少一個有效來源時才加入內容
+        if (hasValidSource) {
+          contentDiv.appendChild(sourcesDiv);
+        }
       }
       
       this.elements.chatMessages.appendChild(messageDiv);
