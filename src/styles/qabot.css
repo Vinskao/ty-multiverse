@@ -131,69 +131,171 @@
   top: 10px;
   right: 15px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 
+/* Modern glass-morphism header buttons */
 .language-button {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  border: 1px solid #DAA520;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #8B4513;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  min-width: 50px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 45px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(218, 165, 32, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.language-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.language-button:hover::before {
+  left: 100%;
 }
 
 .language-button:hover {
-  background: linear-gradient(135deg, #FFA500, #FFD700);
-  border-color: #B8860B;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(218, 165, 32, 0.4);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .language-text {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-.history-button {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  border: 1px solid #DAA520;
+/* Icon buttons with modern styling */
+.history-button,
+.fullscreen-button {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #8B4513;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
   border-radius: 50%;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(218, 165, 32, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.history-button:hover {
-  background: linear-gradient(135deg, #FFA500, #FFD700);
+.history-button::before,
+.fullscreen-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+}
+
+.history-button:hover::before,
+.fullscreen-button:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+.history-button:hover,
+.fullscreen-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.history-button svg,
+.fullscreen-button svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.history-button:hover svg,
+.fullscreen-button:hover svg {
   transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(218, 165, 32, 0.4);
 }
 
+/* Close button with elegant danger styling */
 .close-button {
-  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-  border: 1px solid #CD5C5C;
-  color: #8B0000;
+  background: rgba(220, 53, 69, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
   border-radius: 50%;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(205, 92, 92, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+  position: relative;
+  overflow: hidden;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(220, 53, 69, 0.2);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+}
+
+.close-button:hover::before {
+  width: 100%;
+  height: 100%;
 }
 
 .close-button:hover {
-  background: linear-gradient(135deg, #FF8E8E, #FF6B6B);
+  background: rgba(220, 53, 69, 0.25);
+  border-color: rgba(220, 53, 69, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.close-button svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.close-button:hover svg {
   transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(205, 92, 92, 0.4);
 }
 
 .chat-header h3 {
@@ -772,4 +874,110 @@
   .chat-input-container {
     padding: 12px 15px 15px 15px;
   }
+}
+
+/* ===================================================== */
+/* 🎨  Refined button styles for QABot chat window (2025) */
+/*  - Applies to all interactive buttons inside the chat  */
+/*  - Leaves the bottom-left floating toggle button        */
+/*    (.qa-bot-toggle) completely untouched               */
+/* ===================================================== */
+
+/* Shared glass-like gold theme variables */
+:root {
+  --qabot-btn-color: #4a360d;
+  --qabot-btn-bg: linear-gradient(145deg, #fffbe6 0%, #ffebb2 100%);
+  --qabot-btn-bg-hover: linear-gradient(145deg, #ffebb2 0%, #fffbe6 100%);
+  --qabot-btn-border: #d1b15b;
+  --qabot-btn-shadow: 0 2px 4px rgba(209, 177, 91, 0.25);
+  --qabot-btn-shadow-hover: 0 4px 8px rgba(209, 177, 91, 0.35);
+}
+
+/* Base style – applied to EVERY button that lives inside the chat window */
+.qa-bot-container button,
+.qa-bot-container .suggestion-btn,
+.qa-bot-container .load-more-button {
+  font-family: "Segoe UI", "Helvetica Neue", "PingFang TC", "微軟正黑體", sans-serif;
+  font-weight: 600;
+  background: var(--qabot-btn-bg);
+  color: var(--qabot-btn-color);
+  border: 1px solid var(--qabot-btn-border);
+  border-radius: 8px;
+  box-shadow: var(--qabot-btn-shadow);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  overflow: hidden; /* for subtle active effect */
+}
+
+/* Hover / focus */
+.qa-bot-container button:hover:not(:disabled),
+.qa-bot-container .suggestion-btn:hover,
+.qa-bot-container .load-more-button:hover {
+  background: var(--qabot-btn-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--qabot-btn-shadow-hover);
+}
+
+.qa-bot-container button:focus-visible {
+  outline: 2px solid #ffc53d;
+  outline-offset: 2px;
+}
+
+/* Active / pressed */
+.qa-bot-container button:active:not(:disabled),
+.qa-bot-container .suggestion-btn:active,
+.qa-bot-container .load-more-button:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled state keeps original disabled styles but refined */
+.qa-bot-container .send-button:disabled {
+  background: #e5e5e5;
+  border-color: #c1c1c1;
+  color: #8a8a8a;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Preserve rounded / circular shapes for specific buttons */
+.qa-bot-container .fullscreen-button,
+.qa-bot-container .history-button,
+.qa-bot-container .close-button,
+.qa-bot-container .send-button {
+  border-radius: 50%;
+  padding: 6px; /* ensure consistent clickable area */
+}
+
+/* Suggestion button specific tweaks for nicer pill look */
+.qa-bot-container .suggestion-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+/* Load-more button width full & centred */
+.qa-bot-container .load-more-button {
+  width: 100%;
+  padding: 8px 0;
+  border-radius: 999px;
+}
+
+/* Close button override – appears AFTER generic button rules to keep distinct red palette */
+.qa-bot-container .close-button {
+  background: rgba(220, 53, 69, 0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(220, 53, 69, 0.3) !important;
+  color: #dc3545 !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.qa-bot-container .close-button:hover {
+  background: rgba(220, 53, 69, 0.25) !important;
+  border-color: rgba(220, 53, 69, 0.4) !important;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
