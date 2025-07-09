@@ -107,6 +107,9 @@ import '../styles/qabot.css';
 </div>
 
 <script>
+  // 將訊息配置直接打包，避免正式環境 404
+  // @ts-ignore
+  import mayaMessages from '../storages/mayaMessages.json';
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -167,64 +170,8 @@ import '../styles/qabot.css';
 
     // 載入消息配置
     private async loadMessages() {
-      try {
-        // 嘗試多個可能的路徑
-        const possiblePaths = [
-          '/tymultiverse/src/storages/mayaMessages.json',
-          '/src/storages/mayaMessages.json',
-          '/storages/mayaMessages.json',
-          './src/storages/mayaMessages.json'
-        ];
-        
-        let messages = null;
-        
-        for (const path of possiblePaths) {
-          try {
-            const response = await fetch(path);
-            if (response.ok) {
-              messages = await response.json();
-              // console.log('成功載入消息配置從:', path);
-              break;
-            }
-          } catch (e) {
-            console.log('嘗試路徑失敗:', path, e);
-            continue;
-          }
-        }
-        
-        if (messages) {
-          this.messages = messages;
-        } else {
-          throw new Error('無法載入消息配置文件');
-        }
-      } catch (error) {
-        console.error('載入消息配置失敗:', error);
-        // 使用默認消息作為備用，包含完整的 topics
-        this.messages = {
-          chinese: {
-            welcome: ["你有事？<br>問前想清楚，機會不是誰都有。"],
-            saucy: ["嗯？還不說？<br>我的耐心可是有限的哦～"],
-            topics: {
-              "Java": "請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。",
-              "OOP及DI框架": "我想了解面向對象編程和依賴注入框架的設計原則和實現方式。",
-              "部署實踐": "請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。",
-              "網路問題": "我想了解網路編程、協議和常見網路問題的診斷與解決方法。",
-              "了解真夜": "妳是誰？"
-            }
-          },
-          english: {
-            welcome: ["What do you want?<br>Think carefully before asking, opportunities aren't for everyone."],
-            saucy: ["Hm? Still not talking?<br>My patience is limited, you know~"],
-            topics: {
-              "Java": "Please tell me about Java development, including core concepts, best practices, and common problem solutions.",
-              "OOP及DI框架": "I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.",
-              "部署實踐": "Please share your experience with application deployment, containerization, and DevOps practices.",
-              "網路問題": "I want to understand network programming, protocols, and diagnosis and solutions for common network issues.",
-              "了解真夜": "Who are you?"
-            }
-          }
-        };
-      }
+      // 不再透過 fetch，直接使用打包進來的 JSON
+      this.messages = mayaMessages;
     }
 
     // 設置事件監聽器
