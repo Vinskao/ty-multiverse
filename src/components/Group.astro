@@ -216,20 +216,21 @@
 
     infoContainer.innerHTML = '';
     infoContainer.appendChild(infoContent);
-    infoContainer.classList.add('show');
+    // 移除 show 類別，不再顯示角色詳細信息
 
-    const closeButton = infoContainer.querySelector('.close-button');
-    if (closeButton) {
-      closeButton.addEventListener('click', () => {
-        infoContainer.classList.remove('show');
-      });
-    }
-    document.addEventListener('click', function closeInfo(e) {
-      if (!infoContainer.contains(e.target as Node)) {
-        infoContainer.classList.remove('show');
-        document.removeEventListener('click', closeInfo);
-      }
-    });
+    // 移除關閉按鈕和點擊事件，因為不再顯示角色詳細信息
+    // const closeButton = infoContainer.querySelector('.close-button');
+    // if (closeButton) {
+    //   closeButton.addEventListener('click', () => {
+    //     infoContainer.classList.remove('show');
+    //   });
+    // }
+    // document.addEventListener('click', function closeInfo(e) {
+    //   if (!infoContainer.contains(e.target as Node)) {
+    //     infoContainer.classList.remove('show');
+    //     document.removeEventListener('click', closeInfo);
+    //   }
+    // });
   }
 
   // 初始化頁面
