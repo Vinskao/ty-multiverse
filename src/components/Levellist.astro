@@ -363,7 +363,7 @@ import '../styles/levellist.css';
       utilityInput.style.width = 'auto'; // 自動調整寬度
       utilityInput.style.padding = '2px'; // 上下間距密集一點
       utilityInput.dataset.originalValue = character.originalUtilityPower || '0';
-      utilityInput.disabled = true; // 設置為不可編輯
+      // 移除 disabled 屬性，允許編輯
       // 添加輸入事件來調整寬度
       utilityInput.addEventListener('input', function() {
         this.style.width = `${Math.max(50, this.value.length * 10)}px`;
@@ -525,7 +525,7 @@ import '../styles/levellist.css';
       // 為每個輸入框添加事件監聽器，實現動態計算總戰力
       physicInput.addEventListener('input', updateTotalPower);
       magicInput.addEventListener('input', updateTotalPower);
-      // utilityInput.addEventListener('input', updateTotalPower); // 移除此行
+      utilityInput.addEventListener('input', updateTotalPower); // 啟用武器戰力輸入事件
       
       // 添加失焦事件監聽器，在輸入完成後更新排行
       const updateRankingsOnBlur = () => {
@@ -534,7 +534,7 @@ import '../styles/levellist.css';
       
       physicInput.addEventListener('blur', updateRankingsOnBlur);
       magicInput.addEventListener('blur', updateRankingsOnBlur);
-      // utilityInput.addEventListener('blur', updateRankingsOnBlur); // 移除此行
+      utilityInput.addEventListener('blur', updateRankingsOnBlur); // 啟用武器戰力失焦事件
       
       // 更新按鈕點擊事件
       updateButton.addEventListener('click', async () => {
@@ -551,7 +551,7 @@ import '../styles/levellist.css';
             codeName: character.codeName || '',
             physicPower: parseInt(physicInput.value) || 0,
             magicPower: parseInt(magicInput.value) || 0,
-            utilityPower: parseInt(utilityInput.value) || 0,
+            utilityPower: parseInt(utilityInput.value) || 0, // 現在包含武器戰力的編輯值
             dob: character.dob || '',
             race: character.race || '',
             attributes: character.attributes || '',
@@ -623,7 +623,7 @@ import '../styles/levellist.css';
           // 更新輸入框的原始值
           physicInput.dataset.originalValue = String(currentData.physicPower);
           magicInput.dataset.originalValue = String(currentData.magicPower);
-          utilityInput.dataset.originalValue = String(currentData.utilityPower);
+          utilityInput.dataset.originalValue = String(currentData.utilityPower); // 更新武器戰力原始值
           
           // 添加成功閃爍效果
           row.classList.add('save-success');
