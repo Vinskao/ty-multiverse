@@ -40,7 +40,10 @@ RUN npm run build
 
 FROM base AS runtime
 COPY --from=prod-deps /app/node_modules ./node_modules
+# Copy built files
 COPY --from=build /app/dist ./dist
+# Copy storages JSON for static access
+COPY --from=build /app/src/storages ./dist/client/storages
 # Copy content directory for API access
 COPY --from=build /app/src/content ./src/content
 

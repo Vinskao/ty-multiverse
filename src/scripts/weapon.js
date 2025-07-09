@@ -99,25 +99,59 @@ export function calculateWeaponDamage(character, weapons) {
   };
 }
 
-/**
- * Apply weapon damage to a character's utility power
- * @param {Object} character - The character object with attributes and powers
- * @param {Array} weapons - Array of weapon objects with damage properties
- * @returns {Object} - Updated character object with modified utility power
- */
-export function applyWeaponDamage(character, weapons) {
-  const { totalDamage, hasBonus, stateAttributes } = calculateWeaponDamage(character, weapons);
-  
-  // Create a copy of the character object
-  const updatedCharacter = { ...character };
-  
-  // Add weapon damage to utility power
-  updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
-  
-  // Return the updated character and whether bonus was applied
-  return {
-    character: updatedCharacter,
-    hasBonus,
-    stateAttributes
-  };
+// ------------------------------
+// NOTE: The total weapon damage is now fetched directly from the TYMB backend.
+// The API returns an integer – the total attack power including weapon bonuses.
+// We still fall back to the local calculation if the API call fails for any reason.
+// ------------------------------
+
+export async function applyWeaponDamage(character, weapons) {
+  try {
+    // 使用角色名稱呼叫後端 API 取得總攻擊力
+    const characterName = encodeURIComponent(character?.name || character?.nameOriginal || "");
+    if (!characterName) throw new Error("Character name is missing");
+
+    const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/people/damageWithWeapon?name=${characterName}`;
+    const response = await fetch(apiUrl, { method: "GET" });
+
+    if (!response.ok) throw new Error(`API response not ok: ${response.status}`);
+
+    // API 可能回傳純文字或 JSON，嘗試兩種方式解析
+    let totalDamage;
+    try {
+      totalDamage = await response.json();
+    } catch (_) {
+      const text = await response.text();
+      totalDamage = parseInt(text, 10);
+    }
+
+    totalDamage = parseInt(String(totalDamage || 0), 10);
+
+    // 更新角色 utilityPower
+    const updatedCharacter = { ...character };
+    updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
+
+    // API 已包含武器加成，若總傷害 > 0 視為有加成
+    const hasBonus = totalDamage > 0;
+
+    return {
+      character: updatedCharacter,
+      hasBonus,
+      stateAttributes: []
+    };
+  } catch (error) {
+    console.error("applyWeaponDamage – 使用 API 失敗，改用本地計算:", error);
+
+    // 回退到原本的計算方式
+    const { totalDamage, hasBonus, stateAttributes } = calculateWeaponDamage(character, weapons);
+
+    const updatedCharacter = { ...character };
+    updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
+
+    return {
+      character: updatedCharacter,
+      hasBonus,
+      stateAttributes
+    };
+  }
 }
