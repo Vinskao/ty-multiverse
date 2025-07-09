@@ -866,10 +866,10 @@ import '../styles/levellist.css';
             let weaponBonus = 0;
             let weaponData: any = null;
             
-            // 獲取角色的所有武器
-            const weaponName = character.name?.toLowerCase() || '';
-            const weaponResponse = await fetch(`${TYMB_URL}/weapons/${weaponName}`, {
-              method: "GET",
+            // 獲取角色的所有武器 (改用新 API)
+            const ownerName = character.name || '';
+            const weaponResponse = await fetch(`${TYMB_URL}/weapons/owner/${ownerName}`, {
+              method: "POST",
               headers: { 
                 "Content-Type": "application/json",
                 "Accept": "application/json"
@@ -885,7 +885,7 @@ import '../styles/levellist.css';
               const weaponsArray = Array.isArray(weaponsData) ? weaponsData : [weaponsData];
               
               // 使用所有武器計算加成
-              const { character: updatedCharacter, hasBonus: bonusApplied } = applyWeaponDamage(character, weaponsArray);
+              const { character: updatedCharacter, hasBonus: bonusApplied } = await applyWeaponDamage(character, weaponsArray);
               totalUtilityPower = updatedCharacter.utilityPower;
               hasBonus = bonusApplied;
               

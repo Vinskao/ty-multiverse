@@ -456,10 +456,10 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       const data = await response.json();
       
       if (data && data.name) {
-        // 獲取武器資訊
-        const weaponName = name?.toLowerCase() || '';
-        const weaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${weaponName}`, {
-          method: "GET",
+        // 獲取武器資訊 (改用新 API)
+        const ownerName = name || '';
+        const weaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${ownerName}`, {
+          method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -471,7 +471,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
           const weaponData = await weaponResponse.json();
           
           // 使用新的武器傷害計算邏輯
-          const { character: updatedCharacter, hasBonus } = applyWeaponDamage(data, weaponData);
+          const { character: updatedCharacter, hasBonus } = await applyWeaponDamage(data, weaponData);
           
           // 更新數據中的 utilityPower
           data.utilityPower = updatedCharacter.utilityPower;
@@ -722,9 +722,9 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       // 檢查左方左側夥伴的武器效果
       if (fighters.left.left?.name) {
-        const leftPartnerName = fighters.left.left.name.toLowerCase();
-        const leftPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftPartnerName}`, {
-          method: "GET",
+        const leftPartnerName = fighters.left.left.name;
+        const leftPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${leftPartnerName}`, {
+          method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -744,9 +744,9 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       // 檢查左方右側夥伴的武器效果
       if (fighters.left.right?.name) {
-        const leftRightPartnerName = fighters.left.right.name.toLowerCase();
-        const leftRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${leftRightPartnerName}`, {
-          method: "GET",
+        const leftRightPartnerName = fighters.left.right.name;
+        const leftRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${leftRightPartnerName}`, {
+          method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -774,9 +774,9 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       // 檢查右方左側夥伴的武器效果
       if (fighters.right.left?.name) {
-        const rightPartnerName = fighters.right.left.name.toLowerCase();
-        const rightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightPartnerName}`, {
-          method: "GET",
+        const rightPartnerName = fighters.right.left.name;
+        const rightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${rightPartnerName}`, {
+          method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -796,9 +796,9 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       // 檢查右方右側夥伴的武器效果
       if (fighters.right.right?.name) {
-        const rightRightPartnerName = fighters.right.right.name.toLowerCase();
-        const rightRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/${rightRightPartnerName}`, {
-          method: "GET",
+        const rightRightPartnerName = fighters.right.right.name;
+        const rightRightPartnerWeaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${rightRightPartnerName}`, {
+          method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"

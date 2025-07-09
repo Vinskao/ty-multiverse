@@ -82,7 +82,8 @@
     <!-- Images will be displayed here -->
 </div>
 
-<script>
+<script type="module">
+    const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
     const dropZone = document.getElementById('dropZone');
     const imageGallery = document.getElementById('imageGallery');
 
@@ -127,7 +128,7 @@
     }
 
     function saveToDatabase(base64Data) {
-        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/save', {
+        axios.post(`${baseUrl}/gallery/save`, {
             id: 0,
             imageBase64: base64Data,
             uploadTime: new Date().toISOString(),
@@ -142,7 +143,7 @@
     }
 
     function fetchGalleryImages() {
-        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/getAll')
+        axios.post(`${baseUrl}/gallery/getAll`)
             .then(response => {
                 const images = response.data;
                 imageGallery.innerHTML = ''; // Clear current gallery
@@ -167,7 +168,7 @@
     }
 
     function deleteImage(imageId) {
-        axios.post('https://peoplesystem.tatdvsonorth.com/tymb/gallery/delete', { id: imageId })
+        axios.post(`${baseUrl}/gallery/delete`, { id: imageId })
             .then(response => {
                 if (response.status === 204) {
                     console.log('Image deleted');
