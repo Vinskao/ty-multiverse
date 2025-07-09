@@ -13,7 +13,7 @@ import '../styles/levellist.css';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
+  // no longer require weapon calculation helper here
   
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
@@ -363,6 +363,7 @@ import '../styles/levellist.css';
       utilityInput.style.width = 'auto'; // 自動調整寬度
       utilityInput.style.padding = '2px'; // 上下間距密集一點
       utilityInput.dataset.originalValue = character.originalUtilityPower || '0';
+      utilityInput.disabled = true; // 設置為不可編輯
       // 添加輸入事件來調整寬度
       utilityInput.addEventListener('input', function() {
         this.style.width = `${Math.max(50, this.value.length * 10)}px`;
@@ -508,74 +509,14 @@ import '../styles/levellist.css';
         currentData.magicPower = magicPower;
         currentData.utilityPower = utilityPower;
         
-        // 計算武器加成
-        let weaponBonus = 0;
-        let hasBonus = false;
-        
-        // 檢查角色是否有武器加成
-        if (currentData.hasBonus && currentData.weaponData) {
-          try {
-            // 使用 weapon.js 中的邏輯計算武器加成
-            const { totalDamage, hasBonus: bonusApplied } = calculateWeaponDamage(
-              { 
-                utilityPower: utilityPower,
-                attributes: currentData.attributes
-              }, 
-              currentData.weaponData ? [currentData.weaponData] : []
-            );
-            
-            weaponBonus = totalDamage;
-            hasBonus = bonusApplied;
-            
-            // 更新映射中的武器加成值
-            currentData.weaponBonus = weaponBonus;
-            currentData.hasBonus = hasBonus;
-            
-            // 更新武器加成顯示
-            totalUtilityCell.textContent = hasBonus ? 
-              `${weaponBonus} ⚔️` : 
-              '0';
-          } catch (error) {
-            console.error(`計算武器加成時出錯: ${error.message}`);
-            // 如果計算出錯，使用原始值
-            weaponBonus = currentData.weaponBonus || 0;
-            hasBonus = currentData.hasBonus || false;
-          }
-        } else if (currentData.weaponData) {
-          // 如果沒有 hasBonus 標記但有武器數據，嘗試計算
-          try {
-            const { totalDamage, hasBonus: bonusApplied } = calculateWeaponDamage(
-              { 
-                utilityPower: utilityPower,
-                attributes: currentData.attributes
-              }, 
-              currentData.weaponData
-            );
-            
-            if (totalDamage > 0) {
-              weaponBonus = totalDamage;
-              hasBonus = bonusApplied;
-              
-              // 更新映射中的武器加成值
-              currentData.weaponBonus = weaponBonus;
-              currentData.hasBonus = hasBonus;
-              
-              // 更新武器加成顯示
-              totalUtilityCell.textContent = hasBonus ? 
-                `${weaponBonus} ⚔️` : 
-                '0';
-            }
-          } catch (error) {
-            console.error(`嘗試計算武器加成時出錯: ${error.message}`);
-          }
-        }
-        
-        // 計算新的總戰力
-        const newTotalPower = physicPower + magicPower + utilityPower + weaponBonus;
-        currentData.totalPower = newTotalPower;
-        
-        // 更新總戰力顯示
-        totalCell.textContent = String(newTotalPower);
+        // 依據新的規則：武器加成 = 固定總戰力 - (物理 + 魔法 + 武器)
+        const weaponBonus = currentData.totalPower - (physicPower + magicPower + utilityPower);
+        currentData.weaponBonus = weaponBonus;
+        currentData.hasBonus   = weaponBonus > 0;
+
+        // 更新武器加成顯示
+        totalUtilityCell.textContent = currentData.hasBonus ? `${weaponBonus} ⚔️` : '0';
+        // 總戰力保持不變，不需更新 totalCell
         
         // 將更新後的數據保存到 localStorage
         saveToLocalStorage(character.name, currentData);
@@ -584,7 +525,7 @@ import '../styles/levellist.css';
       // 為每個輸入框添加事件監聽器，實現動態計算總戰力
       physicInput.addEventListener('input', updateTotalPower);
       magicInput.addEventListener('input', updateTotalPower);
-      utilityInput.addEventListener('input', updateTotalPower);
+      // utilityInput.addEventListener('input', updateTotalPower); // 移除此行
       
       // 添加失焦事件監聽器，在輸入完成後更新排行
       const updateRankingsOnBlur = () => {
@@ -593,7 +534,7 @@ import '../styles/levellist.css';
       
       physicInput.addEventListener('blur', updateRankingsOnBlur);
       magicInput.addEventListener('blur', updateRankingsOnBlur);
-      utilityInput.addEventListener('blur', updateRankingsOnBlur);
+      // utilityInput.addEventListener('blur', updateRankingsOnBlur); // 移除此行
       
       // 更新按鈕點擊事件
       updateButton.addEventListener('click', async () => {
@@ -859,59 +800,42 @@ import '../styles/levellist.css';
               };
             }
             
-            // 保存原始武器戰力值
-            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
-            let totalUtilityPower = originalUtilityPower;
-            let hasBonus = false;
-            let weaponBonus = 0;
-            let weaponData: any = null;
-            
-            // 獲取角色的所有武器 (改用新 API)
+            // 基本能力值
+            const physicPower = parseInt(String(character?.physicPower || 0), 10);
+            const magicPower  = parseInt(String(character?.magicPower  || 0), 10);
+            const utilityPower = parseInt(String(character.utilityPower || 0), 10); // 直接使用資料庫中的 utility
+            const originalUtilityPower = utilityPower;
+
+            // 透過 damageWithWeapon API 取得總戰力
             const ownerName = character.name || '';
-            const weaponResponse = await fetch(`${TYMB_URL}/weapons/owner/${ownerName}`, {
-              method: "POST",
-              headers: { 
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-              },
-              credentials: 'include'
-            });
-            
-            if (weaponResponse.ok) {
-              // 獲取所有武器數據
-              const weaponsData = await weaponResponse.json();
-              
-              // 確保 weaponsData 是數組
-              const weaponsArray = Array.isArray(weaponsData) ? weaponsData : [weaponsData];
-              
-              // 使用所有武器計算加成
-              const { character: updatedCharacter, hasBonus: bonusApplied } = await applyWeaponDamage(character, weaponsArray);
-              totalUtilityPower = updatedCharacter.utilityPower;
-              hasBonus = bonusApplied;
-              
-              // 計算武器加成值
-              if (hasBonus) {
-                weaponBonus = totalUtilityPower - originalUtilityPower;
+            let totalPower = physicPower + magicPower + utilityPower;
+            try {
+              const dmgResp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(ownerName)}`);
+              if (dmgResp.ok) {
+                const dmgText = await dmgResp.text();
+                const dmgInt = parseInt(dmgText, 10);
+                if (!isNaN(dmgInt) && dmgInt > 0) {
+                  totalPower = dmgInt;
+                }
               }
-              
-              // 保存所有武器數據
-              weaponData = weaponsArray;
+            } catch (e) {
+              console.error(`damageWithWeapon API error for ${ownerName}:`, e);
             }
 
-            const physicPower = parseInt(String(character?.physicPower || 0), 10);
-            const magicPower = parseInt(String(character?.magicPower || 0), 10);
-            const totalPower = physicPower + magicPower + totalUtilityPower;
+            // 計算武器加成
+            const weaponBonus = totalPower - (physicPower + magicPower + utilityPower);
+            const hasBonus = weaponBonus > 0;
 
             return {
               ...character,
               totalPower,
               physicPower,
               magicPower,
-              utilityPower: totalUtilityPower,
-              originalUtilityPower, // 保存原始武器戰力值
-              weaponBonus, // 保存武器加成值
+              utilityPower,          // 直接用 utility 作為武器戰力
+              originalUtilityPower,
+              weaponBonus,
               hasBonus,
-              weaponData // 保存武器數據
+              weaponData: null
             };
           } catch (error) {
             console.error(`Error fetching weapon info for ${character.name}:`, error);
