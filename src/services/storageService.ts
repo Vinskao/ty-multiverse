@@ -25,7 +25,7 @@ export const storageService = {
   // 設置數據
   set(key: string, value: any): void {
     if (!this.isBrowser()) {
-      console.log('StorageService - Not in browser environment, skipping set');
+      // console.log('StorageService - Not in browser environment, skipping set');
       return;
     }
     try {
@@ -39,7 +39,7 @@ export const storageService = {
   // 獲取數據
   get<T>(key: string, defaultValue: T | null = null): T | null {
     if (!this.isBrowser()) {
-      console.log('StorageService - Not in browser environment, returning default value');
+      // console.log('StorageService - Not in browser environment, returning default value');
       return defaultValue;
     }
     try {
@@ -62,7 +62,7 @@ export const storageService = {
   // 移除數據
   remove(key: string): void {
     if (!this.isBrowser()) {
-      console.log('StorageService - Not in browser environment, skipping remove');
+      // console.log('StorageService - Not in browser environment, skipping remove');
       return;
     }
     try {
@@ -75,7 +75,7 @@ export const storageService = {
   // 清除所有數據
   clear(): void {
     if (!this.isBrowser()) {
-      console.log('StorageService - Not in browser environment, skipping clear');
+      // console.log('StorageService - Not in browser environment, skipping clear');
       return;
     }
     try {
@@ -88,7 +88,7 @@ export const storageService = {
   // 清除特定前綴的所有數據
   clearByPrefix(prefix: string): void {
     if (!this.isBrowser()) {
-      console.log('StorageService - Not in browser environment, skipping clearByPrefix');
+      // console.log('StorageService - Not in browser environment, skipping clearByPrefix');
       return;
     }
     try {

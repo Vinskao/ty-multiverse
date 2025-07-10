@@ -245,15 +245,15 @@
 
 /* Close button with elegant danger styling */
 .close-button {
-  background: rgba(220, 53, 69, 0.15);
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.2), rgba(160, 82, 45, 0.1));
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  color: #dc3545;
+  border: 1px solid rgba(139, 69, 19, 0.4);
+  color: #8B4513;
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
   width: 32px;
@@ -270,7 +270,7 @@
   left: 50%;
   width: 0;
   height: 0;
-  background: rgba(220, 53, 69, 0.2);
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.3), rgba(160, 82, 45, 0.2));
   border-radius: 50%;
   transition: all 0.3s ease;
   transform: translate(-50%, -50%);
@@ -282,20 +282,23 @@
 }
 
 .close-button:hover {
-  background: rgba(220, 53, 69, 0.25);
-  border-color: rgba(220, 53, 69, 0.4);
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.25), rgba(160, 82, 45, 0.15));
+  border-color: rgba(139, 69, 19, 0.6);
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+  color: #654321;
 }
 
 .close-button svg {
   position: relative;
   z-index: 1;
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
+  stroke-width: 3;
 }
 
 .close-button:hover svg {
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(90deg);
+  stroke: #654321;
 }
 
 .chat-header h3 {
