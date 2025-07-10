@@ -20,32 +20,32 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
   accessToken?: string;
   refreshToken?: string;
 }> {
-  console.log('verifyToken - Starting token verification');
-  console.log('verifyToken - Token exists:', !!token);
-  console.log('verifyToken - Refresh Token exists:', !!refreshToken);
-  console.log('verifyToken - TYMB_URL:', TYMB_URL);
+  // console.log('verifyToken - Starting token verification');
+  // console.log('verifyToken - Token exists:', !!token);
+  // console.log('verifyToken - Refresh Token exists:', !!refreshToken);
+  // console.log('verifyToken - TYMB_URL:', TYMB_URL);
   
   // 如果沒有提供 token，嘗試從 storageService 獲取
   if (!token) {
     token = storageService.get(storageService.KEYS.TOKEN);
-    console.log('verifyToken - Retrieved token from storage:', !!token);
+    // console.log('verifyToken - Retrieved token from storage:', !!token);
   }
   
   // 如果沒有提供 refreshToken，嘗試從 storageService 獲取
   if (!refreshToken) {
     refreshToken = storageService.get(storageService.KEYS.REFRESH_TOKEN);
-    console.log('verifyToken - Retrieved refresh token from storage:', !!refreshToken);
+    // console.log('verifyToken - Retrieved refresh token from storage:', !!refreshToken);
   }
   
   // 如果 token 沒有變化，跳過驗證
   if (token === lastToken) {
-    console.log('verifyToken - Token unchanged, skipping verification');
+    // console.log('verifyToken - Token unchanged, skipping verification');
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
 
   // 如果正在驗證或距離上次驗證時間太短，則跳過
   if (isVerifying || Date.now() - lastVerifyTime < VERIFY_COOLDOWN) {
-    console.log('verifyToken - Skipping token verification - too soon or already verifying');
+    // console.log('verifyToken - Skipping token verification - too soon or already verifying');
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
 
@@ -56,7 +56,7 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
   try {
     // 構建 API URL
     const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
-    console.log('verifyToken - API URL:', apiUrl.toString());
+    // console.log('verifyToken - API URL:', apiUrl.toString());
 
     // 構建請求體
     const formData = new FormData();
@@ -67,7 +67,7 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
       formData.append('refreshToken', refreshToken);
     }
 
-    console.log('verifyToken - Sending request to introspect endpoint');
+    // console.log('verifyToken - Sending request to introspect endpoint');
     const response = await fetch(apiUrl.toString(), {
       method: 'POST',
       headers: {
@@ -78,18 +78,18 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
       mode: 'cors'
     });
 
-    console.log('verifyToken - Response status:', response.status);
+    // console.log('verifyToken - Response status:', response.status);
     
     if (response.ok) {
       const data = await response.json();
-      console.log('verifyToken - Token introspection data:', data);
+      // console.log('verifyToken - Token introspection data:', data);
 
       // 檢查 token 是否有效
       if (data.active) {
-        console.log('verifyToken - Token is active');
+        // console.log('verifyToken - Token is active');
         // 如果是新的 token，就更新前端儲存的 token
         if (data.access_token) {
-          console.log('verifyToken - New access token received');
+          // console.log('verifyToken - New access token received');
           // 保存新的 token 到 storageService（僅在瀏覽器環境中）
           if (storageService.isBrowser()) {
             storageService.set(storageService.KEYS.TOKEN, data.access_token);
@@ -105,7 +105,7 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
           };
         }
         
-        console.log('verifyToken - Token is valid but not refreshed');
+        // console.log('verifyToken - Token is valid but not refreshed');
         // 保存當前的 token 到 storageService（僅在瀏覽器環境中）
         if (storageService.isBrowser()) {
           storageService.set(storageService.KEYS.TOKEN, token);
@@ -120,18 +120,18 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
           refreshToken: refreshToken
         };
       } else {
-        console.log('verifyToken - Token is not active');
+        // console.log('verifyToken - Token is not active');
       }
     } else {
-      console.log('verifyToken - Response not OK');
+      // console.log('verifyToken - Response not OK');
       try {
         const errorData = await response.json();
-        console.log('verifyToken - Error data:', errorData);
+        // console.log('verifyToken - Error data:', errorData);
       } catch (e) {
-        console.log('verifyToken - Could not parse error response');
+        // console.log('verifyToken - Could not parse error response');
       }
     }
-    console.log('verifyToken - Token validation failed');
+    // console.log('verifyToken - Token validation failed');
     return {
       valid: false,
       tokenRefreshed: false,
@@ -139,7 +139,7 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
       refreshToken: null
     };
   } catch (error) {
-    console.error('verifyToken - Token verification failed:', error);
+    // console.error('verifyToken - Token verification failed:', error);
     return {
       valid: false,
       tokenRefreshed: false,
