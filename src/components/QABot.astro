@@ -553,14 +553,14 @@ import '../styles/qabot.css';
         const response = await this.callQAAPI(userText);
         this.removeMessage(loadingId);
 
-        console.log('API響應:', response);
+        // console.log('API響應:', response);
 
         if (response.success) {
           // 根據API響應結構，使用 response.text 或 response.answer
           const answer = response.text || response.answer || response;
           const sources = response.data || response.sources || [];
-          console.log('提取的答案:', answer);
-          console.log('提取的來源:', sources);
+          // console.log('提取的答案:', answer);
+          // console.log('提取的來源:', sources);
           this.addBotResponse(answer, sources);
         } else {
           this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');

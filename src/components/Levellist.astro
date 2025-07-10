@@ -4,6 +4,45 @@ import '../styles/levellist.css';
 
 <div id="power-list-container">
   <h2>力表</h2>
+  
+  <!-- 同步全部按鈕 -->
+  <div style="margin-bottom: 30px; text-align: center;">
+    <button id="sync-all-btn" style="
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      min-width: 140px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    ">
+      <span style="
+        display: inline-block;
+        transition: transform 0.3s ease;
+        margin-right: 8px;
+      ">🔄</span>
+      <span>同步全部</span>
+      <div style="
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+      "></div>
+    </button>
+  </div>
+  
   <div id="power-list"></div>
 </div>
 
@@ -497,29 +536,55 @@ import '../styles/levellist.css';
         weaponData: character.weaponData || null
       });
       
-      // 添加輸入事件監聽器，實現動態計算總戰力
+      // helper function to fetch latest total power and update UI/mapping for this row
+      const fetchAndApplyTotalPower = async (shouldReorder = false) => {
+        console.log(`🔄 查詢 ${character.name} 的最新總戰力...`);
+        try {
+          const resp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(character.name)}`);
+          if (resp.ok) {
+            const text = await resp.text();
+            const dmgInt = parseInt(text, 10);
+            if (!isNaN(dmgInt) && dmgInt > 0) {
+              const mapData = characterPowerMap.get(character.name);
+              mapData.totalPower = dmgInt;
+              const weaponBonus = dmgInt - (mapData.physicPower + mapData.magicPower + mapData.utilityPower);
+              mapData.weaponBonus = weaponBonus;
+              mapData.hasBonus   = weaponBonus > 0;
+              totalCell.textContent = String(dmgInt);
+              totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus} ⚔️` : '0';
+              console.log(`✅ ${character.name} 總戰力更新為 ${dmgInt}`);
+              if (shouldReorder) {
+                updateRankings();
+              }
+            } else {
+              console.warn(`⚠️ ${character.name} API 返回無效數值: ${text}`);
+            }
+          } else {
+            console.error(`❌ ${character.name} API 狀態碼 ${resp.status}`);
+          }
+        } catch (e) {
+          console.error(`❌ ${character.name} API 調用失敗:`, e);
+        }
+      };
+
+      //  添加輸入事件監聽器，實現動態計算總戰力
       const updateTotalPower = async () => {
         const currentData = characterPowerMap.get(character.name);
         const physicPower = parseInt(physicInput.value) || 0;
         const magicPower = parseInt(magicInput.value) || 0;
         const utilityPower = parseInt(utilityInput.value) || 0;
-        
-        // 更新映射中的值
         currentData.physicPower = physicPower;
-        currentData.magicPower = magicPower;
+        currentData.magicPower  = magicPower;
         currentData.utilityPower = utilityPower;
-        
-        // 依據新的規則：武器加成 = 固定總戰力 - (物理 + 魔法 + 武器)
-        const weaponBonus = currentData.totalPower - (physicPower + magicPower + utilityPower);
-        currentData.weaponBonus = weaponBonus;
-        currentData.hasBonus   = weaponBonus > 0;
-
-        // 更新武器加成顯示
-        totalUtilityCell.textContent = currentData.hasBonus ? `${weaponBonus} ⚔️` : '0';
-        // 總戰力保持不變，不需更新 totalCell
-        
-        // 將更新後的數據保存到 localStorage
+        await fetchAndApplyTotalPower(false);
         saveToLocalStorage(character.name, currentData);
+      };
+
+      // 添加失焦事件監聽器，在輸入完成後更新排行
+      const updateRankingsOnBlur = () => {
+        row.classList.remove('editing');
+        console.log(`📊 失焦事件: 重新排序表格`);
+        updateRankings();
       };
       
       // 為每個輸入框添加事件監聽器，實現動態計算總戰力
@@ -528,10 +593,6 @@ import '../styles/levellist.css';
       utilityInput.addEventListener('input', updateTotalPower); // 啟用武器戰力輸入事件
       
       // 添加失焦事件監聽器，在輸入完成後更新排行
-      const updateRankingsOnBlur = () => {
-        updateRankings();
-      };
-      
       physicInput.addEventListener('blur', updateRankingsOnBlur);
       magicInput.addEventListener('blur', updateRankingsOnBlur);
       utilityInput.addEventListener('blur', updateRankingsOnBlur); // 啟用武器戰力失焦事件
@@ -585,7 +646,11 @@ import '../styles/levellist.css';
             hei: character.hei || '',
             physicsFallout4: character.physicsFallout4 || '',
             version: character.version || 1, // 確保 version 不為 null
-            hrratio: character.hrratio || ''
+            hrratio: character.hrratio || '',
+            // 新增欄位以供後續更新戰力使用
+            totalPower: 0,
+            weaponBonus: 0,
+            hasBonus: false
           };
           
           // 發送更新請求
@@ -630,6 +695,9 @@ import '../styles/levellist.css';
           setTimeout(() => {
             row.classList.remove('save-success');
           }, 1000);
+
+          // 立即向後端查詢最新總戰力並更新畫面
+          await fetchAndApplyTotalPower(true);
           
         } catch (error) {
           console.error('更新角色能力時出錯:', error);
@@ -749,8 +817,174 @@ import '../styles/levellist.css';
     });
   }
 
+  // 同步全部功能
+  async function syncAllCharacters() {
+    const syncBtn = document.getElementById('sync-all-btn') as HTMLButtonElement;
+    if (!syncBtn) return;
+    
+    // 禁用按鈕並顯示載入狀態
+    syncBtn.disabled = true;
+    syncBtn.innerHTML = `
+      <span style="
+        display: inline-block;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      ">🔄</span>
+      <span>同步中...</span>
+      <div style="
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+      "></div>
+    `;
+    syncBtn.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
+    syncBtn.style.transform = 'scale(0.95)';
+    syncBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.5)';
+    
+    try {
+      console.log('🔄 開始同步所有角色數據...');
+      
+      // 1. 從 TYMB API 獲取所有角色數據
+      const response = await fetch(`${TYMB_URL}/people/get-all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`獲取角色數據失敗: ${response.status}`);
+      }
+      
+      const characters = await response.json();
+      console.log(`✅ 成功獲取 ${characters.length} 個角色數據`);
+      
+      // 2. 透過代理端點發送到 Google Apps Script
+      const syncResponse = await fetch('/api/sync-characters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(characters)
+      });
+      
+      if (!syncResponse.ok) {
+        throw new Error(`同步失敗: ${syncResponse.status}`);
+      }
+      
+      const syncResult = await syncResponse.json();
+      console.log('✅ 同步結果:', syncResult);
+      
+      // 顯示成功訊息
+      showAlert(`同步成功！已同步 ${syncResult.characterCount} 個角色`, 'success', 2000);
+      
+    } catch (error) {
+      console.error('❌ 同步失敗:', error);
+      showAlert(`同步失敗: ${error.message}`, 'error', 3000);
+    } finally {
+      // 恢復按鈕狀態
+      syncBtn.disabled = false;
+      syncBtn.innerHTML = `
+        <span style="
+          display: inline-block;
+          transition: transform 0.3s ease;
+          margin-right: 8px;
+        ">🔄</span>
+        <span>同步全部</span>
+        <div style="
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        "></div>
+      `;
+      syncBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      syncBtn.style.transform = 'translateY(0) scale(1)';
+      syncBtn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+    }
+  }
+
   // 主函數
   document.addEventListener("DOMContentLoaded", async function () {
+    // 綁定同步按鈕事件
+    const syncBtn = document.getElementById('sync-all-btn') as HTMLButtonElement;
+    if (syncBtn) {
+      syncBtn.addEventListener('click', syncAllCharacters);
+      
+      // 添加懸停效果
+      syncBtn.addEventListener('mouseover', () => {
+        if (!syncBtn.disabled) {
+          syncBtn.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
+          syncBtn.style.transform = 'translateY(-2px) scale(1.04)';
+          syncBtn.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.6)';
+          
+          // 啟動閃光效果
+          const shine = syncBtn.querySelector('div') as HTMLElement;
+          if (shine) {
+            shine.style.left = '100%';
+          }
+          
+          // 旋轉圖標
+          const icon = syncBtn.querySelector('span') as HTMLElement;
+          if (icon) {
+            icon.style.transform = 'rotate(180deg)';
+          }
+        }
+      });
+      
+      syncBtn.addEventListener('mouseout', () => {
+        if (!syncBtn.disabled) {
+          syncBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          syncBtn.style.transform = 'translateY(0) scale(1)';
+          syncBtn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+          
+          // 重置閃光效果
+          const shine = syncBtn.querySelector('div') as HTMLElement;
+          if (shine) {
+            shine.style.left = '-100%';
+          }
+          
+          // 重置圖標
+          const icon = syncBtn.querySelector('span') as HTMLElement;
+          if (icon) {
+            icon.style.transform = 'rotate(0deg)';
+          }
+        }
+      });
+      
+      // 添加點擊效果
+      syncBtn.addEventListener('mousedown', () => {
+        if (!syncBtn.disabled) {
+          syncBtn.style.transform = 'translateY(-1px) scale(0.98)';
+        }
+      });
+      
+      syncBtn.addEventListener('mouseup', () => {
+        if (!syncBtn.disabled) {
+          syncBtn.style.transform = 'translateY(-3px) scale(1.05)';
+        }
+      });
+    }
+    
+    // 自動清理暫存，確保每次載入都是最新資料
+    try {
+      const storageKey = 'character_power_cache';
+      if (localStorage.getItem(storageKey)) {
+        console.log('🧹 清除舊的 character_power_cache');
+        localStorage.removeItem(storageKey);
+      }
+    } catch (e) {
+      console.warn('無法清除 localStorage 暫存:', e);
+    }
     try {
       // 添加 CSS 樣式
       const style = document.createElement('style');
@@ -761,8 +995,18 @@ import '../styles/levellist.css';
           100% { background-color: transparent; }
         }
         
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
         .save-success {
           animation: saveSuccess 1s ease-in-out;
+        }
+
+        /* 正在編輯時的行高亮 */
+        .editing {
+          background-color: rgba(255, 223, 0, 0.2);
         }
       `;
       document.head.appendChild(style);
