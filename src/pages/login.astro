@@ -82,20 +82,20 @@ function redirectToLogin() {
     }
   </style>
   <script>
-    // 在頁面載入時立即執行跳轉
-    window.onload = () => {
+    // 立即執行，避免等待圖片等資源載入
+    (() => {
       // 使用 auth 服務進行登入
       const clientId = import.meta.env.PUBLIC_CLIENT_ID || "peoplesystem";
       const realm = import.meta.env.PUBLIC_REALM || "PeopleSystem";
       const redirectUri = `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/redirect`;
       const ssoUrl = import.meta.env.PUBLIC_SSO_URL;
-      
+
       // 構建授權 URL
       const authorizationUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-      
-      // 重定向到授權頁面
-      window.location.href = authorizationUrl;
-    };
+
+      // 立即重定向，不阻塞在 window.onload
+      window.location.replace(authorizationUrl);
+    })();
   </script>
 </head>
 <body>
