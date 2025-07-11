@@ -177,3 +177,146 @@
 #power-list button:hover {
   background-color: #45a049;
 }
+
+/* ------------------------------ */
+/*  Theme variables               */
+/* ------------------------------ */
+:root {
+  --surface-bg: rgba(0, 0, 0, 0.02);
+  --surface-border: rgba(0, 0, 0, 0.1);
+  --surface-hover: rgba(0, 0, 0, 0.05);
+  --text-heading: #111;
+  --text-primary: #222;
+  --table-head-bg: rgba(0, 0, 0, 0.04);
+  --input-border: rgba(0, 0, 0, 0.2);
+  --table-row-alt: rgba(0, 0, 0, 0.02);
+}
+
+html.theme-dark {
+  --surface-bg: rgba(255, 255, 255, 0.05);
+  --surface-border: rgba(255, 255, 255, 0.15);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --text-heading: #ffffff;
+  --text-primary: #ffffff;
+  --table-head-bg: rgba(255, 255, 255, 0.08);
+  --input-border: rgba(255, 255, 255, 0.2);
+  --table-row-alt: rgba(255, 255, 255, 0.03);
+}
+
+/* ------------------------------ */
+/*  Apply variables                */
+/* ------------------------------ */
+.level-title,
+#power-list-container > h2 {
+  color: var(--text-heading);
+}
+
+#power-list th {
+  background: var(--table-head-bg);
+  color: var(--text-heading);
+}
+
+#power-list td {
+  color: var(--text-primary);
+}
+
+#power-list tbody tr:nth-child(even) {
+  background: var(--table-row-alt);
+}
+
+#power-list input[type="number"] {
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+}
+
+/* Header beautification */
+#power-list-container > h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+#power-list-container > h2::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.4;
+  border-radius: 2px;
+}
+
+/* ------------------------------ */
+/*  Minimalist aesthetic upgrades */
+/* ------------------------------ */
+.level-container,
+#power-list-container {
+  backdrop-filter: blur(8px) saturate(120%);
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Refined table look */
+#power-list th {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 600;
+}
+
+#power-list tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+#power-list tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+/* Input & button tweaks for cleaner look */
+#power-list input[type="number"] {
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+#power-list button {
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+/* --------------------------------- */
+/*  Responsive - narrow screen tweaks */
+/* --------------------------------- */
+@media (max-width: 768px) {
+  #power-list-container {
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  #level-container {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .level-container {
+    padding: 10px;
+  }
+
+  .box-container {
+    gap: 12px;
+  }
+}

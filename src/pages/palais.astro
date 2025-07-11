@@ -5,67 +5,14 @@ import Galwall from "../components/Galwall.astro";
 import Fight from  "../components/Fight.astro";
 import Group from  "../components/Group.astro";
 import Levellist from "../components/Levellist.astro";
+import "../styles/palais.css";
 ---
 
 <!DOCTYPE html>
 <meta charset="UTF-8" />
 <html>
   <head>
-    <style>
-      .galwall-container {
-        position: relative;
-        z-index: 1;
-        height: 450px;
-        margin-bottom: 100px;
-      }
-
-      .system-container {
-        display: flex;
-        flex-wrap: wrap;
-        margin-bottom: 0;
-        position: relative;
-        z-index: 1;
-      }
-
-      .system-container:first-of-type {
-        margin-top: 0;
-      }
-
-      .system-container:last-of-type {
-        margin-bottom: 600px;
-      }
-
-      #system {
-        align-items: center;
-        padding-left: -50px;
-        margin-left: -50px;
-      }
-
-      .title {
-        text-align: center;
-        flex-direction: row;
-        display: flex;
-        z-index: 999;
-        padding-left: 30px;
-      }
-
-      .container {
-        display: flex;
-        flex-direction: row;
-        position: relative;
-        columns: 2;
-        margin-top: 250px;
-      }
-    
-      main.wrapper {
-        margin: 5%;
-        padding: 0;
-        max-width: 100%;
-      }
-      main.wrapper .stack {
-        gap: 10px;
-      }
-    </style>
+    <!-- Styles moved to src/styles/palais.css imported via front-matter -->
 
     <script
       async
