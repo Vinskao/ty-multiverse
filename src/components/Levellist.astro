@@ -24,6 +24,7 @@ import '../styles/levellist.css';
       overflow: hidden;
       min-width: 140px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin-right: 15px;
     ">
       <span style="
         display: inline-block;
@@ -31,6 +32,41 @@ import '../styles/levellist.css';
         margin-right: 8px;
       ">🔄</span>
       <span>同步全部</span>
+      <div style="
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+      "></div>
+    </button>
+    
+    <button id="export-btn" style="
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      min-width: 140px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    ">
+      <span style="
+        display: inline-block;
+        transition: transform 0.3s ease;
+        margin-right: 8px;
+      ">📊</span>
+      <span>匯出表格</span>
       <div style="
         position: absolute;
         top: 0;
@@ -50,6 +86,8 @@ import '../styles/levellist.css';
 
 <!-- 引入 SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- 引入 SheetJS 用於 xlsx 匯出 -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
   // no longer require weapon calculation helper here
@@ -193,8 +231,8 @@ import '../styles/levellist.css';
     attributesText.style.cssText = 'margin:0;font-size:clamp(6px,0.8vw,8px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     if (character.hasBonus) {
       const bonusBadge = document.createElement('span');
-      bonusBadge.textContent = '⚔️';
-      bonusBadge.style.cssText = 'margin-left:5px;font-size:clamp(6px,0.8vw,8px);';
+      bonusBadge.textContent = ` (+${character.weaponBonus || 0})`;
+      bonusBadge.style.cssText = 'margin-left:5px;font-size:clamp(6px,0.8vw,8px);color:#FFD700;';
       attributesText.appendChild(bonusBadge);
     }
 
@@ -418,7 +456,7 @@ import '../styles/levellist.css';
       const totalUtilityCell = document.createElement('td');
       // 顯示武器加成值
       totalUtilityCell.textContent = character.hasBonus ? 
-        `${character.weaponBonus || '0'} ⚔️` : 
+        `${character.weaponBonus || '0'}` : 
         '0';
       totalUtilityCell.style.padding = '4px'; // 上下間距密集一點
       totalUtilityCell.style.border = '1px solid #ddd';
@@ -551,7 +589,7 @@ import '../styles/levellist.css';
               mapData.weaponBonus = weaponBonus;
               mapData.hasBonus   = weaponBonus > 0;
               totalCell.textContent = String(dmgInt);
-              totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus} ⚔️` : '0';
+              totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus}` : '0';
               console.log(`✅ ${character.name} 總戰力更新為 ${dmgInt}`);
               if (shouldReorder) {
                 updateRankings();
@@ -866,7 +904,9 @@ import '../styles/levellist.css';
       console.log(`✅ 成功獲取 ${characters.length} 個角色數據`);
       
       // 2. 透過代理端點發送到 Google Apps Script
-      const syncResponse = await fetch('/api/sync-characters', {
+      // 根據當前路徑動態構建 API URL
+      const basePath = window.location.pathname.includes('/tymultiverse') ? '/tymultiverse' : '';
+      const syncResponse = await fetch(`${basePath}/api/sync-characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -910,6 +950,169 @@ import '../styles/levellist.css';
       syncBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       syncBtn.style.transform = 'translateY(0) scale(1)';
       syncBtn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+    }
+  }
+
+  // 匯出表格功能
+  function exportToExcel() {
+    const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
+    if (!exportBtn) return;
+    
+    // 禁用按鈕並顯示載入狀態
+    exportBtn.disabled = true;
+    exportBtn.innerHTML = `
+      <span style="
+        display: inline-block;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      ">📊</span>
+      <span>匯出中...</span>
+      <div style="
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+      "></div>
+    `;
+    exportBtn.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
+    exportBtn.style.transform = 'scale(0.95)';
+    exportBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.5)';
+    
+    try {
+      console.log('📊 開始匯出表格...');
+      
+      // 檢查 SheetJS 是否已載入
+      if (typeof (window as any).XLSX === 'undefined') {
+        throw new Error('SheetJS 庫未載入，請重新整理頁面');
+      }
+      
+      // 獲取表格元素
+      const table = document.querySelector('#power-list table');
+      if (!table) {
+        throw new Error('找不到表格元素');
+      }
+      
+      // 獲取表頭
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent?.trim() || '');
+      
+      // 獲取表格數據
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const data = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        return cells.map(cell => {
+          // 如果是輸入框，獲取其值
+          const input = cell.querySelector('input');
+          if (input) {
+            return input.value;
+          }
+          // 否則獲取文字內容
+          return cell.textContent?.trim() || '';
+        });
+      });
+      
+      // 創建工作簿
+      const wb = (window as any).XLSX.utils.book_new();
+      
+      // 創建主要數據工作表
+      const wsData = [headers, ...data];
+      const ws = (window as any).XLSX.utils.aoa_to_sheet(wsData);
+      
+      // 設置列寬
+      const colWidths = headers.map(header => ({ wch: Math.max(header.length, 10) }));
+      ws['!cols'] = colWidths;
+      
+      // 添加工作表到工作簿
+      (window as any).XLSX.utils.book_append_sheet(wb, ws, '力表數據');
+      
+      // 創建統計工作表
+      const powerRanges = {
+        '0-999': 0,
+        '1000-1999': 0,
+        '2000-2999': 0,
+        '3000-3999': 0,
+        '4000+': 0
+      };
+      
+      data.forEach(row => {
+        const totalPower = parseInt(row[6]) || 0; // 總戰力在第7列
+        if (totalPower < 1000) powerRanges['0-999']++;
+        else if (totalPower < 2000) powerRanges['1000-1999']++;
+        else if (totalPower < 3000) powerRanges['2000-2999']++;
+        else if (totalPower < 4000) powerRanges['3000-3999']++;
+        else powerRanges['4000+']++;
+      });
+      
+      const statsData = [
+        ['戰力範圍', '角色數量'],
+        ...Object.entries(powerRanges).map(([range, count]) => [range, count])
+      ];
+      
+      const wsStats = (window as any).XLSX.utils.aoa_to_sheet(statsData);
+      wsStats['!cols'] = [{ wch: 15 }, { wch: 10 }];
+      (window as any).XLSX.utils.book_append_sheet(wb, wsStats, '統計信息');
+      
+      // 創建摘要工作表
+      const summaryData = [
+        ['力表匯出報告'],
+        [''],
+        ['匯出時間', new Date().toLocaleString('zh-TW')],
+        ['總角色數', data.length],
+        [''],
+        ['戰力統計'],
+        ['最高戰力', Math.max(...data.map(row => parseInt(row[6]) || 0))],
+        ['最低戰力', Math.min(...data.map(row => parseInt(row[6]) || 0))],
+        ['平均戰力', Math.round(data.reduce((sum, row) => sum + (parseInt(row[6]) || 0), 0) / data.length)],
+        [''],
+        ['軍隊分布'],
+        ...Object.entries(
+          data.reduce((acc, row) => {
+            const armyName = row[1] || '未知'; // 假設軍隊名稱在第2列
+            acc[armyName] = (acc[armyName] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        ).sort((a, b) => b[1] - a[1])
+      ];
+      
+      const wsSummary = (window as any).XLSX.utils.aoa_to_sheet(summaryData);
+      wsSummary['!cols'] = [{ wch: 20 }, { wch: 15 }];
+      (window as any).XLSX.utils.book_append_sheet(wb, wsSummary, '摘要報告');
+      
+      // 生成 xlsx 文件並下載
+      const fileName = `力表_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      (window as any).XLSX.writeFile(wb, fileName);
+      
+      console.log('✅ 表格匯出成功');
+      showAlert('表格匯出成功！', 'success', 2000);
+      
+    } catch (error) {
+      console.error('❌ 匯出失敗:', error);
+      showAlert(`匯出失敗: ${error.message}`, 'error', 3000);
+    } finally {
+      // 恢復按鈕狀態
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = `
+        <span style="
+          display: inline-block;
+          transition: transform 0.3s ease;
+          margin-right: 8px;
+        ">📊</span>
+        <span>匯出表格</span>
+        <div style="
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        "></div>
+      `;
+      exportBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+      exportBtn.style.transform = 'translateY(0) scale(1)';
+      exportBtn.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
     }
   }
 
@@ -971,6 +1174,66 @@ import '../styles/levellist.css';
       syncBtn.addEventListener('mouseup', () => {
         if (!syncBtn.disabled) {
           syncBtn.style.transform = 'translateY(-3px) scale(1.05)';
+        }
+      });
+    }
+    
+    // 綁定匯出按鈕事件
+    const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
+    if (exportBtn) {
+      exportBtn.addEventListener('click', exportToExcel);
+      
+      // 添加懸停效果
+      exportBtn.addEventListener('mouseover', () => {
+        if (!exportBtn.disabled) {
+          exportBtn.style.background = 'linear-gradient(135deg, #20c997 0%, #19a77d 100%)';
+          exportBtn.style.transform = 'translateY(-2px) scale(1.04)';
+          exportBtn.style.boxShadow = '0 12px 35px rgba(32, 201, 151, 0.6)';
+          
+          // 啟動閃光效果
+          const shine = exportBtn.querySelector('div') as HTMLElement;
+          if (shine) {
+            shine.style.left = '100%';
+          }
+          
+          // 旋轉圖標
+          const icon = exportBtn.querySelector('span') as HTMLElement;
+          if (icon) {
+            icon.style.transform = 'rotate(180deg)';
+          }
+        }
+      });
+      
+      exportBtn.addEventListener('mouseout', () => {
+        if (!exportBtn.disabled) {
+          exportBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+          exportBtn.style.transform = 'translateY(0) scale(1)';
+          exportBtn.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
+          
+          // 重置閃光效果
+          const shine = exportBtn.querySelector('div') as HTMLElement;
+          if (shine) {
+            shine.style.left = '-100%';
+          }
+          
+          // 重置圖標
+          const icon = exportBtn.querySelector('span') as HTMLElement;
+          if (icon) {
+            icon.style.transform = 'rotate(0deg)';
+          }
+        }
+      });
+      
+      // 添加點擊效果
+      exportBtn.addEventListener('mousedown', () => {
+        if (!exportBtn.disabled) {
+          exportBtn.style.transform = 'translateY(-1px) scale(0.98)';
+        }
+      });
+      
+      exportBtn.addEventListener('mouseup', () => {
+        if (!exportBtn.disabled) {
+          exportBtn.style.transform = 'translateY(-3px) scale(1.05)';
         }
       });
     }
