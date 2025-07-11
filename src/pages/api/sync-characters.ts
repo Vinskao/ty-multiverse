@@ -9,6 +9,7 @@ export const POST: APIRoute = async ({ request }) => {
     
     // Forward the data to Google Apps Script
     const googleScriptUrl = 'https://script.google.com/macros/s/AKfycbyU77t4OsBghW0r_Yx7wmJyMOexBxAsARVaxFGox4Gz38Ze2cJpCR5wm3j6uIktkfNP/exec';
+
     
     const response = await fetch(googleScriptUrl, {
       method: 'POST',
