@@ -125,7 +125,8 @@ import '../styles/qabot.css';
       saucyMessageCount: 0,
       maxSaucyMessages: 3,
       lastSaucyMessage: '',
-      hasShownInactivityMessage: false
+      hasShownInactivityMessage: false,
+      currentTheme: 'light'
     };
     
     // 定時器
@@ -140,11 +141,89 @@ import '../styles/qabot.css';
     constructor() {
       this.initializeElements();
       this.initializeState();
+      this.initializeTheme();
       this.setupEventListeners();
       this.loadMessages().then(() => {
       this.loadChatHistory();
         this.startTimers();
       });
+    }
+
+    // 初始化主題
+    private initializeTheme() {
+      // 檢測當前主題
+      this.state.currentTheme = this.detectCurrentTheme();
+      
+      // 監聽主題變化
+      this.setupThemeListener();
+    }
+
+    // 檢測當前主題
+    private detectCurrentTheme(): string {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        return savedTheme;
+      }
+      
+      // 檢查系統偏好
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      
+      // 檢查 DOM 中的 theme-dark 類
+      if (document.documentElement.classList.contains('theme-dark')) {
+        return 'dark';
+      }
+      
+      return 'light';
+    }
+
+    // 設置主題監聽器
+    private setupThemeListener() {
+      // 監聽 localStorage 變化
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+          this.updateTheme(e.newValue || 'light');
+        }
+      });
+      
+      // 監聽 DOM 變化（當其他組件改變主題時）
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const target = mutation.target as HTMLElement;
+            if (target === document.documentElement) {
+              const newTheme = target.classList.contains('theme-dark') ? 'dark' : 'light';
+              if (newTheme !== this.state.currentTheme) {
+                this.updateTheme(newTheme);
+              }
+            }
+          }
+        });
+      });
+      
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      // 監聽系統主題變化
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      mediaQuery.addEventListener('change', (e) => {
+        const newTheme = e.matches ? 'dark' : 'light';
+        if (newTheme !== this.state.currentTheme) {
+          this.updateTheme(newTheme);
+        }
+      });
+    }
+
+    // 更新主題
+    private updateTheme(newTheme: string) {
+      this.state.currentTheme = newTheme;
+      console.log('QABot theme updated to:', newTheme);
+      
+      // 這裡可以添加主題相關的邏輯
+      // 例如更新按鈕樣式、重新渲染等
     }
 
     // 初始化 DOM 元素
@@ -532,7 +611,7 @@ import '../styles/qabot.css';
     // 添加錯誤消息
     private addErrorMessage(message: string) {
       this.state.isThinking = false;
-      const messageDiv = this.createMessageStructure('bot', `<p style="color: #8B0000; font-weight: 500;">❌ ${this.escapeHtml(message)}</p>`);
+      const messageDiv = this.createMessageStructure('bot', `<p class="error-message">❌ ${this.escapeHtml(message)}</p>`);
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
     }
