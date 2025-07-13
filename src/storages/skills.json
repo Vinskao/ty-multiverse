@@ -22,12 +22,12 @@
           "name": "Frameworks & Libraries",
           "description": [
             "Developed CRUD APIs using Spring Boot framework with SSO server integration",
-            "Building Knowledge Management QA System with FastAPI and LangChain integration, using Laravel APIs to collect data from frontend, saving to PostgreSQL and transforming to vector database for retrieval"
+            "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval"
           ],
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
             { "name": "Spring Boot 2 3", "level": "shade1" },
-            { "name": "Quarkus", "level": "shade3" },
+            { "name": "Quarkus 3", "level": "shade3" },
             { "name": "Django Rest", "level": "shade4" },
             { "name": "Express.js", "level": "shade4" },
             { "name": "Laravel", "level": "shade3" },

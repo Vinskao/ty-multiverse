@@ -710,6 +710,12 @@ section:nth-child(3) {
   clear: both;
 }
 
+/* Reduce vertical space for name section */
+.name-section {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
+}
+
 .majestic-name {
   font-size: 3.5rem;
   font-weight: 700;
@@ -738,9 +744,99 @@ section:nth-child(3) {
   text-align: center;
 }
 
+/* Adjust line spacing for background text */
 .background-content p {
-  text-align: center;
+  line-height: 1.8 !important;
   margin: 1rem 0;
 }
 
 /* Name Section */
+
+/* Additional styles for inline replacements */
+.mermaid-diagram.margin-top {
+  margin-top: 16px;
+}
+
+/* Style for dynamically generated links in skill descriptions */
+.skill-description a,
+.skill-subdescription a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.skill-description a:hover,
+.skill-subdescription a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Dark theme adjustments for links */
+.theme-dark .skill-description a,
+.theme-dark .skill-subdescription a {
+  color: #4da6ff;
+}
+
+.theme-dark .skill-description a:hover,
+.theme-dark .skill-subdescription a:hover {
+  color: #66b3ff;
+}
+
+/* --- Intro Statement Styles --- */
+.intro-statement {
+  background: rgba(81, 70, 149, 0.05);
+  padding: 1.5rem 2rem;
+  border-left: 4px solid #514695;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 800px;
+  margin: 0 auto 2rem auto;
+  text-align: left;
+  animation: fadeIn 0.8s ease;
+}
+
+.intro-statement p {
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+  color: var(--gray-0);
+  font-size: 1.05rem;
+}
+
+.intro-statement .quote {
+  font-style: italic;
+  color: var(--gray-100);
+}
+
+.intro-link {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-weight: 600;
+  color: #514695;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.intro-link:hover,
+.intro-link:focus {
+  color: #3a2f6b;
+  text-decoration: underline;
+}
+
+/* Background section left align */
+.background-content,
+.background-content p {
+  text-align: left !important;
+}
+
+/* Override name-section alignment within Background */
+.background-content .name-section {
+  text-align: left !important;
+}
+
+.background-content .name-section .email {
+  text-align: left !important;
+}
+
+/* Force left alignment for all descendants of background-content */
+.background-content * {
+  text-align: left !important;
+}

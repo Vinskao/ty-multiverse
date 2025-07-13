@@ -271,7 +271,7 @@ width: 100%;
 max-width: 1800px;
 display: flex;
 justify-content: center;
-margin: 0 0 20px 0;  /* 只保留底部margin */
+margin: 320px 0 20px 0;  /* 向下位移，避免遮住 Galwall */
 z-index: 100;
 overflow-x: auto;
 scroll-behavior: smooth;

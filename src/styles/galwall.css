@@ -1,9 +1,37 @@
+#galwallWrapper {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 550px;
+  /* 手機上滑動順暢 */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;            /* Firefox */
+}
+
+#galwallWrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+#galwallWrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+#galwallWrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+
+#galwallWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
 #containerFront,
 #containerBack {
 position: absolute;
 left: 0;
 display: flex;
-overflow: hidden;
+overflow: visible; /* 讓圖片可以超出自身寬度，實際由 wrapper 控制滾動 */
 height: 550px;
 }
 
@@ -39,6 +67,13 @@ width: 300px;
 height: 550px;
 object-fit: contain;
 display: block;
+/* 降低圖片渲染品質以提升效能 */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: -moz-crisp-edges;
+image-rendering: crisp-edges;
+image-rendering: pixelated;
+/* 強制使用較低的圖片品質 */
+filter: contrast(0.9) brightness(0.95);
 }
 
 @keyframes slideLeft {
@@ -57,4 +92,27 @@ display: block;
 100% {
     transform: translateX(-100%);
 }
+}
+
+/* --------------  動態漂移效果 -------------- */
+@keyframes driftFront {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(-30px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes driftBack {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(-20px); }
+  100% { transform: translateX(0); }
+}
+
+/* 前排圖片漂移較快 */
+.ad-front .ad-image {
+  animation: driftFront 10s ease-in-out infinite alternate;
+}
+
+/* 後排圖片漂移較慢 */
+.ad-back .ad-image {
+  animation: driftBack 20s ease-in-out infinite alternate;
 }

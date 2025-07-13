@@ -26,11 +26,6 @@ import '../styles/levellist.css';
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin-right: 15px;
     ">
-      <span style="
-        display: inline-block;
-        transition: transform 0.3s ease;
-        margin-right: 8px;
-      ">🔄</span>
       <span>同步全部</span>
       <div style="
         position: absolute;
@@ -61,11 +56,6 @@ import '../styles/levellist.css';
       min-width: 140px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     ">
-      <span style="
-        display: inline-block;
-        transition: transform 0.3s ease;
-        margin-right: 8px;
-      ">📊</span>
       <span>匯出表格</span>
       <div style="
         position: absolute;
@@ -77,6 +67,116 @@ import '../styles/levellist.css';
         transition: left 0.5s ease;
       "></div>
     </button>
+  </div>
+  
+  <!-- 戰力統計 -->
+  <div id="power-stats" style="
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  ">
+    <h3 style="
+      margin: 0 0 15px 0;
+      text-align: center;
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    ">陣營戰力統計</h3>
+    <div style="
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 20px;
+    ">
+      <div class="faction-stat" style="
+        text-align: center;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(255, 182, 193, 0.2) 0%, rgba(255, 182, 193, 0.1) 100%);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 182, 193, 0.3);
+        min-width: 150px;
+      ">
+        <div style="
+          font-size: 14px;
+          font-weight: 600;
+          color: #FF69B4;
+          margin-bottom: 5px;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        ">Lily Palais</div>
+        <div id="lily-palais-total" style="
+          font-size: 20px;
+          font-weight: bold;
+          color: #FF1493;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        ">計算中...</div>
+        <div id="lily-palais-count" style="
+          font-size: 12px;
+          color: var(--text-secondary);
+          margin-top: 3px;
+        ">戰士數: 0</div>
+      </div>
+      
+      <div class="faction-stat" style="
+        text-align: center;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(255, 255, 224, 0.2) 0%, rgba(255, 255, 224, 0.1) 100%);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 224, 0.3);
+        min-width: 150px;
+      ">
+        <div style="
+          font-size: 14px;
+          font-weight: 600;
+          color: #FFD700;
+          margin-bottom: 5px;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        ">Libertad</div>
+        <div id="libertad-total" style="
+          font-size: 20px;
+          font-weight: bold;
+          color: #FFA500;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        ">計算中...</div>
+        <div id="libertad-count" style="
+          font-size: 12px;
+          color: var(--text-secondary);
+          margin-top: 3px;
+        ">戰士數: 0</div>
+      </div>
+      
+      <div class="faction-stat" style="
+        text-align: center;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(144, 238, 144, 0.2) 0%, rgba(144, 238, 144, 0.1) 100%);
+        border-radius: 8px;
+        border: 1px solid rgba(144, 238, 144, 0.3);
+        min-width: 150px;
+      ">
+        <div style="
+          font-size: 14px;
+          font-weight: 600;
+          color: #32CD32;
+          margin-bottom: 5px;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        ">Jardin des Dieux</div>
+        <div id="jardin-total" style="
+          font-size: 20px;
+          font-weight: bold;
+          color: #228B22;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        ">計算中...</div>
+        <div id="jardin-count" style="
+          font-size: 12px;
+          color: var(--text-secondary);
+          margin-top: 3px;
+        ">戰士數: 0</div>
+      </div>
+    </div>
   </div>
   
   <div id="power-list"></div>
@@ -171,8 +271,14 @@ import '../styles/levellist.css';
       characterContainer.style.marginLeft = `-${containerWidth/2}px`;
     };
 
-    // 檢查戰鬥圖片
-    checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`).then(hasFightingImage => {
+    // 檢查戰鬥圖片和毀壞圖片
+    Promise.all([
+      checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`),
+      checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`)
+    ]).then(([hasFightingImage, hasRuinedImage]) => {
+      const images = [img];
+      let currentImageIndex = 0;
+      
       if (hasFightingImage) {
         const fightingImg = document.createElement('img');
         fightingImg.style.cssText = img.style.cssText + 'opacity:0;';
@@ -189,12 +295,41 @@ import '../styles/levellist.css';
         };
         
         characterContainer.appendChild(fightingImg);
-
-        let isRegularImage = true;
+        images.push(fightingImg);
+      }
+      
+      if (hasRuinedImage) {
+        const ruinedImg = document.createElement('img');
+        ruinedImg.style.cssText = img.style.cssText + 'opacity:0;';
+        ruinedImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`;
+        ruinedImg.alt = `${character.nameOriginal} Ruined`;
+        
+        // 毀壞圖片加載完成後也設置容器寬度
+        ruinedImg.onload = function() {
+          const imgElement = this as HTMLImageElement;
+          const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+          const containerWidth = 300 * aspectRatio;
+          characterContainer.style.width = `${containerWidth}px`;
+          characterContainer.style.marginLeft = `-${containerWidth/2}px`;
+        };
+        
+        characterContainer.appendChild(ruinedImg);
+        images.push(ruinedImg);
+      }
+      
+      // 如果有多張圖片，開始循環顯示
+      if (images.length > 1) {
         setInterval(() => {
-          img.style.opacity = isRegularImage ? '0' : '1';
-          fightingImg.style.opacity = isRegularImage ? '1' : '0';
-          isRegularImage = !isRegularImage;
+          // 隱藏所有圖片
+          images.forEach(img => {
+            (img as HTMLImageElement).style.opacity = '0';
+          });
+          
+          // 顯示當前圖片
+          (images[currentImageIndex] as HTMLImageElement).style.opacity = '1';
+          
+          // 更新索引
+          currentImageIndex = (currentImageIndex + 1) % images.length;
         }, 2000);
       }
     });
@@ -202,15 +337,19 @@ import '../styles/levellist.css';
     // 添加懸停事件
     img.addEventListener('mouseover', () => {
       (img as HTMLImageElement).style.zIndex = '3';
-      if (img.nextElementSibling?.tagName === 'IMG') {
-        (img.nextElementSibling as HTMLImageElement).style.zIndex = '3';
-      }
+      // 提升所有兄弟圖片元素的 z-index
+      const siblingImages = characterContainer.querySelectorAll('img');
+      siblingImages.forEach(siblingImg => {
+        (siblingImg as HTMLImageElement).style.zIndex = '3';
+      });
     });
     img.addEventListener('mouseout', () => {
       (img as HTMLImageElement).style.zIndex = '2';
-      if (img.nextElementSibling?.tagName === 'IMG') {
-        (img.nextElementSibling as HTMLImageElement).style.zIndex = '2';
-      }
+      // 重置所有兄弟圖片元素的 z-index
+      const siblingImages = characterContainer.querySelectorAll('img');
+      siblingImages.forEach(siblingImg => {
+        (siblingImg as HTMLImageElement).style.zIndex = '2';
+      });
     });
 
     // 創建信息容器
@@ -288,10 +427,101 @@ import '../styles/levellist.css';
     return levelContainer;
   }
 
+  // 根據數值範圍返回顏色（越高者越紅，低於中位數無特殊處理）
+  function getColorByRange(value, min, max) {
+    if (max === min) return 'transparent'; // 如果所有值都相同，返回透明
+    
+    const percentage = (value - min) / (max - min);
+    
+    // 低於中位數（50%）不特殊處理
+    if (percentage <= 0.5) {
+      return 'transparent';
+    }
+    
+    // 高於中位數的部分分成5個區間，從淺紅到深紅
+    const adjustedPercentage = (percentage - 0.5) * 2; // 將0.5-1映射到0-1
+    const range = Math.floor(adjustedPercentage * 5); // 分成5個區間
+    
+    // 顏色漸變：從淺紅到深紅
+    const colors = [
+      '#FFE6E6', // 50-60%  淺粉紅
+      '#FFCCCC', // 60-70%  粉紅
+      '#FFB3B3', // 70-80%  淺紅
+      '#FF8080', // 80-90%  紅
+      '#FF0000'  // 90-100% 最紅
+    ];
+    
+    return colors[Math.min(range, 4)]; // 確保不會超出陣列範圍
+  }
+
+  // 更新戰力統計
+  function updatePowerStats(characters) {
+    const stats = {
+      'Lily Palais': { total: 0, count: 0 },
+      'Libertad': { total: 0, count: 0 },
+      'Jardin des Dieux': { total: 0, count: 0 }
+    };
+    
+    characters.forEach(character => {
+      const faction = character.faction || '';
+      const totalPower = parseInt(character.totalPower) || 0;
+      
+      if (faction.includes('Lily Palais')) {
+        stats['Lily Palais'].total += totalPower;
+        stats['Lily Palais'].count++;
+      } else if (faction.includes('Libertad')) {
+        stats['Libertad'].total += totalPower;
+        stats['Libertad'].count++;
+      } else if (faction.includes('Jardin des Dieux')) {
+        stats['Jardin des Dieux'].total += totalPower;
+        stats['Jardin des Dieux'].count++;
+      }
+    });
+    
+    // 更新顯示
+    const lilyTotal = document.getElementById('lily-palais-total');
+    const lilyCount = document.getElementById('lily-palais-count');
+    const libertadTotal = document.getElementById('libertad-total');
+    const libertadCount = document.getElementById('libertad-count');
+    const jardinTotal = document.getElementById('jardin-total');
+    const jardinCount = document.getElementById('jardin-count');
+    
+    if (lilyTotal) lilyTotal.textContent = stats['Lily Palais'].total.toLocaleString();
+    if (lilyCount) lilyCount.textContent = `角色數: ${stats['Lily Palais'].count}`;
+    if (libertadTotal) libertadTotal.textContent = stats['Libertad'].total.toLocaleString();
+    if (libertadCount) libertadCount.textContent = `角色數: ${stats['Libertad'].count}`;
+    if (jardinTotal) jardinTotal.textContent = stats['Jardin des Dieux'].total.toLocaleString();
+    if (jardinCount) jardinCount.textContent = `角色數: ${stats['Jardin des Dieux'].count}`;
+    
+    console.log('📊 戰力統計更新:', stats);
+  }
+
+    // 全局變量來存儲角色數據
+  let characterPowerMap = new Map();
+  let characterFactionMap = new Map();
+
   // 創建戰力列表
   function createPowerList(characters) {
     const powerListContainer = document.getElementById('power-list');
     if (!powerListContainer) return;
+    
+    // 更新戰力統計
+    updatePowerStats(characters);
+    
+    // 計算各欄位的最大值和最小值
+    const physicPowers = characters.map(c => parseInt(c.physicPower) || 0);
+    const magicPowers = characters.map(c => parseInt(c.magicPower) || 0);
+    const utilityPowers = characters.map(c => parseInt(c.originalUtilityPower) || 0);
+    const weaponBonuses = characters.map(c => parseInt(c.weaponBonus) || 0);
+    
+    const physicMin = Math.min(...physicPowers);
+    const physicMax = Math.max(...physicPowers);
+    const magicMin = Math.min(...magicPowers);
+    const magicMax = Math.max(...magicPowers);
+    const utilityMin = Math.min(...utilityPowers);
+    const utilityMax = Math.max(...utilityPowers);
+    const weaponMin = Math.min(...weaponBonuses);
+    const weaponMax = Math.max(...weaponBonuses);
     
     // 創建一個可滾動的容器
     const scrollContainer = document.createElement('div');
@@ -305,8 +535,8 @@ import '../styles/levellist.css';
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
-    table.style.minWidth = '800px'; // 確保表格有最小寬度
-    table.style.tableLayout = 'fixed'; // 使用固定表格布局
+    // 取消固定表格寬度與佈局，讓欄位寬度可依內容自適應
+    // table.style.tableLayout 預設為 'auto'
     table.style.fontSize = '12px'; // 字體小一點
     
     // 創建表頭
@@ -340,11 +570,21 @@ import '../styles/levellist.css';
     // 按總戰力排序
     const sortedCharacters = [...characters].sort((a, b) => b.totalPower - a.totalPower);
     
-    // 創建一個 Map 來存儲每個角色的當前戰力值
-    const characterPowerMap = new Map();
+    // 重置全局 Map
+    characterPowerMap = new Map();
+    characterFactionMap = new Map();
     
     sortedCharacters.forEach((character, index) => {
       const row = document.createElement('tr');
+      
+      // 根據 faction 設置行背景色
+      const faction = character.faction || '';
+      if (faction.includes('Lily Palais')) {
+        row.style.backgroundColor = 'rgba(255, 182, 193, 0.2)'; // 淡粉紅 10%透明度
+      } else if (faction.includes('Libertad')) {
+      } else if (faction.includes('Jardin des Dieux')) {
+        row.style.backgroundColor = 'rgba(144, 238, 144, 0.2)'; // 淡綠 10%透明度
+      }
       
       // 排行
       const rankCell = document.createElement('td');
@@ -395,11 +635,27 @@ import '../styles/levellist.css';
       const physicCell = document.createElement('td');
       const physicInput = document.createElement('input');
       physicInput.type = 'number';
+      physicInput.style.webkitAppearance = 'none';
+      physicInput.style.appearance = 'textfield';
+      physicInput.style.setProperty('--webkit-inner-spin-button', 'none');
+      physicInput.style.setProperty('--webkit-outer-spin-button', 'none');
       physicInput.value = character.physicPower || '0';
       physicInput.style.minWidth = '50px'; // 最小寬度
       physicInput.style.width = 'auto'; // 自動調整寬度
       physicInput.style.padding = '2px'; // 上下間距密集一點
       physicInput.dataset.originalValue = character.physicPower || '0';
+      // 根據數值設定字體顏色
+      const physicValue = parseInt(character.physicPower) || 0;
+      const physicColor = getColorByRange(physicValue, physicMin, physicMax);
+      physicCell.style.backgroundColor = 'transparent';
+      // 設定字體顏色和粗細
+      if (physicColor !== 'transparent') {
+        physicInput.style.color = physicColor;
+        physicInput.style.fontWeight = 'bold';
+      } else {
+        physicInput.style.color = 'var(--text-primary)';
+        physicInput.style.fontWeight = 'normal';
+      }
       // 添加輸入事件來調整寬度
       physicInput.addEventListener('input', function() {
         this.style.width = `${Math.max(50, this.value.length * 10)}px`;
@@ -415,11 +671,27 @@ import '../styles/levellist.css';
       const magicCell = document.createElement('td');
       const magicInput = document.createElement('input');
       magicInput.type = 'number';
+      magicInput.style.webkitAppearance = 'none';
+      magicInput.style.appearance = 'textfield';
+      magicInput.style.setProperty('--webkit-inner-spin-button', 'none');
+      magicInput.style.setProperty('--webkit-outer-spin-button', 'none');
       magicInput.value = character.magicPower || '0';
       magicInput.style.minWidth = '50px'; // 最小寬度
       magicInput.style.width = 'auto'; // 自動調整寬度
       magicInput.style.padding = '2px'; // 上下間距密集一點
       magicInput.dataset.originalValue = character.magicPower || '0';
+      // 根據數值設定字體顏色
+      const magicValue = parseInt(character.magicPower) || 0;
+      const magicColor = getColorByRange(magicValue, magicMin, magicMax);
+      magicCell.style.backgroundColor = 'transparent';
+      // 設定字體顏色和粗細
+      if (magicColor !== 'transparent') {
+        magicInput.style.color = magicColor;
+        magicInput.style.fontWeight = 'bold';
+      } else {
+        magicInput.style.color = 'var(--text-primary)';
+        magicInput.style.fontWeight = 'normal';
+      }
       // 添加輸入事件來調整寬度
       magicInput.addEventListener('input', function() {
         this.style.width = `${Math.max(50, this.value.length * 10)}px`;
@@ -435,11 +707,27 @@ import '../styles/levellist.css';
       const utilityCell = document.createElement('td');
       const utilityInput = document.createElement('input');
       utilityInput.type = 'number';
+      utilityInput.style.webkitAppearance = 'none';
+      utilityInput.style.appearance = 'textfield';
+      utilityInput.style.setProperty('--webkit-inner-spin-button', 'none');
+      utilityInput.style.setProperty('--webkit-outer-spin-button', 'none');
       utilityInput.value = character.originalUtilityPower || '0';
       utilityInput.style.minWidth = '50px'; // 最小寬度
       utilityInput.style.width = 'auto'; // 自動調整寬度
       utilityInput.style.padding = '2px'; // 上下間距密集一點
       utilityInput.dataset.originalValue = character.originalUtilityPower || '0';
+      // 根據數值設定字體顏色
+      const utilityValue = parseInt(character.originalUtilityPower) || 0;
+      const utilityColor = getColorByRange(utilityValue, utilityMin, utilityMax);
+      utilityCell.style.backgroundColor = 'transparent';
+      // 設定字體顏色和粗細
+      if (utilityColor !== 'transparent') {
+        utilityInput.style.color = utilityColor;
+        utilityInput.style.fontWeight = 'bold';
+      } else {
+        utilityInput.style.color = 'var(--text-primary)';
+        utilityInput.style.fontWeight = 'normal';
+      }
       // 移除 disabled 屬性，允許編輯
       // 添加輸入事件來調整寬度
       utilityInput.addEventListener('input', function() {
@@ -458,6 +746,18 @@ import '../styles/levellist.css';
       totalUtilityCell.textContent = character.hasBonus ? 
         `${character.weaponBonus || '0'}` : 
         '0';
+      // 根據數值設定字體顏色
+      const weaponValue = parseInt(character.weaponBonus) || 0;
+      const weaponColor = getColorByRange(weaponValue, weaponMin, weaponMax);
+      totalUtilityCell.style.backgroundColor = 'transparent';
+      // 設定字體顏色和粗細
+      if (weaponColor !== 'transparent') {
+        totalUtilityCell.style.color = weaponColor;
+        totalUtilityCell.style.fontWeight = 'bold';
+      } else {
+        totalUtilityCell.style.color = 'var(--text-primary)';
+        totalUtilityCell.style.fontWeight = 'normal';
+      }
       totalUtilityCell.style.padding = '4px'; // 上下間距密集一點
       totalUtilityCell.style.border = '1px solid #ddd';
       totalUtilityCell.style.whiteSpace = 'nowrap'; // 防止文字換行
@@ -573,6 +873,9 @@ import '../styles/levellist.css';
         attributes: character.attributes || '',
         weaponData: character.weaponData || null
       });
+      
+      // 存儲 faction 信息
+      characterFactionMap.set(character.name, character.faction || '');
       
       // helper function to fetch latest total power and update UI/mapping for this row
       const fetchAndApplyTotalPower = async (shouldReorder = false) => {
@@ -737,6 +1040,21 @@ import '../styles/levellist.css';
           // 立即向後端查詢最新總戰力並更新畫面
           await fetchAndApplyTotalPower(true);
           
+          // 更新戰力統計
+          const tbody = document.querySelector('#power-list table tbody');
+          if (tbody) {
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const characters = rows.map(row => {
+              const nameCell = row.querySelector('td:nth-child(2)');
+              const totalPowerCell = row.querySelector('td:nth-child(7)');
+              const name = nameCell ? nameCell.textContent : '';
+              const totalPower = totalPowerCell ? parseInt(totalPowerCell.textContent || '0') : 0;
+              const faction = characterFactionMap.get(name) || '';
+              return { name, totalPower, faction };
+            });
+            updatePowerStats(characters);
+          }
+          
         } catch (error) {
           console.error('更新角色能力時出錯:', error);
           if (typeof (window as any).Swal !== 'undefined') {
@@ -853,6 +1171,24 @@ import '../styles/levellist.css';
       // 添加行到表格
       tbody.appendChild(row);
     });
+    
+    // 更新戰力統計
+    const characters = Array.from(rows).map(row => {
+      const nameCell = row.querySelector('td:nth-child(2)');
+      const totalPowerCell = row.querySelector('td:nth-child(7)');
+      const name = nameCell ? nameCell.textContent : '';
+      const totalPower = totalPowerCell ? parseInt(totalPowerCell.textContent || '0') : 0;
+      
+      // 從 characterFactionMap 獲取 faction 信息
+      const faction = characterFactionMap.get(name) || '';
+      return {
+        name,
+        totalPower,
+        faction
+      };
+    });
+    
+    updatePowerStats(characters);
   }
 
   // 同步全部功能
@@ -863,11 +1199,6 @@ import '../styles/levellist.css';
     // 禁用按鈕並顯示載入狀態
     syncBtn.disabled = true;
     syncBtn.innerHTML = `
-      <span style="
-        display: inline-block;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-      ">🔄</span>
       <span>同步中...</span>
       <div style="
         position: absolute;
@@ -924,6 +1255,11 @@ import '../styles/levellist.css';
       // 顯示成功訊息
       showAlert(`同步成功！已同步 ${syncResult.characterCount} 個角色`, 'success', 2000);
       
+      // 重新載入頁面以更新戰力統計
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
     } catch (error) {
       console.error('❌ 同步失敗:', error);
       showAlert(`同步失敗: ${error.message}`, 'error', 3000);
@@ -931,11 +1267,6 @@ import '../styles/levellist.css';
       // 恢復按鈕狀態
       syncBtn.disabled = false;
       syncBtn.innerHTML = `
-        <span style="
-          display: inline-block;
-          transition: transform 0.3s ease;
-          margin-right: 8px;
-        ">🔄</span>
         <span>同步全部</span>
         <div style="
           position: absolute;
@@ -961,11 +1292,6 @@ import '../styles/levellist.css';
     // 禁用按鈕並顯示載入狀態
     exportBtn.disabled = true;
     exportBtn.innerHTML = `
-      <span style="
-        display: inline-block;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-      ">📊</span>
       <span>匯出中...</span>
       <div style="
         position: absolute;
@@ -1094,11 +1420,6 @@ import '../styles/levellist.css';
       // 恢復按鈕狀態
       exportBtn.disabled = false;
       exportBtn.innerHTML = `
-        <span style="
-          display: inline-block;
-          transition: transform 0.3s ease;
-          margin-right: 8px;
-        ">📊</span>
         <span>匯出表格</span>
         <div style="
           position: absolute;
@@ -1139,7 +1460,7 @@ import '../styles/levellist.css';
           // 旋轉圖標
           const icon = syncBtn.querySelector('span') as HTMLElement;
           if (icon) {
-            icon.style.transform = 'rotate(180deg)';
+            // icon.style.transform = 'rotate(180deg)';
           }
         }
       });
@@ -1159,7 +1480,7 @@ import '../styles/levellist.css';
           // 重置圖標
           const icon = syncBtn.querySelector('span') as HTMLElement;
           if (icon) {
-            icon.style.transform = 'rotate(0deg)';
+            // icon.style.transform = 'rotate(0deg)';
           }
         }
       });
@@ -1199,7 +1520,7 @@ import '../styles/levellist.css';
           // 旋轉圖標
           const icon = exportBtn.querySelector('span') as HTMLElement;
           if (icon) {
-            icon.style.transform = 'rotate(180deg)';
+            // icon.style.transform = 'rotate(180deg)';
           }
         }
       });
@@ -1219,7 +1540,7 @@ import '../styles/levellist.css';
           // 重置圖標
           const icon = exportBtn.querySelector('span') as HTMLElement;
           if (icon) {
-            icon.style.transform = 'rotate(0deg)';
+            // icon.style.transform = 'rotate(0deg)';
           }
         }
       });
@@ -1270,6 +1591,17 @@ import '../styles/levellist.css';
         /* 正在編輯時的行高亮 */
         .editing {
           background-color: rgba(255, 223, 0, 0.2);
+        }
+
+        /* 隱藏數字輸入框的上下箭頭 */
+        #power-list input[type="number"]::-webkit-outer-spin-button,
+        #power-list input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        #power-list input[type="number"] {
+          -moz-appearance: textfield;
         }
       `;
       document.head.appendChild(style);
