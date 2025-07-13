@@ -6,6 +6,19 @@ import Fight from  "../components/Fight.astro";
 import Group from  "../components/Group.astro";
 import Levellist from "../components/Levellist.astro";
 import "../styles/palais.css";
+
+// 獲取 URL 參數
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+// 檢查登入狀態
+const isLoggedIn = !!username && !!token;
+
+// 如果未登入，重定向到登入頁面
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
 ---
 
 <!DOCTYPE html>

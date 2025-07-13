@@ -140,7 +140,7 @@
 
 #power-list table {
   width: 100%;
-  min-width: 800px; /* 確保表格有最小寬度 */
+  /* 移除最小寬度限制，讓欄位寬度可依內容縮放 */
   border-collapse: collapse;
   margin-bottom: 20px;
 }

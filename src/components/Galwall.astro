@@ -1,8 +1,10 @@
 ---
 import '../styles/galwall.css';
 ---
-<div id="containerFront"></div>
-<div id="containerBack"></div>
+<div id="galwallWrapper">
+  <div id="containerFront"></div>
+  <div id="containerBack"></div>
+</div>
 
 <script>
   let frontList: string[] = [];
@@ -102,8 +104,55 @@ import '../styles/galwall.css';
       adImage.style.height = "300px";
       adImage.style.width = "auto";
       adImage.style.objectFit = "contain";
+      // 降低圖片渲染品質以提升效能
+      adImage.style.imageRendering = "pixelated";
+      adImage.style.imageRendering = "-webkit-optimize-contrast";
+      adImage.style.imageRendering = "crisp-edges";
+      
+      // 圖片載入完成後進行品質優化
+      adImage.onload = function() {
+        optimizeImageQuality(adImage);
+      };
+      
       adDiv.appendChild(adImage);
       return adDiv;
+    }
+
+    // 圖片品質優化函數
+    function optimizeImageQuality(imgElement) {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 檢查 canvas context 是否成功獲取
+        if (!ctx) {
+          console.warn('無法獲取 canvas context');
+          return;
+        }
+        
+        // 設定較小的畫布尺寸來降低品質
+        const targetWidth = 150; // 降低到一半尺寸
+        const targetHeight = 275; // 降低到一半尺寸
+        
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // 設定較低的渲染品質
+        ctx.imageSmoothingEnabled = false;
+        ctx.imageSmoothingQuality = 'low';
+        
+        // 繪製圖片到畫布
+        ctx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
+        
+        // 將畫布內容轉換為較低品質的圖片
+        const optimizedDataURL = canvas.toDataURL('image/jpeg', 0.6); // 60% JPEG 品質
+        
+        // 更新圖片來源
+        imgElement.src = optimizedDataURL;
+      } catch (error) {
+        console.warn('圖片品質優化失敗:', error);
+        // 如果優化失敗，保持原圖
+      }
     }
 
     function loadAds(imageList, container, isFront) {
@@ -116,24 +165,56 @@ import '../styles/galwall.css';
       }
     }
 
-    function animateContainer(container, imageList, isFront) {
-      const duration = isFront ? 200 : 600;
-      
-      function startAnimation() {
-        container.style.transform = 'translateX(0)';
-        container.style.animation = `${isFront ? 'slideLeft' : 'slideLeftSlow'} ${duration}s linear infinite`;
-      }
-      
-      startAnimation();
+    // 每 10 秒隨機重新排列圖片，並用 FLIP 動畫讓所有圖片平滑滑到新位置
+    function animateContainer(container) {
+      const SHUFFLE_INTERVAL = 40000; // 40 秒
 
-      // 監聽動畫結束事件，重新排列圖片
-      container.addEventListener('animationend', () => {
-        // 隨機打亂圖片順序
-        const shuffledImages = [...imageList].sort(() => Math.random() - 0.5);
-        loadAds(shuffledImages, container, isFront);
-        container.style.width = (300 * shuffledImages.length) + "px";
-        startAnimation();
-      });
+      const doShuffle = () => {
+        const items = Array.from(container.children) as HTMLElement[];
+        if (items.length <= 1) return;
+
+        // 1) 記錄初始位置（First）
+        const firstPositions = new Map<HTMLElement, number>();
+        items.forEach(el => {
+          firstPositions.set(el, el.getBoundingClientRect().left);
+        });
+
+        // 2) 打亂順序（DOM 重新排序）
+        const shuffled = [...items].sort(() => Math.random() - 0.5);
+        shuffled.forEach(el => container.appendChild(el));
+
+        // 3) 重新計算位置（Last）並設置 Invert → Play
+        shuffled.forEach(el => {
+          const lastLeft = el.getBoundingClientRect().left;
+          const firstLeft = firstPositions.get(el) || lastLeft;
+          const deltaX = firstLeft - lastLeft;
+
+          // 應用位移抵消當前位置 (Invert)
+          el.style.transform = `translateX(${deltaX}px)`;
+          el.style.transition = 'none';
+        });
+
+        // 4) 於下一禎啟動 transition，播放到新位置
+        requestAnimationFrame(() => {
+          shuffled.forEach(el => {
+            el.style.transition = 'transform 800ms ease';
+            el.style.transform = 'translateX(0)';
+
+            // 清理行內樣式
+            el.addEventListener(
+              'transitionend',
+              () => {
+                el.style.transition = '';
+                el.style.transform = '';
+              },
+              { once: true }
+            );
+          });
+        });
+      };
+
+      // 初始啟動
+      setInterval(doShuffle, SHUFFLE_INTERVAL);
     }
 
     loadAds(frontList, containerFront, true);
@@ -148,11 +229,11 @@ import '../styles/galwall.css';
     }
 
     if (containerFront) {
-      animateContainer(containerFront, frontList, true);
+      animateContainer(containerFront);
     }
     
     if (containerBack) {
-      animateContainer(containerBack, backList, false);
+      animateContainer(containerBack);
     }
   });
 </script> 

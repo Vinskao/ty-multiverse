@@ -1,0 +1,129 @@
+---
+---
+
+<div class="pdf-export-section">
+  <button id="preview-pdf-btn" class="export-btn">Preview Resume</button>
+</div>
+
+<script type="module">
+  const btn = document.getElementById('preview-pdf-btn');
+
+  btn?.addEventListener('click', () => {
+    btn.disabled = true;
+
+    try {
+      const aboutSection = document.querySelector('.about');
+      if (!aboutSection) throw new Error('About section not found');
+
+      // Open a new window
+      const printWin = window.open('', '_blank');
+      if (!printWin) throw new Error('Failed to open preview window');
+
+      // Collect stylesheets & inline styles
+      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map(el => el.outerHTML)
+        .join('\n');
+
+      // Remove preview button & non-essential hero photo from clone
+      const clone = aboutSection.cloneNode(true);
+      clone.querySelector('#preview-pdf-btn')?.remove();
+      clone.querySelectorAll('.work-photo').forEach(el => el.remove());
+      clone.querySelectorAll('.title, .tagline').forEach(el => el.remove());
+
+      // Mark each major section (except the first) for page break
+      const allSecs = Array.from(clone.querySelectorAll('section'));
+      allSecs.slice(1).forEach(sec => sec.classList.add('printable-page-break'));
+
+      // Build HTML for the new window
+      const docHTML = `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>TY Team - All Rights Reserved</title>
+            ${styles}
+            <style>
+              /* Print adjustments */
+              @media print {
+                body { margin: 0; }
+                .about { overflow: visible !important; max-width: 100% !important; display: block !important; }
+                html,body { overflow: visible !important; height: auto !important; }
+                * { overflow: visible !important; }
+                .printable-page-break { 
+                  break-before: page; page-break-before: always; 
+                  break-inside: avoid; page-break-inside: avoid;
+                }
+                .printable-page-break:last-child { break-before: auto; page-break-before: auto; }
+              }
+            </style>
+            <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"><\/script>
+          </head>
+          <body>${clone.outerHTML}
+            <script>
+              window.addEventListener('load', () => {
+                if (window.mermaid) {
+                  window.mermaid.initialize({ startOnLoad: true, theme: 'default' });
+                }
+                // 若需要列印，可手動在瀏覽器選單中列印
+              });
+            <\/script>
+          </body>
+        </html>`;
+
+      printWin.document.open();
+      printWin.document.write(docHTML);
+      printWin.document.close();
+
+      // Replace history state so header/footer URL isn't about:blank
+      try {
+        const nicePath = '/tymultiverse/preview';
+        printWin.history.replaceState(null, '', nicePath);
+      } catch (e) { /* ignore cross-origin issues */ }
+
+      // Re-enable button after preview window is ready
+      btn.disabled = false;
+
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .pdf-export-section {
+    display: flex;
+    justify-content: center;
+    margin: 3rem 0;
+    padding: 2rem;
+  }
+
+  .export-btn {
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 118, 234, 0.35);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+  }
+
+  .export-btn:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 8px 20px rgba(102, 118, 234, 0.45);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  }
+
+  .export-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .export-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+</style> 
