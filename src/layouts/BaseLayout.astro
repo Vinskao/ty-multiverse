@@ -47,7 +47,14 @@ const { title, description } = Astro.props;
 					const cleanPath   = urlObj.pathname + urlObj.search;
 					const isLoginPage = currentPath.startsWith('/login');
 					// 1) 如果在首頁且有暫存的最後頁面且不是帶 token/username 的跳轉，就自動導向
-					if (!isLoginPage && (currentPath === '/' || currentPath === '/tymultiverse' || currentPath === '/tymultiverse/')) {
+					//    但僅在 referrer 同源的情況下才導向，避免使用者直接輸入網址或從外部連結進站時被誤導
+					const sameOriginReferrer = document.referrer && new URL(document.referrer).origin === window.location.origin;
+
+					if (
+					  !isLoginPage &&
+					  sameOriginReferrer &&
+					  (currentPath === '/' || currentPath === '/tymultiverse' || currentPath === '/tymultiverse/')
+					) {
 						const lastPath = localStorage.getItem(STORAGE_KEY);
 						if (lastPath && lastPath !== currentPath) {
 							console.log('🔀 重新導向到最後訪問頁面:', lastPath);
