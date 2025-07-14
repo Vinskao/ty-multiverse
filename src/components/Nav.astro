@@ -220,6 +220,22 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
   }
   customElements.define("menu-button", MenuButton);
 
+  // 移除 lastVisitedPath 以避免回首頁後再次跳轉
+  (() => {
+    try {
+      const STORAGE_KEY = 'lastVisitedPath';
+      // 找出指向首頁的連結 (含子目錄 /tymultiverse 和根路徑 /)
+      const selector = 'a[href="/tymultiverse"], a[href="/tymultiverse/"], a[href="/"]';
+      document.querySelectorAll(selector).forEach((link) => {
+        link.addEventListener('click', () => {
+          localStorage.removeItem(STORAGE_KEY);
+        });
+      });
+    } catch (e) {
+      console.warn('初始化 Home 連結 click 監聽失敗', e);
+    }
+  })();
+
   // 獲取 URL 參數
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('username');
