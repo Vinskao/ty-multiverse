@@ -518,12 +518,12 @@ import '../styles/qabot.css';
       formattedAnswer = formattedAnswer.replace(/圖片連結：\s*\n((?:- [^\n]+\n?)+)/gi, (match, imageList) => {
         const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
         return `<div class="image-container-wrapper">${imageUrls.map(url => 
-          `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" /></div>`
+          `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>`
         ).join('')}</div>`;
       });
       
       formattedAnswer = formattedAnswer.replace(/圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi, 
-        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onerror="this.style.display=\'none\'" /></div>');
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onerror="this.style.display=\'none\'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>');
       
       // 處理換行
       formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
