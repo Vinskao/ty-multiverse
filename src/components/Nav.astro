@@ -81,7 +81,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 
 <nav>
   <div class="menu-header">
-    <a href="/tymultiverse" class="site-title">
+    <a href="/tymultiverse" class="site-title" onclick="localStorage.removeItem('lastVisitedPath');">
       <Icon
         icon="terminal-window"
         color="var(--accent-regular)"
