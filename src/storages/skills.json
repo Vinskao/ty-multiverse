@@ -276,9 +276,9 @@
         "Implemented CDI to inject entity manager to DAO layer"
       ],
       "skills": [
-        { "name": "Keycloak 18 26", "level": "shade2" },
-        { "name": "Keycloak SPI", "level": "shade4" },
-        { "name": "RedHat SSO 7", "level": "shade3" },
+        { "name": "Keycloak 18 26", "level": "shade1" },
+        { "name": "Keycloak SPI", "level": "shade2" },
+        { "name": "RedHat SSO 7", "level": "shade1" },
         { "name": "Authorization Code Flow", "level": "shade2" },
         { "name": "JWT", "level": "shade2", "specialClass": "jwt" },
         { "name": "Spring Security", "level": "shade3", "specialClass": "spring-security" },
@@ -297,7 +297,11 @@
           "description": [],
           "skills": [
             { "name": "LangChain", "level": "shade4" },
-            { "name": "OpenAI API", "level": "shade4" }
+            { "name": "OpenAI API", "level": "shade4" },
+            { "name": "ChatOpenAI", "level": "shade5" },
+            { "name": "LLMChain", "level": "shade5" },
+            { "name": "PromptTemplate", "level": "shade5" },
+            { "name": "LangChain RAG", "level": "shade5" }
           ]
         }
       ]
