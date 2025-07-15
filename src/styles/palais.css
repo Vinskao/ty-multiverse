@@ -91,4 +91,28 @@
   align-items: center;
   padding-inline-start: var(--gap-m);
   z-index: 999;
+}
+
+/* Navigation buttons for individual modules */
+.module-buttons {
+  display: flex;
+  gap: var(--gap-m);
+  justify-content: center;
+  margin-block-end: var(--gap-l);
+}
+
+.module-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.module-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 } 

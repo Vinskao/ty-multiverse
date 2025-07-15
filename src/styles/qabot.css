@@ -776,31 +776,34 @@
   border-top-color: #555;
 }
 
+/* 更精簡、半透明的「載入更多」按鈕 */
 .load-more-button {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #8B4513;
-  border: 2px solid #DAA520;
-  padding: 8px 16px;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: inherit;
+  padding: 4px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(218, 165, 32, 0.3);
+  font-size: 0.7rem;
   font-weight: 500;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+  backdrop-filter: blur(4px);
 }
 
 .load-more-button:hover {
-  background: linear-gradient(135deg, #FFA500, #FFD700);
+  background: rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(218, 165, 32, 0.4);
 }
 
 :root.theme-dark .load-more-button {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0c48c;
 }
 
 :root.theme-dark .load-more-button:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .chat-input-container {
