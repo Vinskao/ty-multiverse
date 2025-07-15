@@ -61,7 +61,7 @@ import '../styles/qabot.css';
               <button class="suggestion-btn" data-topic="OOP及DI框架">🏗️ OOP及DI框架</button>
               <button class="suggestion-btn" data-topic="部署實踐">🚀 部署實踐</button>
               <button class="suggestion-btn" data-topic="網路問題">🌐 網路問題</button>
-              <button class="suggestion-btn" data-topic="了解真夜">想多了解妳</button>
+              <button class="suggestion-btn" data-topic="了解妳">想多了解妳</button>
             </div>
           </div>
         </div>
@@ -109,7 +109,7 @@ import '../styles/qabot.css';
 <script>
   // 將訊息配置直接打包，避免正式環境 404
   // @ts-ignore
-  import mayaMessages from '../storages/mayaMessages.json';
+  import messages from '../storages/messages.json';
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -126,7 +126,11 @@ import '../styles/qabot.css';
       maxSaucyMessages: 3,
       lastSaucyMessage: '',
       hasShownInactivityMessage: false,
-      currentTheme: 'light'
+      currentTheme: 'light',
+      earliestTimestamp: null as number | null,
+      botName: 'Maya',
+      availableBots: [] as string[],
+      currentBotIndex: 0
     };
     
     // 定時器
@@ -143,6 +147,8 @@ import '../styles/qabot.css';
       this.initializeState();
       this.initializeTheme();
       this.setupEventListeners();
+      this.setupAvatarSelector(); // 新增頭貼選擇器
+      this.fetchBotNames();       // 從 API 取得可用 bot 名稱
       this.loadMessages().then(() => {
       this.loadChatHistory();
         this.startTimers();
@@ -237,6 +243,9 @@ import '../styles/qabot.css';
       elementIds.forEach(id => {
         this.elements[id] = document.getElementById(id) as HTMLElement;
       });
+
+      // 另外取得頭貼元素
+      this.elements.headerAvatar = document.querySelector('.header-avatar') as HTMLElement;
     }
 
     // 初始化狀態
@@ -250,7 +259,137 @@ import '../styles/qabot.css';
     // 載入消息配置
     private async loadMessages() {
       // 不再透過 fetch，直接使用打包進來的 JSON
-      this.messages = mayaMessages;
+      this.messages = messages;
+      // 移除沒有對應句庫的 bot
+      this.pruneAvailableBots();
+    }
+
+    // 檢查指定角色是否有有效的 welcome 句
+    private hasValidMessages(name: string): boolean {
+      const zh = this.messages?.chinese?.[name];
+      const en = this.messages?.english?.[name];
+      return (zh?.welcome?.length > 0) || (en?.welcome?.length > 0);
+    }
+
+    private pruneAvailableBots() {
+      if (!Array.isArray(this.state.availableBots)) return;
+      this.state.availableBots = this.state.availableBots.filter(n => this.hasValidMessages(n));
+      // 確保至少 Maya 存在
+      if (!this.state.availableBots.includes('Maya') && this.hasValidMessages('Maya')) {
+        this.state.availableBots.unshift('Maya');
+      }
+      // 如果當前 bot 沒有句庫 → 換成清單第一個
+      if (!this.hasValidMessages(this.state.botName) && this.state.availableBots.length) {
+        this.state.botName = this.state.availableBots[0];
+        this.state.currentBotIndex = 0;
+        this.updateAvatarAndName();
+      }
+    }
+ 
+    // 取得所有可選 bot 名稱
+    private async fetchBotNames() {
+      try {
+        const apiBase = import.meta.env.PUBLIC_TYMB_URL || '/tymb';
+        const resp = await fetch(`${apiBase}/people/names`, {
+          method: 'GET',
+          credentials: 'include'
+        });
+        if (resp.ok) {
+          const names = await resp.json();
+          if (Array.isArray(names)) {
+            // 確保 Maya 在列表內
+            if (!names.includes('Maya')) names.unshift('Maya');
+            this.state.availableBots = names;
+            // 初始化後先過濾無句庫的
+            if (this.messages) this.pruneAvailableBots();
+            this.state.currentBotIndex = names.indexOf('Maya');
+          }
+        }
+      } catch (err) {
+        console.warn('無法取得 bot 名稱列表', err);
+      }
+      this.updateAvatarAndName();
+    }
+
+    // 依目前 botName 更新 UI
+    private updateAvatarAndName() {
+      const avatarUrl = this.getAvatarUrl(this.state.botName);
+      const avatarEl = this.elements.headerAvatar as HTMLImageElement;
+      if (avatarEl) {
+        avatarEl.src = avatarUrl;
+        avatarEl.alt = this.state.botName;
+      }
+      const headerName = avatarEl?.parentElement?.querySelector('.header-text h3') as HTMLElement;
+      if (headerName) headerName.textContent = this.state.botName;
+    }
+
+    // 建立頭貼選擇 UI 與事件
+    private setupAvatarSelector() {
+      const avatarEl = this.elements.headerAvatar as HTMLImageElement;
+      if (!avatarEl) return;
+
+      // 建立左右按鈕
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'avatar-nav avatar-prev';
+      prevBtn.textContent = '◀';
+      prevBtn.style.display = 'none';
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'avatar-nav avatar-next';
+      nextBtn.textContent = '▶';
+      nextBtn.style.display = 'none';
+
+      avatarEl.parentElement?.appendChild(prevBtn);
+      avatarEl.parentElement?.appendChild(nextBtn);
+
+      // 切換顯示 / 隱藏
+      avatarEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const show = prevBtn.style.display === 'none';
+        prevBtn.style.display = show ? 'inline-block' : 'none';
+        nextBtn.style.display = show ? 'inline-block' : 'none';
+      });
+
+      prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.changeBot(-1);
+      });
+      nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.changeBot(1);
+      });
+
+      // 存到 elements 方便以後取用
+      this.elements.avatarPrev = prevBtn as HTMLElement;
+      this.elements.avatarNext = nextBtn as HTMLElement;
+    }
+
+    // 切換 bot
+    private changeBot(delta: number) {
+      const list = this.state.availableBots;
+      if (!list.length) return;
+
+      let attempts = 0;
+      do {
+        this.state.currentBotIndex = (this.state.currentBotIndex + delta + list.length) % list.length;
+        this.state.botName = list[this.state.currentBotIndex];
+        attempts++;
+      } while (!this.hasValidMessages(this.state.botName) && attempts <= list.length);
+
+      if (!this.hasValidMessages(this.state.botName)) return; // 沒有有效 bot
+      this.updateAvatarAndName();
+      // 重新開始聊天對話
+      this.reinitializeChat();
+      // 隱藏切換按鈕
+      if (this.elements.avatarPrev && this.elements.avatarNext) {
+        this.elements.avatarPrev.style.display = 'none';
+        this.elements.avatarNext.style.display = 'none';
+      }
+    }
+
+    // 取得頭貼 URL
+    private getAvatarUrl(name: string): string {
+      return `https://peoplesystem.tatdvsonorth.com/images/people/${encodeURIComponent(name)}Head.png`;
     }
 
     // 設置事件監聽器
@@ -332,8 +471,8 @@ import '../styles/qabot.css';
       const avatarDiv = document.createElement('div');
       avatarDiv.className = 'message-avatar';
       const avatarImg = document.createElement('img');
-      avatarImg.src = '/tymultiverse/assets/sawamayo.jpeg';
-      avatarImg.alt = '真夜';
+      avatarImg.src = this.getAvatarUrl(this.state.botName);
+      avatarImg.alt = this.state.botName;
       avatarImg.className = 'bot-avatar';
       avatarDiv.appendChild(avatarImg);
       messageDiv.appendChild(avatarDiv);
@@ -347,7 +486,7 @@ import '../styles/qabot.css';
       headerDiv.className = 'message-header';
       const aiName = document.createElement('span');
       aiName.className = 'ai-name';
-      aiName.textContent = '真夜';
+      aiName.textContent = this.state.botName;
       headerDiv.appendChild(aiName);
       contentWrapper.appendChild(headerDiv);
       
@@ -428,7 +567,8 @@ import '../styles/qabot.css';
       setTimeout(() => {
         this.removeMessage(loadingDiv);
         
-        const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
+        const langData = this.messages?.[this.state.currentLanguage];
+        const currentMessages = langData?.[this.state.botName] || langData?.['Maya'];
         const randomWelcome = currentMessages.welcome[Math.floor(Math.random() * currentMessages.welcome.length)];
         
         const messageDiv = this.createMessageStructure('bot', `<p>${randomWelcome}</p>`);
@@ -450,13 +590,13 @@ import '../styles/qabot.css';
         { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
         { key: '部署實踐', text: '🚀 部署實踐' },
         { key: '網路問題', text: '🌐 網路問題' },
-        { key: '了解真夜', text: '想多了解妳' }
+        { key: '了解妳', text: '想多了解妳' }
       ] : [
         { key: 'Java', text: '☕ Java Development' },
         { key: 'OOP及DI框架', text: '🏗️ OOP & DI Frameworks' },
         { key: '部署實踐', text: '🚀 Deployment Practices' },
         { key: '網路問題', text: '🌐 Network Issues' },
-        { key: '了解真夜', text: 'Learn More About Maya' }
+        { key: '了解妳', text: 'Learn More About Maya' }
       ];
       
       topics.forEach(topic => {
@@ -482,14 +622,13 @@ import '../styles/qabot.css';
         return;
       }
       
-      const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
-      
-      if (!currentMessages || !currentMessages.topics) {
+      const langData = this.messages?.[this.state.currentLanguage];
+      const topicsData = langData?.topics;
+      if (!topicsData) {
         console.error('當前語言消息或topics不存在');
         return;
       }
-      
-      const suggestion = currentMessages.topics[topic as keyof typeof currentMessages.topics];
+      const suggestion = (topicsData as any)[topic];
       
       if (suggestion) {
         (this.elements.userInput as HTMLInputElement).value = suggestion;
@@ -667,7 +806,8 @@ import '../styles/qabot.css';
         body: JSON.stringify({ 
           text,
           user_id: this.state.userId,
-          language: this.state.currentLanguage
+          language: this.state.currentLanguage,
+          bot: this.state.botName
         })
       });
 
@@ -690,16 +830,27 @@ import '../styles/qabot.css';
         this.addWelcomeMessage();
         
         if (result.success && result.history && result.history.length > 0) {
-          this.state.currentHistoryPage = 0;
-          const historyToShow = result.history.slice(0, this.state.historyItemsPerPage);
+          // 依照時間升序排列，確保顯示順序正確
+          const sortedHistory = [...result.history].sort((a, b) => {
+            const aTime = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+            const bTime = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+            return aTime - bTime;
+          });
+          const total = sortedHistory.length;
+          this.state.currentHistoryPage = 0; // 0 = latest page
+          const startIdx = Math.max(0, total - this.state.historyItemsPerPage);
+          const historyToShow = sortedHistory.slice(startIdx, total);
           
           historyToShow.forEach(item => {
             this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
           });
-          
-          if (result.history.length > this.state.historyItemsPerPage) {
-            this.elements.loadMoreContainer.style.display = 'block';
-            this.state.currentHistoryPage = 1;
+
+          // 記錄目前最早的訊息時間
+          if (historyToShow.length > 0) {
+            const firstItem = historyToShow[0];
+            this.state.earliestTimestamp = new Date(firstItem.created_at || firstItem.timestamp || firstItem.time || 0).getTime();
+          } else {
+            this.state.earliestTimestamp = null;
           }
         }
       } catch (error) {
@@ -720,18 +871,44 @@ import '../styles/qabot.css';
         const result = await response.json();
         
         if (result.success && result.history) {
-          const startIndex = this.state.currentHistoryPage * this.state.historyItemsPerPage;
-          const endIndex = startIndex + this.state.historyItemsPerPage;
-          const historyToShow = result.history.slice(startIndex, endIndex);
-          
-          historyToShow.forEach(item => {
-            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+          const sortedHistory = [...result.history].sort((a, b) => {
+            const aTime = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
+            const bTime = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+            return aTime - bTime;
           });
-          
-          this.state.currentHistoryPage++;
-          
-          if (endIndex >= result.history.length) {
+          const total = sortedHistory.length;
+          // 只取早於目前 earliestTimestamp 的紀錄
+          const olderHistory = (this.state.earliestTimestamp !== null)
+            ? sortedHistory.filter(item => {
+                const ts = new Date(item.created_at || item.timestamp || item.time || 0).getTime();
+                return ts < (this.state.earliestTimestamp as number);
+              })
+            : sortedHistory;
+
+          if (olderHistory.length === 0) {
             this.elements.loadMoreContainer.style.display = 'none';
+            return;
+          }
+
+          const startIndex = Math.max(0, olderHistory.length - this.state.historyItemsPerPage);
+          const endIndex = olderHistory.length;
+          const historyToShow = olderHistory.slice(startIndex, endIndex);
+           
+          // 調整插入順序，確保時間順
+          historyToShow.forEach(item => {
+            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || [], true);
+          });
+
+          // 更新 earliestTimestamp
+          const firstOld = historyToShow[0];
+          this.state.earliestTimestamp = new Date(firstOld.created_at || firstOld.timestamp || firstOld.time || 0).getTime();
+           
+          // 當再也沒有更舊紀錄時，隱藏按鈕並清空標記
+          if (startIndex === 0) {
+            this.elements.loadMoreContainer.style.display = 'none';
+            this.state.earliestTimestamp = null;
+          } else {
+            this.state.currentHistoryPage++;
           }
         }
       } catch (error) {
@@ -741,7 +918,7 @@ import '../styles/qabot.css';
     }
 
     // 添加歷史消息
-    private addHistoryMessage(userMessage: any, aiAnswer: any, sources: any[]) {
+    private addHistoryMessage(userMessage: any, aiAnswer: any, sources: any[], insertAtTop: boolean = false) {
       // 確保參數是字符串類型
       if (typeof userMessage !== 'string') {
         userMessage = String(userMessage || '');
@@ -750,8 +927,15 @@ import '../styles/qabot.css';
         aiAnswer = String(aiAnswer || '');
       }
       
-      this.addMessage(userMessage, 'user');
-      this.addBotResponse(aiAnswer, sources);
+      if (insertAtTop) {
+        const userDiv = this.createMessageStructure('user', userMessage);
+        const botDiv = this.createMessageStructure('bot', this.formatAnswer(aiAnswer));
+        this.elements.chatMessages.insertBefore(botDiv, this.elements.chatMessages.firstChild);
+        this.elements.chatMessages.insertBefore(userDiv, this.elements.chatMessages.firstChild);
+      } else {
+        this.addMessage(userMessage, 'user');
+        this.addBotResponse(aiAnswer, sources);
+      }
     }
 
     // 顯示催促消息
@@ -759,7 +943,8 @@ import '../styles/qabot.css';
       if (this.state.saucyMessageCount >= this.state.maxSaucyMessages) return;
       
       this.state.saucyMessageCount++;
-      const currentMessages = this.messages[this.state.currentLanguage as keyof typeof this.messages];
+      const langData = this.messages?.[this.state.currentLanguage];
+      const currentMessages = langData?.[this.state.botName] || langData?.['Maya'];
       
       // 避免重複顯示相同的消息
       let availableMessages = currentMessages.saucy.filter((msg: string) => msg !== this.state.lastSaucyMessage);
