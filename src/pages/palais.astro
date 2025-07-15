@@ -2,8 +2,6 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.astro";
-import Fight from  "../components/Fight.astro";
-import Group from  "../components/Group.astro";
 import Levellist from "../components/Levellist.astro";
 import "../styles/palais.css";
 
@@ -49,14 +47,12 @@ if (!isLoggedIn) {
           <div class="galwall-container">
             <Galwall />
           </div>
-          <div class="system-container">
-            <Fight />
+          <div class="system-container module-buttons">
+            <a href={`/tymultiverse/palais/fight?username=${username}&token=${token}`} class="module-button">Fight</a>
+            <a href={`/tymultiverse/palais/group?username=${username}&token=${token}`} class="module-button">Group</a>
           </div>
           <div class="system-container">
             <Levellist />
-          </div>
-          <div class="system-container">
-            <Group />
           </div>
         </main>
       </div>
