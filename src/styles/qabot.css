@@ -1266,3 +1266,183 @@
   padding: 8px 0;
   border-radius: 999px;
 }
+
+/* 頭像選擇器樣式 */
+.avatar-selector {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #FFF8DC, #F5DEB3);
+  border: 2px solid #DAA520;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  z-index: 10002;
+  min-width: 300px;
+  max-width: 500px;
+  backdrop-filter: blur(10px);
+}
+
+:root.theme-dark .avatar-selector {
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  border-color: #555;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.avatar-selector-title {
+  text-align: center;
+  margin: 0 0 20px 0;
+  color: #8B4513;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+:root.theme-dark .avatar-selector-title {
+  color: #DAA520;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.avatar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+}
+
+.avatar-item:hover {
+  background: rgba(218, 165, 32, 0.2);
+  border-color: #DAA520;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+}
+
+.avatar-item.active {
+  background: rgba(218, 165, 32, 0.3);
+  border-color: #DAA520;
+  box-shadow: 0 4px 12px rgba(218, 165, 32, 0.4);
+}
+
+:root.theme-dark .avatar-item {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:root.theme-dark .avatar-item:hover {
+  background: rgba(218, 165, 32, 0.15);
+}
+
+:root.theme-dark .avatar-item.active {
+  background: rgba(218, 165, 32, 0.25);
+}
+
+.avatar-selector-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  border: 2px solid #DAA520;
+  transition: all 0.3s ease;
+}
+
+.avatar-item:hover .avatar-selector-img {
+  transform: scale(1.1);
+  border-color: #B8860B;
+}
+
+.avatar-item.active .avatar-selector-img {
+  border-color: #B8860B;
+  box-shadow: 0 0 10px rgba(218, 165, 32, 0.6);
+}
+
+.avatar-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #8B4513;
+  text-align: center;
+  line-height: 1.2;
+}
+
+:root.theme-dark .avatar-name {
+  color: #DAA520;
+}
+
+/* AI切換提示消息樣式 */
+.bot-switch-message {
+  background: linear-gradient(135deg, #DAA520, #B8860B);
+  color: #8B4513;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+:root.theme-dark .bot-switch-message {
+  background: linear-gradient(135deg, #555, #333);
+  color: #DAA520;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* 頭像選擇器響應式設計 */
+@media (max-width: 768px) {
+  .avatar-selector {
+    min-width: 280px;
+    max-width: 90vw;
+    padding: 15px;
+  }
+  
+  .avatar-grid {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 10px;
+  }
+  
+  .avatar-selector-img {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .avatar-name {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar-selector {
+    min-width: 250px;
+    padding: 12px;
+  }
+  
+  .avatar-grid {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+  }
+  
+  .avatar-selector-img {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatar-name {
+    font-size: 0.65rem;
+  }
+}

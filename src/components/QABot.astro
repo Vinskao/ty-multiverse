@@ -5,7 +5,7 @@ import '../styles/qabot.css';
 
 <!-- 浮動聊天按鈕 -->
 <div class="qa-bot-toggle" id="qaBotToggle">
-  <img src="/tymultiverse/assets/sawamayo.jpeg" alt="Sawa Maya" class="toggle-image" />
+  <img src="" alt="Sawa Maya" class="toggle-image" />
   <span class="toggle-text">真夜</span>
 </div>
 
@@ -13,7 +13,7 @@ import '../styles/qabot.css';
 <div class="qa-bot-container" id="qaBotContainer">
   <div class="chat-header">
     <div class="header-content">
-      <img src="/tymultiverse/assets/sawamayo.jpeg" alt="佐和 真夜" class="header-avatar" />
+      <img src="" alt="佐和 真夜" class="header-avatar" />
       <div class="header-text">
         <h3>佐和 真夜</h3>
         <p>TY的智慧庫</p>
@@ -44,7 +44,7 @@ import '../styles/qabot.css';
   <div class="chat-messages" id="chatMessages">
     <div class="message bot-message">
       <div class="message-avatar">
-        <img src="/tymultiverse/assets/sawamayo.jpeg" alt="真夜" class="bot-avatar" />
+        <img src="" alt="真夜" class="bot-avatar" />
       </div>
       <div class="message-content-wrapper">
         <div class="message-header">
@@ -314,13 +314,36 @@ import '../styles/qabot.css';
     // 依目前 botName 更新 UI
     private updateAvatarAndName() {
       const avatarUrl = this.getAvatarUrl(this.state.botName);
+      const defaultAvatarUrl = this.getDefaultAvatarUrl();
+      
+      // 更新 header 頭像
       const avatarEl = this.elements.headerAvatar as HTMLImageElement;
       if (avatarEl) {
         avatarEl.src = avatarUrl;
         avatarEl.alt = this.state.botName;
+        avatarEl.onerror = () => {
+          avatarEl.src = defaultAvatarUrl;
+        };
       }
+      
+      // 更新 toggle 按鈕頭像
+      const toggleImage = this.elements.qaBotToggle?.querySelector('.toggle-image') as HTMLImageElement;
+      if (toggleImage) {
+        toggleImage.src = avatarUrl;
+        toggleImage.alt = this.state.botName;
+        toggleImage.onerror = () => {
+          toggleImage.src = defaultAvatarUrl;
+        };
+      }
+      
       const headerName = avatarEl?.parentElement?.querySelector('.header-text h3') as HTMLElement;
       if (headerName) headerName.textContent = this.state.botName;
+    }
+
+    // 取得預設頭貼 URL
+    private getDefaultAvatarUrl(): string {
+      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
+      return `${apiBaseUrl}/images/people/default.png`;
     }
 
     // 建立頭貼選擇 UI 與事件
@@ -328,68 +351,119 @@ import '../styles/qabot.css';
       const avatarEl = this.elements.headerAvatar as HTMLImageElement;
       if (!avatarEl) return;
 
-      // 建立左右按鈕
-      const prevBtn = document.createElement('button');
-      prevBtn.className = 'avatar-nav avatar-prev';
-      prevBtn.textContent = '◀';
-      prevBtn.style.display = 'none';
+      // 創建浮動頭像選擇面板
+      const avatarSelector = document.createElement('div');
+      avatarSelector.className = 'avatar-selector';
+      avatarSelector.style.display = 'none';
+      document.body.appendChild(avatarSelector);
 
-      const nextBtn = document.createElement('button');
-      nextBtn.className = 'avatar-nav avatar-next';
-      nextBtn.textContent = '▶';
-      nextBtn.style.display = 'none';
-
-      avatarEl.parentElement?.appendChild(prevBtn);
-      avatarEl.parentElement?.appendChild(nextBtn);
-
-      // 切換顯示 / 隱藏
+      // 點擊頭像顯示選擇面板
       avatarEl.addEventListener('click', (e) => {
         e.stopPropagation();
-        const show = prevBtn.style.display === 'none';
-        prevBtn.style.display = show ? 'inline-block' : 'none';
-        nextBtn.style.display = show ? 'inline-block' : 'none';
+        this.showAvatarSelector(avatarSelector);
       });
 
-      prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.changeBot(-1);
-      });
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.changeBot(1);
+      // 點擊其他地方隱藏選擇面板
+      document.addEventListener('click', (e) => {
+        if (!avatarSelector.contains(e.target as Node) && !avatarEl.contains(e.target as Node)) {
+          avatarSelector.style.display = 'none';
+        }
       });
 
       // 存到 elements 方便以後取用
-      this.elements.avatarPrev = prevBtn as HTMLElement;
-      this.elements.avatarNext = nextBtn as HTMLElement;
+      this.elements.avatarSelector = avatarSelector;
     }
 
-    // 切換 bot
-    private changeBot(delta: number) {
-      const list = this.state.availableBots;
-      if (!list.length) return;
+    // 顯示頭像選擇面板
+    private showAvatarSelector(selector: HTMLElement) {
+      // 清空現有內容
+      selector.innerHTML = '';
+      
+      // 創建標題
+      const title = document.createElement('h4');
+      title.textContent = '選擇AI助手';
+      title.className = 'avatar-selector-title';
+      selector.appendChild(title);
 
-      let attempts = 0;
-      do {
-        this.state.currentBotIndex = (this.state.currentBotIndex + delta + list.length) % list.length;
-        this.state.botName = list[this.state.currentBotIndex];
-        attempts++;
-      } while (!this.hasValidMessages(this.state.botName) && attempts <= list.length);
+      // 創建頭像網格
+      const avatarGrid = document.createElement('div');
+      avatarGrid.className = 'avatar-grid';
 
-      if (!this.hasValidMessages(this.state.botName)) return; // 沒有有效 bot
-      this.updateAvatarAndName();
-      // 重新開始聊天對話
-      this.reinitializeChat();
-      // 隱藏切換按鈕
-      if (this.elements.avatarPrev && this.elements.avatarNext) {
-        this.elements.avatarPrev.style.display = 'none';
-        this.elements.avatarNext.style.display = 'none';
+      const defaultAvatarUrl = this.getDefaultAvatarUrl();
+
+      this.state.availableBots.forEach((botName, index) => {
+        const avatarItem = document.createElement('div');
+        avatarItem.className = 'avatar-item';
+        if (botName === this.state.botName) {
+          avatarItem.classList.add('active');
+        }
+
+        const avatarImg = document.createElement('img');
+        avatarImg.src = this.getAvatarUrl(botName);
+        avatarImg.alt = botName;
+        avatarImg.className = 'avatar-selector-img';
+        avatarImg.onerror = () => {
+          avatarImg.src = defaultAvatarUrl;
+        };
+
+        const avatarName = document.createElement('span');
+        avatarName.textContent = botName;
+        avatarName.className = 'avatar-name';
+
+        avatarItem.appendChild(avatarImg);
+        avatarItem.appendChild(avatarName);
+
+        // 點擊切換AI
+        avatarItem.addEventListener('click', () => {
+          this.selectBot(index);
+          selector.style.display = 'none';
+        });
+
+        avatarGrid.appendChild(avatarItem);
+      });
+
+      selector.appendChild(avatarGrid);
+
+      // 顯示面板
+      selector.style.display = 'block';
+    }
+
+    // 選擇指定的bot
+    private selectBot(index: number) {
+      if (index >= 0 && index < this.state.availableBots.length) {
+        this.state.currentBotIndex = index;
+        this.state.botName = this.state.availableBots[index];
+        this.updateAvatarAndName();
+        
+        // 立即清除對話歷史，避免頭像和對話不匹配
+        this.elements.chatMessages.innerHTML = '';
+        
+        // 重置狀態
+        this.state.lastSaucyMessage = '';
+        this.state.hasShownInactivityMessage = false;
+        this.state.isThinking = false;
+        this.state.saucyMessageCount = 0;
+        this.state.earliestTimestamp = null;
+        
+        // 顯示AI切換提示
+        this.addBotSwitchMessage();
+        
+        // 延遲顯示新的歡迎消息，讓用戶看到切換提示
+        setTimeout(() => {
+          this.addWelcomeMessage();
+        }, 1000);
+        
+        this.resetInactivityTimer();
+        this.scrollToBottom();
       }
     }
 
+
+
     // 取得頭貼 URL
     private getAvatarUrl(name: string): string {
-      return `https://peoplesystem.tatdvsonorth.com/images/people/${encodeURIComponent(name)}Head.png`;
+      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
+      return `${apiBaseUrl}/images/people/${encodeURIComponent(name)}Head.png`;
     }
 
     // 設置事件監聽器
@@ -474,6 +548,9 @@ import '../styles/qabot.css';
       avatarImg.src = this.getAvatarUrl(this.state.botName);
       avatarImg.alt = this.state.botName;
       avatarImg.className = 'bot-avatar';
+      avatarImg.onerror = () => {
+        avatarImg.src = this.getDefaultAvatarUrl();
+      };
       avatarDiv.appendChild(avatarImg);
       messageDiv.appendChild(avatarDiv);
       
@@ -613,6 +690,24 @@ import '../styles/qabot.css';
         this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
       }, 1500);
+    }
+
+    // 添加AI切換提示消息
+    private addBotSwitchMessage() {
+      const switchMessage = this.state.currentLanguage === 'chinese' 
+        ? `🔄 已切換到 ${this.state.botName}`
+        : `🔄 Switched to ${this.state.botName}`;
+      
+      const messageDiv = this.createMessageStructure('bot', `<p class="bot-switch-message">${switchMessage}</p>`);
+      this.elements.chatMessages.appendChild(messageDiv);
+      this.scrollToBottom();
+      
+      // 3秒後自動移除切換提示
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv);
+        }
+      }, 3000);
     }
 
     // 處理主題建議
@@ -800,19 +895,30 @@ import '../styles/qabot.css';
       const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
       const apiPathPrefix = '/maya-sawa';
       
+      const payload = {
+        text,
+        user_id: this.state.userId,
+        language: this.state.currentLanguage,
+        name: this.state.botName
+      };
+
+      // 調試日誌：確認送出的請求內容
+      console.log('callQAAPI payload =>', payload);
+
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text,
-          user_id: this.state.userId,
-          language: this.state.currentLanguage,
-          bot: this.state.botName
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.json();
+
+      const result = await response.json();
+
+      // 調試日誌：查看 API 回傳
+      console.log('callQAAPI response =>', result);
+
+      return result;
     }
 
     // 載入聊天歷史
@@ -826,7 +932,10 @@ import '../styles/qabot.css';
 
         const result = await response.json();
         
+        // 清除現有對話
         this.elements.chatMessages.innerHTML = '';
+        
+        // 顯示歡迎消息
         this.addWelcomeMessage();
         
         if (result.success && result.history && result.history.length > 0) {
@@ -836,21 +945,31 @@ import '../styles/qabot.css';
             const bTime = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
             return aTime - bTime;
           });
-          const total = sortedHistory.length;
-          this.state.currentHistoryPage = 0; // 0 = latest page
-          const startIdx = Math.max(0, total - this.state.historyItemsPerPage);
-          const historyToShow = sortedHistory.slice(startIdx, total);
           
-          historyToShow.forEach(item => {
-            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+          // 只顯示最近10分鐘內的對話（與Redis TTL保持一致）
+          const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+          const recentHistory = sortedHistory.filter(item => {
+            const itemTime = new Date(item.created_at || item.timestamp || item.time || 0).getTime();
+            return itemTime > tenMinutesAgo;
           });
+          
+          if (recentHistory.length > 0) {
+            const total = recentHistory.length;
+            this.state.currentHistoryPage = 0; // 0 = latest page
+            const startIdx = Math.max(0, total - this.state.historyItemsPerPage);
+            const historyToShow = recentHistory.slice(startIdx, total);
+            
+            historyToShow.forEach(item => {
+              this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+            });
 
-          // 記錄目前最早的訊息時間
-          if (historyToShow.length > 0) {
-            const firstItem = historyToShow[0];
-            this.state.earliestTimestamp = new Date(firstItem.created_at || firstItem.timestamp || firstItem.time || 0).getTime();
-          } else {
-            this.state.earliestTimestamp = null;
+            // 記錄目前最早的訊息時間
+            if (historyToShow.length > 0) {
+              const firstItem = historyToShow[0];
+              this.state.earliestTimestamp = new Date(firstItem.created_at || firstItem.timestamp || firstItem.time || 0).getTime();
+            } else {
+              this.state.earliestTimestamp = null;
+            }
           }
         }
       } catch (error) {
