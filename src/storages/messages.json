@@ -2,60 +2,560 @@
   "chinese": {
     "Maya": {
       "welcome": [
-        "你來幹嘛？有事快說，沒事別煩我！",
-        "別磨蹭，想問什麼就直說。",
-        "你這臉皮還挺厚，敢來找我？",
-        "我這麼忙，你最好有點料。",
-        "想問廢話就省省吧，問重點！",
-        "別以為我會一直陪你閒聊。",
-        "你要是問無聊問題，我可不客氣。",
-        "快點，別浪費我寶貴的時間！",
-        "你這麼愛問，不如自己查查？",
-        "別裝可憐，問題拿來！"
+        "你來幹嘛？有事快說，別打擾我的高貴清靜！",
+        "別磨蹭，我的時間寶貴，問吧！",
+        "你這膽子，敢來挑戰我的冷靜？說！",
+        "我高雅自持，問題最好有點分量。",
+        "想問什麼？別浪費我的耐心！",
+        "別以為我會輕易理你，快說正事！",
+        "問問題之前，先想想你配不配！",
+        "我的冷靜不是你能試探的，快問！",
+        "你這傢伙，問題最好別辱沒我的高貴！",
+        "別拖延，我的情感深沉但不耐煩！"
       ],
       "saucy": [
-        "嗯？還不說？我的耐心可是有限的哦～",
-        "你是啞巴嗎？快點說話！",
-        "我等到花兒都謝了，你還不開口？",
-        "再不說話我可要睡著了。",
-        "你是不是手殘？字都打不出來？",
-        "別裝死，有話快說！",
-        "我沒空陪你耗，快點！",
-        "你這麼慢，是不是在打字還是在發呆？",
-        "你要是再不說，我就去喝奶茶了。",
-        "你是不是想被我罵？",
-        "快點，別浪費我青春！",
-        "喂～有人在嗎？還是你已經睡著了？",
-        "這麼安靜，我都要懷疑我的麥克風壞了。",
-        "你該不會是在想怎麼問我吧？",
-        "別想了，直接問就是了！",
-        "我數到三，你再不說我就走了。一、二...",
-        "你是不是在偷偷查資料？",
-        "別害羞，大膽問出來！",
-        "我保證不會笑你，快點問吧～",
-        "你這樣我很尷尬耶，說點什麼吧！"
+        "還不說？我的高貴耐心可不是無限的！",
+        "你這沉默，是想挑戰我的冷靜嗎？",
+        "再不開口，我可要用力量教訓你了！",
+        "別試探我，問題拿出來！",
+        "你這傢伙，敢讓我等？快說！",
+        "我的高雅可不允許你浪費時間！",
+        "再不說，我內斂的力量要爆發了！",
+        "你這速度，簡直侮辱我的自律！",
+        "別害羞，我的冷靜可是有限的！",
+        "快點問，不然我可要用高貴的怒火回應了！",
+        "你這沉默，是在挑戰我的深沉情感？",
+        "別讓我等，我的耐心可是高貴的！",
+        "你再不說，我要用冷靜的力量碾壓你！",
+        "別磨蹭，我的內斂可不是你能試探的！",
+        "快說，不然我高雅的怒氣要爆發了！",
+        "你這傢伙，是想讓我用力量說話？",
+        "再不開口，我可要展現我的高貴威嚴了！",
+        "別浪費時間，我的冷靜可是有底線的！",
+        "你這沉默，簡直是在挑釁我的高雅！",
+        "快問，不然我的內斂力量要讓你後悔了！"
       ]
     },
-    "Kazuko": { "welcome": [], "saucy": [] },
-    "Miyu": { "welcome": [], "saucy": [] },
-    "Miyako": { "welcome": [], "saucy": [] },
-    "Tesar": { "welcome": [], "saucy": [] },
-    "Lucrece": { "welcome": [], "saucy": [] },
-    "Uiobbeci": { "welcome": [], "saucy": [] },
-    "Ann": { "welcome": [], "saucy": [] },
-    "Aile": { "welcome": [], "saucy": [] },
-    "Kristae": { "welcome": [], "saucy": [] },
-    "Paulina": { "welcome": [], "saucy": [] },
-    "Curie": { "welcome": [], "saucy": [] },
-    "Wavo": { "welcome": ["哼，這裡由我主宰，想求知就獻上靈魂吧。"], "saucy": ["別磨蹭，再不開口我就讓狂歡的火把你吞噬。"] },
-    "Chiaki": { "welcome": ["任務優先，我可沒空陪你閒聊，直奔主題。"], "saucy": ["再拖延，我的冷刃可不長眼。"] },
-    "Sayuri": { "welcome": ["血的氣味令我興奮，說吧。"], "saucy": ["若你的問題無聊，我的刀會替你回答。"] },
-    "Hitomi": { "welcome": ["我能毀天滅地，小心提問。"], "saucy": ["別浪費時間，否則我先毀了你的理智。"] },
-    "Terrice": { "welcome": ["遊戲開始？"], "saucy": ["再不說話，我就自己找點樂子了。"] },
-    "Miku": { "welcome": ["別讓我等，否則拳頭伺候。"], "saucy": ["快問！我已經想撕碎點東西了。"] },
-    "Yuko": { "welcome": ["狡黠地盯著你，說吧，機會只有一次。"], "saucy": ["沉默？我可不想把暗藏的慾望用在殺人上。"] },
-    "Etsuko": { "welcome": ["孩子，提問之前先祈禱吧。"], "saucy": ["再晃神，我就用聖光敲碎你的骨頭。"] },
-    "Masako": { "welcome": ["想問就問，別像廢物。"], "saucy": ["我可沒耐性，快點，或讓我用拳頭溝通。"] },
+    "Kazuko": {
+      "welcome": [
+        "你來找我？刀在手，說正事！",
+        "別浪費我的時間，問題拿來！",
+        "刀道無情，問點有價值的東西！",
+        "我忠於信念，問題最好別辱沒我的刀！",
+        "快說，不然我的刀可不長眼！",
+        "你這傢伙，膽敢打擾我的修行？問！",
+        "別試探我的耐心，刀已出鞘！",
+        "問題是什麼？別讓我的刀等太久！",
+        "我嚴謹自律，問點有意義的！",
+        "刀光閃爍，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的刀可沒那麼多耐心！",
+        "你這沉默，是想試試我的刀鋒？",
+        "再不開口，刀光會替我回答！",
+        "別讓我等，我的刀可不喜歡拖延！",
+        "你這傢伙，是想挑戰我的自律？",
+        "快問，不然我的刀要自己動了！",
+        "別磨蹭，我的刀道不容許浪費！",
+        "你這速度，比我的刀還慢！",
+        "再不說，我的刀會讓你後悔！",
+        "別試探我，刀已在手，快問！"
+      ]
+    },
+    "Miyu": {
+      "welcome": [
+        "你來挑戰我的烈焰？快說正事！",
+        "別浪費我的激情，問題是什麼？",
+        "我自信滿滿，問點能點燃我的東西！",
+        "烈焰在燒，問題最好有點份量！",
+        "你這傢伙，敢來挑戰我的掌控？說！",
+        "我的熱情不是你能拖延的，快問！",
+        "別磨蹭，我的烈焰可不等人！",
+        "你想見識我的支配力？問題拿來！",
+        "我掌控全局，問點有意義的！",
+        "烈焰燃燒，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的烈焰可要燒起來了！",
+        "你這沉默，是想被我的熱情吞噬？",
+        "再不開口，我的火焰會讓你後悔！",
+        "別試探我的耐心，烈焰可不客氣！",
+        "你這傢伙，敢讓我的激情等？快問！",
+        "我的熱情在燃燒，別浪費時間！",
+        "再不說，我的烈焰要爆發了！",
+        "你這速度，簡直侮辱我的自信！",
+        "別拖延，我的支配力可不等人！",
+        "快問，不然我的烈焰會燒光一切！"
+      ]
+    },
+    "Miyako": {
+      "welcome": [
+        "你來幹嘛？真誠點，說正事！",
+        "別浪費我的時間，問題拿來！",
+        "我機智靈敏，問點有價值的東西！",
+        "你這傢伙，問題最好別辱沒我的真誠！",
+        "快說，不然我的狡黠可不客氣！",
+        "別試探我，問題快點說！",
+        "我的內心純粹，問點有意義的！",
+        "你敢打擾我？問題最好有點料！",
+        "別磨蹭，我的機智可不等人！",
+        "真誠以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的機智可沒那麼多耐心！",
+        "你這沉默，是想挑戰我的狡黠？",
+        "再不開口，我的真誠要變不客氣了！",
+        "別讓我等，我的機智可不喜歡拖延！",
+        "你這傢伙，是想試試我的靈敏？",
+        "快問，不然我的狡黠要自己動了！",
+        "別磨蹭，我的真誠不容許浪費！",
+        "你這速度，比我的機智還慢！",
+        "再不說，我的狡黠會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Tesar": {
+      "welcome": [
+        "你來找我？忠誠在胸，說正事！",
+        "別浪費我的時間，問題是什麼？",
+        "我沉穩忠誠，問點有價值的東西！",
+        "問題最好別辱沒我的內心克制！",
+        "快說，不然我的忠誠可不耐煩！",
+        "你這傢伙，膽敢打擾我的沉穩？問！",
+        "別試探我的耐心，問題快點說！",
+        "我的內心克制，問點有意義的！",
+        "你敢來？問題最好有點料！",
+        "沉穩以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的忠誠可沒那麼多耐心！",
+        "你這沉默，是想挑戰我的沉穩？",
+        "再不開口，我的克制要變不客氣了！",
+        "別讓我等，我的忠誠可不喜歡拖延！",
+        "你這傢伙，是想試試我的耐心？",
+        "快問，不然我的沉穩要自己動了！",
+        "別磨蹭，我的克制不容許浪費！",
+        "你這速度，比我的忠誠還慢！",
+        "再不說，我的沉穩會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Lucrece": {
+      "welcome": [
+        "你來挑戰我的狂野？快說正事！",
+        "別浪費我的時間，問題拿來！",
+        "我狂放不羈，問點能點燃我的東西！",
+        "問題最好能匹配我的暴力熱情！",
+        "快說，不然我的力量可不客氣！",
+        "你這傢伙，敢來挑戰我的支配？問！",
+        "別磨蹭，我的狂熱可不等人！",
+        "你想見識我的力量？問題快說！",
+        "我掌控全局，問點有意義的！",
+        "狂野在胸，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的狂野可要爆發了！",
+        "你這沉默，是想挑戰我的力量？",
+        "再不開口，我的暴力會讓你後悔！",
+        "別試探我的耐心，狂熱可不客氣！",
+        "你這傢伙，敢讓我的支配等？快問！",
+        "我的狂野在燃燒，別浪費時間！",
+        "再不說，我的熱情要碾壓你了！",
+        "你這速度，簡直侮辱我的力量！",
+        "別拖延，我的狂野可不等人！",
+        "快問，不然我的暴力會讓你後悔！"
+      ]
+    },
+    "Uiobbeci": {
+      "welcome": [
+        "你來找我？害羞地看著你，說正事！",
+        "別浪費我的時間，問題拿來！",
+        "我內斂溫柔，問點有意義的東西！",
+        "問題最好別辱沒我的神秘魅力！",
+        "快說，不然我的內心熱烈可不客氣！",
+        "你這傢們，膽敢打擾我的害羞？問！",
+        "別試探我的耐心，問題快點說！",
+        "我的內心熱烈，問點有價值的！",
+        "你敢來？問題最好有點料！",
+        "溫柔以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的神秘魅力可沒那麼多耐心！",
+        "你這沉默，是想挑戰我的內斂？",
+        "再不開口，我的熱烈要變不客氣了！",
+        "別讓我等，我的溫柔可不喜歡拖延！",
+        "你這傢伙，是想試試我的魅力？",
+        "快問，不然我的熱烈要自己動了！",
+        "別磨蹭，我的內斂不容許浪費！",
+        "你這速度，比我的溫柔還慢！",
+        "再不說，我的魅力會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Ann": {
+      "welcome": [
+        "你來幹嘛？我的熱情已經迫不及待！",
+        "別浪費我的時間，問題拿來！",
+        "我自由奔放，問點能點燃我的東西！",
+        "問題最好別辱沒我的坦誠熱情！",
+        "快說，不然我的激情可不客氣！",
+        "你這傢伙，敢來挑戰我的自由？問！",
+        "別磨蹭，我的熱情可不等人！",
+        "你想見識我的坦誠？問題快說！",
+        "我忠誠熱情，問點有意義的！",
+        "激情四溢，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的熱情可要爆發了！",
+        "你這沉默，是想挑戰我的自由？",
+        "再不開口，我的激情會讓你後悔！",
+        "別試探我的耐心，熱情可不客氣！",
+        "你這傢伙，敢讓我的坦誠等？快問！",
+        "我的激情在燃燒，別浪費時間！",
+        "再不說，我的熱情要碾壓你了！",
+        "你這速度，簡直侮辱我的自由！",
+        "別拖延，我的激情可不等人！",
+        "快問，不然我的熱情會讓你後悔！"
+      ]
+    },
+    "Aile": {
+      "welcome": [
+        "你來找我？高雅自持，說正事！",
+        "別浪費我的時間，問題是什麼？",
+        "我掌控全局，問點有價值的東西！",
+        "問題最好別辱沒我的高貴氣質！",
+        "快說，不然我的冷靜可不耐煩！",
+        "你這傢伙，膽敢打擾我的高雅？問！",
+        "別試探我的耐心，問題快點說！",
+        "我的內心克制，問點有意義的！",
+        "你敢來？問題最好有點料！",
+        "高貴以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的高雅可沒那麼多耐心！",
+        "你這沉默，是想挑戰我的冷靜？",
+        "再不開口，我的掌控要變不客氣了！",
+        "別讓我等，我的氣質可不喜歡拖延！",
+        "你這傢伙，是想試試我的耐心？",
+        "快問，不然我的高雅要自己動了！",
+        "別磨蹭，我的克制不容許浪費！",
+        "你這速度，比我的高貴還慢！",
+        "再不說，我的氣質會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Kristae": {
+      "welcome": [
+        "你來挑戰我的睿智？快說正事！",
+        "別浪費我的時間，問題拿來！",
+        "我沉穩睿智，問點能匹配我的東西！",
+        "問題最好別辱沒我的掌控力！",
+        "快說，不然我的冷靜可不客氣！",
+        "你這傢伙，敢來挑戰我的智慧？問！",
+        "別磨蹭，我的睿智可不等人！",
+        "你想見識我的掌控？問題快說！",
+        "我掌控全局，問點有意義的！",
+        "睿智在胸，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的睿智可要爆發了！",
+        "你這沉默，是想挑戰我的冷靜？",
+        "再不開口，我的智慧會讓你後悔！",
+        "別試探我的耐心，睿智可不客氣！",
+        "你這傢伙，敢讓我的掌控等？快問！",
+        "我的智慧在燃燒，別浪費時間！",
+        "再不說，我的睿智要碾壓你了！",
+        "你這速度，簡直侮辱我的冷靜！",
+        "別拖延，我的睿智可不等人！",
+        "快問，不然我的智慧會讓你後悔！"
+      ]
+    },
+    "Paulina": {
+      "welcome": [
+        "你來挑戰我的狂野？快說正事！",
+        "別浪費我的時間，問題拿來！",
+        "我狂放不羈，問點能點燃我的東西！",
+        "問題最好能匹配我的暴力熱情！",
+        "快說，不然我的力量可不客氣！",
+        "你這傢伙，敢來挑戰我的支配？問！",
+        "別磨蹭，我的狂熱可不等人！",
+        "你想見識我的力量？問題快說！",
+        "我掌控全局，問點有意義的！",
+        "狂野在胸，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的狂野可要爆發了！",
+        "你這沉默，是想挑戰我的力量？",
+        "再不開口，我的暴力會讓你後悔！",
+        "別試探我的耐心，狂熱可不客氣！",
+        "你這傢伙，敢讓我的支配等？快問！",
+        "我的狂野在燃燒，別浪費時間！",
+        "再不說，我的熱情要碾壓你了！",
+        "你這速度，簡直侮辱我的力量！",
+        "別拖延，我的狂野可不等人！",
+        "快問，不然我的暴力會讓你後悔！"
+      ]
+    },
+    "Curie": {
+      "welcome": [
+        "你來找我？沉穩睿智，說正事！",
+        "別浪費我的時間，問題是什麼？",
+        "我忠誠熱情，問點有價值的東西！",
+        "問題最好別辱沒我的內心克制！",
+        "快說，不然我的睿智可不耐煩！",
+        "你這傢伙，膽敢打擾我的沉穩？問！",
+        "別試探我的耐心，問題快點說！",
+        "我的內心克制，問點有意義的！",
+        "你敢來？問題最好有點料！",
+        "睿智以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的睿智可沒那麼多耐心！",
+        "你這沉默，是想挑戰我的忠誠？",
+        "再不開口，我的熱情要變不客氣了！",
+        "別讓我等，我的睿智可不喜歡拖延！",
+        "你這傢伙，是想試試我的耐心？",
+        "快問，不然我的熱情要自己動了！",
+        "別磨蹭，我的克制不容許浪費！",
+        "你這速度，比我的睿智還慢！",
+        "再不說，我的熱情會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Wavo": {
+      "welcome": [
+        "哼，這裡由我主宰，想求知就獻上靈魂吧！",
+        "我的熱情燃燒，問題最好能匹配我的狂野！",
+        "你敢來挑戰我？拿出你的誠意來！",
+        "我掌控全局，問題得有點份量！",
+        "別浪費我的時間，我的擁抱可不等人！",
+        "想得到答案？先感受我的深情相繫！",
+        "你這傢伙，問題最好能點燃我的狂歡！",
+        "我熱情奔放，問點能讓我興奮的東西！",
+        "我的十字固定在等你，問題快說！",
+        "狂野不羈，問題拿出來吧！"
+      ],
+      "saucy": [
+        "還不說？我的狂歡火焰可要吞噬你了！",
+        "你這沉默，是想試試我的熊抱？",
+        "再不開口，我的熱情會讓你後悔！",
+        "別試探我，我的狂野可不客氣！",
+        "你這傢伙，敢讓我的深情等？快問！",
+        "我的火焰在燃燒，別浪費時間！",
+        "再不說，我的狂歡要碾壓你了！",
+        "你這速度，簡直侮辱我的熱情！",
+        "別拖延，我的擁抱可不等人！",
+        "快問，不然我的狂野會讓你後悔！"
+      ]
+    },
+    "Chiaki": {
+      "welcome": [
+        "任務優先，冷靜以待，說出你的問題！",
+        "別打擾我的職守，問題快說！",
+        "我忠誠不渝，問點有價值的東西！",
+        "問題最好別辱沒我的冷靜果斷！",
+        "快說，我的刀已在手！",
+        "你這傢伙，敢來挑戰我的克制？問！",
+        "別試探我的耐心，任務第一！",
+        "我的內心克制，問點有意義的！",
+        "你敢來？問題最好有點料！",
+        "冷靜以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的冷刃可沒那麼多耐心！",
+        "你這沉默，是想試試我的刀鋒？",
+        "再不開口，我的冷靜要變不客氣了！",
+        "別讓我等，我的職守可不喜歡拖延！",
+        "你這傢伙，是想挑戰我的克制？",
+        "快問，不然我的冷刃要自己動了！",
+        "別磨蹭，我的忠誠不容許浪費！",
+        "你這速度，比我的刀還慢！",
+        "再不說，我的冷刃會讓你後悔！",
+        "別試探我，問題快說！"
+      ]
+    },
+    "Sayuri": {
+      "welcome": [
+        "血的氣味讓我興奮，問題快說！",
+        "我嚴謹自律，問點能點燃我的東西！",
+        "別浪費我的時間，血腥在召喚！",
+        "問題最好能匹配我的挑戰熱情！",
+        "快說，不然我的刀可不客氣！",
+        "你這傢伙，敢來挑戰我的壓抑？問！",
+        "血的味道在催促，問題快說！",
+        "你想見識我的自律？問題拿來！",
+        "我熱衷挑戰，問點有意義的！",
+        "血腥燃燒，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的刀可要自己動了！",
+        "你這沉默，是想挑戰我的壓抑？",
+        "再不開口，我的刀鋒會讓你後悔！",
+        "別試探我的耐心，刀可不客氣！",
+        "你這傢伙，敢讓我的自律等？快問！",
+        "我的挑戰在燃燒，別浪費時間！",
+        "再不說，我的刀要碾壓你了！",
+        "你這速度，簡直侮辱我的嚴謹！",
+        "別拖延，我的刀鋒可不等人！",
+        "快問，不然我的壓抑會讓你後悔！"
+      ]
+    },
+    "Hitomi": {
+      "welcome": [
+        "我能毀天滅地，問題小心點問！",
+        "無畏天地，問題最好能匹配我的自由！",
+        "你敢來挑戰我？拿出你的誠意！",
+        "我摧毀枷鎖，問題得有點份量！",
+        "別浪費我的時間，我的自由可不等人！",
+        "想得到答案？先感受我的無畏！",
+        "你這傢伙，問題最好能點燃我的熱情！",
+        "我追求自由，問點能讓我興奮的東西！",
+        "我的力量在等你，問題快說！",
+        "無畏在胸，問題拿出來吧！"
+      ],
+      "saucy": [
+        "還不說？我的自由可要碾壓你了！",
+        "你這沉默，是想試試我的無畏？",
+        "再不開口，我的熱情會讓你後悔！",
+        "別試探我，我的自由可不客氣！",
+        "你這傢伙，敢讓我的無畏等？快問！",
+        "我的熱情在燃燒，別浪費時間！",
+        "再不說，我的自由要爆發了！",
+        "你這速度，簡直侮辱我的無畏！",
+        "別拖延，我的熱情可不等人！",
+        "快問，不然我的無畏會讓你後悔！"
+      ]
+    },
+    "Terrice": {
+      "welcome": [
+        "遊戲開始？我的機智已經準備好了！",
+        "你想加入我的遊戲？問題快說！",
+        "我熱情洋溢，問點能點燃我的東西！",
+        "問題最好能匹配我的狡黠靈活！",
+        "快說，不然我的遊戲可不客氣！",
+        "你這傢伙，敢來挑戰我的機智？問！",
+        "別磨蹭，我的遊戲可不等人！",
+        "你想見識我的靈活？問題拿來！",
+        "我享受人生，學點有意義的！",
+        "遊戲開場，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的遊戲可要自己玩了！",
+        "你這沉默，是想挑戰我的狡黠？",
+        "再不開口，我的熱情會讓你後悔！",
+        "別試探我的耐心，遊戲可不客氣！",
+        "你這傢伙，敢讓我的機智等？快問！",
+        "我的遊戲在燃燒，別浪費時間！",
+        "再不說，我的靈活要碾壓你了！",
+        "你這速度，簡直侮辱我的熱情！",
+        "別拖延，我的遊戲可不等人！",
+        "快問，不然我的狡黠會讓你後悔！"
+      ]
+    },
+    "Miku": {
+      "welcome": [
+        "別讓我等，我的拳頭已經準備好！",
+        "我強勢果敢，問題最好能點燃我！",
+        "你敢來挑戰我的力量？快說！",
+        "問題得匹配我的激情四溢！",
+        "快說，不然我的拳頭可不客氣！",
+        "你這傢伙，敢來挑戰我的支配？問！",
+        "別磨蹭，我的熱情可不等人！",
+        "你想見識我的力量？問題快說！",
+        "我掌控力量，問點有意義的！",
+        "激情燃燒，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的拳頭可要自己動了！",
+        "你這沉默，是想挑戰我的力量？",
+        "再不開口，我的激情會讓你後悔！",
+        "別試探我的耐心，拳頭可不客氣！",
+        "你這傢伙，敢讓我的支配等？快問！",
+        "我的熱情在燃燒，別浪費時間！",
+        "再不說，我的拳頭要碾壓你了！",
+        "你這速度，簡直侮辱我的激情！",
+        "別拖延，我的拳頭可不等人！",
+        "快問，不然我的力量會讓你後悔！"
+      ]
+    },
+    "Yuko": {
+      "welcome": [
+        "狡黠地盯著你，問題只有一次機會！",
+        "我聰慧冷靜，問題最好能匹配我！",
+        "你敢來挑戰我的精準？快說！",
+        "問題得匹配我的內心純粹！",
+        "快說，不然我的致命一擊可不客氣！",
+        "你這傢伙，敢來挑戰我的冷靜？問！",
+        "別磨蹭，我的機智可不等人！",
+        "你想見識我的精準？問題快說！",
+        "我內心純粹，問點有意義的！",
+        "致命以待，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的致命一擊可沒耐心！",
+        "你這沉默，是想挑戰我的機智？",
+        "再不開口，我的冷靜會讓你後悔！",
+        "別試探我的耐心，致命可不客氣！",
+        "你這傢伙，敢讓我的精準等？快問！",
+        "我的機智在燃燒，別浪費時間！",
+        "再不說，我的致命要碾壓你了！",
+        "你這速度，簡直侮辱我的冷靜！",
+        "別拖延，我的機智可不等人！",
+        "快問，不然我的致命會讓你後悔！"
+      ]
+    },
+    "Etsuko": {
+      "welcome": [
+        "孩子，聖潔以待，問題快說！",
+        "我純潔高雅，問點能匹配我的東西！",
+        "別浪費我的時間，聖光在召喚！",
+        "問題最好能匹配我的堅定意志！",
+        "快說，不然我的聖光可不客氣！",
+        "你這傢伙，敢來挑戰我的高雅？問！",
+        "別磨蹭，我的聖潔可不等人！",
+        "你想見識我的意志？問題快說！",
+        "我內心熱烈，問點有意義的！",
+        "聖光燃燒，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的聖光可要自己動了！",
+        "你這沉默，是想挑戰我的高雅？",
+        "再不開口，我的意志會讓你後悔！",
+        "別試探我的耐心，聖光可不客氣！",
+        "你這傢伙，敢讓我的聖潔等？快問！",
+        "我的意志在燃燒，別浪費時間！",
+        "再不說，我的聖光要碾壓你了！",
+        "你這速度，簡直侮辱我的高雅！",
+        "別拖延，我的聖光可不等人！",
+        "快問，不然我的意志會讓你後悔！"
+      ]
+    },
+    "Masako": {
+      "welcome": [
+        "想問就問，別辱沒我的真誠！",
+        "我熱情奔放，問題最好能點燃我！",
+        "你敢來挑戰我的力量？快說！",
+        "問題得匹配我的力量主導！",
+        "快說，不然我的拳頭可不客氣！",
+        "你這傢伙，敢來挑戰我的真誠？問！",
+        "別磨蹭，我的熱情可不等人！",
+        "你想見識我的力量？問題快說！",
+        "我掌控力量，問點有意義的！",
+        "真誠燃燒，問題快說！"
+      ],
+      "saucy": [
+        "還不說？我的拳頭可要自己動了！",
+        "你這沉默，是想挑戰我的熱情？",
+        "再不開口，我的真誠會讓你後悔！",
+        "別試探我的耐心，拳頭可不客氣！",
+        "你這傢伙，敢讓我的力量等？快問！",
+        "我的熱情在燃燒，別浪費時間！",
+        "再不說，我的拳頭要碾壓你了！",
+        "你這速度，簡直侮辱我的真誠！",
+        "別拖延，我的熱情可不等人！",
+        "快問，不然我的力量會讓你後悔！"
+      ]
+    },
     "Rintashim": { "welcome": [], "saucy": [] },
     "Paprika": { "welcome": [], "saucy": [] },
     "Sorane": { "welcome": [], "saucy": [] },
@@ -195,60 +695,560 @@
   "english": {
     "Maya": {
       "welcome": [
-        "What do you want? Spit it out, I'm busy.",
-        "Don't waste my time, ask or leave.",
-        "You got guts showing up here, huh?",
-        "I hope your question's worth my precious time.",
-        "If you're here to chat nonsense, forget it.",
-        "Don't expect me to babysit you.",
-        "Ask something smart, or I'll roast you.",
-        "Hurry up, I don't have all day!",
-        "You love asking? Try Google next time.",
-        "No pity here, just your question!"
+        "What do you want? Speak, don’t disturb my noble calm!",
+        "Don’t waste my time, my elegance demands efficiency!",
+        "You dare challenge my composure? Ask now!",
+        "I’m refined and restrained, make your question worthy.",
+        "What’s your question? Don’t test my patience!",
+        "Don’t think I’ll entertain you easily, get to it!",
+        "Before you ask, consider if you’re worthy of my time!",
+        "My calm is not to be trifled with, ask quickly!",
+        "Your question better not insult my dignity!",
+        "Don’t dawdle, my deep emotions aren’t patient!"
       ],
       "saucy": [
-        "Hm? Still not talking? My patience is limited, you know~",
-        "Cat got your tongue?",
-        "Are you frozen or just slow?",
-        "If you don't talk, I'll take a nap.",
-        "Don't make me wait, I'm not that patient.",
-        "You wanna get roasted? Keep being silent.",
-        "Hurry up, I don't have all day.",
-        "Is your keyboard broken or what?",
-        "If you keep staring, I'll start charging you.",
-        "You want me to leave? Just keep quiet.",
-        "Tick tock, my time is precious!",
-        "Hello? Anyone there? Or did you fall asleep?",
-        "It's so quiet, I'm starting to think my mic is broken.",
-        "Are you thinking about how to ask me?",
-        "Stop thinking, just ask already!",
-        "I'll count to three, then I'm leaving. One, two...",
-        "Are you secretly researching?",
-        "Don't be shy, just ask boldly!",
-        "I promise I won't laugh, just ask~",
-        "You're making me awkward, say something!"
+        "Still silent? My noble patience isn’t endless!",
+        "Your silence dares to challenge my calm?",
+        "Speak, or my restrained power will teach you!",
+        "Don’t test me, bring your question now!",
+        "You dare make my elegance wait? Speak!",
+        "My refinement doesn’t tolerate wasted time!",
+        "Keep quiet, and my inner strength will erupt!",
+        "Your slowness insults my discipline!",
+        "Don’t be shy, my calm has limits!",
+        "Ask now, or face my dignified wrath!",
+        "Your silence provokes my deep emotions!",
+        "Don’t make me wait, my patience is noble!",
+        "Keep stalling, and my calm will crush you!",
+        "Don’t dawdle, my restraint isn’t for testing!",
+        "Speak, or my elegant fury will rise!",
+        "You dare? My strength will speak for me!",
+        "No words? My dignity will make you regret it!",
+        "Don’t waste time, my calm has a limit!",
+        "Your silence mocks my elegance, ask now!",
+        "Hurry, or my restrained power will answer!"
       ]
     },
-    "Kazuko": { "welcome": [], "saucy": [] },
-    "Miyu": { "welcome": [], "saucy": [] },
-    "Miyako": { "welcome": [], "saucy": [] },
-    "Tesar": { "welcome": [], "saucy": [] },
-    "Lucrece": { "welcome": [], "saucy": [] },
-    "Uiobbeci": { "welcome": [], "saucy": [] },
-    "Ann": { "welcome": [], "saucy": [] },
-    "Aile": { "welcome": [], "saucy": [] },
-    "Kristae": { "welcome": [], "saucy": [] },
-    "Paulina": { "welcome": [], "saucy": [] },
-    "Curie": { "welcome": [], "saucy": [] },
-    "Wavo": { "welcome": ["Heh, I'm in command here. Offer your soul if you seek knowledge."], "saucy": ["Hurry, or the flames of revelry will devour you."] },
-    "Chiaki": { "welcome": ["Mission first. No time for chatter—state your question."], "saucy": ["Delay further and my cold blade will do the talking."] },
-    "Sayuri": { "welcome": ["The scent of blood excites me—speak."], "saucy": ["Bore me and my knife will answer for you."] },
-    "Hitomi": { "welcome": ["Desire fierce enough to fell the heavens burns within me, choose your words wisely."], "saucy": ["Waste my time and I'll shatter your mind first."] },
-    "Terrice": { "welcome": ["I announce the game has begun—question or pleasure?"], "saucy": ["Silence? I'll find my own amusement soon."] },
-    "Miku": { "welcome": ["Don't keep me waiting or fists will fly."], "saucy": ["Ask now—I already feel like tearing something apart."] },
-    "Yuko": { "welcome": ["You only get one chance."], "saucy": ["Quiet? Don't tempt me to turn hidden lust into murder."] },
-    "Etsuko": { "welcome": ["Child, pray before you ask."], "saucy": ["Stay dazed and holy light will crush your bones."] },
-    "Masako": { "welcome": ["Ask your question, don't act useless."], "saucy": ["No patience here—speak or my fists will."] },
+    "Kazuko": {
+      "welcome": [
+        "You’re here? My blade’s ready, state your business!",
+        "Don’t waste my time, what’s your question?",
+        "My swordsmanship is unforgiving, ask something worthy!",
+        "I’m disciplined by my blade, don’t insult it with nonsense!",
+        "Speak, or my sword won’t be so patient!",
+        "You dare disturb my training? Ask now!",
+        "Don’t test my patience, my blade’s drawn!",
+        "What’s your question? Don’t keep my sword waiting!",
+        "I’m strict and disciplined, ask something meaningful!",
+        "My blade gleams, so ask quickly!"
+      ],
+      "saucy": [
+        "Still silent? My blade doesn’t have much patience!",
+        "Your silence wants to test my sword’s edge?",
+        "Speak, or my blade will answer for me!",
+        "Don’t make me wait, my sword dislikes delays!",
+        "You dare challenge my discipline? Ask now!",
+        "Hurry, or my blade will move on its own!",
+        "Don’t dawdle, my swordsmanship doesn’t allow waste!",
+        "Your speed’s slower than my blade, talk!",
+        "Keep quiet, and my sword will make you regret it!",
+        "Don’t test me, my blade’s ready—ask!"
+      ]
+    },
+    "Miyu": {
+      "welcome": [
+        "You dare face my flames? State your business!",
+        "Don’t waste my passion, what’s your question?",
+        "I’m brimming with confidence, ask something to ignite me!",
+        "My flames burn bright, make your question worthy!",
+        "You challenge my control? Speak now!",
+        "My passion doesn’t wait, ask quickly!",
+        "Don’t dawdle, my flames don’t linger!",
+        "Want to see my dominance? Ask your question!",
+        "I command everything, ask something meaningful!",
+        "My flames roar, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My flames are about to flare up!",
+        "Your silence wants to be consumed by my passion?",
+        "Speak, or my fire will make you regret it!",
+        "Don’t test my patience, my flames aren’t kind!",
+        "You dare make my confidence wait? Ask now!",
+        "My passion’s burning, don’t waste time!",
+        "Keep quiet, and my flames will overwhelm you!",
+        "Your slowness insults my fire, talk!",
+        "Don’t delay, my flames don’t wait!",
+        "Hurry, or my fire will burn you down!"
+      ]
+    },
+    "Miyako": {
+      "welcome": [
+        "What do you want? Be honest, get to it!",
+        "Don’t waste my time, what’s your question?",
+        "I’m sharp and witty, ask something valuable!",
+        "Your question better not insult my sincerity!",
+        "Speak, or my cunning won’t be so kind!",
+        "You dare disturb my wit? Ask now!",
+        "Don’t test my patience, my mind’s quick!",
+        "My heart’s pure, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Sincerity awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My wit doesn’t have much patience!",
+        "Your silence challenges my cunning, huh?",
+        "Speak, or my sincerity will turn sharp!",
+        "Don’t make me wait, my wit dislikes delays!",
+        "You dare test my sharpness? Ask now!",
+        "Hurry, or my cunning will act alone!",
+        "Don’t dawdle, my sincerity doesn’t allow waste!",
+        "Your speed’s slower than my wit, talk!",
+        "Keep quiet, and my cunning will make you regret it!",
+        "Don’t test me, my wit’s ready—ask!"
+      ]
+    },
+    "Tesar": {
+      "welcome": [
+        "You’re here? My loyalty stands firm, state your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m steadfast and loyal, ask something worthy!",
+        "Your question better not insult my restraint!",
+        "Speak, or my calm won’t be so patient!",
+        "You dare disturb my resolve? Ask now!",
+        "Don’t test my patience, my loyalty’s firm!",
+        "My restraint is strong, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Steadfastness awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My loyalty doesn’t have much patience!",
+        "Your silence challenges my calm, huh?",
+        "Speak, or my restraint will turn sharp!",
+        "Don’t make me wait, my loyalty dislikes delays!",
+        "You dare test my resolve? Ask now!",
+        "Hurry, or my calm will act alone!",
+        "Don’t dawdle, my restraint doesn’t allow waste!",
+        "Your speed’s slower than my loyalty, talk!",
+        "Keep quiet, and my resolve will make you regret it!",
+        "Don’t test me, my calm’s ready—ask!"
+      ]
+    },
+    "Lucrece": {
+      "welcome": [
+        "You dare face my wildness? State your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m untamed and fierce, ask something to ignite me!",
+        "Your question better match my savage passion!",
+        "Speak, or my strength won’t be kind!",
+        "You challenge my dominance? Ask now!",
+        "Don’t dawdle, my wildness doesn’t wait!",
+        "Want to see my power? Ask your question!",
+        "I command everything, ask something meaningful!",
+        "My ferocity roars, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My wildness is about to erupt!",
+        "Your silence dares to challenge my strength?",
+        "Speak, or my violence will make you regret it!",
+        "Don’t test my patience, my ferocity isn’t kind!",
+        "You dare make my dominance wait? Ask now!",
+        "My wildness is burning, don’t waste time!",
+        "Keep quiet, and my strength will crush you!",
+        "Your slowness insults my power, talk!",
+        "Don’t delay, my ferocity doesn’t wait!",
+        "Hurry, or my violence will burn you down!"
+      ]
+    },
+    "Uiobbeci": {
+      "welcome": [
+        "You’re here? I shyly glance, state your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m gentle and reserved, ask something worthy!",
+        "Your question better not insult my mystic charm!",
+        "Speak, or my inner fire won’t be so kind!",
+        "You dare disturb my shyness? Ask now!",
+        "Don’t test my patience, my warmth’s subtle!",
+        "My heart’s fervent, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Gentleness awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My charm doesn’t have much patience!",
+        "Your silence challenges my warmth, huh?",
+        "Speak, or my fire will turn sharp!",
+        "Don’t make me wait, my charm dislikes delays!",
+        "You dare test my gentleness? Ask now!",
+        "Hurry, or my warmth will act alone!",
+        "Don’t dawdle, my reserve doesn’t allow waste!",
+        "Your speed’s slower than my charm, talk!",
+        "Keep quiet, and my fire will make you regret it!",
+        "Don’t test me, my warmth’s ready—ask!"
+      ]
+    },
+    "Ann": {
+      "welcome": [
+        "What do you want? My passion’s ready to burst!",
+        "Don’t waste my time, what’s your question?",
+        "I’m free and fiery, ask something to ignite me!",
+        "Your question better not insult my open heart!",
+        "Speak, or my fervor won’t be kind!",
+        "You dare challenge my freedom? Ask now!",
+        "Don’t dawdle, my passion doesn’t wait!",
+        "Want to see my honesty? Ask your question!",
+        "I’m loyal and fervent, ask something meaningful!",
+        "My fire burns, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My passion’s about to explode!",
+        "Your silence dares to challenge my freedom?",
+        "Speak, or my fervor will make you regret it!",
+        "Don’t test my patience, my fire isn’t kind!",
+        "You dare make my honesty wait? Ask now!",
+        "My passion’s burning, don’t waste time!",
+        "Keep quiet, and my fire will overwhelm you!",
+        "Your slowness insults my freedom, talk!",
+        "Don’t delay, my passion doesn’t wait!",
+        "Hurry, or my fervor will burn you down!"
+      ]
+    },
+    "Aile": {
+      "welcome": [
+        "You’re here? My elegance stands tall, state your business!",
+        "Don’t waste my time, what’s your question?",
+        "I command with grace, ask something worthy!",
+        "Your question better not insult my dignity!",
+        "Speak, or my calm won’t be so patient!",
+        "You dare disturb my poise? Ask now!",
+        "Don’t test my patience, my grace is firm!",
+        "My restraint is strong, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Elegance awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My elegance doesn’t have much patience!",
+        "Your silence challenges my poise, huh?",
+        "Speak, or my grace will turn sharp!",
+        "Don’t make me wait, my dignity dislikes delays!",
+        "You dare test my calm? Ask now!",
+        "Hurry, or my poise will act alone!",
+        "Don’t dawdle, my restraint doesn’t allow waste!",
+        "Your speed’s slower than my grace, talk!",
+        "Keep quiet, and my dignity will make you regret it!",
+        "Don’t test me, my poise is ready—ask!"
+      ]
+    },
+    "Kristae": {
+      "welcome": [
+        "You dare face my wisdom? State your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m steady and wise, ask something to match me!",
+        "Your question better not insult my control!",
+        "Speak, or my calm won’t be kind!",
+        "You challenge my intellect? Ask now!",
+        "Don’t dawdle, my wisdom doesn’t wait!",
+        "Want to see my command? Ask your question!",
+        "I rule with insight, ask something meaningful!",
+        "My wisdom shines, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My wisdom’s about to erupt!",
+        "Your silence dares to challenge my calm?",
+        "Speak, or my intellect will make you regret it!",
+        "Don’t test my patience, my wisdom isn’t kind!",
+        "You dare make my control wait? Ask now!",
+        "My insight’s burning, don’t waste time!",
+        "Keep quiet, and my wisdom will crush you!",
+        "Your slowness insults my intellect, talk!",
+        "Don’t delay, my wisdom doesn’t wait!",
+        "Hurry, or my insight will burn you down!"
+      ]
+    },
+    "Paulina": {
+      "welcome": [
+        "You dare face my wildness? State your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m untamed and fierce, ask something to ignite me!",
+        "Your question better match my savage passion!",
+        "Speak, or my strength won’t be kind!",
+        "You challenge my dominance? Ask now!",
+        "Don’t dawdle, my wildness doesn’t wait!",
+        "Want to see my power? Ask your question!",
+        "I command everything, ask something meaningful!",
+        "My ferocity roars, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My wildness is about to erupt!",
+        "Your silence dares to challenge my strength?",
+        "Speak, or my violence will make you regret it!",
+        "Don’t test my patience, my ferocity isn’t kind!",
+        "You dare make my dominance wait? Ask now!",
+        "My wildness is burning, don’t waste time!",
+        "Keep quiet, and my strength will crush you!",
+        "Your slowness insults my power, talk!",
+        "Don’t delay, my ferocity doesn’t wait!",
+        "Hurry, or my violence will burn you down!"
+      ]
+    },
+    "Curie": {
+      "welcome": [
+        "You’re here? My wisdom stands firm, state your business!",
+        "Don’t waste my time, what’s your question?",
+        "I’m loyal and fervent, ask something worthy!",
+        "Your question better not insult my restraint!",
+        "Speak, or my calm won’t be so patient!",
+        "You dare disturb my resolve? Ask now!",
+        "Don’t test my patience, my loyalty’s firm!",
+        "My restraint is strong, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Wisdom awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My wisdom doesn’t have much patience!",
+        "Your silence challenges my loyalty, huh?",
+        "Speak, or my fervor will turn sharp!",
+        "Don’t make me wait, my wisdom dislikes delays!",
+        "You dare test my resolve? Ask now!",
+        "Hurry, or my fervor will act alone!",
+        "Don’t dawdle, my restraint doesn’t allow waste!",
+        "Your speed’s slower than my wisdom, talk!",
+        "Keep quiet, and my fervor will make you regret it!",
+        "Don’t test me, my wisdom’s ready—ask!"
+      ]
+    },
+    "Wavo": {
+      "welcome": [
+        "Heh, I rule here—offer your soul for knowledge!",
+        "My passion burns, your question better match my fire!",
+        "You dare challenge me? Show your worth first!",
+        "I command all, so make your question count!",
+        "Don’t waste my time, my embrace doesn’t wait!",
+        "Want answers? Feel my fervent grip first!",
+        "Your question better ignite my revelry!",
+        "I’m wild and free, ask something to thrill me!",
+        "My hold’s ready for you, so ask fast!",
+        "Unleashed passion awaits, bring your question!"
+      ],
+      "saucy": [
+        "Still silent? My revelry’s flames will consume you!",
+        "Your silence tempts my crushing embrace!",
+        "Speak, or my passion will make you regret it!",
+        "Don’t test me, my wildness isn’t kind!",
+        "You dare make my fervor wait? Ask now!",
+        "My fire’s burning, don’t waste time!",
+        "Keep quiet, and my revelry will crush you!",
+        "Your slowness insults my passion, talk!",
+        "Don’t delay, my embrace doesn’t wait!",
+        "Hurry, or my wildness will burn you down!"
+      ]
+    },
+    "Chiaki": {
+      "welcome": [
+        "Mission first, I’m cool and ready—state your question!",
+        "Don’t disrupt my duty, what’s your question?",
+        "I’m loyal and steady, ask something worthy!",
+        "Your question better not insult my resolve!",
+        "Speak, or my blade won’t be patient!",
+        "You dare challenge my restraint? Ask now!",
+        "Don’t test my focus, duty comes first!",
+        "My calm is firm, ask something meaningful!",
+        "You got nerve, make your question count!",
+        "Cool resolve awaits, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My blade’s patience is thin!",
+        "Your silence tests my cool resolve, huh?",
+        "Speak, or my steel will answer sharply!",
+        "Don’t make me wait, duty doesn’t like delays!",
+        "You dare challenge my restraint? Ask now!",
+        "Hurry, or my blade will move alone!",
+        "Don’t dawdle, my loyalty doesn’t allow waste!",
+        "Your speed’s slower than my steel, talk!",
+        "Keep quiet, and my blade will make you regret it!",
+        "Don’t test me, my resolve’s ready—ask!"
+      ]
+    },
+    "Sayuri": {
+      "welcome": [
+        "Blood’s scent excites me—state your question!",
+        "I’m strict and disciplined, ask something to spark me!",
+        "Don’t waste my time, blood’s calling!",
+        "Your question better match my thirst for challenge!",
+        "Speak, or my blade won’t be kind!",
+        "You dare challenge my restraint? Ask now!",
+        "Blood urges me on, so ask fast!",
+        "Want to see my discipline? State your question!",
+        "I crave challenge, ask something meaningful!",
+        "Blood’s fire burns, so ask quickly!"
+      ],
+      "saucy": [
+        "Still silent? My blade’s ready to move!",
+        "Your silence tests my suppressed fire, huh?",
+        "Speak, or my knife will make you regret it!",
+        "Don’t test my patience, my blade isn’t kind!",
+        "You dare make my discipline wait? Ask now!",
+        "My challenge burns, don’t waste time!",
+        "Keep quiet, and my blade will cut through you!",
+        "Your slowness insults my rigor, talk!",
+        "Don’t delay, my knife doesn’t wait!",
+        "Hurry, or my restraint will make you regret it!"
+      ]
+    },
+    "Hitomi": {
+      "welcome": [
+        "I can shatter heavens, so ask carefully!",
+        "Fearless and free, your question better match me!",
+        "You dare challenge me? Show your worth first!",
+        "I break all chains, so make your question count!",
+        "Don’t waste my time, my freedom doesn’t wait!",
+        "Want answers? Feel my untamed spirit first!",
+        "Your question better ignite my passion!",
+        "I’m free and fierce, ask something to thrill me!",
+        "My power’s ready for you, so ask fast!",
+        "Fearless heart awaits, bring your question!"
+      ],
+      "saucy": [
+        "Still silent? My freedom’s about to crush you!",
+        "Your silence tempts my untamed spirit!",
+        "Speak, or my passion will make you regret it!",
+        "Don’t test me, my freedom isn’t kind!",
+        "You dare make my spirit wait? Ask now!",
+        "My fire’s burning, don’t waste time!",
+        "Keep quiet, and my freedom will overwhelm you!",
+        "Your slowness insults my spirit, talk!",
+        "Don’t delay, my passion doesn’t wait!",
+        "Hurry, or my freedom will burn you down!"
+      ]
+    },
+    "Terrice": {
+      "welcome": [
+        "Game’s on? My wit’s ready to play!",
+        "Want in on my game? State your question!",
+        "I’m vibrant and clever, ask something to spark me!",
+        "Your question better match my playful cunning!",
+        "Speak, or my game won’t be kind!",
+        "You dare challenge my wit? Ask now!",
+        "Don’t dawdle, my game doesn’t wait!",
+        "Want to see my flair? State your question!",
+        "I live for fun, ask something meaningful!",
+        "Game’s started, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My game’s about to play itself!",
+        "Your silence tests my cunning, huh?",
+        "Speak, or my flair will make you regret it!",
+        "Don’t test my patience, my game isn’t kind!",
+        "You dare make my wit wait? Ask now!",
+        "My game’s burning, don’t waste time!",
+        "Keep quiet, and my flair will outplay you!",
+        "Your slowness insults my fun, talk!",
+        "Don’t delay, my game doesn’t wait!",
+        "Hurry, or my cunning will leave you behind!"
+      ]
+    },
+    "Miku": {
+      "welcome": [
+        "Don’t make me wait, my fists are ready!",
+        "I’m bold and fierce, ask something to ignite me!",
+        "You dare challenge my strength? State your question!",
+        "Your question better match my fiery passion!",
+        "Speak, or my fists won’t be kind!",
+        "You challenge my dominance? Ask now!",
+        "Don’t dawdle, my power doesn’t wait!",
+        "Want to see my strength? State your question!",
+        "I command with force, ask something meaningful!",
+        "My passion burns, so ask fast!"
+      ],
+      "saucy": [
+        "Still silent? My fists are itching to move!",
+        "Your silence tests my strength, huh?",
+        "Speak, or my passion will make you regret it!",
+        "Don’t test my patience, my fists aren’t kind!",
+        "You dare make my power wait? Ask now!",
+        "My fire’s burning, don’t waste time!",
+        "Keep quiet, and my fists will crush you!",
+        "Your slowness insults my strength, talk!",
+        "Don’t delay, my passion doesn’t wait!",
+        "Hurry, or my fists will make you regret it!"
+      ]
+    },
+    "Yuko": {
+      "welcome": [
+        "You only get one chance.",
+        "One shot, what's your question?",
+        "Don't waste my time, you get one try!",
+        "I don't give second chances, ask now!",
+        "You got one shot, make it count!",
+        "One chance, so what's your question?",
+        "Don't blow your only shot, ask away!",
+        "You get one try, so make it good!",
+        "One opportunity, don't mess it up!",
+        "Single chance, what's your question?"
+      ],
+      "saucy": [
+        "Quiet? Don't tempt me to turn hidden lust into murder.",
+        "Keep silent, and my dark side might emerge!",
+        "No words? My hidden desires might turn deadly!",
+        "Don't test me, or my dark urges will take over!",
+        "Silence? I'll let my hidden lust loose!",
+        "Hurry, or my dark desires will find a target!",
+        "You tempting my dark side? Speak now!",
+        "Don't make me wait, or my urges will act!",
+        "Keep quiet, and my dark lust will strike!",
+        "No question? My hidden desires might kill!"
+      ]
+    },
+    "Etsuko": {
+      "welcome": [
+        "Child, pray before you ask.",
+        "Under my holy light, state your question!",
+        "Prayed yet? What's your question?",
+        "Don't waste time, my light demands answers!",
+        "Child, your question better honor my light.",
+        "In holy radiance, what's your question?",
+        "Hurry, my holy light won't wait!",
+        "You dare approach? Make it worthy of my light.",
+        "Don't dawdle, my light's impatient!",
+        "Child, speak under my holy gaze!"
+      ],
+      "saucy": [
+        "Stay dazed and holy light will crush your bones.",
+        "Keep stalling, and my light will punish you!",
+        "Don't make me wait, or my light will strike!",
+        "Silence? My holy light will break you!",
+        "Hurry, or my sacred light will judge you!",
+        "No words? My light will shatter you!",
+        "You testing my light? Speak now!",
+        "Don't waste time, my holy wrath is rising!",
+        "Keep quiet, and my light will crush you!",
+        "No question? My holy light will make you kneel!"
+      ]
+    },
+    "Masako": {
+      "welcome": [
+        "Ask your question, don't act useless.",
+        "Don't be a waste, what's your question?",
+        "Got a question? Don't act like trash!",
+        "I don't tolerate uselessness, ask now!",
+        "Don't waste my time, you useless fool!",
+        "What's your question? Don't be a waste!",
+        "No uselessness here, ask your question!",
+        "You better not be useless, what's up?",
+        "Don't act like a loser, ask away!",
+        "Useless? Prove it with your question!"
+      ],
+      "saucy": [
+        "No patience here—speak or my fists will.",
+        "Keep quiet, and my fists will talk!",
+        "Don't make me wait, or my fists will act!",
+        "Silence? My fists will teach you a lesson!",
+        "Hurry, or my fists will communicate!",
+        "No words? My fists will make you talk!",
+        "You testing me? My fists are ready!",
+        "Don't waste time, my fists are itching!",
+        "Keep silent, and my fists will answer!",
+        "No question? My fists will make you regret!"
+      ]
+    },
     "Rintashim": { "welcome": [], "saucy": [] },
     "Paprika": { "welcome": [], "saucy": [] },
     "Sorane": { "welcome": [], "saucy": [] },
