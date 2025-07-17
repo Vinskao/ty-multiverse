@@ -5,7 +5,7 @@ import '../styles/qabot.css';
 
 <!-- 浮動聊天按鈕 -->
 <div class="qa-bot-toggle" id="qaBotToggle">
-  <img src="" alt="Sawa Maya" class="toggle-image" />
+  <img src="https://peoplesystem.tatdvsonorth.com/images/people/MayaHeadLow.png" alt="Sawa Maya" class="toggle-image" />
   <span class="toggle-text">真夜</span>
 </div>
 
@@ -148,6 +148,7 @@ import '../styles/qabot.css';
       this.initializeTheme();
       this.setupEventListeners();
       this.setupAvatarSelector(); // 新增頭貼選擇器
+      this.setupNetworkListener(); // 新增網路狀態監聽
       this.fetchBotNames();       // 從 API 取得可用 bot 名稱
       this.loadMessages().then(() => {
       this.loadChatHistory();
@@ -223,6 +224,82 @@ import '../styles/qabot.css';
       });
     }
 
+    // 設置網路狀態監聽器
+    private setupNetworkListener() {
+      let wasOffline = !navigator.onLine;
+      
+      // 監聽網路狀態變化
+      window.addEventListener('online', () => {
+        if (wasOffline) {
+          console.log('網路已恢復，重新獲取AI專員列表');
+          wasOffline = false;
+          this.refreshBotList();
+        }
+      });
+      
+      window.addEventListener('offline', () => {
+        wasOffline = true;
+        console.log('網路已斷線');
+      });
+    }
+
+    // 重新整理AI專員列表
+    private async refreshBotList() {
+      try {
+        console.log('開始重新獲取AI專員列表...');
+        
+        // 顯示loading狀態
+        this.showBotListLoading();
+        
+        await this.fetchBotNames();
+        
+        // 隱藏loading狀態
+        this.hideBotListLoading();
+        
+        // 如果當前選擇的AI不在新列表中，自動切換到第一個可用的AI
+        if (this.state.availableBots.length > 0 && !this.state.availableBots.includes(this.state.botName)) {
+          console.log(`當前AI ${this.state.botName} 不在新列表中，切換到 ${this.state.availableBots[0]}`);
+          this.state.currentBotIndex = 0;
+          this.state.botName = this.state.availableBots[0];
+          this.updateAvatarAndName();
+          
+          // 顯示切換提示
+          this.addBotSwitchMessage();
+          
+          // 延遲顯示新的歡迎消息
+          setTimeout(() => {
+            this.addWelcomeMessage();
+          }, 1000);
+        }
+        
+        console.log('AI專員列表更新完成');
+      } catch (error) {
+        console.error('重新獲取AI專員列表失敗:', error);
+        this.hideBotListLoading();
+      }
+    }
+
+    // 顯示AI專員列表載入中狀態
+    private showBotListLoading() {
+      // 在頭像選擇器中顯示loading狀態
+      if (this.elements.avatarSelector) {
+        this.elements.avatarSelector.innerHTML = `
+          <div class="avatar-selector-loading">
+            <div class="loading-spinner"></div>
+            <p>正在重新連線中...</p>
+          </div>
+        `;
+        this.elements.avatarSelector.style.display = 'block';
+      }
+    }
+
+    // 隱藏AI專員列表載入中狀態
+    private hideBotListLoading() {
+      if (this.elements.avatarSelector) {
+        this.elements.avatarSelector.style.display = 'none';
+      }
+    }
+
     // 更新主題
     private updateTheme(newTheme: string) {
       this.state.currentTheme = newTheme;
@@ -288,25 +365,54 @@ import '../styles/qabot.css';
  
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
-      try {
-        const apiBase = import.meta.env.PUBLIC_TYMB_URL || '/tymb';
-        const resp = await fetch(`${apiBase}/people/names`, {
-          method: 'GET',
-          credentials: 'include'
-        });
-        if (resp.ok) {
-          const names = await resp.json();
-          if (Array.isArray(names)) {
-            // 確保 Maya 在列表內
-            if (!names.includes('Maya')) names.unshift('Maya');
-            this.state.availableBots = names;
-            // 初始化後先過濾無句庫的
-            if (this.messages) this.pruneAvailableBots();
-            this.state.currentBotIndex = names.indexOf('Maya');
+      const maxRetries = 3;
+      const retryDelay = 2000; // 2秒
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const apiBase = import.meta.env.PUBLIC_TYMB_URL || '/tymb';
+          const resp = await fetch(`${apiBase}/people/names`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (resp.ok) {
+            const names = await resp.json();
+            if (Array.isArray(names)) {
+              // 確保 Maya 在列表內
+              if (!names.includes('Maya')) names.unshift('Maya');
+              this.state.availableBots = names;
+              // 初始化後先過濾無句庫的
+              if (this.messages) this.pruneAvailableBots();
+              this.state.currentBotIndex = names.indexOf('Maya');
+              console.log('成功獲取AI專員列表:', this.state.availableBots);
+              return; // 成功後直接返回
+            }
+          } else if (resp.status === 500) {
+            console.warn(`API 500錯誤 (嘗試 ${attempt}/${maxRetries}):`, resp.statusText);
+            if (attempt < maxRetries) {
+              console.log(`${retryDelay/1000}秒後重試...`);
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              continue;
+            }
+          } else {
+            console.warn('API回應錯誤:', resp.status, resp.statusText);
+          }
+        } catch (err) {
+          console.warn(`網路錯誤 (嘗試 ${attempt}/${maxRetries}):`, err);
+          if (attempt < maxRetries) {
+            console.log(`${retryDelay/1000}秒後重試...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
           }
         }
-      } catch (err) {
-        console.warn('無法取得 bot 名稱列表', err);
+      }
+      
+      // 所有重試都失敗後，確保至少有一個預設的AI可用
+      console.warn('所有重試都失敗，使用預設AI');
+      if (this.state.availableBots.length === 0) {
+        this.state.availableBots = ['Maya'];
+        this.state.currentBotIndex = 0;
       }
       this.updateAvatarAndName();
     }
@@ -381,7 +487,7 @@ import '../styles/qabot.css';
       
       // 創建標題
       const title = document.createElement('h4');
-      title.textContent = '選擇AI助手';
+      title.textContent = '選擇專員';
       title.className = 'avatar-selector-title';
       selector.appendChild(title);
 
@@ -437,6 +543,10 @@ import '../styles/qabot.css';
         
         // 立即清除對話歷史，避免頭像和對話不匹配
         this.elements.chatMessages.innerHTML = '';
+        // 隱藏載入更多歷史按鈕
+        if (this.elements.loadMoreContainer) {
+          this.elements.loadMoreContainer.style.display = 'none';
+        }
         
         // 重置狀態
         this.state.lastSaucyMessage = '';
@@ -463,7 +573,7 @@ import '../styles/qabot.css';
     // 取得頭貼 URL
     private getAvatarUrl(name: string): string {
       const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
-      return `${apiBaseUrl}/images/people/${encodeURIComponent(name)}Head.png`;
+      return `${apiBaseUrl}/images/people/${encodeURIComponent(name)}HeadLow.png`;
     }
 
     // 設置事件監聽器
@@ -845,6 +955,9 @@ import '../styles/qabot.css';
       
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
+      
+      // AI回答完成後，重新開始催促計時
+      this.resetInactivityTimer();
     }
 
     // 添加錯誤消息
@@ -1059,9 +1172,14 @@ import '../styles/qabot.css';
 
     // 顯示催促消息
     private showSaucyMessage() {
-      if (this.state.saucyMessageCount >= this.state.maxSaucyMessages) return;
+      if (this.state.saucyMessageCount >= this.state.maxSaucyMessages) {
+        console.log('已達到最大催促次數，停止催促');
+        return;
+      }
       
       this.state.saucyMessageCount++;
+      console.log(`顯示第${this.state.saucyMessageCount}次催促消息`);
+      
       const langData = this.messages?.[this.state.currentLanguage];
       const currentMessages = langData?.[this.state.botName] || langData?.['Maya'];
       
@@ -1091,19 +1209,11 @@ import '../styles/qabot.css';
     private startTimers() {
       // 啟動不活躍計時器（使用遞增間隔）
       this.startInactivityTimer();
-
-      // 定期檢查是否需要發送催促消息
-      this.timers.randomMessage = setInterval(() => {
-        if (this.elements.qaBotContainer.classList.contains('show') && 
-            !this.state.isThinking && 
-            this.state.saucyMessageCount < this.state.maxSaucyMessages) {
-          this.showSaucyMessage();
-        }
-      }, 100000); // 每100秒檢查一次
     }
 
     // 重置不活躍計時器
     private resetInactivityTimer() {
+      console.log('重置催促計時器');
       if (this.timers.inactivity) clearTimeout(this.timers.inactivity);
       this.state.hasShownInactivityMessage = false;
       this.state.saucyMessageCount = 0;
@@ -1114,18 +1224,20 @@ import '../styles/qabot.css';
 
     // 啟動不活躍計時器（使用遞增間隔）
     private startInactivityTimer() {
-      const intervals = [3, 9, 27]; // 3分鐘, 9分鐘, 27分鐘
+      const intervals = [10, 30, 60]; // 10分鐘, 30分鐘, 60分鐘
       const currentInterval = intervals[this.state.saucyMessageCount] || intervals[intervals.length - 1];
       
+      console.log(`設置催促計時器: ${currentInterval}分鐘後 (第${this.state.saucyMessageCount + 1}次催促)`);
+      
       this.timers.inactivity = setTimeout(() => {
-        if (!this.state.hasShownInactivityMessage && !this.state.isThinking && this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+        if (!this.state.isThinking && this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+          console.log(`觸發第${this.state.saucyMessageCount + 1}次催促`);
           this.showSaucyMessage();
-          this.state.hasShownInactivityMessage = true;
           
           // 如果還沒達到最大次數，設置下一次定時器
           if (this.state.saucyMessageCount < this.state.maxSaucyMessages) {
-      this.startInactivityTimer();
-    }
+            this.startInactivityTimer();
+          }
         }
       }, currentInterval * 60 * 1000);
     }
