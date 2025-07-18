@@ -42,11 +42,13 @@
 }
 
 .toggle-image {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 2px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .qa-bot-toggle:hover {
@@ -124,10 +126,12 @@
 }
 
 .header-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .header-text {
@@ -362,10 +366,12 @@
 }
 
 .bot-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .message-content-wrapper {
@@ -1094,8 +1100,8 @@
   }
 
   .toggle-image {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .qa-bot-container {
@@ -1348,13 +1354,15 @@
 }
 
 .avatar-selector-img {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 8px;
   border: 2px solid #DAA520;
   transition: all 0.3s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .avatar-item:hover .avatar-selector-img {
@@ -1453,8 +1461,8 @@
   }
   
   .avatar-selector-img {
-    width: 45px;
-    height: 45px;
+    width: 35px;
+    height: 35px;
   }
   
   .avatar-name {
@@ -1474,8 +1482,8 @@
   }
   
   .avatar-selector-img {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
   }
   
   .avatar-name {
