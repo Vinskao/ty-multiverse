@@ -42,8 +42,8 @@
 }
 
 .toggle-image {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 2px;
@@ -126,12 +126,21 @@
 }
 
 .header-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.header-avatar:hover {
+  transform: scale(1.1);
+  border-color: #DAA520;
+  box-shadow: 0 4px 12px rgba(218, 165, 32, 0.4);
 }
 
 .header-text {
@@ -366,8 +375,8 @@
 }
 
 .bot-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   image-rendering: -webkit-optimize-contrast;
@@ -1100,8 +1109,8 @@
   }
 
   .toggle-image {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .qa-bot-container {
@@ -1354,8 +1363,8 @@
 }
 
 .avatar-selector-img {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 8px;
@@ -1461,8 +1470,8 @@
   }
   
   .avatar-selector-img {
-    width: 35px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
   }
   
   .avatar-name {
@@ -1482,8 +1491,8 @@
   }
   
   .avatar-selector-img {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
   }
   
   .avatar-name {

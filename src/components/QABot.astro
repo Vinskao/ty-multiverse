@@ -385,7 +385,7 @@ import '../styles/qabot.css';
               // 初始化後先過濾無句庫的
               if (this.messages) this.pruneAvailableBots();
               this.state.currentBotIndex = names.indexOf('Maya');
-              console.log('成功獲取AI專員列表:', this.state.availableBots);
+              // console.log('成功獲取AI專員列表:', this.state.availableBots);
               return; // 成功後直接返回
             }
           } else if (resp.status === 500) {
@@ -487,7 +487,7 @@ import '../styles/qabot.css';
       
       // 創建標題
       const title = document.createElement('h4');
-      title.textContent = '選擇專員';
+      title.textContent = '在線專員';
       title.className = 'avatar-selector-title';
       selector.appendChild(title);
 
@@ -497,7 +497,14 @@ import '../styles/qabot.css';
 
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
 
-      this.state.availableBots.forEach((botName, index) => {
+      // 過濾掉 default 角色和可能的無效角色
+      const validBots = this.state.availableBots.filter(botName => 
+        botName.toLowerCase() !== 'default' && 
+        botName.toLowerCase() !== 'unknown' &&
+        botName.trim() !== ''
+      );
+
+      validBots.forEach((botName, index) => {
         const avatarItem = document.createElement('div');
         avatarItem.className = 'avatar-item';
         if (botName === this.state.botName) {
@@ -508,8 +515,10 @@ import '../styles/qabot.css';
         avatarImg.src = this.getAvatarUrl(botName);
         avatarImg.alt = botName;
         avatarImg.className = 'avatar-selector-img';
+        
+        // 如果圖片載入失敗，隱藏整個選項
         avatarImg.onerror = () => {
-          avatarImg.src = defaultAvatarUrl;
+          avatarItem.style.display = 'none';
         };
 
         const avatarName = document.createElement('span');
@@ -519,9 +528,10 @@ import '../styles/qabot.css';
         avatarItem.appendChild(avatarImg);
         avatarItem.appendChild(avatarName);
 
-        // 點擊切換AI
+        // 點擊切換AI - 使用原始索引
         avatarItem.addEventListener('click', () => {
-          this.selectBot(index);
+          const originalIndex = this.state.availableBots.indexOf(botName);
+          this.selectBot(originalIndex);
           selector.style.display = 'none';
         });
 
