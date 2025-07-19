@@ -5,7 +5,7 @@ import '../styles/qabot.css';
 
 <!-- 浮動聊天按鈕 -->
 <div class="qa-bot-toggle" id="qaBotToggle">
-  <img src="https://peoplesystem.tatdvsonorth.com/images/people/MayaHead.png" alt="Sawa Maya" class="toggle-image" />
+  <img src={`${import.meta.env.PUBLIC_API_BASE_URL}/images/people/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
   <span class="toggle-text">真夜</span>
 </div>
 
@@ -13,7 +13,7 @@ import '../styles/qabot.css';
 <div class="qa-bot-container" id="qaBotContainer">
   <div class="chat-header">
     <div class="header-content">
-      <img src="https://peoplesystem.tatdvsonorth.com/images/people/MayaHead.png" alt="佐和 真夜" class="header-avatar" />
+      <img src={`${import.meta.env.PUBLIC_API_BASE_URL}/images/people/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
       <div class="header-text">
         <h3>佐和 真夜</h3>
         <p>TY的智慧庫</p>
@@ -44,7 +44,7 @@ import '../styles/qabot.css';
   <div class="chat-messages" id="chatMessages">
     <div class="message bot-message">
       <div class="message-avatar">
-        <img src="https://peoplesystem.tatdvsonorth.com/images/people/MayaHead.png" alt="真夜" class="bot-avatar" />
+        <img src={`${import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com'}/images/people/MayaHead.png`} alt="真夜" class="bot-avatar" />
       </div>
       <div class="message-content-wrapper">
         <div class="message-header">
