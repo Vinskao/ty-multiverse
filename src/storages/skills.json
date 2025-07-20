@@ -301,9 +301,16 @@
             { "name": "ChatOpenAI", "level": "shade5" },
             { "name": "LLMChain", "level": "shade5" },
             { "name": "PromptTemplate", "level": "shade5" },
-            { "name": "LangChain RAG", "level": "shade5" },
+            { "name": "LangChain RAG", "level": "shade5" }
+          ]
+        },
+        {
+          "name": "Tools",
+          "description": [],
+          "skills": [
             { "name": "WSL2", "level": "shade5" },
-            { "name": "NVIDIA Container Toolkit", "level": "shade5" }
+            { "name": "NVIDIA Container Toolkit", "level": "shade5" },
+            { "name": "Colab", "level": "shade4"}
           ]
         }
       ]
