@@ -840,3 +840,53 @@ section:nth-child(3) {
 .background-content * {
   text-align: left !important;
 }
+
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
+  }
+  .about, .wrapper, main, section, div, .stack, .content {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  section {
+    page-break-before: auto;
+    page-break-after: always;
+    page-break-inside: avoid;
+    animation: none !important;
+  }
+  .experience-item, .education-item {
+    box-shadow: none !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  nav, .no-print {
+    display: none !important;
+  }
+  .mermaid-diagram, .mermaid-diagram svg {
+    filter: none !important;
+    background: none !important;
+    color: black !important;
+  }
+  /* 讓所有內容展開且可見 */
+  * {
+    visibility: visible !important;
+    color: black !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  /* 避免頁首空白 */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
