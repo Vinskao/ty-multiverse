@@ -9,6 +9,7 @@
         "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
         "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
         "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
+        "Upgraded RHEL from 7 to 8 for 20+ servers",
         "API Development & Integration: Built WebSocket and RESTful APIs for seamless frontend-backend communication",
         "Quality Assurance & Observability: Developed comprehensive unit testing framework (JUnit5, Mockito) and implemented monitoring dashboards using Grafana and Prometheus"
       ]
@@ -43,7 +44,7 @@
         "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
         "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
         "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
-        "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements ensuring regulatory compliance"
+        "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
       ]
     }
   ],
