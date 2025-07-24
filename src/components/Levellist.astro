@@ -920,7 +920,7 @@ import '../styles/levellist.css';
         await fetchAndApplyTotalPower(false);
         saveToLocalStorage(character.name, currentData);
       };
-
+      
       // 添加失焦事件監聽器，在輸入完成後更新排行
       const updateRankingsOnBlur = () => {
         row.classList.remove('editing');
