@@ -22,7 +22,8 @@
           "name": "Frameworks & Libraries",
           "description": [
             "Developed CRUD APIs using Spring Boot framework with SSO server integration",
-            "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval"
+            "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval",
+            "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources."
           ],
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
@@ -37,6 +38,7 @@
         {
           "name": "Data Access",
           "description": [
+            "Used JPA, MyBatis, and JDBCTemplate to implement data access layer across Spring Boot and legacy JBoss applications. Designed entity mappings and SQL queries for CRUD and batch operations. Used Mongoose.js for schema definition and queries in MongoDB-powered dashboards."
           ],
           "skills": [
             { "name": "JPA", "level": "shade1" },
@@ -46,7 +48,9 @@
         },
         {
           "name": "API Development & Testing",
-          "description": [],
+          "description": [
+            "Designed and implemented RESTful APIs for order processing and account management using Spring MVC, FastAPI, and Laravel. Used Swagger for API documentation. Implemented unit and integration tests with JUnit 5 and Mockito, validating controller-service-repo interaction. Applied Servlet 5 filters for CORS and auth, and used Maven/Poetry for build lifecycle management."
+          ],
           "skills": [
             { "name": "Swagger", "level": "shade1" },
             { "name": "RESTful API", "level": "shade1" },
@@ -91,7 +95,8 @@
           "description": [
             "Integrated PostgreSQL with Keycloak SSO, LangChain, and multiple backend REST API frameworks",
             "Maintained DB Access Layer for MSSQL in JBoss EAP",
-            "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers"
+            "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers",
+            "Used PostgreSQL transaction blocks (with Spring @Transactional) to ensure atomic updates for order matching, record insertion, and position updates. Designed composite indexes (e.g., status + timestamp) for efficient query of latest records, and avoided unnecessary indexes to balance write performance."
           ],
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
@@ -105,7 +110,8 @@
         {
           "name": "NoSQL",
           "description": [
-            "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests"
+            "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests",
+            "Experienced with Redis and have used redis-cli for basic commands. Mainly used Redis to store order and temporary data in a matching simulation system, and used simple commands like GET, SET, and DEL to check if keys were written correctly or to clear test data. Also implemented atomic operations with Lua scripts, but mostly called them from the application rather than running EVAL directly in the CLI."
           ],
           "skills": [
             { "name": "MongoDB", "level": "shade4" },
@@ -135,7 +141,9 @@
         },
         {
           "name": "IaC & Automation",
-          "description": [],
+          "description": [
+            "Used Terraform to provision infrastructure on OCI and configure networking, compute, and storage resources. Automated deployment with Ansible for multi-node environments. Created and templated Helm charts for application rollout and upgrade across namespaces."
+          ],
           "skills": [
             { "name": "Terraform", "level": "shade4" },
             { "name": "Ansible", "level": "shade4" },
@@ -156,7 +164,9 @@
         },
         {
           "name": "Monitoring & Visualization",
-          "description": [],
+          "description": [
+            "Integrated Prometheus with Spring Boot Actuator for collecting JVM and custom metrics. Visualized real-time data using Grafana dashboards. Used Kiali to monitor service mesh topology and Istio routing behaviors. Monitored JBoss runtime via Jolokia and collected traces with Instana."
+          ],
           "skills": [
             { "name": "Grafana", "level": "shade4" },
             { "name": "Prometheus", "level": "shade4" },
@@ -196,7 +206,8 @@
         {
           "name": "Service Mesh & Load Balancing",
           "description": [
-            "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files"
+            "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files.",
+            "Configured Istio ingress gateway with routing policies and mTLS for internal services. Applied round-robin load balancing for stateless services and integrated Nginx for static assets delivery. Used cert-manager with ACME to issue and auto-renew TLS certs for ingress."
           ],
           "skills": [
             { "name": "Istio", "level": "shade4" },
@@ -216,7 +227,7 @@
         {
           "name": "Platforms",
           "description": [
-            "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database"
+            "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database. Evaluated cost-performance ratio and networking security between the two cloud environments."
           ],
           "skills": [
             { "name": "OCI", "level": "shade3" },
@@ -243,7 +254,9 @@
         },
         {
           "name": "Scripting",
-          "description": [],
+          "description": [
+            "Used Bash and Shell scripts to automate backup, deployment, and log rotation for RHEL-based systems. Used Python scripts to call APIs, process logs, and integrate with third-party services for data extraction and cleanup."
+          ],
           "skills": [
             { "name": "Shell", "level": "shade1" },
             { "name": "Bash", "level": "shade1" },
@@ -294,7 +307,9 @@
       "subcategories": [
         {
           "name": "Frameworks & APIs",
-          "description": [],
+          "description": [
+            "Built knowledge-based RAG chatbot using LangChain and OpenAI APIs. Used LLMChain and PromptTemplate to build query workflows. Parsed and embedded documents, exposed query interface via FastAPI, and orchestrated flow with tools and chains."
+          ],
           "skills": [
             { "name": "LangChain", "level": "shade4" },
             { "name": "OpenAI API", "level": "shade4" },
@@ -306,7 +321,9 @@
         },
         {
           "name": "Tools",
-          "description": [],
+          "description": [
+            "Set up local GPU inference with NVIDIA Container Toolkit and WSL2 on Windows. Used Colab for LLM prototyping and rapid experimentation. Tuned prompt behavior and latency benchmarks between local and remote environments."
+          ],
           "skills": [
             { "name": "WSL2", "level": "shade5" },
             { "name": "NVIDIA Container Toolkit", "level": "shade5" },
