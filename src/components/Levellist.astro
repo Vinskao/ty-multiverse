@@ -252,23 +252,26 @@ import '../styles/levellist.css';
   // 創建角色卡片
   function createCharacterCard(character, levelColor) {
     const characterContainer = document.createElement('div');
-    characterContainer.style.cssText = 'display:inline-block;height:300px;text-align:center;position:relative;z-index:1;';
+    characterContainer.style.cssText = 'display:inline-block;height:300px;text-align:center;position:relative;z-index:1;margin-right:-20px;';
 
     const img = document.createElement('img');
-    img.style.cssText = 'height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:opacity 0.5s ease-in-out;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
+    img.style.cssText = 'height:300px;width:auto;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;transition:opacity 0.5s ease-in-out;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
     img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
     img.alt = character.nameOriginal;
     img.onerror = function() {
       this.src = `${PEOPLE_IMAGE_URL}/default.png`;
     };
 
+    // 設置容器寬度，讓圖片維持固定高度
+    characterContainer.style.width = 'auto';
+    characterContainer.style.marginLeft = '0px';
+    
     // 圖片加載完成後設置容器寬度
     img.onload = function() {
       const imgElement = this as HTMLImageElement;
       const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
       const containerWidth = 300 * aspectRatio;
       characterContainer.style.width = `${containerWidth}px`;
-      characterContainer.style.marginLeft = `-${containerWidth/2}px`;
     };
 
     // 檢查戰鬥圖片和毀壞圖片
@@ -281,7 +284,7 @@ import '../styles/levellist.css';
       
       if (hasFightingImage) {
         const fightingImg = document.createElement('img');
-        fightingImg.style.cssText = img.style.cssText + 'opacity:0;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
+        fightingImg.style.cssText = img.style.cssText + 'opacity:0;width:auto;z-index:10;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
         fightingImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
         fightingImg.alt = `${character.nameOriginal} Fighting`;
         
@@ -291,7 +294,6 @@ import '../styles/levellist.css';
           const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
           const containerWidth = 300 * aspectRatio;
           characterContainer.style.width = `${containerWidth}px`;
-          characterContainer.style.marginLeft = `-${containerWidth/2}px`;
         };
         
         characterContainer.appendChild(fightingImg);
@@ -300,7 +302,7 @@ import '../styles/levellist.css';
       
       if (hasRuinedImage) {
         const ruinedImg = document.createElement('img');
-        ruinedImg.style.cssText = img.style.cssText + 'opacity:0;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
+        ruinedImg.style.cssText = img.style.cssText + 'opacity:0;width:auto;z-index:10;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
         ruinedImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`;
         ruinedImg.alt = `${character.nameOriginal} Ruined`;
         
@@ -310,7 +312,6 @@ import '../styles/levellist.css';
           const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
           const containerWidth = 300 * aspectRatio;
           characterContainer.style.width = `${containerWidth}px`;
-          characterContainer.style.marginLeft = `-${containerWidth/2}px`;
         };
         
         characterContainer.appendChild(ruinedImg);
@@ -336,19 +337,19 @@ import '../styles/levellist.css';
 
     // 添加懸停事件
     img.addEventListener('mouseover', () => {
-      (img as HTMLImageElement).style.zIndex = '3';
+      (img as HTMLImageElement).style.zIndex = '20';
       // 提升所有兄弟圖片元素的 z-index
       const siblingImages = characterContainer.querySelectorAll('img');
       siblingImages.forEach(siblingImg => {
-        (siblingImg as HTMLImageElement).style.zIndex = '3';
+        (siblingImg as HTMLImageElement).style.zIndex = '20';
       });
     });
     img.addEventListener('mouseout', () => {
-      (img as HTMLImageElement).style.zIndex = '2';
+      (img as HTMLImageElement).style.zIndex = '10';
       // 重置所有兄弟圖片元素的 z-index
       const siblingImages = characterContainer.querySelectorAll('img');
       siblingImages.forEach(siblingImg => {
-        (siblingImg as HTMLImageElement).style.zIndex = '2';
+        (siblingImg as HTMLImageElement).style.zIndex = '10';
       });
     });
 
@@ -380,6 +381,26 @@ import '../styles/levellist.css';
     powerText.textContent = `Total Power: ${character.totalPower}`;
     powerText.style.cssText = 'margin:0;font-size:clamp(12px,0.8vw,14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
     powerText.style.color = levelColor;
+    
+    // 使用與力表相同的 API 獲取最新戰力
+    const fetchLatestPower = async () => {
+      try {
+        const resp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(character.name)}`);
+        if (resp.ok) {
+          const text = await resp.text();
+          const dmgInt = parseInt(text, 10);
+          if (!isNaN(dmgInt) && dmgInt > 0) {
+            powerText.textContent = `Total Power: ${dmgInt}`;
+            console.log(`✅ ${character.name} 最新戰力: ${dmgInt}`);
+          }
+        }
+      } catch (e) {
+        console.error(`❌ ${character.name} 獲取最新戰力失敗:`, e);
+      }
+    };
+    
+    // 立即獲取最新戰力
+    fetchLatestPower();
 
     infoContainer.appendChild(nameText);
     infoContainer.appendChild(attributesText);
