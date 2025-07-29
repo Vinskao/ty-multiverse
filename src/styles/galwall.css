@@ -72,8 +72,7 @@ image-rendering: -webkit-optimize-contrast;
 image-rendering: -moz-crisp-edges;
 image-rendering: crisp-edges;
 image-rendering: pixelated;
-/* 強制使用較低的圖片品質 */
-filter: contrast(0.9) brightness(0.95);
+/* 移除可能導致黑色背景的 filter */
 }
 
 @keyframes slideLeft {
