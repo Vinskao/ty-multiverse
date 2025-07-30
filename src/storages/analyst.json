@@ -1,0 +1,86 @@
+{
+  "chinese": {
+    "analysis_types": [
+      {
+        "value": "summary",
+        "label": "📝 摘要",
+        "desc": "200字內簡潔摘要"
+      },
+      {
+        "value": "key_points",
+        "label": "🔍 重點提取",
+        "desc": "條列式重點整理"
+      },
+      {
+        "value": "technical",
+        "label": "⚙️ 技術分析",
+        "desc": "技術概念解析"
+      },
+      {
+        "value": "qa",
+        "label": "❓ 問題生成",
+        "desc": "基於內容生成問題"
+      }
+    ],
+    "ui": {
+      "title": "分析類型：",
+      "start_button": "📄 分析頁面",
+      "analyzing": "⏳ 分析中...",
+      "panel_title": "頁面分析"
+    },
+    "labels": {
+      "page_summary": "📄 頁面摘要",
+      "page_key_points": "🔍 重點提取",
+      "page_technical": "⚙️ 技術分析",
+      "page_qa": "❓ 問題生成"
+    },
+    "metadata": {
+      "content_length": "內容長度",
+      "source": "來源",
+      "reanalyze": "🔄 重新分析",
+      "copy_result": "📋 複製結果"
+    }
+  },
+  "english": {
+    "analysis_types": [
+      {
+        "value": "summary",
+        "label": "📝 Summary",
+        "desc": "200-word concise summary"
+      },
+      {
+        "value": "key_points",
+        "label": "🔍 Key Points",
+        "desc": "Bullet-point key takeaways"
+      },
+      {
+        "value": "technical",
+        "label": "⚙️ Technical Analysis",
+        "desc": "Technical concept breakdown"
+      },
+      {
+        "value": "qa",
+        "label": "❓ Q&A Generation",
+        "desc": "Generate questions from content"
+      }
+    ],
+    "ui": {
+      "title": "Analysis Type:",
+      "start_button": "📄 Analyze Page",
+      "analyzing": "⏳ Analyzing...",
+      "panel_title": "Page Analysis"
+    },
+    "labels": {
+      "page_summary": "📄 Page Summary",
+      "page_key_points": "🔍 Key Points",
+      "page_technical": "⚙️ Technical Analysis",
+      "page_qa": "❓ Q&A Generation"
+    },
+    "metadata": {
+      "content_length": "Content Length",
+      "source": "Source",
+      "reanalyze": "🔄 Re-analyze",
+      "copy_result": "📋 Copy Result"
+    }
+  }
+}

@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageContent from '../components/PageContent.astro';
+---
+
+<BaseLayout title="內容結構化示例" description="展示如何使用 PageContent 組件進行 AI 分析">
+  <div class="container">
+    <h1>內容結構化示例</h1>
+    <p>這個頁面展示了如何使用 PageContent 組件來標記頁面內容，讓 AI 分析更加準確。</p>
+    
+    <!-- 主要內容區域 -->
+    <PageContent type="main" className="main-article">
+      <h2>主要內容</h2>
+      <p>這是頁面的主要內容區域，AI 會優先分析這裡的內容。</p>
+      
+      <h3>技術要點</h3>
+      <ul>
+        <li>使用 data-page-type 屬性標記內容類型</li>
+        <li>支持 content、main、article、sidebar、footer 等類型</li>
+        <li>AI 會按優先級提取內容</li>
+        <li>自動過濾導航、廣告等干擾內容</li>
+      </ul>
+      
+      <h3>使用方式</h3>
+      <pre><code>
+&lt;PageContent type="main"&gt;
+  &lt;h2&gt;主要內容&lt;/h2&gt;
+  &lt;p&gt;這裡的內容會被 AI 優先分析&lt;/p&gt;
+&lt;/PageContent&gt;
+      </code></pre>
+    </PageContent>
+    
+    <!-- 側邊欄內容 -->
+    <PageContent type="sidebar" className="sidebar-content">
+      <h3>側邊欄內容</h3>
+      <p>這是側邊欄內容，AI 分析時會降低優先級。</p>
+      <ul>
+        <li>相關連結</li>
+        <li>廣告內容</li>
+        <li>導航選項</li>
+      </ul>
+    </PageContent>
+    
+    <!-- 文章內容 -->
+    <PageContent type="article" className="article-content">
+      <h2>文章內容</h2>
+      <p>這是文章類型的內容，適合長篇文本分析。</p>
+      
+      <h3>AI 分析功能</h3>
+      <p>通過結構化標記，AI 可以：</p>
+      <ul>
+        <li>準確識別頁面主要內容</li>
+        <li>過濾無關的導航和廣告</li>
+        <li>提供更精確的頁面摘要</li>
+        <li>生成相關的問題和重點</li>
+      </ul>
+      
+      <h3>技術實現</h3>
+      <p>系統會按以下優先級提取內容：</p>
+      <ol>
+        <li>data-page-type="content" 的內容</li>
+        <li>data-page-type="main" 的內容</li>
+        <li>data-page-type="article" 的內容</li>
+        <li>main 標籤內容</li>
+        <li>article 標籤內容</li>
+        <li>其他內容選擇器</li>
+      </ol>
+    </PageContent>
+  </div>
+</BaseLayout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+  }
+  
+  .main-article {
+    grid-column: 1;
+  }
+  
+  .sidebar-content {
+    grid-column: 2;
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .article-content {
+    grid-column: 1 / -1;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 12px;
+  }
+  
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  
+  code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+    
+    .sidebar-content {
+      grid-column: 1;
+    }
+  }
+</style> 

@@ -1,0 +1,45 @@
+---
+// 頁面內容組件 - 用於 AI 分析
+interface Props {
+  type?: 'content' | 'main' | 'article' | 'sidebar' | 'footer';
+  className?: string;
+  id?: string;
+}
+
+const { type = 'content', className = '', id = '' } = Astro.props;
+---
+
+<div 
+  class={`page-content-section ${className}`}
+  data-page-type={type}
+  id={id}
+>
+  <slot />
+</div>
+
+<style>
+  .page-content-section {
+    /* 基本樣式 */
+  }
+  
+  /* 為不同類型的內容添加視覺提示（開發時使用） */
+  .page-content-section[data-page-type="content"] {
+    /* 主要內容區域 */
+  }
+  
+  .page-content-section[data-page-type="main"] {
+    /* 主要內容 */
+  }
+  
+  .page-content-section[data-page-type="article"] {
+    /* 文章內容 */
+  }
+  
+  .page-content-section[data-page-type="sidebar"] {
+    /* 側邊欄內容 */
+  }
+  
+  .page-content-section[data-page-type="footer"] {
+    /* 頁腳內容 */
+  }
+</style> 
