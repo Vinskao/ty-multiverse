@@ -1,51 +1,88 @@
 {
-  "background": "I offer full-stack capabilities covering API design, multi-threading, data queuing, and the design and optimization of LLM Chains (e.g., RetrievalQAChain). My strength lies in swiftly diagnosing problems and facilitating the real-world deployment of AI applications. I also have a solid background in system architecture planning and refactoring, and am proficient in microservices traffic management and containerized deployments.\n\n\"My personal website has a complete skill tree. Please email me, and I'll respond promptly.\"\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
+  "background": {
+    "en": "I offer full-stack capabilities covering API design, multi-threading, data queuing, and the design and optimization of LLM Chains (e.g., RetrievalQAChain). My strength lies in swiftly diagnosing problems and facilitating the real-world deployment of AI applications. I also have a solid background in system architecture planning and refactoring, and am proficient in microservices traffic management and containerized deployments.\n\n\"My personal website has a complete skill tree. Please email me, and I'll respond promptly.\"\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
+    "zh": "我具備全端開發能力，涵蓋 API 設計、多執行緒、資料佇列，以及 LLM Chain（如 RetrievalQAChain）的設計與優化。專長在於迅速診斷問題並協助 AI 應用落地。亦擅長系統架構規劃與重構，熟悉微服務流量治理與容器化部署。\n\n「我的個人網站上有完整的技能樹，歡迎來信交流，我會盡快回覆。」\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about"
+  },
   "experience": [
     {
       "title": "Open Source Backend Engineer",
       "company": "Mercuries Life Insurance",
       "period": "2024/3~Present",
-      "projectExperience": [
-        "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
-        "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
-        "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
-        "Upgraded RHEL from 7 to 8 for 20+ servers",
-        "API Development & Integration: Built WebSocket and RESTful APIs for seamless frontend-backend communication",
-        "Quality Assurance & Observability: Developed comprehensive unit testing framework (JUnit5, Mockito) and implemented monitoring dashboards using Grafana and Prometheus"
-      ]
+      "projectExperience": {
+        "en": [
+          "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
+          "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
+          "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
+          "Upgraded RHEL from 7 to 8 for 20+ servers",
+          "API Development & Integration: Built WebSocket and RESTful APIs for seamless frontend-backend communication",
+          "Quality Assurance & Observability: Developed comprehensive unit testing framework (JUnit5, Mockito) and implemented monitoring dashboards using Grafana and Prometheus"
+        ],
+        "zh": [
+          "SSO 系統架構與整合：使用 Keycloak 與 RedHat SSO 設計並實作企業級 SSO 解決方案，確保安全驗證",
+          "Java 生態系現代化：主導將 JBoss、MVC 與 Spring/Spring Boot 應用從 Java 8/11 升級至 Java 17",
+          "DevOps 與容器化：實作 Linux 離線部署策略，並使用 Kubernetes 與 Docker Compose 將應用容器化",
+          "為 20+ 台伺服器將 RHEL 從 7 升級至 8",
+          "API 開發與整合：打造 WebSocket 與 RESTful API，以實現前後端無縫溝通",
+          "品質保證與可觀測性：建立完善的單元測試框架（JUnit5、Mockito），並使用 Grafana 與 Prometheus 部署監控儀表板"
+        ]
+      }
     },
     {
       "title": "Macro Associate",
       "company": "Tarobo Investment Advisors",
       "period": "2022/9~2023/1",
-      "responsibilities": [
-        "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis",
-        "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies",
-        "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis"
-      ]
+      "responsibilities": {
+        "en": [
+          "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis",
+          "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies",
+          "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis"
+        ],
+        "zh": [
+          "每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析",
+          "分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略",
+          "維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析"
+        ]
+      }
     },
     {
       "title": "Fintech PM, MA Program",
       "company": "Far Eastern Int'l Bank",
       "period": "2021/8~2022/5",
-      "responsibilities": [
-        "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
-        "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
-        "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
-        "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations"
-      ]
+      "responsibilities": {
+        "en": [
+          "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
+          "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
+          "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
+          "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations"
+        ],
+        "zh": [
+          "撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案",
+          "進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告",
+          "管理數位支付部門 31 項作業流程，確保合規與效率",
+          "提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地"
+        ]
+      }
     },
     {
       "title": "Auditor",
       "company": "EY",
       "period": "2019/9~2020/3",
-      "responsibilities": [
-        "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
-        "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
-        "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
-        "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
-        "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
-      ]
+      "responsibilities": {
+        "en": [
+          "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
+          "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
+          "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
+          "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
+          "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
+        ],
+        "zh": [
+          "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益",
+          "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序",
+          "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異",
+          "編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析",
+          "稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表"
+        ]
+      }
     }
   ],
   "education": [

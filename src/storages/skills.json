@@ -3,14 +3,18 @@
     {
       "name": "Backend Development",
       "pillClass": "pill1",
-      "description": [
-      ],
+      "description": {},
       "subcategories": [
         {
           "name": "Languages",
-          "description": [
-            "Implemented factory design pattern for decoupling - https://github.com/Vinskao?tab=repositories"
-          ],
+          "description": {
+            "en": [
+              "Implemented factory design pattern for decoupling - https://github.com/Vinskao?tab=repositories"
+            ],
+            "zh": [
+              "使用工廠設計模式進行解耦 - https://github.com/Vinskao?tab=repositories"
+            ]
+          },
           "skills": [
             { "name": "Java 8 11 17", "level": "shade1" },
             { "name": "Python 3", "level": "shade3" },
@@ -20,11 +24,18 @@
         },
         {
           "name": "Frameworks & Libraries",
-          "description": [
-            "Developed CRUD APIs using Spring Boot framework with SSO server integration",
-            "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval",
-            "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources."
-          ],
+          "description": {
+            "en": [
+              "Developed CRUD APIs using Spring Boot framework with SSO server integration",
+              "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval",
+              "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources."
+            ],
+            "zh": [
+              "使用 Spring Boot 框架開發 CRUD API，並整合 SSO 伺服器",
+              "以 FastAPI 與 LangChain 架構知識管理問答系統；透過 Laravel API 注入資料，儲存於 PostgreSQL 並轉換為向量嵌入以進行語義檢索",
+              "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理"
+            ]
+          },
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
             { "name": "Spring Boot 2 3", "level": "shade1" },
@@ -37,20 +48,31 @@
         },
         {
           "name": "Data Access",
-          "description": [
-            "Used JPA, MyBatis, and JDBCTemplate to implement data access layer across Spring Boot and legacy JBoss applications. Designed entity mappings and SQL queries for CRUD and batch operations. Used Mongoose.js for schema definition and queries in MongoDB-powered dashboards."
-          ],
+          "description": {
+            "en": [
+              "Used JPA, MyBatis, and JDBCTemplate to implement data access layer across Spring Boot and legacy JBoss applications. Designed entity mappings and SQL queries for CRUD and batch operations. Used Mongoose.js for schema definition and queries in MongoDB-powered dashboards."
+            ],
+            "zh": [
+              "使用 JPA、MyBatis 與 JDBCTemplate 在 Spring Boot 與傳統 JBoss 應用中實作資料存取層。設計實體映射與 SQL 查詢以支援 CRUD 與批次操作。於 MongoDB 儀表板中使用 Mongoose.js 定義 Schema 與查詢"
+            ]
+          },
           "skills": [
             { "name": "JPA", "level": "shade1" },
             { "name": "Mybatis 3", "level": "shade1" },
             { "name": "JDBCTemplate", "level": "shade1" },
-            { "name": "Mongoose.js", "level": "shade4" }          ]
+            { "name": "Mongoose.js", "level": "shade4" }
+          ]
         },
         {
           "name": "API Development & Testing",
-          "description": [
-            "Designed and implemented RESTful APIs for order processing and account management using Spring MVC, FastAPI, and Laravel. Used Swagger for API documentation. Implemented unit and integration tests with JUnit 5 and Mockito, validating controller-service-repo interaction. Applied Servlet 5 filters for CORS and auth, and used Maven/Poetry for build lifecycle management."
-          ],
+          "description": {
+            "en": [
+              "Designed and implemented RESTful APIs for order processing and account management using Spring MVC, FastAPI, and Laravel. Used Swagger for API documentation. Implemented unit and integration tests with JUnit 5 and Mockito, validating controller-service-repo interaction. Applied Servlet 5 filters for CORS and auth, and used Maven/Poetry for build lifecycle management."
+            ],
+            "zh": [
+              "使用 Spring MVC、FastAPI 與 Laravel 設計並實作訂單處理與帳戶管理之 RESTful API。利用 Swagger 撰寫 API 文件。以 JUnit 5 與 Mockito 實作單元與整合測試，驗證控制器、服務及資料層互動。應用 Servlet 5 Filter 處理 CORS 與驗證，並以 Maven／Poetry 管理建置流程"
+            ]
+          },
           "skills": [
             { "name": "Swagger", "level": "shade1" },
             { "name": "RESTful API", "level": "shade1" },
@@ -66,11 +88,18 @@
     {
       "name": "Frontend Development",
       "pillClass": "pill2",
-      "description": [
-        "Built Astro website with React useState integration",
-        "Developed Thymeleaf MVC and Handlebars CRUD APIs",
-        "Developed Vue.js 2 3 with Vuex integration"
-      ],
+      "description": {
+        "en": [
+          "Built Astro website with React useState integration",
+          "Developed Thymeleaf MVC and Handlebars CRUD APIs",
+          "Developed Vue.js 2 3 with Vuex integration"
+        ],
+        "zh": [
+          "建立整合 React useState 的 Astro 網站",
+          "開發 Thymeleaf MVC 及 Handlebars CRUD API",
+          "開發 Vue.js 2/3 並整合 Vuex"
+        ]
+      },
       "skills": [
         { "name": "JavaScript", "level": "shade1" },
         { "name": "Vue.js 2 3", "level": "shade2" },
@@ -87,20 +116,27 @@
     {
       "name": "Database",
       "pillClass": "pill4",
-      "description": [
-      ],
+      "description": {},
       "subcategories": [
         {
           "name": "Relational",
-          "description": [
-            "Integrated PostgreSQL with Keycloak SSO, LangChain, and multiple backend REST API frameworks",
-            "Maintained DB Access Layer for MSSQL in JBoss EAP",
-            "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers",
-            "Used PostgreSQL transaction blocks (with Spring @Transactional) to ensure atomic updates for order matching, record insertion, and position updates. Designed composite indexes (e.g., status + timestamp) for efficient query of latest records, and avoided unnecessary indexes to balance write performance."
-          ],
+          "description": {
+            "en": [
+              "Integrated PostgreSQL with Keycloak SSO, LangChain, and multiple backend REST API frameworks",
+              "Maintained DB Access Layer for MSSQL in JBoss EAP",
+              "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers",
+              "Used PostgreSQL transaction blocks (with Spring @Transactional) to ensure atomic updates for order matching, record insertion, and position updates. Designed composite indexes (e.g., status + timestamp) for efficient query of latest records, and avoided unnecessary indexes to balance write performance."
+            ],
+            "zh": [
+              "將 PostgreSQL 與 Keycloak SSO、LangChain 及多個後端 REST API 框架整合",
+              "維護 JBoss EAP 中的 MSSQL 資料存取層",
+              "將 JBoss 從 EAP 7 升級至 EAP 8，並為 20+ 伺服器將 JBoss 7 容器化",
+              "使用 PostgreSQL 交易區塊（搭配 Spring @Transactional）確保訂單撮合、資料插入與持倉更新的原子性；設計複合索引（如 status + timestamp）以高效查詢最新紀錄，並避免不必要索引以平衡寫入效能"
+            ]
+          },
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
-            {"name":"PGVector", "level": "shade5"},
+            { "name": "PGVector", "level": "shade5" },
             { "name": "MSSQL", "level": "shade1" },
             { "name": "SQLite", "level": "shade1" },
             { "name": "MySQL", "level": "shade3" },
@@ -109,10 +145,16 @@
         },
         {
           "name": "NoSQL",
-          "description": [
-            "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests",
-            "Experienced with Redis and have used redis-cli for basic commands. Mainly used Redis to store order and temporary data in a matching simulation system, and used simple commands like GET, SET, and DEL to check if keys were written correctly or to clear test data. Also implemented atomic operations with Lua scripts, but mostly called them from the application rather than running EVAL directly in the CLI."
-          ],
+          "description": {
+            "en": [
+              "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests",
+              "Experienced with Redis and have used redis-cli for basic commands. Mainly used Redis to store order and temporary data in a matching simulation system, and used simple commands like GET, SET, and DEL to check if keys were written correctly or to clear test data. Also implemented atomic operations with Lua scripts, but mostly called them from the application rather than running EVAL directly in the CLI."
+            ],
+            "zh": [
+              "部署 Redis 伺服器，搭配 producer（具訪問計數 API 的 API 伺服器）與 consumer（獨立部署）服務，記錄網站訪問次數，以因應大量並發請求",
+              "熟悉 Redis，曾使用 redis-cli 執行基本指令。主要在撮合模擬系統中使用 Redis 儲存訂單與暫存資料，透過 GET、SET、DEL 檢查鍵值或清除測試資料，也以 Lua 腳本實作原子操作（多由應用程式呼叫，而非直接在 CLI 中執行 EVAL）"
+            ]
+          },
           "skills": [
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
@@ -124,13 +166,18 @@
     {
       "name": "Infrastructure & Deployment",
       "pillClass": "pill5",
-      "description": [],
+      "description": {},
       "subcategories": [
         {
           "name": "Containerization & Orchestration",
-          "description": [
-            "Implemented PV and PVC for database data persistence"
-          ],
+          "description": {
+            "en": [
+              "Implemented PV and PVC for database data persistence"
+            ],
+            "zh": [
+              "為資料庫資料持久化實作 PV 與 PVC"
+            ]
+          },
           "skills": [
             { "name": "Docker", "level": "shade1" },
             { "name": "Podman", "level": "shade1" },
@@ -141,9 +188,14 @@
         },
         {
           "name": "IaC & Automation",
-          "description": [
-            "Used Terraform to provision infrastructure on OCI and configure networking, compute, and storage resources. Automated deployment with Ansible for multi-node environments. Created and templated Helm charts for application rollout and upgrade across namespaces."
-          ],
+          "description": {
+            "en": [
+              "Used Terraform to provision infrastructure on OCI and configure networking, compute, and storage resources. Automated deployment with Ansible for multi-node environments. Created and templated Helm charts for application rollout and upgrade across namespaces."
+            ],
+            "zh": [
+              "使用 Terraform 在 OCI 佈建基礎設施並配置網路、運算與儲存資源。透過 Ansible 自動化多節點部署。編寫並模板化 Helm Chart 以在多命名空間中部署與升級應用"
+            ]
+          },
           "skills": [
             { "name": "Terraform", "level": "shade4" },
             { "name": "Ansible", "level": "shade4" },
@@ -152,10 +204,16 @@
         },
         {
           "name": "Servers & Middleware",
-          "description": [
-            "Set up volumes for containerized JBoss EAP 7 for real-time configuration updates",
-            "Configured systemctl for JBoss EAP 8 and JBoss containers for auto-start on restart"
-          ],
+          "description": {
+            "en": [
+              "Set up volumes for containerized JBoss EAP 7 for real-time configuration updates",
+              "Configured systemctl for JBoss EAP 8 and JBoss containers for auto-start on restart"
+            ],
+            "zh": [
+              "為容器化 JBoss EAP 7 設定 Volume，以支援即時配置更新",
+              "為 JBoss EAP 8 及 JBoss 容器設定 systemctl，確保重新啟動後自動啟動"
+            ]
+          },
           "skills": [
             { "name": "JBoss EAP 7 Runtime Image", "level": "shade1" },
             { "name": "JBoss EAP 7 8", "level": "shade1" },
@@ -164,9 +222,14 @@
         },
         {
           "name": "Monitoring & Visualization",
-          "description": [
-            "Integrated Prometheus with Spring Boot Actuator for collecting JVM and custom metrics. Visualized real-time data using Grafana dashboards. Used Kiali to monitor service mesh topology and Istio routing behaviors. Monitored JBoss runtime via Jolokia and collected traces with Instana."
-          ],
+          "description": {
+            "en": [
+              "Integrated Prometheus with Spring Boot Actuator for collecting JVM and custom metrics. Visualized real-time data using Grafana dashboards. Used Kiali to monitor service mesh topology and Istio routing behaviors. Monitored JBoss runtime via Jolokia and collected traces with Instana."
+            ],
+            "zh": [
+              "整合 Prometheus 與 Spring Boot Actuator 收集 JVM 與自訂指標，並以 Grafana 儀表板視覺化即時資料。使用 Kiali 監控服務網格拓撲與 Istio 路由行為。透過 Jolokia 監控 JBoss 執行狀態，並以 Instana 收集 Trace"
+            ]
+          },
           "skills": [
             { "name": "Grafana", "level": "shade4" },
             { "name": "Prometheus", "level": "shade4" },
@@ -180,7 +243,10 @@
     {
       "name": "CI/CD",
       "pillClass": "pill10",
-      "description": ["Built Jenkins Server and implemented CI/CD pipelines using Jenkins and Jenkins Credentials for Spring Boot, Django, Laravel, and Astro projects"],
+      "description": {
+        "en": ["Built Jenkins Server and implemented CI/CD pipelines using Jenkins and Jenkins Credentials for Spring Boot, Django, Laravel, and Astro projects"],
+        "zh": ["搭建 Jenkins 伺服器，並為 Spring Boot、Django、Laravel 與 Astro 專案實作 CI/CD 流水線"]
+      },
       "skills": [
         { "name": "Jenkins", "level": "shade3" },
         { "name": "Docker BuildKit", "level": "shade5" }
@@ -189,13 +255,18 @@
     {
       "name": "Network",
       "pillClass": "pill6",
-      "description": [],
+      "description": {},
       "subcategories": [
         {
           "name": "Protocols",
-          "description": [
-            "Built chat room and Spring Boot Actuator metrics exporter with WebSocket, using STOMP for message broker"
-          ],
+          "description": {
+            "en": [
+              "Built chat room and Spring Boot Actuator metrics exporter with WebSocket, using STOMP for message broker"
+            ],
+            "zh": [
+              "使用 WebSocket 建置聊天室與 Spring Boot Actuator 指標匯出器，並以 STOMP 擔任訊息代理"
+            ]
+          },
           "skills": [
             { "name": "HTTP", "level": "shade1" },
             { "name": "Web Socket", "level": "shade3" },
@@ -205,10 +276,16 @@
         },
         {
           "name": "Service Mesh & Load Balancing",
-          "description": [
-            "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files.",
-            "Configured Istio ingress gateway with routing policies and mTLS for internal services. Applied round-robin load balancing for stateless services and integrated Nginx for static assets delivery. Used cert-manager with ACME to issue and auto-renew TLS certs for ingress."
-          ],
+          "description": {
+            "en": [
+              "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files.",
+              "Configured Istio ingress gateway with routing policies and mTLS for internal services. Applied round-robin load balancing for stateless services and integrated Nginx for static assets delivery. Used cert-manager with ACME to issue and auto-renew TLS certs for ingress."
+            ],
+            "zh": [
+              "部署 Nginx Ingress Controller，透過 Ingress 暴露所有服務並以 cert-manager 發行 TLS 憑證，同時使用 Nginx Static File Server 提供靜態檔案",
+              "設定 Istio Ingress Gateway 路由策略與 mTLS 來保護內部服務。對無狀態服務採用 Round-Robin 負載均衡，並整合 Nginx 以傳送靜態資源。使用 cert-manager 搭配 ACME 發行並自動續期 Ingress TLS 憑證"
+            ]
+          },
           "skills": [
             { "name": "Istio", "level": "shade4" },
             { "name": "Ingress", "level": "shade1" },
@@ -222,13 +299,18 @@
     {
       "name": "Cloud",
       "pillClass": "pill7",
-      "description": [],
+      "description": {},
       "subcategories": [
         {
           "name": "Platforms",
-          "description": [
-            "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database. Evaluated cost-performance ratio and networking security between the two cloud environments."
-          ],
+          "description": {
+            "en": [
+              "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database. Evaluated cost-performance ratio and networking security between the two cloud environments."
+            ],
+            "zh": [
+              "在 OCI 上部署裸機 K8S 伺服器，使用 Public Subnet 與 Ingress 設定，並規劃遷移至 GCP 的 GKE，將資料庫放置於 Private Subnet。評估兩雲環境的成本效益與網路安全"
+            ]
+          },
           "skills": [
             { "name": "OCI", "level": "shade3" },
             { "name": "GCP", "level": "shade5" }
@@ -239,13 +321,18 @@
     {
       "name": "Tools",
       "pillClass": "pill8",
-      "description": [],
+      "description": {},
       "subcategories": [
         {
           "name": "Systems",
-          "description": [
-            "Upgraded RHEL from 7 to 8 for 20+ servers"
-          ],
+          "description": {
+            "en": [
+              "Upgraded RHEL from 7 to 8 for 20+ servers"
+            ],
+            "zh": [
+              "為 20+ 台伺服器將 RHEL 從 7 升級至 8"
+            ]
+          },
           "skills": [
             { "name": "Linux", "level": "shade1" },
             { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
@@ -254,9 +341,14 @@
         },
         {
           "name": "Scripting",
-          "description": [
-            "Used Bash and Shell scripts to automate backup, deployment, and log rotation for RHEL-based systems. Used Python scripts to call APIs, process logs, and integrate with third-party services for data extraction and cleanup."
-          ],
+          "description": {
+            "en": [
+              "Used Bash and Shell scripts to automate backup, deployment, and log rotation for RHEL-based systems. Used Python scripts to call APIs, process logs, and integrate with third-party services for data extraction and cleanup."
+            ],
+            "zh": [
+              "使用 Bash 與 Shell 腳本自動化 RHEL 系統的備份、部署與日誌輪轉。利用 Python 腳本呼叫 API、處理日誌，並與第三方服務整合以進行資料抽取與清理"
+            ]
+          },
           "skills": [
             { "name": "Shell", "level": "shade1" },
             { "name": "Bash", "level": "shade1" },
@@ -265,10 +357,16 @@
         },
         {
           "name": "Others",
-          "description": [
-            "Used Yum Repository and Satellite to get files for upgrading RHEL",
-            "Developed WordPress plugin to crawl double-layered data in Elementor ecommerce form"
-          ],
+          "description": {
+            "en": [
+              "Used Yum Repository and Satellite to get files for upgrading RHEL",
+              "Developed WordPress plugin to crawl double-layered data in Elementor ecommerce form"
+            ],
+            "zh": [
+              "使用 Yum Repository 與 Satellite 取得檔案以升級 RHEL",
+              "開發 WordPress 外掛，抓取 Elementor 電商表單的雙層式資料"
+            ]
+          },
           "skills": [
             { "name": "WordPress", "level": "shade2" },
             { "name": "Cursor", "level": "shade1" },
@@ -282,12 +380,20 @@
     {
       "name": "Security & Authentication",
       "pillClass": "pill9",
-      "description": [
-        "Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo",
-        "Updated Keycloak 18 to 26 on K8S, persisted data to PostgreSQL",
-        "Updated Keycloak SPI to Quarkus 3 from Quarkus 2, and implemented Keycloak username-password authentication flow using Informix stored procedure",
-        "Implemented CDI to inject entity manager to DAO layer"
-      ],
+      "description": {
+        "en": [
+          "Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo",
+          "Updated Keycloak 18 to 26 on K8S, persisted data to PostgreSQL",
+          "Updated Keycloak SPI to Quarkus 3 from Quarkus 2, and implemented Keycloak username-password authentication flow using Informix stored procedure",
+          "Implemented CDI to inject entity manager to DAO layer"
+        ],
+        "zh": [
+          "建置 Keycloak SSO 伺服器，並實作授權碼 OIDC 流程以連接 Public 與 Confidential Client - https://github.com/Vinskao/keycloak-client-demo",
+          "在 K8S 上將 Keycloak 18 升級至 26，並將資料持久化至 PostgreSQL",
+          "將 Keycloak SPI 從 Quarkus 2 升級至 Quarkus 3，並以 Informix Stored Procedure 實作 Keycloak 使用者密碼驗證流程",
+          "使用 CDI 將 EntityManager 注入 DAO 層"
+        ]
+      },
       "skills": [
         { "name": "Keycloak 18 26", "level": "shade1" },
         { "name": "Keycloak SPI", "level": "shade2" },
@@ -303,13 +409,18 @@
     {
       "name": "AI",
       "pillClass": "pill3",
-      "description": [],
+      "description": {},
       "subcategories": [
         {
           "name": "Frameworks & APIs",
-          "description": [
-            "Built knowledge-based RAG chatbot using LangChain and OpenAI APIs. Used LLMChain and PromptTemplate to build query workflows. Parsed and embedded documents, exposed query interface via FastAPI, and orchestrated flow with tools and chains."
-          ],
+          "description": {
+            "en": [
+              "Built knowledge-based RAG chatbot using LangChain and OpenAI APIs. Used LLMChain and PromptTemplate to build query workflows. Parsed and embedded documents, exposed query interface via FastAPI, and orchestrated flow with tools and chains."
+            ],
+            "zh": [
+              "使用 LangChain 與 OpenAI API 構建基於知識的 RAG 聊天機器人。透過 LLMChain 與 PromptTemplate 建立查詢流程；解析並嵌入文件，透過 FastAPI 提供查詢介面，並以多工具與 Chain 協調流程"
+            ]
+          },
           "skills": [
             { "name": "LangChain", "level": "shade4" },
             { "name": "OpenAI API", "level": "shade4" },
@@ -321,13 +432,18 @@
         },
         {
           "name": "Tools",
-          "description": [
-            "Set up local GPU inference with NVIDIA Container Toolkit and WSL2 on Windows. Used Colab for LLM prototyping and rapid experimentation. Tuned prompt behavior and latency benchmarks between local and remote environments."
-          ],
+          "description": {
+            "en": [
+              "Set up local GPU inference with NVIDIA Container Toolkit and WSL2 on Windows. Used Colab for LLM prototyping and rapid experimentation. Tuned prompt behavior and latency benchmarks between local and remote environments."
+            ],
+            "zh": [
+              "在 Windows 透過 NVIDIA Container Toolkit 與 WSL2 部署本地 GPU 推論環境，並使用 Colab 進行 LLM 原型與快速實驗。調校提示詞行為並比較本地與遠端環境延遲基準"
+            ]
+          },
           "skills": [
             { "name": "WSL2", "level": "shade5" },
             { "name": "NVIDIA Container Toolkit", "level": "shade5" },
-            { "name": "Colab", "level": "shade4"}
+            { "name": "Colab", "level": "shade4" }
           ]
         }
       ]
