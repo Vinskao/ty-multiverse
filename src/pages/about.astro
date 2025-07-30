@@ -10,6 +10,8 @@ import '../styles/about.css';
 import aboutData from '../storages/about.json';
 import skillsData from '../storages/skills.json';
 
+const lang = Astro.url.searchParams.get('lang') ?? 'en';
+
 ---
 
 <meta charset="UTF-8" />
@@ -18,6 +20,10 @@ import skillsData from '../storages/skills.json';
   <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
     <div class="stack gap-20">
       <main class="wrapper about">
+        <div class="lang-toggle" style="text-align:right;margin-bottom:1rem;">
+          <a href="?lang=en" class={lang === 'en' ? 'active' : ''}>EN</a> |
+          <a href="?lang=zh" class={lang === 'zh' ? 'active' : ''}>中文</a>
+        </div>
         <div class="hero-section">
           <Hero
             title="About"
@@ -41,7 +47,7 @@ import skillsData from '../storages/skills.json';
               <h1 class="majestic-name">KAO TIAN YI</h1>
               <p class="email">tianyikao@gmail.com</p>
             </div>
-            <p set:html={aboutData.background.replace(/\n/g, '<br>')}>
+            <p set:html={aboutData.background[lang].replace(/\n/g, '<br>')}>
             </p>
           </div>
         </section>
@@ -78,21 +84,21 @@ import skillsData from '../storages/skills.json';
                   </div>
                 </div>
                 
-                {job.projectExperience && (
+                {job.projectExperience && job.projectExperience[lang] && job.projectExperience[lang].length > 0 && (
                   <div class="project-experience">
                     <h4>Project Experience</h4>
                     <ul>
-                      {job.projectExperience.map((project) => (
+                      {job.projectExperience[lang].map((project) => (
                         <li>{project}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 
-                {job.responsibilities && (
+                {job.responsibilities && job.responsibilities[lang] && job.responsibilities[lang].length > 0 && (
                   <div class="responsibilities">
                     <ul>
-                      {job.responsibilities.map((responsibility) => (
+                      {job.responsibilities[lang].map((responsibility) => (
                         <li>{responsibility}</li>
                       ))}
                     </ul>
@@ -125,9 +131,9 @@ import skillsData from '../storages/skills.json';
                                   );
                                 })}
                               </div>
-                              {(subcategory as any).description && (subcategory as any).description.length > 0 && (
+                              {(subcategory as any).description && (subcategory as any).description[lang] && (subcategory as any).description[lang].length > 0 && (
                                 <ul class="skill-subdescription">
-                                  {(subcategory as any).description.map((desc: string, index: number) => (
+                                  {(subcategory as any).description[lang].map((desc: string, index: number) => (
                                     <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
                                     </li>
                                   ))}
@@ -294,9 +300,9 @@ import skillsData from '../storages/skills.json';
                             })}
                           </div>
                         )}
-                        {(category as any).description && (category as any).description.length > 0 && (
+                        {(category as any).description && (category as any).description[lang] && (category as any).description[lang].length > 0 && (
                           <ul class="skill-description">
-                            {(category as any).description.map((desc: string, index: number) => (
+                            {(category as any).description[lang].map((desc: string, index: number) => (
                               <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
                               </li>
                             ))}
