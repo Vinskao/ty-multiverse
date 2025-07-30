@@ -33,6 +33,12 @@ import '../styles/qabot.css';
           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
       </button>
+      <!-- 新增：頁面分析按鈕 -->
+      <button class="page-analysis-button" id="pageAnalysisButton" title="分析頁面">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 4h18M3 10h18M3 16h18"/>
+        </svg>
+      </button>
       <button class="close-button" id="closeButton">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"/>
@@ -74,7 +80,8 @@ import '../styles/qabot.css';
       載入更多歷史記錄
     </button>
   </div>
-  
+  <!-- 新增：頁面分析面板 -->
+  <div class="analysis-panel" id="analysisPanel" style="display:none;"></div>
   <div class="chat-input-container">
     <div class="input-wrapper">
       <input 
@@ -110,6 +117,8 @@ import '../styles/qabot.css';
   // 將訊息配置直接打包，避免正式環境 404
   // @ts-ignore
   import messages from '../storages/messages.json';
+  // @ts-ignore
+  import analystTemplates from '../storages/analyst.json';
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -130,7 +139,10 @@ import '../styles/qabot.css';
       earliestTimestamp: null as number | null,
       botName: 'Maya',
       availableBots: [] as string[],
-      currentBotIndex: 0
+      currentBotIndex: 0,
+      // 新增：頁面分析相關狀態
+      analysisType: 'summary',
+      isAnalyzing: false
     };
     
     // 定時器
@@ -150,6 +162,8 @@ import '../styles/qabot.css';
       this.setupAvatarSelector(); // 新增頭貼選擇器
       this.setupNetworkListener(); // 新增網路狀態監聽
       this.fetchBotNames();       // 從 API 取得可用 bot 名稱
+      // 新增：初始化頁面分析面板
+      this.setupAnalysisPanel();
       this.loadMessages().then(() => {
       this.loadChatHistory();
         this.startTimers();
@@ -314,7 +328,9 @@ import '../styles/qabot.css';
       const elementIds = [
         'userInput', 'sendButton', 'chatMessages', 'inputStatus', 'qaBotToggle', 
         'qaBotContainer', 'closeButton', 'historyButton', 'loadMoreButton', 
-        'loadMoreContainer', 'imageModal', 'modalImage', 'imageModalClose'
+        'loadMoreContainer', 'imageModal', 'modalImage', 'imageModalClose',
+        // 新增：頁面分析相關元素
+        'pageAnalysisButton', 'analysisPanel'
       ];
       
       elementIds.forEach(id => {
@@ -480,6 +496,41 @@ import '../styles/qabot.css';
       this.elements.avatarSelector = avatarSelector;
     }
 
+    // 設置分析面板事件監聽器
+    private setupAnalysisPanelEvents() {
+      const panel = this.elements.analysisPanel as HTMLElement;
+      if (!panel) {
+        console.warn('分析面板元素不存在');
+        return;
+      }
+
+      console.log('設置分析面板事件監聽器');
+
+      // 綁定分析類型按鈕事件
+      const typeButtons = panel.querySelectorAll('.pa-type-btn');
+      console.log(`找到 ${typeButtons.length} 個分析類型按鈕`);
+      
+      typeButtons.forEach((btn, index) => {
+        btn.addEventListener('click', (e) => {
+          const type = (e.currentTarget as HTMLElement).getAttribute('data-type') || 'summary';
+          console.log(`點擊分析類型按鈕: ${type}`);
+          this.selectAnalysisType(type);
+        });
+      });
+
+      // 綁定開始分析按鈕事件
+      const startBtn = panel.querySelector('#startPageAnalysis') as HTMLButtonElement;
+      if (startBtn) {
+        console.log('找到開始分析按鈕');
+        startBtn.addEventListener('click', () => {
+          console.log('點擊開始分析按鈕');
+          this.analyzePage();
+        });
+      } else {
+        console.warn('未找到開始分析按鈕');
+      }
+    }
+
     // 顯示頭像選擇面板
     private showAvatarSelector(selector: HTMLElement) {
       // 清空現有內容
@@ -593,6 +644,13 @@ import '../styles/qabot.css';
       this.elements.closeButton.addEventListener('click', () => this.hideChat());
       this.elements.historyButton.addEventListener('click', () => this.loadChatHistory());
       this.elements.loadMoreButton.addEventListener('click', () => this.loadMoreHistory());
+      // 新增：頁面分析按鈕事件
+      this.elements.pageAnalysisButton.addEventListener('click', () => this.toggleAnalysisPanel());
+      
+      // 新增：頁面分析面板事件（延遲綁定，確保面板已創建）
+      setTimeout(() => {
+        this.setupAnalysisPanelEvents();
+      }, 100);
       
       // 功能按鈕事件
       (document.getElementById('fullscreenButton') as HTMLButtonElement).addEventListener('click', () => this.toggleFullscreen());
@@ -1014,24 +1072,25 @@ import '../styles/qabot.css';
     }
 
     // 調用 QA API
-    private async callQAAPI(text: string) {
+    private async callQAAPI(payload: string | object) {
       const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
       const apiPathPrefix = '/maya-sawa';
       
-      const payload = {
-        text,
+      // 如果是字符串，構建基本 payload
+      const finalPayload = typeof payload === 'string' ? {
+        text: payload,
         user_id: this.state.userId,
         language: this.state.currentLanguage,
         name: this.state.botName
-      };
+      } : payload;
 
       // 調試日誌：確認送出的請求內容
-      console.log('callQAAPI payload =>', payload);
+      console.log('callQAAPI payload =>', finalPayload);
 
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(finalPayload)
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -1258,6 +1317,10 @@ import '../styles/qabot.css';
       localStorage.setItem('qabot_language', this.state.currentLanguage);
       this.updateLanguageButton();
       this.updateInputPlaceholder();
+      
+      // 更新分析面板語言
+      this.updateAnalysisPanelLanguage();
+      
       this.reinitializeChat();
     }
 
@@ -1371,6 +1434,423 @@ import '../styles/qabot.css';
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // ============================
+    // 頁面分析功能  Page Analyzer
+    // ============================
+    private setupAnalysisPanel() {
+      const panel = this.elements.analysisPanel as HTMLElement;
+      if (!panel) return;
+
+      this.updateAnalysisPanelLanguage();
+    }
+
+    // 更新分析面板語言
+    private updateAnalysisPanelLanguage() {
+      const panel = this.elements.analysisPanel as HTMLElement;
+      if (!panel) return;
+
+      const currentLang = this.state.currentLanguage;
+      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+      
+      if (!templates) {
+        console.warn(`未找到語言模板: ${currentLang}`);
+        return;
+      }
+
+      const analysisTypes = templates.analysis_types;
+      const ui = templates.ui;
+
+      panel.innerHTML = `
+        <div class="pa-wrapper">
+          <h4 class="pa-title">${ui.title}</h4>
+          <div class="pa-grid">
+            ${analysisTypes.map(t => `
+              <button class="pa-type-btn" data-type="${t.value}">
+                <div>${t.label}</div>
+                <div class="pa-desc">${t.desc}</div>
+              </button>`).join('')}
+          </div>
+          <button id="startPageAnalysis" class="pa-start-btn">${ui.start_button}</button>
+        </div>`;
+
+      // 預設選擇 summary
+      this.selectAnalysisType('summary');
+      
+      // 重新綁定事件
+      this.setupAnalysisPanelEvents();
+    }
+
+    private toggleAnalysisPanel(forceShow?: boolean) {
+      const panel = this.elements.analysisPanel as HTMLElement;
+      if (!panel) {
+        console.warn('分析面板元素不存在');
+        return;
+      }
+      const show = forceShow !== undefined ? forceShow : panel.style.display === 'none';
+      console.log(`切換分析面板顯示: ${show}`);
+      panel.style.display = show ? 'block' : 'none';
+      
+      // 如果顯示面板，重新綁定事件
+      if (show) {
+        setTimeout(() => {
+          this.setupAnalysisPanelEvents();
+        }, 50);
+      }
+    }
+
+    private selectAnalysisType(type: string) {
+      this.state.analysisType = type;
+      const panel = this.elements.analysisPanel as HTMLElement;
+      if (!panel) return;
+      panel.querySelectorAll('.pa-type-btn').forEach(btn => {
+        (btn as HTMLElement).classList.toggle('active', (btn as HTMLElement).getAttribute('data-type') === type);
+      });
+    }
+
+    // 安全地提取頁面內容
+    private extractPageContentSafe(): { text: string; length: number } {
+      console.log('開始提取頁面內容...');
+      
+      // 使用全局的頁面內容提取函數（如果可用）
+      if (typeof (window as any).extractPageContent === 'function') {
+        try {
+          const pageData = (window as any).extractPageContent();
+          console.log(`使用全局提取函數，內容長度: ${pageData.length}`);
+          console.log(`內容預覽: ${pageData.content.substring(0, 200)}...`);
+          
+          // 限制長度避免 token 超限
+          const maxLength = 3000;
+          const truncated = pageData.content.length > maxLength 
+            ? pageData.content.substring(0, maxLength) + '...' 
+            : pageData.content;
+          
+          console.log(`最終文字長度: ${truncated.length}`);
+          return { text: truncated, length: truncated.length };
+        } catch (error) {
+          console.warn('全局提取函數失敗，使用備用方法:', error);
+        }
+      }
+      
+      // 備用提取方法
+      console.log('使用備用內容提取方法...');
+      
+      // 嘗試多個內容選擇器，按優先級排序
+      const contentSelectors = [
+        '[data-page-type="content"]',
+        '[data-page-type="main"]',
+        '[data-page-type="article"]',
+        'main',
+        'article',
+        '.content',
+        '.main-content',
+        '#content',
+        '#main',
+        '.post-content',
+        '.entry-content'
+      ];
+      
+      let contentElement: Element | null = null;
+      
+      // 尋找最佳內容元素
+      for (const selector of contentSelectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+          const text = (element as HTMLElement).innerText || element.textContent || '';
+          if (text.trim().length > 100) { // 確保有足夠內容
+            contentElement = element;
+            console.log(`找到內容元素: ${selector}, 長度: ${text.length}`);
+            break;
+          }
+        }
+      }
+      
+      // 如果沒有找到合適的內容元素，使用 body
+      if (!contentElement) {
+        contentElement = document.body;
+        console.log('使用 document.body 作為內容元素');
+      }
+      
+      // 創建臨時容器
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = contentElement.innerHTML;
+      
+      // 移除不需要的元素
+      const elementsToRemove = [
+        'script', 'style', 'nav', 'footer', 'aside', 'header',
+        '[aria-hidden="true"]', '[style*="display: none"]', '[style*="display:none"]',
+        '.qa-bot-container', '.qa-bot-toggle', // 移除聊天機器人本身
+        '.sidebar', '.side-nav', '.navigation',
+        '.advertisement', '.ads', '.banner',
+        '.social-share', '.share-buttons',
+        '.comments', '.comment-section'
+      ];
+      
+      elementsToRemove.forEach(selector => {
+        const elements = tempDiv.querySelectorAll(selector);
+        elements.forEach(el => el.remove());
+      });
+      
+      // 提取純文字
+      let text = tempDiv.innerText || tempDiv.textContent || '';
+      text = text.replace(/\s+/g, ' ').trim();
+      
+      console.log(`提取的原始文字長度: ${text.length}`);
+      console.log(`提取的文字預覽: ${text.substring(0, 200)}...`);
+      
+      // 如果內容太少，嘗試從 body 提取更多內容
+      if (text.length < 200 && contentElement !== document.body) {
+        console.log('內容太少，嘗試從 body 提取更多內容');
+        const bodyDiv = document.createElement('div');
+        bodyDiv.innerHTML = document.body.innerHTML;
+        
+        // 移除不需要的元素
+        elementsToRemove.forEach(selector => {
+          const elements = bodyDiv.querySelectorAll(selector);
+          elements.forEach(el => el.remove());
+        });
+        
+        const bodyText = bodyDiv.innerText || bodyDiv.textContent || '';
+        const cleanedBodyText = bodyText.replace(/\s+/g, ' ').trim();
+        
+        if (cleanedBodyText.length > text.length) {
+          text = cleanedBodyText;
+          console.log(`使用 body 內容，新長度: ${text.length}`);
+        }
+      }
+      
+      // 限制長度避免 token 超限
+      const maxLength = 3000;
+      const truncated = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+      
+      console.log(`最終文字長度: ${truncated.length}`);
+      
+      return { text: truncated, length: truncated.length };
+    }
+
+    // 檢測頁面語言
+    private detectPageLanguage(): string {
+      console.log('開始檢測頁面語言...');
+      
+      // 檢查 HTML lang 屬性
+      const htmlLang = document.documentElement.lang;
+      console.log(`HTML lang 屬性: ${htmlLang}`);
+      
+      // 檢查 meta 標籤
+      const metaLang = document.querySelector('meta[name="language"]') as HTMLMetaElement;
+      console.log(`Meta language: ${metaLang?.content}`);
+      
+      // 優先使用 Unicode 檢測（更準確）
+      const text = document.body.innerText || '';
+      const chineseCharCount = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+      const totalCharCount = text.length;
+      const chineseRatio = totalCharCount > 0 ? chineseCharCount / totalCharCount : 0;
+      
+      console.log(`總字符數: ${totalCharCount}, 中文字符數: ${chineseCharCount}, 中文比例: ${(chineseRatio * 100).toFixed(1)}%`);
+      
+      // 如果中文比例超過 20%，就認為是中文頁面
+      if (chineseRatio > 0.2) {
+        console.log('檢測到中文頁面');
+        return 'chinese';
+      }
+      
+      // 如果中文比例很低，檢查 HTML lang 屬性
+      if (htmlLang && (htmlLang.startsWith('zh') || htmlLang.startsWith('en'))) {
+        const detectedLang = htmlLang.startsWith('zh') ? 'chinese' : 'english';
+        console.log(`根據 HTML lang 屬性檢測為: ${detectedLang}`);
+        return detectedLang;
+      }
+      
+      // 檢查 meta 標籤
+      if (metaLang?.content) {
+        const detectedLang = metaLang.content.startsWith('zh') ? 'chinese' : 'english';
+        console.log(`根據 Meta 標籤檢測為: ${detectedLang}`);
+        return detectedLang;
+      }
+      
+      console.log('預設為英文頁面');
+      return 'english';
+    }
+
+    // 構建頁面分析請求參數
+    private buildPageAnalysisPayload({ text, length, type }: { text: string; length: number; type: string }) {
+      const detectedLanguage = this.detectPageLanguage();
+      
+      return {
+        text,
+        analysis_type: `page_${type}`,
+        content_length: length,
+        user_id: this.state.userId,
+        language: detectedLanguage,
+        name: this.state.botName,
+        frontend_source: 'astro_page_analyzer',
+        page_url: window.location.href,
+        page_title: document.title
+      };
+    }
+
+    // 檢查快取
+    private getAnalysisCache(type: string): { answer: string; timestamp: number } | null {
+      const cacheKey = `page_analysis_${window.location.href}_${type}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      // 檢查是否在 5 分鐘內
+      if (now - data.timestamp < fiveMinutes) {
+        return data;
+      }
+      
+      // 過期則清除
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    // 儲存快取
+    private setAnalysisCache(type: string, answer: string) {
+      const cacheKey = `page_analysis_${window.location.href}_${type}`;
+      const data = { answer, timestamp: Date.now() };
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+    }
+
+    // 渲染分析結果卡片
+    private renderAnalysisCard(answer: string, analysisType: string, contentLength: number) {
+      const currentLang = this.state.currentLanguage;
+      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+      const labels = templates?.labels || {};
+      const metadata = templates?.metadata || {};
+      
+      const typeLabels: Record<string, string> = {
+        'page_summary': labels.page_summary || '📄 頁面摘要',
+        'page_key_points': labels.page_key_points || '🔍 重點提取',
+        'page_technical': labels.page_technical || '⚙️ 技術分析',
+        'page_qa': labels.page_qa || '❓ 問題生成'
+      };
+      
+      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answer));
+      const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
+      
+      // 添加分析卡片元數據
+      const metadataDiv = document.createElement('div');
+      metadataDiv.className = 'analysis-metadata';
+      metadataDiv.innerHTML = `
+        <div class="analysis-info">
+          <span class="analysis-type">${typeLabels[analysisType] || '頁面分析'}</span>
+          <span class="content-length">${metadata.content_length || '內容長度'}: ${contentLength} ${currentLang === 'english' ? 'chars' : '字'}</span>
+          <span class="page-url">${metadata.source || '來源'}: ${document.title}</span>
+        </div>
+        <div class="analysis-actions">
+          <button class="reanalyze-btn" onclick="this.closest('.message').dispatchEvent(new CustomEvent('reanalyze'))">
+            ${metadata.reanalyze || '🔄 重新分析'}
+          </button>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${answer.replace(/'/g, "\\'")}')">
+            ${metadata.copy_result || '📋 複製結果'}
+          </button>
+        </div>
+      `;
+      
+      contentDiv.appendChild(metadataDiv);
+      this.elements.chatMessages.appendChild(messageDiv);
+      
+      // 監聽重新分析事件
+      messageDiv.addEventListener('reanalyze', () => {
+        this.analyzePage(true); // 強制重新分析，忽略快取
+      });
+      
+      this.scrollToBottom();
+    }
+
+    // 更新分析按鈕狀態
+    private updateAnalysisButtonState() {
+      const startBtn = document.querySelector('#startPageAnalysis') as HTMLButtonElement;
+      if (!startBtn) return;
+      
+      const currentLang = this.state.currentLanguage;
+      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+      const ui = templates?.ui;
+      
+      if (this.state.isAnalyzing) {
+        startBtn.disabled = true;
+        startBtn.innerHTML = `<span class="spinner">⏳</span> ${ui?.analyzing || '分析中...'}`;
+      } else {
+        startBtn.disabled = false;
+        startBtn.innerHTML = ui?.start_button || '📄 分析頁面';
+      }
+    }
+
+    private async analyzePage(forceRefresh: boolean = false) {
+      if (this.state.isAnalyzing) return;
+      
+      this.state.isAnalyzing = true;
+      this.updateAnalysisButtonState();
+      
+      const loadingId = this.addLoadingMessage();
+
+      try {
+        // 檢查快取（除非強制重新分析）
+        if (!forceRefresh) {
+          const cached = this.getAnalysisCache(this.state.analysisType);
+          if (cached) {
+            this.removeMessage(loadingId);
+            this.renderAnalysisCard(cached.answer, `page_${this.state.analysisType}`, 0);
+            this.state.isAnalyzing = false;
+            this.updateAnalysisButtonState();
+            this.toggleAnalysisPanel(false);
+            return;
+          }
+        }
+
+        // 生成用戶提示消息
+        const currentLang = this.state.currentLanguage;
+        const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+        const labels = templates?.labels || {};
+        
+        const typeLabels: Record<string, string> = {
+          summary: labels.page_summary || '📄 頁面摘要',
+          key_points: labels.page_key_points || '🔍 重點提取',
+          technical: labels.page_technical || '⚙️ 技術分析',
+          qa: labels.page_qa || '❓ 問題生成'
+        };
+        
+        const userPrompt = currentLang === 'english' 
+          ? `Please ${typeLabels[this.state.analysisType] || 'analyze the page'}`
+          : `請${typeLabels[this.state.analysisType] || '分析頁面'}`;
+        
+        this.addMessage(userPrompt, 'user');
+        
+        // 提取頁面內容
+        const { text, length } = this.extractPageContentSafe();
+        
+        // 構建請求參數
+        const payload = this.buildPageAnalysisPayload({ text, length, type: this.state.analysisType });
+        
+        // 調用 API
+        const result = await this.callQAAPI(payload);
+        this.removeMessage(loadingId);
+
+        if (result.success) {
+          const answer = result.text || result.answer || result;
+          
+          // 儲存快取
+          this.setAnalysisCache(this.state.analysisType, answer);
+          
+          // 渲染結果
+          this.renderAnalysisCard(answer, `page_${this.state.analysisType}`, length);
+        } else {
+          this.addErrorMessage(result.error || '分析失敗，請稍後再試。');
+        }
+      } catch (err) {
+        this.removeMessage(loadingId);
+        this.addErrorMessage(`分析失敗：${(err as Error).message}`);
+      } finally {
+        this.state.isAnalyzing = false;
+        this.updateAnalysisButtonState();
+        this.toggleAnalysisPanel(false);
+      }
     }
   }
 

@@ -77,7 +77,10 @@ const { title, description } = Astro.props;
 	<body>
 		<div class="stack backgrounds">
 			<Nav />
-			<slot />
+			<!-- 頁面主要內容容器 - 用於 AI 分析 -->
+			<main class="page-content" data-page-type="content">
+				<slot />
+			</main>
 			<Footer />
 		</div>
 		
@@ -87,6 +90,46 @@ const { title, description } = Astro.props;
 		<script>
 			// Add "loaded" class once the document has completely loaded.
 			addEventListener('load', () => document.documentElement.classList.add('loaded'));
+			
+			// 頁面內容提取輔助函數
+			(window as any).extractPageContent = function() {
+				const contentSelectors = [
+					'[data-page-type="content"]',
+					'[data-page-type="main"]',
+					'[data-page-type="article"]',
+					'main',
+					'article',
+					'.content',
+					'.main-content',
+					'#content',
+					'#main'
+				];
+				
+				let bestContent: string | null = null;
+				let maxLength = 0;
+				
+				// 尋找最佳內容元素
+				contentSelectors.forEach(selector => {
+					const elements = document.querySelectorAll(selector);
+					elements.forEach(element => {
+						const text = (element as HTMLElement).innerText || element.textContent || '';
+						const cleanText = text.replace(/\s+/g, ' ').trim();
+						if (cleanText.length > maxLength) {
+							maxLength = cleanText.length;
+							bestContent = cleanText;
+						}
+					});
+				});
+				
+				const finalContent = bestContent || document.body.innerText || '';
+				return {
+					content: finalContent,
+					length: finalContent.length,
+					title: document.title,
+					url: window.location.href,
+					timestamp: new Date().toISOString()
+				};
+			};
 		</script>
 
 		<style>
