@@ -39,6 +39,7 @@
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
             { "name": "Spring Boot 2 3", "level": "shade1" },
+            { "name": "Spring Session Redis", "level": "shade3" },
             { "name": "Quarkus 3", "level": "shade3" },
             { "name": "Django Rest", "level": "shade4" },
             { "name": "Express.js", "level": "shade4" },
