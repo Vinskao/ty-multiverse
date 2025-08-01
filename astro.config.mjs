@@ -25,6 +25,10 @@ export default defineConfig({
             if (assetInfo.name === 'favicon.ico') {
               return 'favicon.ico';
             }
+            // 保持 CSS 檔案的 hash 用於 cache busting
+            if (assetInfo.name?.endsWith('.css')) {
+              return '_astro/[name].[hash][extname]';
+            }
             return assetInfo.name;
           }
         }

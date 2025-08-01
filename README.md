@@ -57,19 +57,23 @@ graph TD
     end
     
     subgraph 受保護路由
-        F
-        G
-        H
+        F[wildland<br>需要 admin 權限]
+        G[palais<br>需要 admin 權限]
+        H[control<br>需要 user 權限]
     end
+    
+    Note over F,G: 管理員專用功能
+    Note over H: 用戶權限即可使用
 ```
 
-### SSO 認證流程
+### 認證與權限驗證流程
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Router
     participant Keycloak
+    participant Guardian
     participant API
     participant DB
     
@@ -81,10 +85,19 @@ sequenceDiagram
     DB-->>API: 返回用戶數據
     API-->>Keycloak: 返回 access_token 和 refresh_token
     Keycloak-->>Client: 重定向回應用 + tokens
-    Client->>Router: 帶 token 訪問資源
-    Router->>API: 驗證 token (/keycloak/introspect)
-    API-->>Router: 驗證結果
-    Router-->>Client: 返回受保護資源
+    
+    Note over Client,Guardian: 三層權限驗證系統
+    Client->>Guardian: 第一層：管理員權限驗證 (/guardian/admin)
+    Guardian-->>Client: 200 OK (管理員) / 403 Forbidden
+    
+    Client->>Guardian: 第二層：用戶權限驗證 (/guardian/user)
+    Guardian-->>Client: 200 OK (用戶) / 401 Unauthorized
+    
+    Client->>Guardian: 第三層：基本權限檢查 (token 存在)
+    Guardian-->>Client: 驗證結果
+    
+    Client->>Router: 帶驗證結果訪問資源
+    Router-->>Client: 返回對應權限的資源
     
     Note over Client,API: Token 過期處理
     Client->>API: 使用 refresh_token 獲取新 token (/keycloak/refresh)
@@ -96,6 +109,42 @@ sequenceDiagram
     Keycloak-->>API: 註銷確認
     API-->>Client: 登出成功
     Client->>Router: 重定向到登入頁
+```
+
+### Guardian API 權限系統
+
+#### 權限層級
+- **Admin (管理員)**：可訪問 `/guardian/admin`，需要 `manage-users` 角色
+- **User (用戶)**：可訪問 `/guardian/user`，任何有效 token
+- **Visitor (訪客)**：可訪問 `/guardian/visitor`，無需驗證
+
+#### 驗證流程
+1. **第一層**：嘗試管理員權限驗證
+   - 成功 → 設定 `isAdmin = true`, `hasUserAccess = true`
+   - 失敗 → 進入第二層
+2. **第二層**：嘗試用戶權限驗證
+   - 成功 → 設定 `hasUserAccess = true`, `isAdmin = false`
+   - 失敗 → 進入第三層
+3. **第三層**：基本權限檢查
+   - 有 token → 設定 `hasUserAccess = true`, `isAdmin = false`
+   - 無 token → 設定所有權限為 `false`
+
+#### Guardian API 端點
+
+```typescript
+// 管理員端點
+GET /guardian/admin
+Authorization: Bearer <token>
+Response: 200 OK / 403 Forbidden / 401 Unauthorized
+
+// 用戶端點  
+GET /guardian/user
+Authorization: Bearer <token>
+Response: 200 OK / 401 Unauthorized
+
+// 訪客端點
+GET /guardian/visitor
+Response: 200 OK
 ```
 
 ### 緩存架構
