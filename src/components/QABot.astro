@@ -504,16 +504,12 @@ import '../styles/qabot.css';
         return;
       }
 
-      console.log('設置分析面板事件監聽器');
-
       // 綁定分析類型按鈕事件
       const typeButtons = panel.querySelectorAll('.pa-type-btn');
-      console.log(`找到 ${typeButtons.length} 個分析類型按鈕`);
       
       typeButtons.forEach((btn, index) => {
         btn.addEventListener('click', (e) => {
           const type = (e.currentTarget as HTMLElement).getAttribute('data-type') || 'summary';
-          console.log(`點擊分析類型按鈕: ${type}`);
           this.selectAnalysisType(type);
         });
       });
@@ -521,9 +517,7 @@ import '../styles/qabot.css';
       // 綁定開始分析按鈕事件
       const startBtn = panel.querySelector('#startPageAnalysis') as HTMLButtonElement;
       if (startBtn) {
-        console.log('找到開始分析按鈕');
         startBtn.addEventListener('click', () => {
-          console.log('點擊開始分析按鈕');
           this.analyzePage();
         });
       } else {
@@ -1296,7 +1290,6 @@ import '../styles/qabot.css';
       const intervals = [10, 30, 60]; // 10分鐘, 30分鐘, 60分鐘
       const currentInterval = intervals[this.state.saucyMessageCount] || intervals[intervals.length - 1];
       
-      console.log(`設置催促計時器: ${currentInterval}分鐘後 (第${this.state.saucyMessageCount + 1}次催促)`);
       
       this.timers.inactivity = setTimeout(() => {
         if (!this.state.isThinking && this.state.saucyMessageCount < this.state.maxSaucyMessages) {

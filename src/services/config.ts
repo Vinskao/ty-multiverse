@@ -2,7 +2,7 @@
 export const config = {
   // API 配置
   api: {
-    baseUrl: import.meta.env.PUBLIC_TYMB_URL || 'https://api.tymultiverse.com',
+    baseUrl: import.meta.env.PUBLIC_TYMB_URL,
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -12,7 +12,7 @@ export const config = {
   
   // 資源配置
   resources: {
-    peopleImageUrl: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'https://api.tymultiverse.com/images/people',
+    peopleImageUrl: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL,
   },
   
   // 路由配置
