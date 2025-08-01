@@ -20,7 +20,7 @@ const isAdmin = false; // 初始值，將在前端 JavaScript 中動態更新
 const currentPath = Astro.url.pathname;
 
 /** Main menu items */
-const textLinks: { label: string; href: string; isActive: boolean }[] = [
+const textLinks: { label: string; href: string; isActive: boolean; adminOnly?: boolean }[] = [
   { 
     label: "Home", 
     href: isLoggedIn ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}` : "/tymultiverse/", 
@@ -49,11 +49,13 @@ const textLinks: { label: string; href: string; isActive: boolean }[] = [
     },
     { 
       label: "Wildland", 
+      adminOnly: true, 
       href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
       isActive: currentPath.startsWith("/tymultiverse/wildland")
     },
     { 
       label: "Palais", 
+      adminOnly: true, 
       href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
       isActive: currentPath.startsWith("/tymultiverse/palais")
     }
@@ -99,8 +101,8 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
   <noscript>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href, isActive }) => (
-          <li>
+        textLinks.map(({ label, href, isActive, adminOnly }) => (
+          <li class:list={[{ 'admin-only': adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
               class:list={[
@@ -135,8 +137,8 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
   <div id="menu-content" hidden>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href, isActive }) => (
-          <li>
+        textLinks.map(({ label, href, isActive, adminOnly }) => (
+          <li class:list={[{ 'admin-only': adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
               class:list={[
