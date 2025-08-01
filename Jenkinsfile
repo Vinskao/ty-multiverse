@@ -96,8 +96,27 @@ pipeline {
                         string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
                         string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
                     ]) {
-                        sh 'npm install'
-                    sh 'npm run build'
+                        sh '''
+                            # 清除 npm 快取
+                            echo "Cleaning npm cache..."
+                            npm cache clean --force
+                            
+                            # 清除 node_modules 和 package-lock.json
+                            echo "Removing node_modules and package-lock.json..."
+                            rm -rf node_modules package-lock.json
+                            
+                            # 重新安裝依賴
+                            echo "Installing dependencies..."
+                            npm install
+                            
+                            # 建置專案
+                            echo "Building project..."
+                            npm run build
+                            
+                            # 檢查建置結果
+                            echo "Checking build output..."
+                            ls -la dist/client/_astro/ | grep -E "\.(css|js)$"
+                        '''
                     }
                 }
             }
