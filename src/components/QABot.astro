@@ -3,6 +3,91 @@
 import '../styles/qabot.css';
 ---
 
+<style>
+  /* 自定義 SweetAlert 樣式 */
+  .swal-login-popup {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    overflow: hidden !important;
+  }
+
+  .swal-login-title {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .swal-login-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  .swal-login-content p {
+    line-height: 1.6 !important;
+    margin: 0 !important;
+  }
+
+  /* 按鈕樣式 */
+  .swal2-confirm {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .swal2-cancel {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .swal2-confirm:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(48, 133, 214, 0.3) !important;
+  }
+
+  .swal2-cancel:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
+  }
+
+  /* 動畫效果 */
+  .swal2-popup {
+    animation: swalSlideIn 0.3s ease-out !important;
+  }
+
+  @keyframes swalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* 響應式設計 */
+  @media (max-width: 480px) {
+    .swal-login-popup {
+      width: 90% !important;
+      margin: 0 5% !important;
+    }
+    
+    .swal-login-title {
+      font-size: 20px !important;
+    }
+    
+    .swal-login-content p {
+      font-size: 14px !important;
+    }
+  }
+</style>
+
 <!-- 浮動聊天按鈕 -->
 <div class="qa-bot-toggle" id="qaBotToggle">
   <img src={`${import.meta.env.PUBLIC_API_BASE_URL}/images/people/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
@@ -142,7 +227,8 @@ import '../styles/qabot.css';
       currentBotIndex: 0,
       // 新增：頁面分析相關狀態
       analysisType: 'summary',
-      isAnalyzing: false
+      isAnalyzing: false,
+      hasShownLoginAlert: false
     };
     
     // 定時器
@@ -380,56 +466,97 @@ import '../styles/qabot.css';
  
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
-      const maxRetries = 3;
-      const retryDelay = 2000; // 2秒
-      
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const apiBase = import.meta.env.PUBLIC_TYMB_URL || '/tymb';
-          const resp = await fetch(`${apiBase}/people/names`, {
-            method: 'GET',
-            credentials: 'include'
-          });
-          
-          if (resp.ok) {
-            const names = await resp.json();
-            if (Array.isArray(names)) {
-              // 確保 Maya 在列表內
-              if (!names.includes('Maya')) names.unshift('Maya');
-              this.state.availableBots = names;
-              // 初始化後先過濾無句庫的
-              if (this.messages) this.pruneAvailableBots();
-              this.state.currentBotIndex = names.indexOf('Maya');
-              // console.log('成功獲取AI專員列表:', this.state.availableBots);
-              return; // 成功後直接返回
-            }
-          } else if (resp.status === 500) {
-            console.warn(`API 500錯誤 (嘗試 ${attempt}/${maxRetries}):`, resp.statusText);
-            if (attempt < maxRetries) {
-              console.log(`${retryDelay/1000}秒後重試...`);
-              await new Promise(resolve => setTimeout(resolve, retryDelay));
-              continue;
-            }
-          } else {
-            console.warn('API回應錯誤:', resp.status, resp.statusText);
-          }
-        } catch (err) {
-          console.warn(`網路錯誤 (嘗試 ${attempt}/${maxRetries}):`, err);
-          if (attempt < maxRetries) {
-            console.log(`${retryDelay/1000}秒後重試...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
+      try {
+        const apiBase = import.meta.env.PUBLIC_TYMB_URL || '/tymb';
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
+        
+        const resp = await fetch(`${apiBase}/people/names`, {
+          method: 'GET',
+          headers,
+          credentials: 'include'
+        });
+        
+        if (resp.ok) {
+          const names = await resp.json();
+          if (Array.isArray(names)) {
+            // 確保 Maya 在列表內
+            if (!names.includes('Maya')) names.unshift('Maya');
+            this.state.availableBots = names;
+            // 初始化後先過濾無句庫的
+            if (this.messages) this.pruneAvailableBots();
+            this.state.currentBotIndex = names.indexOf('Maya');
+            // console.log('成功獲取AI專員列表:', this.state.availableBots);
+            return; // 成功後直接返回
+          }
+        } else {
+          // API 調用失敗，顯示 Sweet Alert 提示用戶先登入
+          this.showLoginAlert();
+          console.warn('API回應錯誤:', resp.status, resp.statusText);
+        }
+      } catch (err) {
+        // 網路錯誤，顯示 Sweet Alert 提示用戶先登入
+        this.showLoginAlert();
+        console.warn('網路錯誤:', err);
       }
       
-      // 所有重試都失敗後，確保至少有一個預設的AI可用
-      console.warn('所有重試都失敗，使用預設AI');
+      // 所有情況都失敗後，確保至少有一個預設的AI可用
+      console.warn('使用預設AI');
       if (this.state.availableBots.length === 0) {
         this.state.availableBots = ['Maya'];
         this.state.currentBotIndex = 0;
       }
       this.updateAvatarAndName();
+    }
+
+    // 顯示登入提示
+    private showLoginAlert() {
+      // 檢查是否已經顯示過提示，避免重複顯示
+      if (this.state.hasShownLoginAlert) {
+        return;
+      }
+      
+      this.state.hasShownLoginAlert = true;
+      
+      // 使用 SweetAlert2 顯示美觀的提示
+      if (typeof (window as any).Swal !== 'undefined') {
+        (window as any).Swal.fire({
+          title: '🔐 需要登入',
+          html: `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 48px; margin-bottom: 20px;">👋</div>
+              <p style="font-size: 16px; color: #666; margin-bottom: 15px;">
+                需要登入才能獲取完整的AI專員列表
+              </p>
+              <p style="font-size: 14px; color: #999;">
+                登入後可以選擇更多AI助手進行對話
+              </p>
+            </div>
+          `,
+          icon: 'info',
+          confirmButtonText: '知道了',
+          confirmButtonColor: '#3085d6',
+          showCancelButton: true,
+          cancelButtonText: '稍後再說',
+          cancelButtonColor: '#6c757d',
+          customClass: {
+            popup: 'swal-login-popup',
+            title: 'swal-login-title',
+            htmlContainer: 'swal-login-content'
+          },
+          background: '#fff',
+          backdrop: 'rgba(0,0,0,0.4)',
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          width: '400px'
+        });
+      }
     }
 
     // 依目前 botName 更新 UI
@@ -1080,10 +1207,20 @@ import '../styles/qabot.css';
       // 調試日誌：確認送出的請求內容
       console.log('callQAAPI payload =>', finalPayload);
 
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalPayload)
+        headers,
+        body: JSON.stringify(finalPayload),
+        credentials: 'include'
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -1102,7 +1239,19 @@ import '../styles/qabot.css';
         const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
         const apiPathPrefix = '/maya-sawa';
         
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
+          headers,
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const result = await response.json();
@@ -1159,7 +1308,19 @@ import '../styles/qabot.css';
         const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
         const apiPathPrefix = '/maya-sawa';
         
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`);
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
+          headers,
+          credentials: 'include'
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const result = await response.json();
@@ -1851,3 +2012,6 @@ import '../styles/qabot.css';
     new QABot();
   });
 </script>
+
+<!-- 引入 SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

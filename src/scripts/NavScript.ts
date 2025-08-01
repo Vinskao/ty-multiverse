@@ -27,6 +27,20 @@ export class NavController {
     // 支援兩種參數名：refreshToken 和 refresh_token
     this.refreshToken = urlParams.get('refreshToken') || urlParams.get('refresh_token');
     this.isLoggedIn = !!this.username;
+    
+    // 將 token 儲存到 localStorage 中，供其他組件使用
+    if (this.token) {
+      localStorage.setItem('token', this.token);
+      console.log('✅ Token 已儲存到 localStorage');
+    }
+    if (this.refreshToken) {
+      localStorage.setItem('refreshToken', this.refreshToken);
+      console.log('✅ RefreshToken 已儲存到 localStorage');
+    }
+    if (this.username) {
+      localStorage.setItem('username', this.username);
+      console.log('✅ Username 已儲存到 localStorage');
+    }
   }
 
   private setupEventListeners() {
@@ -217,6 +231,17 @@ export class NavController {
         // token 刷新時的回調
         (newToken, newRefreshToken) => {
           console.log('Token refreshed');
+          
+          // 更新 localStorage
+          if (newToken) {
+            localStorage.setItem('token', newToken);
+            console.log('✅ 新的 access token 已儲存到 localStorage');
+          }
+          if (newRefreshToken) {
+            localStorage.setItem('refreshToken', newRefreshToken);
+            console.log('✅ 新的 refresh token 已儲存到 localStorage');
+          }
+          
           // 更新 URL 參數
           const newUrl = new URL(window.location.href);
           newUrl.searchParams.set('token', newToken);
