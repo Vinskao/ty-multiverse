@@ -241,7 +241,7 @@ export async function validateRefreshToken(refreshToken: string): Promise<boolea
 export async function logout(refreshToken: string): Promise<boolean> {
   try {
     // 保存當前主題設置
-    const currentTheme = storageService.get(storageService.KEYS.THEME);
+    const currentTheme = localStorage.getItem('theme');
 
     // 構建登出 URL
     const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
@@ -265,7 +265,7 @@ export async function logout(refreshToken: string): Promise<boolean> {
 
     // 清除除了主題以外的所有數據
     Object.keys(localStorage).forEach(key => {
-      if (key !== storageService.KEYS.THEME) {
+      if (key !== 'theme') {
         localStorage.removeItem(key);
       }
     });
@@ -279,9 +279,9 @@ export async function logout(refreshToken: string): Promise<boolean> {
       document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
     }
 
-    // 恢復主題設置
+    // 確保主題設置被保留（如果原本有的話）
     if (currentTheme) {
-      storageService.set(storageService.KEYS.THEME, currentTheme);
+      localStorage.setItem('theme', currentTheme);
     }
 
     return true;

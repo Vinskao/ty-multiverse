@@ -354,6 +354,11 @@ nav {
   }
 }
 
+/* Admin-only items hidden by default */
+.admin-only {
+  display: none;
+}
+
 /* 高對比度模式 */
 @media (forced-colors: active) {
   .link.active {

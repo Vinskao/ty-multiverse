@@ -135,7 +135,6 @@ export class NavController {
     try {
       if (this.isLoggedIn && this.token) {
         const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/guardian/user`;
-        console.log('Validating user access at:', apiUrl);
         
         // 使用 fetch 直接調用用戶端點來驗證權限
         const response = await fetch(apiUrl, {
@@ -146,11 +145,9 @@ export class NavController {
           }
         });
         
-        console.log('User validation response status:', response.status);
         
         if (response.ok) {
           this.hasUserAccess = true;
-          console.log('User access validated');
         } else if (response.status === 401) {
           // Token 無效
           this.hasUserAccess = false;
@@ -279,28 +276,30 @@ export class NavController {
     if (wildlandLink) {
       const shouldShowWildland = this.isAdmin;
       wildlandLink.style.display = shouldShowWildland ? 'block' : 'none';
+      if (wildlandLink.parentElement) {
+        (wildlandLink.parentElement as HTMLElement).style.display = shouldShowWildland ? 'block' : 'none';
+      }
       if (wildlandLink && this.isLoggedIn && this.isAdmin) {
         wildlandLink.href = `/tymultiverse/wildland/?username=${this.username}&token=${this.token}&refresh_token=${this.refreshToken}`;
       }
     } else {
-      console.log('❌ 未找到 Wildland 連結元素');
       // 嘗試其他選擇器
       const allLinks = document.querySelectorAll('a');
-      console.log('所有連結:', Array.from(allLinks).map(link => ({ href: link.href, text: link.textContent })));
     }
     
     // Palais 需要管理員權限
     if (palaisLink) {
       const shouldShowPalais = this.isAdmin;
       palaisLink.style.display = shouldShowPalais ? 'block' : 'none';
+      if (palaisLink.parentElement) {
+        (palaisLink.parentElement as HTMLElement).style.display = shouldShowPalais ? 'block' : 'none';
+      }
       if (palaisLink && this.isLoggedIn && this.isAdmin) {
         palaisLink.href = `/tymultiverse/palais/?username=${this.username}&token=${this.token}&refresh_token=${this.refreshToken}`;
       }
     } else {
-      console.log('❌ 未找到 Palais 連結元素');
       // 嘗試其他選擇器
       const allLinks = document.querySelectorAll('a');
-      console.log('所有連結:', Array.from(allLinks).map(link => ({ href: link.href, text: link.textContent })));
     }
   }
 }
