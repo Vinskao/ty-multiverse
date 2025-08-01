@@ -24,12 +24,19 @@ import '../styles/galwall.css';
   // 獲取角色列表
   async function fetchCharacterList() {
     try {
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        headers,
         credentials: 'include'
       });
       

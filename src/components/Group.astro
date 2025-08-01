@@ -235,11 +235,18 @@
 
   // 初始化頁面
   document.addEventListener("DOMContentLoaded", function () {
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     fetch(`${TYMB_URL}/people/get-all`, {
       method: "POST", 
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers,
       credentials: 'include'
     })
     .then(response => response.json())
