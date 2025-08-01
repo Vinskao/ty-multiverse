@@ -1,0 +1,226 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { guardianService } from '../services/guardian';
+
+const title = "Guardian API Test";
+const description = "Test page for Guardian API endpoints";
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="container">
+    <h1>Guardian API 測試頁面</h1>
+    
+    <div class="test-section">
+      <h2>API 端點測試</h2>
+      
+      <div class="test-buttons">
+        <button id="testVisitor" class="test-btn">測試公開端點</button>
+        <button id="testUser" class="test-btn">測試用戶端點</button>
+        <button id="testAdmin" class="test-btn">測試管理員端點</button>
+        <button id="testAll" class="test-btn">測試所有端點</button>
+      </div>
+      
+      <div class="results">
+        <h3>測試結果</h3>
+        <div id="testResults" class="results-content">
+          <p>點擊上方按鈕開始測試...</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="token-section">
+      <h2>Token 資訊</h2>
+      <div id="tokenInfo" class="token-content">
+        <p>載入中...</p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { guardianService } from '../services/guardian';
+
+  // 獲取 DOM 元素
+  const testVisitorBtn = document.getElementById('testVisitor');
+  const testUserBtn = document.getElementById('testUser');
+  const testAdminBtn = document.getElementById('testAdmin');
+  const testAllBtn = document.getElementById('testAll');
+  const testResults = document.getElementById('testResults');
+  const tokenInfo = document.getElementById('tokenInfo');
+
+  // 顯示測試結果
+  function displayResult(testName: string, result: any, error?: any) {
+    if (!testResults) return;
+    
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result-item';
+    
+    if (error) {
+      resultDiv.innerHTML = `
+        <h4>${testName} - 失敗</h4>
+        <p class="error">錯誤: ${error.message}</p>
+      `;
+    } else {
+      resultDiv.innerHTML = `
+        <h4>${testName} - 成功</h4>
+        <pre>${JSON.stringify(result, null, 2)}</pre>
+      `;
+    }
+    
+    testResults.appendChild(resultDiv);
+  }
+
+  // 清空結果
+  function clearResults() {
+    if (testResults) {
+      testResults.innerHTML = '';
+    }
+  }
+
+  // 更新 Token 資訊
+  function updateTokenInfo() {
+    const token = guardianService.getCurrentToken();
+    const hasToken = guardianService.hasValidToken();
+    
+    if (tokenInfo) {
+      tokenInfo.innerHTML = `
+        <p><strong>Token 存在:</strong> ${hasToken ? '是' : '否'}</p>
+        <p><strong>Token 長度:</strong> ${token ? token.length : 0}</p>
+        <p><strong>Token 預覽:</strong> ${token ? token.substring(0, 20) + '...' : '無'}</p>
+      `;
+    }
+  }
+
+  // 測試公開端點
+  testVisitorBtn?.addEventListener('click', async () => {
+    clearResults();
+    try {
+      const result = await guardianService.testVisitorEndpoint();
+      displayResult('公開端點', result);
+    } catch (error) {
+      displayResult('公開端點', null, error);
+    }
+  });
+
+  // 測試用戶端點
+  testUserBtn?.addEventListener('click', async () => {
+    clearResults();
+    try {
+      const result = await guardianService.testUserEndpoint();
+      displayResult('用戶端點', result);
+    } catch (error) {
+      displayResult('用戶端點', null, error);
+    }
+  });
+
+  // 測試管理員端點
+  testAdminBtn?.addEventListener('click', async () => {
+    clearResults();
+    try {
+      const result = await guardianService.testAdminEndpoint();
+      displayResult('管理員端點', result);
+    } catch (error) {
+      displayResult('管理員端點', null, error);
+    }
+  });
+
+  // 測試所有端點
+  testAllBtn?.addEventListener('click', async () => {
+    clearResults();
+    try {
+      const results = await guardianService.testAllEndpoints();
+      displayResult('所有端點', results);
+    } catch (error) {
+      displayResult('所有端點', null, error);
+    }
+  });
+
+  // 頁面載入時更新 Token 資訊
+  updateTokenInfo();
+</script>
+
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .test-section {
+    margin-bottom: 3rem;
+  }
+
+  .test-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .test-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-regular);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+  }
+
+  .test-btn:hover {
+    background: var(--accent-hover);
+  }
+
+  .results {
+    background: var(--gray-100);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .result-item {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.25rem;
+    border-left: 4px solid var(--accent-regular);
+  }
+
+  .result-item h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--gray-900);
+  }
+
+  .result-item pre {
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+  }
+
+  .error {
+    color: #dc2626;
+    font-weight: 500;
+  }
+
+  .token-section {
+    background: var(--gray-50);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .token-content p {
+    margin: 0.5rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .test-buttons {
+      flex-direction: column;
+    }
+    
+    .test-btn {
+      width: 100%;
+    }
+  }
+</style> 

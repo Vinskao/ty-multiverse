@@ -16,5 +16,19 @@ export default defineConfig({
   },
   devToolbar: {
     enabled: false
+  },
+  vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name === 'favicon.ico') {
+              return 'favicon.ico';
+            }
+            return assetInfo.name;
+          }
+        }
+      }
+    }
   }
 });
