@@ -115,7 +115,7 @@ pipeline {
                             
                             # 檢查建置結果
                             echo "Checking build output..."
-                            ls -la dist/client/_astro/ | grep -E "\.(css|js)$"
+                            ls -la dist/client/_astro/ | grep -E "\\.(css|js)$"
                         '''
                     }
                 }
