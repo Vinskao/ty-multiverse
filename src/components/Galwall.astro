@@ -144,6 +144,9 @@ import '../styles/galwall.css';
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         
+        // 清除 Canvas 背景，確保透明
+        ctx.clearRect(0, 0, targetWidth, targetHeight);
+        
         // 設定較低的渲染品質
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'low';
@@ -154,18 +157,21 @@ import '../styles/galwall.css';
                      originalSrc.includes('data:image/png') ||
                      originalSrc.includes('image/png');
         
+        // 確保 Canvas 支持透明度
+        ctx.globalCompositeOperation = 'source-over';
+        
         // 繪製圖片到畫布
         ctx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
         
         // 根據原始格式選擇輸出格式
         let optimizedDataURL;
+        
+        // 對於 PNG 圖片，始終使用 PNG 格式以保持透明度
         if (isPNG) {
-          // PNG 格式保持透明度
           optimizedDataURL = canvas.toDataURL('image/png');
         } else {
-          // 其他格式使用 JPEG，但檢查是否有透明區域
+          // 對於其他格式，檢查是否有透明區域
           try {
-            // 嘗試檢測是否有透明區域
             const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
             const hasTransparency = imageData.data.some((_, index) => 
               index % 4 === 3 && imageData.data[index] < 255
