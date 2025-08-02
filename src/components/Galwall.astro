@@ -148,11 +148,41 @@ import '../styles/galwall.css';
         ctx.imageSmoothingEnabled = false;
         ctx.imageSmoothingQuality = 'low';
         
+        // 檢查原始圖片是否為 PNG（支持透明度）
+        const originalSrc = imgElement.src;
+        const isPNG = originalSrc.toLowerCase().includes('.png') || 
+                     originalSrc.includes('data:image/png') ||
+                     originalSrc.includes('image/png');
+        
         // 繪製圖片到畫布
         ctx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
         
-        // 將畫布內容轉換為較低品質的圖片
-        const optimizedDataURL = canvas.toDataURL('image/jpeg', 0.6); // 60% JPEG 品質
+        // 根據原始格式選擇輸出格式
+        let optimizedDataURL;
+        if (isPNG) {
+          // PNG 格式保持透明度
+          optimizedDataURL = canvas.toDataURL('image/png');
+        } else {
+          // 其他格式使用 JPEG，但檢查是否有透明區域
+          try {
+            // 嘗試檢測是否有透明區域
+            const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+            const hasTransparency = imageData.data.some((_, index) => 
+              index % 4 === 3 && imageData.data[index] < 255
+            );
+            
+            if (hasTransparency) {
+              // 有透明區域，使用 PNG
+              optimizedDataURL = canvas.toDataURL('image/png');
+            } else {
+              // 沒有透明區域，使用 JPEG
+              optimizedDataURL = canvas.toDataURL('image/jpeg', 0.8);
+            }
+          } catch (e) {
+            // 檢測失敗，安全起見使用 PNG
+            optimizedDataURL = canvas.toDataURL('image/png');
+          }
+        }
         
         // 更新圖片來源
         imgElement.src = optimizedDataURL;
