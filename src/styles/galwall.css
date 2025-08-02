@@ -68,12 +68,10 @@ width: 300px;
 height: 550px;
 object-fit: contain;
 display: block;
-/* 降低圖片渲染品質以提升效能 */
-image-rendering: -webkit-optimize-contrast;
-image-rendering: -moz-crisp-edges;
-image-rendering: crisp-edges;
-image-rendering: pixelated;
-/* 移除可能導致黑色背景的 filter */
+/* 保持預設渲染品質以維持透明度 */
+image-rendering: auto;
+/* 確保透明背景 */
+background: transparent;
 }
 
 @keyframes slideLeft {

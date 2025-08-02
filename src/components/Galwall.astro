@@ -111,10 +111,9 @@ import '../styles/galwall.css';
       adImage.style.height = "300px";
       adImage.style.width = "auto";
       adImage.style.objectFit = "contain";
-      // 降低圖片渲染品質以提升效能
-      adImage.style.imageRendering = "pixelated";
-      adImage.style.imageRendering = "-webkit-optimize-contrast";
-      adImage.style.imageRendering = "crisp-edges";
+      // 保持預設渲染品質以維持透明度
+      adImage.style.imageRendering = "auto";
+      adImage.style.background = "transparent";
       
       // 圖片載入完成後進行品質優化
       adImage.onload = function() {
@@ -125,11 +124,23 @@ import '../styles/galwall.css';
       return adDiv;
     }
 
-    // 圖片品質優化函數
+    // 圖片品質優化函數 - 修正透明背景問題
     function optimizeImageQuality(imgElement) {
       try {
+        // 檢查原始圖片是否為 PNG（支持透明度）
+        const originalSrc = imgElement.src;
+        const isPNG = originalSrc.toLowerCase().includes('.png') || 
+                     originalSrc.includes('data:image/png') ||
+                     originalSrc.includes('image/png');
+        
+        // 對於 PNG 圖片，為了保持透明度，跳過 Canvas 優化
+        if (isPNG) {
+          console.log('PNG 圖片保持原始品質以維持透明度');
+          return;
+        }
+        
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: true }); // 明確啟用 alpha 通道
         
         // 檢查 canvas context 是否成功獲取
         if (!ctx) {
@@ -137,58 +148,26 @@ import '../styles/galwall.css';
           return;
         }
         
-        // 設定較小的畫布尺寸來降低品質
-        const targetWidth = 150; // 降低到一半尺寸
-        const targetHeight = 275; // 降低到一半尺寸
+        // 設定較小的畫布尺寸來降低品質（降低20%）
+        const targetWidth = 240;  // 300 * 0.8
+        const targetHeight = 440; // 550 * 0.8
         
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         
-        // 清除 Canvas 背景，確保透明
+        // 確保 Canvas 背景完全透明
         ctx.clearRect(0, 0, targetWidth, targetHeight);
         
-        // 設定較低的渲染品質
-        ctx.imageSmoothingEnabled = false;
-        ctx.imageSmoothingQuality = 'low';
-        
-        // 檢查原始圖片是否為 PNG（支持透明度）
-        const originalSrc = imgElement.src;
-        const isPNG = originalSrc.toLowerCase().includes('.png') || 
-                     originalSrc.includes('data:image/png') ||
-                     originalSrc.includes('image/png');
-        
-        // 確保 Canvas 支持透明度
+        // 設定渲染品質，但保持透明度支持
+        ctx.imageSmoothingEnabled = true; // 改為 true 以更好處理透明度
+        ctx.imageSmoothingQuality = 'medium'; // 提升品質以保持透明度
         ctx.globalCompositeOperation = 'source-over';
         
         // 繪製圖片到畫布
         ctx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
         
-        // 根據原始格式選擇輸出格式
-        let optimizedDataURL;
-        
-        // 對於 PNG 圖片，始終使用 PNG 格式以保持透明度
-        if (isPNG) {
-          optimizedDataURL = canvas.toDataURL('image/png');
-        } else {
-          // 對於其他格式，檢查是否有透明區域
-          try {
-            const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-            const hasTransparency = imageData.data.some((_, index) => 
-              index % 4 === 3 && imageData.data[index] < 255
-            );
-            
-            if (hasTransparency) {
-              // 有透明區域，使用 PNG
-              optimizedDataURL = canvas.toDataURL('image/png');
-            } else {
-              // 沒有透明區域，使用 JPEG
-              optimizedDataURL = canvas.toDataURL('image/jpeg', 0.8);
-            }
-          } catch (e) {
-            // 檢測失敗，安全起見使用 PNG
-            optimizedDataURL = canvas.toDataURL('image/png');
-          }
-        }
+        // 始終使用 PNG 格式以保持透明度
+        const optimizedDataURL = canvas.toDataURL('image/png');
         
         // 更新圖片來源
         imgElement.src = optimizedDataURL;
