@@ -90,7 +90,7 @@ import '../styles/qabot.css';
 
 <!-- 浮動聊天按鈕 -->
 <div class="qa-bot-toggle" id="qaBotToggle">
-  <img src={`${import.meta.env.PUBLIC_API_BASE_URL}/images/people/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
+  <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
   <span class="toggle-text">真夜</span>
 </div>
 
@@ -98,7 +98,7 @@ import '../styles/qabot.css';
 <div class="qa-bot-container" id="qaBotContainer">
   <div class="chat-header">
     <div class="header-content">
-      <img src={`${import.meta.env.PUBLIC_API_BASE_URL}/images/people/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
+      <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
       <div class="header-text">
         <h3>佐和 真夜</h3>
         <p>TY的智慧庫</p>
@@ -135,7 +135,7 @@ import '../styles/qabot.css';
   <div class="chat-messages" id="chatMessages">
     <div class="message bot-message">
       <div class="message-avatar">
-        <img src={`${import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com'}/images/people/MayaHead.png`} alt="真夜" class="bot-avatar" />
+        <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
       </div>
       <div class="message-content-wrapper">
         <div class="message-header">
@@ -590,8 +590,8 @@ import '../styles/qabot.css';
 
     // 取得預設頭貼 URL
     private getDefaultAvatarUrl(): string {
-      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
-      return `${apiBaseUrl}/images/people/default.png`;
+      // 使用環境變數取得 PNG 圖片 URL
+      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/default.png`;
     }
 
     // 建立頭貼選擇 UI 與事件
@@ -753,8 +753,8 @@ import '../styles/qabot.css';
 
     // 取得頭貼 URL
     private getAvatarUrl(name: string): string {
-      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
-      return `${apiBaseUrl}/images/people/${encodeURIComponent(name)}Head.png`;
+      // 使用環境變數取得 PNG 圖片 URL
+      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}Head.png`;
     }
 
     // 設置事件監聽器
