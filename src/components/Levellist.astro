@@ -1015,19 +1015,62 @@ import '../styles/levellist.css';
             hasBonus: false
           };
           
-          // 發送更新請求
-          const response = await fetch(`${TYMB_URL}/people/update`, {
+          // 發送更新請求到新的 API 路由
+          const response = await fetch('/api/people/update', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json'
             },
-            body: JSON.stringify(currentData),
-            credentials: 'include'
+            body: JSON.stringify(currentData)
           });
           
           if (!response.ok) {
-            throw new Error(`更新失敗: ${response.status}`);
+            const errorData = await response.json();
+            
+            // 特殊處理版本衝突錯誤
+            if (errorData.error === 'VERSION_CONFLICT') {
+              if (typeof (window as any).Swal !== 'undefined') {
+                (window as any).Swal.fire({
+                  title: '版本衝突',
+                  text: errorData.message,
+                  icon: 'warning',
+                  confirmButtonText: '重新載入',
+                  showCancelButton: true,
+                  cancelButtonText: '取消'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    // 重新載入頁面或重新獲取數據
+                    location.reload();
+                  }
+                });
+              }
+              return;
+            }
+            
+            // 特殊處理主鍵衝突錯誤
+            if (errorData.error === 'DUPLICATE_KEY') {
+              if (typeof (window as any).Swal !== 'undefined') {
+                (window as any).Swal.fire({
+                  title: '後端邏輯錯誤',
+                  html: `
+                    <div style="text-align: left;">
+                      <p><strong>錯誤類型：</strong>主鍵衝突</p>
+                      <p><strong>問題：</strong>後端嘗試插入已存在的角色</p>
+                      <p><strong>建議：</strong>${errorData.suggestion || '聯繫後端開發者修復'}</p>
+                      <hr>
+                      <p><small>詳細錯誤：${errorData.details?.substring(0, 200)}...</small></p>
+                    </div>
+                  `,
+                  icon: 'error',
+                  confirmButtonText: '確定',
+                  width: '600px'
+                });
+              }
+              return;
+            }
+            
+            throw new Error(`更新失敗: ${response.status} - ${errorData.message || '未知錯誤'}`);
           }
           
           const result = await response.json();
