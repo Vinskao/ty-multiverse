@@ -141,92 +141,331 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
                               )}
                               {subcategory.name === "Frameworks & Libraries" && (
                                 <>
-                                                                  <div class="mermaid-diagram margin-top">
-                                  <pre class="mermaid">
-                                    sequenceDiagram
-                                          participant Client
-                                          participant Controller
-                                        participant Service
-                                        participant Repository
-                                          participant Exception
-                                          participant GlobalExceptionHandler
-                                          participant ErrorResponse
-                                          participant Logger
-
-                                          Client->>Controller: HTTP Request
-                                          Controller->>Service: 調用服務方法
-                                          Service->>Repository: 數據庫操作
-                                          Repository-->>Service: 返回結果/異常
-                                          alt 發生異常
-                                              Service->>Exception: 拋出業務異常
-                                              Exception-->>Controller: 異常傳播
-                                              Controller->>GlobalExceptionHandler: 捕獲異常
-                                              GlobalExceptionHandler->>Logger: 記錄異常
-                                              GlobalExceptionHandler->>ErrorResponse: 創建錯誤響應
-                                              GlobalExceptionHandler-->>Client: 返回錯誤響應
-                                          else 正常流程
-                                              Service-->>Controller: 返回結果
-                                              Controller-->>Client: 返回成功響應
-                                          end
+                                  {/* --- Updated Backend Architecture Diagrams --- */}
+                                  <div class="mermaid-diagram margin-top">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class SpringBootApplication {
+                                              +@SpringBootApplication
+                                              +@EnableCaching
+                                              +@EnableJpaRepositories
+                                          }
+                                          
+                                          class HikariCP {
+                                              +PrimaryHikariCP (50 connections)
+                                              +PeopleHikariCP (15 connections)
+                                              +Connection Pool Management
+                                          }
+                                          
+                                          class RedisCache {
+                                              +@Cacheable
+                                              +damage-calculations
+                                              +Session Storage
+                                              +Distributed Lock
+                                          }
+                                          
+                                          class Database {
+                                              +PostgreSQL Primary
+                                              +PostgreSQL People
+                                              +Indexed Queries
+                                              +Batch Operations
+                                          }
+                                          
+                                          SpringBootApplication --> HikariCP
+                                          SpringBootApplication --> RedisCache
+                                          HikariCP --> Database
+                                          RedisCache --> Database`}
                                     </pre>
                                   </div>
+
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
-                                      flowchart TD
-                                          subgraph "API Layer"
-                                              APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
-                                          end
+                                      {`classDiagram
+                                          class PeopleModule {
+                                              +PeopleController
+                                              +PeopleService
+                                              +WeaponDamageService
+                                              +PeopleRepository
+                                              +People.java
+                                          }
+                                          
+                                          class WeaponModule {
+                                              +WeaponController
+                                              +WeaponService
+                                              +WeaponRepository
+                                              +Weapon.java
+                                          }
+                                          
+                                          class GalleryModule {
+                                              +GalleryController
+                                              +GalleryService
+                                              +GalleryRepository
+                                              +Gallery.java
+                                          }
+                                          
+                                          class LivestockModule {
+                                              +LivestockController
+                                              +LivestockService
+                                              +LivestockRepository
+                                              +Livestock.java
+                                          }
+                                          
+                                          class CKEditorModule {
+                                              +FileUploadController
+                                              +EditContentService
+                                              +EditContentRepository
+                                              +EditContentVO.java
+                                          }
+                                          
+                                          PeopleModule --> WeaponModule
+                                          PeopleModule --> GalleryModule
+                                          PeopleModule --> LivestockModule
+                                          PeopleModule --> CKEditorModule`}
+                                    </pre>
+                                  </div>
 
-                                          subgraph "Q&A Layer"
-                                              QAEngine["QAEngine"]
-                                              QAChain["QAChain"]
-                                          end
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class CacheStrategy {
+                                              +@Cacheable
+                                              +Redis Storage
+                                              +TTL Management
+                                              +Cache Eviction
+                                          }
+                                          
+                                          class DamageCache {
+                                              +damage-calculations::name
+                                              +Weapon Damage Results
+                                              +People Attributes
+                                          }
+                                          
+                                          class SessionCache {
+                                              +tymb:sessions
+                                              +CKEditor Drafts
+                                              +Game States
+                                          }
+                                          
+                                          class DistributedLock {
+                                              +lock:content:save
+                                              +lock:metrics:export
+                                              +lock:livestock:query
+                                          }
+                                          
+                                          CacheStrategy --> DamageCache
+                                          CacheStrategy --> SessionCache
+                                          CacheStrategy --> DistributedLock`}
+                                    </pre>
+                                  </div>
 
-                                          subgraph "Support Layer"
-                                              NameDetector["NameDetector"]
-                                              ProfileManager["ProfileManager"]
-                                              PeopleWeaponManager["PeopleWeaponManager"]
-                                              PersonalityPromptBuilder["PersonalityPromptBuilder"]
-                                              NameAdapter["NameAdapter"]
-                                              VectorStore["PostgresVectorStore"]
-                                              ChatHistoryManager["ChatHistoryManager"]
-                                          end
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class HikariCPConfig {
+                                              +PrimaryHikariCP
+                                              +PeopleHikariCP
+                                              +Connection Management
+                                          }
+                                          
+                                          class PrimaryPool {
+                                              +maximum-pool-size: 50
+                                              +minimum-idle: 10
+                                              +connection-timeout: 30s
+                                              +leak-detection-threshold: 60s
+                                          }
+                                          
+                                          class PeoplePool {
+                                              +maximum-pool-size: 15
+                                              +minimum-idle: 5
+                                              +connection-timeout: 30s
+                                              +leak-detection-threshold: 60s
+                                          }
+                                          
+                                          class PoolMonitoring {
+                                              +ActiveConnections
+                                              +IdleConnections
+                                              +WaitingThreads
+                                              +ConnectionTimeout
+                                          }
+                                          
+                                          HikariCPConfig --> PrimaryPool
+                                          HikariCPConfig --> PeoplePool
+                                          HikariCPConfig --> PoolMonitoring`}
+                                    </pre>
+                                  </div>
 
-                                          subgraph "External Services"
-                                              OpenAIAPI["OpenAI API<br/>Chat & Embeddings"]
-                                              PeopleAPI["People System API<br/>/tymb/people/*"]
-                                              ArticleAPI["Public Article API<br/>/paprika/articles"]
-                                              PostgresDB["PostgreSQL"]
-                                          end
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class SecurityConfig {
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
+                                              +JWT Authentication
+                                              +Session Management
+                                          }
+                                          
+                                          class JWTValidation {
+                                              +OAuth2ResourceServer
+                                              +JwtDecoder
+                                              +CustomJwtGrantedAuthoritiesConverter
+                                          }
+                                          
+                                          class Authorization {
+                                              +ROLE_GUEST
+                                              +ROLE_MANAGE_USERS
+                                              +ROLE_ADMIN
+                                              +ROLE_USER
+                                          }
+                                          
+                                          class SessionManagement {
+                                              +Redis Session Storage
+                                              +Session Timeout
+                                              +Session Fixation
+                                          }
+                                          
+                                          SecurityConfig --> JWTValidation
+                                          SecurityConfig --> Authorization
+                                          SecurityConfig --> SessionManagement`}
+                                    </pre>
+                                  </div>
 
-                                          Client["Client / Frontend"] --> APIRouter
-                                          APIRouter --> QAEngine
-                                          QAEngine --> QAChain
-                                          APIRouter --> VectorStore
-                                          APIRouter --> ChatHistoryManager
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class GlobalExceptionHandler {
+                                              +Chain of Responsibility
+                                              +Error Response Builder
+                                          }
+                                          
+                                          class BusinessApiExceptionHandler {
+                                              +@Order(0)
+                                              +BusinessException
+                                          }
+                                          
+                                          class DataIntegrityApiExceptionHandler {
+                                              +@Order(1)
+                                              +DataIntegrityViolationException
+                                          }
+                                          
+                                          class ValidationApiExceptionHandler {
+                                              +@Order(2)
+                                              +MethodArgumentNotValidException
+                                          }
+                                          
+                                          class DefaultApiExceptionHandler {
+                                              +@Order(Integer.MAX_VALUE)
+                                              +Generic Exception
+                                          }
+                                          
+                                          GlobalExceptionHandler --> BusinessApiExceptionHandler
+                                          GlobalExceptionHandler --> DataIntegrityApiExceptionHandler
+                                          GlobalExceptionHandler --> ValidationApiExceptionHandler
+                                          GlobalExceptionHandler --> DefaultApiExceptionHandler`}
+                                    </pre>
+                                  </div>
 
-                                          ChatHistoryManager --> PostgresDB
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class ActuatorEndpoints {
+                                              +/health
+                                              +/metrics
+                                              +/prometheus
+                                              +/info
+                                              +/loggers
+                                              +/env
+                                          }
+                                          
+                                          class MetricsConfig {
+                                              +MeterRegistry
+                                              +HikariCP Metrics
+                                              +Custom Metrics
+                                          }
+                                          
+                                          class MetricsWSController {
+                                              +@Scheduled
+                                              +WebSocket Broadcast
+                                              +Distributed Lock
+                                          }
+                                          
+                                          class HealthChecks {
+                                              +Database Health
+                                              +Redis Health
+                                              +Application Health
+                                          }
+                                          
+                                          ActuatorEndpoints --> MetricsConfig
+                                          MetricsConfig --> MetricsWSController
+                                          MetricsConfig --> HealthChecks`}
+                                    </pre>
+                                  </div>
 
-                                          QAChain --> NameDetector
-                                          QAChain --> ProfileManager
-                                          QAChain --> PeopleWeaponManager
-                                          QAChain --> PersonalityPromptBuilder
-                                          QAChain --> NameAdapter
-                                          QAChain --> VectorStore
-
-                                          NameDetector --> OpenAIAPI
-                                          QAChain --> OpenAIAPI
-
-                                          ProfileManager --> PeopleAPI
-                                          PeopleWeaponManager --> PeopleAPI
-
-                                          VectorStore --> PostgresDB
-                                          VectorStore --> ArticleAPI
-
-                                          PeopleWeaponManager --> PostgresDB
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`classDiagram
+                                          class PerformanceOptimization {
+                                              +Database Indexing
+                                              +Connection Pooling
+                                              +Caching Strategy
+                                              +N+1 Query Fix
+                                          }
+                                          
+                                          class CacheOptimization {
+                                              +Redis Caching
+                                              +@Cacheable
+                                              +TTL Management
+                                          }
+                                          
+                                          class QueryOptimization {
+                                              +IN Clause
+                                              +Selective Columns
+                                              +Batch Operations
+                                          }
+                                          
+                                          PerformanceOptimization --> CacheOptimization
+                                          PerformanceOptimization --> QueryOptimization`}
+                                    </pre>
+                                  </div>
+                                </>
+                              )}
+                              {subcategory.name === "Relational" && (
+                                <div class="mermaid-diagram">
+                                  <pre class="mermaid">
+                                    {`classDiagram
+                                        class DatabaseOptimization {
+                                            +B-Tree Indexes
+                                            +Composite Indexes
+                                            +Vector Indexes (pgvector)
+                                            +Batch Queries
+                                        }
+                                        
+                                        class PeopleTable {
+                                            +idx_people_name (Primary)
+                                            +idx_people_race
+                                            +idx_people_gender
+                                            +idx_people_faction
+                                            +idx_people_embedding
+                                        }
+                                        
+                                        class WeaponTable {
+                                            +idx_weapon_owner
+                                            +idx_weapon_base_damage
+                                            +idx_weapon_bonus_damage
+                                            +idx_weapon_embedding
+                                        }
+                                        
+                                        class QueryOptimization {
+                                            +IN Clause (N+1 Fix)
+                                            +Batch Operations
+                                            +Selective Columns
+                                            +Caching Strategy
+                                        }
+                                        
+                                        DatabaseOptimization --> PeopleTable
+                                        DatabaseOptimization --> WeaponTable
+                                        DatabaseOptimization --> QueryOptimization`}
                                   </pre>
                                 </div>
-                                </>
                               )}
                               {subcategory.name === "Platforms" && (
                                 <div class="mermaid-diagram">
