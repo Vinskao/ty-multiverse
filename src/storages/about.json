@@ -1,7 +1,7 @@
 {
   "background": {
-    "en": "I offer full-stack capabilities covering API design, multi-threading, data queuing, and the design and optimization of LLM Chains (e.g., RetrievalQAChain). My strength lies in swiftly diagnosing problems and facilitating the real-world deployment of AI applications. I also have a solid background in system architecture planning and refactoring, and am proficient in microservices traffic management and containerized deployments.\n\n\"My personal website has a complete skill tree. Please email me, and I'll respond promptly.\"\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
-    "zh": "我具備全端開發能力，涵蓋 API 設計、多執行緒、資料佇列，以及 LLM Chain（如 RetrievalQAChain）的設計與優化。專長在於迅速診斷問題並協助 AI 應用落地。亦擅長系統架構規劃與重構，熟悉微服務流量治理與容器化部署。\n\n「我的個人網站上有完整的技能樹，歡迎來信交流，我會盡快回覆。」\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about"
+    "en": "I specialize in backend architecture and performance optimization, with expertise in API design, multi-threading, advanced database indexing, and high-concurrency cache strategies using Redis and Lua scripts. My experience spans fixing N+1 queries, managing multi-source connection pools, and implementing distributed locks to ensure data consistency under heavy load. I am also skilled in designing and optimizing LLM pipelines (e.g., RetrievalQAChain) for low-latency, high-accuracy responses, and in orchestrating containerized deployments with Docker, Kubernetes, and CI/CD pipelines.\n\nMy personal website contains a complete skill map — feel free to reach out via email, and I will respond promptly.\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
+    "zh": "我專精於後端架構與效能優化，具備 API 設計、多執行緒、進階資料庫索引與高併發快取策略（使用 Redis 與 Lua 腳本）的專業能力。經驗涵蓋修復 N+1 查詢問題、管理多源連線池，以及實作分布式鎖以確保高負載下的資料一致性。亦擅長設計與優化 LLM 管道（如 RetrievalQAChain）以實現低延遲、高準確度的回應，以及使用 Docker、Kubernetes 與 CI/CD 管道協調容器化部署。\n\n我的個人網站包含完整的技能圖譜 — 歡迎來信交流，我會盡快回覆。\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about"
   },
   "experience": [
     {
