@@ -136,7 +136,7 @@ pipeline {
                             string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL')
                         ]) {
                             sh '''
-                                cd /home/jenkins/agent/workspace/TYF/ty-multiverse-frontend-deploy
+                                cd "${WORKSPACE}"
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
                                 # 確認 Dockerfile 存在
                                 ls -la
