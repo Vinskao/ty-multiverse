@@ -9,7 +9,7 @@ stringData:
   PUBLIC_SSO_URL: "${{ secrets.PUBLIC_SSO_URL }}"
   PUBLIC_FRONTEND_URL: "${{ secrets.PUBLIC_FRONTEND_URL }}"
   PUBLIC_PEOPLE_IMAGE_URL: "${{ secrets.PUBLIC_PEOPLE_IMAGE_URL }}"
-  PUBLIC_CLIENT: "${{ secrets.PUBLIC_CLIENT }}"
+  PUBLIC_CLIENT_ID: "${{ secrets.PUBLIC_CLIENT_ID }}"
   PUBLIC_REALM: "${{ secrets.PUBLIC_REALM }}"
   PUBLIC_API_BASE_URL: "${{ secrets.PUBLIC_API_BASE_URL }}"
 ---
@@ -73,11 +73,11 @@ spec:
             secretKeyRef:
               name: ty-multiverse-frontend-secrets
               key: PUBLIC_PEOPLE_IMAGE_URL
-        - name: PUBLIC_CLIENT
+        - name: PUBLIC_CLIENT_ID
           valueFrom:
             secretKeyRef:
               name: ty-multiverse-frontend-secrets
-              key: PUBLIC_CLIENT
+              key: PUBLIC_CLIENT_ID
         - name: PUBLIC_REALM
           valueFrom:
             secretKeyRef:
