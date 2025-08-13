@@ -179,11 +179,10 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                container('kubectl') {
-                    withKubeConfig([credentialsId: 'kubeconfig-secret']) {
-                        script {
+		stage('Deploy to Kubernetes') {
+			steps {
+				container('kubectl') {
+					script {
                             try {
                                 // 測試集群連接
                                 sh 'kubectl cluster-info'
@@ -209,8 +208,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Error during deployment: ${e.message}"
                                 throw e
-                            }
-                        }
+						}
                     }
                 }
             }
