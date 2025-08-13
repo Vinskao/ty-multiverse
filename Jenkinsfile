@@ -21,8 +21,6 @@ pipeline {
                     securityContext:
                       privileged: true
                     env:
-                    - name: DOCKER_HOST
-                      value: tcp://localhost:2375
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
                     - name: DOCKER_BUILDKIT
@@ -34,7 +32,7 @@ pipeline {
                     image: bitnami/kubectl:1.30.7
                     command: ["/bin/sh"]
                     args: ["-c", "while true; do sleep 30; done"]
-                    alwaysPull: true
+                    imagePullPolicy: Always
                     securityContext:
                       runAsUser: 0
                     volumeMounts:
@@ -67,7 +65,7 @@ pipeline {
                             string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
-                            string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                            string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
                         ]) {
                         sh '''
@@ -93,7 +91,7 @@ pipeline {
                         string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
                         string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                         string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
-                        string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                        string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                         string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
                     ]) {
                         sh '''
@@ -133,7 +131,7 @@ pipeline {
                             string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
-                            string(credentialsId: 'PUBLIC_CLIENT', variable: 'PUBLIC_CLIENT'),
+                            string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
                             string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL')
                         ]) {
@@ -154,7 +152,7 @@ pipeline {
                                     --build-arg PUBLIC_SSO_URL="${PUBLIC_SSO_URL}" \
                                     --build-arg PUBLIC_FRONTEND_URL="${PUBLIC_FRONTEND_URL}" \
                                     --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
-                                    --build-arg PUBLIC_CLIENT="${PUBLIC_CLIENT}" \
+                                    --build-arg PUBLIC_CLIENT_ID="${PUBLIC_CLIENT_ID}" \
                                     --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
                                     --build-arg PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL}" \
                                     --cache-from ${DOCKER_IMAGE}:latest \
