@@ -10,7 +10,18 @@ import '../styles/about.css';
 import aboutData from '../storages/about.json';
 import skillsData from '../storages/skills.json';
 
-const lang = Astro.url.searchParams.get('lang') ?? 'en';
+type LangKey = 'en' | 'zh';
+type LangText = { en: string[]; zh: string[] };
+interface ExperienceItem {
+  title: string;
+  company: string;
+  period: string;
+  projectExperience?: LangText;
+  responsibilities?: LangText;
+}
+
+const lang = (Astro.url.searchParams.get('lang') ?? 'en') as LangKey;
+const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
 ---
 
@@ -74,7 +85,7 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
         <section>
           <h2 class="section-title">Project Experience</h2>
           <div class="content">
-            {aboutData.experience.map((job) => (
+            {experienceData.map((job) => (
               job.projectExperience && job.projectExperience[lang] && job.projectExperience[lang].length > 0 && (
                 <div class="experience-item">
                   <div class="job-header">
@@ -100,7 +111,7 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
         <section>
           <h2 class="section-title">Tech Experience</h2>
           <div class="content">
-            {aboutData.experience
+            {experienceData
               .filter((job) => !["Macro Associate", "Fintech PM, MA Program", "Auditor"].includes(job.title))
               .map((job) => (
               <div class="experience-item">
@@ -112,10 +123,10 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
                   </div>
                 </div>
                 
-                {job.responsibilities && job.responsibilities[lang] && job.responsibilities[lang].length > 0 && (
+                {job.responsibilities && (job.responsibilities as any)[lang] && (job.responsibilities as any)[lang].length > 0 && (
                   <div class="responsibilities">
                     <ul>
-                      {job.responsibilities[lang].map((responsibility) => (
+                      {(job.responsibilities as any)[lang].map((responsibility: string) => (
                         <li>{responsibility}</li>
                       ))}
                     </ul>

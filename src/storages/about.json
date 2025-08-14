@@ -31,18 +31,7 @@
       "title": "Macro Associate",
       "company": "Tarobo Investment Advisors",
       "period": "2022/9~2023/1",
-      "responsibilities": {
-        "en": [
-          "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis",
-          "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies",
-          "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis"
-        ],
-        "zh": [
-          "每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析",
-          "分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略",
-          "維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析"
-        ]
-      },
+      
       "projectExperience": {
         "en": [
           "Built automated reporting workflows; integrated SinoPac Shioaji trading API with Python to ingest market data and prototype trading strategies",
@@ -62,23 +51,10 @@
       "title": "Fintech PM, MA Program",
       "company": "Far Eastern Int'l Bank",
       "period": "2021/8~2022/5",
-      "responsibilities": {
-        "en": [
-          "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
-          "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
-          "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
-          "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations"
-        ],
-        "zh": [
-          "撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案",
-          "進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告",
-          "管理數位支付部門 31 項作業流程，確保合規與效率",
-          "提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地"
-        ]
-      },
+      
       "projectExperience": {
         "en": [
-          "Built Power BI dashboards for executive and product KPIs; designed data models and visuals to support business reviews",
+          "Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews",
           "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
           "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
           "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
@@ -97,25 +73,10 @@
       "title": "Auditor",
       "company": "EY",
       "period": "2019/9~2020/3",
-      "responsibilities": {
-        "en": [
-          "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
-          "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
-          "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
-          "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
-          "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
-        ],
-        "zh": [
-          "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益",
-          "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序",
-          "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異",
-          "編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析",
-          "稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表"
-        ]
-      },
+      
       "projectExperience": {
         "en": [
-          "Automated reconciliation, sampling, and tie-out steps using Excel VBA to accelerate audit working papers",
+          "Automated reconciliation workflow using Excel VBA to accelerate audit working papers",
           "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
           "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
           "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
@@ -123,7 +84,7 @@
           "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
         ],
         "zh": [
-          "使用 Excel VBA 自動化對帳、抽樣與核對流程，加速稽核底稿作業",
+          "使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業",
           "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益",
           "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序",
           "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異",
