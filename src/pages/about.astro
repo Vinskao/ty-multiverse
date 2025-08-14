@@ -606,27 +606,48 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
                               {subcategory.name === "Platforms" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
-                                    graph TB
-                                        Internet[Internet]
-                                        
-                                        subgraph OCI_VCN_10_0_0_0_16["OCI VCN (10.0.0.0/16)"]
-                                            subgraph Public_Subnet_10_0_0_0_24["Public Subnet (10.0.0.0/24)"]
-                                                node1[node1\nControlPlane\n10.0.0.11\n+ Public IP]
-                                                node2[node2\nWorker\n10.0.0.12\n+ Public IP]
-                                                node3[node3\nWorker\n10.0.0.13\n+ Public IP]
-                                                node4[node4\nWorker\n10.0.0.14\n+ Public IP]
-                                            end
+                                    flowchart LR
+                                      user["User"] -->|SSH 22| bastion["Bastion (Public Subnet)"]
 
-                                            IG[Internet Gateway]
-                                            SL[Security List\nIngress: 0.0.0.0/0\nEgress: 0.0.0.0/0]
+                                      subgraph OCI VCN
+                                        direction LR
+
+                                        subgraph Public["Public Subnets"]
+                                          bastion
+                                          pubLB["Public LB Subnet (OCI LB - Reserved IP)"]
                                         end
 
-                                        Internet --> IG
-                                        IG --> SL
-                                        SL --> node1
-                                        SL --> node2
-                                        SL --> node3
-                                        SL --> node4
+                                        subgraph Private["Private Subnets"]
+                                          operator["Operator VM"]
+                                          cp["OKE Control Plane (Private Endpoint)"]
+                                          workers["Worker Nodes (NodePool size=2, A1.Flex 1c/8GB/50GB)"]
+                                          intLB["Internal LB Subnet"]
+                                        end
+
+                                        subgraph Gateways["Network Gateways"]
+                                          ig["Internet Gateway"]:::net
+                                          nat["NAT Gateway"]:::net
+                                          sg["Service Gateway"]:::net
+                                        end
+
+                                        pubRT["Public Route Table"]:::net --> ig
+                                        privRT["Private Route Table"]:::net --> nat
+                                        privRT --> sg
+
+                                        bastion -.-> pubRT
+                                        pubLB -.-> pubRT
+
+                                        operator -.-> privRT
+                                        workers -.-> privRT
+                                        intLB -.-> privRT
+                                      end
+
+                                      bastion -->|SSH Proxy| operator
+                                      operator -->|kubectl 6443| cp
+                                      pubLB --> workers
+                                      intLB --> workers
+
+                                      classDef net fill:#eee,stroke:#999;
                                   </pre>
                                 </div>
                               )}
