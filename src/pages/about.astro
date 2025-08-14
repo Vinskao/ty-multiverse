@@ -72,9 +72,37 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
         </section>
         
         <section>
-          <h2 class="section-title">Experience</h2>
+          <h2 class="section-title">Project Experience</h2>
           <div class="content">
             {aboutData.experience.map((job) => (
+              job.projectExperience && job.projectExperience[lang] && job.projectExperience[lang].length > 0 && (
+                <div class="experience-item">
+                  <div class="job-header">
+                    <h3>{job.title}</h3>
+                    <div class="job-meta">
+                      <span class="company">{job.company}</span>
+                      <span class="period">{job.period}</span>
+                    </div>
+                  </div>
+                  <div class="project-experience">
+                    <ul>
+                      {job.projectExperience[lang].map((project) => (
+                        <li>{project}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 class="section-title">Tech Experience</h2>
+          <div class="content">
+            {aboutData.experience
+              .filter((job) => !["Macro Associate", "Fintech PM, MA Program", "Auditor"].includes(job.title))
+              .map((job) => (
               <div class="experience-item">
                 <div class="job-header">
                   <h3>{job.title}</h3>
@@ -83,17 +111,6 @@ const lang = Astro.url.searchParams.get('lang') ?? 'en';
                     <span class="period">{job.period}</span>
                   </div>
                 </div>
-                
-                {job.projectExperience && job.projectExperience[lang] && job.projectExperience[lang].length > 0 && (
-                  <div class="project-experience">
-                    <h4>Project Experience</h4>
-                    <ul>
-                      {job.projectExperience[lang].map((project) => (
-                        <li>{project}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 
                 {job.responsibilities && job.responsibilities[lang] && job.responsibilities[lang].length > 0 && (
                   <div class="responsibilities">
