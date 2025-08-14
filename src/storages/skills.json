@@ -292,7 +292,7 @@
             { "name": "Ingress", "level": "shade1" },
             { "name": "Nginx Ingress Controller", "level": "shade2" },
             { "name": "Nginx Static File Server", "level": "shade3" },
-            { "name": "LoadBalancer", "level": "shade1" }
+            { "name": "Public Load Balancer", "level": "shade1" }
           ]
         }
       ]
@@ -306,14 +306,18 @@
           "name": "Platforms",
           "description": {
             "en": [
-              "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration, planning migration to GCP with GKE, with private subnet for database. Evaluated cost-performance ratio and networking security between the two cloud environments."
+              "Deployed bare-metal K8S server on OCI with public subnet and ingress configuration.",
+              "Provisioned OKE with bastion in public subnet, operator VM in private subnets, and OKE control plane on private endpoint; configured public/internal load balancers and route tables (IGW/NAT/Service Gateway), with kubectl access via SSH proxy through bastion."
             ],
             "zh": [
-              "在 OCI 上部署裸機 K8S 伺服器，使用 Public Subnet 與 Ingress 設定，並規劃遷移至 GCP 的 GKE，將資料庫放置於 Private Subnet。評估兩雲環境的成本效益與網路安全"
+              "在 OCI 上部署裸機 K8S 伺服器，使用 Public Subnet 與 Ingress 設定，並規劃遷移至 GCP 的 GKE，將資料庫放置於 Private Subnet。評估兩雲環境的成本效益與網路安全",
+              "在 OKE 架構中，Bastion 置於 Public Subnet，Operator VM 置於 Private Subnets，OKE Control Plane 使用 Private Endpoint；配置 Public/Internal LB 與路由表（IGW/NAT/Service Gateway），透過 Bastion SSH Proxy 執行 kubectl 存取。"
             ]
           },
           "skills": [
             { "name": "OCI", "level": "shade3" },
+            { "name": "OKE", "level": "shade3" },
+            { "name": "Bastion", "level": "shade4" },
             { "name": "GCP", "level": "shade5" }
           ]
         }
