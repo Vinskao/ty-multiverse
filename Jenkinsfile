@@ -214,9 +214,10 @@ pipeline {
                                 // 檢查 Deployment 是否存在
                                 sh '''
                                     if kubectl get deployment ty-multiverse-frontend -n default; then
-                                        echo "Deployment exists, updating..."
+                                        echo "Deployment exists, updating with Recreate strategy..."
                                         kubectl set image deployment/ty-multiverse-frontend ty-multiverse-frontend=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
-                                        kubectl rollout restart deployment ty-multiverse-frontend
+                                        echo "Waiting for rollout to complete..."
+                                        kubectl rollout status deployment/ty-multiverse-frontend --timeout=300s
                                     else
                                         echo "Deployment does not exist, creating..."
                                         kubectl apply -f k8s/deployment.yaml
