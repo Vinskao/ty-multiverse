@@ -451,13 +451,28 @@ import '../styles/qabot.css';
 
     private pruneAvailableBots() {
       if (!Array.isArray(this.state.availableBots)) return;
-      this.state.availableBots = this.state.availableBots.filter(n => this.hasValidMessages(n));
+      
+      console.log('🔍 開始過濾專員列表...');
+      console.log('過濾前的專員:', this.state.availableBots);
+      
+      const beforeFilter = [...this.state.availableBots];
+      this.state.availableBots = this.state.availableBots.filter(n => {
+        const hasMessages = this.hasValidMessages(n);
+        console.log(`專員 ${n}: ${hasMessages ? '✅ 有句庫' : '❌ 無句庫'}`);
+        return hasMessages;
+      });
+      
+      console.log('過濾後的專員:', this.state.availableBots);
+      
       // 確保至少 Maya 存在
       if (!this.state.availableBots.includes('Maya') && this.hasValidMessages('Maya')) {
         this.state.availableBots.unshift('Maya');
+        console.log('✅ 添加 Maya 到專員列表');
       }
+      
       // 如果當前 bot 沒有句庫 → 換成清單第一個
       if (!this.hasValidMessages(this.state.botName) && this.state.availableBots.length) {
+        console.log(`當前專員 ${this.state.botName} 無句庫，切換到 ${this.state.availableBots[0]}`);
         this.state.botName = this.state.availableBots[0];
         this.state.currentBotIndex = 0;
         this.updateAvatarAndName();
@@ -477,33 +492,39 @@ import '../styles/qabot.css';
           headers['Authorization'] = `Bearer ${token}`;
         }
         
+        
         const resp = await fetch(`${apiBase}/people/names`, {
           method: 'GET',
           headers,
           credentials: 'include'
         });
         
+        console.log('API 回應狀態:', resp.status, resp.statusText);
+        
         if (resp.ok) {
           const names = await resp.json();
+          console.log('API 返回的專員列表:', names);
+          
           if (Array.isArray(names)) {
             // 確保 Maya 在列表內
             if (!names.includes('Maya')) names.unshift('Maya');
             this.state.availableBots = names;
+            
             // 初始化後先過濾無句庫的
             if (this.messages) this.pruneAvailableBots();
+            
             this.state.currentBotIndex = names.indexOf('Maya');
-            // console.log('成功獲取AI專員列表:', this.state.availableBots);
             return; // 成功後直接返回
           }
         } else {
           // API 調用失敗，顯示 Sweet Alert 提示用戶先登入
           this.showLoginAlert();
-          console.warn('API回應錯誤:', resp.status, resp.statusText);
+          console.warn('❌ API回應錯誤:', resp.status, resp.statusText);
         }
       } catch (err) {
         // 網路錯誤，顯示 Sweet Alert 提示用戶先登入
         this.showLoginAlert();
-        console.warn('網路錯誤:', err);
+        console.warn('❌ 網路錯誤:', err);
       }
       
       // 所有情況都失敗後，確保至少有一個預設的AI可用

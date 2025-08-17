@@ -31,15 +31,12 @@ export class NavController {
     // 將 token 儲存到 localStorage 中，供其他組件使用
     if (this.token) {
       localStorage.setItem('token', this.token);
-      console.log('✅ Token 已儲存到 localStorage');
     }
     if (this.refreshToken) {
       localStorage.setItem('refreshToken', this.refreshToken);
-      console.log('✅ RefreshToken 已儲存到 localStorage');
     }
     if (this.username) {
       localStorage.setItem('username', this.username);
-      console.log('✅ Username 已儲存到 localStorage');
     }
   }
 

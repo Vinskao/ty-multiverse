@@ -1,6 +1,7 @@
 ---
 import { config } from '../services/config';
 import '../styles/bj.css';
+import MaintenanceOverlay from './MaintenanceOverlay.astro';
 const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
 ---
 
@@ -11,29 +12,38 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blackjack Game</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .game-container {
+            position: relative;
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
-        <h1 class="centered-title">Black Jack</h1>
-        <div class="game-sections">
-            <div class="player-section">
-                <h3 class="centered-subtitle">You</h3>
-                <div id="player-cards" class="cards"></div>
+        <MaintenanceOverlay id="maintenance-overlay" show={true} title="🛠️ 維護中" message="服務正在維護中，敬請期待！" icon="🎰" />
+        
+        <div class="game-content" id="game-content" style="display: none;">
+            <h1 class="centered-title">Black Jack</h1>
+            <div class="game-sections">
+                <div class="player-section">
+                    <h3 class="centered-subtitle">You</h3>
+                    <div id="player-cards" class="cards"></div>
+                </div>
+
+                <div class="dealer-section">
+                    <h3 class="centered-subtitle">Dealer</h3>
+                    <div id="dealer-cards" class="cards"></div>
+                </div>
             </div>
 
-            <div class="dealer-section">
-                <h3 class="centered-subtitle">Dealer</h3>
-                <div id="dealer-cards" class="cards"></div>
+            <div class="button-group">
+                <button onclick="startGame()">New Game</button>
+                <button onclick="hit()">Hit</button>
+                <button onclick="stand()">Stand</button>
             </div>
-        </div>
 
-        <div class="button-group">
-            <button onclick="startGame()">New Game</button>
-            <button onclick="hit()">Hit</button>
-            <button onclick="stand()">Stand</button>
+            <div id="game-status"></div>
         </div>
-
-        <div id="game-status"></div>
     </div>
 
     <script type="module" define:vars={{ deckOfCardsUrl, config }}>
@@ -43,6 +53,20 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
 
         // Use deckOfCardsUrl for asset paths
         const BASE_URL = deckOfCardsUrl || '/';
+        
+        // 檢查 API 是否可用
+        async function checkApiAvailability() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/status`);
+                // API 可用，顯示遊戲內容
+                document.getElementById('maintenance-overlay').style.display = 'none';
+                document.getElementById('game-content').style.display = 'block';
+                getGameStatus();
+            } catch (error) {
+                // API 不可用，顯示維護訊息
+                console.log('Black Jack API not available, showing maintenance message');
+            }
+        }
         
         // 開始新遊戲的函數
         async function startGame() {
@@ -185,8 +209,8 @@ const deckOfCardsUrl = import.meta.env.PUBLIC_DECKOFCARDS_URL;
             hitButton.disabled = true;
             standButton.disabled = true;
         }
-
-        window.onload = getGameStatus;
+        
+        window.onload = checkApiAvailability;
         
         // Expose functions to global scope so they're accessible from HTML onclick attributes
         window.startGame = startGame;
