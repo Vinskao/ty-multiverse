@@ -2,201 +2,7 @@
 // QABot組件
 import '../styles/qabot.css';
 ---
-
-<style>
-  /* 自定義 SweetAlert 樣式 */
-  .swal-login-popup {
-    border-radius: 16px !important;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-    border: none !important;
-    overflow: hidden !important;
-  }
-
-  .swal-login-title {
-    font-size: 24px !important;
-    font-weight: 600 !important;
-    color: #2c3e50 !important;
-    margin-bottom: 10px !important;
-  }
-
-  .swal-login-content {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  }
-
-  .swal-login-content p {
-    line-height: 1.6 !important;
-    margin: 0 !important;
-  }
-
-  /* 按鈕樣式 */
-  .swal2-confirm {
-    border-radius: 8px !important;
-    font-weight: 500 !important;
-    padding: 12px 24px !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease !important;
-  }
-
-  .swal2-cancel {
-    border-radius: 8px !important;
-    font-weight: 500 !important;
-    padding: 12px 24px !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease !important;
-  }
-
-  .swal2-confirm:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(48, 133, 214, 0.3) !important;
-  }
-
-  .swal2-cancel:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3) !important;
-  }
-
-  /* 動畫效果 */
-  .swal2-popup {
-    animation: swalSlideIn 0.3s ease-out !important;
-  }
-
-  @keyframes swalSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  /* 響應式設計 */
-  @media (max-width: 480px) {
-    .swal-login-popup {
-      width: 90% !important;
-      margin: 0 5% !important;
-    }
-    
-    .swal-login-title {
-      font-size: 20px !important;
-    }
-    
-    .swal-login-content p {
-      font-size: 14px !important;
-    }
-  }
-</style>
-
-<!-- 浮動聊天按鈕 -->
-<div class="qa-bot-toggle" id="qaBotToggle">
-  <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
-  <span class="toggle-text">真夜</span>
-</div>
-
-<!-- 聊天對話框 -->
-<div class="qa-bot-container" id="qaBotContainer">
-  <div class="chat-header">
-    <div class="header-content">
-      <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
-      <div class="header-text">
-        <h3>佐和 真夜</h3>
-        <p>TY的智慧庫</p>
-      </div>
-    </div>
-    <div class="header-controls">
-      <button class="fullscreen-button" id="fullscreenButton" title="切換全屏模式">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </svg>
-      </button>
-      <button class="language-button" id="languageButton" title="切換語言">
-        <span class="language-text">中文</span>
-      </button>
-      <button class="history-button" id="historyButton" title="查看聊天歷史">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-      </button>
-      <!-- 新增：頁面分析按鈕 -->
-      <button class="page-analysis-button" id="pageAnalysisButton" title="分析頁面">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 4h18M3 10h18M3 16h18"/>
-        </svg>
-      </button>
-      <button class="close-button" id="closeButton">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-  
-  <div class="chat-messages" id="chatMessages">
-    <div class="message bot-message">
-      <div class="message-avatar">
-        <img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
-      </div>
-      <div class="message-content-wrapper">
-        <div class="message-header">
-          <span class="ai-name">真夜</span>
-        </div>
-        <div class="message-content">
-          <p>你有事？<br>問前想清楚，機會不是誰都有。</p>
-          
-          <!-- 主題建議 -->
-          <div class="topic-suggestions">
-            <h4>💡 建議主題：</h4>
-            <div class="suggestion-buttons">
-              <button class="suggestion-btn" data-topic="Java">☕ Java 開發</button>
-              <button class="suggestion-btn" data-topic="OOP及DI框架">🏗️ OOP及DI框架</button>
-              <button class="suggestion-btn" data-topic="部署實踐">🚀 部署實踐</button>
-              <button class="suggestion-btn" data-topic="網路問題">🌐 網路問題</button>
-              <button class="suggestion-btn" data-topic="了解妳">想多了解妳</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="load-more-container" id="loadMoreContainer" style="display: none;">
-    <button class="load-more-button" id="loadMoreButton">
-      載入更多歷史記錄
-    </button>
-  </div>
-  <!-- 新增：頁面分析面板 -->
-  <div class="analysis-panel" id="analysisPanel" style="display:none;"></div>
-  <div class="chat-input-container">
-    <div class="input-wrapper">
-      <input 
-        type="text" 
-        id="userInput" 
-        placeholder=""
-        class="chat-input"
-        maxlength="500"
-      />
-      <button 
-        id="sendButton" 
-        class="send-button"
-        disabled
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-      </button>
-    </div>
-    <div class="input-status" id="inputStatus"></div>
-  </div>
-</div>
-
-<!-- 圖片放大模態框 -->
-<div class="image-modal" id="imageModal">
-  <div class="image-modal-content">
-    <button class="image-modal-close" id="imageModalClose">&times;</button>
-    <img id="modalImage" src="" alt="放大圖片" />
-  </div>
-</div>
+<!-- 已抽出共用 HTML 至 QAPlatform.astro -->
 
 <script>
   // 將訊息配置直接打包，避免正式環境 404
@@ -632,6 +438,27 @@ import '../styles/qabot.css';
         this.showAvatarSelector(avatarSelector);
       });
 
+      // 新增：header-text hover + click 切換到 V2
+      const headerText = document.querySelector('.chat-header .header-text') as HTMLElement;
+      if (headerText) {
+        headerText.style.cursor = 'pointer';
+        headerText.title = '切換到 Maya v2';
+        headerText.addEventListener('mouseenter', () => {
+          headerText.style.opacity = '0.85';
+          headerText.style.textDecoration = 'underline';
+        });
+        headerText.addEventListener('mouseleave', () => {
+          headerText.style.opacity = '';
+          headerText.style.textDecoration = '';
+        });
+        headerText.addEventListener('click', () => {
+          const current = (window as any).qabotMode;
+          const next = current === 'v2' ? 'v1' : 'v2';
+          (window as any).qabotMode = next;
+          window.dispatchEvent(new CustomEvent('qabot:switch', { detail: { mode: next } }));
+        });
+      }
+
       // 點擊其他地方隱藏選擇面板
       document.addEventListener('click', (e) => {
         if (!avatarSelector.contains(e.target as Node) && !avatarEl.contains(e.target as Node)) {
@@ -782,6 +609,32 @@ import '../styles/qabot.css';
     private setupEventListeners() {
       // 基本控制事件
       this.elements.qaBotToggle.addEventListener('click', () => this.toggleChat());
+      // 監聽從外部切換 v1/v2
+      window.addEventListener('qabot:switch', (e: any) => {
+        const mode = e?.detail?.mode;
+        const container = this.elements.qaBotContainer;
+        const headerNameEl = container?.querySelector('.header-text h3') as HTMLElement | null;
+        const inputEl = this.elements.userInput as HTMLInputElement;
+        if (mode === 'v2') {
+          // 確保 v1 視窗可見
+          if (container && !container.classList.contains('show')) {
+            container.classList.add('show');
+          }
+          // 顯示 Maya v2 名稱
+          if (headerNameEl) headerNameEl.textContent = 'Maya v2';
+          // 調整輸入框提示
+          if (inputEl) inputEl.placeholder = '問 Maya v2...';
+        } else if (mode === 'v1') {
+          // 還原成目前 bot 名稱
+          if (headerNameEl) headerNameEl.textContent = this.state.botName;
+          // 還原輸入框提示
+          this.updateInputPlaceholder();
+          // 顯示 v1 面板
+          if (container && !container.classList.contains('show')) {
+            container.classList.add('show');
+          }
+        }
+      });
       this.elements.closeButton.addEventListener('click', () => this.hideChat());
       this.elements.historyButton.addEventListener('click', () => this.loadChatHistory());
       this.elements.loadMoreButton.addEventListener('click', () => this.loadMoreHistory());
@@ -806,12 +659,14 @@ import '../styles/qabot.css';
       this.elements.userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
+          if ((window as any).qabotMode === 'v2') return; // 交由 v2 處理
           this.sendMessage();
         }
         this.resetInactivityTimer();
       });
 
       this.elements.sendButton.addEventListener('click', () => {
+        if ((window as any).qabotMode === 'v2') return; // 交由 v2 處理
         this.sendMessage();
         this.resetInactivityTimer();
       });
@@ -852,6 +707,37 @@ import '../styles/qabot.css';
           this.hideImageModal();
         }
       });
+
+      // 監聽全域模式切換事件
+      window.addEventListener('qabot:switch', (e: any) => {
+        const mode = e?.detail?.mode;
+        const headerText = document.querySelector('.header-text') as HTMLElement;
+        const input = document.getElementById('userInput') as HTMLInputElement;
+        
+        if (mode === 'v2') {
+          // 切換到 v2 模式
+          if (headerText) {
+            headerText.setAttribute('data-tooltip', '切換至 v1 模式');
+          }
+          if (input) {
+            input.placeholder = '問我任何問題... (v2)';
+          }
+        } else if (mode === 'v1') {
+          // 切換到 v1 模式
+          if (headerText) {
+            headerText.setAttribute('data-tooltip', '切換至 v2 模式');
+          }
+          if (input) {
+            input.placeholder = '問我任何問題...';
+          }
+        }
+      });
+
+      // 初始化 tooltip
+      const headerText = document.querySelector('.header-text') as HTMLElement;
+      if (headerText) {
+        headerText.setAttribute('data-tooltip', '切換至 v2 模式');
+      }
     }
 
     // 創建消息結構的通用方法
