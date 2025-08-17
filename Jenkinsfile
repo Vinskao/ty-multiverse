@@ -49,6 +49,13 @@ pipeline {
                     imagePullPolicy: Always
                     securityContext:
                       runAsUser: 0
+                    resources:
+                      requests:
+                        cpu: "100m"
+                        memory: "256Mi"
+                      limits:
+                        cpu: "100m"
+                        memory: "512Mi"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
