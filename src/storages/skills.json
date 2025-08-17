@@ -292,7 +292,9 @@
             { "name": "Ingress", "level": "shade1" },
             { "name": "Nginx Ingress Controller", "level": "shade2" },
             { "name": "Nginx Static File Server", "level": "shade3" },
-            { "name": "Public Load Balancer", "level": "shade1" }
+            { "name": "Public Load Balancer", "level": "shade1" },
+            { "name": "NAT Gateway", "level": "shade5" },
+            { "name": "Egress", "level": "shade5" }
           ]
         }
       ]

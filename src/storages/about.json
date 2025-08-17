@@ -10,6 +10,7 @@
       "period": "2024/3~Present",
       "projectExperience": {
         "en": [
+          "Built JBoss War Deployment CI/CD Pipeline for UAT/PROD, 10+ UAT servers implemented",
           "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
           "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
           "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
