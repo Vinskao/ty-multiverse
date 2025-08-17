@@ -8,10 +8,6 @@ const username = url.searchParams.get('username');
 const token = url.searchParams.get('token');
 ---
 
-<!-- 編輯器標題 -->
-<h2 style="text-align: center; color: #e0e0e0;">請登入後留言給我</h2>
-<h5 style="text-align: center; color: #e0e0e0;">(不要刪別人留言)</h5>
-
 <!-- 編輯器容器 - 包含兩層，外層控制整體佈局，內層是 CKEditor 的掛載點 -->
 <div id="editor-container">
     <div id="editor"></div>
@@ -62,6 +58,7 @@ const token = url.searchParams.get('token');
     #editor-container {
         width: 100%;
         margin: 15px 0 5px 0;
+        position: relative;
     }
     
     /* 超強力覆蓋 */
@@ -155,8 +152,7 @@ const token = url.searchParams.get('token');
     .ck.ck-balloon-panel .ck-button:hover {
         background-color: #555 !important;
     }
-
-    /* ========== 恢復狀態顯示區域的樣式 ========== */
+    
     /* 編輯器狀態提示的樣式 */
     #editor-status {
         transition: opacity 0.5s ease-in-out;
@@ -164,18 +160,10 @@ const token = url.searchParams.get('token');
         margin-top: 5px;
         color: #aaa;
     }
-    .success {
-        color: #4caf50 !important;
-    }
-    .error {
-        color: #ff5252 !important;
-    }
-    .loading {
-        color: #999 !important;
-    }
-    .warning {
-        color: #ffc107 !important;
-    }
+    .success { color: #4caf50 !important; }
+    .error { color: #ff5252 !important; }
+    .loading { color: #999 !important; }
+    .warning { color: #ffc107 !important; }
 
     /* 保存狀態指示器樣式 */
     #save-indicator {
@@ -186,14 +174,8 @@ const token = url.searchParams.get('token');
         width: 100px;
         margin: 0 auto;  /* 移除上邊距，只保留水平置中 */
     }
-    #save-indicator.saved {
-        background-color: #1e3b2a;
-        color: #4caf50;
-    }
-    #save-indicator.unsaved {
-        background-color: #3e3417;
-        color: #ffc107;
-    }
+    #save-indicator.saved { background-color: #1e3b2a; color: #4caf50; }
+    #save-indicator.unsaved { background-color: #3e3417; color: #ffc107; }
 
     /* 添加登入提示的樣式 */
     #login-prompt {
@@ -215,19 +197,11 @@ const token = url.searchParams.get('token');
         
         // 如果沒有登入，顯示提示並禁用編輯器
         if (!isLoggedIn) {
-            if (loginPrompt) {
-                loginPrompt.style.display = 'block';
-            }
-            if (editorContainer) {
-                editorContainer.classList.add('not-logged-in');
-            }
-            if (saveIndicator) {
-                saveIndicator.style.display = 'none';
-            }
+            if (loginPrompt) loginPrompt.style.display = 'block';
+            if (editorContainer) editorContainer.classList.add('not-logged-in');
+            if (saveIndicator) saveIndicator.style.display = 'none';
         } else {
-            if (loginPrompt) {
-                loginPrompt.style.display = 'none';
-            }
+            if (loginPrompt) loginPrompt.style.display = 'none';
         }
         
         // 直接使用 Astro 提供的 hostUrl 變數
@@ -237,45 +211,26 @@ const token = url.searchParams.get('token');
         const apiClient = axios.create({
             baseURL: API_BASE_URL,
             timeout: 10000,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            auth: {
-                username: 'admin',
-                password: 'admin'
-            }
+            headers: { 'Content-Type': 'application/json' },
+            auth: { username: 'admin', password: 'admin' }
         });
         
         // Base64 上傳適配器 - 直接將圖片轉換為 base64 而不上傳到服務器
         class Base64UploadAdapter {
-            constructor(loader) {
-                this.loader = loader;
-            }
-
+            constructor(loader) { this.loader = loader; }
             upload() {
                 return this.loader.file
                     .then(file => new Promise((resolve, reject) => {
                         const reader = new FileReader();
-                        reader.addEventListener('load', () => {
-                            resolve({ default: reader.result });
-                        });
-                        reader.addEventListener('error', err => {
-                            reject(err);
-                        });
+                        reader.addEventListener('load', () => { resolve({ default: reader.result }); });
+                        reader.addEventListener('error', err => { reject(err); });
                         reader.readAsDataURL(file);
                     }));
             }
-
-            abort() {
-                // 不需要實現
-            }
+            abort() { /* 不需要實現 */ }
         }
-
-        // 上傳適配器工廠函數
         function Base64UploadAdapterPlugin(editor) {
-            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-                return new Base64UploadAdapter(loader);
-            };
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapter(loader);
         }
         
         // 狀態提示函數
@@ -286,36 +241,21 @@ const token = url.searchParams.get('token');
                 statusEl.className = type;
                 statusEl.style.opacity = '1';
             }
-            
-            setTimeout(() => {
-                if (statusEl) {
-                    statusEl.style.opacity = '0';
-                }
-            }, 5000);
+            setTimeout(() => { if (statusEl) statusEl.style.opacity = '0'; }, 5000);
         }
 
         // 從後端獲取編輯器內容
         async function fetchContent() {
             try {
                 showStatus('正在載入內容...', 'loading');
-                
-                const response = await apiClient.post('/ckeditor/get-content', {
-                    editor: EDITOR_ID
-                });
-                
+                const response = await apiClient.post('/ckeditor/get-content', { editor: EDITOR_ID });
                 showStatus('內容載入成功', 'success');
                 return response.data.content || '';
             } catch (error) {
                 console.error('獲取內容失敗:', error);
-                
-                if (error.response) {
-                    showStatus(`獲取內容失敗: 伺服器錯誤 ${error.response.status}`, 'error');
-                } else if (error.request) {
-                    showStatus('獲取內容失敗: 未收到伺服器響應', 'error');
-                } else {
-                    showStatus(`獲取內容失敗: ${error.message}`, 'error');
-                }
-                
+                if (error.response) showStatus(`獲取內容失敗: 伺服器錯誤 ${error.response.status}`, 'error');
+                else if (error.request) showStatus('獲取內容失敗: 未收到伺服器響應', 'error');
+                else showStatus(`獲取內容失敗: ${error.message}`, 'error');
                 return localStorage.getItem('editorContent') || '';
             }
         }
@@ -323,57 +263,30 @@ const token = url.searchParams.get('token');
         // 更新儲存指示器
         function updateSaveIndicator(isSaved) {
             const indicator = document.getElementById('save-indicator');
-            if (indicator) {
-                if (!isLoggedIn) {
-                    indicator.style.display = 'none';
-                    return;
-                }
-                if (isSaved) {
-                    indicator.textContent = '已儲存';
-                    indicator.className = 'saved';
-                } else {
-                    indicator.textContent = '未儲存';
-                    indicator.className = 'unsaved';
-                }
-            }
+            if (!indicator) return;
+            if (!isLoggedIn) { indicator.style.display = 'none'; return; }
+            if (isSaved) { indicator.textContent = '已儲存'; indicator.className = 'saved'; }
+            else { indicator.textContent = '未儲存'; indicator.className = 'unsaved'; }
         }
 
         // 儲存內容
         async function saveContent(content) {
-            if (!isLoggedIn) {
-                showStatus('請先登入後再儲存', 'warning');
-                return false;
-            }
-
+            if (!isLoggedIn) { showStatus('請先登入後再儲存', 'warning'); return false; }
             try {
                 showStatus('正在儲存...', 'loading');
-                
-                const response = await apiClient.post('/ckeditor/save-content', {
-                    editor: EDITOR_ID,
-                    content: content
-                });
-                
+                const response = await apiClient.post('/ckeditor/save-content', { editor: EDITOR_ID, content });
                 const currentTime = new Date().toLocaleTimeString();
                 showStatus(`內容已儲存 (${currentTime})`, 'success');
                 updateSaveIndicator(true);
-                
                 localStorage.setItem('editorContent', content);
                 return true;
             } catch (error) {
                 console.error('保存內容失敗:', error);
-                
                 if (error.response) {
-                    if (error.response.status === 401) {
-                        showStatus('儲存失敗: 未授權訪問。只儲存到本地', 'warning');
-                    } else {
-                        showStatus(`儲存失敗: 伺服器錯誤 ${error.response.status}。已備份到本地`, 'error');
-                    }
-                } else if (error.request) {
-                    showStatus('儲存失敗: 未收到伺服器響應。已備份到本地', 'error');
-                } else {
-                    showStatus(`儲存失敗: ${error.message}。已備份到本地`, 'error');
-                }
-                
+                    if (error.response.status === 401) showStatus('儲存失敗: 未授權訪問。只儲存到本地', 'warning');
+                    else showStatus(`儲存失敗: 伺服器錯誤 ${error.response.status}。已備份到本地`, 'error');
+                } else if (error.request) showStatus('儲存失敗: 未收到伺服器響應。已備份到本地', 'error');
+                else showStatus(`儲存失敗: ${error.message}。已備份到本地`, 'error');
                 localStorage.setItem('editorContent', content);
                 return false;
             }
@@ -387,87 +300,27 @@ const token = url.searchParams.get('token');
             extraPlugins: [Base64UploadAdapterPlugin],
             // 工具欄配置 - 只在登入時顯示
             toolbar: isLoggedIn ? [
-                'heading',
-                '|',
-                'fontSize',
-                'fontColor',
-                'fontBackgroundColor',
-                '|',
-                'bold',
-                'italic',
-                'link',
-                'bulletedList',
-                'numberedList',
-                '|',
-                'outdent',
-                'indent',
-                '|',
-                'blockQuote',
-                'insertTable',
-                'imageUpload',
-                'undo',
-                'redo'
+                'heading','|','fontSize','fontColor','fontBackgroundColor','|','bold','italic','link','bulletedList','numberedList','|','outdent','indent','|','blockQuote','insertTable','imageUpload','undo','redo'
             ] : [],
             // 未登入時移除所有插件
-            removePlugins: isLoggedIn ? [] : ['toolbar', 'heading', 'fontSize', 'fontColor', 'fontBackgroundColor', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'outdent', 'indent', 'blockQuote', 'insertTable', 'imageUpload', 'undo', 'redo'],
+            removePlugins: isLoggedIn ? [] : ['toolbar','heading','fontSize','fontColor','fontBackgroundColor','bold','italic','link','bulletedList','numberedList','outdent','indent','blockQuote','insertTable','imageUpload','undo','redo'],
             // 配置字體大小選項
-            fontSize: {
-                options: [
-                    'tiny',
-                    'small',
-                    'default',
-                    'big',
-                    'huge'
-                ],
-                supportAllValues: true
-            },
-            // 配置字體顏色選項 - 暗色主題友好的顏色
-            fontColor: {
-                colors: [
-                    { color: '#f44336', label: '紅色' },
-                    { color: '#ff9800', label: '橙色' },
-                    { color: '#ffeb3b', label: '黃色' },
-                    { color: '#4caf50', label: '綠色' },
-                    { color: '#2196f3', label: '藍色' },
-                    { color: '#9c27b0', label: '紫色' },
-                    { color: '#e0e0e0', label: '白色' },
-                    { color: '#bdbdbd', label: '淺灰' },
-                    { color: '#757575', label: '灰色' }
-                ]
-            },
-            // 配置字體背景顏色選項
-            fontBackgroundColor: {
-                colors: [
-                    { color: '#f443361a', label: '淡紅' },
-                    { color: '#ff98001a', label: '淡橙' },
-                    { color: '#ffeb3b1a', label: '淡黃' },
-                    { color: '#4caf501a', label: '淡綠' },
-                    { color: '#2196f31a', label: '淡藍' },
-                    { color: '#9c27b01a', label: '淡紫' },
-                    { color: '#2a2a2a', label: '背景色' },
-                    { color: '#3a3a3a', label: '淺暗' },
-                    { color: '#111111', label: '深暗' }
-                ]
-            },
-            // 圖片工具欄配置
-            image: {
-                toolbar: [
-                    'imageTextAlternative',
-                    'imageStyle:inline',
-                    'imageStyle:block',
-                    'imageStyle:side'
-                ]
-            },
-            // 增加額外配置以支持暗色主題
-            ui: {
-                viewportOffset: {
-                    top: 10,
-                    right: 10,
-                    bottom: 10,
-                    left: 10
-                }
-            }
+            fontSize: { options: ['tiny','small','default','big','huge'], supportAllValues: true },
+            // 顏色
+            fontColor: { colors: [ { color: '#f44336', label: '紅色' }, { color: '#ff9800', label: '橙色' }, { color: '#ffeb3b', label: '黃色' }, { color: '#4caf50', label: '綠色' }, { color: '#2196f3', label: '藍色' }, { color: '#9c27b0', label: '紫色' }, { color: '#e0e0e0', label: '白色' }, { color: '#bdbdbd', label: '淺灰' }, { color: '#757575', label: '灰色' } ] },
+            fontBackgroundColor: { colors: [ { color: '#f443361a', label: '淡紅' }, { color: '#ff98001a', label: '淡橙' }, { color: '#ffeb3b1a', label: '淡黃' }, { color: '#4caf501a', label: '淡綠' }, { color: '#2196f31a', label: '淡藍' }, { color: '#9c27b01a', label: '淡紫' }, { color: '#2a2a2a', label: '背景色' }, { color: '#3a3a3a', label: '淺暗' }, { color: '#111111', label: '深暗' } ] },
+            image: { toolbar: ['imageTextAlternative','imageStyle:inline','imageStyle:block','imageStyle:side'] },
+            ui: { viewportOffset: { top: 10, right: 10, bottom: 10, left: 10 } }
         }).then(async (editor) => {
+            // 確保 CKEditor 根元素在 #editor-container 中
+            try {
+                const container = document.getElementById('editor-container');
+                const editorRoot = (editor && editor.ui && editor.ui.view && editor.ui.view.element) || null;
+                if (container && editorRoot && !container.contains(editorRoot)) {
+                    container.appendChild(editorRoot);
+                }
+            } catch (_) {}
+
             // 根據登入狀態設置編輯器的可編輯性
             if (!isLoggedIn) {
                 editor.enableReadOnlyMode('login-required');
@@ -476,12 +329,11 @@ const token = url.searchParams.get('token');
             // 額外添加強制應用黑色主題的代碼
             try {
                 // 強制設置背景色
-                const editorContainer = document.querySelector('.ck.ck-editor__main');
-                if (editorContainer) {
-                    editorContainer.style.backgroundColor = '#2a2a2a';
-                    editorContainer.style.color = '#e0e0e0';
+                const editorMain = document.querySelector('.ck.ck-editor__main');
+                if (editorMain) {
+                    editorMain.style.backgroundColor = '#2a2a2a';
+                    editorMain.style.color = '#e0e0e0';
                 }
-                
                 const editorArea = document.querySelector('.ck.ck-editor__editable');
                 if (editorArea) {
                     editorArea.style.backgroundColor = '#2a2a2a';
@@ -505,9 +357,7 @@ const token = url.searchParams.get('token');
                     editor.setData(initialContent); // 恢復原始內容
                     return;
                 }
-                
                 updateSaveIndicator(false);
-                
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
                     const data = editor.getData();
@@ -520,14 +370,12 @@ const token = url.searchParams.get('token');
                 if (saveTimeout) {
                     const data = editor.getData();
                     localStorage.setItem('editorContent', data);
-                    
                     event.preventDefault();
                     event.returnValue = '有未儲存的更改，確定要離開嗎？';
                 }
             });
             
             updateSaveIndicator(true);
-            
             showStatus('編輯器準備就緒', 'success');
         }).catch(error => {
             console.error('編輯器初始化失敗:', error);

@@ -38,10 +38,10 @@ spec:
         - containerPort: 4321
         resources:
           requests:
-            cpu: "50m"
+            cpu: "25m"
             memory: "256Mi"
           limits:
-            cpu: "100m"
+            cpu: "75m"
             memory: "512Mi"
         lifecycle:
           postStart:

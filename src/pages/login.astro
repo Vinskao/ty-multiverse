@@ -12,8 +12,18 @@ const authorizationUrl = `${SSO_URL}/realms/${realm}/protocol/openid-connect/aut
   redirectUri
 )}`;
 
+// 除錯：印出實際的授權 URL 和 redirect_uri
+console.log('=== 前端授權 URL 除錯 ===');
+console.log('TYMB_URL:', TYMB_URL);
+console.log('SSO_URL:', SSO_URL);
+console.log('Client ID:', clientId);
+console.log('Realm:', realm);
+console.log('Redirect URI:', redirectUri);
+console.log('完整授權 URL:', authorizationUrl);
+
 // 頁面加載時觸發跳轉
 function redirectToLogin() {
+  console.log('準備跳轉到:', authorizationUrl);
   window.location.href = authorizationUrl;
 }
 
@@ -81,18 +91,9 @@ function redirectToLogin() {
       margin: 0;
     }
   </style>
-  <script>
+  <script define:vars={{ authorizationUrl }}>
     // 立即執行，避免等待圖片等資源載入
     (() => {
-      // 使用 auth 服務進行登入
-      const clientId = import.meta.env.PUBLIC_CLIENT_ID || "peoplesystem";
-      const realm = import.meta.env.PUBLIC_REALM || "PeopleSystem";
-      const redirectUri = `${import.meta.env.PUBLIC_TYMB_URL}/keycloak/redirect`;
-      const ssoUrl = import.meta.env.PUBLIC_SSO_URL;
-
-      // 構建授權 URL
-      const authorizationUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
       // 立即重定向，不阻塞在 window.onload
       window.location.replace(authorizationUrl);
     })();
