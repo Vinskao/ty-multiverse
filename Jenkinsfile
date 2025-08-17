@@ -11,6 +11,13 @@ pipeline {
                     image: node:18
                     command: ["cat"]
                     tty: true
+                    resources:
+                      requests:
+                        cpu: "100m"
+                        memory: "256Mi"
+                      limits:
+                        cpu: "100m"
+                        memory: "512Mi"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
@@ -20,6 +27,13 @@ pipeline {
                     privileged: true
                     securityContext:
                       privileged: true
+                    resources:
+                      requests:
+                        cpu: "100m"
+                        memory: "256Mi"
+                      limits:
+                        cpu: "100m"
+                        memory: "512Mi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
