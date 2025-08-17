@@ -1,0 +1,144 @@
+---
+import { } from 'astro';
+import '../styles/qabotv2.css';
+---
+
+<!-- v2 控制列：插入共用 qa-bot-container 中（header 下方即可） -->
+<div class="control-row" id="qaV2Controls" style="display:none">
+  <label>
+    Model
+    <select id="v2Model"></select>
+  </label>
+  <label style="display:flex;align-items:center;gap:6px;">
+    <input type="checkbox" id="v2UseKb" checked /> TY 知識庫
+  </label>
+</div>
+
+<script>
+  import { getApiBaseUrl, getOrCreateUserId, escapeHtml } from '../scripts/qabotShared';
+
+  class QABotV2 {
+    private messagesEl: HTMLElement;
+    private inputEl: HTMLInputElement;
+    private sendBtn: HTMLButtonElement;
+    private modelSel: HTMLSelectElement;
+    private kbEl: HTMLInputElement;
+    private userId: string;
+    private apiBase: string;
+
+    constructor() {
+      // 將控制列移到 header 底下（若尚未在正確位置）
+      const container = document.getElementById('qaBotContainer') as HTMLElement;
+      const header = container?.querySelector('.chat-header') as HTMLElement | null;
+      const controls = document.getElementById('qaV2Controls') as HTMLElement;
+      if (container && header && controls && controls.parentElement !== container) {
+        container.insertBefore(controls, container.children[1]);
+      }
+
+      this.messagesEl = document.getElementById('chatMessages') as HTMLElement;
+      this.inputEl = document.getElementById('userInput') as HTMLInputElement;
+      this.sendBtn = document.getElementById('sendButton') as HTMLButtonElement;
+      this.modelSel = document.getElementById('v2Model') as HTMLSelectElement;
+      this.kbEl = document.getElementById('v2UseKb') as HTMLInputElement;
+      this.userId = getOrCreateUserId('qabot_user_id');
+      this.apiBase = getApiBaseUrl();
+
+      this.bindEvents();
+      this.loadModels();
+    }
+
+    private bindEvents() {
+      this.sendBtn.addEventListener('click', () => this.ask());
+      this.inputEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if ((window as any).qabotMode === 'v2') this.ask();
+        }
+      });
+    }
+
+    public show() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'flex'; }
+    public hide() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'none'; }
+
+    private appendMessage(html: string) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      this.messagesEl.appendChild(div);
+      this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+    }
+
+    private async loadModels() {
+      try {
+        const resp = await fetch(`${this.apiBase}/maya-v2/available-models/`, { credentials: 'include' });
+        if (!resp.ok) throw new Error(`models ${resp.status}`);
+        const data = await resp.json();
+        
+        // 解析 API 回應格式
+        const models = data?.models || [];
+        const activeModels = models.filter((m: any) => m.is_active === true);
+        
+        this.modelSel.innerHTML = '';
+        activeModels.forEach((m: any) => {
+          const opt = document.createElement('option');
+          opt.value = m.model_id;
+          opt.textContent = m.name;
+          this.modelSel.appendChild(opt);
+        });
+        
+        // 設定預設選項
+        if (!this.modelSel.value && activeModels.length > 0) {
+          this.modelSel.value = activeModels[0].model_id;
+        }
+      } catch (e) {
+        console.error('Failed to load models:', e);
+        this.modelSel.innerHTML = '<option value="">無法載入模型</option>';
+      }
+    }
+
+    private async ask() {
+      const q = this.inputEl.value.trim();
+      if (!q) return;
+      this.inputEl.value = '';
+      // 使用共用訊息流格式
+      this.appendMessage(`<div class=\"message user-message\"><div class=\"message-content\"><p>${escapeHtml(q)}</p></div></div>`);
+      try {
+        const payload = {
+          question: q,
+          model_name: this.modelSel.value,
+          sync: true,
+          use_knowledge_base: !!this.kbEl.checked,
+          user_id: this.userId
+        };
+        const resp = await fetch(`${this.apiBase}/maya-v2/ask-with-model/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          credentials: 'include'
+        });
+        if (!resp.ok) throw new Error(`ask ${resp.status}`);
+        const data = await resp.json();
+        const answer = data?.text || data?.answer || JSON.stringify(data);
+        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p>${escapeHtml(answer)}</p></div></div>`);
+      } catch (e) {
+        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml((e as Error).message)}</p></div></div>`);
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const v2 = new QABotV2();
+    // 監聽全域模式切換
+    window.addEventListener('qabot:switch', (e: any) => {
+      const mode = e?.detail?.mode;
+      const v1 = document.getElementById('qaBotContainer');
+      if (mode === 'v2') {
+        if (v1 && !v1.classList.contains('show')) v1.classList.add('show');
+        v2.show();
+      } else if (mode === 'v1') {
+        v2.hide();
+      }
+    });
+  });
+</script>
+
+

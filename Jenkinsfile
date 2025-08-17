@@ -8,7 +8,7 @@ pipeline {
                   serviceAccountName: jenkins-admin
                   containers:
                   - name: node
-                    image: node:18
+                    image: node:22
                     command: ["cat"]
                     tty: true
                     resources:

@@ -1,0 +1,103 @@
+---
+import '../styles/qabot.css';
+import '../styles/qaplatform.css';
+---
+
+<!-- 浮動聊天按鈕（共用） -->
+<div class="qa-bot-toggle" id="qaBotToggle">
+	<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
+	<span class="toggle-text">真夜</span>
+</div>
+
+<!-- 聊天對話框（共用） -->
+<div class="qa-bot-container" id="qaBotContainer">
+	<div class="chat-header">
+		<div class="header-content">
+			<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
+			<div class="header-text">
+				<h3>佐和 真夜</h3>
+				<p>TY的智慧庫</p>
+			</div>
+		</div>
+		<div class="header-controls">
+			<button class="fullscreen-button" id="fullscreenButton" title="切換全屏模式">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+				</svg>
+			</button>
+			<button class="language-button" id="languageButton" title="切換語言">
+				<span class="language-text">中文</span>
+			</button>
+			<button class="history-button" id="historyButton" title="查看聊天歷史">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+				</svg>
+			</button>
+			<button class="page-analysis-button" id="pageAnalysisButton" title="分析頁面">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M3 4h18M3 10h18M3 16h18"/>
+				</svg>
+			</button>
+			<button class="close-button" id="closeButton">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M18 6L6 18M6 6l12 12"/>
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<div class="chat-messages" id="chatMessages">
+		<div class="message bot-message">
+			<div class="message-avatar">
+				<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
+			</div>
+			<div class="message-content-wrapper">
+				<div class="message-header">
+					<span class="ai-name">真夜</span>
+				</div>
+				<div class="message-content">
+					<p>你有事？<br>問前想清楚，機會不是誰都有。</p>
+					<div class="topic-suggestions">
+						<h4>💡 建議主題：</h4>
+						<div class="suggestion-buttons">
+							<button class="suggestion-btn" data-topic="Java">☕ Java 開發</button>
+							<button class="suggestion-btn" data-topic="OOP及DI框架">🏗️ OOP及DI框架</button>
+							<button class="suggestion-btn" data-topic="部署實踐">🚀 部署實踐</button>
+							<button class="suggestion-btn" data-topic="網路問題">🌐 網路問題</button>
+							<button class="suggestion-btn" data-topic="了解妳">想多了解妳</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="load-more-container" id="loadMoreContainer" style="display: none;">
+		<button class="load-more-button" id="loadMoreButton">載入更多歷史記錄</button>
+	</div>
+
+	<div class="analysis-panel" id="analysisPanel" style="display:none;"></div>
+
+	<div class="chat-input-container">
+		<div class="input-wrapper">
+			<input type="text" id="userInput" placeholder="" class="chat-input" maxlength="500" />
+			<button id="sendButton" class="send-button" disabled>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+				</svg>
+			</button>
+		</div>
+		<div class="input-status" id="inputStatus"></div>
+	</div>
+</div>
+
+<!-- 圖片放大模態框（共用） -->
+<div class="image-modal" id="imageModal">
+	<div class="image-modal-content">
+		<button class="image-modal-close" id="imageModalClose">&times;</button>
+		<img id="modalImage" src="" alt="放大圖片" />
+	</div>
+</div>
+
+<!-- SweetAlert2 (共用) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
