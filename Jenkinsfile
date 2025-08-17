@@ -13,8 +13,8 @@ pipeline {
                     tty: true
                     resources:
                       requests:
-                        cpu: "100m"
-                        memory: "256Mi"
+                        cpu: "25m"
+                        memory: "128Mi"
                       limits:
                         cpu: "100m"
                         memory: "512Mi"
@@ -29,11 +29,11 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "100m"
+                        cpu: "50m"
                         memory: "256Mi"
                       limits:
-                        cpu: "100m"
-                        memory: "512Mi"
+                        cpu: "500m"
+                        memory: "1Gi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
@@ -51,11 +51,11 @@ pipeline {
                       runAsUser: 0
                     resources:
                       requests:
-                        cpu: "100m"
-                        memory: "256Mi"
+                        cpu: "10m"
+                        memory: "64Mi"
                       limits:
                         cpu: "100m"
-                        memory: "512Mi"
+                        memory: "256Mi"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
