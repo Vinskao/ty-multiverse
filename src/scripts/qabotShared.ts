@@ -1,4 +1,8 @@
 export function getApiBaseUrl(): string {
+	// 開發環境使用 localhost:8000，生產環境使用 PUBLIC_API_BASE_URL
+	if (import.meta.env.DEV) {
+		return 'http://localhost:8000';
+	}
 	return (import.meta as any).env.PUBLIC_API_BASE_URL || '';
 }
 

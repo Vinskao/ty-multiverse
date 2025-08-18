@@ -99,5 +99,25 @@ import '../styles/qaplatform.css';
 	</div>
 </div>
 
+<!-- 共用的等待UI组件 -->
+<div class="loading-message" id="loadingMessage" style="display: none;">
+	<div class="message bot-message">
+		<div class="message-avatar">
+			<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
+		</div>
+		<div class="message-content-wrapper">
+			<div class="message-header">
+				<span class="ai-name">真夜</span>
+			</div>
+			<div class="message-content">
+				<div class="loading">
+					<div class="spinner"></div>
+					<span>正在思考中...</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
 <!-- SweetAlert2 (共用) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
