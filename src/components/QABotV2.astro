@@ -99,8 +99,13 @@ import '../styles/qabotv2.css';
       const q = this.inputEl.value.trim();
       if (!q) return;
       this.inputEl.value = '';
-      // 使用共用訊息流格式
+      
+      // 顯示用戶消息
       this.appendMessage(`<div class=\"message user-message\"><div class=\"message-content\"><p>${escapeHtml(q)}</p></div></div>`);
+      
+      // 顯示等待UI
+      this.showLoadingMessage();
+      
       try {
         const payload = {
           question: q,
@@ -117,11 +122,140 @@ import '../styles/qabotv2.css';
         });
         if (!resp.ok) throw new Error(`ask ${resp.status}`);
         const data = await resp.json();
-        const answer = data?.text || data?.answer || JSON.stringify(data);
-        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p>${escapeHtml(answer)}</p></div></div>`);
+        
+        // 隱藏等待UI
+        this.hideLoadingMessage();
+        
+        // 使用新的格式化方法顯示 AI 回應
+        this.displayAIResponse(data);
       } catch (e) {
+        // 隱藏等待UI
+        this.hideLoadingMessage();
         this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml((e as Error).message)}</p></div></div>`);
       }
+    }
+
+    private showLoadingMessage() {
+      const loadingEl = document.getElementById('loadingMessage') as HTMLElement;
+      if (loadingEl) {
+        const clone = loadingEl.cloneNode(true) as HTMLElement;
+        clone.style.display = 'block';
+        clone.id = 'v2LoadingMessage';
+        this.messagesEl.appendChild(clone);
+        this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+      }
+    }
+
+    private hideLoadingMessage() {
+      const loadingEl = document.getElementById('v2LoadingMessage');
+      if (loadingEl) {
+        loadingEl.remove();
+      }
+    }
+
+    private displayAIResponse(data: any) {
+      try {
+        // 建立主要的AI回應容器
+        const aiResponse = data.ai_response || data.text || data.answer || '';
+        const modelInfo = data.ai_model || {};
+        const knowledgeUsed = data.knowledge_used || false;
+        const citations = data.knowledge_citations || [];
+
+        // 分割AI回應以提取主要內容和知識庫內容
+        const responseText = this.formatAIResponse(aiResponse);
+        
+        // 建立完整的回應HTML
+        let responseHTML = `
+          <div class=\"message bot-message\">
+            <div class=\"message-content-wrapper\">
+              <div class=\"message-header\">
+                <span class=\"ai-name\">${escapeHtml(modelInfo.name || 'AI')}</span>
+                ${knowledgeUsed ? '<span class=\"knowledge-badge\">🧠 知識庫</span>' : ''}
+              </div>
+              <div class=\"message-content\">
+                ${responseText}
+              </div>
+              ${citations.length > 0 ? this.buildCitationsHTML(citations) : ''}
+            </div>
+          </div>
+        `;
+        
+        this.appendMessage(responseHTML);
+      } catch (e) {
+        console.error('Error displaying AI response:', e);
+        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 回應格式錯誤</p></div></div>`);
+      }
+    }
+
+    private formatAIResponse(response: string): string {
+      if (!response) return '<p>無回應內容</p>';
+      
+      // 分割主要回應和知識庫內容
+      const parts = response.split(/相關知識庫內容：|知識庫內容：/);
+      const mainContent = parts[0].trim();
+      
+      // 格式化主要內容
+      const formattedContent = mainContent
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/### (.+?)(\n|$)/g, '<h4>$1</h4>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/- (.+?)(\n|$)/g, '<li>$1</li>');
+      
+      // 包裝在段落標籤中
+      const wrappedContent = formattedContent.includes('<li>') 
+        ? formattedContent.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>')
+        : `<p>${formattedContent}</p>`;
+      
+      return wrappedContent;
+    }
+
+    private buildCitationsHTML(citations: any[]): string {
+      if (!citations || citations.length === 0) return '';
+      
+      const citationsList = citations.map((citation, index) => {
+        const provider = citation.provider || '';
+        
+        // 基於 file_path 構建正確的 URL 格式
+        let url = '#';
+        let displayName = '未知文件';
+        
+        if (citation.file_path) {
+          // 移除 .md 副檔名作為顯示名稱
+          displayName = citation.file_path.replace(/\.md$/, '');
+          
+          // 根據環境構建 URL
+          if ((import.meta as any).env.DEV) {
+            url = `http://localhost:4321/tymultiverse/work/${displayName}`;
+          } else {
+            url = `https://peoplesystem.tatdvsonorth.com/tymultiverse/work/${displayName}`;
+          }
+        }
+        
+        return `
+          <div class=\"citation-item\">
+            <span class=\"citation-number\">${index + 1}</span>
+            <div class=\"citation-content\">
+              <a href=\"${escapeHtml(url)}\" target=\"_blank\" class=\"citation-link\">
+                ${escapeHtml(displayName)}
+              </a>
+              ${provider ? `<span class=\"citation-provider\">${escapeHtml(provider)}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      return `
+        <div class=\"knowledge-citations\">
+          <div class=\"citations-header\">
+            <span class=\"citations-icon\">📚</span>
+            <span class=\"citations-title\">參考資料</span>
+          </div>
+          <div class=\"citations-list\">
+            ${citationsList}
+          </div>
+        </div>
+      `;
     }
   }
 
