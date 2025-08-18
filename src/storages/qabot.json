@@ -1,0 +1,61 @@
+{
+  "header_controls": {
+    "v1": {
+      "fullscreen": {
+        "enabled": true,
+        "title": "切換全屏模式",
+        "element_id": "fullscreenButton"
+      },
+      "language": {
+        "enabled": true,
+        "title": "切換語言",
+        "element_id": "languageButton"
+      },
+      "history": {
+        "enabled": true,
+        "title": "查看聊天歷史",
+        "element_id": "historyButton"
+      },
+      "page_analysis": {
+        "enabled": true,
+        "title": "分析頁面",
+        "element_id": "pageAnalysisButton"
+      },
+      "avatar": {
+        "enabled": true,
+        "title": "點擊選擇專員",
+        "element_selector": ".header-avatar"
+      }
+    },
+    "v2": {
+      "fullscreen": {
+        "enabled": true,
+        "title": "切換全屏模式",
+        "element_id": "fullscreenButton"
+      },
+      "language": {
+        "enabled": false,
+        "title": "V2模式下無法切換語言",
+        "element_id": "languageButton",
+        "restriction_message": "語言切換"
+      },
+      "history": {
+        "enabled": true,
+        "title": "查看聊天歷史",
+        "element_id": "historyButton"
+      },
+      "page_analysis": {
+        "enabled": false,
+        "title": "V2模式下無法使用頁面分析",
+        "element_id": "pageAnalysisButton",
+        "restriction_message": "頁面分析"
+      },
+      "avatar": {
+        "enabled": false,
+        "title": "V2模式下無法切換專員",
+        "element_selector": ".header-avatar",
+        "restriction_message": "專員選擇"
+      }
+    }
+  }
+}

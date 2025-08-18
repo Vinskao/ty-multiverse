@@ -143,6 +143,38 @@
   box-shadow: 0 4px 12px rgba(218, 165, 32, 0.4);
 }
 
+/* V2模式下的禁用狀態 */
+.header-avatar.v2-disabled,
+.language-button.v2-disabled,
+.page-analysis-button.v2-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  filter: grayscale(50%);
+  transition: all 0.3s ease;
+}
+
+.header-avatar.v2-disabled:hover,
+.language-button.v2-disabled:hover,
+.page-analysis-button.v2-disabled:hover {
+  transform: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* 禁用狀態下的按鈕樣式 */
+.language-button.v2-disabled,
+.page-analysis-button.v2-disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* V2限制提示彈窗樣式 */
+.swal-v2-restriction-popup {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 .header-text {
   text-align: left;
 }

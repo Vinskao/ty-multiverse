@@ -10,6 +10,8 @@ import '../styles/qabot.css';
   import messages from '../storages/messages.json';
   // @ts-ignore
   import analystTemplates from '../storages/analyst.json';
+  // @ts-ignore
+  import qabotConfig from '../storages/qabot.json';
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -257,19 +259,13 @@ import '../styles/qabot.css';
 
     private pruneAvailableBots() {
       if (!Array.isArray(this.state.availableBots)) return;
-      
-      console.log('🔍 開始過濾專員列表...');
-      console.log('過濾前的專員:', this.state.availableBots);
-      
+            
       const beforeFilter = [...this.state.availableBots];
       this.state.availableBots = this.state.availableBots.filter(n => {
         const hasMessages = this.hasValidMessages(n);
-        console.log(`專員 ${n}: ${hasMessages ? '✅ 有句庫' : '❌ 無句庫'}`);
         return hasMessages;
       });
-      
-      console.log('過濾後的專員:', this.state.availableBots);
-      
+            
       // 確保至少 Maya 存在
       if (!this.state.availableBots.includes('Maya') && this.hasValidMessages('Maya')) {
         this.state.availableBots.unshift('Maya');
@@ -278,7 +274,6 @@ import '../styles/qabot.css';
       
       // 如果當前 bot 沒有句庫 → 換成清單第一個
       if (!this.hasValidMessages(this.state.botName) && this.state.availableBots.length) {
-        console.log(`當前專員 ${this.state.botName} 無句庫，切換到 ${this.state.availableBots[0]}`);
         this.state.botName = this.state.availableBots[0];
         this.state.currentBotIndex = 0;
         this.updateAvatarAndName();
@@ -304,12 +299,9 @@ import '../styles/qabot.css';
           headers,
           credentials: 'include'
         });
-        
-        console.log('API 回應狀態:', resp.status, resp.statusText);
-        
+                
         if (resp.ok) {
           const names = await resp.json();
-          console.log('API 返回的專員列表:', names);
           
           if (Array.isArray(names)) {
             // 確保 Maya 在列表內
@@ -435,6 +427,16 @@ import '../styles/qabot.css';
       // 點擊頭像顯示選擇面板
       avatarEl.addEventListener('click', (e) => {
         e.stopPropagation();
+        
+        // 檢查是否在V2模式下
+        if ((window as any).qabotMode === 'v2') {
+          const config = qabotConfig.header_controls.v2.avatar;
+          if (config && !config.enabled && config.restriction_message) {
+            this.showV2RestrictionMessage(config.restriction_message);
+          }
+          return;
+        }
+        
         this.showAvatarSelector(avatarSelector);
       });
 
@@ -458,6 +460,14 @@ import '../styles/qabot.css';
           window.dispatchEvent(new CustomEvent('qabot:switch', { detail: { mode: next } }));
         });
       }
+
+      // 監聽全域模式切換，使用配置文件管理header controls狀態
+      window.addEventListener('qabot:switch', (e: any) => {
+        const mode = e?.detail?.mode;
+        if (mode === 'v1' || mode === 'v2') {
+          this.updateHeaderControlsByConfig(mode);
+        }
+      });
 
       // 點擊其他地方隱藏選擇面板
       document.addEventListener('click', (e) => {
@@ -639,7 +649,17 @@ import '../styles/qabot.css';
       this.elements.historyButton.addEventListener('click', () => this.loadChatHistory());
       this.elements.loadMoreButton.addEventListener('click', () => this.loadMoreHistory());
       // 新增：頁面分析按鈕事件
-      this.elements.pageAnalysisButton.addEventListener('click', () => this.toggleAnalysisPanel());
+      this.elements.pageAnalysisButton.addEventListener('click', () => {
+        // 檢查是否在V2模式下
+        if ((window as any).qabotMode === 'v2') {
+          const config = qabotConfig.header_controls.v2.page_analysis;
+          if (config && !config.enabled && config.restriction_message) {
+            this.showV2RestrictionMessage(config.restriction_message);
+          }
+          return;
+        }
+        this.toggleAnalysisPanel();
+      });
       
       // 新增：頁面分析面板事件（延遲綁定，確保面板已創建）
       setTimeout(() => {
@@ -648,7 +668,17 @@ import '../styles/qabot.css';
       
       // 功能按鈕事件
       (document.getElementById('fullscreenButton') as HTMLButtonElement).addEventListener('click', () => this.toggleFullscreen());
-      (document.getElementById('languageButton') as HTMLButtonElement).addEventListener('click', () => this.toggleLanguage());
+      (document.getElementById('languageButton') as HTMLButtonElement).addEventListener('click', () => {
+        // 檢查是否在V2模式下
+        if ((window as any).qabotMode === 'v2') {
+          const config = qabotConfig.header_controls.v2.language;
+          if (config && !config.enabled && config.restriction_message) {
+            this.showV2RestrictionMessage(config.restriction_message);
+          }
+          return;
+        }
+        this.toggleLanguage();
+      });
       
       // 輸入相關事件
       this.elements.userInput.addEventListener('input', () => {
@@ -1494,6 +1524,87 @@ import '../styles/qabot.css';
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    // 顯示V2模式限制提示
+    private showV2RestrictionMessage(featureName: string) {
+      if (typeof (window as any).Swal !== 'undefined') {
+        (window as any).Swal.fire({
+          title: '⚠️ V2模式限制',
+          html: `
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+              <p style="font-size: 16px; color: #666; margin-bottom: 15px;">
+                Maya v2 模式下無法使用 ${featureName} 功能
+              </p>
+              <p style="font-size: 14px; color: #999;">
+                請切換回 v1 模式以使用此功能
+              </p>
+            </div>
+          `,
+          icon: 'info',
+          confirmButtonText: '知道了',
+          confirmButtonColor: '#3085d6',
+          showCancelButton: true,
+          cancelButtonText: '切換到 v1',
+          cancelButtonColor: '#6c757d',
+          customClass: {
+            popup: 'swal-v2-restriction-popup'
+          },
+          background: '#fff',
+          backdrop: 'rgba(0,0,0,0.4)',
+          allowOutsideClick: true,
+          allowEscapeKey: true,
+          width: '400px'
+        }).then((result: any) => {
+          if (result.dismiss === 'cancel') {
+            // 用戶選擇切換到v1
+            (window as any).qabotMode = 'v1';
+            window.dispatchEvent(new CustomEvent('qabot:switch', { detail: { mode: 'v1' } }));
+          }
+        });
+      }
+    }
+
+    // 根據配置更新header controls狀態
+    private updateHeaderControlsByConfig(mode: 'v1' | 'v2') {
+      const config = qabotConfig.header_controls[mode];
+      if (!config) return;
+
+      // 更新各個控制項的狀態
+      Object.entries(config).forEach(([key, controlConfig]: [string, any]) => {
+        let element: HTMLElement | null = null;
+        
+        // 根據配置獲取元素
+        if (controlConfig.element_id) {
+          element = document.getElementById(controlConfig.element_id);
+        } else if (controlConfig.element_selector) {
+          element = document.querySelector(controlConfig.element_selector);
+        }
+
+        if (!element) return;
+
+        // 更新元素狀態
+        if (controlConfig.enabled) {
+          // 啟用狀態
+          element.classList.remove('v2-disabled');
+          element.removeAttribute('disabled');
+          if (element instanceof HTMLButtonElement) {
+            element.disabled = false;
+          }
+        } else {
+          // 禁用狀態
+          element.classList.add('v2-disabled');
+          if (element instanceof HTMLButtonElement) {
+            element.disabled = true;
+          }
+        }
+
+        // 更新title
+        if (controlConfig.title) {
+          element.title = controlConfig.title;
+        }
+      });
     }
 
     // ============================
