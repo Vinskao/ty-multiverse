@@ -48,6 +48,13 @@ const setupResumePreview = (aboutData, skillsData) => {
 };
 
 const generateMobileContent = (aboutData, skillsData) => {
+  // Get language parameter from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const lang = urlParams.get('lang') || 'en';
+  
+  // Define name based on language
+  const name = lang === 'zh' ? '高天逸' : 'KAO TIAN YI';
+  
   // This function will contain the HTML string for the mobile preview.
   // Due to length, it's defined below.
   return `
@@ -82,7 +89,7 @@ const generateMobileContent = (aboutData, skillsData) => {
     </style>
   </head>
   <body>
-      <h1>KAO TIAN YI</h1>
+      <h1>${name}</h1>
       <p>tianyikao@gmail.com</p>
       <div class="section">
         <h2>Background</h2>
@@ -154,6 +161,13 @@ const generateMobileContent = (aboutData, skillsData) => {
 };
 
 const generateDesktopContent = (aboutData, skillsData) => {
+  // Get language parameter from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const lang = urlParams.get('lang') || 'en';
+  
+  // Define name based on language
+  const name = lang === 'zh' ? '高天逸' : 'KAO TIAN YI';
+  
   // This function will contain the HTML string for the desktop preview.
   return `
   <!DOCTYPE html>
@@ -201,7 +215,7 @@ const generateDesktopContent = (aboutData, skillsData) => {
     <div class="resume-section">
       <h2 class="section-title">Background</h2>
       <div class="name-section">
-        <h1 class="majestic-name">KAO TIAN YI</h1>
+        <h1 class="majestic-name">${name}</h1>
         <p class="email">tianyikao@gmail.com</p>
       </div>
       <p>${aboutData.background.replace(/\n/g, '<br>')}</p>

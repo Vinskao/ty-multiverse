@@ -55,7 +55,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
           <h2 class="section-title">Background</h2>
           <div class="content background-content">
             <div class="name-section">
-              <h1 class="majestic-name">KAO TIAN YI</h1>
+              <h1 class="majestic-name">{lang === 'zh' ? '高天逸' : 'KAO TIAN YI'}</h1>
               <p class="email">tianyikao@gmail.com</p>
             </div>
             <p set:html={aboutData.background[lang].replace(/\n/g, '<br>')}>
@@ -173,25 +173,71 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                   <div class="mermaid-diagram margin-top">
                                     <pre class="mermaid">
                                       {`classDiagram
-                                          class SpringBootApplication {
+                                          %% Application Layer
+                                          class TYMBackendApplication {
                                               +@SpringBootApplication
+                                              +@EnableWebSocket
+                                              +@EnableRetry
+                                              +@EnableAsync
+                                              +@EnableScheduling
+                                          }
+                                          
+                                          %% Security Layer
+                                          class SecurityConfig {
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
+                                              +JWT Authentication
+                                              +OAuth2 Resource Server
+                                              +CORS Configuration
+                                          }
+                                          
+                                          class KeycloakController {
+                                              +OAuth2 Redirect
+                                              +Token Exchange
+                                              +User Info
+                                              +Token Introspect
+                                          }
+                                          
+                                          class Guardian {
+                                              +User Management
+                                              +Admin Operations
+                                              +Token Validation
+                                          }
+                                          
+                                          %% Configuration Layer
+                                          class RedisConfig {
                                               +@EnableCaching
-                                              +@EnableJpaRepositories
-                                          }
-                                          
-                                          class HikariCP {
-                                              +PrimaryHikariCP (50 connections)
-                                              +PeopleHikariCP (15 connections)
-                                              +Connection Pool Management
-                                          }
-                                          
-                                          class RedisCache {
-                                              +@Cacheable
+                                              +RedisConnectionFactory
+                                              +RedisTemplate
                                               +damage-calculations
-                                              +Session Storage
+                                              +tymb:sessions
                                               +Distributed Lock
                                           }
                                           
+                                          class PrimaryDataSourceConfig {
+                                              +PrimaryHikariCP (5 connections)
+                                              +maximum-pool-size: 5
+                                              +minimum-idle: 1
+                                              +connection-timeout: 30s
+                                              +leak-detection-threshold: 60s
+                                          }
+                                          
+                                          class PeopleDataSourceConfig {
+                                              +PeopleHikariCP (5 connections)
+                                              +maximum-pool-size: 5
+                                              +minimum-idle: 1
+                                              +connection-timeout: 30s
+                                              +leak-detection-threshold: 60s
+                                          }
+                                          
+                                          class SessionConfig {
+                                              +@EnableRedisHttpSession
+                                              +Redis Session Store
+                                              +Session Timeout
+                                              +Session Fixation
+                                          }
+                                          
+                                          %% Infrastructure Layer
                                           class Database {
                                               +PostgreSQL Primary
                                               +PostgreSQL People
@@ -199,56 +245,29 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                               +Batch Operations
                                           }
                                           
-                                          SpringBootApplication --> HikariCP
-                                          SpringBootApplication --> RedisCache
-                                          HikariCP --> Database
-                                          RedisCache --> Database`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class PeopleModule {
-                                              +PeopleController
-                                              +PeopleService
-                                              +WeaponDamageService
-                                              +PeopleRepository
-                                              +People.java
+                                          class Redis {
+                                              +Cache Storage
+                                              +Session Store
+                                              +Distributed Lock
+                                              +Concurrency Control
                                           }
                                           
-                                          class WeaponModule {
-                                              +WeaponController
-                                              +WeaponService
-                                              +WeaponRepository
-                                              +Weapon.java
-                                          }
+                                          %% Layer Relationships
+                                          TYMBackendApplication --> SecurityConfig
+                                          TYMBackendApplication --> RedisConfig
+                                          TYMBackendApplication --> PrimaryDataSourceConfig
+                                          TYMBackendApplication --> PeopleDataSourceConfig
+                                          TYMBackendApplication --> SessionConfig
                                           
-                                          class GalleryModule {
-                                              +GalleryController
-                                              +GalleryService
-                                              +GalleryRepository
-                                              +Gallery.java
-                                          }
+                                          SecurityConfig --> KeycloakController
+                                          SecurityConfig --> Guardian
+                                          SecurityConfig --> SessionConfig
                                           
-                                          class LivestockModule {
-                                              +LivestockController
-                                              +LivestockService
-                                              +LivestockRepository
-                                              +Livestock.java
-                                          }
+                                          SessionConfig --> RedisConfig
+                                          RedisConfig --> Redis
                                           
-                                          class CKEditorModule {
-                                              +FileUploadController
-                                              +EditContentService
-                                              +EditContentRepository
-                                              +EditContentVO.java
-                                          }
-                                          
-                                          PeopleModule --> WeaponModule
-                                          PeopleModule --> GalleryModule
-                                          PeopleModule --> LivestockModule
-                                          PeopleModule --> CKEditorModule`}
+                                          PrimaryDataSourceConfig --> Database
+                                          PeopleDataSourceConfig --> Database`}
                                     </pre>
                                   </div>
 
@@ -276,8 +295,13 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                           
                                           class DistributedLock {
                                               +lock:content:save
-                                              +lock:metrics:export
-                                              +lock:livestock:query
+                                              +lock:metrics:export:lock
+                                              +lock:livestock:getAll:lock
+                                              +lock:livestock:save
+                                              +lock:scheduled:cleanup:old:data:lock
+                                              +lock:scheduled:generate:weekly:report:lock
+                                              +lock:scheduled:backup:data:lock
+                                              +lock:scheduled:health:check:lock
                                           }
                                           
                                           CacheStrategy --> DamageCache
@@ -289,118 +313,20 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
                                       {`classDiagram
-                                          class RedisCommands {
-                                              +String Commands
-                                              +Hash Commands
-                                              +Script Commands
-                                              +Key Commands
-                                          }
-                                          
-                                          class StringCommands {
-                                              +SET (快取存儲)
-                                              +GET (快取讀取)
-                                              +SETNX (分布式鎖)
-                                              +EXPIRE (過期時間)
-                                          }
-                                          
-                                          class HashCommands {
-                                              +HSET (Session 存儲)
-                                              +HGET (Session 讀取)
-                                              +HDEL (Session 刪除)
-                                              +HGETALL (完整讀取)
-                                          }
-                                          
-                                          class ScriptCommands {
-                                              +EVAL (Lua 腳本)
-                                              +GET (腳本內)
-                                              +DEL (腳本內)
-                                          }
-                                          
-                                          class KeyCommands {
-                                              +EXISTS (鍵檢查)
-                                              +TTL (剩餘時間)
-                                          }
-                                          
-                                          RedisCommands --> StringCommands
-                                          RedisCommands --> HashCommands
-                                          RedisCommands --> ScriptCommands
-                                          RedisCommands --> KeyCommands`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`sequenceDiagram
-                                          participant App as 應用層
-                                          participant Redis as Redis 伺服器
-                                          participant Lua as Lua 腳本引擎
-                                          
-                                          App->>Redis: 執行 Lua 腳本
-                                          Note over Redis: 分布式鎖釋放腳本
-                                          Redis->>Lua: 載入腳本
-                                          Lua->>Redis: redis.call('get', KEYS[1])
-                                          Redis-->>Lua: 返回鎖值
-                                          Lua->>Lua: 比較鎖值
-                                          alt 鎖值匹配
-                                              Lua->>Redis: redis.call('del', KEYS[1])
-                                              Redis-->>Lua: 刪除成功
-                                              Lua-->>App: 返回 1
-                                          else 鎖值不匹配
-                                              Lua-->>App: 返回 0
-                                          end`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class HikariCPConfig {
-                                              +PrimaryHikariCP
-                                              +PeopleHikariCP
-                                              +Connection Management
-                                          }
-                                          
-                                          class PrimaryPool {
-                                              +maximum-pool-size: 50
-                                              +minimum-idle: 10
-                                              +connection-timeout: 30s
-                                              +leak-detection-threshold: 60s
-                                          }
-                                          
-                                          class PeoplePool {
-                                              +maximum-pool-size: 15
-                                              +minimum-idle: 5
-                                              +connection-timeout: 30s
-                                              +leak-detection-threshold: 60s
-                                          }
-                                          
-                                          class PoolMonitoring {
-                                              +ActiveConnections
-                                              +IdleConnections
-                                              +WaitingThreads
-                                              +ConnectionTimeout
-                                          }
-                                          
-                                          HikariCPConfig --> PrimaryPool
-                                          HikariCPConfig --> PeoplePool
-                                          HikariCPConfig --> PoolMonitoring`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
                                           class SecurityConfig {
                                               +@EnableWebSecurity
                                               +@EnableMethodSecurity
                                               +JWT Authentication
-                                              +Session Management
+                                              +OAuth2 Resource Server
+                                              +CORS Configuration
+                                              +Stateless Keycloak Endpoints
                                           }
                                           
                                           class JWTValidation {
                                               +OAuth2ResourceServer
                                               +JwtDecoder
                                               +CustomJwtGrantedAuthoritiesConverter
+                                              +Bearer Token Resolver
                                           }
                                           
                                           class Authorization {
@@ -408,17 +334,30 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                               +ROLE_MANAGE_USERS
                                               +ROLE_ADMIN
                                               +ROLE_USER
+                                              +permitAll() for /people/names
+                                              +authenticated() for protected endpoints
                                           }
                                           
                                           class SessionManagement {
                                               +Redis Session Storage
                                               +Session Timeout
                                               +Session Fixation
+                                              +@EnableRedisHttpSession
+                                              +tymb:sessions namespace
+                                          }
+                                          
+                                          class KeycloakController {
+                                              +OAuth2 Redirect
+                                              +Token Exchange
+                                              +User Info
+                                              +Token Introspect
+                                              +Dynamic redirectUri
                                           }
                                           
                                           SecurityConfig --> JWTValidation
                                           SecurityConfig --> Authorization
-                                          SecurityConfig --> SessionManagement`}
+                                          SecurityConfig --> SessionManagement
+                                          SecurityConfig --> KeycloakController`}
                                     </pre>
                                   </div>
 
@@ -456,118 +395,9 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                           GlobalExceptionHandler --> DefaultApiExceptionHandler`}
                                     </pre>
                                   </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class ActuatorEndpoints {
-                                              +/health
-                                              +/metrics
-                                              +/prometheus
-                                              +/info
-                                              +/loggers
-                                              +/env
-                                          }
-                                          
-                                          class MetricsConfig {
-                                              +MeterRegistry
-                                              +HikariCP Metrics
-                                              +Custom Metrics
-                                          }
-                                          
-                                          class MetricsWSController {
-                                              +@Scheduled
-                                              +WebSocket Broadcast
-                                              +Distributed Lock
-                                          }
-                                          
-                                          class HealthChecks {
-                                              +Database Health
-                                              +Redis Health
-                                              +Application Health
-                                          }
-                                          
-                                          ActuatorEndpoints --> MetricsConfig
-                                          MetricsConfig --> MetricsWSController
-                                          MetricsConfig --> HealthChecks`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class PerformanceOptimization {
-                                              +Database Indexing
-                                              +Connection Pooling
-                                              +Caching Strategy
-                                              +N+1 Query Fix
-                                          }
-                                          
-                                          class DatabaseOptimization {
-                                              +B-Tree Indexes
-                                              +Composite Indexes
-                                              +Vector Indexes
-                                              +Batch Queries
-                                          }
-                                          
-                                          class CacheOptimization {
-                                              +Redis Caching
-                                              +@Cacheable
-                                              +TTL Management
-                                          }
-                                          
-                                          class QueryOptimization {
-                                              +IN Clause
-                                              +Selective Columns
-                                              +Batch Operations
-                                          }
-                                          
-                                          PerformanceOptimization --> DatabaseOptimization
-                                          PerformanceOptimization --> CacheOptimization
-                                          PerformanceOptimization --> QueryOptimization`}
-                                    </pre>
-                                  </div>
                                 </>
                               )}
-                              {subcategory.name === "Relational" && (
-                                <div class="mermaid-diagram">
-                                  <pre class="mermaid">
-                                    {`classDiagram
-                                        class DatabaseOptimization {
-                                            +B-Tree Indexes
-                                            +Composite Indexes
-                                            +Vector Indexes (pgvector)
-                                            +Batch Queries
-                                        }
-                                        
-                                        class PeopleTable {
-                                            +idx_people_name (Primary)
-                                            +idx_people_race
-                                            +idx_people_gender
-                                            +idx_people_faction
-                                            +idx_people_embedding
-                                        }
-                                        
-                                        class WeaponTable {
-                                            +idx_weapon_owner
-                                            +idx_weapon_base_damage
-                                            +idx_weapon_bonus_damage
-                                            +idx_weapon_embedding
-                                        }
-                                        
-                                        class QueryOptimization {
-                                            +IN Clause (N+1 Fix)
-                                            +Batch Operations
-                                            +Selective Columns
-                                            +Caching Strategy
-                                        }
-                                        
-                                        DatabaseOptimization --> PeopleTable
-                                        DatabaseOptimization --> WeaponTable
-                                        DatabaseOptimization --> QueryOptimization`}
-                                  </pre>
-                                </div>
-                              )}
+
                               {subcategory.name === "Platforms" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
@@ -652,19 +482,19 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     B --> C["qa_chain.get_answer(query)"];
     C --> D{"Detect names in query"};
     
-    %% 名稱檢測分支
+    %% Name Detection Branch
     D -- "Names found" --> E["Fetch character profiles</br>from DB"];
     E --> F{"Profile found?"};
     F -- "Yes" --> G["Create prompt with</br>character profile"];
     F -- "No" --> H["Respond 'not found'"];
     
-    %% 無名稱分支
+    %% No Names Branch
     D -- "No names found" --> I{"Semantic search for people"};
     I -- "People found" --> J["Generate answer from</br>search results"];
     I -- "No one found" --> K["Similarity search</br>in Vector Store"];
     K --> L["Create prompt with</br>document context"];
     
-    %% 統一處理
+    %% Unified Processing
     G --> M["Invoke LLM"];
     J --> M;
     L --> M;
@@ -747,18 +577,18 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
                                       {`graph TD
-  %% 使用者與入口
+  %% User and Entry
   U["User"] --> Q["ask-with-model API<br/>question"]
   Q --> P["Full-text Retrieval Pipeline"]
 
-  %% 檢索流程
+  %% Retrieval Process
   subgraph "Pipeline"
     P --> N["Normalize/Lowercase<br/>trim punctuation"]
     N --> E{"Compute Embedding?"}
-    E -- Yes --> EM["OpenAI Embeddings<br/>(text-embedding-3-small) → qvec(1536)"]
+    E -- Yes --> EM["OpenAI Embeddings<br/>(text-embedding-3-small) → qvec"]
     E -- No --> SKIP["Skip vector branch"]
 
-    %% Postgres 檢索（Trigram 與 Vector）
+    %% PostgreSQL Retrieval (Trigram & Vector)
     subgraph "PostgreSQL"
       direction LR
       PG1["Trigram Search<br/>content % :query<br/>similarity(content, :query) as text_sim"]:::trgm
@@ -777,21 +607,21 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     MRG --> TOPK["Top-K Articles"]
   end
 
-  %% 後處理與回傳
+  %% Post-processing and Response
   TOPK --> CTX["Build Context from Articles<br/>(title + snippet)"]
   CTX --> AI["LLM Call (OpenAI/Gemini/Qwen/Mock)"]
   AI --> RESP["Answer + Citations/No Knowledge Notice"]
   RESP --> RDS["Redis ChatHistory<br/>chat:session:{sid}"]
   RESP --> OUT["API Response"]
 
-  %% 資料表與索引
+  %% Database Table and Indexes
   subgraph "articles schema"
-    TBL["articles<br/>- id BIGSERIAL PK<br/>- file_path VARCHAR(500) UNIQUE<br/>- content TEXT NOT NULL<br/>- file_date TIMESTAMP NOT NULL<br/>- embedding vector(1536)"]:::tbl
+    TBL["articles<br/>- id BIGSERIAL PK<br/>- file_path VARCHAR(500) UNIQUE<br/>- content TEXT NOT NULL<br/>- file_date TIMESTAMP NOT NULL<br/>- embedding vector"]:::tbl
   end
   TBL -. indexed by .-> IDX1
   TBL -. indexed by .-> IDX2
 
-  %% 樣式
+  %% Styles
   classDef trgm fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px
   classDef vec fill:#fce4ec,stroke:#d81b60,stroke-width:1px
   classDef idx fill:#fff3e0,stroke:#fb8c00,stroke-width:1px
@@ -803,11 +633,11 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
                                       {`graph TB
-    subgraph "前端層"
-        A[用戶介面] --> B[API 客戶端]
+    subgraph "Frontend Layer"
+        A[User Interface] --> B[API Client]
     end
 
-    subgraph "API 層"
+    subgraph "API Layer"
         B --> A1[ask-with-model]
         B --> A2[chat-history]
         B --> A3[available-models]
@@ -816,7 +646,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
         B --> A6[legacy-chat-history]
     end
 
-    subgraph "服務層"
+    subgraph "Service Layer"
         S1[FilterChainManager] --> S2[KMSourceManager]
         S3[ChatHistoryService] --> R[(Redis)]
         S4[AIResponseService] --> P1[AI Providers]
@@ -826,20 +656,20 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
         P1 --> P1d[Mock]
     end
 
-    subgraph "資料層"
+    subgraph "Data Layer"
         D1[(PostgreSQL)]
         D2[(Redis)]
         D3[(Celery Broker)]
     end
 
-    subgraph "外部系統"
+    subgraph "External Systems"
         E1[Paprika API]
         E2[OpenAI API]
         E3[Google Gemini API]
         E4[Qwen API]
     end
 
-    %% 關聯
+    %% Relationships
     A1 --> S1
     S1 --> S2
     S2 --> D1
@@ -852,12 +682,12 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     P1c --> E4
     S2 --> E1
 
-    %% DB 關聯
+    %% Database Relationships
     A1 --> D1
     A2 --> D2
     A4 --> D1
 
-    %% 註解
+    %% Annotations
     D1:::db
     D2:::cache
     D3:::broker
