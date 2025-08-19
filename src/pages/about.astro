@@ -353,33 +353,6 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
-                                      {`graph TB
-                                          subgraph "String 類型"
-                                              A[分布式鎖] --> A1[SETNX lock:key value]
-                                              A --> A2[GET lock:key]
-                                              A --> A3[DEL lock:key]
-                                              B[快取機制] --> B1[SET cache:key value]
-                                              B --> B2[GET cache:key]
-                                              B --> B3[EXPIRE cache:key time]
-                                          end
-                                          
-                                          subgraph "Hash 類型"
-                                              C[Session 存儲] --> C1[HSET session:id field value]
-                                              C --> C2[HGET session:id field]
-                                              C --> C3[HDEL session:id field]
-                                              C --> C4[HGETALL session:id]
-                                          end
-                                          
-                                          subgraph "腳本執行"
-                                              D[Lua 腳本] --> D1[EVAL script keys args]
-                                              D --> D2[原子性操作]
-                                              D --> D3[複雜邏輯處理]
-                                          end`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
                                       {`classDiagram
                                           class HikariCPConfig {
                                               +PrimaryHikariCP
@@ -552,42 +525,6 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                           PerformanceOptimization --> DatabaseOptimization
                                           PerformanceOptimization --> CacheOptimization
                                           PerformanceOptimization --> QueryOptimization`}
-                                    </pre>
-                                  </div>
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class DockerBuild {
-                                              +Multi-stage Build
-                                              +BuildKit Optimization
-                                              +Security Scan
-                                          }
-                                          
-                                          class KubernetesDeploy {
-                                              +Deployment
-                                              +Service
-                                              +ConfigMap
-                                              +Secret
-                                          }
-                                          
-                                          class CI_CD {
-                                              +Jenkins Pipeline
-                                              +Maven Build
-                                              +Docker Build
-                                              +K8s Deploy
-                                          }
-                                          
-                                          class Monitoring {
-                                              +Prometheus
-                                              +Grafana
-                                              +Logging
-                                          }
-                                          
-                                          DockerBuild --> KubernetesDeploy
-                                          CI_CD --> DockerBuild
-                                          CI_CD --> KubernetesDeploy
-                                          KubernetesDeploy --> Monitoring`}
                                     </pre>
                                   </div>
                                 </>
