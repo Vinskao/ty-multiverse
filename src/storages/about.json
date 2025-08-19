@@ -1,7 +1,7 @@
 {
   "background": {
-    "en": "I specialize in backend architecture and performance optimization, with expertise in API design, multi-threading, advanced database indexing, and high-concurrency cache strategies using Redis and Lua scripts. My experience includes fixing N+1 queries, managing multi-source connection pools, and implementing distributed locks to ensure data consistency under heavy load. I am also proficient in orchestrating containerized deployments using Docker, Kubernetes, and CI/CD pipelines. Additionally, I have experience designing and optimizing LLM pipelines (e.g., RetrievalQAChain) to achieve low-latency, high-accuracy responses.\n\nMy personal website contains a complete skill map — feel free to reach out via email, and I will respond promptly.\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
-    "zh": "我專精於後端架構與效能優化，具備 API 設計、多執行緒、進階資料庫索引與高併發快取策略（使用 Redis 與 Lua 腳本）的專業能力。經驗涵蓋修復 N+1 查詢問題、管理多源連線池，以及實作分布式鎖以確保高負載下的資料一致性以及使用 Docker、Kubernetes 與 CI/CD 管道協調容器化部署。亦擅長設計與優化 LLM 管道（如 RetrievalQAChain）以實現低延遲、高準確度的回應，\n\n我的個人網站包含完整的技能圖譜 — 歡迎來信交流，我會盡快回覆。\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about"
+    "en": "TYK combines fintech and software engineering expertise, transforming complex market behaviors and product requirements into efficient data flows and robust systems. With a background in banking MA and trading room research, TYK now specializes in backend architecture design, performance optimization, and rapid product deployment.\n\nHis technical expertise includes API design, multi-threading, advanced database indexing, and high-concurrency cache strategies using Redis and Lua scripts. Experience covers fixing N+1 query issues, managing multi-source connection pools, and implementing distributed locks to ensure data consistency under heavy load. TYK is also proficient in orchestrating containerized deployments using Docker, Kubernetes, and CI/CD pipelines. Additionally, TYK has experience designing and optimizing LLM pipelines (e.g., RetrievalQAChain) to achieve low-latency, high-accuracy responses.\n\nTYK's personal website contains a complete skill map — feel free to reach out via email, and he will respond promptly.\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about",
+    "zh": "TYK 結合金融科技與軟體工程專長，能將複雜市場行為與產品需求轉化為高效數據流程與穩健系統。具備銀行 MA 與交易室研究背景，現專精於後端架構設計、效能優化與產品快速落地。\n\n他的技術專業包括 API 設計、多執行緒、進階資料庫索引與高併發快取策略（使用 Redis 與 Lua 腳本）。經驗涵蓋修復 N+1 查詢問題、管理多源連線池，以及實作分布式鎖以確保高負載下的資料一致性。亦擅長使用 Docker、Kubernetes 與 CI/CD 管道協調容器化部署。此外，TYK 具備設計與優化 LLM 管道（如 RetrievalQAChain）以實現低延遲、高準確度回應的經驗。\n\nTYK 的個人網站包含完整的技能圖譜 — 歡迎來信交流，他會盡快回覆。\n\nhttps://peoplesystem.tatdvsonorth.com/tymultiverse/about"
   },
   "experience": [
     {
@@ -33,66 +33,66 @@
       "company": "Tarobo Investment Advisors",
       "period": "2022/9~2023/1",
       
-      "projectExperience": {
-        "en": [
-          "Built automated reporting workflows; integrated SinoPac Shioaji trading API with Python to ingest market data and prototype trading strategies",
-          "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis",
-          "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies",
-          "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis"
-        ],
-        "zh": [
-          "接觸自動化報表；使用 Python 串接永豐金交易 API（Shioaji），並撰寫策略原型",
-          "每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析",
-          "分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略",
-          "維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析"
-        ]
-      }
+              "projectExperience": {
+          "en": [
+            "Built automated reporting workflows; integrated SinoPac Shioaji trading API with Python to ingest market data and prototype trading strategies, designing data processing pipelines for real-time market analysis",
+            "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis, structuring complex market data into actionable insights through systematic data flow analysis",
+            "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies, mapping market behavior patterns to investment decision frameworks",
+            "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis, optimizing data flow architecture for multi-source financial data integration"
+          ],
+          "zh": [
+            "接觸自動化報表；使用 Python 串接永豐金交易 API（Shioaji），並撰寫策略原型，設計即時市場分析的數據處理管道",
+            "每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析，透過系統化數據流程分析將複雜市場數據結構化為可執行洞察",
+            "分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略，將市場行為模式對應至投資決策框架",
+            "維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析，優化多源金融數據整合的數據流程架構"
+          ]
+        }
     },
     {
       "title": "Fintech PM, MA Program",
       "company": "Far Eastern Int'l Bank",
       "period": "2021/8~2022/5",
       
-      "projectExperience": {
-        "en": [
-          "Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews",
-          "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies",
-          "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting",
-          "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency",
-          "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations"
-        ],
-        "zh": [
-          "使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視",
-          "撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案",
-          "進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告",
-          "管理數位支付部門 31 項作業流程，確保合規與效率",
-          "提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地"
-        ]
-      }
+              "projectExperience": {
+          "en": [
+            "Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews, translating complex business requirements into structured data flows",
+            "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies, analyzing user journey flows and payment processing logic",
+            "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting, mapping product features to user behavior patterns",
+            "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency, designing workflow logic and data validation processes",
+            "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations, analyzing integration requirements and data exchange protocols"
+          ],
+          "zh": [
+            "使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視，將複雜業務需求轉化為結構化數據流程",
+            "撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案，分析用戶旅程流程與支付處理邏輯",
+            "進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告，將產品功能對應至用戶行為模式",
+            "管理數位支付部門 31 項作業流程，確保合規與效率，設計工作流程邏輯與數據驗證程序",
+            "提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地，分析整合需求與數據交換協議"
+          ]
+        }
     },
     {
       "title": "Auditor",
       "company": "EY",
       "period": "2019/9~2020/3",
       
-      "projectExperience": {
-        "en": [
-          "Automated reconciliation workflow using Excel VBA to accelerate audit working papers",
-          "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements",
-          "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds",
-          "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies",
-          "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis",
-          "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements"
-        ],
-        "zh": [
-          "使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業",
-          "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益",
-          "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序",
-          "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異",
-          "編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析",
-          "稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表"
-        ]
-      }
+              "projectExperience": {
+          "en": [
+            "Automated reconciliation workflow using Excel VBA to accelerate audit working papers, designing logical data validation processes for financial data integrity",
+            "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements, analyzing financial data flows and transaction processing logic",
+            "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds, mapping complex financial product structures to audit testing frameworks",
+            "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies, developing systematic approaches to financial data analysis and anomaly detection",
+            "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis, creating data-driven risk assessment models",
+            "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements, structuring financial reporting data flows for compliance and analysis purposes"
+          ],
+          "zh": [
+            "使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業，設計財務數據完整性的邏輯驗證程序",
+            "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益，分析財務數據流程與交易處理邏輯",
+            "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序，將複雜金融產品結構對應至稽核測試框架",
+            "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異，開發財務數據分析與異常檢測的系統化方法",
+            "編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析，建立數據驅動的風險評估模型",
+            "稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表，為合規與分析目的結構化財務報告數據流程"
+          ]
+        }
     }
   ],
   "education": [

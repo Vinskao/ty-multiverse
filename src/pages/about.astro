@@ -703,6 +703,235 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                   </pre>
                                 </div>
                               )}
+                              {subcategory.name === "Frameworks & APIs" && (
+                                <>
+                                  {/* --- AI Frameworks & APIs Architecture Diagrams --- */}
+                                  <br />
+                                  <p>Maya Sawa V1</p><a href="https://github.com/Vinskao/maya-sawa" target="_blank">maya-sawa</a>
+                                  <div class="mermaid-diagram margin-top">
+                                    <pre class="mermaid">
+                                      {`graph TD
+    A["User Request</br>(/qa/query)"] --> B{FastAPI Router};
+    B --> C["qa_chain.get_answer(query)"];
+    C --> D{"Detect names in query"};
+    
+    %% 名稱檢測分支
+    D -- "Names found" --> E["Fetch character profiles</br>from DB"];
+    E --> F{"Profile found?"};
+    F -- "Yes" --> G["Create prompt with</br>character profile"];
+    F -- "No" --> H["Respond 'not found'"];
+    
+    %% 無名稱分支
+    D -- "No names found" --> I{"Semantic search for people"};
+    I -- "People found" --> J["Generate answer from</br>search results"];
+    I -- "No one found" --> K["Similarity search</br>in Vector Store"];
+    K --> L["Create prompt with</br>document context"];
+    
+    %% 統一處理
+    G --> M["Invoke LLM"];
+    J --> M;
+    L --> M;
+    H --> N["Return final answer"];
+    M --> N;
+    N --> O["Save chat history"];
+    O --> P["Return AI answer"];
+    P --> B;`}
+                                    </pre>
+                                  </div>
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`flowchart TD
+    subgraph "API Layer"
+        APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
+    end
+
+    subgraph "Q&A Layer"
+        QAChain["QAChain"]
+        PageAnalyzer["PageAnalyzer"]
+    end
+
+    subgraph "Support Layer"
+        NameDetector["NameDetector"]
+        ProfileManager["ProfileManager"]
+        PeopleWeaponManager["PeopleWeaponManager"]
+        PersonalityPromptBuilder["PersonalityPromptBuilder"]
+        NameAdapter["NameAdapter"]
+        VectorStore["PostgresVectorStore"]
+        ChatHistoryManager["ChatHistoryManager"]
+        ConfigManager["ConfigManager"]
+        ConnectionPoolManager["ConnectionPoolManager"]
+        Scheduler["ArticleSyncScheduler"]
+    end
+
+    subgraph "External Services"
+        OpenAIAPI["OpenAI API<br/>Chat & Embeddings"]
+        PeopleAPI["People System API<br/>/tymb/people/*"]
+        ArticleAPI["Public Article API<br/>/paprika/articles"]
+        PostgresDB["PostgreSQL"]
+        RedisDB["Redis"]
+    end
+
+    Client["Client / Frontend"] --> APIRouter
+    APIRouter --> QAChain
+    APIRouter --> PageAnalyzer
+    APIRouter --> VectorStore
+    APIRouter --> ChatHistoryManager
+    APIRouter --> Scheduler
+
+    ChatHistoryManager --> RedisDB
+
+    QAChain --> NameDetector
+    QAChain --> ProfileManager
+    QAChain --> PeopleWeaponManager
+    QAChain --> PersonalityPromptBuilder
+    QAChain --> NameAdapter
+    QAChain --> VectorStore
+
+    PageAnalyzer --> QAChain
+
+    NameDetector --> OpenAIAPI
+    QAChain --> OpenAIAPI
+
+    ProfileManager --> PeopleAPI
+    PeopleWeaponManager --> PeopleAPI
+
+    VectorStore --> PostgresDB
+    VectorStore --> ArticleAPI
+
+    PeopleWeaponManager --> PostgresDB
+
+    ConfigManager --> PostgresDB
+    ConnectionPoolManager --> PostgresDB
+    Scheduler --> ArticleAPI`}
+                                    </pre>
+                                  </div>
+                                  <br />
+                                  <p>Maya Sawa V2</p><a href="https://github.com/Vinskao/maya-sawa-v2" target="_blank">maya-sawa-v2</a>
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`graph TD
+  %% 使用者與入口
+  U["User"] --> Q["ask-with-model API<br/>question"]
+  Q --> P["Full-text Retrieval Pipeline"]
+
+  %% 檢索流程
+  subgraph "Pipeline"
+    P --> N["Normalize/Lowercase<br/>trim punctuation"]
+    N --> E{"Compute Embedding?"}
+    E -- Yes --> EM["OpenAI Embeddings<br/>(text-embedding-3-small) → qvec(1536)"]
+    E -- No --> SKIP["Skip vector branch"]
+
+    %% Postgres 檢索（Trigram 與 Vector）
+    subgraph "PostgreSQL"
+      direction LR
+      PG1["Trigram Search<br/>content % :query<br/>similarity(content, :query) as text_sim"]:::trgm
+      PG2["Vector Search<br/>1 - (embedding <=> :qvec) as vec_sim"]:::vec
+      IDX1["GIN Index<br/>idx_articles_content_trgm<br/>(content gin_trgm_ops)"]:::idx
+      IDX2["IVFFlat Index<br/>idx_articles_embedding_ivfcos<br/>(embedding vector_cosine_ops)"]:::idx
+      EXT1["EXTENSION pg_trgm<br/>set_limit(:min_sim)"]:::ext
+      EXT2["EXTENSION pgvector"]:::ext
+    end
+
+    EM --> PG2
+    SKIP -.-> PG1
+    N --> PG1
+    PG1 --> MRG["Merge & Rank<br/>score = 0.6*text_sim + 0.4*vec_sim"]
+    PG2 --> MRG
+    MRG --> TOPK["Top-K Articles"]
+  end
+
+  %% 後處理與回傳
+  TOPK --> CTX["Build Context from Articles<br/>(title + snippet)"]
+  CTX --> AI["LLM Call (OpenAI/Gemini/Qwen/Mock)"]
+  AI --> RESP["Answer + Citations/No Knowledge Notice"]
+  RESP --> RDS["Redis ChatHistory<br/>chat:session:{sid}"]
+  RESP --> OUT["API Response"]
+
+  %% 資料表與索引
+  subgraph "articles schema"
+    TBL["articles<br/>- id BIGSERIAL PK<br/>- file_path VARCHAR(500) UNIQUE<br/>- content TEXT NOT NULL<br/>- file_date TIMESTAMP NOT NULL<br/>- embedding vector(1536)"]:::tbl
+  end
+  TBL -. indexed by .-> IDX1
+  TBL -. indexed by .-> IDX2
+
+  %% 樣式
+  classDef trgm fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px
+  classDef vec fill:#fce4ec,stroke:#d81b60,stroke-width:1px
+  classDef idx fill:#fff3e0,stroke:#fb8c00,stroke-width:1px
+  classDef ext fill:#ede7f6,stroke:#5e35b1,stroke-width:1px
+  classDef tbl fill:#f1f8e9,stroke:#43a047,stroke-width:1px`}
+                                    </pre>
+                                  </div>
+
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`graph TB
+    subgraph "前端層"
+        A[用戶介面] --> B[API 客戶端]
+    end
+
+    subgraph "API 層"
+        B --> A1[ask-with-model]
+        B --> A2[chat-history]
+        B --> A3[available-models]
+        B --> A4[add-model]
+        B --> A5[healthz]
+        B --> A6[legacy-chat-history]
+    end
+
+    subgraph "服務層"
+        S1[FilterChainManager] --> S2[KMSourceManager]
+        S3[ChatHistoryService] --> R[(Redis)]
+        S4[AIResponseService] --> P1[AI Providers]
+        P1 --> P1a[OpenAI]
+        P1 --> P1b[Gemini]
+        P1 --> P1c[Qwen]
+        P1 --> P1d[Mock]
+    end
+
+    subgraph "資料層"
+        D1[(PostgreSQL)]
+        D2[(Redis)]
+        D3[(Celery Broker)]
+    end
+
+    subgraph "外部系統"
+        E1[Paprika API]
+        E2[OpenAI API]
+        E3[Google Gemini API]
+        E4[Qwen API]
+    end
+
+    %% 關聯
+    A1 --> S1
+    S1 --> S2
+    S2 --> D1
+    A1 --> S3
+    S3 --> D2
+    A1 --> S4
+    S4 --> P1
+    P1a --> E2
+    P1b --> E3
+    P1c --> E4
+    S2 --> E1
+
+    %% DB 關聯
+    A1 --> D1
+    A2 --> D2
+    A4 --> D1
+
+    %% 註解
+    D1:::db
+    D2:::cache
+    D3:::broker
+
+    classDef db fill:#f1f8e9
+    classDef cache fill:#e3f2fd
+    classDef broker fill:#fff3e0`}
+                                    </pre>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))
                         ) : (
