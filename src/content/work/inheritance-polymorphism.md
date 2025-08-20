@@ -99,21 +99,25 @@ public static void case2() {
 #### 實現多型的範例
 
 ```java
-interface A (){
+interface A {
     void getValue();
 }
-interface B() implement {
+
+interface B extends A {
     @Override
-    default void getValue(){System.out.println(1);}
+    default void getValue() {
+        System.out.println(1);
+    }
 }
-class C() extends ClassB{
-    // 有實現多型，只要用非C class來實力化與呼叫方法就算
-    public void add(A a){ a.getValue(); }
-    public void add(B b){ a.getValue(); }
-    public void add(A a, B b){ a.getValue(); b.getValue(); }
+
+class C implements B {
+    // 有實現多型，只要用非C class來實例化與呼叫方法就算
+    public void add(A a) { a.getValue(); }
+    public void add(B b) { b.getValue(); }
+    public void add(A a, B b) { a.getValue(); b.getValue(); }
     // 沒實現多型
-    public void add(C c){c.getValue();}
-    public void add(C c1,C c2){c1.getValue();}
+    public void add(C c) { c.getValue(); }
+    public void add(C c1, C c2) { c1.getValue(); }
 }
 ```
 

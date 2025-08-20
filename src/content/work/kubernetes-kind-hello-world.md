@@ -1,12 +1,12 @@
 ---
-title: K8s Set Up With Kind
+title: Kubernetes Setup with Kind - Hello World
 publishDate: 2024-04-25 12:00:00
 img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/04/25
 tags:
-  - K8s
+  - Kubernetes
   - Kind
   - Spring Boot
   - Hello World
@@ -101,7 +101,7 @@ public class DemoApplication {
 }
 ```
 
-#### Docketfile 撰寫
+## Dockerfile 撰寫
 
 ```Dockerfile
 # 使用包含 Maven 的 Java 基礎映像
@@ -126,7 +126,7 @@ COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar /app/demo.jar
 CMD ["java", "-jar", "/app/demo.jar"]
 ```
 
-#### kind-config.yaml 撰寫
+## kind-config.yaml 撰寫
 
 ##### control-plane
 
@@ -165,7 +165,7 @@ nodes:
   - role: worker
 ```
 
-#### deployment.yaml 撰寫
+## deployment.yaml 撰寫
 
 ```yaml
 apiVersion: apps/v1
@@ -209,7 +209,7 @@ spec:
             # 容器需要暴露的端口，這裡暴露 8080 端口供外部訪問。
 ```
 
-#### service.yaml 撰寫
+## service.yaml 撰寫
 
 ```yaml
 apiVersion: v1
@@ -226,17 +226,17 @@ spec:
     app: hello-kubernetes
 ```
 
-### 叢集
+## 叢集
 
 叢集（由 Kind 管理）提供了一個本地 Kubernetes 環境，可以模擬生產環境的部署。
 
-#### 創建叢集
+### 創建叢集
 
 ```bash
 kind create cluster --config kind-config.yaml
 ```
 
-### 鏡像
+## 鏡像
 
 #### 建構鏡像
 
@@ -251,7 +251,7 @@ docker login
 docker push papakao/hello-kubernetes:1.0
 ```
 
-### 部署
+## 部署
 
 #### 套用 deployment.yaml
 
@@ -271,7 +271,7 @@ Pod 是部署的基本單元，每個 Pod 包含了應用程式的一個容器�
 kubectl apply -f service.yaml
 ```
 
-### 驗證部署
+## 驗證部署
 
 #### 查看 Pods
 
@@ -291,13 +291,13 @@ kubectl logs hello-kubernetes-7b8d6cd658-9zv26
 kubectl get svc
 ```
 
-### 查看 Hello World (目前是 Whitelabel Error Page)
+## 查看 Hello World (目前是 Whitelabel Error Page)
 
 ```bash
 curl http://localhost:30000
 ```
 
-## 現在想要改 Hello World 專案讓他可以在網頁顯示，重新打包專案部署怎麼做？
+## 修改 Hello World 專案以在網頁顯示
 
 ```java
 package com.example.demo;
@@ -322,19 +322,19 @@ public class DemoApplication {
 }
 ```
 
-#### 重新建置 Docker 映像
+### 重新建置 Docker 映像
 
 ```bash
 docker build -t papakao/hello-kubernetes:1.1 .
 ```
 
-#### 將新的映像轉移到 Docker Hub
+### 將新的映像轉移到 Docker Hub
 
 ```bash
 docker push papakao/hello-kubernetes:1.1
 ```
 
-#### deployment.yaml 更新版本
+### deployment.yaml 更新版本
 
 ```yaml
 apiVersion: apps/v1
@@ -358,7 +358,7 @@ spec:
             - containerPort: 8080
 ```
 
-#### 應用程式更新
+### 應用程式更新
 
 ```bash
 kubectl apply -f deployment.yaml
@@ -366,7 +366,7 @@ kubectl apply -f deployment.yaml
 
 Kubernetes 會自動進行滾動更新，逐步替換舊版本的 Pod 為新版本，而不會導致服務中斷。
 
-#### 驗證更新
+### 驗證更新
 
 ```bash
 kubectl get pods
@@ -375,7 +375,7 @@ kubectl describe deployments hello-kubernetes
 kubectl logs deployments hello-kubernetes
 ```
 
-### 查看 Hello World
+## 查看 Hello World
 
 ```bash
 curl http://localhost:30000

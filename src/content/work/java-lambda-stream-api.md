@@ -17,7 +17,10 @@ tags:
 Lambda 表達式是 Java 8 中引入的一個重要特性，它可以用來建立匿名函數（或稱為閉包），從而實現函數式程式設計的一些特性。 Lambda 表達式主要用於簡化函數式介面（Functional Interface）的實作。
 
 ```java
-
+// Lambda 表達式範例
+Runnable runnable = () -> System.out.println("Hello Lambda!");
+Consumer<String> consumer = (String s) -> System.out.println(s);
+Function<String, Integer> function = (String s) -> s.length();
 ```
 
 #### ::
@@ -140,7 +143,7 @@ stream 後面一定要加終端操作，但不一定要加中間操作。
 
 ```java
 List<Integer> list = Arrays.stream(array).boxed().collect(Collectors.toList()); // [5, 1, 3, 2, 4]
-List<Integer> list = Arrays.stream(array).sorted().boxed().collect(Collectors.toList()); // [1, 2, 3, 4, 5]
+List<Integer> sortedList = Arrays.stream(array).sorted().boxed().collect(Collectors.toList()); // [1, 2, 3, 4, 5]
 // 不加boxed()會錯，要加基礎型別int轉成參用Integer才能調用方法，reason: no instance(s) of type variable(s) A, T exist so that Collector<T, A, List<T>> conforms to Supplier<R>
 ```
 
@@ -151,7 +154,7 @@ ArrayList<Integer> arrayList = new ArrayList<>();
 for (int num : array) {
     arrayList.add(num);
 }
-List<Object> streamArrayList = arrayList.stream().sorted().collect(Collectors.toList());
+List<Integer> streamArrayList = arrayList.stream().sorted().collect(Collectors.toList());
 System.out.println(streamArrayList); // [1, 2, 3, 4, 5]
 ```
 
@@ -166,10 +169,10 @@ Set<Integer> set = new HashSet<>();
 for (int num : array) {
     set.add(num);
 }
-Set<Object> streamHashSet = set.stream().collect(Collectors.toCollection(HashSet::new));
+Set<Integer> streamHashSet = set.stream().collect(Collectors.toCollection(HashSet::new));
 // [1, 2, 3, 4, 5]
 // HashSet::new 表示調用 HashSet 類的無參數建構子，用來創建一個新的 HashSet 物件
-Set<Object> streamHashSet = set.stream().sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+Set<Integer> sortedHashSet = set.stream().sorted().collect(Collectors.toCollection(LinkedHashSet::new));
 // [1, 2, 3, 4, 5]
 ```
 
@@ -182,12 +185,12 @@ HashMap<Integer, Integer> originalMap = new HashMap<>();
 for(int i=0; i < array.length; i++){
     originalMap.put(i+1, array[i]);
 }
-HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
+LinkedHashMap<Integer, Integer> sortedByKey = originalMap.entrySet().stream()
         .sorted(Map.Entry.comparingByKey())
         .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll);
         // {1=5, 2=1, 3=3, 4=2, 5=4}
 
-HashMap<Integer, Integer> sortedEntrySet = originalMap.entrySet().stream()
+LinkedHashMap<Integer, Integer> sortedByValue = originalMap.entrySet().stream()
         .sorted(Map.Entry.comparingByValue())
         .collect(LinkedHashMap::new, (map,entry) -> map.put(entry.getKey(), entry.getValue()),LinkedHashMap::putAll);
         // {2=1, 4=2, 3=3, 5=4, 1=5}

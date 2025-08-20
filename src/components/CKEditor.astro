@@ -283,7 +283,7 @@ const token = url.searchParams.get('token');
             } catch (error) {
                 console.error('保存內容失敗:', error);
                 if (error.response) {
-                    if (error.response.status === 401) showStatus('儲存失敗: 未授權訪問。只儲存到本地', 'warning');
+                    if (error.response.status === 401) showStatus('儲存失敗: 未授權訪問。只儲存到本地，可先登入後再試試', 'warning');
                     else showStatus(`儲存失敗: 伺服器錯誤 ${error.response.status}。已備份到本地`, 'error');
                 } else if (error.request) showStatus('儲存失敗: 未收到伺服器響應。已備份到本地', 'error');
                 else showStatus(`儲存失敗: ${error.message}。已備份到本地`, 'error');

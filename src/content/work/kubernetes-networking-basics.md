@@ -6,8 +6,8 @@ img_alt: A bright pink sheet of paper used to wrap flowers curves in front of ri
 description: |
   2024/12/13
 tags:
-  - K8s
-  - Network
+  - Kubernetes
+  - Networking
 ---
 
 # Kubernetes Networking

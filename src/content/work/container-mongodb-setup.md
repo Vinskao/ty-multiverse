@@ -11,11 +11,11 @@ tags:
   - Container
 ---
 
-##### 目標
+## 目標
 
 建立兩個 Docker Container，MongoDB Container、Mongo Express Container，其中 Mongo Express 是 MongoDB 的 GUI，兩個 Container 之間是需要連線的。
 
-#### 建立 Docker 網路
+### 建立 Docker 網路
 
 創建一個驅動類型為 bridge 的網路。
 
@@ -29,7 +29,7 @@ docker network create -d bridge mongo-network
 docker network ls
 ```
 
-#### 創造 Volume 以儲存 mongoDB 資料
+### 創造 Volume 以儲存 mongoDB 資料
 
 ```bash
 docker volume create mongo_data_volume
@@ -37,15 +37,15 @@ docker volume create mongo_data_volume
 
 建立完成後，mongo_data_volume 將在 Docker 的捲管理系統中註冊，並在本機檔案系統上建立目錄來儲存資料。 這個目錄將由 Docker 管理，可以將它掛載到容器中的適當位置來儲存資料。 透過建立卷，可以確保即使容器被刪除，資料也將保留，並且可以在其他容器中共享使用。
 
-### Container 1：MongoDB
+## Container 1：MongoDB
 
-##### 從 Docker Hub 拉取 mongo 鏡像檔
+#### 從 Docker Hub 拉取 mongo 鏡像檔
 
 ```bash
 docker pull mongo
 ```
 
-#### 部署 Docker 映像
+### 部署 Docker 映像
 
 部署映像意味著在 Docker 環境中啟動一個容器，並讓它運行特定的映像，以提供某種服務或應用程式。
 
@@ -58,13 +58,13 @@ docker pull mongo
 docker run -itd --name mongo_volume -p 27017:27017 --network mongo-network -v mongo_data_volume:/data/db mongo:latest
 ```
 
-#### 連線到 mongoDB
+### 連線到 mongoDB
 
 ```bash
 docker exec -it mongo_volume mongosh --host localhost --port 27017
 ```
 
-#### 建立使用者
+### 建立使用者
 
 ```javascript
 use admin
@@ -78,23 +78,23 @@ db.createUser(
 exit;
 ```
 
-#### 登入
+### 登入
 
 ```javascript
 db.auth("admin", "password");
 ```
 
-### Container 2：Mongo Express
+## Container 2：Mongo Express
 
 mongo-express 是 mongoDB 的 GUI。
 
-##### 從 Docker Hub 拉取 mongo-express 鏡像檔
+#### 從 Docker Hub 拉取 mongo-express 鏡像檔
 
 ```bash
 docker pull mongo-express:latest
 ```
 
-#### 部署 Docker 映像
+### 部署 Docker 映像
 
 這邊要寫跟上面 mongoDB 部署時所創建的 server 名稱。
 
