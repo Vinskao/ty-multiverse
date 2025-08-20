@@ -1,13 +1,14 @@
 ---
-title: Project Setup On K8s
+title: Docker & Kubernetes Commands
 publishDate: 2024-05-06 13:00:00
 img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/05/06
 tags:
-  - K8s
+  - Kubernetes
   - Docker
+  - Commands
 ---
 
 # Docker 與 Kubernetes 指令大全

@@ -6,7 +6,7 @@ img_alt: Pearls of silky soft white cotton, bubble up under vibrant lighting
 description: |
   Click the image to verify the authentic copy.
 tags:
-  - Fuctional Programming
+  - Functional Programming
   - Object Oriented Programming
 ---
 
@@ -16,4 +16,4 @@ As part of this certification, tianyikao built the following projects and got al
 2. Roman Numeral Converter	
 3. Caesars Cipher	
 4. Telephone Number Validator	
-5. ash Register
+5. Cash Register

@@ -13,15 +13,15 @@ tags:
   - Container
 ---
 
-#### 網路部分（共同）
+## 網路部分（共同）
 
 ```bash
 docker network create discord_network
 ```
 
-#### SQL 部分
+## SQL 部分
 
-##### 先備份舊容器數據複製至本機
+### 先備份舊容器數據複製至本機
 
 先啟動 SQL Server 容器後執行以下：
 
@@ -29,31 +29,31 @@ docker network create discord_network
 docker cp sql_volume:/var/opt/mssql /Users/vinskao/volume/temp
 ```
 
-##### 從本機複製到新容器
+### 從本機複製到新容器
 
 ```bash
 docker cp /Users/vinskao/volume/temp sql_edge:/var/opt/mssql
 ```
 
-##### 創建新 volume
+### 創建新 volume
 
 ```bash
 docker volume create discord_db_data
 ```
 
-##### 開啟本機資料夾修改權限
+### 開啟本機資料夾修改權限
 
 ```bash
 sudo chmod -R 777 /Users/vinskao/volume/temp
 ```
 
-##### 將本機資料放入 discord_db_data
+### 將本機資料放入 discord_db_data
 
 ```bash
 docker run --rm -v discord_db_data:/var/opt/mssql -v /Users/vinskao/volume/temp:/backup alpine cp -a /backup/. /var/opt/mssql
 ```
 
-##### 執行 SQL 鏡像
+### 執行 SQL 鏡像
 
 ```bash
 docker run -e "ACCEPT_EULA=Y" \
@@ -69,9 +69,9 @@ docker run -e "ACCEPT_EULA=Y" \
    mcr.microsoft.com/azure-sql-edge
 ```
 
-#### Spring Boot 部分
+## Spring Boot 部分
 
-##### Docketfile 撰寫
+### Dockerfile 撰寫
 
 ```Dockerfile
 # 使用 Maven 和 OpenJDK 11 的官方基礎映像來構建專案
@@ -99,13 +99,13 @@ ENTRYPOINT ["java", "-jar", "/discord.war"]
 EXPOSE 8088
 ```
 
-##### 將 java properties 改成資料庫容器連接點
+### 將 java properties 改成資料庫容器連接點
 
 ```yml
 url: jdbc:sqlserver://sql_edge:1433;databaseName=discord;trustServerCertificate=true
 ```
 
-##### 創造 Image
+### 創造 Image
 
 在 Spring Boot 根目錄執行以下：
 
@@ -113,13 +113,13 @@ url: jdbc:sqlserver://sql_edge:1433;databaseName=discord;trustServerCertificate=
 docker build -t discord-backend .
 ```
 
-##### 創建新 volume
+### 創建新 volume
 
 ```bash
 docker volume create java_logs
 ```
 
-##### 執行 Image
+### 執行 Image
 
 如果 application.yml 沒有設定 datasource
 
@@ -143,9 +143,9 @@ docker run -d -p 8088:8088 --name discord-backend \
   discord-backend
 ```
 
-#### Vue 部分
+## Vue 部分
 
-##### Docketfile 撰寫
+### Dockerfile 撰寫
 
 ```Dockerfile
 # 使用 Node.js 官方镜像作为构建环境
@@ -171,13 +171,13 @@ CMD ["npx", "vite", "--host", "--port", "8090", "--no-open"]
 
 ```
 
-##### 創建新 volume
+### 創建新 volume
 
 ```bash
 docker volume create vue_storage
 ```
 
-##### 創造 Image
+### 創造 Image
 
 在 Vue 根目錄執行以下：
 
@@ -185,7 +185,7 @@ docker volume create vue_storage
 docker build -t discord-frontend .
 ```
 
-##### 執行 Image
+### 執行 Image
 
 在容器內的/app 目錄會掛載到主機上的 vue_storage 目錄。
 

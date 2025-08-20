@@ -1,16 +1,16 @@
 ---
-title: Project Setup On K8s
+title: Kubernetes Project Setup with Kind
 publishDate: 2024-04-25 13:00:00
 img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/04/25
 tags:
-  - K8s
+  - Kubernetes
   - Kind
   - Frontend
   - Backend
-  - DB
+  - Database
 ---
 
 本專案有 3 個必要服務：客戶端服務、伺服器端服務、資料庫服務。

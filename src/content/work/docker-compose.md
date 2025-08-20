@@ -18,7 +18,7 @@ tags:
 
 init-db.sql 裡面放資料庫一啟動就想要建立的表跟插入的資料，直接在跟目錄建立一個 data 資料夾，然後把 sql 檔案放入。
 
-#### Docketfile 撰寫
+## Dockerfile 撰寫
 
 ##### Spring Boot
 
@@ -75,7 +75,7 @@ EXPOSE 8090
 CMD ["npx", "vite", "--host", "--port", "8090", "--no-open"]
 ```
 
-#### docker-compose.yml
+## docker-compose.yml
 
 此檔案寫入前後端、資料庫的啟動容器設定。
 
@@ -151,7 +151,7 @@ docker-compose up
 
 就可以一次啟動整個服務。但是因為是同時啟動，如果有資料庫要先完成，後端再插入初始資料的需求，就可能在後端插入資料時資料庫還沒建好。
 
-#### start-services.sh
+## start-services.sh
 
 此為腳本，目的為決定 docker-coompose 中服務的執行順序。在每個服務啟動中間設定等待時間，以確保後啟動的服務可以運用先啟動的服務之功能。
 
