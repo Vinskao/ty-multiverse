@@ -44,7 +44,9 @@
             { "name": "Django Rest", "level": "shade4" },
             { "name": "Express.js", "level": "shade4" },
             { "name": "Laravel", "level": "shade3" },
-            { "name": "FastAPI", "level": "shade3" }
+            { "name": "FastAPI", "level": "shade3" },
+            { "name": "ExecutorService", "level": "shade3" },
+            { "name": "ConcurrentHashMap", "level": "shade3" }
           ]
         },
         {
@@ -61,7 +63,8 @@
             { "name": "JPA", "level": "shade1" },
             { "name": "Mybatis 3", "level": "shade1" },
             { "name": "JDBCTemplate", "level": "shade1" },
-            { "name": "Mongoose.js", "level": "shade4" }
+            { "name": "Mongoose.js", "level": "shade4" },
+            { "name": "HikariCP", "level": "shade2" }
           ]
         },
         {
@@ -81,7 +84,10 @@
             { "name": "Mokito", "level": "shade3" },
             { "name": "Servlet 5", "level": "shade3" },
             { "name": "Maven", "level": "shade2" },
-            { "name": "Poetry", "level": "shade3" }
+            { "name": "Poetry", "level": "shade3" },
+            { "name": "DataIntegrityViolationException", "level": "shade3" },
+            { "name": "MethodArgumentNotValidException", "level": "shade3" },
+            { "name": "Chain of Responsibility", "level": "shade3" }
           ]
         }
       ]
@@ -138,6 +144,7 @@
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
             { "name": "PGVector", "level": "shade5" },
+            { "name": "pg_trgm", "level": "shade4" },
             { "name": "MSSQL", "level": "shade1" },
             { "name": "SQLite", "level": "shade1" },
             { "name": "MySQL", "level": "shade3" },
@@ -159,7 +166,8 @@
           "skills": [
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
-            { "name": "Redis", "level": "shade3" }
+            { "name": "Redis", "level": "shade3" },
+            { "name": "Celery", "level": "shade4" }
           ]
         }
       ]
@@ -216,7 +224,6 @@
             ]
           },
           "skills": [
-            { "name": "JBoss EAP 7 Runtime Image", "level": "shade1" },
             { "name": "JBoss EAP 7 8", "level": "shade1" },
             { "name": "Tomcat", "level": "shade3" }
           ]
@@ -358,8 +365,7 @@
           },
           "skills": [
             { "name": "Shell", "level": "shade1" },
-            { "name": "Bash", "level": "shade1" },
-            { "name": "Python", "level": "shade1" }
+            { "name": "Bash", "level": "shade1" }
           ]
         },
         {

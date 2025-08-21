@@ -309,10 +309,14 @@ font-weight: bold;
 
 .skills-section {
 margin-top: 1.5rem;
+width: auto;
+max-width: none;
 }
 
 .skill-category {
 margin-bottom: 1rem;
+width: auto;
+max-width: none;
 }
 
 .skill-category h5 {
@@ -353,6 +357,9 @@ margin-bottom: 0;
 
 .skill-subcategory {
 margin-bottom: 0.8rem;
+width: auto;
+max-width: none;
+display: block;
 }
 
 .skill-subcategory h6 {
@@ -395,11 +402,14 @@ margin-bottom: 0;
 display: flex;
 flex-wrap: wrap;
 gap: 0.3rem;
+width: auto;
+max-width: none;
+align-items: flex-start;
 }
 
 /* Pill styles for skills */
 .skill-tags .pill {
-display: inline-block;
+display: inline-block !important;
 margin: 3px 6px 3px 0;
 padding: 5px 10px;
 border-radius: 20px;
@@ -408,6 +418,10 @@ font-size: 14px;
 transition: all 0.3s ease;
 position: relative;
 cursor: pointer;
+width: auto !important;
+max-width: none !important;
+flex: none !important;
+align-self: flex-start;
 }
 
 .skill-tags .pill:hover {
@@ -416,6 +430,10 @@ font-size: 16px;
 font-weight: bold;
 white-space: normal;
 overflow: visible;
+width: auto !important;
+max-width: none !important;
+flex: none !important;
+align-self: flex-start;
 }
 
 /* Tooltip styles */
@@ -435,11 +453,15 @@ opacity: 0;
 visibility: hidden;
 transition: opacity 0.3s ease, visibility 0.3s ease;
 z-index: 1000;
+width: auto;
+max-width: none;
 }
 
 .skill-tags .pill:hover::after {
 opacity: 1;
 visibility: visible;
+width: auto;
+max-width: none;
 }
 
 /* Pill color classes */
@@ -451,39 +473,49 @@ visibility: visible;
 --shade5: #1abfff;
 }
 
-.pill1 { background-color: #b06c13; }
-.pill2 { background-color: #b7a414; }
-.pill3 { background-color: #306998; }
-.pill4 { background-color: #47a248; }
-.pill5 { background-color: #2496ed; }
-.pill6 { background-color: #0052cc; }
-.pill7 { background-color: #671f74; }
-.pill8 { background-color: #6e1431; }
-.pill9 { background-color: #146e66; }
-.pill10 { background-color: #2b5797; }
+.pill1 { background-color: #b06c13; width: auto; max-width: none; }
+.pill2 { background-color: #b7a414; width: auto; max-width: none; }
+.pill3 { background-color: #306998; width: auto; max-width: none; }
+.pill4 { background-color: #47a248; width: auto; max-width: none; }
+.pill5 { background-color: #2496ed; width: auto; max-width: none; }
+.pill6 { background-color: #0052cc; width: auto; max-width: none; }
+.pill7 { background-color: #671f74; width: auto; max-width: none; }
+.pill8 { background-color: #6e1431; width: auto; max-width: none; }
+.pill9 { background-color: #146e66; width: auto; max-width: none; }
+.pill10 { background-color: #2b5797; width: auto; max-width: none; }
 
 /* Shade levels for skill proficiency */
-.shade1 { opacity: 1.0; }
-.shade2 { opacity: 0.8; }
-.shade3 { opacity: 0.6; }
-.shade4 { opacity: 0.4; }
-.shade5 { opacity: 0.2; }
+.shade1 { opacity: 1.0; width: auto; max-width: none; }
+.shade2 { opacity: 0.8; width: auto; max-width: none; }
+.shade3 { opacity: 0.6; width: auto; max-width: none; }
+.shade4 { opacity: 0.4; width: auto; max-width: none; }
+.shade5 { opacity: 0.2; width: auto; max-width: none; }
 
 /* Special classes */
 .pill.jwt,
 .pill.spring-security {
 /* Removed special styling to fix spacing issue */
+width: auto !important;
+max-width: none !important;
+flex: none !important;
+align-self: flex-start;
 }
 
 .pill.jwt:hover,
 .pill.spring-security:hover {
 /* Removed special hover styling */
+width: auto !important;
+max-width: none !important;
+flex: none !important;
+align-self: flex-start;
 }
 
 .job-tags {
 display: flex;
 flex-wrap: wrap;
 gap: 0.5rem;
+width: auto;
+max-width: none;
 }
 
 .tag {
@@ -494,11 +526,15 @@ border-radius: 20px;
 font-size: 0.85rem;
 font-weight: 500;
 transition: all 0.3s ease;
+width: auto;
+max-width: none;
 }
 
 .tag:hover {
 transform: translateY(-2px);
 box-shadow: 0 4px 8px rgba(81, 70, 149, 0.3);
+width: auto;
+max-width: none;
 }
 
 /* Responsive Design for Experience */
@@ -520,16 +556,22 @@ box-shadow: 0 4px 8px rgba(81, 70, 149, 0.3);
 
 .skill-tags {
     gap: 0.4rem;
+    width: auto;
+    max-width: none;
 }
 
 .skill-tags .pill {
     font-size: 0.8rem;
     padding: 0.25rem 0.6rem;
+    width: auto;
+    max-width: none;
 }
 
 .tag {
     font-size: 0.8rem;
     padding: 0.3rem 0.8rem;
+    width: auto;
+    max-width: none;
 }
 }
 
@@ -580,6 +622,21 @@ section {
     height: auto;
     margin: 0;
 }
+
+.skill-tags {
+    width: auto;
+    max-width: none;
+}
+
+.skill-tags .pill {
+    width: auto;
+    max-width: none;
+}
+
+.skill-subcategory {
+    width: auto;
+    max-width: none;
+}
 }
 
 @media (min-width: 75em) {
@@ -595,6 +652,21 @@ section {
     max-width: 100%;
     width: 100%;
     height: auto;
+}
+
+.skill-tags {
+    width: auto;
+    max-width: none;
+}
+
+.skill-tags .pill {
+    width: auto;
+    max-width: none;
+}
+
+.skill-subcategory {
+    width: auto;
+    max-width: none;
 }
 }
 
@@ -617,6 +689,21 @@ section {
     height: auto;
     margin: 0;
     border-radius: 1rem;
+}
+
+.skill-tags {
+    width: auto;
+    max-width: none;
+}
+
+.skill-tags .pill {
+    width: auto;
+    max-width: none;
+}
+
+.skill-subcategory {
+    width: auto;
+    max-width: none;
 }
 }
 
@@ -679,6 +766,21 @@ section {
     margin-bottom: 1.5rem !important;
 }
 
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
+}
+
 .job-header h3 {
     font-size: 1.1rem !important;
     margin-bottom: 0.5rem !important;
@@ -692,13 +794,39 @@ section {
 }
 
 .skill-tags {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
     gap: 0.3rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    max-width: none !important;
+    align-items: flex-start;
 }
 
 .skill-tags .pill {
     font-size: 0.75rem !important;
     padding: 0.2rem 0.5rem !important;
     margin: 2px 4px 2px 0 !important;
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    align-self: flex-start;
 }
 
 .mermaid-diagram {
@@ -714,6 +842,12 @@ section {
 .mermaid-diagram svg {
     max-width: 100% !important;
     height: auto !important;
+}
+
+.skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
+    display: block !important;
 }
 }
 
@@ -734,6 +868,24 @@ section {
 
 .content {
     font-size: 0.9rem !important;
+}
+
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
 }
 }
 
@@ -758,6 +910,23 @@ section {
 .skill-tags .pill {
     font-size: 0.7rem !important;
     padding: 0.15rem 0.4rem !important;
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+}
+
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
 }
 }
 
@@ -782,6 +951,23 @@ section {
 .skill-tags .pill {
     font-size: 0.65rem !important;
     padding: 0.1rem 0.3rem !important;
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+}
+
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
 }
 }
 
@@ -801,6 +987,23 @@ section {
 .skill-tags .pill {
     -webkit-tap-highlight-color: transparent !important;
     touch-action: manipulation !important;
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+}
+
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
 }
 
 .mermaid-diagram {
@@ -838,6 +1041,23 @@ section {
 .skill-tags .pill {
     font-size: 0.7rem !important;
     padding: 0.15rem 0.4rem !important;
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+}
+
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
 }
 }
 
@@ -851,10 +1071,84 @@ section,
 .experience-item,
 .education-item,
 .job-header,
-.job-meta,
-.skill-tags {
+.job-meta {
     display: flex !important;
     flex-direction: column !important;
+}
+
+/* 確保 skill 相關容器不會被強制為垂直排列 */
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+/* 確保 skill 相關容器在所有設備上正確顯示 */
+@media screen and (max-width: 767px) {
+    .skills-section,
+    .skill-category,
+    .skill-subcategory {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    
+    .skill-subcategory {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        margin-bottom: 0.8rem !important;
+    }
+    
+    .skill-tags {
+        width: auto !important;
+        max-width: none !important;
+    }
+    
+    .skill-tags .pill {
+        width: auto !important;
+        max-width: none !important;
+    }
+}
+
+/* 確保 skill 相關容器在所有設備上正確顯示 */
+@media screen and (max-width: 767px) {
+    .skills-section,
+    .skill-category,
+    .skill-subcategory {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    
+    .skill-subcategory {
+        display: block !important;
+        width: auto !important;
+        max-width: none !important;
+        margin-bottom: 0.8rem !important;
+    }
+    
+    .skill-tags {
+        width: auto !important;
+        max-width: none !important;
+    }
+    
+    .skill-tags .pill {
+        width: auto !important;
+        max-width: none !important;
+    }
+}
+
+/* 保持 skill-tags 為水平排列 */
+.skill-tags {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    max-width: none !important;
+    align-items: flex-start;
 }
 
 /* 防止水平滾動 */
@@ -897,6 +1191,24 @@ section,
     max-width: 100% !important;
     height: auto !important;
 }
+
+/* 確保 skill-tags 中的 pills 正確顯示 */
+.skill-tags .pill {
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    align-self: flex-start;
+}
+
+/* 確保 skill 相關容器在強制佈局中正確顯示 */
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
 }
 
 /* 添加動畫效果 */
@@ -927,11 +1239,21 @@ section:nth-child(3) {
 .theme-dark .skill-tags .pill {
     background-color: rgba(200, 200, 200, 0.15);
     color: rgba(220, 220, 220, 0.9);
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    align-self: flex-start;
 }
 
 .theme-dark .skill-tags .pill:hover {
     background-color: rgba(200, 200, 200, 0.25);
     color: rgba(240, 240, 240, 1);
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    align-self: flex-start;
 }
 
 .theme-dark .experience-item li,
@@ -942,6 +1264,19 @@ section:nth-child(3) {
 .theme-dark .skill-category h5,
 .theme-dark .skill-subcategory h6 {
     color: rgba(230, 230, 230, 0.95);
+}
+
+.theme-dark .skills-section,
+.theme-dark .skill-category,
+.theme-dark .skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.theme-dark .skill-tags {
+    width: auto !important;
+    max-width: none !important;
 }
 
 .theme-dark .project-experience h4,
@@ -1120,6 +1455,22 @@ section:nth-child(3) {
   text-align: left !important;
 }
 
+/* 確保 skill 相關元素在 background-content 中正確顯示 */
+.background-content .skill-tags {
+  width: auto !important;
+  max-width: none !important;
+}
+
+.background-content .skill-tags .pill {
+  width: auto !important;
+  max-width: none !important;
+}
+
+.background-content .skill-subcategory {
+  width: auto !important;
+  max-width: none !important;
+}
+
 @media print {
   html, body {
     height: auto !important;
@@ -1135,6 +1486,22 @@ section:nth-child(3) {
     box-shadow: none !important;
     background: none !important;
     padding: 0 !important;
+  }
+  
+  /* 確保 skill 相關元素在 print 模式下正確顯示 */
+  .skill-tags {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
   }
   section {
     page-break-before: auto;
@@ -1163,9 +1530,106 @@ section:nth-child(3) {
     background: none !important;
     box-shadow: none !important;
   }
+  
+  /* 確保 skill 相關元素在 print 模式下正確顯示 */
+  .skill-tags {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* 確保 skill-tags 在 print 模式下正確顯示 */
+  .skill-tags {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-tags .pill {
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+  }
+  
+  /* 確保 skill 相關容器在 print 模式下正確顯示 */
+.skills-section,
+.skill-category,
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+/* 確保 skill-subcategory 在 print 模式下正確顯示 */
+.skill-subcategory {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-bottom: 0.8rem !important;
+}
+
+/* 確保 skill 相關元素在 print 模式下正確顯示 */
+.skill-tags {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
+}
+
+/* 確保 skill-tags 在 print 模式下正確顯示 */
+.skill-tags {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.skill-tags .pill {
+    display: inline-block !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+}
   /* 避免頁首空白 */
   body {
     margin: 0 !important;
     padding: 0 !important;
+  }
+  
+  /* 確保 skill 相關元素在 print 模式下正確顯示 */
+  .skill-tags {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-tags .pill {
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .skill-subcategory {
+    width: auto !important;
+    max-width: none !important;
   }
 }
