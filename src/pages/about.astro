@@ -61,25 +61,6 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
         </section>
         
         <section>
-          <h2 class="section-title">Education</h2>
-          <div class="content education-container">
-            {aboutData.education.map((item) => (
-              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
-                <div class="education-header">
-                  <h3>{item.institution}</h3>
-                  <span class="education-period">{item.period}</span>
-                </div>
-                <ul>
-                  {item.programs.map((program) => (
-                    <li>{program}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-        
-        <section>
           <h2 class="section-title">Project Experience</h2>
           <div class="content">
             {experienceData.map((job) => (
@@ -101,6 +82,25 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                   </div>
                 </div>
               )
+            ))}
+          </div>
+        </section>
+        
+        <section>
+          <h2 class="section-title">Education</h2>
+          <div class="content education-container">
+            {aboutData.education.map((item) => (
+              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
+                <div class="education-header">
+                  <h3>{item.institution}</h3>
+                  <span class="education-period">{item.period}</span>
+                </div>
+                <ul>
+                  {item.programs.map((program) => (
+                    <li>{program}</li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
         </section>
@@ -446,24 +446,20 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                               {subcategory.name === "NoSQL" && (
                                 <div class="mermaid-diagram">
                                   <pre class="mermaid">
-                                    sequenceDiagram
-                                        participant Frontend as Frontend
-                                        participant Django as Django API
-                                        participant Redis as Redis Queue
-                                        participant Consumer as Consumer Service
-                                        participant Mongo as MongoDB
-
-                                        Frontend->>Django: 1. Call Push API
-                                        Django->>Redis: 2. Push to Redis List
-                                        Consumer->>Redis: 3. Pop from Redis List
-                                        Consumer->>Mongo: 4. Update Increment in Document
-                                        Frontend->>Django: 5. Call Count API
-                                        Django->>Mongo: 6. Query Count from Document
-                                        Mongo-->>Django: Return Count
-                                        Django-->>Frontend: Return Count
-
-                                        Note over Frontend,Mongo: Asynchronous Visit Count Processing
-                                        Note over Redis,Consumer: Using Consumer YAML Configuration
+                                    graph LR
+    A[Backend<br/>Spring Boot<br/>REST Endpoints] --> B[RabbitMQ<br/>Message Queue]
+    B --> C[Consumer<br/>Spring Boot<br/>JDBC Processing]
+    C --> D[PostgreSQL<br/>Database]
+    
+    classDef producer fill:#e1f5fe
+    classDef mq fill:#f3e5f5
+    classDef consumer fill:#e8f5e8
+    classDef database fill:#ffebee
+    
+    class A producer
+    class B mq
+    class C consumer
+    class D database
                                   </pre>
                                 </div>
                               )}

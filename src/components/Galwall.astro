@@ -34,17 +34,30 @@ import '../styles/galwall.css';
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
+      if (!import.meta.env.PUBLIC_TYMB_URL) {
+        throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+      }
+      const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+      
+      const response = await fetch(`${TYMB_URL}/people/get-all`, {
         method: "POST",
         headers,
         credentials: 'include'
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch character list');
+        console.error('Galwall API response not ok:', response.status, response.statusText);
+        throw new Error(`Failed to fetch character list: ${response.status}`);
       }
       
       const data = await response.json();
+      
+      // 檢查返回的數據格式
+      if (!Array.isArray(data)) {
+        console.error('Galwall API returned non-array data:', data);
+        throw new Error('API returned invalid data format - expected array');
+      }
+      
       return data.map(char => char.name);
     } catch (error) {
       console.error('Error fetching character list:', error);

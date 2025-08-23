@@ -190,6 +190,14 @@ import '../styles/levellist.css';
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
+  // 檢查環境變量
+  if (!import.meta.env.PUBLIC_TYMB_URL) {
+    throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+  }
+  if (!import.meta.env.PUBLIC_PEOPLE_IMAGE_URL) {
+    throw new Error('PUBLIC_PEOPLE_IMAGE_URL 環境變量未設置');
+  }
+  
   // no longer require weapon calculation helper here
   
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
@@ -252,25 +260,28 @@ import '../styles/levellist.css';
   // 創建角色卡片
   function createCharacterCard(character, levelColor) {
     const characterContainer = document.createElement('div');
-    characterContainer.style.cssText = 'display:inline-block;height:300px;text-align:center;position:relative;z-index:1;margin-right:-20px;';
+    // 使用 CSS 類別，不需要內聯樣式
+    characterContainer.className = 'character-card';
 
     const img = document.createElement('img');
-    img.style.cssText = 'height:300px;width:auto;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;transition:opacity 0.5s ease-in-out;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
     img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
     img.alt = character.nameOriginal;
     img.onerror = function() {
       this.src = `${PEOPLE_IMAGE_URL}/default.png`;
     };
 
-    // 設置容器寬度，讓圖片維持固定高度
-    characterContainer.style.width = 'auto';
-    characterContainer.style.marginLeft = '0px';
-    
     // 圖片加載完成後設置容器寬度
     img.onload = function() {
       const imgElement = this as HTMLImageElement;
       const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
-      const containerWidth = 300 * aspectRatio;
+      // 根據螢幕尺寸決定高度
+      let targetHeight = 300; // 桌面版
+      if (window.innerWidth <= 480) {
+        targetHeight = 200; // 小螢幕
+      } else if (window.innerWidth <= 768) {
+        targetHeight = 250; // 手機版
+      }
+      const containerWidth = targetHeight * aspectRatio;
       characterContainer.style.width = `${containerWidth}px`;
     };
 
@@ -284,15 +295,22 @@ import '../styles/levellist.css';
       
       if (hasFightingImage) {
         const fightingImg = document.createElement('img');
-        fightingImg.style.cssText = img.style.cssText + 'opacity:0;width:auto;z-index:10;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
         fightingImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
         fightingImg.alt = `${character.nameOriginal} Fighting`;
+        fightingImg.style.opacity = '0';
         
         // 戰鬥圖片加載完成後也設置容器寬度
         fightingImg.onload = function() {
           const imgElement = this as HTMLImageElement;
           const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
-          const containerWidth = 300 * aspectRatio;
+          // 根據螢幕尺寸決定高度
+          let targetHeight = 300; // 桌面版
+          if (window.innerWidth <= 480) {
+            targetHeight = 200; // 小螢幕
+          } else if (window.innerWidth <= 768) {
+            targetHeight = 250; // 手機版
+          }
+          const containerWidth = targetHeight * aspectRatio;
           characterContainer.style.width = `${containerWidth}px`;
         };
         
@@ -302,15 +320,22 @@ import '../styles/levellist.css';
       
       if (hasRuinedImage) {
         const ruinedImg = document.createElement('img');
-        ruinedImg.style.cssText = img.style.cssText + 'opacity:0;width:auto;z-index:10;image-rendering:optimizeSpeed;image-rendering:-moz-crisp-edges;image-rendering:-webkit-optimize-contrast;image-rendering:optimize-contrast;image-rendering:pixelated;';
         ruinedImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`;
         ruinedImg.alt = `${character.nameOriginal} Ruined`;
+        ruinedImg.style.opacity = '0';
         
         // 毀壞圖片加載完成後也設置容器寬度
         ruinedImg.onload = function() {
           const imgElement = this as HTMLImageElement;
           const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
-          const containerWidth = 300 * aspectRatio;
+          // 根據螢幕尺寸決定高度
+          let targetHeight = 300; // 桌面版
+          if (window.innerWidth <= 480) {
+            targetHeight = 200; // 小螢幕
+          } else if (window.innerWidth <= 768) {
+            targetHeight = 250; // 手機版
+          }
+          const containerWidth = targetHeight * aspectRatio;
           characterContainer.style.width = `${containerWidth}px`;
         };
         
@@ -355,7 +380,7 @@ import '../styles/levellist.css';
 
     // 創建信息容器
     const infoContainer = document.createElement('div');
-    infoContainer.style.cssText = 'padding:5px;color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:200px;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;border-radius:5px;';
+    infoContainer.style.cssText = 'padding:5px;color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:100%;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;border-radius:5px;';
 
     // 添加名稱
     const nameText = document.createElement('p');
@@ -399,8 +424,10 @@ import '../styles/levellist.css';
       }
     };
     
-    // 立即獲取最新戰力
-    fetchLatestPower();
+    // 立即獲取最新戰力 - 使用延遲避免並發過多
+    setTimeout(() => {
+      fetchLatestPower();
+    }, Math.random() * 2000); // 隨機延遲 0-2 秒
 
     infoContainer.appendChild(nameText);
     infoContainer.appendChild(attributesText);
@@ -517,7 +544,82 @@ import '../styles/levellist.css';
     console.log('📊 戰力統計更新:', stats);
   }
 
-    // 全局變量來存儲角色數據
+  // 通用 API 調用函數，包含重試機制
+  async function apiCallWithRetry(url: string, options: RequestInit = {}, maxRetries = 3, delayMs = 1000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超時
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response;
+      } catch (error) {
+        console.warn(`API 調用失敗 (嘗試 ${attempt}/${maxRetries}):`, error);
+        
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // 等待後重試
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      }
+    }
+  }
+
+  // 批次處理 API 調用，限制並發數
+  async function batchFetchPowerData(characters: any[], batchSize = 5, delayMs = 1000) {
+    const results: Array<{name: string, power: number} | null> = [];
+    
+    for (let i = 0; i < characters.length; i += batchSize) {
+      const batch = characters.slice(i, i + batchSize);
+      
+      // 並發處理當前批次
+      const batchPromises = batch.map(async (character) => {
+        try {
+          const resp = await apiCallWithRetry(
+            `${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(character.name)}`,
+            { method: 'GET' },
+            2, // 最多重試 2 次
+            500 // 500ms 延遲
+          );
+          
+          if (resp) {
+            const text = await resp.text();
+            const dmgInt = parseInt(text, 10);
+            if (!isNaN(dmgInt) && dmgInt > 0) {
+              return { name: character.name, power: dmgInt };
+            }
+          }
+        } catch (e) {
+          console.error(`❌ ${character.name} 獲取最新戰力失敗:`, e);
+        }
+        return null;
+      });
+      
+      // 等待當前批次完成
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults.filter(r => r !== null));
+      
+      // 批次間延遲，避免對後端造成過大壓力
+      if (i + batchSize < characters.length) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+    
+    return results;
+  }
+
+  // 全局變量來存儲角色數據
   let characterPowerMap = new Map();
   let characterFactionMap = new Map();
 
@@ -1281,32 +1383,40 @@ import '../styles/levellist.css';
     try {
       console.log('🔄 開始同步所有角色數據...');
       
-      // 1. 從 TYMB API 獲取所有角色數據
+      // 1. 從 TYMB API 獲取所有角色數據 - 添加超時和重試機制
       const response = await fetch(`${TYMB_URL}/people/get-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        credentials: 'include'
+        credentials: 'include',
+        signal: AbortSignal.timeout(30000) // 30秒超時
       });
       
       if (!response.ok) {
+        console.error('Sync API response not ok:', response.status, response.statusText);
         throw new Error(`獲取角色數據失敗: ${response.status}`);
       }
       
       const characters = await response.json();
+      
+      // 檢查返回的數據格式
+      if (!Array.isArray(characters)) {
+        console.error('Sync API returned non-array data:', characters);
+        throw new Error('API returned invalid data format - expected array');
+      }
       console.log(`✅ 成功獲取 ${characters.length} 個角色數據`);
       
-      // 2. 透過代理端點發送到 Google Apps Script
-      // 根據當前路徑動態構建 API URL
+      // 2. 透過代理端點發送到 Google Apps Script - 添加超時機制
       const basePath = window.location.pathname.includes('/tymultiverse') ? '/tymultiverse' : '';
       const syncResponse = await fetch(`${basePath}/api/sync-characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(characters)
+        body: JSON.stringify(characters),
+        signal: AbortSignal.timeout(60000) // 60秒超時
       });
       
       if (!syncResponse.ok) {
@@ -1688,9 +1798,18 @@ import '../styles/levellist.css';
         credentials: 'include'
       });
       
-      if (!response.ok) throw new Error('Failed to fetch character list');
+      if (!response.ok) {
+        console.error('API response not ok:', response.status, response.statusText);
+        throw new Error(`Failed to fetch character list: ${response.status}`);
+      }
       
       const data = await response.json();
+      
+      // 檢查返回的數據格式
+      if (!Array.isArray(data)) {
+        console.error('API returned non-array data:', data);
+        throw new Error('API returned invalid data format - expected array');
+      }
       
       // 計算每個角色的總戰力並獲取武器資訊
       const charactersWithPower = await Promise.all(
@@ -1842,7 +1961,25 @@ import '../styles/levellist.css';
         container.appendChild(mainContainer);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading Levellist:', error);
+      
+      // 顯示用戶友好的錯誤訊息
+      if (typeof (window as any).Swal !== 'undefined') {
+        (window as any).Swal.fire({
+          title: '載入失敗',
+          text: `無法載入角色數據: ${error.message}`,
+          icon: 'error',
+          confirmButtonText: '重新整理',
+          showCancelButton: true,
+          cancelButtonText: '取消'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.reload();
+          }
+        });
+      } else {
+        alert(`載入失敗: ${error.message}`);
+      }
     }
   });
 </script>
