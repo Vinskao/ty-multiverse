@@ -85,8 +85,7 @@
             { "name": "Servlet 5", "level": "shade3" },
             { "name": "Maven", "level": "shade2" },
             { "name": "Poetry", "level": "shade3" },
-            { "name": "DataIntegrityViolationException", "level": "shade3" },
-            { "name": "MethodArgumentNotValidException", "level": "shade3" },
+            { "name": "Exception Handling", "level": "shade3" },
             { "name": "Chain of Responsibility", "level": "shade3" }
           ]
         }
