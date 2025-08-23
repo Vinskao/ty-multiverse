@@ -10,29 +10,20 @@
       "period": "2024/3~Present",
       "projectExperience": {
         "en": [
-          "Document Management System: Implemented multi-layered Spring Boot application with @EnableWebSocket, @EnableRetry, @EnableAsync, @EnableScheduling, @EnableCaching, @EnableRedisHttpSession, @EnableWebSecurity, and @EnableMethodSecurity for comprehensive backend functionality; designed dual PostgreSQL data sources with HikariCP connection pools, implementing indexed queries and batch operations for optimal performance; built WebSocket and RESTful APIs for seamless frontend-backend communication; established comprehensive unit testing framework with JUnit5 and Mockito, and deployed monitoring dashboards using Grafana and Prometheus",
-          "DevOps Management Portal: Configured @EnableWebSecurity and @EnableMethodSecurity with JWT Authentication, OAuth2 Resource Server, and CORS configuration for enterprise-grade security",
-          "External Portal: Implemented Redis-based caching with TTL management, session storage (tymb:sessions), and distributed locks for high-concurrency scenarios; configured @EnableRedisHttpSession with Redis session store, implementing session timeout and session fixation protection",
-          "Portal Website: Built comprehensive error handling system with ordered exception handlers for business logic, data integrity, and validation errors",
-          "DevOps Team Lab: Designed OCI VCN architecture with Bastion, Public/Private Subnets, OKE clusters, and Load Balancer configurations using Terraform infrastructure as code",
-          "Customer Portal Q&A Assistant System: Developed FastAPI-based QA system with LangChain integration, implementing multi-character personality-based RAG chatbots and hybrid retrieval pipelines; implemented PostgreSQL pg_trgm and pgvector extensions with GIN and IVFFlat indexes for advanced semantic search capabilities; built support for multiple LLM APIs with fallback strategies and no-knowledge handling to reduce hallucination risks",
-          "Built JBoss War Deployment CI/CD Pipeline for UAT/PROD, 10+ UAT servers implemented",
-          "SSO System Architecture & Integration: Designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
-          "Java Ecosystem Modernization: Led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17",
-          "DevOps & Containerization: Implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose",
-          "Upgraded RHEL from 7 to 8 for 20+ servers"
+          "Document Management System: Built multi-layered Spring Boot application with comprehensive backend features (@EnableRetry, @EnableCaching, @EnableRedisHttpSession, @EnableWebSecurity, @EnableMethodSecurity); designed dual PostgreSQL data sources with HikariCP connection pools, implementing composite indexes, batch queries, and N+1 query optimization; implemented WebSocket and RESTful APIs; established unit testing with JUnit5/Mockito and monitoring with Grafana/Prometheus",
+          "External Portal & Portal Website: Implemented Redis-based caching with TTL management, session storage, and distributed locks for high-concurrency scenarios; configured @EnableRedisHttpSession with session timeout and fixation protection; built comprehensive error handling system with ordered exception handlers",
+          "Customer Portal Q&A Assistant System: Developed FastAPI-based QA system with LangChain integration, implementing multi-character personality-based RAG chatbots and hybrid retrieval pipelines; implemented PostgreSQL pg_trgm and pgvector extensions with GIN and IVFFlat indexes for advanced semantic search; built support for multiple LLM APIs with fallback strategies and no-knowledge handling to reduce hallucination risks",
+          "DevOps Management Portal: Configured enterprise-grade security with @EnableWebSecurity, @EnableMethodSecurity, JWT Authentication, OAuth2 Resource Server, and CORS; designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
+          "DevOps Team Lab: Designed OCI VCN architecture with Bastion, Public/Private Subnets, OKE clusters, and Load Balancer using Terraform",
+          "System Modernization & Deployment: Built JBoss War Deployment CI/CD Pipeline for UAT/PROD (10+ UAT servers); implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose; led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17; upgraded RHEL from 7 to 8 for 20+ servers"
         ],
         "zh": [
-          "文件管理系統：實作多層次 Spring Boot 應用，整合 @EnableWebSocket、@EnableRetry、@EnableAsync、@EnableScheduling、@EnableCaching、@EnableRedisHttpSession、@EnableWebSecurity 與 @EnableMethodSecurity 以提供完整的後端功能；設計雙 PostgreSQL 資料來源，使用 HikariCP 連線池，實作索引查詢與批次操作以優化效能；打造 WebSocket 與 RESTful API 以實現前後端無縫溝通；建立完善的單元測試框架（JUnit5、Mockito），並使用 Grafana 與 Prometheus 部署監控儀表板",
-          "DevOps 管理後台：配置 @EnableWebSecurity 與 @EnableMethodSecurity，整合 JWT 認證、OAuth2 資源伺服器與 CORS 配置，實現企業級安全防護",
-          "外部專區：實作 Redis 基礎快取系統，包含 TTL 管理、會話儲存（tymb:sessions）與分布式鎖，以應對高併發情境；配置 @EnableRedisHttpSession 與 Redis 會話儲存，實作會話逾時與會話固定攻擊防護",
-          "入口網站：建立完整的錯誤處理系統，包含有序的異常處理器，處理業務邏輯、資料完整性與驗證錯誤",
-          "DevOps Team Lab：設計 OCI VCN 架構，包含 Bastion、Public/Private Subnets、OKE 叢集與負載平衡器配置，使用 Terraform 基礎設施即程式碼建置",
-          "客戶專區附加的問答輔助系統：開發 FastAPI 基礎問答系統，整合 LangChain，實作多角色個性化 RAG 聊天機器人與混合檢索管道；實作 PostgreSQL pg_trgm 與 pgvector 擴展，使用 GIN 與 IVFFlat 索引以提供進階語義搜尋功能；建立對多 LLM API 的支援，包含回退策略與無知識處理，以降低幻覺風險",
-          "SSO 系統架構與整合：使用 Keycloak 與 RedHat SSO 設計並實作企業級 SSO 解決方案，確保安全驗證",
-          "Java 生態系現代化：主導將 JBoss、MVC 與 Spring/Spring Boot 應用從 Java 8/11 升級至 Java 17",
-          "DevOps 與容器化：實作 Linux 離線部署策略，並使用 Kubernetes 與 Docker Compose 將應用容器化",
-          "為 20+ 台伺服器將 RHEL 從 7 升級至 8"
+          "文件管理系統：建置多層次 Spring Boot 應用，整合完整後端功能（@EnableRetry、@EnableCaching、@EnableRedisHttpSession、@EnableWebSecurity、@EnableMethodSecurity）；設計雙 PostgreSQL 資料來源與 HikariCP 連線池，實作複合索引、批次查詢與 N+1 查詢優化；實作 WebSocket 與 RESTful API；建立 JUnit5/Mockito 單元測試與 Grafana/Prometheus 監控",
+          "外部專區與入口網站：實作 Redis 基礎快取系統，包含 TTL 管理、會話儲存與分布式鎖，以應對高併發情境；配置 @EnableRedisHttpSession 與會話逾時及固定攻擊防護；建立完整的錯誤處理系統，包含有序的異常處理器",
+          "客戶專區附加的問答輔助系統：開發 FastAPI 基礎問答系統，整合 LangChain，實作多角色個性化 RAG 聊天機器人與混合檢索管道；實作 PostgreSQL pg_trgm 與 pgvector 擴展，使用 GIN 與 IVFFlat 索引以提供進階語義搜尋；建立對多 LLM API 的支援，包含回退策略與無知識處理，以降低幻覺風險",
+          "DevOps 管理後台：配置企業級安全防護（@EnableWebSecurity、@EnableMethodSecurity、JWT 認證、OAuth2 資源伺服器、CORS）；使用 Keycloak 與 RedHat SSO 設計並實作企業級 SSO 解決方案，確保安全驗證",
+          "DevOps Team Lab：設計 OCI VCN 架構，包含 Bastion、Public/Private Subnets、OKE 叢集與負載平衡器，使用 Terraform 建置",
+          "系統現代化與部署：建置 JBoss War Deployment CI/CD Pipeline for UAT/PROD（10+ UAT 伺服器）；實作 Linux 離線部署策略，並使用 Kubernetes 與 Docker Compose 將應用容器化；主導將 JBoss、MVC 與 Spring/Spring Boot 應用從 Java 8/11 升級至 Java 17；為 20+ 台伺服器將 RHEL 從 7 升級至 8"
         ]
       }
     },
