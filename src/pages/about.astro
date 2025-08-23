@@ -172,11 +172,14 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                       {`classDiagram
                                           %% Application Layer
                                           class TYMBackendApplication {
-                                              +@SpringBootApplication
                                               +@EnableWebSocket
                                               +@EnableRetry
                                               +@EnableAsync
                                               +@EnableScheduling
+                                              +@EnableCaching
+                                              +@EnableRedisHttpSession
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
                                           }
                                           
                                           %% Security Layer
@@ -206,25 +209,27 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                               +@EnableCaching
                                               +RedisConnectionFactory
                                               +RedisTemplate
+                                              +TTL Management
                                               +damage-calculations
                                               +tymb:sessions
                                               +Distributed Lock
+                                              +Lua Scripts
                                           }
                                           
                                           class PrimaryDataSourceConfig {
-                                              +PrimaryHikariCP (5 connections)
-                                              +maximum-pool-size: 5
-                                              +minimum-idle: 1
-                                              +connection-timeout: 30s
-                                              +leak-detection-threshold: 60s
+                                              +PrimaryHikariCP
+                                              +HikariCP Connection Pool
+                                              +Connection Management
+                                              +Connection Timeout
+                                              +Leak Detection
                                           }
                                           
                                           class PeopleDataSourceConfig {
-                                              +PeopleHikariCP (5 connections)
-                                              +maximum-pool-size: 5
-                                              +minimum-idle: 1
-                                              +connection-timeout: 30s
-                                              +leak-detection-threshold: 60s
+                                              +PeopleHikariCP
+                                              +HikariCP Connection Pool
+                                              +Connection Management
+                                              +Connection Timeout
+                                              +Leak Detection
                                           }
                                           
                                           class SessionConfig {
@@ -232,6 +237,8 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                               +Redis Session Store
                                               +Session Timeout
                                               +Session Fixation
+                                              +Session Security
+                                              +Concurrent Session Control
                                           }
                                           
                                           %% Infrastructure Layer
