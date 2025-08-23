@@ -1,5 +1,8 @@
 ---
 // 獲取環境變數
+if (!import.meta.env.PUBLIC_TYMB_URL) {
+  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+}
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
 const SSO_URL = import.meta.env.PUBLIC_SSO_URL;
 const PEOPLE_IMG_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;

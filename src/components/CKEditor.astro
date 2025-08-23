@@ -1,5 +1,8 @@
 ---
 // 從環境變數獲取 API 基礎 URL
+if (!import.meta.env.PUBLIC_TYMB_URL) {
+  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+}
 const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
 
 // 獲取 URL 參數來檢查登入狀態

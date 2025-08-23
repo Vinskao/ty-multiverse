@@ -91,8 +91,15 @@
 </style>
 
 <script>
-  const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-  const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+  if (!import.meta.env.PUBLIC_TYMB_URL) {
+  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+}
+if (!import.meta.env.PUBLIC_PEOPLE_IMAGE_URL) {
+  throw new Error('PUBLIC_PEOPLE_IMAGE_URL 環境變量未設置');
+}
+
+const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
   
   // 定義軍隊顏色映射
   const ARMY_COLORS = {

@@ -116,6 +116,14 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   }
 
   // 全局設置與狀態
+  // 檢查環境變量
+  if (!import.meta.env.PUBLIC_TYMB_URL) {
+    throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+  }
+  if (!import.meta.env.PUBLIC_PEOPLE_IMAGE_URL) {
+    throw new Error('PUBLIC_PEOPLE_IMAGE_URL 環境變量未設置');
+  }
+
   const config = {
     baseImagePath: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/",
     apiEndpoint: `${import.meta.env.PUBLIC_TYMB_URL}/people/get-by-name`,
@@ -1057,7 +1065,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     console.log(`Cleared ${side} side localStorage data`);
   }
 
-  // 通用的武器 API 調用函數
+    // 通用的武器 API 調用函數
   async function fetchWeaponData(ownerName: string) {
     const token = localStorage.getItem('token');
     const headers: Record<string, string> = {

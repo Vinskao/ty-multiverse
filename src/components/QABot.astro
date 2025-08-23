@@ -283,7 +283,10 @@ import '../styles/qabot.css';
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
       try {
-        const apiBase = import.meta.env.PUBLIC_TYMB_URL;
+        if (!import.meta.env.PUBLIC_TYMB_URL) {
+  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+}
+const apiBase = import.meta.env.PUBLIC_TYMB_URL;
         const token = localStorage.getItem('token');
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'

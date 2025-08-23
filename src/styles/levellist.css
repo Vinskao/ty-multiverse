@@ -40,6 +40,65 @@
   padding: 20px;
 }
 
+/* 確保圖片容器不會因為內容而改變大小 */
+.box-container > div {
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+/* 角色卡片統一樣式 */
+.character-card {
+  display: inline-block;
+  height: 300px;
+  width: auto; /* 讓寬度根據圖片比例自動調整 */
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin: 0 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+/* 角色卡片內的圖片統一樣式 */
+.character-card img {
+  height: 300px !important;
+  width: auto !important;
+  max-width: none !important; /* 移除最大寬度限制 */
+  display: block !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border: none !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10 !important;
+  transition: opacity 0.5s ease-in-out !important;
+  image-rendering: optimizeSpeed !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: optimize-contrast !important;
+  image-rendering: pixelated !important;
+}
+
+/* 角色信息容器統一樣式 */
+.character-card > div:last-child {
+  padding: 5px;
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+  width: 100%;
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  overflow: hidden;
+  font-size: 12px;
+  z-index: 4;
+  background-color: transparent;
+  border-radius: 5px;
+}
+
 .character-info {
   display: none;
   position: fixed;
@@ -318,5 +377,45 @@ html.theme-dark {
 
   .box-container {
     gap: 12px;
+  }
+
+  /* 手機版角色卡片樣式 */
+  .character-card {
+    height: 250px;
+    width: auto; /* 讓寬度根據圖片比例自動調整 */
+    margin: 0 5px;
+  }
+
+  .character-card img {
+    height: 250px !important;
+  }
+
+
+
+  /* 手機版信息容器樣式 */
+  .character-card > div:last-child {
+    font-size: 10px;
+    bottom: -35px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 小螢幕角色卡片樣式 */
+  .character-card {
+    height: 200px;
+    width: auto; /* 讓寬度根據圖片比例自動調整 */
+    margin: 0 3px;
+  }
+
+  .character-card img {
+    height: 200px !important;
+  }
+
+
+
+  /* 小螢幕信息容器樣式 */
+  .character-card > div:last-child {
+    font-size: 8px;
+    bottom: -30px;
   }
 }

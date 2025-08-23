@@ -156,18 +156,21 @@
           "description": {
             "en": [
               "Deployed Redis server with producer (API server with visit count API) and consumer (deployed individually) services to record website visit counts for handling large numbers of concurrent requests",
-              "Experienced with Redis and have used redis-cli for basic commands. Mainly used Redis to store order and temporary data in a matching simulation system, and used simple commands like GET, SET, and DEL to check if keys were written correctly or to clear test data. Also implemented atomic operations with Lua scripts, but mostly called them from the application rather than running EVAL directly in the CLI."
+              "Integrated Redis for form state management system, implementing session storage and temporary data caching, with Lua scripts for atomic operations and application-level integration for data persistence and state synchronization.",
+              "Implemented RabbitMQ-based asynchronous message processing architecture with producer-consumer pattern. Designed TYMBackendApplication as producer with AsyncMessageService and RabbitMQConfig for message publishing. Deployed RabbitMQ 4.1 Management server as message broker with queue management and async processing capabilities. Built dedicated Consumer Pod for message processing and database write operations, ensuring reliable message delivery and fault tolerance. This architecture enables scalable, decoupled communication between backend services and database operations, supporting high-throughput message processing with guaranteed delivery semantics."
             ],
             "zh": [
               "部署 Redis 伺服器，搭配 producer（具訪問計數 API 的 API 伺服器）與 consumer（獨立部署）服務，記錄網站訪問次數，以因應大量並發請求",
-              "熟悉 Redis，曾使用 redis-cli 執行基本指令。主要在撮合模擬系統中使用 Redis 儲存訂單與暫存資料，透過 GET、SET、DEL 檢查鍵值或清除測試資料，也以 Lua 腳本實作原子操作（多由應用程式呼叫，而非直接在 CLI 中執行 EVAL）"
+              "整合 Redis 進行表單狀態管理系統，實作會話儲存與暫存資料快取，以 Lua 腳本實作原子操作並透過應用程式層級整合進行資料持久化與狀態同步。",
+              "實作基於 RabbitMQ 的非同步訊息處理架構，採用 producer-consumer 模式。設計 TYMBackendApplication 作為 producer，整合 AsyncMessageService 與 RabbitMQConfig 進行訊息發布。部署 RabbitMQ 4.1 Management 伺服器作為訊息代理，具備佇列管理與非同步處理能力。建構專用 Consumer Pod 進行訊息處理與資料庫寫入操作，確保可靠訊息傳遞與容錯機制。此架構實現後端服務與資料庫操作間的可擴展、解耦通訊，支援高吞吐量訊息處理並保證傳遞語義。"
             ]
           },
           "skills": [
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
             { "name": "Redis", "level": "shade3" },
-            { "name": "Celery", "level": "shade4" }
+            { "name": "Celery", "level": "shade4" },
+            { "name": "RabbitMQ", "level": "shade3" }
           ]
         }
       ]
