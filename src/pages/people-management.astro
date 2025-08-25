@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/people-management.css";
+
+// 獲取 URL 參數
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+// 檢查登入狀態
+const isLoggedIn = !!username && !!token;
+
+// 如果未登入，重定向到登入頁面
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+---
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色管理系統 | TY Multiverse</title>
+</head>
+<body>
+  <BaseLayout title="角色管理系統" description="管理角色和武器的系統">
+    <div class="container">
+      <div id="people-management-root"></div>
+    </div>
+  </BaseLayout>
+
+  <script>
+    import PeopleManagement from '../components/PeopleManagement';
+    import { createRoot } from 'react-dom/client';
+    import React from 'react';
+
+    // 等待 DOM 載入完成
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('people-management-root');
+      if (container) {
+        const root = createRoot(container);
+        root.render(React.createElement(PeopleManagement));
+      }
+    });
+  </script>
+</body>
+</html>
