@@ -25,6 +25,7 @@ import '../styles/qabotv2.css';
     private kbEl: HTMLInputElement;
     private userId: string;
     private apiBase: string;
+    private pollingTasks: Map<string, NodeJS.Timeout> = new Map();
 
     constructor() {
       // 將控制列移到 header 底下（若尚未在正確位置）
@@ -69,25 +70,32 @@ import '../styles/qabotv2.css';
 
     private async loadModels() {
       try {
+        console.log('Loading models from:', `${this.apiBase}/maya-v2/available-models/`);
         const resp = await fetch(`${this.apiBase}/maya-v2/available-models/`, { credentials: 'include' });
         if (!resp.ok) throw new Error(`models ${resp.status}`);
         const data = await resp.json();
         
-        // 解析 API 回應格式
-        const models = data?.models || [];
+        console.log('Models API response:', data);
+        
+        // 解析 API 回應格式 - 支援 {models: [...]} 和直接陣列兩種格式
+        const models = data?.models || (Array.isArray(data) ? data : []);
         const activeModels = models.filter((m: any) => m.is_active === true);
+        
+        console.log('Active models:', activeModels);
         
         this.modelSel.innerHTML = '';
         activeModels.forEach((m: any) => {
           const opt = document.createElement('option');
-          opt.value = m.model_id;
+          opt.value = m.model_id || m.name; // 優先使用 model_id，否則使用 name
           opt.textContent = m.name;
           this.modelSel.appendChild(opt);
+          console.log('Added model option:', m.name, 'with value:', opt.value);
         });
         
         // 設定預設選項
         if (!this.modelSel.value && activeModels.length > 0) {
-          this.modelSel.value = activeModels[0].model_id;
+          this.modelSel.value = activeModels[0].model_id || activeModels[0].name;
+          console.log('Set default model:', this.modelSel.value);
         }
       } catch (e) {
         console.error('Failed to load models:', e);
@@ -110,29 +118,96 @@ import '../styles/qabotv2.css';
         const payload = {
           question: q,
           model_name: this.modelSel.value,
-          sync: true,
-          use_knowledge_base: !!this.kbEl.checked,
-          user_id: this.userId
+          sync: false, // 使用異步處理
+          use_knowledge_base: !!this.kbEl.checked
         };
+        
         const resp = await fetch(`${this.apiBase}/maya-v2/ask-with-model/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           credentials: 'include'
         });
+        
         if (!resp.ok) throw new Error(`ask ${resp.status}`);
         const data = await resp.json();
         
-        // 隱藏等待UI
-        this.hideLoadingMessage();
-        
-        // 使用新的格式化方法顯示 AI 回應
-        this.displayAIResponse(data);
+        // 檢查是否有 task_id
+        if (data.task_id) {
+          // 開始輪詢任務狀態
+          this.startPollingTask(data.task_id, q);
+        } else {
+          throw new Error('未收到任務ID');
+        }
       } catch (e) {
         // 隱藏等待UI
         this.hideLoadingMessage();
         this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml((e as Error).message)}</p></div></div>`);
       }
+    }
+
+    private startPollingTask(taskId: string, originalQuestion: string) {
+      // 清除之前的輪詢（如果存在）
+      if (this.pollingTasks.has(taskId)) {
+        clearTimeout(this.pollingTasks.get(taskId)!);
+      }
+
+      const pollTask = async () => {
+        try {
+          const resp = await fetch(`${this.apiBase}/maya-v2/task-status/${taskId}`, {
+            credentials: 'include'
+          });
+          
+          if (!resp.ok) throw new Error(`task status ${resp.status}`);
+          const data = await resp.json();
+          
+          // 調試信息
+          console.log('Task status response:', data);
+          
+          switch (data.status) {
+            case 'SUCCESS':
+              // 任務完成
+              console.log('Task completed successfully:', data);
+              this.hideLoadingMessage();
+              this.displayAIResponse(data);
+              this.pollingTasks.delete(taskId);
+              break;
+              
+            case 'FAILURE':
+              // 任務失敗
+              console.log('Task failed:', data);
+              this.hideLoadingMessage();
+              const errorMsg = data.error || '任務處理失敗';
+              this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml(errorMsg)}</p></div></div>`);
+              this.pollingTasks.delete(taskId);
+              break;
+              
+            case 'PENDING':
+            case 'STARTED':
+              // 任務仍在處理中，繼續輪詢
+              console.log('Task still processing:', data.status);
+              this.updateLoadingMessage(data.status === 'STARTED' ? '處理中...' : '等待中...');
+              this.pollingTasks.set(taskId, setTimeout(pollTask, 2000)); // 2秒後再次檢查
+              break;
+              
+            default:
+              // 未知狀態
+              console.log('Unknown task status:', data.status);
+              this.hideLoadingMessage();
+              this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 未知任務狀態: ${data.status}</p></div></div>`);
+              this.pollingTasks.delete(taskId);
+          }
+        } catch (e) {
+          // 輪詢錯誤
+          console.error('Polling error:', e);
+          this.hideLoadingMessage();
+          this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 輪詢任務狀態失敗: ${escapeHtml((e as Error).message)}</p></div></div>`);
+          this.pollingTasks.delete(taskId);
+        }
+      };
+
+      // 開始輪詢
+      this.pollingTasks.set(taskId, setTimeout(pollTask, 1000)); // 1秒後開始第一次檢查
     }
 
     private showLoadingMessage() {
@@ -143,6 +218,16 @@ import '../styles/qabotv2.css';
         clone.id = 'v2LoadingMessage';
         this.messagesEl.appendChild(clone);
         this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+      }
+    }
+
+    private updateLoadingMessage(message: string) {
+      const loadingEl = document.getElementById('v2LoadingMessage');
+      if (loadingEl) {
+        const messageEl = loadingEl.querySelector('.loading-text');
+        if (messageEl) {
+          messageEl.textContent = message;
+        }
       }
     }
 
@@ -214,32 +299,16 @@ import '../styles/qabotv2.css';
       if (!citations || citations.length === 0) return '';
       
       const citationsList = citations.map((citation, index) => {
-        const provider = citation.provider || '';
-        
-        // 基於 file_path 構建正確的 URL 格式
-        let url = '#';
-        let displayName = '未知文件';
-        
-        if (citation.file_path) {
-          // 移除 .md 副檔名作為顯示名稱
-          displayName = citation.file_path.replace(/\.md$/, '');
-          
-          // 根據環境構建 URL
-          if ((import.meta as any).env.DEV) {
-            url = `http://localhost:4321/tymultiverse/work/${displayName}`;
-          } else {
-            url = `https://peoplesystem.tatdvsonorth.com/tymultiverse/work/${displayName}`;
-          }
-        }
+        const source = citation.source || '';
+        const content = citation.content || '';
         
         return `
           <div class=\"citation-item\">
             <span class=\"citation-number\">${index + 1}</span>
             <div class=\"citation-content\">
-              <a href=\"${escapeHtml(url)}\" target=\"_blank\" class=\"citation-link\">
-                ${escapeHtml(displayName)}
-              </a>
-              ${provider ? `<span class=\"citation-provider\">${escapeHtml(provider)}</span>` : ''}
+              <div class=\"citation-source\">${escapeHtml(source)}</div>
+              ${content ? `<div class=\"citation-text\">${escapeHtml(content)}</div>` : ''}
+              ${citation.relevance_score ? `<div class=\"citation-score\">相關度: ${(citation.relevance_score * 100).toFixed(1)}%</div>` : ''}
             </div>
           </div>
         `;
@@ -257,6 +326,14 @@ import '../styles/qabotv2.css';
         </div>
       `;
     }
+
+    // 清理方法，用於停止所有輪詢
+    public cleanup() {
+      this.pollingTasks.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+      this.pollingTasks.clear();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -271,6 +348,11 @@ import '../styles/qabotv2.css';
       } else if (mode === 'v1') {
         v2.hide();
       }
+    });
+
+    // 頁面卸載時清理輪詢
+    window.addEventListener('beforeunload', () => {
+      v2.cleanup();
     });
   });
 </script>

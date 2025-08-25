@@ -1,0 +1,257 @@
+/* People Management 樣式 */
+
+.people-management {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.people-management h2 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem;
+}
+
+.people-management h3 {
+  color: #34495e;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 5px;
+}
+
+.section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e8ed;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+button.danger {
+  background: #e74c3c;
+}
+
+button.danger:hover {
+  background: #c0392b;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.error-container {
+  background: #fdf2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  color: #dc2626;
+}
+
+.error-container h3 {
+  margin-top: 0;
+  color: #dc2626;
+}
+
+.people-list,
+.weapons-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.person-card,
+.weapon-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 15px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.person-card:hover,
+.weapon-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.person-card h4,
+.weapon-card h4 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.person-card p,
+.weapon-card p {
+  margin: 5px 0;
+  color: #5a6c7d;
+  font-size: 14px;
+}
+
+.damage-result {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.damage-result h4 {
+  margin-top: 0;
+  color: #0c5460;
+}
+
+.damage-result p {
+  margin: 5px 0;
+  color: #0c5460;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .people-management {
+    padding: 10px;
+  }
+  
+  .section {
+    padding: 15px;
+  }
+  
+  .people-list,
+  .weapons-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .button-group button {
+    width: 100%;
+  }
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.person-card,
+.weapon-card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 載入動畫 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+/* 成功狀態 */
+.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+/* 警告狀態 */
+.warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
