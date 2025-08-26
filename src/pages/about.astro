@@ -275,44 +275,6 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                     </pre>
                                   </div>
 
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
-                                          class CacheStrategy {
-                                              +@Cacheable
-                                              +Redis Storage
-                                              +TTL Management
-                                              +Cache Eviction
-                                          }
-                                          
-                                          class DamageCache {
-                                              +damage-calculations::name
-                                              +Weapon Damage Results
-                                              +People Attributes
-                                          }
-                                          
-                                          class SessionCache {
-                                              +tymb:sessions
-                                              +CKEditor Drafts
-                                              +Game States
-                                          }
-                                          
-                                          class DistributedLock {
-                                              +lock:content:save
-                                              +lock:metrics:export:lock
-                                              +lock:livestock:getAll:lock
-                                              +lock:livestock:save
-                                              +lock:scheduled:cleanup:old:data:lock
-                                              +lock:scheduled:generate:weekly:report:lock
-                                              +lock:scheduled:backup:data:lock
-                                              +lock:scheduled:health:check:lock
-                                          }
-                                          
-                                          CacheStrategy --> DamageCache
-                                          CacheStrategy --> SessionCache
-                                          CacheStrategy --> DistributedLock`}
-                                    </pre>
-                                  </div>
 
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
@@ -630,73 +592,155 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                     </pre>
                                   </div>
 
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`graph TB
-    subgraph "Frontend Layer"
-        A[User Interface] --> B[API Client]
+                                                                     <div class="mermaid-diagram">
+                                     <pre class="mermaid">
+                                       {`graph TB
+    subgraph "前端層"
+        A[用戶介面] --> B[API 客戶端]
     end
 
-    subgraph "API Layer"
-        B --> A1[ask-with-model]
-        B --> A2[chat-history]
-        B --> A3[available-models]
-        B --> A4[add-model]
-        B --> A5[healthz]
-        B --> A6[legacy-chat-history]
+    subgraph "API 層"
+        B --> A1[ask-with-model<br/>異步處理]
+        B --> A2[task-status<br/>任務狀態查詢]
+        B --> A3[available-models<br/>可用模型列表]
+        B --> A4[add-model<br/>添加模型]
+        B --> A5[chat-history<br/>聊天歷史]
+        B --> A6[legacy-chat-history<br/>舊版聊天歷史]
+        B --> A7[healthz<br/>健康檢查]
     end
 
-    subgraph "Service Layer"
-        S1[FilterChainManager] --> S2[KMSourceManager]
-        S3[ChatHistoryService] --> R[(Redis)]
-        S4[AIResponseService] --> P1[AI Providers]
-        P1 --> P1a[OpenAI]
-        P1 --> P1b[Gemini]
-        P1 --> P1c[Qwen]
-        P1 --> P1d[Mock]
+    subgraph "處理層"
+        P1[異步處理<br/>Celery 任務]
+        P2[任務狀態管理<br/>Redis/Celery]
     end
 
-    subgraph "Data Layer"
-        D1[(PostgreSQL)]
-        D2[(Redis)]
-        D3[(Celery Broker)]
+    subgraph "Agent 服務層"
+        AS[MayaAgentService<br/>統一服務入口]
     end
 
-    subgraph "External Systems"
-        E1[Paprika API]
-        E2[OpenAI API]
-        E3[Google Gemini API]
-        E4[Qwen API]
+    subgraph "工作流層"
+        WF[MayaAgentWorkflow<br/>圖形化工作流]
+        N1[意圖分類節點<br/>FilterChain]
+        N2[知識檢索節點<br/>KMSourceManager]
+        N3[工具選擇節點<br/>智能工具選擇]
+        N4[工具執行節點<br/>PDF/OCR/計算/搜索]
+        N5[AI 回應生成節點<br/>LLM 調用]
+        N6[結果保存節點<br/>資料持久化]
+        N7[錯誤處理節點<br/>異常處理]
     end
 
-    %% Relationships
-    A1 --> S1
-    S1 --> S2
-    S2 --> D1
-    A1 --> S3
-    S3 --> D2
-    A1 --> S4
-    S4 --> P1
-    P1a --> E2
-    P1b --> E3
-    P1c --> E4
-    S2 --> E1
+    subgraph "能力支撐層"
+        LLM[LLM 能力<br/>OpenAI/Gemini/Qwen]
+        TOOLS[工具能力<br/>PDF/OCR/計算/搜索]
+        MEMORY[記憶能力<br/>Redis/向量記憶]
+        RAG[RAG 能力<br/>pgvector/混合檢索]
+    end
 
-    %% Database Relationships
-    A1 --> D1
-    A2 --> D2
-    A4 --> D1
+    subgraph "資料層"
+        D1[(PostgreSQL<br/>Conversations/Articles)]
+        D2[(Redis<br/>Cache/Memory/Celery)]
+        D3[(RabbitMQ<br/>Celery Broker)]
+    end
 
-    %% Annotations
-    D1:::db
-    D2:::cache
-    D3:::broker
+    subgraph "外部系統"
+        E1[Paprika API<br/>知識庫內容]
+        E2[OpenAI API<br/>GPT-4o/GPT-4.1]
+        E3[Google Gemini API<br/>Gemini Pro/Flash]
+        E4[Qwen API<br/>Qwen Turbo/Plus]
+    end
 
-    classDef db fill:#f1f8e9
-    classDef cache fill:#e3f2fd
-    classDef broker fill:#fff3e0`}
-                                    </pre>
-                                  </div>
+    %% API 到處理層
+    A1 --> P1
+    A2 --> P2
+
+    %% 處理層到 Agent 服務層
+    P1 --> AS
+
+    %% Agent 服務層到工作流層
+    AS --> WF
+
+    %% 工作流節點連接
+    WF --> N1
+    WF --> N2
+    WF --> N3
+    WF --> N4
+    WF --> N5
+    WF --> N6
+    WF --> N7
+
+    %% 工作流節點到能力層
+    N1 --> LLM
+    N2 --> RAG
+    N3 --> TOOLS
+    N4 --> TOOLS
+    N5 --> LLM
+    N6 --> MEMORY
+
+    %% 能力層到資料層
+    LLM --> D1
+    TOOLS --> D1
+    MEMORY --> D2
+    RAG --> D1
+
+    %% Celery 任務到資料層
+    P1 --> D3
+    P2 --> D2
+
+    %% 外部系統連接
+    LLM --> E2
+    LLM --> E3
+    LLM --> E4
+    RAG --> E1
+
+    %% 樣式定義
+    classDef api fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000000
+    classDef process fill:#fff8e1,stroke:#ffa000,stroke-width:3px,color:#000000
+    classDef agent fill:#e3f2fd,stroke:#2196f3,stroke-width:3px,color:#000000
+    classDef workflow fill:#fff3e0,stroke:#ff9800,stroke-width:3px,color:#000000
+    classDef capability fill:#fce4ec,stroke:#e91e63,stroke-width:3px,color:#000000
+    classDef data fill:#f1f8e9,stroke:#43a047,stroke-width:3px,color:#000000
+    classDef external fill:#f3e5f5,stroke:#9c27b0,stroke-width:3px,color:#000000
+
+    class A1,A2,A3,A4,A5,A6,A7 api
+    class P1,P2 process
+    class AS agent
+    class WF,N1,N2,N3,N4,N5,N6,N7 workflow
+    class LLM,TOOLS,MEMORY,RAG capability
+    class D1,D2,D3 data
+    class E1,E2,E3,E4 external`}
+                                     </pre>
+                                   </div>
+
+                                   <div class="mermaid-diagram">
+                                     <pre class="mermaid">
+                                       {`sequenceDiagram
+    participant U as 用戶
+    participant F as 前端
+    participant A as API
+    participant C as Celery Worker
+    participant DB as 資料庫
+
+    U->>F: 發送問題
+    F->>A: POST /maya-v2/ask-with-model/
+    A->>DB: 建立任務記錄
+    A->>C: 發送處理任務
+    A-->>F: 返回 task_id
+    F-->>U: 顯示處理中
+    
+    loop 輪詢狀態
+        F->>A: GET /maya-v2/task-status/{task_id}
+        A->>C: 查詢任務狀態
+        C-->>A: 返回狀態
+        
+        alt 任務完成
+            A-->>F: 返回 AI 回應
+            F-->>U: 顯示結果
+        else 處理中
+            F-->>U: 顯示處理中
+        end
+    end`}
+                                     </pre>
+                                   </div>
                                 </>
                               )}
                             </div>
