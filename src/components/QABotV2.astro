@@ -300,13 +300,23 @@ import '../styles/qabotv2.css';
       
       const citationsList = citations.map((citation, index) => {
         const source = citation.source || '';
+        const filePath = citation.file_path || '';
+        const sourceUrl = citation.source_url || '';
+        const title = citation.title || filePath || source;
         const content = citation.content || '';
+        
+        // 建立連結，如果有 source_url 就使用，否則建立相對連結
+        const linkUrl = sourceUrl || `/work/${filePath}`;
+        const linkText = filePath || source;
         
         return `
           <div class=\"citation-item\">
             <span class=\"citation-number\">${index + 1}</span>
             <div class=\"citation-content\">
-              <div class=\"citation-source\">${escapeHtml(source)}</div>
+              <div class=\"citation-source\">
+                <span class=\"citation-id\">${escapeHtml(source)}</span>
+                ${linkUrl ? `<a href=\"${linkUrl}\" target=\"_blank\" class=\"citation-link\">📄 ${escapeHtml(linkText)}</a>` : ''}
+              </div>
               ${content ? `<div class=\"citation-text\">${escapeHtml(content)}</div>` : ''}
               ${citation.relevance_score ? `<div class=\"citation-score\">相關度: ${(citation.relevance_score * 100).toFixed(1)}%</div>` : ''}
             </div>

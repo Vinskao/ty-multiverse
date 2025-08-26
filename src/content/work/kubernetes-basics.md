@@ -1,5 +1,5 @@
 ---
-title: K8s Basic
+title: "kubernetes-basics"
 publishDate: 2024-12-13 13:00:00
 img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

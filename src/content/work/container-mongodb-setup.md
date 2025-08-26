@@ -1,5 +1,5 @@
 ---
-title: Mongo on Container
+title: "container-mongodb-setup"
 publishDate: 2024-03-17 12:00:00
 img: /tymultiverse/assets/container.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

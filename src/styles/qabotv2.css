@@ -230,6 +230,17 @@
   text-shadow: 0 1px 2px rgba(2, 132, 199, 0.2);
 }
 
+.citation-id {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  padding: 2px 6px;
+  background: rgba(100, 116, 139, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
 .citation-provider {
   font-size: 11px;
   color: #64748b;
@@ -310,6 +321,11 @@
 :root.theme-dark .citation-provider {
   color: #64748b;
   background: rgba(100, 116, 139, 0.2);
+}
+
+:root.theme-dark .citation-id {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.2);
 }
 
 :root.theme-dark .message-content h4 {

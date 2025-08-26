@@ -1,5 +1,5 @@
 ---
-title: Subquery & Aggregate Functions
+title: "sql-subquery-aggregate-functions"
 publishDate: 2024-02-29 22:00:00
 img: /tymultiverse/assets/SQL.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
