@@ -1,5 +1,5 @@
 ---
-title: Java Persistence API
+title: "jpa"
 publishDate: 2024-02-26 16:00:00
 img: /tymultiverse/assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

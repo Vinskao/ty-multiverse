@@ -1,5 +1,5 @@
 ---
-title: System.out.print
+title: "system-out-println"
 publishDate: 2024-02-27 12:00:00
 img: /tymultiverse/assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

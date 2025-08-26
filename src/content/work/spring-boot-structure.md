@@ -1,5 +1,5 @@
 ---
-title: "Spring Boot 控制實作方式"
+title: "spring-boot-structure"
 publishDate: 2025-05-24 10:00:00
 img: /tymultiverse/assets/stock-2.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

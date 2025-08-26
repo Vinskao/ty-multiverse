@@ -1,5 +1,5 @@
 ---
-title: JavaScript Algorithms
+title: "javascript-algorithms-certification"
 publishDate: 2023-08-25 00:00:00
 img: /tymultiverse/assets/stock-3.jpg
 img_alt: Pearls of silky soft white cotton, bubble up under vibrant lighting

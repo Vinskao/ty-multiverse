@@ -1,5 +1,5 @@
 ---
-title: SQL Clauses
+title: "sql-clauses"
 publishDate: 2024-03-04 15:00:00
 img: /tymultiverse/assets/SQL.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
