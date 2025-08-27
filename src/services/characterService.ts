@@ -37,7 +37,6 @@ class CharacterService {
       // 檢查緩存
       const cached = this.getCachedCharacters();
       if (cached) {
-        console.log('📦 使用緩存的角色數據');
         return cached;
       }
 

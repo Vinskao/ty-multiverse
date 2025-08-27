@@ -258,12 +258,6 @@ export class NavController {
   }
 
   private updateNavLinks() {
-    console.log('當前權限狀態:', {
-      isLoggedIn: this.isLoggedIn,
-      isAdmin: this.isAdmin,
-      hasUserAccess: this.hasUserAccess,
-      username: this.username
-    });
     // 更新登入/登出按鈕
     const loginLink = document.querySelector('a[href^="/tymultiverse/login"]') as HTMLElement;
     const logoutLink = document.querySelector('a[href="#"]') as HTMLElement;

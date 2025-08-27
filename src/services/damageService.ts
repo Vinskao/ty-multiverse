@@ -26,7 +26,6 @@ class DamageService {
       // 檢查緩存
       const cached = this.getCachedDamage(characterName);
       if (cached !== null) {
-        console.log(`📦 使用緩存的傷害數據: ${characterName} = ${cached}`);
         return cached;
       }
 
@@ -239,7 +238,6 @@ class DamageService {
       
       const expiryTime = parseInt(expiry);
       if (Date.now() > expiryTime) {
-        console.log(`⏰ 傷害緩存已過期: ${characterName}`);
         this.clearDamageCache(characterName);
         return null;
       }
@@ -263,7 +261,6 @@ class DamageService {
       const expiry = Date.now() + this.cacheDuration;
       localStorage.setItem(cacheKey, damage.toString());
       localStorage.setItem(expiryKey, expiry.toString());
-      console.log(`💾 傷害數據已緩存: ${characterName} = ${damage}`);
     } catch (error) {
       console.error('緩存傷害數據失敗:', error);
     }
@@ -277,7 +274,6 @@ class DamageService {
         const expiryKey = `${this.cacheExpiryKey}_${characterName}`;
         localStorage.removeItem(cacheKey);
         localStorage.removeItem(expiryKey);
-        console.log(`🗑️ 傷害緩存已清除: ${characterName}`);
       } else {
         // 清除所有傷害緩存
         const keys = Object.keys(localStorage);
@@ -286,7 +282,7 @@ class DamageService {
             localStorage.removeItem(key);
           }
         });
-        console.log('🗑️ 所有傷害緩存已清除');
+        console.log('所有傷害緩存已清除');
       }
     } catch (error) {
       console.error('清除傷害緩存失敗:', error);
