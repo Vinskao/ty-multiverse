@@ -58,6 +58,3 @@ FROM table1
 FULL JOIN table2 ON table1.column = table2.column;
 ```
 
-## Conclusion
-
-瞭解各種 JOIN 操作有助於構造正確且高效的 SQL 查詢，根據具體需求選擇適當的 JOIN 類型。

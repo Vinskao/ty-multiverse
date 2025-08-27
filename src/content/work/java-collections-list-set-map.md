@@ -193,6 +193,3 @@ System.out.println(myArray[2]); // 輸出: 30
 System.out.println(myArray[3]); // 輸出: 0 (預設值)
 ```
 
-## Conclusion
-
-了解 List、Set、Map 及 Array 的特性與操作方法，能夠協助您在 Java 程式中有效地管理及操作資料集合。

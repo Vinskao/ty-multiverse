@@ -241,23 +241,12 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
   }
 
   // 初始化頁面
-  document.addEventListener("DOMContentLoaded", function () {
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json"
-    };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    fetch(`${TYMB_URL}/people/get-all`, {
-      method: "POST", 
-      headers,
-      credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(data => {
+  document.addEventListener("DOMContentLoaded", async function () {
+    try {
+      // 使用共用的角色服務
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const data = await characterService.getCharacters();
+      
       const armyGroups = {};
       data.forEach(character => {
         const army = character.armyName || 'Unknown Army';
@@ -278,7 +267,8 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
       if (container) {
         container.appendChild(mainContainer);
       }
-    })
-    .catch(error => console.error('Error fetching data:', error));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   });
 </script>

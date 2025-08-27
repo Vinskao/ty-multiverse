@@ -126,7 +126,6 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
   const config = {
     baseImagePath: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/",
-    apiEndpoint: `${import.meta.env.PUBLIC_TYMB_URL}/people/get-by-name`,
     defaultImage: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/default.png",
     sideOffset: 75 // 側邊角色的偏移量
   };
@@ -140,46 +139,12 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 從 API 獲取角色列表
   async function fetchCharacterList() {
     try {
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      };
+      // 使用共用的角色服務
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characters = await characterService.getCharactersWithImages();
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/people/get-all`, {
-        method: "POST",
-        headers,
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch character list');
-      }
-      
-      const data = await response.json();
-      
-      // 檢查每個角色是否有對應的圖片
-      const validCharacters = await Promise.all(
-        data.map(async char => {
-          const imagePath = `${config.baseImagePath}${char.name}.png`;
-          try {
-            const imgResponse = await fetch(imagePath);
-            if (imgResponse.ok) {
-              return char.name;
-            }
-            return null;
-          } catch {
-            return null;
-          }
-        })
-      );
-      
-      // 過濾掉沒有圖片的角色
-      characterNames = validCharacters.filter(name => name !== null);
+      // 提取角色名稱
+      characterNames = characters.map(char => char.name);
       
       // 更新按鈕
       createButtons("leftButtons", "left");
@@ -451,28 +416,17 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   async function fetchFighterInfo(side: 'left' | 'right', imagePath: string) {
     try {
       const name = characterNames.find(n => n === imagePath.split("/").pop()?.split(".")[0]);
-      const apiName = name;
-      
-      // 獲取角色資訊
-      const response = await fetch(config.apiEndpoint, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ name: apiName }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API 返回錯誤: ${response.status}`);
+      if (!name) {
+        throw new Error("無法找到角色名稱");
       }
       
-      const data = await response.json();
+      // 使用共用的角色服務
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const data = await characterService.getCharacterByName(name);
       
       if (data && data.name) {
         // 獲取武器資訊 (改用新 API)
-        const ownerName = name || '';
+        const ownerName = name;
         const token = localStorage.getItem('token');
         const weaponHeaders: Record<string, string> = {
           "Content-Type": "application/json",
@@ -484,7 +438,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         }
         
         const weaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${ownerName}`, {
-          method: "POST",
+          method: "GET",
           headers: weaponHeaders,
           credentials: 'include'
         });
@@ -504,12 +458,13 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
           data.hasBonus = hasBonus;
         }
 
+        // 等待武器傷害計算完成後再更新顯示和保存
         updateFighterInfo(side, data);
         // 儲存到 localStorage
         saveToLocalStorage(side, data);
         return;
       }
-      throw new Error("API 沒有返回有效數據");
+      throw new Error(`找不到角色: ${name}`);
     } catch (error) {
       console.error("獲取角色資訊失敗:", error);
       clearFighterInfo(side);
@@ -1078,7 +1033,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     }
     
     const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${ownerName}`, {
-      method: "POST",
+      method: "GET",
       headers,
       credentials: 'include'
     });

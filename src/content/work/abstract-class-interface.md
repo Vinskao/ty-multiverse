@@ -136,6 +136,3 @@ class Dog implements AnimalMovement {
 }
 ```
 
-## Conclusion
-
-抽象類別與介面都是設計健全 Java 應用的重要工具。當需要部分通用實作時使用抽象類別；而當需要實現多重行為標準或契約時，則可選擇介面。

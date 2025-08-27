@@ -247,12 +247,25 @@ import '../styles/levellist.css';
     }
   }
 
-  // 檢查圖片是否存在
+  // 檢查圖片是否存在 - 添加緩存和更好的錯誤處理
+  const imageCache = new Map();
+  
   async function checkImageExists(imagePath) {
+    // 檢查緩存
+    if (imageCache.has(imagePath)) {
+      return imageCache.get(imagePath);
+    }
+    
     try {
-      const response = await fetch(imagePath);
-      return response.ok;
+      const response = await fetch(imagePath, { 
+        method: 'HEAD', // 只檢查頭部，不下載圖片
+        cache: 'no-cache' // 避免瀏覽器緩存
+      });
+      const exists = response.ok;
+      imageCache.set(imagePath, exists);
+      return exists;
     } catch {
+      imageCache.set(imagePath, false);
       return false;
     }
   }
@@ -410,14 +423,12 @@ import '../styles/levellist.css';
     // 使用與力表相同的 API 獲取最新戰力
     const fetchLatestPower = async () => {
       try {
-        const resp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(character.name)}`);
-        if (resp.ok) {
-          const text = await resp.text();
-          const dmgInt = parseInt(text, 10);
-          if (!isNaN(dmgInt) && dmgInt > 0) {
-            powerText.textContent = `Total Power: ${dmgInt}`;
-            console.log(`✅ ${character.name} 最新戰力: ${dmgInt}`);
-          }
+        // 使用新的傷害計算服務
+        const damageService = (await import('../services/damageService')).default.getInstance();
+        const damageValue = await damageService.getCharacterDamage(character.name);
+        if (damageValue > 0) {
+          powerText.textContent = `Total Power: ${damageValue}`;
+          console.log(`✅ ${character.name} 最新戰力: ${damageValue}`);
         }
       } catch (e) {
         console.error(`❌ ${character.name} 獲取最新戰力失敗:`, e);
@@ -427,7 +438,7 @@ import '../styles/levellist.css';
     // 立即獲取最新戰力 - 使用延遲避免並發過多
     setTimeout(() => {
       fetchLatestPower();
-    }, Math.random() * 2000); // 隨機延遲 0-2 秒
+    }, Math.random() * 3000 + 1000); // 隨機延遲 1-4 秒，避免 429
 
     infoContainer.appendChild(nameText);
     infoContainer.appendChild(attributesText);
@@ -1004,27 +1015,24 @@ import '../styles/levellist.css';
       const fetchAndApplyTotalPower = async (shouldReorder = false) => {
         console.log(`🔄 查詢 ${character.name} 的最新總戰力...`);
         try {
-          const resp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(character.name)}`);
-          if (resp.ok) {
-            const text = await resp.text();
-            const dmgInt = parseInt(text, 10);
-            if (!isNaN(dmgInt) && dmgInt > 0) {
-              const mapData = characterPowerMap.get(character.name);
-              mapData.totalPower = dmgInt;
-              const weaponBonus = dmgInt - (mapData.physicPower + mapData.magicPower + mapData.utilityPower);
-              mapData.weaponBonus = weaponBonus;
-              mapData.hasBonus   = weaponBonus > 0;
-              totalCell.textContent = String(dmgInt);
-              totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus}` : '0';
-              console.log(`✅ ${character.name} 總戰力更新為 ${dmgInt}`);
-              if (shouldReorder) {
-                updateRankings();
-              }
-            } else {
-              console.warn(`⚠️ ${character.name} API 返回無效數值: ${text}`);
+          // 使用新的傷害計算服務
+          const damageService = (await import('../services/damageService')).default.getInstance();
+          const damageValue = await damageService.getCharacterDamage(character.name);
+          
+          if (damageValue > 0) {
+            const mapData = characterPowerMap.get(character.name);
+            mapData.totalPower = damageValue;
+            const weaponBonus = damageValue - (mapData.physicPower + mapData.magicPower + mapData.utilityPower);
+            mapData.weaponBonus = weaponBonus;
+            mapData.hasBonus   = weaponBonus > 0;
+            totalCell.textContent = String(damageValue);
+            totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus}` : '0';
+            console.log(`✅ ${character.name} 總戰力更新為 ${damageValue}`);
+            if (shouldReorder) {
+              updateRankings();
             }
           } else {
-            console.error(`❌ ${character.name} API 狀態碼 ${resp.status}`);
+            console.warn(`⚠️ ${character.name} API 返回無效數值: ${damageValue}`);
           }
         } catch (e) {
           console.error(`❌ ${character.name} API 調用失敗:`, e);
@@ -1383,29 +1391,9 @@ import '../styles/levellist.css';
     try {
       console.log('🔄 開始同步所有角色數據...');
       
-      // 1. 從 TYMB API 獲取所有角色數據 - 添加超時和重試機制
-      const response = await fetch(`${TYMB_URL}/people/get-all`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        credentials: 'include',
-        signal: AbortSignal.timeout(30000) // 30秒超時
-      });
-      
-      if (!response.ok) {
-        console.error('Sync API response not ok:', response.status, response.statusText);
-        throw new Error(`獲取角色數據失敗: ${response.status}`);
-      }
-      
-      const characters = await response.json();
-      
-      // 檢查返回的數據格式
-      if (!Array.isArray(characters)) {
-        console.error('Sync API returned non-array data:', characters);
-        throw new Error('API returned invalid data format - expected array');
-      }
+      // 1. 使用共用的角色服務獲取所有角色數據
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characters = await characterService.refreshCharacters(); // 強制刷新
       console.log(`✅ 成功獲取 ${characters.length} 個角色數據`);
       
       // 2. 透過代理端點發送到 Google Apps Script - 添加超時機制
@@ -1789,31 +1777,13 @@ import '../styles/levellist.css';
         }
       `;
       document.head.appendChild(style);
-      const response = await fetch(`${TYMB_URL}/people/get-all`, {
-        method: "POST", 
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        console.error('API response not ok:', response.status, response.statusText);
-        throw new Error(`Failed to fetch character list: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // 檢查返回的數據格式
-      if (!Array.isArray(data)) {
-        console.error('API returned non-array data:', data);
-        throw new Error('API returned invalid data format - expected array');
-      }
+      // 使用共用的角色服務
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const data = await characterService.getCharacters();
       
       // 計算每個角色的總戰力並獲取武器資訊
       const charactersWithPower = await Promise.all(
-        data.map(async (character) => {
+        data.map(async (character, index) => {
           try {
             // 檢查是否有暫存的戰力數據
             const cachedData = getFromLocalStorage(character.name);
@@ -1841,14 +1811,18 @@ import '../styles/levellist.css';
             // 透過 damageWithWeapon API 取得總戰力
             const ownerName = character.name || '';
             let totalPower = physicPower + magicPower + utilityPower;
+            
+            // 添加延遲以避免 429 錯誤
+            if (index > 0) {
+              await new Promise(resolve => setTimeout(resolve, 100 * index)); // 每個請求間隔 100ms
+            }
+            
             try {
-              const dmgResp = await fetch(`${TYMB_URL}/people/damageWithWeapon?name=${encodeURIComponent(ownerName)}`);
-              if (dmgResp.ok) {
-                const dmgText = await dmgResp.text();
-                const dmgInt = parseInt(dmgText, 10);
-                if (!isNaN(dmgInt) && dmgInt > 0) {
-                  totalPower = dmgInt;
-                }
+              // 使用新的傷害計算服務
+              const damageService = (await import('../services/damageService')).default.getInstance();
+              const damageValue = await damageService.getCharacterDamage(ownerName);
+              if (damageValue > 0) {
+                totalPower = damageValue;
               }
             } catch (e) {
               console.error(`damageWithWeapon API error for ${ownerName}:`, e);

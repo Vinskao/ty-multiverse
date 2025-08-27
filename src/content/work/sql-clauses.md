@@ -137,9 +137,7 @@ GROUP BY department
 HAVING AVG(salary) IS NOT NULL;
 ```
 
-## Conclusion
 
-`WHERE` 和 `HAVING` 各自用於不同階段的資料篩選，合理使用這兩個子句可以有效提升 SQL 查詢的準確性與效能。
 
 
 ## SQL Injection

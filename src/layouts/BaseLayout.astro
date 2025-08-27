@@ -9,6 +9,7 @@ import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
 import QABot from '../components/QABot.astro';
 import QABotV2 from '../components/QABotV2.astro';
+import GlobalTestPanel from '../components/GlobalTestPanel.astro';
 
 
 interface Props {
@@ -90,6 +91,9 @@ const { title, description } = Astro.props;
 		<QAPlatform />
 		<QABot />
 		<QABotV2 />
+		
+		<!-- 全局測試面板 -->
+		<GlobalTestPanel />
 
 		<script>
 			// Add "loaded" class once the document has completely loaded.
