@@ -428,7 +428,6 @@ import '../styles/levellist.css';
         const damageValue = await damageService.getCharacterDamage(character.name);
         if (damageValue > 0) {
           powerText.textContent = `Total Power: ${damageValue}`;
-          console.log(`✅ ${character.name} 最新戰力: ${damageValue}`);
         }
       } catch (e) {
         console.error(`❌ ${character.name} 獲取最新戰力失敗:`, e);

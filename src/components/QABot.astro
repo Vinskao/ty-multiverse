@@ -269,7 +269,6 @@ import '../styles/qabot.css';
       // 確保至少 Maya 存在
       if (!this.state.availableBots.includes('Maya') && this.hasValidMessages('Maya')) {
         this.state.availableBots.unshift('Maya');
-        console.log('✅ 添加 Maya 到專員列表');
       }
       
       // 如果當前 bot 沒有句庫 → 換成清單第一個

@@ -70,7 +70,6 @@ import '../styles/qabotv2.css';
 
     private async loadModels() {
       try {
-        console.log('Loading models from:', `${this.apiBase}/maya-v2/available-models/`);
         const resp = await fetch(`${this.apiBase}/maya-v2/available-models/`, { credentials: 'include' });
         if (!resp.ok) throw new Error(`models ${resp.status}`);
         const data = await resp.json();
