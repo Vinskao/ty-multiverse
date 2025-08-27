@@ -1,0 +1,647 @@
+---
+// 監控面板組件
+---
+
+<div id="monitoring-panel" class="monitoring-panel">
+  <div class="panel-header">
+    <h3>🔧 系統監控面板</h3>
+    <div class="panel-controls">
+      <button id="refresh-btn" class="btn btn-primary">刷新</button>
+      <button id="export-btn" class="btn btn-secondary">導出診斷</button>
+      <button id="clear-btn" class="btn btn-danger">清除統計</button>
+    </div>
+  </div>
+
+  <div class="panel-content">
+    <!-- 系統健康狀況 -->
+    <div class="section">
+      <h4>🏥 系統健康狀況</h4>
+      <div id="health-status" class="health-grid">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+
+    <!-- Consumer 狀態 -->
+    <div class="section">
+      <h4>🔄 Consumer 狀態</h4>
+      <div id="consumer-status" class="status-card">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+
+    <!-- API 指標 -->
+    <div class="section">
+      <h4>📊 API 指標</h4>
+      <div id="api-metrics" class="metrics-grid">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+
+    <!-- 錯誤統計 -->
+    <div class="section">
+      <h4>🚨 錯誤統計</h4>
+      <div id="error-stats" class="error-grid">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+
+    <!-- 重試統計 -->
+    <div class="section">
+      <h4>🔄 重試統計</h4>
+      <div id="retry-stats" class="retry-grid">
+        <div class="loading">載入中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .monitoring-panel {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+  }
+
+  .panel-header h3 {
+    margin: 0;
+    color: #fff;
+  }
+
+  .panel-controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+  }
+
+  .btn:hover {
+    opacity: 0.8;
+  }
+
+  .section {
+    margin-bottom: 25px;
+  }
+
+  .section h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .health-item {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+  }
+
+  .health-item.healthy {
+    border-color: #28a745;
+  }
+
+  .health-item.warning {
+    border-color: #ffc107;
+  }
+
+  .health-item.critical {
+    border-color: #dc3545;
+  }
+
+  .health-item h5 {
+    margin: 0 0 10px 0;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .health-item .status {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+
+  .health-item .message {
+    font-size: 12px;
+    color: #ccc;
+  }
+
+  .status-card {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+  }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .status-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .status-label {
+    color: #ccc;
+    font-size: 12px;
+  }
+
+  .status-value {
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+  }
+
+  .metric-card {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .metric-name {
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .metric-status {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .metric-status.success {
+    background: #28a745;
+    color: white;
+  }
+
+  .metric-status.error {
+    background: #dc3545;
+    color: white;
+  }
+
+  .metric-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .metric-stat {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .metric-label {
+    color: #ccc;
+  }
+
+  .metric-value {
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .error-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .error-item {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .error-type {
+    color: #fff;
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+
+  .error-count {
+    color: #dc3545;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .retry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .retry-item {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+  }
+
+  .retry-name {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .retry-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .loading {
+    color: #ccc;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+  }
+
+  .timestamp {
+    color: #666;
+    font-size: 10px;
+    text-align: right;
+    margin-top: 10px;
+  }
+</style>
+
+<script>
+  class MonitoringPanel {
+    private serviceManager: any;
+    private refreshInterval?: number;
+
+    constructor() {
+      this.initialize();
+    }
+
+    private async initializeServiceManager() {
+      const ServiceManager = (await import('../services/serviceManager')).default;
+      this.serviceManager = ServiceManager.getInstance();
+    }
+
+    private async initialize(): Promise<void> {
+      await this.initializeServiceManager();
+      this.setupEventListeners();
+      this.startAutoRefresh();
+      this.refreshData();
+    }
+
+    private setupEventListeners(): void {
+      const refreshBtn = document.getElementById('refresh-btn');
+      const exportBtn = document.getElementById('export-btn');
+      const clearBtn = document.getElementById('clear-btn');
+
+      refreshBtn?.addEventListener('click', () => this.refreshData());
+      exportBtn?.addEventListener('click', () => this.exportDiagnostics());
+      clearBtn?.addEventListener('click', () => this.clearStats());
+    }
+
+    private startAutoRefresh(): void {
+      this.refreshInterval = window.setInterval(() => {
+        this.refreshData();
+      }, 30000); // 每30秒刷新一次
+    }
+
+    private async refreshData(): Promise<void> {
+      try {
+        await Promise.all([
+          this.updateHealthStatus(),
+          this.updateConsumerStatus(),
+          this.updateAPIMetrics(),
+          this.updateErrorStats(),
+          this.updateRetryStats()
+        ]);
+      } catch (error) {
+        console.error('刷新監控數據失敗:', error);
+      }
+    }
+
+    private async updateHealthStatus(): Promise<void> {
+      const healthElement = document.getElementById('health-status');
+      if (!healthElement) return;
+
+      try {
+        const health = await this.serviceManager.getSystemHealth();
+        
+        healthElement.innerHTML = `
+          <div class="health-item ${health.overallHealth}">
+            <h5>整體健康狀況</h5>
+            <div class="status">${this.getHealthIcon(health.overallHealth)}</div>
+            <div class="message">${health.overallHealth.toUpperCase()}</div>
+          </div>
+          <div class="health-item ${health.consumerStatus.isConnected ? 'healthy' : 'critical'}">
+            <h5>Consumer 連接</h5>
+            <div class="status">${health.consumerStatus.isConnected ? '✅' : '❌'}</div>
+            <div class="message">${health.consumerStatus.isConnected ? '已連接' : '未連接'}</div>
+          </div>
+          <div class="health-item ${this.getMemoryHealthClass(health.memoryUsage)}">
+            <h5>內存使用</h5>
+            <div class="status">${(health.memoryUsage * 100).toFixed(1)}%</div>
+            <div class="message">${this.getMemoryHealthMessage(health.memoryUsage)}</div>
+          </div>
+          <div class="health-item ${this.getErrorHealthClass(health.errorRate)}">
+            <h5>錯誤率</h5>
+            <div class="status">${(health.errorRate * 100).toFixed(2)}%</div>
+            <div class="message">${this.getErrorHealthMessage(health.errorRate)}</div>
+          </div>
+        `;
+      } catch (error) {
+        healthElement.innerHTML = '<div class="loading">載入失敗</div>';
+      }
+    }
+
+    private async updateConsumerStatus(): Promise<void> {
+      const consumerElement = document.getElementById('consumer-status');
+      if (!consumerElement) return;
+
+      try {
+        const status = this.serviceManager.getConsumerStatus();
+        
+        consumerElement.innerHTML = `
+          <div class="status-row">
+            <span class="status-label">連接狀態:</span>
+            <span class="status-value">${status.isConnected ? '✅ 已連接' : '❌ 未連接'}</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">最後心跳:</span>
+            <span class="status-value">${new Date(status.lastHeartbeat).toLocaleTimeString()}</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">隊列大小:</span>
+            <span class="status-value">${status.queueSize}</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">處理速率:</span>
+            <span class="status-value">${status.processingRate}/秒</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">錯誤率:</span>
+            <span class="status-value">${(status.errorRate * 100).toFixed(2)}%</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">運行時間:</span>
+            <span class="status-value">${this.formatUptime(status.uptime)}</span>
+          </div>
+        `;
+      } catch (error) {
+        consumerElement.innerHTML = '<div class="loading">載入失敗</div>';
+      }
+    }
+
+    private async updateAPIMetrics(): Promise<void> {
+      const metricsElement = document.getElementById('api-metrics');
+      if (!metricsElement) return;
+
+      try {
+        const metrics = this.serviceManager.getAPIMetrics() as Map<string, any>;
+        
+        if (metrics.size === 0) {
+          metricsElement.innerHTML = '<div class="loading">暫無 API 指標數據</div>';
+          return;
+        }
+
+        const metricsHTML = Array.from(metrics.entries()).map(([endpoint, metric]) => `
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-name">${endpoint}</span>
+              <span class="metric-status ${metric.errorCount === 0 ? 'success' : 'error'}">
+                ${metric.errorCount === 0 ? '正常' : '錯誤'}
+              </span>
+            </div>
+            <div class="metric-stats">
+              <div class="metric-stat">
+                <span class="metric-label">請求數:</span>
+                <span class="metric-value">${metric.requestCount}</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">成功率:</span>
+                <span class="metric-value">${((metric.successCount / metric.requestCount) * 100).toFixed(1)}%</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">平均響應:</span>
+                <span class="metric-value">${metric.averageResponseTime.toFixed(0)}ms</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">最後請求:</span>
+                <span class="metric-value">${new Date(metric.lastRequestTime).toLocaleTimeString()}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        metricsElement.innerHTML = metricsHTML;
+      } catch (error) {
+        metricsElement.innerHTML = '<div class="loading">載入失敗</div>';
+      }
+    }
+
+    private async updateErrorStats(): Promise<void> {
+      const errorElement = document.getElementById('error-stats');
+      if (!errorElement) return;
+
+      try {
+        const errorStats = this.serviceManager.getErrorStats();
+        
+        const errorHTML = Object.entries(errorStats).map(([type, count]) => `
+          <div class="error-item">
+            <div class="error-type">${this.getErrorTypeLabel(type)}</div>
+            <div class="error-count">${count}</div>
+          </div>
+        `).join('');
+
+        errorElement.innerHTML = errorHTML || '<div class="loading">暫無錯誤數據</div>';
+      } catch (error) {
+        errorElement.innerHTML = '<div class="loading">載入失敗</div>';
+      }
+    }
+
+    private async updateRetryStats(): Promise<void> {
+      const retryElement = document.getElementById('retry-stats');
+      if (!retryElement) return;
+
+      try {
+        const retryStats = this.serviceManager.getRetryStats() as Map<string, any>;
+        
+        if (retryStats.size === 0) {
+          retryElement.innerHTML = '<div class="loading">暫無重試數據</div>';
+          return;
+        }
+
+        const retryHTML = Array.from(retryStats.entries()).map(([operation, stats]) => `
+          <div class="retry-item">
+            <div class="retry-name">${operation}</div>
+            <div class="retry-stats">
+              <div class="metric-stat">
+                <span class="metric-label">總嘗試:</span>
+                <span class="metric-value">${stats.totalAttempts}</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">成功:</span>
+                <span class="metric-value">${stats.successfulAttempts}</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">失敗:</span>
+                <span class="metric-value">${stats.failedAttempts}</span>
+              </div>
+              <div class="metric-stat">
+                <span class="metric-label">平均響應:</span>
+                <span class="metric-value">${stats.averageResponseTime.toFixed(0)}ms</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        retryElement.innerHTML = retryHTML;
+      } catch (error) {
+        retryElement.innerHTML = '<div class="loading">載入失敗</div>';
+      }
+    }
+
+    private exportDiagnostics(): void {
+      try {
+        const diagnostics = this.serviceManager.exportDiagnostics();
+        const blob = new Blob([diagnostics], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diagnostics-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('導出診斷信息失敗:', error);
+        alert('導出失敗');
+      }
+    }
+
+    private clearStats(): void {
+      if (confirm('確定要清除所有統計數據嗎？')) {
+        this.serviceManager.clearAllStats();
+        this.refreshData();
+      }
+    }
+
+    private getHealthIcon(health: string): string {
+      switch (health) {
+        case 'healthy': return '✅';
+        case 'warning': return '⚠️';
+        case 'critical': return '🚨';
+        default: return '❓';
+      }
+    }
+
+    private getMemoryHealthClass(usage: number): string {
+      if (usage < 0.7) return 'healthy';
+      if (usage < 0.9) return 'warning';
+      return 'critical';
+    }
+
+    private getMemoryHealthMessage(usage: number): string {
+      if (usage < 0.7) return '正常';
+      if (usage < 0.9) return '較高';
+      return '過高';
+    }
+
+    private getErrorHealthClass(rate: number): string {
+      if (rate < 0.05) return 'healthy';
+      if (rate < 0.1) return 'warning';
+      return 'critical';
+    }
+
+    private getErrorHealthMessage(rate: number): string {
+      if (rate < 0.05) return '正常';
+      if (rate < 0.1) return '較高';
+      return '過高';
+    }
+
+    private getErrorTypeLabel(type: string): string {
+      const labels: Record<string, string> = {
+        'NETWORK': '網絡錯誤',
+        'AUTHENTICATION': '認證錯誤',
+        'AUTHORIZATION': '授權錯誤',
+        'VALIDATION': '驗證錯誤',
+        'SERVER': '服務器錯誤',
+        'TIMEOUT': '超時錯誤',
+        'RATE_LIMIT': '速率限制',
+        'UNKNOWN': '未知錯誤'
+      };
+      return labels[type] || type;
+    }
+
+    private formatUptime(seconds: number): string {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hours}h ${minutes}m ${secs}s`;
+    }
+
+    destroy(): void {
+      if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+      }
+    }
+  }
+
+  // 初始化監控面板
+  document.addEventListener('DOMContentLoaded', () => {
+    new MonitoringPanel();
+  });
+</script>

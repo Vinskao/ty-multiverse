@@ -24,41 +24,11 @@ import '../styles/galwall.css';
   // 獲取角色列表
   async function fetchCharacterList() {
     try {
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      };
+      // 使用共用的角色服務
+      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characters = await characterService.getCharactersWithImages();
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      if (!import.meta.env.PUBLIC_TYMB_URL) {
-        throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
-      }
-      const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-      
-      const response = await fetch(`${TYMB_URL}/people/get-all`, {
-        method: "POST",
-        headers,
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        console.error('Galwall API response not ok:', response.status, response.statusText);
-        throw new Error(`Failed to fetch character list: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // 檢查返回的數據格式
-      if (!Array.isArray(data)) {
-        console.error('Galwall API returned non-array data:', data);
-        throw new Error('API returned invalid data format - expected array');
-      }
-      
-      return data.map(char => char.name);
+      return characters.map(char => char.name);
     } catch (error) {
       console.error('Error fetching character list:', error);
       return [];

@@ -72,6 +72,3 @@ System.out.println("Milliseconds: " + millis);
 System.out.println("Nanoseconds: " + nanos);
 ```
 
-## Conclusion
-
-Java Time API 提供了一套強大而靈活的工具，能夠應對多種日期與時間操作需求，從時區處理到持續時間計算都非常方便。

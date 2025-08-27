@@ -132,6 +132,3 @@ public class CleanController {
 }
 ```
 
-## Conclusion
-
-通過依賴注入和遵循 DIP，高層模組不再直接依賴具體實作，而是依賴抽象介面，從而極大提高系統的靈活性與可維護性。

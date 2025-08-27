@@ -111,34 +111,54 @@ export async function applyWeaponDamage(character, weapons) {
     const characterName = encodeURIComponent(character?.name || character?.nameOriginal || "");
     if (!characterName) throw new Error("Character name is missing");
 
-    const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/people/damageWithWeapon?name=${characterName}`;
-    const response = await fetch(apiUrl, { method: "GET" });
+    const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+    const apiUrl = `${baseUrl}/people/damageWithWeapon?name=${characterName}`;
+    
+    console.log('🗡️ 請求傷害計算:', apiUrl);
+    const response = await fetch(apiUrl, { 
+      method: "GET",
+      credentials: 'include'
+    });
 
     if (!response.ok) throw new Error(`API response not ok: ${response.status}`);
 
-    // API 可能回傳純文字或 JSON，嘗試兩種方式解析
-    let totalDamage;
-    try {
-      totalDamage = await response.json();
-    } catch (_) {
-      const text = await response.text();
-      totalDamage = parseInt(text, 10);
+    const data = await response.json();
+    console.log('📡 傷害計算響應:', data);
+
+    // 檢查是否為異步處理
+    if (data.status === 'processing' && data.requestId) {
+      console.log('🔄 開始輪詢傷害計算結果...');
+      const totalDamage = await pollForDamageResult(data.requestId, baseUrl);
+      
+      // 更新角色 utilityPower
+      const updatedCharacter = { ...character };
+      updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
+
+      // API 已包含武器加成，若總傷害 > 0 視為有加成
+      const hasBonus = totalDamage > 0;
+
+      return {
+        character: updatedCharacter,
+        hasBonus,
+        stateAttributes: []
+      };
+    } else {
+      // 直接返回結果
+      const totalDamage = parseInt(String(data || 0), 10);
+      
+      // 更新角色 utilityPower
+      const updatedCharacter = { ...character };
+      updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
+
+      // API 已包含武器加成，若總傷害 > 0 視為有加成
+      const hasBonus = totalDamage > 0;
+
+      return {
+        character: updatedCharacter,
+        hasBonus,
+        stateAttributes: []
+      };
     }
-
-    totalDamage = parseInt(String(totalDamage || 0), 10);
-
-    // 更新角色 utilityPower
-    const updatedCharacter = { ...character };
-    updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
-
-    // API 已包含武器加成，若總傷害 > 0 視為有加成
-    const hasBonus = totalDamage > 0;
-
-    return {
-      character: updatedCharacter,
-      hasBonus,
-      stateAttributes: []
-    };
   } catch (error) {
     console.error("applyWeaponDamage – 使用 API 失敗，改用本地計算:", error);
 
@@ -154,4 +174,65 @@ export async function applyWeaponDamage(character, weapons) {
       stateAttributes
     };
   }
+}
+
+// 輪詢傷害計算結果
+async function pollForDamageResult(requestId, baseUrl, maxAttempts = 30, interval = 6000) {
+  console.log('🔄 開始輪詢傷害結果，RequestId:', requestId);
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`🔄 輪詢嘗試 ${attempt}/${maxAttempts}...`);
+      
+      const existsUrl = `${baseUrl}/api/request-status/${requestId}/exists`;
+      console.log('🔍 檢查傷害結果存在:', existsUrl);
+      
+      const existsResponse = await fetch(existsUrl, { credentials: 'include' });
+      console.log('📡 存在檢查響應:', existsResponse.status, existsResponse.statusText);
+      
+      if (existsResponse.ok) {
+        const existsData = await existsResponse.json();
+        console.log('📊 傷害結果存在檢查:', existsData);
+        
+        if (existsData.exists) {
+          const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
+          console.log('📥 獲取傷害結果:', resultUrl);
+          
+          const resultResponse = await fetch(resultUrl, { credentials: 'include' });
+          console.log('📡 傷害結果響應:', resultResponse.status, resultResponse.statusText);
+          
+          if (!resultResponse.ok) {
+            const errorText = await resultResponse.text();
+            console.error('❌ 傷害結果獲取失敗:', errorText);
+            throw new Error(`傷害結果獲取失敗: ${resultResponse.status} - ${errorText}`);
+          }
+          
+          const result = await resultResponse.json();
+          console.log('✅ 獲取傷害結果成功:', result);
+          
+          // 從結果中提取傷害值
+          const damage = result.data || result.damage || result.totalDamage || 0;
+          return parseInt(String(damage), 10);
+        }
+      } else {
+        console.log('⚠️ 傷害結果存在檢查失敗:', existsResponse.status, existsResponse.statusText);
+      }
+      
+      console.log('⏳ 傷害結果還不存在，繼續等待...');
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        continue;
+      } else {
+        throw new Error('傷害計算輪詢超時');
+      }
+    } catch (error) {
+      console.error(`❌ 傷害輪詢嘗試 ${attempt} 失敗:`, error);
+      if (attempt === maxAttempts) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+  }
+  
+  throw new Error('傷害計算輪詢超時');
 }

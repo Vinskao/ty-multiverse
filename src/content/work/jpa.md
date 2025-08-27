@@ -101,6 +101,3 @@ Stream<Bean> findAllBeansAsStream();
       .sorted(Comparator.comparing(Bean::getName));
   ```
 
-## Conclusion
-
-JPA 利用命名規約簡化了資料庫查詢，並支持多種回傳類型，使得開發者可以根據需要靈活處理資料。

@@ -127,6 +127,6 @@ docker push papakao/discord-backend:latest
 ## 進階設定與故障排除
 
 - **資源管理：** 確保 Persistent Volume、PVC 與 StorageClass 正確配置，防止資源浪費或意外丟失。
-- **Helm 優勢：** 透過 Helm 除了快速安裝，也能方便進行版本管理和版本回退。
+- **Helm 功能：** 透過 Helm 除了快速安裝，也能方便進行版本管理和版本回退。
 - **網路配置：** 留意 Ingress 與 NodePort 的網路設定，必要時調整防火牆規則。
 - **除錯技巧：** 使用 `kubectl describe`、`kubectl logs` 等命令追蹤問題根源，參閱官方文件獲取更多細節。

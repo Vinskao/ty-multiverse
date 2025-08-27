@@ -66,9 +66,7 @@ Ansible 採用無代理架構，適用於伺服器及雲端環境的配置和管
 - Task：單一操作，對應 Ansible 模組
 - Module：完成任務的基本單位
 
-## Conclusion
 
-Ansible 為自動化和配置管理工具，用於 IT 運維。
 
 ## 進階應用與最佳實踐
 

@@ -1,0 +1,558 @@
+---
+// 獨立測試面板組件
+---
+
+<!-- 測試面板 -->
+<div id="test-panel" class="test-panel hidden">
+  <div class="test-panel-header">
+    <h3>🔧 測試面板</h3>
+    <button id="close-test-panel" class="close-btn">&times;</button>
+  </div>
+  
+  <div class="test-panel-content">
+    <!-- 標籤頁 -->
+    <div class="test-tabs">
+      <button class="tab-btn active" data-tab="api-test">API 測試</button>
+      <button class="tab-btn" data-tab="cache-test">緩存管理</button>
+      <button class="tab-btn" data-tab="monitor-test">系統監控</button>
+      <button class="tab-btn" data-tab="damage-test">傷害計算</button>
+    </div>
+    
+    <!-- API 測試內容 -->
+    <div id="api-test" class="tab-content active">
+      <div class="test-section">
+        <h4>🌐 API 連接測試</h4>
+        <div id="api-test-results" class="test-results">載入中...</div>
+        <button id="test-api-btn" class="test-btn">測試 API</button>
+      </div>
+    </div>
+    
+    <!-- 緩存管理內容 -->
+    <div id="cache-test" class="tab-content">
+      <div class="test-section">
+        <h4>💾 緩存管理</h4>
+        <div id="cache-status" class="test-results">載入中...</div>
+        <div class="test-buttons">
+          <button id="clear-cache-btn" class="test-btn">清除緩存</button>
+          <button id="refresh-cache-btn" class="test-btn">刷新數據</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 系統監控內容 -->
+    <div id="monitor-test" class="tab-content">
+      <div class="test-section">
+        <h4>📊 系統監控</h4>
+        <div id="health-status" class="test-results">載入中...</div>
+        <div id="consumer-status" class="test-results">載入中...</div>
+        <div id="api-metrics" class="test-results">載入中...</div>
+        <div id="error-stats" class="test-results">載入中...</div>
+        <div class="test-buttons">
+          <button id="refresh-monitor-btn" class="test-btn">刷新監控</button>
+          <button id="export-diagnostics-btn" class="test-btn">導出診斷</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 傷害計算內容 -->
+    <div id="damage-test" class="tab-content">
+      <div class="test-section">
+        <h4>🗡️ 傷害計算測試</h4>
+        <div class="damage-test-input">
+          <input type="text" id="damage-test-character" placeholder="輸入角色名稱" value="Wavo">
+          <button id="test-damage-btn" class="test-btn">測試傷害計算</button>
+        </div>
+        <div id="damage-test-results" class="test-results">等待測試...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 測試面板 */
+  .test-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 800px;
+    height: 80vh;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 12px;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .test-panel.hidden {
+    display: none;
+  }
+
+  .test-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #333;
+    background: #2a2a2a;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .test-panel-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+
+  .close-btn:hover {
+    background: #444;
+  }
+
+  .test-panel-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 標籤頁 */
+  .test-tabs {
+    display: flex;
+    background: #2a2a2a;
+    border-bottom: 1px solid #333;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  .tab-btn:hover {
+    background: #3a3a3a;
+    color: #fff;
+  }
+
+  .tab-btn.active {
+    background: #4a4a4a;
+    color: #fff;
+    border-bottom: 2px solid #667eea;
+  }
+
+  /* 標籤內容 */
+  .tab-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .test-section {
+    margin-bottom: 25px;
+  }
+
+  .test-section h4 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 16px;
+  }
+
+  .test-results {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .test-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+  }
+
+  .test-btn:hover {
+    background: #5a6fd8;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .test-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .damage-test-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .damage-test-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .damage-test-input input::placeholder {
+    color: #666;
+  }
+
+  /* 響應式設計 */
+  @media (max-width: 768px) {
+    .test-panel {
+      width: 95vw;
+      height: 90vh;
+    }
+    
+    .test-tabs {
+      flex-direction: column;
+    }
+    
+    .damage-test-input {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  class TestPanel {
+    private isOpen = false;
+    private serviceManager: any;
+    private characterService: any;
+    private damageService: any;
+
+    constructor() {
+      this.initialize();
+    }
+
+    private async initialize(): Promise<void> {
+      await this.loadServices();
+      this.setupEventListeners();
+      this.initializeTabs();
+    }
+
+    private async loadServices(): Promise<void> {
+      try {
+        const ServiceManager = (await import('../services/serviceManager')).default;
+        this.serviceManager = ServiceManager.getInstance();
+        
+        const CharacterService = (await import('../services/characterService')).default;
+        this.characterService = CharacterService.getInstance();
+        
+        const DamageService = (await import('../services/damageService')).default;
+        this.damageService = DamageService.getInstance();
+      } catch (error) {
+        console.error('載入服務失敗:', error);
+      }
+    }
+
+    private setupEventListeners(): void {
+      // 關閉面板
+      const closeBtn = document.getElementById('close-test-panel');
+      const panel = document.getElementById('test-panel');
+
+      closeBtn?.addEventListener('click', () => this.closePanel());
+
+      // 點擊外部關閉
+      document.addEventListener('click', (e) => {
+        if (panel && !panel.contains(e.target as Node)) {
+          this.closePanel();
+        }
+      });
+
+      // API 測試
+      const testApiBtn = document.getElementById('test-api-btn');
+      testApiBtn?.addEventListener('click', () => this.testAPI());
+
+      // 緩存管理
+      const clearCacheBtn = document.getElementById('clear-cache-btn');
+      const refreshCacheBtn = document.getElementById('refresh-cache-btn');
+      clearCacheBtn?.addEventListener('click', () => this.clearCache());
+      refreshCacheBtn?.addEventListener('click', () => this.refreshCache());
+
+      // 系統監控
+      const refreshMonitorBtn = document.getElementById('refresh-monitor-btn');
+      const exportDiagnosticsBtn = document.getElementById('export-diagnostics-btn');
+      refreshMonitorBtn?.addEventListener('click', () => this.refreshMonitor());
+      exportDiagnosticsBtn?.addEventListener('click', () => this.exportDiagnostics());
+
+      // 傷害計算
+      const testDamageBtn = document.getElementById('test-damage-btn');
+      testDamageBtn?.addEventListener('click', () => this.testDamage());
+    }
+
+    private initializeTabs(): void {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-tab');
+          
+          // 移除所有活動狀態
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          
+          // 添加活動狀態
+          btn.classList.add('active');
+          const targetContent = document.getElementById(targetTab!);
+          targetContent?.classList.add('active');
+          
+          // 載入對應數據
+          this.loadTabData(targetTab!);
+        });
+      });
+    }
+
+    private loadTabData(tabName: string): void {
+      switch (tabName) {
+        case 'api-test':
+          this.testAPI();
+          break;
+        case 'cache-test':
+          this.updateCacheStatus();
+          break;
+        case 'monitor-test':
+          this.refreshMonitor();
+          break;
+        case 'damage-test':
+          // 傷害測試需要用戶輸入，不自動載入
+          break;
+      }
+    }
+
+    public openPanel(): void {
+      this.isOpen = true;
+      const panel = document.getElementById('test-panel');
+      panel?.classList.remove('hidden');
+      this.loadTabData('api-test'); // 載入第一個標籤頁數據
+    }
+
+    private closePanel(): void {
+      this.isOpen = false;
+      document.getElementById('test-panel')?.classList.add('hidden');
+    }
+
+    // API 測試
+    private async testAPI(): Promise<void> {
+      const resultsDiv = document.getElementById('api-test-results');
+      if (!resultsDiv) return;
+
+      resultsDiv.textContent = '測試中...';
+
+      try {
+        const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+        if (!baseUrl) {
+          resultsDiv.textContent = '❌ 環境變量未設置';
+          return;
+        }
+
+        const response = await fetch(`${baseUrl}/people/get-all`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          resultsDiv.textContent = `❌ API 錯誤: ${response.status}`;
+          return;
+        }
+
+        const data = await response.json();
+        resultsDiv.textContent = `✅ API 正常\n響應: ${JSON.stringify(data, null, 2)}`;
+
+        if (data.status === 'processing' && data.requestId) {
+          resultsDiv.textContent += '\n🔄 開始輪詢結果...';
+          await this.pollForResult(data.requestId, baseUrl, resultsDiv);
+        }
+      } catch (error) {
+        resultsDiv.textContent = `❌ 測試失敗: ${error}`;
+      }
+    }
+
+    private async pollForResult(requestId: string, baseUrl: string, resultsDiv: HTMLElement): Promise<void> {
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        try {
+          const existsResponse = await fetch(`${baseUrl}/api/request-status/${requestId}/exists`, {
+            credentials: 'include'
+          });
+
+          if (existsResponse.ok) {
+            const existsData = await existsResponse.json();
+            if (existsData.exists) {
+              const resultResponse = await fetch(`${baseUrl}/api/request-status/${requestId}`, {
+                credentials: 'include'
+              });
+
+              if (resultResponse.ok) {
+                const result = await resultResponse.json();
+                resultsDiv.textContent += `\n✅ 輪詢成功！\n結果: ${JSON.stringify(result, null, 2)}`;
+                return;
+              }
+            }
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } catch (error) {
+          resultsDiv.textContent += `\n❌ 輪詢失敗: ${error}`;
+          return;
+        }
+      }
+
+      resultsDiv.textContent += '\n❌ 輪詢超時';
+    }
+
+    // 緩存管理
+    private async updateCacheStatus(): Promise<void> {
+      const statusDiv = document.getElementById('cache-status');
+      if (!statusDiv) return;
+
+      try {
+        const status = this.characterService.getCacheStatus();
+        statusDiv.textContent = `緩存狀態: ${JSON.stringify(status, null, 2)}`;
+      } catch (error) {
+        statusDiv.textContent = `❌ 獲取緩存狀態失敗: ${error}`;
+      }
+    }
+
+    private async clearCache(): Promise<void> {
+      try {
+        this.characterService.clearCache();
+        this.damageService.clearDamageCache();
+        this.serviceManager.clearAllStats();
+        this.updateCacheStatus();
+        alert('緩存已清除');
+      } catch (error) {
+        alert(`清除緩存失敗: ${error}`);
+      }
+    }
+
+    private async refreshCache(): Promise<void> {
+      try {
+        await this.characterService.refreshCharacters();
+        this.updateCacheStatus();
+        alert('數據已刷新');
+      } catch (error) {
+        alert(`刷新數據失敗: ${error}`);
+      }
+    }
+
+    // 系統監控
+    private async refreshMonitor(): Promise<void> {
+      try {
+        const health = await this.serviceManager.getSystemHealth();
+        const consumerStatus = this.serviceManager.getConsumerStatus();
+        const apiMetrics = this.serviceManager.getAPIMetrics();
+        const errorStats = this.serviceManager.getErrorStats();
+
+        document.getElementById('health-status')!.textContent = 
+          `系統健康: ${JSON.stringify(health, null, 2)}`;
+        
+        document.getElementById('consumer-status')!.textContent = 
+          `Consumer 狀態: ${JSON.stringify(consumerStatus, null, 2)}`;
+        
+        document.getElementById('api-metrics')!.textContent = 
+          `API 指標: ${JSON.stringify(Array.from(apiMetrics.entries()), null, 2)}`;
+        
+        document.getElementById('error-stats')!.textContent = 
+          `錯誤統計: ${JSON.stringify(errorStats, null, 2)}`;
+      } catch (error) {
+        console.error('刷新監控失敗:', error);
+      }
+    }
+
+    private exportDiagnostics(): void {
+      try {
+        const diagnostics = this.serviceManager.exportDiagnostics();
+        const blob = new Blob([diagnostics], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diagnostics-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('診斷信息已導出');
+      } catch (error) {
+        alert(`導出失敗: ${error}`);
+      }
+    }
+
+    // 傷害計算
+    private async testDamage(): Promise<void> {
+      const characterInput = document.getElementById('damage-test-character') as HTMLInputElement;
+      const resultsDiv = document.getElementById('damage-test-results');
+      
+      if (!characterInput || !resultsDiv) return;
+
+      const characterName = characterInput.value.trim();
+      if (!characterName) {
+        resultsDiv.textContent = '❌ 請輸入角色名稱';
+        return;
+      }
+
+      resultsDiv.textContent = '計算中...';
+
+      try {
+        const damage = await this.damageService.getCharacterDamage(characterName);
+        resultsDiv.textContent = `✅ ${characterName} 的傷害值: ${damage}`;
+      } catch (error) {
+        resultsDiv.textContent = `❌ 傷害計算失敗: ${error}`;
+      }
+    }
+  }
+
+  // 初始化測試面板
+  (window as any).testPanel = new TestPanel();
+</script>
