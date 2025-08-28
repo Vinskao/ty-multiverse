@@ -35,15 +35,42 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       />
     </div>
     <div id="leftInfo" class="info-container">
-      <div class="info" id="leftName"></div>
+      <div class="info loading-state" id="leftName">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
       <div id="leftResult" class="result-image"></div>
       <div class="info-row">
-        <div class="info" id="leftPhysicPower"></div>
-        <div class="info" id="leftMagicPower"></div>
-        <div class="info" id="leftUtilityPower"></div>
+        <div class="info loading-state" id="leftPhysicPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
+        <div class="info loading-state" id="leftMagicPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
+        <div class="info loading-state" id="leftUtilityPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
       </div>
-      <div class="info" id="leftAttributes"></div>
-      <div class="info" id="leftTotalPower"></div>
+      <div class="info loading-state" id="leftAttributes">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
+      <div class="info loading-state" id="leftTotalPower">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
+      <div class="weapon-info" id="leftWeaponInfo">
+        <div class="weapon-loading" id="leftWeaponLoading">
+          <div class="loading-spinner"></div>
+          <span>載入武器中...</span>
+        </div>
+        <div class="weapons-container" id="leftWeaponsContainer">
+          <!-- 武器信息將動態插入這裡 -->
+        </div>
+      </div>
     </div>
     <div class="button-container" id="leftButtons"></div>
   </div>
@@ -75,15 +102,42 @@ const characterNames = ['default']; // 初始化為默認值，實際角色列�
       />
     </div>
     <div id="rightInfo" class="info-container">
-      <div class="info" id="rightName"></div>
+      <div class="info loading-state" id="rightName">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
       <div id="rightResult" class="result-image"></div>
       <div class="info-row">
-        <div class="info" id="rightPhysicPower"></div>
-        <div class="info" id="rightMagicPower"></div>
-        <div class="info" id="rightUtilityPower"></div>
+        <div class="info loading-state" id="rightPhysicPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
+        <div class="info loading-state" id="rightMagicPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
+        <div class="info loading-state" id="rightUtilityPower">
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        </div>
       </div>
-      <div class="info" id="rightAttributes"></div>
-      <div class="info" id="rightTotalPower"></div>
+      <div class="info loading-state" id="rightAttributes">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
+      <div class="info loading-state" id="rightTotalPower">
+        <div class="loading-spinner"></div>
+        <span>載入中...</span>
+      </div>
+      <div class="weapon-info" id="rightWeaponInfo">
+        <div class="weapon-loading" id="rightWeaponLoading">
+          <div class="loading-spinner"></div>
+          <span>載入武器中...</span>
+        </div>
+        <div class="weapons-container" id="rightWeaponsContainer">
+          <!-- 武器信息將動態插入這裡 -->
+        </div>
+      </div>
     </div>
     <div class="button-container" id="rightButtons"></div>
   </div>
@@ -136,22 +190,64 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 添加戰鬥狀態追蹤
   let fightCompleted = false;
   
-  // 從 API 獲取角色列表
-  async function fetchCharacterList() {
+  // 從 API 獲取角色名稱列表（同步）
+  async function fetchCharacterNames() {
     try {
-      // 使用共用的角色服務
-      const characterService = (await import('../services/characterService')).default.getInstance();
-      const characters = await characterService.getCharactersWithImages();
-      
-      // 提取角色名稱
-      characterNames = characters.map(char => char.name);
-      
-      // 更新按鈕
-      createButtons("leftButtons", "left");
-      createButtons("rightButtons", "right");
+      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+
+      const response = await fetch(`${baseUrl}/people/names`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      console.log('📡 API 響應狀態:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 錯誤詳情:', errorText);
+        throw new Error(`API 錯誤: ${response.status} - ${errorText}`);
+      }
+
+      const names = await response.json();
+
+      // 確保是數組格式
+      characterNames = Array.isArray(names) ? names : ['default'];
     } catch (error) {
-      console.error('Error fetching character list:', error);
-      characterNames = ['default']; // 如果出錯，只保留默認角色
+      console.error('❌ 獲取角色名稱列表失敗:', error);
+      characterNames = ['default'];
+      console.log('⚠️ 使用默認角色列表:', characterNames);
+    }
+  }
+
+  // 根據名稱獲取角色詳細信息（同步）
+  async function fetchCharacterByName(name: string) {
+    try {
+      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+
+      const response = await fetch(`${baseUrl}/people/get-by-name`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name })
+      });
+
+      if (!response.ok) {
+        throw new Error(`獲取角色信息失敗: ${response.status}`);
+      }
+
+      const characterData = await response.json();
+
+      return characterData;
+    } catch (error) {
+      console.error(`❌ 獲取角色 ${name} 信息失敗:`, error);
+      throw error;
     }
   }
   
@@ -178,19 +274,43 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   };
   
   // 初始化函數
-  function init() {
-    fetchCharacterList();  // 獲取角色列表
+  async function init() {
+    // 初始化載入狀態
+    showInfoLoading('left');
+    showInfoLoading('right');
+
+    // 獲取角色名稱列表（異步）
+    await fetchCharacterNames();
+
+    // 創建按鈕
+    createButtons("leftButtons", "left");
+    createButtons("rightButtons", "right");
+
+    // 創建側邊容器
     createSideContainers('left');
     createSideContainers('right');
+
+    // 隱藏載入狀態（因為還沒有選擇角色）
+    hideInfoLoading('left');
+    hideInfoLoading('right');
   }
   
   // 創建角色選擇按鈕
   function createButtons(containerId: string, side: 'left' | 'right') {
+
     const container = document.getElementById(containerId);
-    if (!container) return;
-    
+    if (!container) {
+      console.error(`❌ 找不到容器: ${containerId}`);
+      return;
+    }
+
     container.innerHTML = "";
-    
+
+    if (characterNames.length === 0) {
+      console.warn(`⚠️ 角色名稱列表為空`);
+      return;
+    }
+
     characterNames.forEach(name => {
       const button = document.createElement("button");
       button.textContent = name;
@@ -198,6 +318,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       button.onclick = () => selectFighter(side, `${config.baseImagePath}${name}.png`);
       container.appendChild(button);
     });
+
   }
   
   // 創建側邊角色容器
@@ -283,13 +404,13 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
     const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]) || null;
-    
+
     // 如果戰鬥已經完成，選擇新角色時清除所有角色
     if (fightCompleted) {
       resetSideSelection('left');
       resetSideSelection('right');
       fightCompleted = false;
-      
+
       // 啟用 Fight 按鈕
       const fightButton = document.getElementById('fightButton') as HTMLButtonElement;
       if (fightButton) {
@@ -297,25 +418,25 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         fightButton.style.opacity = '1';
         fightButton.style.cursor = 'pointer';
       }
-      
+
       // 清除所有按鈕的禁用狀態
       document.querySelectorAll("#leftButtons .button, #rightButtons .button").forEach(button => {
         button.classList.remove("disabled");
       });
-      
-      // 直接選擇新角色，不檢查是否已被選擇
+
+      // 直接選擇新角色，設置為main fighter
       clearAllEffects();
-      
       fighters[side].main.image = imagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
       if (mainImage) mainImage.src = imagePath;
-      
+
       updateButtonStates();
-      fetchFighterInfo(side, imagePath);
+      fetchFighterInfo(side, imagePath, 'main');
+      fetchAndDisplayWeaponInfo(side, selectedName, 'main');
       return;
     }
-    
+
     // 如果戰鬥未完成，則檢查角色是否已被選擇
     if (isCharacterSelected(otherSide, selectedName)) {
       return;
@@ -328,13 +449,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     }
 
     clearAllEffects();
-    
+
+    // 確定fighter類型：根據選擇順序決定是main/left/right
+    let fighterType: 'main' | 'left' | 'right' = 'main';
+
+    // 檢查選擇的順序來確定fighter類型
     if (!fighters[side].main.image) {
+      // 第一個選擇，設置為main
+      fighterType = 'main';
       fighters[side].main.image = imagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
       if (mainImage) mainImage.src = imagePath;
     } else if (!fighters[side].left?.image) {
+      // 第二個選擇，設置為left
+      fighterType = 'left';
       fighters[side].left = { image: imagePath, totalPower: 0, name: selectedName };
       const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
       if (leftImage) {
@@ -342,6 +471,8 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         leftImage.style.display = 'block';
       }
     } else if (!fighters[side].right?.image) {
+      // 第三個選擇，設置為right
+      fighterType = 'right';
       fighters[side].right = { image: imagePath, totalPower: 0, name: selectedName };
       const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
       if (rightImage) {
@@ -349,7 +480,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         rightImage.style.display = 'block';
       }
     } else {
-      resetSideSelection(side);
+      // 所有位置都已選擇，覆蓋main
+      fighterType = 'main';
+      // 先移除舊的main武器
+      fetchAndDisplayWeaponInfo(side, null, 'main');
+
       fighters[side].main.image = imagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
@@ -357,7 +492,27 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     }
 
     updateButtonStates();
-    fetchFighterInfo(side, imagePath);
+    fetchFighterInfo(side, imagePath, fighterType);
+    fetchAndDisplayWeaponInfo(side, selectedName, fighterType);
+  }
+
+  // 獲取並顯示武器信息
+  async function fetchAndDisplayWeaponInfo(side: 'left' | 'right', characterName: string | null, fighterType: 'main' | 'left' | 'right') {
+    if (!characterName) {
+      // 如果沒有角色名，移除該fighter類型的武器
+      removeWeaponByFighterType(side, fighterType);
+      updateNoWeaponsDisplay(side);
+      return;
+    }
+
+    try {
+      console.log(`🔫 開始獲取武器信息 (${side}-${fighterType}): ${characterName}`);
+      const weapons = await fetchWeaponData(characterName);
+      displayWeaponInfo(side, weapons, fighterType);
+    } catch (error) {
+      console.error(`❌ 獲取武器信息失敗 (${side}-${fighterType}):`, error);
+      displayWeaponInfo(side, [], fighterType); // 顯示無武器狀態
+    }
   }
   
   // 檢查角色是否已被選擇
@@ -394,6 +549,12 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     // 清除 localStorage 數據
     clearLocalStorage(side);
+
+    // 清除武器信息
+    clearWeaponInfo(side);
+
+    // 顯示載入狀態
+    showInfoLoading(side);
   }
   
   // 更新按鈕狀態
@@ -413,52 +574,77 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   }
   
   // 獲取角色資訊
-  async function fetchFighterInfo(side: 'left' | 'right', imagePath: string) {
+  async function fetchFighterInfo(side: 'left' | 'right', imagePath: string, fighterType: 'main' | 'left' | 'right' = 'main') {
     try {
       const name = characterNames.find(n => n === imagePath.split("/").pop()?.split(".")[0]);
       if (!name) {
         throw new Error("無法找到角色名稱");
       }
-      
-      // 使用共用的角色服務
-      const characterService = (await import('../services/characterService')).default.getInstance();
-      const data = await characterService.getCharacterByName(name);
-      
+
+      // 顯示載入狀態
+      showInfoLoading(side);
+
+      // 使用新的同步 API 獲取角色詳細信息
+      const data = await fetchCharacterByName(name);
+
       if (data && data.name) {
-        // 獲取武器資訊 (改用新 API)
+        // 計算總傷害（異步）
         const ownerName = name;
-        const token = localStorage.getItem('token');
-        const weaponHeaders: Record<string, string> = {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        };
-        
-        if (token) {
-          weaponHeaders['Authorization'] = `Bearer ${token}`;
-        }
-        
-        const weaponResponse = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${ownerName}`, {
-          method: "GET",
-          headers: weaponHeaders,
-          credentials: 'include'
-        });
 
-        if (weaponResponse.ok) {
-          const weaponData = await weaponResponse.json();
-          
-          // 使用新的武器傷害計算邏輯
-          const { character: updatedCharacter, hasBonus } = await applyWeaponDamage(data, weaponData);
-          
-          // 更新數據中的 utilityPower
-          data.utilityPower = updatedCharacter.utilityPower;
-          
-          // 不再在這裡顯示狀態效果，而是在戰鬥開始時顯示
-          // 將武器數據保存到角色數據中，以便戰鬥時使用
-          data.weaponData = weaponData;
-          data.hasBonus = hasBonus;
+        try {
+          // 添加延遲以避免 429 錯誤 (類似 Levellist.astro 的處理)
+          const delayMs = 100; // 100ms 延遲
+          if (delayMs > 0) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+          }
+
+          // 使用新的傷害計算服務獲取總傷害值
+          const damageService = (await import('../services/damageService')).default.getInstance();
+          const totalDamage = await damageService.getCharacterDamage(ownerName);
+
+          if (totalDamage > 0) {
+            // 計算原始總戰力（physic + magic + utility）
+            const originalPhysic = parseInt(String(data.physicPower || 0), 10);
+            const originalMagic = parseInt(String(data.magicPower || 0), 10);
+            const originalUtility = parseInt(String(data.utilityPower || 0), 10);
+            const originalTotal = originalPhysic + originalMagic + originalUtility;
+
+            console.log(`📊 戰力計算 (${ownerName}):`, {
+              physicPower: originalPhysic,
+              magicPower: originalMagic,
+              utilityPower: originalUtility,
+              originalTotal: originalTotal,
+              apiTotal: totalDamage,
+              hasBonus: totalDamage > originalTotal
+            });
+
+            // 如果 API 返回的總戰力大於原始計算，說明有武器加成
+            if (totalDamage > originalTotal) {
+              // 計算武器加成
+              data.weaponBonus = totalDamage - originalTotal;
+              data.hasBonus = true;
+              console.log(`🎯 計算武器加成 (${ownerName}): weaponBonus = ${data.weaponBonus}`);
+            } else {
+              // 如果 API 返回的總戰力不大於原始計算，使用原始數據
+              data.weaponBonus = 0;
+              data.hasBonus = false;
+              console.log(`📋 使用原始數據 (${ownerName}): 無武器加成`);
+            }
+          } else {
+            // 如果 API 返回無效值，使用原始數據
+            data.weaponBonus = 0;
+            data.hasBonus = false;
+            console.log(`⚠️ API 返回無效值 (${ownerName}): 使用原始數據`);
+          }
+        } catch (damageError) {
+          console.error(`damageWithWeapon API error for ${ownerName}:`, damageError);
+          // 如果傷害計算失敗，使用原始數據（與 Levellist.astro 完全一致）
+          data.weaponBonus = 0;
+          data.hasBonus = false;
         }
 
-        // 等待武器傷害計算完成後再更新顯示和保存
+        // 清除載入狀態並更新顯示
+        hideInfoLoading(side);
         updateFighterInfo(side, data);
         // 儲存到 localStorage
         saveToLocalStorage(side, data);
@@ -467,8 +653,51 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       throw new Error(`找不到角色: ${name}`);
     } catch (error) {
       console.error("獲取角色資訊失敗:", error);
+      hideInfoLoading(side);
       clearFighterInfo(side);
     }
+  }
+
+  // 顯示info區域的載入狀態
+  function showInfoLoading(side: 'left' | 'right') {
+    const infoElements = [
+      `${side}Name`,
+      `${side}PhysicPower`,
+      `${side}MagicPower`,
+      `${side}UtilityPower`,
+      `${side}Attributes`,
+      `${side}TotalPower`
+    ];
+
+    infoElements.forEach(elementId => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.classList.add('loading-state');
+        element.innerHTML = `
+          <div class="loading-spinner"></div>
+          <span>載入中...</span>
+        `;
+      }
+    });
+  }
+
+  // 隱藏info區域的載入狀態
+  function hideInfoLoading(side: 'left' | 'right') {
+    const infoElements = [
+      `${side}Name`,
+      `${side}PhysicPower`,
+      `${side}MagicPower`,
+      `${side}UtilityPower`,
+      `${side}Attributes`,
+      `${side}TotalPower`
+    ];
+
+    infoElements.forEach(elementId => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.classList.remove('loading-state');
+      }
+    });
   }
   
   // 更新角色資訊
@@ -476,7 +705,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     // 從 localStorage 獲取累加的值
     const storageKey = `fighters_${side}`;
     const storedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    
+
     // 獲取當前顯示的角色列表
     const displayedCharacters: string[] = [];
     if (fighters[side].main.image) {
@@ -492,38 +721,85 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       if (rightName) displayedCharacters.push(rightName);
     }
 
-    // 使用 localStorage 中的值，如果沒有則使用當前角色的值
-    const physicPower = storedData.physicPower || parseInt(String(fighter.physicPower || 0), 10);
-    const magicPower = storedData.magicPower || parseInt(String(fighter.magicPower || 0), 10);
-    const utilityPower = storedData.utilityPower || parseInt(String(fighter.utilityPower || 0), 10);
-    const totalPower = physicPower + magicPower + utilityPower;
-    
+    // 使用當前角色的基礎值（來自 get-by-name API）
+    const physicPower = parseInt(String(fighter.physicPower || 0), 10);
+    const magicPower = parseInt(String(fighter.magicPower || 0), 10);
+    const utilityPower = parseInt(String(fighter.utilityPower || 0), 10);
+
+    // 計算武器加成
+    const weaponBonus = parseInt(String(fighter.weaponBonus || 0), 10);
+    const hasBonus = fighter.hasBonus || false;
+
+    // 計算總戰力
+    let totalPower;
+    if (hasBonus && weaponBonus > 0) {
+      // 如果有武器加成，使用 damageWithWeapon API 的總值
+      // 或者使用基礎值 + 武器加成
+      totalPower = physicPower + magicPower + utilityPower + weaponBonus;
+    } else {
+      // 如果沒有武器加成，使用基礎值總和
+      totalPower = physicPower + magicPower + utilityPower;
+    }
+
+    // 如果有多個角色，累加 localStorage 中的值
+    if (storedData.physicPower && displayedCharacters.length > 1) {
+      const storedPhysic = parseInt(String(storedData.physicPower || 0), 10);
+      const storedMagic = parseInt(String(storedData.magicPower || 0), 10);
+      const storedUtility = parseInt(String(storedData.utilityPower || 0), 10);
+      const storedWeaponBonus = parseInt(String(storedData.weaponBonus || 0), 10);
+      const storedHasBonus = storedData.hasBonus || false;
+
+      if (storedHasBonus && storedWeaponBonus > 0) {
+        totalPower = storedPhysic + storedMagic + storedUtility + storedWeaponBonus;
+      } else {
+        totalPower = storedPhysic + storedMagic + storedUtility;
+      }
+    }
+
     // 顯示角色名稱，使用 localStorage 中的名稱列表
     const nameElement = document.getElementById(`${side}Name`);
     if (nameElement) {
       const names = storedData.nameOriginal || [];
       nameElement.textContent = names.join('、') || (fighter.nameOriginal || fighter.name) || "N/A";
+      nameElement.classList.remove('loading-state');
     }
-    
-    const physicPowerElement = document.getElementById(`${side}PhysicPower`);
+
+        const physicPowerElement = document.getElementById(`${side}PhysicPower`);
     const magicPowerElement = document.getElementById(`${side}MagicPower`);
     const utilityPowerElement = document.getElementById(`${side}UtilityPower`);
-    
-    if (physicPowerElement) physicPowerElement.textContent = `Physic Power: ${physicPower}`;
-    if (magicPowerElement) magicPowerElement.textContent = `Magic Power: ${magicPower}`;
-    if (utilityPowerElement) utilityPowerElement.textContent = `Utility Power: ${utilityPower}`;
-    
+
+    if (physicPowerElement) {
+      physicPowerElement.textContent = `Physic Power: ${physicPower}`;
+      physicPowerElement.classList.remove('loading-state');
+    }
+    if (magicPowerElement) {
+      magicPowerElement.textContent = `Magic Power: ${magicPower}`;
+      magicPowerElement.classList.remove('loading-state');
+    }
+    if (utilityPowerElement) {
+      if (hasBonus && weaponBonus > 0) {
+        utilityPowerElement.textContent = `Utility Power: ${utilityPower} (+${weaponBonus})`;
+      } else {
+        utilityPowerElement.textContent = `Utility Power: ${utilityPower}`;
+      }
+      utilityPowerElement.classList.remove('loading-state');
+    }
+
     // 顯示屬性，使用 localStorage 中的屬性列表
     const attributesElement = document.getElementById(`${side}Attributes`);
     if (attributesElement) {
       const attributes = storedData.attributes || [];
       attributesElement.textContent = `Attributes: ${attributes.join('、') || (fighter.attributes || "N/A")}`;
+      attributesElement.classList.remove('loading-state');
     }
-    
+
     // 顯示總力量
     const totalPowerElement = document.getElementById(`${side}TotalPower`);
-    if (totalPowerElement) totalPowerElement.textContent = `Total Power: ${totalPower}`;
-    
+    if (totalPowerElement) {
+      totalPowerElement.textContent = `Total Power: ${totalPower}`;
+      totalPowerElement.classList.remove('loading-state');
+    }
+
     // 確保存儲的總力量是數字
     fighters[side].main.totalPower = totalPower;
     fighters[side].main.nameOriginal = fighter.nameOriginal;
@@ -531,6 +807,8 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   
   // 清除角色資訊
   function clearFighterInfo(side: 'left' | 'right') {
+    hideInfoLoading(side);
+
     const elements = [
       `${side}Name`,
       `${side}PhysicPower`,
@@ -539,12 +817,15 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       `${side}Attributes`,
       `${side}TotalPower`
     ];
-    
+
     elements.forEach(id => {
       const element = document.getElementById(id);
-      if (element) element.textContent = "";
+      if (element) {
+        element.textContent = "";
+        element.classList.remove('loading-state');
+      }
     });
-    
+
     fighters[side].main.totalPower = 0;
     fighters[side].main.nameOriginal = undefined;
   }
@@ -950,12 +1231,16 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   }
   
   // 頁面載入時初始化
-  window.onload = () => {
-    init();
-    // 添加 Fight 按鈕的點擊事件監聽器
-    const fightButton = document.getElementById('fightButton');
-    if (fightButton) {
-      fightButton.addEventListener('click', startFight);
+  window.onload = async () => {
+    try {
+      await init();
+      // 添加 Fight 按鈕的點擊事件監聽器
+      const fightButton = document.getElementById('fightButton');
+      if (fightButton) {
+        fightButton.addEventListener('click', startFight);
+      }
+    } catch (error) {
+      console.error('❌ Fight 組件初始化失敗:', error);
     }
   };
 
@@ -968,6 +1253,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     if (!currentData.physicPower) currentData.physicPower = 0;
     if (!currentData.magicPower) currentData.magicPower = 0;
     if (!currentData.utilityPower) currentData.utilityPower = 0;
+    if (!currentData.weaponBonus) currentData.weaponBonus = 0;
     if (!currentData.nameOriginal) currentData.nameOriginal = [];
     if (!currentData.attributes) currentData.attributes = [];
 
@@ -977,13 +1263,19 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     // 檢查當前角色是否已經在列表中
     const isAlreadyAdded = currentData.nameOriginal.includes(currentName);
-    
+
     // 如果角色已經存在，不重複添加
     if (!isAlreadyAdded) {
       // 累加數值
       currentData.physicPower += parseInt(String(fighter.physicPower || 0), 10);
       currentData.magicPower += parseInt(String(fighter.magicPower || 0), 10);
       currentData.utilityPower += parseInt(String(fighter.utilityPower || 0), 10);
+      currentData.weaponBonus += parseInt(String(fighter.weaponBonus || 0), 10);
+
+      // 如果任何角色有武器加成，整體就有加成
+      if (fighter.hasBonus) {
+        currentData.hasBonus = true;
+      }
 
       // 添加名稱和屬性
       currentData.nameOriginal.push(currentName);
@@ -991,13 +1283,10 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       if (attributes && !currentData.attributes.includes(attributes)) {
         currentData.attributes.push(attributes);
       }
-      
-      // 保存武器數據和加成狀態
+
+      // 保存武器數據
       if (fighter.weaponData) {
         currentData.weaponData = fighter.weaponData;
-      }
-      if (fighter.hasBonus !== undefined) {
-        currentData.hasBonus = fighter.hasBonus;
       }
 
       // 儲存回 localStorage
@@ -1020,28 +1309,267 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     console.log(`Cleared ${side} side localStorage data`);
   }
 
-    // 通用的武器 API 調用函數
+    // 通用的武器 API 調用函數（異步處理）
   async function fetchWeaponData(ownerName: string) {
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    try {
+      console.log(`🔫 開始獲取武器數據: ${ownerName}`);
+
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+      const response = await fetch(`${baseUrl}/weapons/owner/${ownerName}`, {
+        method: "GET",
+        headers,
+        credentials: 'include'
+      });
+
+      console.log(`📡 武器 API 響應: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ 武器 API 錯誤:`, errorText);
+        throw new Error(`武器 API 錯誤: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`📥 武器 API 數據:`, data);
+
+      // 檢查是否是異步處理
+      if (data.requestId && data.status === 'processing') {
+        console.log('⏳ 武器數據正在處理中，開始輪詢...');
+        return await pollWeaponData(data.requestId, baseUrl);
+      }
+
+      // 如果直接返回數據
+      if (Array.isArray(data)) {
+        console.log(`✅ 獲取到 ${data.length} 件武器數據`);
+        return data;
+      }
+
+      console.log('⚠️ 武器數據格式異常');
+      return [];
+    } catch (error) {
+      console.error(`❌ 獲取武器數據失敗 (${ownerName}):`, error);
+      return [];
     }
-    
-    const response = await fetch(`${import.meta.env.PUBLIC_TYMB_URL}/weapons/owner/${ownerName}`, {
-      method: "GET",
-      headers,
-      credentials: 'include'
+  }
+
+  // 輪詢武器數據
+  async function pollWeaponData(requestId: string, baseUrl: string, maxAttempts: number = 8, interval: number = 5000) {
+    // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
+    maxAttempts = Math.min(maxAttempts, 8);
+    interval = Math.max(interval, 5000);
+    console.log(`🔄 開始輪詢武器數據: ${requestId}`);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`🔄 武器輪詢嘗試 ${attempt}/${maxAttempts}...`);
+
+        // 檢查結果是否存在
+        const existsUrl = `${baseUrl}/api/request-status/${requestId}/exists`;
+        const existsResponse = await fetch(existsUrl, { credentials: 'include' });
+
+        if (existsResponse.ok) {
+          const existsData = await existsResponse.json();
+          console.log(`傷害結果存在檢查: ${JSON.stringify(existsData)}`);
+
+          // 如果 exists 為 false，等待3秒後停止輪詢
+          if (!existsData.exists) {
+            console.log('傷害結果存在檢查:', existsData);
+            console.log('⏳ 結果不存在，3秒後停止輪詢...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            console.log('❌ 結果不存在，肯定沒到隊列裡面，停止輪詢');
+            throw new Error('結果不存在，肯定沒到隊列裡面');
+          }
+
+          if (existsData.exists) {
+            // 獲取結果
+            const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
+            const resultResponse = await fetch(resultUrl, { credentials: 'include' });
+
+            if (!resultResponse.ok) {
+              const errorText = await resultResponse.text();
+              console.error('❌ 武器結果獲取失敗:', errorText);
+              throw new Error(`武器結果獲取失敗: ${resultResponse.status} - ${errorText}`);
+            }
+
+            const result = await resultResponse.json();
+            console.log('✅ 武器輪詢結果:', result);
+
+            // 檢查是否還在處理中
+            if (result.status === 'processing' || result.data === null) {
+              console.log('⏳ 武器數據仍在處理中，繼續等待...');
+              if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, interval));
+                continue;
+              } else {
+                throw new Error('武器數據輪詢超時');
+              }
+            }
+
+            // 檢查是否有錯誤
+            if (result.error) {
+              console.error('❌ 武器處理錯誤:', result.error);
+              throw new Error(`武器處理錯誤: ${result.error}`);
+            }
+
+            // 檢查數據格式
+            if (result.data && Array.isArray(result.data)) {
+              return result.data;
+            } else {
+              console.error('❌ 武器數據格式錯誤:', result);
+              throw new Error('武器數據格式不正確');
+            }
+          }
+        }
+
+        // 結果還不存在，繼續等待
+        console.log('⏳ 武器結果還不存在，繼續等待...');
+        if (attempt < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, interval));
+          continue;
+        } else {
+          throw new Error('武器數據輪詢超時');
+        }
+
+      } catch (error) {
+        console.error(`❌ 武器輪詢嘗試 ${attempt} 失敗:`, error);
+        if (attempt === maxAttempts) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+
+    throw new Error('武器數據輪詢超時');
+  }
+
+  // 顯示武器信息（累積模式）
+  function displayWeaponInfo(side: 'left' | 'right', weapons: any[], fighterType: 'main' | 'left' | 'right') {
+    const weaponLoading = document.getElementById(`${side}WeaponLoading`);
+    const weaponsContainer = document.getElementById(`${side}WeaponsContainer`);
+
+    if (!weaponLoading || !weaponsContainer) {
+      console.error(`❌ 找不到武器顯示元素 (${side})`);
+      return;
+    }
+
+    // 隱藏 loading（只有在沒有任何fighter時才顯示loading）
+    const hasAnyFighter = fighters[side].main.image || fighters[side].left?.image || fighters[side].right?.image;
+    weaponLoading.style.display = hasAnyFighter ? 'none' : 'flex';
+
+    // 先移除舊的fighter類型的武器（如果存在的話）
+    removeWeaponByFighterType(side, fighterType);
+
+    if (!weapons || weapons.length === 0) {
+      console.log(`ℹ️ ${fighterType} fighter 無武器 (${side})`);
+      updateNoWeaponsDisplay(side);
+      return;
+    }
+
+    // 添加新武器的標識，讓我們知道這是哪個fighter的武器
+    weapons.forEach((weapon, index) => {
+      const weaponElement = document.createElement('div');
+      weaponElement.className = `weapon-item fighter-${fighterType}`;
+      weaponElement.dataset.fighterType = fighterType;
+      weaponElement.innerHTML = `
+        <div class="weapon-header">
+          <span class="weapon-name">${weapon.weapon || '未知武器'}</span>
+          <span class="weapon-owner">(${weapon.owner})</span>
+          <span class="fighter-type">${getFighterTypeLabel(fighterType)}</span>
+        </div>
+        <div class="weapon-stats">
+          <div class="weapon-damage">
+            <div class="base-damage">基礎傷害: ${weapon.baseDamage || 0}</div>
+            <div class="bonus-damage">加成傷害: ${weapon.bonusDamage || 0}</div>
+          </div>
+          <div class="weapon-attributes">
+            <div class="main-attribute">主屬性: ${weapon.attributes || '無'}</div>
+            ${weapon.bonusAttributes && weapon.bonusAttributes.length > 0 ?
+              `<div class="bonus-attributes">副屬性: ${weapon.bonusAttributes.join(', ')}</div>` : ''}
+          </div>
+          ${weapon.stateAttributes && weapon.stateAttributes.length > 0 ?
+            `<div class="state-effects">
+              <span class="state-label">狀態效果:</span>
+              <div class="state-tags">
+                ${weapon.stateAttributes.slice(0, 4).map(state =>
+                  `<span class="state-tag">${state}</span>`
+                ).join('')}
+                ${weapon.stateAttributes.length > 4 ?
+                  `<span class="state-tag more">+${weapon.stateAttributes.length - 4}</span>` : ''}
+              </div>
+            </div>` : ''}
+        </div>
+      `;
+      weaponsContainer.appendChild(weaponElement);
     });
-    
-    if (response.ok) {
-      return await response.json();
+
+    console.log(`✅ 已累積顯示 ${weapons.length} 件武器信息 (${side}-${fighterType})`);
+    updateNoWeaponsDisplay(side);
+  }
+
+  // 移除特定fighter類型的武器
+  function removeWeaponByFighterType(side: 'left' | 'right', fighterType: 'main' | 'left' | 'right') {
+    const weaponsContainer = document.getElementById(`${side}WeaponsContainer`);
+    if (!weaponsContainer) return;
+
+    // 移除指定fighter類型的武器元素
+    const weaponElements = weaponsContainer.querySelectorAll(`[data-fighter-type="${fighterType}"]`);
+    weaponElements.forEach(element => element.remove());
+
+    console.log(`🗑️ 已移除 ${weaponElements.length} 件武器 (${side}-${fighterType})`);
+  }
+
+  // 更新無武器顯示
+  function updateNoWeaponsDisplay(side: 'left' | 'right') {
+    const weaponsContainer = document.getElementById(`${side}WeaponsContainer`);
+    if (!weaponsContainer) return;
+
+    // 檢查是否還有武器
+    const hasWeapons = weaponsContainer.querySelectorAll('.weapon-item').length > 0;
+
+    // 移除現有的無武器提示
+    const noWeaponsElement = weaponsContainer.querySelector('.no-weapons');
+    if (noWeaponsElement) {
+      noWeaponsElement.remove();
     }
-    return null;
+
+    // 如果沒有武器，顯示無武器提示
+    if (!hasWeapons) {
+      weaponsContainer.innerHTML = '<div class="no-weapons">無武器</div>';
+    }
+  }
+
+  // 獲取fighter類型標籤
+  function getFighterTypeLabel(fighterType: 'main' | 'left' | 'right'): string {
+    switch (fighterType) {
+      case 'main': return '主';
+      case 'left': return '左';
+      case 'right': return '右';
+      default: return '';
+    }
+  }
+
+  // 清除武器信息
+  function clearWeaponInfo(side: 'left' | 'right') {
+    const weaponLoading = document.getElementById(`${side}WeaponLoading`);
+    const weaponsContainer = document.getElementById(`${side}WeaponsContainer`);
+
+    if (weaponLoading) {
+      weaponLoading.style.display = 'flex';
+    }
+
+    if (weaponsContainer) {
+      weaponsContainer.innerHTML = '';
+    }
   }
 
   // 檢查並應用狀態效果

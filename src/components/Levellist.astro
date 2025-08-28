@@ -1776,20 +1776,41 @@ import '../styles/levellist.css';
         }
       `;
       document.head.appendChild(style);
-      // 使用共用的角色服務
-      const characterService = (await import('../services/characterService')).default.getInstance();
-      const data = await characterService.getCharacters();
-      
-      // 計算每個角色的總戰力並獲取武器資訊
+      // 使用新的同步 API 獲取角色列表和詳細信息
+      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+
+      // 1. 先獲取角色名稱列表
+      const namesResponse = await fetch(`${baseUrl}/people/names`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!namesResponse.ok) {
+        throw new Error(`獲取角色名稱列表失敗: ${namesResponse.status}`);
+      }
+
+      const characterNames = await namesResponse.json();
+
+      // 確保是數組格式
+      if (!Array.isArray(characterNames)) {
+        throw new Error('角色名稱列表格式錯誤');
+      }
+
+      // 2. 獲取每個角色的詳細信息並計算總戰力
       const charactersWithPower = await Promise.all(
-        data.map(async (character, index) => {
+        characterNames.map(async (name, index) => {
           try {
             // 檢查是否有暫存的戰力數據
-            const cachedData = getFromLocalStorage(character.name);
+            const cachedData = getFromLocalStorage(name);
             if (cachedData) {
-              console.log(`使用暫存的戰力數據: ${character.name}`);
+              console.log(`使用暫存的戰力數據: ${name}`);
               return {
-                ...character,
+                name: name,
+                nameOriginal: cachedData.nameOriginal || name,
                 totalPower: cachedData.totalPower,
                 physicPower: cachedData.physicPower,
                 magicPower: cachedData.magicPower,
@@ -1797,34 +1818,51 @@ import '../styles/levellist.css';
                 originalUtilityPower: cachedData.utilityPower,
                 weaponBonus: cachedData.weaponBonus,
                 hasBonus: cachedData.hasBonus,
-                weaponData: cachedData.weaponData
+                weaponData: cachedData.weaponData,
+                attributes: cachedData.attributes
               };
             }
             
+            // 獲取角色詳細信息（同步）
+            const characterResponse = await fetch(`${baseUrl}/people/get-by-name`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({ name })
+            });
+
+            if (!characterResponse.ok) {
+              throw new Error(`獲取角色 ${name} 信息失敗: ${characterResponse.status}`);
+            }
+
+            const character = await characterResponse.json();
+
             // 基本能力值
             const physicPower = parseInt(String(character?.physicPower || 0), 10);
-            const magicPower  = parseInt(String(character?.magicPower  || 0), 10);
-            const utilityPower = parseInt(String(character.utilityPower || 0), 10); // 直接使用資料庫中的 utility
+            const magicPower = parseInt(String(character?.magicPower || 0), 10);
+            const utilityPower = parseInt(String(character.utilityPower || 0), 10);
             const originalUtilityPower = utilityPower;
 
             // 透過 damageWithWeapon API 取得總戰力
-            const ownerName = character.name || '';
             let totalPower = physicPower + magicPower + utilityPower;
-            
+
             // 添加延遲以避免 429 錯誤
             if (index > 0) {
               await new Promise(resolve => setTimeout(resolve, 100 * index)); // 每個請求間隔 100ms
             }
-            
+
             try {
               // 使用新的傷害計算服務
               const damageService = (await import('../services/damageService')).default.getInstance();
-              const damageValue = await damageService.getCharacterDamage(ownerName);
+              const damageValue = await damageService.getCharacterDamage(name);
               if (damageValue > 0) {
                 totalPower = damageValue;
               }
             } catch (e) {
-              console.error(`damageWithWeapon API error for ${ownerName}:`, e);
+              console.error(`damageWithWeapon API error for ${name}:`, e);
             }
 
             // 計算武器加成
@@ -1836,25 +1874,24 @@ import '../styles/levellist.css';
               totalPower,
               physicPower,
               magicPower,
-              utilityPower,          // 直接用 utility 作為武器戰力
+              utilityPower,
               originalUtilityPower,
               weaponBonus,
               hasBonus,
               weaponData: null
             };
           } catch (error) {
-            console.error(`Error fetching weapon info for ${character.name}:`, error);
-            const originalUtilityPower = parseInt(String(character.utilityPower || 0), 10);
+            console.error(`Error fetching weapon info for ${name}:`, error);
+            // 如果獲取角色信息失敗，返回基本信息
             return {
-              ...character,
-              totalPower: parseInt(String(character.physicPower || 0), 10) + 
-                          parseInt(String(character.magicPower || 0), 10) + 
-                          parseInt(String(character.utilityPower || 0), 10),
-              physicPower: parseInt(String(character.physicPower || 0), 10),
-              magicPower: parseInt(String(character.magicPower || 0), 10),
-              utilityPower: parseInt(String(character.utilityPower || 0), 10),
-              originalUtilityPower, // 保存原始武器戰力值
-              weaponBonus: 0, // 無武器加成
+              name: name,
+              nameOriginal: name,
+              physicPower: 0,
+              magicPower: 0,
+              utilityPower: 0,
+              totalPower: 0,
+              attributes: '未知',
+              weaponBonus: 0,
               hasBonus: false,
               weaponData: null
             };

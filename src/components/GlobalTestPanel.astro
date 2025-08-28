@@ -63,21 +63,27 @@ import TestPanel from './TestPanel.astro';
       }
     }
 
-    private togglePanel(): void {
-      // 調用獨立測試面板的 openPanel 方法
-      if ((window as any).testPanel) {
-        (window as any).testPanel.openPanel();
-      } else {
-        console.log('測試面板尚未初始化，等待...');
-        // 如果測試面板還沒初始化，等待一下再試
-        setTimeout(() => {
-          if ((window as any).testPanel) {
-            (window as any).testPanel.openPanel();
-          } else {
-            console.error('無法找到測試面板實例');
-          }
-        }, 1000);
+    private async togglePanel(): Promise<void> {
+      console.log('🔧 測試按鈕被點擊');
+      
+      // 等待測試面板初始化完成
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (attempts < maxAttempts) {
+        if ((window as any).testPanel && typeof (window as any).testPanel.openPanel === 'function') {
+          console.log('✅ 找到測試面板，打開面板');
+          (window as any).testPanel.openPanel();
+          return;
+        }
+        
+        console.log(`⏳ 等待測試面板初始化... (${attempts + 1}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
       }
+      
+      console.error('❌ 測試面板初始化超時');
+      alert('測試面板初始化失敗，請刷新頁面重試');
     }
   }
 
