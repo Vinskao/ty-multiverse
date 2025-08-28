@@ -133,8 +133,8 @@ display: flex;
 flex-direction: column;
 align-items: center;
 width: 100%;
-min-height: 200px;
-max-height: 200px;
+min-height: 300px;
+max-height: 400px;
 background: linear-gradient(135deg, rgba(207, 157, 165, 0.11), rgba(218, 203, 205, 0.048));
 z-index: 50;
 padding: 10px 0;
@@ -545,6 +545,237 @@ overflow: visible;
   }
 }
 
+/* 武器信息顯示樣式 */
+.weapon-info {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 192, 203, 0.3);
+}
+
+.weapon-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff69b4;
+  font-size: 12px;
+  padding: 10px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 105, 180, 0.3);
+  border-top: 2px solid #ff69b4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.weapons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.weapon-item {
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.1), rgba(255, 192, 203, 0.05));
+  border: 1px solid rgba(255, 182, 193, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 11px;
+  color: #333;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.weapon-item:hover {
+  background: linear-gradient(135deg, rgba(255, 182, 193, 0.15), rgba(255, 192, 203, 0.1));
+  border-color: rgba(255, 182, 193, 0.5);
+}
+
+/* 不同fighter類型的武器樣式 */
+.weapon-item.fighter-main {
+  border-left: 4px solid #ff1493;
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.1), rgba(255, 192, 203, 0.05));
+}
+
+.weapon-item.fighter-main:hover {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.15), rgba(255, 192, 203, 0.1));
+  border-color: rgba(255, 20, 147, 0.5);
+}
+
+.weapon-item.fighter-left {
+  border-left: 4px solid #32cd32;
+  background: linear-gradient(135deg, rgba(50, 205, 50, 0.1), rgba(255, 192, 203, 0.05));
+}
+
+.weapon-item.fighter-left:hover {
+  background: linear-gradient(135deg, rgba(50, 205, 50, 0.15), rgba(255, 192, 203, 0.1));
+  border-color: rgba(50, 205, 50, 0.5);
+}
+
+.weapon-item.fighter-right {
+  border-left: 4px solid #ffa500;
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 192, 203, 0.05));
+}
+
+.weapon-item.fighter-right:hover {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.15), rgba(255, 192, 203, 0.1));
+  border-color: rgba(255, 165, 0, 0.5);
+}
+
+.weapon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 182, 193, 0.2);
+}
+
+.weapon-name {
+  font-weight: bold;
+  color: #ff1493;
+  font-size: 12px;
+}
+
+.weapon-owner {
+  font-size: 10px;
+  color: #888;
+}
+
+.fighter-type {
+  font-size: 9px;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: white;
+}
+
+.fighter-main .fighter-type {
+  background: #ff1493;
+}
+
+.fighter-left .fighter-type {
+  background: #32cd32;
+}
+
+.fighter-right .fighter-type {
+  background: #ffa500;
+}
+
+.weapon-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weapon-damage {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 10px;
+}
+
+.base-damage {
+  color: #666;
+  line-height: 1.2;
+}
+
+.bonus-damage {
+  color: #ff4500;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.weapon-attributes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+}
+
+.main-attribute {
+  color: #8a2be2;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.bonus-attributes {
+  color: #32cd32;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+.state-effects {
+  margin-top: 4px;
+}
+
+.state-label {
+  font-size: 10px;
+  color: #ff6347;
+  font-weight: bold;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.state-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.state-tag {
+  background: rgba(255, 99, 71, 0.2);
+  color: #ff6347;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  border: 1px solid rgba(255, 99, 71, 0.3);
+}
+
+.state-tag.more {
+  background: rgba(255, 99, 71, 0.4);
+  font-weight: bold;
+}
+
+.no-weapons {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  padding: 10px;
+  font-style: italic;
+}
+
+/* 武器滾動條樣式 */
+.weapons-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.weapons-container::-webkit-scrollbar-track {
+  background: rgba(255, 192, 203, 0.1);
+  border-radius: 2px;
+}
+
+.weapons-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 182, 193, 0.5);
+  border-radius: 2px;
+}
+
+.weapons-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 182, 193, 0.7);
+}
+
 .left-container, .right-container {
   display: flex;
   flex-direction: column;
@@ -558,4 +789,29 @@ overflow: visible;
   position: relative;
   z-index: 50;
   padding: 0 10px;  /* 添加左右padding */
+}
+
+/* Info 區域載入狀態樣式 */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff69b4;
+  font-size: 12px;
+  min-height: 20px;
+}
+
+.loading-state .loading-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(255, 105, 180, 0.3);
+  border-top: 1.5px solid #ff69b4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-state span {
+  color: #ff69b4;
+  font-weight: 500;
 }

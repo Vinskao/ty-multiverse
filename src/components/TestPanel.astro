@@ -421,7 +421,7 @@
     }
 
     private async pollForResult(requestId: string, baseUrl: string, resultsDiv: HTMLElement): Promise<void> {
-      for (let attempt = 1; attempt <= 5; attempt++) {
+      for (let attempt = 1; attempt <= 8; attempt++) {
         try {
           const existsResponse = await fetch(`${baseUrl}/api/request-status/${requestId}/exists`, {
             credentials: 'include'
@@ -429,20 +429,51 @@
 
           if (existsResponse.ok) {
             const existsData = await existsResponse.json();
-            if (existsData.exists) {
-              const resultResponse = await fetch(`${baseUrl}/api/request-status/${requestId}`, {
-                credentials: 'include'
-              });
+            console.log(`傷害結果存在檢查: ${JSON.stringify(existsData)}`);
 
-              if (resultResponse.ok) {
-                const result = await resultResponse.json();
-                resultsDiv.textContent += `\n✅ 輪詢成功！\n結果: ${JSON.stringify(result, null, 2)}`;
+            // 如果 exists 為 false，等待3秒後停止輪詢
+            if (!existsData.exists) {
+              resultsDiv.textContent += `\n傷害結果存在檢查: ${JSON.stringify(existsData)}`;
+              resultsDiv.textContent += '\n⏳ 結果不存在，3秒後停止輪詢...';
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              resultsDiv.textContent += '\n❌ 結果不存在，肯定沒到隊列裡面，停止輪詢';
+              return;
+            }
+
+            // 如果 exists 為 true，獲取結果
+            const resultResponse = await fetch(`${baseUrl}/api/request-status/${requestId}`, {
+              credentials: 'include'
+            });
+
+            if (resultResponse.ok) {
+              const result = await resultResponse.json();
+
+              // 檢查是否還在處理中
+              if (result.status === 'processing' || result.data === null) {
+                resultsDiv.textContent += `\n⏳ 結果仍在處理中...`;
+                if (attempt < 8) {
+                  await new Promise(resolve => setTimeout(resolve, 5000));
+                  continue;
+                } else {
+                  resultsDiv.textContent += '\n❌ 輪詢超時';
+                  return;
+                }
+              }
+
+              // 檢查是否有錯誤
+              if (result.error) {
+                resultsDiv.textContent += `\n❌ 處理錯誤: ${result.error}`;
                 return;
               }
+
+              resultsDiv.textContent += `\n✅ 輪詢成功！\n結果: ${JSON.stringify(result, null, 2)}`;
+              return;
             }
           }
 
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          if (attempt < 8) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
         } catch (error) {
           resultsDiv.textContent += `\n❌ 輪詢失敗: ${error}`;
           return;
@@ -554,5 +585,8 @@
   }
 
   // 初始化測試面板
-  (window as any).testPanel = new TestPanel();
+  const testPanel = new TestPanel();
+  (window as any).testPanel = testPanel;
+
+  console.log('🔧 測試面板實例已創建，openPanel方法:', typeof testPanel.openPanel);
 </script>

@@ -123,7 +123,6 @@ export async function applyWeaponDamage(character, weapons) {
     if (!response.ok) throw new Error(`API response not ok: ${response.status}`);
 
     const data = await response.json();
-    console.log('📡 傷害計算響應:', data);
 
     // 檢查是否為異步處理
     if (data.status === 'processing' && data.requestId) {
@@ -177,7 +176,7 @@ export async function applyWeaponDamage(character, weapons) {
 }
 
 // 輪詢傷害計算結果
-async function pollForDamageResult(requestId, baseUrl, maxAttempts = 30, interval = 6000) {
+async function pollForDamageResult(requestId, baseUrl, maxAttempts = 8, interval = 5000) {
   console.log('🔄 開始輪詢傷害結果，RequestId:', requestId);
   
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -207,12 +206,30 @@ async function pollForDamageResult(requestId, baseUrl, maxAttempts = 30, interva
             throw new Error(`傷害結果獲取失敗: ${resultResponse.status} - ${errorText}`);
           }
           
-          const result = await resultResponse.json();
-          console.log('✅ 獲取傷害結果成功:', result);
-          
-          // 從結果中提取傷害值
-          const damage = result.data || result.damage || result.totalDamage || 0;
-          return parseInt(String(damage), 10);
+                      const result = await resultResponse.json();
+            console.log('✅ 獲取傷害結果成功:', result);
+
+            // 檢查是否還在處理中
+            if (result.status === 'processing' || result.data === null) {
+              console.log('⏳ 傷害結果仍在處理中，繼續等待...');
+              // 不要立即 continue，而是等待後再繼續
+              if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, interval));
+                continue;
+              } else {
+                throw new Error('傷害計算輪詢超時');
+              }
+            }
+            
+            // 檢查是否有錯誤
+            if (result.error) {
+              console.error('❌ 傷害處理結果有錯誤:', result.error);
+              throw new Error(`傷害處理錯誤: ${result.error}`);
+            }
+
+            // 從結果中提取傷害值
+            const damage = result.data || result.damage || result.totalDamage || 0;
+            return parseInt(String(damage), 10);
         }
       } else {
         console.log('⚠️ 傷害結果存在檢查失敗:', existsResponse.status, existsResponse.statusText);

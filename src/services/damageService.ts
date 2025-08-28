@@ -42,67 +42,88 @@ class DamageService {
     }
   }
 
-  // 從 API 獲取傷害值
+  // 從 API 獲取傷害值（現在是同步API）
   private async fetchDamageFromAPI(characterName: string): Promise<number> {
     const serviceManager = (await import('./serviceManager')).default.getInstance();
-    
+
     return await serviceManager.executeAPI(async () => {
       const token = localStorage.getItem('token');
       const headers: Record<string, string> = {
-        "Content-Type": "application/json",
         "Accept": "application/json"
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
       console.log(`🌐 傷害計算 URL: ${baseUrl}/people/damageWithWeapon?name=${characterName}`);
-      
+
       const response = await fetch(`${baseUrl}/people/damageWithWeapon?name=${encodeURIComponent(characterName)}`, {
         method: "GET",
         headers,
         credentials: 'include'
       });
-      
-      console.log(`📡 傷害計算響應: ${response.status} ${response.statusText}`);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ 傷害計算 API 錯誤:', errorText);
         throw new Error(`傷害計算 API 錯誤: ${response.status} - ${errorText}`);
       }
-      
-      const data = await response.json();
-      console.log(`📥 傷害計算數據:`, data);
-      
-      // 檢查是否為異步處理響應
-      if (data.status === 'processing' || data.requestId) {
-        console.log(`⏳ 檢測到異步傷害計算，開始輪詢結果...`);
-        return await this.pollForDamageResult(data.requestId, baseUrl);
+
+      // 根據用戶說明，這現在是同步API，直接返回數值
+      const textData = await response.text();
+      console.log(`📥 傷害計算原始響應:`, textData);
+
+      // 嘗試解析為JSON
+      let data;
+      try {
+        data = JSON.parse(textData);
+        console.log(`📥 傷害計算JSON數據:`, data);
+      } catch {
+        // 如果不是JSON，直接當作數字字符串處理
+        data = textData;
+        console.log(`📥 傷害計算文本數據:`, data);
       }
-      
-      // 檢查是否為數字（直接響應）
+
+      // 檢查是否為數字
       if (typeof data === 'number') {
         console.log(`✅ 收到直接傷害值: ${data}`);
         return data;
       }
-      
+
       // 檢查是否為字符串數字
       const damageValue = parseInt(String(data), 10);
       if (!isNaN(damageValue)) {
         console.log(`✅ 解析傷害值: ${damageValue}`);
         return damageValue;
       }
-      
+
+      // 如果是對象，嘗試提取數值
+      if (typeof data === 'object' && data !== null) {
+        // 檢查常見的數值字段
+        const possibleFields = ['damage', 'value', 'result', 'totalDamage'];
+        for (const field of possibleFields) {
+          if (data[field] !== undefined) {
+            const fieldValue = parseInt(String(data[field]), 10);
+            if (!isNaN(fieldValue)) {
+              console.log(`✅ 從字段 ${field} 解析傷害值: ${fieldValue}`);
+              return fieldValue;
+            }
+          }
+        }
+      }
+
       console.error('❌ 未知的傷害數據格式:', data);
       throw new Error('傷害計算 API 返回無效數據格式');
     }, `DamageService.getCharacterDamage.${characterName}`);
   }
 
   // 輪詢傷害計算結果
-  private async pollForDamageResult(requestId: string, baseUrl: string, maxAttempts: number = 30, interval: number = 6000): Promise<number> {
+  private async pollForDamageResult(requestId: string, baseUrl: string, maxAttempts: number = 8, interval: number = 5000): Promise<number> {
+    // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
+    maxAttempts = Math.min(maxAttempts, 8);
+    interval = Math.max(interval, 5000);
     console.log(`🔄 開始輪詢傷害結果，RequestId: ${requestId}`);
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -117,12 +138,20 @@ class DamageService {
           credentials: 'include'
         });
         
-        console.log(`📡 傷害存在檢查響應: ${existsResponse.status} ${existsResponse.statusText}`);
         
         if (existsResponse.ok) {
           const existsData = await existsResponse.json();
           console.log(`📊 傷害結果存在檢查:`, existsData);
-          
+
+          // 如果 exists 為 false，等待3秒後停止輪詢
+          if (!existsData.exists) {
+            console.log('傷害結果存在檢查:', existsData);
+            console.log('⏳ 結果不存在，3秒後停止輪詢...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            console.log('❌ 結果不存在，肯定沒到隊列裡面，停止輪詢');
+            throw new Error('結果不存在，肯定沒到隊列裡面');
+          }
+
           if (existsData.exists) {
             // 獲取結果
             const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
@@ -142,6 +171,24 @@ class DamageService {
             
             const result = await resultResponse.json();
             console.log(`✅ 獲取傷害結果成功:`, result);
+            
+            // 檢查是否還在處理中
+            if (result.status === 'processing' || result.data === null) {
+              console.log('⏳ 傷害結果仍在處理中，繼續等待...');
+              // 不要立即 continue，而是等待後再繼續
+              if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, interval));
+                continue;
+              } else {
+                throw new Error('傷害計算輪詢超時');
+              }
+            }
+            
+            // 檢查是否有錯誤
+            if (result.error) {
+              console.error('❌ 傷害處理結果有錯誤:', result.error);
+              throw new Error(`傷害處理錯誤: ${result.error}`);
+            }
             
             // 解析傷害值
             const damageValue = this.parseDamageValue(result);

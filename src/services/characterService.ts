@@ -41,7 +41,6 @@ class CharacterService {
       }
 
       // 從 API 獲取數據
-      console.log('🔄 從 API 獲取角色數據...');
       const characters = await this.fetchCharactersFromAPI();
       
       // 緩存數據
@@ -119,7 +118,10 @@ class CharacterService {
   }
 
   // 輪詢結果直到完成
-  private async pollForResult(requestId: string, baseUrl: string, maxAttempts: number = 30, interval: number = 6000): Promise<Character[]> {
+  private async pollForResult(requestId: string, baseUrl: string, maxAttempts: number = 8, interval: number = 5000): Promise<Character[]> {
+    // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
+    maxAttempts = Math.min(maxAttempts, 8);
+    interval = Math.max(interval, 5000);
     console.log('🔄 開始輪詢，RequestId:', requestId, 'BaseUrl:', baseUrl);
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -139,7 +141,16 @@ class CharacterService {
         if (existsResponse.ok) {
           const existsData = await existsResponse.json();
           console.log('📊 結果存在檢查:', existsData);
-          
+
+          // 如果 exists 為 false，等待3秒後停止輪詢
+          if (!existsData.exists) {
+            console.log('傷害結果存在檢查:', existsData);
+            console.log('⏳ 結果不存在，3秒後停止輪詢...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            console.log('❌ 結果不存在，肯定沒到隊列裡面，停止輪詢');
+            throw new Error('結果不存在，肯定沒到隊列裡面');
+          }
+
           if (existsData.exists) {
             // 獲取結果
             const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
@@ -159,7 +170,33 @@ class CharacterService {
             
             const result = await resultResponse.json();
             console.log('✅ 獲取結果成功:', result);
-            return result.data || result;
+            
+            // 檢查是否還在處理中
+            if (result.status === 'processing' || result.data === null) {
+              console.log('⏳ 結果仍在處理中，繼續等待...');
+              // 不要立即 continue，而是等待後再繼續
+              if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, interval));
+                continue;
+              } else {
+                throw new Error('輪詢超時');
+              }
+            }
+            
+            // 檢查是否有錯誤
+            if (result.error) {
+              console.error('❌ 處理結果有錯誤:', result.error);
+              throw new Error(`處理錯誤: ${result.error}`);
+            }
+            
+            // 檢查 data 字段
+            if (result.data && Array.isArray(result.data)) {
+              console.log('✅ 收到有效的角色數據');
+              return result.data;
+            } else {
+              console.error('❌ 結果數據格式不正確:', result);
+              throw new Error('API 返回的角色數據格式不正確');
+            }
           }
         } else {
           console.log('⚠️ 存在檢查失敗:', existsResponse.status, existsResponse.statusText);
@@ -237,6 +274,13 @@ class CharacterService {
   // 獲取有圖片的角色
   async getCharactersWithImages(): Promise<Character[]> {
     const characters = await this.getCharacters();
+    
+    // 確保 characters 是數組
+    if (!Array.isArray(characters)) {
+      console.error('❌ getCharacters 返回的不是數組:', characters);
+      return [];
+    }
+    
     const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
     
     // 檢查每個角色是否有對應的圖片
