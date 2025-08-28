@@ -57,7 +57,7 @@ class DamageService {
       }
 
       const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
-      console.log(`🌐 傷害計算 URL: ${baseUrl}/people/damageWithWeapon?name=${characterName}`);
+      // 傷害計算 URL
 
       const response = await fetch(`${baseUrl}/people/damageWithWeapon?name=${encodeURIComponent(characterName)}`, {
         method: "GET",
@@ -95,7 +95,7 @@ class DamageService {
       // 檢查是否為字符串數字
       const damageValue = parseInt(String(data), 10);
       if (!isNaN(damageValue)) {
-        console.log(`✅ 解析傷害值: ${damageValue}`);
+        // 解析傷害值
         return damageValue;
       }
 
@@ -124,15 +124,15 @@ class DamageService {
     // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
     maxAttempts = Math.min(maxAttempts, 8);
     interval = Math.max(interval, 5000);
-    console.log(`🔄 開始輪詢傷害結果，RequestId: ${requestId}`);
+    // 開始輪詢傷害結果
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(`🔄 傷害輪詢嘗試 ${attempt}/${maxAttempts}...`);
+        // 傷害輪詢嘗試
         
         // 檢查結果是否存在
         const existsUrl = `${baseUrl}/api/request-status/${requestId}/exists`;
-        console.log(`🔍 檢查傷害結果存在: ${existsUrl}`);
+        // 檢查傷害結果存在
         
         const existsResponse = await fetch(existsUrl, {
           credentials: 'include'
@@ -141,27 +141,26 @@ class DamageService {
         
         if (existsResponse.ok) {
           const existsData = await existsResponse.json();
-          console.log(`📊 傷害結果存在檢查:`, existsData);
+          // 傷害結果存在檢查
 
           // 如果 exists 為 false，等待3秒後停止輪詢
           if (!existsData.exists) {
-            console.log('傷害結果存在檢查:', existsData);
-            console.log('⏳ 結果不存在，3秒後停止輪詢...');
+            // 結果不存在，3秒後停止輪詢
             await new Promise(resolve => setTimeout(resolve, 3000));
-            console.log('❌ 結果不存在，肯定沒到隊列裡面，停止輪詢');
+            // 結果不存在，肯定沒到隊列裡面，停止輪詢
             throw new Error('結果不存在，肯定沒到隊列裡面');
           }
 
           if (existsData.exists) {
             // 獲取結果
             const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
-            console.log(`📥 獲取傷害結果: ${resultUrl}`);
+            // 獲取傷害結果
             
             const resultResponse = await fetch(resultUrl, {
               credentials: 'include'
             });
             
-            console.log(`📡 傷害結果響應: ${resultResponse.status} ${resultResponse.statusText}`);
+            // 傷害結果響應
             
             if (!resultResponse.ok) {
               const errorText = await resultResponse.text();
@@ -170,11 +169,11 @@ class DamageService {
             }
             
             const result = await resultResponse.json();
-            console.log(`✅ 獲取傷害結果成功:`, result);
+            // 獲取傷害結果成功
             
             // 檢查是否還在處理中
             if (result.status === 'processing' || result.data === null) {
-              console.log('⏳ 傷害結果仍在處理中，繼續等待...');
+              // 傷害結果仍在處理中，繼續等待
               // 不要立即 continue，而是等待後再繼續
               if (attempt < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, interval));
@@ -192,15 +191,14 @@ class DamageService {
             
             // 解析傷害值
             const damageValue = this.parseDamageValue(result);
-            console.log(`✅ 解析傷害值: ${damageValue}`);
             return damageValue;
           }
         } else {
-          console.log(`⚠️ 傷害存在檢查失敗: ${existsResponse.status} ${existsResponse.statusText}`);
+          // 傷害存在檢查失敗
         }
         
         // 結果還不存在，繼續等待
-        console.log(`⏳ 傷害結果還不存在，繼續等待...`);
+        // 傷害結果還不存在，繼續等待
         if (attempt < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, interval));
           continue;
