@@ -24,7 +24,7 @@ import '../styles/galwall.css';
   // 獲取角色列表
   async function fetchCharacterNames() {
     try {
-      const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ? import.meta.env.PUBLIC_PEOPLE_IMAGE_URL.replace('/images/people', '') : 'http://localhost:8080/tymb';
+      const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
 
       const response = await fetch(`${baseUrl}/people/names`, {
         method: 'GET',
@@ -71,8 +71,11 @@ import '../styles/galwall.css';
   }
 
   document.addEventListener("DOMContentLoaded", async function () {
+    console.log('🚀 Galwall 組件開始初始化...');
+    
     // 獲取角色名稱列表
     const characterNames = await fetchCharacterNames();
+    console.log('📋 獲取到的角色名稱數量:', characterNames.length);
 
     // 檢查每個角色的圖片
     const imagePromises = characterNames.map(name => checkImageTypes(name));
@@ -87,6 +90,9 @@ import '../styles/galwall.css';
       return paths;
     });
 
+    console.log('🖼️ 有效圖片數量:', validImages.length);
+    console.log('🖼️ 有效圖片路徑:', validImages.slice(0, 5)); // 只顯示前5個
+
     // 分配圖片到 front 和 back 列表
     const totalImages = validImages.length;
     const frontCount = Math.ceil(totalImages / 3);
@@ -94,9 +100,19 @@ import '../styles/galwall.css';
     frontList = validImages.slice(0, frontCount);
     backList = validImages.slice(frontCount);
 
+    console.log('📊 前排圖片數量:', frontList.length);
+    console.log('📊 後排圖片數量:', backList.length);
+
     // 初始化動畫
     const containerFront = document.getElementById("containerFront");
     const containerBack = document.getElementById("containerBack");
+
+    if (!containerFront || !containerBack) {
+      console.error('❌ 找不到容器元素');
+      return;
+    }
+
+    console.log('✅ 找到容器元素，開始載入圖片...');
 
     function createAdDiv(imageURL, isFront) {
       const adDiv = document.createElement("div");
@@ -115,7 +131,15 @@ import '../styles/galwall.css';
       
       // 圖片載入完成後進行品質優化
       adImage.onload = function() {
+        console.log('✅ 圖片載入成功:', imageURL);
         optimizeImageQuality(adImage);
+      };
+      
+      // 圖片載入失敗處理
+      adImage.onerror = function() {
+        console.error('❌ 圖片載入失敗:', imageURL);
+        // 可以設置一個預設圖片或隱藏元素
+        adImage.style.display = 'none';
       };
       
       adDiv.appendChild(adImage);

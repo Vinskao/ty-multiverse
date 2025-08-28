@@ -506,7 +506,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     }
 
     try {
-      console.log(`🔫 開始獲取武器信息 (${side}-${fighterType}): ${characterName}`);
+      // 開始獲取武器信息
       const weapons = await fetchWeaponData(characterName);
       displayWeaponInfo(side, weapons, fighterType);
     } catch (error) {
@@ -609,32 +609,25 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
             const originalUtility = parseInt(String(data.utilityPower || 0), 10);
             const originalTotal = originalPhysic + originalMagic + originalUtility;
 
-            console.log(`📊 戰力計算 (${ownerName}):`, {
-              physicPower: originalPhysic,
-              magicPower: originalMagic,
-              utilityPower: originalUtility,
-              originalTotal: originalTotal,
-              apiTotal: totalDamage,
-              hasBonus: totalDamage > originalTotal
-            });
+                  // 戰力計算完成
 
             // 如果 API 返回的總戰力大於原始計算，說明有武器加成
             if (totalDamage > originalTotal) {
               // 計算武器加成
               data.weaponBonus = totalDamage - originalTotal;
               data.hasBonus = true;
-              console.log(`🎯 計算武器加成 (${ownerName}): weaponBonus = ${data.weaponBonus}`);
+              // 計算武器加成完成
             } else {
               // 如果 API 返回的總戰力不大於原始計算，使用原始數據
               data.weaponBonus = 0;
               data.hasBonus = false;
-              console.log(`📋 使用原始數據 (${ownerName}): 無武器加成`);
+              // 使用原始數據
             }
           } else {
             // 如果 API 返回無效值，使用原始數據
             data.weaponBonus = 0;
             data.hasBonus = false;
-            console.log(`⚠️ API 返回無效值 (${ownerName}): 使用原始數據`);
+            // API 返回無效值，使用原始數據
           }
         } catch (damageError) {
           console.error(`damageWithWeapon API error for ${ownerName}:`, damageError);
@@ -1312,7 +1305,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     // 通用的武器 API 調用函數（異步處理）
   async function fetchWeaponData(ownerName: string) {
     try {
-      console.log(`🔫 開始獲取武器數據: ${ownerName}`);
+      // 開始獲取武器數據
 
       const token = localStorage.getItem('token');
       const headers: Record<string, string> = {
@@ -1331,7 +1324,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         credentials: 'include'
       });
 
-      console.log(`📡 武器 API 響應: ${response.status} ${response.statusText}`);
+      // 武器 API 響應
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -1340,21 +1333,21 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       }
 
       const data = await response.json();
-      console.log(`📥 武器 API 數據:`, data);
+      // 武器 API 數據
 
       // 檢查是否是異步處理
       if (data.requestId && data.status === 'processing') {
-        console.log('⏳ 武器數據正在處理中，開始輪詢...');
+        // 武器數據正在處理中，開始輪詢
         return await pollWeaponData(data.requestId, baseUrl);
       }
 
       // 如果直接返回數據
       if (Array.isArray(data)) {
-        console.log(`✅ 獲取到 ${data.length} 件武器數據`);
+        // 獲取到武器數據
         return data;
       }
 
-      console.log('⚠️ 武器數據格式異常');
+      // 武器數據格式異常
       return [];
     } catch (error) {
       console.error(`❌ 獲取武器數據失敗 (${ownerName}):`, error);
@@ -1367,11 +1360,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
     maxAttempts = Math.min(maxAttempts, 8);
     interval = Math.max(interval, 5000);
-    console.log(`🔄 開始輪詢武器數據: ${requestId}`);
+    // 開始輪詢武器數據
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(`🔄 武器輪詢嘗試 ${attempt}/${maxAttempts}...`);
+        // 武器輪詢嘗試
 
         // 檢查結果是否存在
         const existsUrl = `${baseUrl}/api/request-status/${requestId}/exists`;
@@ -1402,11 +1395,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
             }
 
             const result = await resultResponse.json();
-            console.log('✅ 武器輪詢結果:', result);
+            // 武器輪詢結果
 
             // 檢查是否還在處理中
             if (result.status === 'processing' || result.data === null) {
-              console.log('⏳ 武器數據仍在處理中，繼續等待...');
+              // 武器數據仍在處理中，繼續等待
               if (attempt < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, interval));
                 continue;
@@ -1432,7 +1425,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         }
 
         // 結果還不存在，繼續等待
-        console.log('⏳ 武器結果還不存在，繼續等待...');
+        // 武器結果還不存在，繼續等待
         if (attempt < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, interval));
           continue;
@@ -1470,7 +1463,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     removeWeaponByFighterType(side, fighterType);
 
     if (!weapons || weapons.length === 0) {
-      console.log(`ℹ️ ${fighterType} fighter 無武器 (${side})`);
+      // fighter 無武器
       updateNoWeaponsDisplay(side);
       return;
     }
@@ -1512,7 +1505,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       weaponsContainer.appendChild(weaponElement);
     });
 
-    console.log(`✅ 已累積顯示 ${weapons.length} 件武器信息 (${side}-${fighterType})`);
+    // 已累積顯示武器信息
     updateNoWeaponsDisplay(side);
   }
 
@@ -1525,7 +1518,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     const weaponElements = weaponsContainer.querySelectorAll(`[data-fighter-type="${fighterType}"]`);
     weaponElements.forEach(element => element.remove());
 
-    console.log(`🗑️ 已移除 ${weaponElements.length} 件武器 (${side}-${fighterType})`);
+    // 已移除武器
   }
 
   // 更新無武器顯示

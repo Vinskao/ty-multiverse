@@ -551,7 +551,7 @@ import '../styles/levellist.css';
     if (jardinTotal) jardinTotal.textContent = stats['Jardin des Dieux'].total.toLocaleString();
     if (jardinCount) jardinCount.textContent = `角色數: ${stats['Jardin des Dieux'].count}`;
     
-    console.log('📊 戰力統計更新:', stats);
+    // 戰力統計更新
   }
 
   // 通用 API 調用函數，包含重試機制
@@ -1012,7 +1012,7 @@ import '../styles/levellist.css';
       
       // helper function to fetch latest total power and update UI/mapping for this row
       const fetchAndApplyTotalPower = async (shouldReorder = false) => {
-        console.log(`🔄 查詢 ${character.name} 的最新總戰力...`);
+        // 查詢最新總戰力
         try {
           // 使用新的傷害計算服務
           const damageService = (await import('../services/damageService')).default.getInstance();
@@ -1026,7 +1026,7 @@ import '../styles/levellist.css';
             mapData.hasBonus   = weaponBonus > 0;
             totalCell.textContent = String(damageValue);
             totalUtilityCell.textContent = mapData.hasBonus ? `${weaponBonus}` : '0';
-            console.log(`✅ ${character.name} 總戰力更新為 ${damageValue}`);
+            // 總戰力更新完成
             if (shouldReorder) {
               updateRankings();
             }
@@ -1265,7 +1265,7 @@ import '../styles/levellist.css';
       // 保存回 localStorage
       localStorage.setItem(storageKey, JSON.stringify(cachedData));
       
-      console.log(`已暫存 ${characterName} 的戰力數據`);
+      // 已暫存戰力數據
     } catch (error) {
       console.error('暫存戰力數據時出錯:', error);
     }
@@ -1724,7 +1724,7 @@ import '../styles/levellist.css';
     try {
       const storageKey = 'character_power_cache';
       if (localStorage.getItem(storageKey)) {
-        console.log('🧹 清除舊的 character_power_cache');
+        // 清除舊的 character_power_cache
         localStorage.removeItem(storageKey);
       }
     } catch (e) {
@@ -1807,7 +1807,7 @@ import '../styles/levellist.css';
             // 檢查是否有暫存的戰力數據
             const cachedData = getFromLocalStorage(name);
             if (cachedData) {
-              console.log(`使用暫存的戰力數據: ${name}`);
+              // 使用暫存的戰力數據
               return {
                 name: name,
                 nameOriginal: cachedData.nameOriginal || name,

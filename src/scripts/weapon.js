@@ -114,7 +114,7 @@ export async function applyWeaponDamage(character, weapons) {
     const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
     const apiUrl = `${baseUrl}/people/damageWithWeapon?name=${characterName}`;
     
-    console.log('🗡️ 請求傷害計算:', apiUrl);
+    // 請求傷害計算
     const response = await fetch(apiUrl, { 
       method: "GET",
       credentials: 'include'
