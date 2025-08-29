@@ -358,4 +358,6 @@ h5 {
   height: auto;           /* Maintains aspect ratio */
   margin: 1rem auto;      /* Adds some vertical spacing and centers it horizontally */
   border-radius: 8px;     /* Adds slightly rounded corners */
+  object-fit: cover;      /* Ensures video fills container while maintaining aspect ratio */
+  background: #f5f5f5;    /* Fallback background color while video loads */
 }

@@ -42,8 +42,8 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
           <img
             width="1553"
             height="873"
-            src="/tymultiverse/assets/at-work.jpg"
-            alt="Tianyi Kao at work with a colleague"
+            src="/tymultiverse/assets/zen-landscape.svg"
+            alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
             class="work-photo"
           />
         </div>
@@ -436,7 +436,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                 <>
                                   {/* --- AI Frameworks & APIs Architecture Diagrams --- */}
                                   <br />
-                                  <p>Maya Sawa V1</p><a href="https://github.com/Vinskao/maya-sawa" target="_blank">maya-sawa</a>
+                                  <a href="https://github.com/Vinskao/maya-sawa" target="_blank">Maya Sawa V1</a>
                                   <div class="mermaid-diagram margin-top">
                                     <pre class="mermaid">
                                       {`graph TD
@@ -535,7 +535,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                     </pre>
                                   </div>
                                   <br />
-                                  <p>Maya Sawa V2</p><a href="https://github.com/Vinskao/maya-sawa-v2" target="_blank">maya-sawa-v2</a>
+                                  <a href="https://github.com/Vinskao/maya-sawa-v2" target="_blank">Maya Sawa V2</a>
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
                                       {`graph TD
@@ -595,71 +595,71 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                                                      <div class="mermaid-diagram">
                                      <pre class="mermaid">
                                        {`graph TB
-    subgraph "前端層"
-        A[用戶介面] --> B[API 客戶端]
+    subgraph "Frontend Layer"
+        A[User Interface] --> B[API Client]
     end
 
-    subgraph "API 層"
-        B --> A1[ask-with-model<br/>異步處理]
-        B --> A2[task-status<br/>任務狀態查詢]
-        B --> A3[available-models<br/>可用模型列表]
-        B --> A4[add-model<br/>添加模型]
-        B --> A5[chat-history<br/>聊天歷史]
-        B --> A6[legacy-chat-history<br/>舊版聊天歷史]
-        B --> A7[healthz<br/>健康檢查]
+    subgraph "API Layer"
+        B --> A1[ask-with-model<br/>Async Processing]
+        B --> A2[task-status<br/>Task Status Query]
+        B --> A3[available-models<br/>Available Models List]
+        B --> A4[add-model<br/>Add Model]
+        B --> A5[chat-history<br/>Chat History]
+        B --> A6[legacy-chat-history<br/>Legacy Chat History]
+        B --> A7[healthz<br/>Health Check]
     end
 
-    subgraph "處理層"
-        P1[異步處理<br/>Celery 任務]
-        P2[任務狀態管理<br/>Redis/Celery]
+    subgraph "Processing Layer"
+        P1[Async Processing<br/>Celery Task]
+        P2[Task Status Management<br/>Redis/Celery]
     end
 
-    subgraph "Agent 服務層"
-        AS[MayaAgentService<br/>統一服務入口]
+    subgraph "Agent Service Layer"
+        AS[MayaAgentService<br/>Unified Service Entry]
     end
 
-    subgraph "工作流層"
-        WF[MayaAgentWorkflow<br/>圖形化工作流]
-        N1[意圖分類節點<br/>FilterChain]
-        N2[知識檢索節點<br/>KMSourceManager]
-        N3[工具選擇節點<br/>智能工具選擇]
-        N4[工具執行節點<br/>PDF/OCR/計算/搜索]
-        N5[AI 回應生成節點<br/>LLM 調用]
-        N6[結果保存節點<br/>資料持久化]
-        N7[錯誤處理節點<br/>異常處理]
+    subgraph "Workflow Layer"
+        WF[MayaAgentWorkflow<br/>Graphical Workflow]
+        N1[Intent Classification Node<br/>FilterChain]
+        N2[Knowledge Retrieval Node<br/>KMSourceManager]
+        N3[Tool Selection Node<br/>Smart Tool Selection]
+        N4[Tool Execution Node<br/>PDF/OCR/Calculation/Search]
+        N5[AI Response Generation Node<br/>LLM Call]
+        N6[Result Saving Node<br/>Data Persistence]
+        N7[Error Handling Node<br/>Exception Handling]
     end
 
-    subgraph "能力支撐層"
-        LLM[LLM 能力<br/>OpenAI/Gemini/Qwen]
-        TOOLS[工具能力<br/>PDF/OCR/計算/搜索]
-        MEMORY[記憶能力<br/>Redis/向量記憶]
-        RAG[RAG 能力<br/>pgvector/混合檢索]
+    subgraph "Capability Support Layer"
+        LLM[LLM Capability<br/>OpenAI/Gemini/Qwen]
+        TOOLS[Tool Capability<br/>PDF/OCR/Calculation/Search]
+        MEMORY[Memory Capability<br/>Redis/Vector Memory]
+        RAG[RAG Capability<br/>pgvector/Hybrid Retrieval]
     end
 
-    subgraph "資料層"
+    subgraph "Data Layer"
         D1[(PostgreSQL<br/>Conversations/Articles)]
         D2[(Redis<br/>Cache/Memory/Celery)]
         D3[(RabbitMQ<br/>Celery Broker)]
     end
 
-    subgraph "外部系統"
-        E1[Paprika API<br/>知識庫內容]
+    subgraph "External Systems"
+        E1[Paprika API<br/>Knowledge Base Content]
         E2[OpenAI API<br/>GPT-4o/GPT-4.1]
         E3[Google Gemini API<br/>Gemini Pro/Flash]
         E4[Qwen API<br/>Qwen Turbo/Plus]
     end
 
-    %% API 到處理層
+    %% API to Processing Layer
     A1 --> P1
     A2 --> P2
 
-    %% 處理層到 Agent 服務層
+    %% Processing Layer to Agent Service Layer
     P1 --> AS
 
-    %% Agent 服務層到工作流層
+    %% Agent Service Layer to Workflow Layer
     AS --> WF
 
-    %% 工作流節點連接
+    %% Workflow Node Connections
     WF --> N1
     WF --> N2
     WF --> N3
@@ -668,7 +668,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     WF --> N6
     WF --> N7
 
-    %% 工作流節點到能力層
+    %% Workflow Nodes to Capability Layer
     N1 --> LLM
     N2 --> RAG
     N3 --> TOOLS
@@ -676,23 +676,23 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     N5 --> LLM
     N6 --> MEMORY
 
-    %% 能力層到資料層
+    %% Capability Layer to Data Layer
     LLM --> D1
     TOOLS --> D1
     MEMORY --> D2
     RAG --> D1
 
-    %% Celery 任務到資料層
+    %% Celery Tasks to Data Layer
     P1 --> D3
     P2 --> D2
 
-    %% 外部系統連接
+    %% External System Connections
     LLM --> E2
     LLM --> E3
     LLM --> E4
     RAG --> E1
 
-    %% 樣式定義
+    %% Style Definitions
     classDef api fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000000
     classDef process fill:#fff8e1,stroke:#ffa000,stroke-width:3px,color:#000000
     classDef agent fill:#e3f2fd,stroke:#2196f3,stroke-width:3px,color:#000000
@@ -714,29 +714,29 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                                    <div class="mermaid-diagram">
                                      <pre class="mermaid">
                                        {`sequenceDiagram
-    participant U as 用戶
-    participant F as 前端
+    participant U as User
+    participant F as Frontend
     participant A as API
     participant C as Celery Worker
-    participant DB as 資料庫
+    participant DB as Database
 
-    U->>F: 發送問題
+    U->>F: Send Question
     F->>A: POST /maya-v2/ask-with-model/
-    A->>DB: 建立任務記錄
-    A->>C: 發送處理任務
-    A-->>F: 返回 task_id
-    F-->>U: 顯示處理中
-    
-    loop 輪詢狀態
+    A->>DB: Create Task Record
+    A->>C: Send Processing Task
+    A-->>F: Return task_id
+    F-->>U: Show Processing
+
+    loop Poll Status
         F->>A: GET /maya-v2/task-status/{task_id}
-        A->>C: 查詢任務狀態
-        C-->>A: 返回狀態
-        
-        alt 任務完成
-            A-->>F: 返回 AI 回應
-            F-->>U: 顯示結果
-        else 處理中
-            F-->>U: 顯示處理中
+        A->>C: Query Task Status
+        C-->>A: Return Status
+
+        alt Task Complete
+            A-->>F: Return AI Response
+            F-->>U: Display Result
+        else Processing
+            F-->>U: Show Processing
         end
     end`}
                                      </pre>

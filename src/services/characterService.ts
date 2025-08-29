@@ -84,6 +84,7 @@ class CharacterService {
       const response = await fetch(`${baseUrl}/people/get-all`, {
         method: "POST",
         headers,
+        body: '{}', // 根據API規範，body可以是空JSON或省略
         credentials: 'include'
       });
       
@@ -142,13 +143,85 @@ class CharacterService {
           const existsData = await existsResponse.json();
           console.log('📊 結果存在檢查:', existsData);
 
-          // 如果 exists 為 false，等待3秒後停止輪詢
+          // 如果 exists 為 false，等待更長時間後再檢查
           if (!existsData.exists) {
-            console.log('傷害結果存在檢查:', existsData);
-            console.log('⏳ 結果不存在，3秒後停止輪詢...');
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            console.log('❌ 結果不存在，肯定沒到隊列裡面，停止輪詢');
-            throw new Error('結果不存在，肯定沒到隊列裡面');
+            console.log('📊 結果存在檢查:', existsData);
+            console.log('⏳ 結果不存在，等待9秒鐘後再檢查...');
+
+            // 等待9秒鐘，讓後端有時間處理
+            await new Promise(resolve => setTimeout(resolve, 9000));
+
+            // 等待9秒後再次檢查一次
+            console.log('🔄 9秒後重新檢查 exists...');
+            let retryExistsData = null;
+
+            try {
+              const retryExistsResponse = await fetch(existsUrl, {
+                credentials: 'include'
+              });
+
+              if (retryExistsResponse.ok) {
+                retryExistsData = await retryExistsResponse.json();
+                console.log('📊 9秒後重新檢查結果:', retryExistsData);
+
+                if (retryExistsData.exists) {
+                  console.log('✅ 9秒後檢查發現結果已存在，繼續處理...');
+                  // 結果現在存在了，繼續正常流程
+                  const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
+                  const resultResponse = await fetch(resultUrl, {
+                    credentials: 'include'
+                  });
+
+                  if (!resultResponse.ok) {
+                    const errorText = await resultResponse.text();
+                    console.error('❌ 獲取結果失敗:', errorText);
+                    throw new Error(`獲取結果失敗: ${resultResponse.status} - ${errorText}`);
+                  }
+
+                  const result = await resultResponse.json();
+                  console.log('✅ 獲取結果成功:', result);
+
+                  // 檢查數據格式
+                  if (result.data && Array.isArray(result.data)) {
+                    console.log('✅ 收到有效的角色數據');
+                    return result.data;
+                  } else {
+                    console.error('❌ 結果數據格式不正確:', result);
+                    throw new Error('API 返回的角色數據格式不正確');
+                  }
+                } else {
+                  console.log('❌ 9秒後檢查仍然不存在');
+                }
+              } else {
+                console.log('❌ 9秒後檢查請求失敗');
+              }
+            } catch (retryError) {
+              console.error('❌ 9秒後重新檢查失敗:', retryError);
+              retryExistsData = '檢查失敗';
+            }
+
+            // 如果還是找不到，提供更詳細的診斷信息
+            const errorMessage = `
+🔍 診斷信息:
+   • Request ID: ${requestId}
+   • API 端點: ${baseUrl}/api/request-status/${requestId}/exists
+   • 第一次檢查 Exists 響應: ${JSON.stringify(existsData)}
+   • 9秒後檢查 Exists 響應: ${JSON.stringify(retryExistsData || '檢查失敗')}
+   • 可能原因:
+     - 後端隊列系統未啟動或處理緩慢
+     - 請求未正確進入隊列
+     - 後端服務異常
+     - 建議檢查後端日誌
+
+💡 解決建議:
+   • 檢查 RabbitMQ 或隊列服務狀態
+   • 查看後端應用日誌
+   • 確認 /people/get-all API 是否正常工作
+   • 考慮重啟後端服務
+            `.trim();
+
+            console.error('❌ 輪詢診斷:', errorMessage);
+            throw new Error(`角色數據請求失敗: 等待9秒後結果仍不存在\n\n${errorMessage}`);
           }
 
           if (existsData.exists) {

@@ -268,7 +268,44 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
         container.appendChild(mainContainer);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ Group 組件載入失敗:', error);
+
+      // 創建錯誤提示區域
+      const errorContainer = document.createElement('div');
+      errorContainer.style.cssText = `
+        padding: 20px;
+        margin: 20px 0;
+        background: linear-gradient(135deg, rgba(255, 87, 87, 0.1), rgba(255, 87, 87, 0.05));
+        border: 2px solid rgba(255, 87, 87, 0.3);
+        border-radius: 12px;
+        color: #ff5757;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        text-shadow: 0 0 5px rgba(255, 87, 87, 0.3);
+      `;
+
+      const errorTitle = document.createElement('div');
+      errorTitle.style.cssText = `
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: #ff3333;
+      `;
+      errorTitle.textContent = '🚨 載入失敗 - Group 組件';
+
+      const errorMessage = document.createElement('div');
+      errorMessage.textContent = `錯誤詳情:\n${error.message || error}\n\n請檢查:\n• 後端服務是否正常運行\n• 隊列系統是否已啟動\n• API 端點是否正確`;
+
+      errorContainer.appendChild(errorTitle);
+      errorContainer.appendChild(errorMessage);
+
+      // 插入到頁面頂部
+      const container = document.querySelector('#group-container') || document.body;
+      container.insertBefore(errorContainer, container.firstChild);
+
+      // 同時顯示 alert 提示用戶
+      alert(`Group 組件載入失敗:\n${error.message || error}\n\n請檢查後端服務狀態。`);
     }
   });
 </script>

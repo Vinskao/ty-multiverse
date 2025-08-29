@@ -173,16 +173,175 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 <script>
   import { storageService } from '../services/storageService';
   import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/auth';
-  
+
   // 定義全局類型
   declare global {
     interface Window {
       storageService: typeof storageService;
     }
   }
-  
+
   // 將 storageService 掛載到 window 對象上
   window.storageService = storageService;
+
+  // 頁面訪問追蹤功能
+  class PageTracker {
+    private static readonly STORAGE_KEY = 'lastVisitedTymultiverseUrl';
+    private static readonly REFERER_KEY = 'tymultiverseReferer';
+
+    constructor() {
+      this.initializePageTracking();
+    }
+
+    private initializePageTracking(): void {
+      // 記錄當前頁面
+      this.saveCurrentUrl();
+
+      // 監聽所有鏈接點擊
+      this.trackLinkClicks();
+
+      // 檢查是否需要從 localStorage 跳轉
+      this.checkAndRedirectFromStorage();
+
+      // 監聽頁面卸載，保存最後訪問的 URL
+      window.addEventListener('beforeunload', () => {
+        this.saveCurrentUrl();
+      });
+
+      // 監聽頁面可見性變化
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.saveCurrentUrl();
+        }
+      });
+    }
+
+    private saveCurrentUrl(): void {
+      const currentUrl = window.location.href;
+
+      // 只保存 /tymultiverse 開頭的 URL
+      if (currentUrl.includes('/tymultiverse')) {
+        localStorage.setItem(PageTracker.STORAGE_KEY, currentUrl);
+        console.log('📍 已保存當前 TY Multiverse 頁面:', currentUrl);
+      }
+    }
+
+    private trackLinkClicks(): void {
+      // 使用事件委派監聽所有鏈接點擊
+      document.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+
+        // 找到最近的鏈接元素
+        const linkElement = target.closest('a') as HTMLAnchorElement;
+        if (linkElement && linkElement.href) {
+          const href = linkElement.href;
+
+          // 如果是內部 TY Multiverse 鏈接，保存當前頁面
+          if (href.includes('/tymultiverse') && !href.includes('#')) {
+            // 延遲一點時間保存，因為頁面還沒跳轉
+            setTimeout(() => {
+              this.saveCurrentUrl();
+            }, 100);
+          }
+        }
+      });
+    }
+
+    private checkAndRedirectFromStorage(): void {
+      const currentUrl = window.location.href;
+      const savedUrl = localStorage.getItem(PageTracker.STORAGE_KEY);
+      const savedReferer = localStorage.getItem(PageTracker.REFERER_KEY);
+
+      // 保存當前 referer（如果有的話）
+      if (document.referrer) {
+        localStorage.setItem(PageTracker.REFERER_KEY, document.referrer);
+      }
+
+      // 檢查是否需要跳轉的條件：
+      // 1. 有保存的 URL
+      // 2. 當前 URL 是 TY Multiverse 的根頁面或首頁
+      // 3. Referer 不是 TY Multiverse 內部的頁面（表示從外部跳轉過來）
+      if (savedUrl && savedUrl !== currentUrl) {
+        const isHomePage = currentUrl === `${window.location.origin}/tymultiverse/` ||
+                          currentUrl === `${window.location.origin}/tymultiverse/index.html` ||
+                          currentUrl.endsWith('/tymultiverse');
+
+        const isFromExternal = savedReferer && !savedReferer.includes('/tymultiverse');
+
+        if (isHomePage && isFromExternal) {
+          console.log('🔄 從外部跳轉回來，跳轉到上次訪問的頁面:', savedUrl);
+
+          // 添加一個小的延遲，確保頁面完全加載
+          setTimeout(() => {
+            window.location.href = savedUrl;
+          }, 500);
+
+          return;
+        }
+      }
+
+      // 如果沒有跳轉條件，清除舊的 referer
+      if (savedReferer && savedReferer.includes('/tymultiverse')) {
+        localStorage.removeItem(PageTracker.REFERER_KEY);
+      }
+    }
+
+    // 手動保存當前 URL（可以用於特殊情況）
+    public static saveCurrentUrl(): void {
+      const currentUrl = window.location.href;
+      if (currentUrl.includes('/tymultiverse')) {
+        localStorage.setItem(PageTracker.STORAGE_KEY, currentUrl);
+        console.log('📍 手動保存當前 TY Multiverse 頁面:', currentUrl);
+      }
+    }
+
+    // 獲取保存的 URL
+    public static getSavedUrl(): string | null {
+      return localStorage.getItem(PageTracker.STORAGE_KEY);
+    }
+
+    // 清除保存的 URL
+    public static clearSavedUrl(): void {
+      localStorage.removeItem(PageTracker.STORAGE_KEY);
+      localStorage.removeItem(PageTracker.REFERER_KEY);
+      console.log('🗑️ 已清除保存的頁面記錄');
+    }
+  }
+
+  // 初始化頁面追蹤器
+  const pageTracker = new PageTracker();
+
+  // 將 PageTracker 的靜態方法掛載到 window 對象上
+  declare global {
+    interface Window {
+      pageTracker: {
+        saveCurrentUrl: () => void;
+        getSavedUrl: () => string | null;
+        clearSavedUrl: () => void;
+      };
+    }
+  }
+
+  window.pageTracker = {
+    saveCurrentUrl: PageTracker.saveCurrentUrl,
+    getSavedUrl: PageTracker.getSavedUrl,
+    clearSavedUrl: PageTracker.clearSavedUrl
+  };
+
+  // 為 site-title 添加雙擊清除功能
+  const siteTitle = document.querySelector('.site-title') as HTMLAnchorElement;
+  if (siteTitle) {
+    siteTitle.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      if (confirm('要清除保存的頁面記錄嗎？\n這將清除您上次訪問的頁面，下次從外部跳轉回來時不會自動跳轉。')) {
+        PageTracker.clearSavedUrl();
+        alert('✅ 已清除保存的頁面記錄');
+      }
+    });
+
+    // 添加提示信息
+    siteTitle.title = '雙擊清除保存的頁面記錄';
+  }
   
   class MenuButton extends HTMLElement {
     constructor() {

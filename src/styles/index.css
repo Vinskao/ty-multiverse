@@ -546,3 +546,36 @@
 	font-weight: bold;
 	color: var(--gray-100);
 }
+
+/* Portrait container with AI label */
+.portrait-container {
+	position: relative;
+	display: inline-block;
+	margin: 1rem auto;
+}
+
+.ai-creation-label {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	padding: 4px 8px;
+	border-radius: 12px;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+	z-index: 10;
+	animation: labelGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes labelGlow {
+	0% {
+		box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+	}
+	100% {
+		box-shadow: 0 2px 12px rgba(102, 126, 234, 0.6);
+	}
+}
