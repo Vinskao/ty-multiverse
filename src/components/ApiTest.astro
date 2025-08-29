@@ -68,6 +68,7 @@
       const response = await fetch(`${baseUrl}/people/get-all`, {
         method: "POST",
         headers,
+        body: '{}', // 根據API規範，body可以是空JSON或省略
         credentials: 'include'
       });
       
