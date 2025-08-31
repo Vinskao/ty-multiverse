@@ -1,6 +1,6 @@
 ---
 title: "container-database-frontend-backend"
-publishDate: 2024-04-09 12:00:00
+publishDate: "2024-04-09 12:00:00"
 img: /tymultiverse/assets/container.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |

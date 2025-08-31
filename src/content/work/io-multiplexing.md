@@ -1,6 +1,6 @@
 ---
 title: "io-multiplexing"
-publishDate: 2025-08-27 01:00:00
+publishDate: "2025-08-27 01:00:00"
 img: /tymultiverse/assets/algorithm.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: 從 select() 到 epoll：理解現代 Web 框架的 I/O 多工技術

@@ -1,6 +1,6 @@
 ---
 title: "solid-principles"
-publishDate: 2025-05-24 10:00:00
+publishDate: "2025-05-24 10:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: Understanding SOLID

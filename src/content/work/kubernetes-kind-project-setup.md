@@ -1,6 +1,6 @@
 ---
 title: "kubernetes-kind-project-setup"
-publishDate: 2024-04-25 13:00:00
+publishDate: "2024-04-25 13:00:00"
 img: /tymultiverse/assets/k8s.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |

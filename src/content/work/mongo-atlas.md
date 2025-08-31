@@ -1,6 +1,6 @@
 ---
 title: "mongo-atlas"
-publishDate: 2024-02-25 13:00:00
+publishDate: "2024-02-25 13:00:00"
 img: /tymultiverse/assets/mongodb-logo.jpg
 img_alt: mongo pic
 description: |
