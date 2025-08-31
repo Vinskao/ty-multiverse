@@ -39,7 +39,7 @@ const imageLinks = [
         linkUrl: "https://www.freecodecamp.org/certification/TianyiKao/data-visualization"
     },
 	{
-        imgUrl: "/tymultiverse/assets/stock-2.jpg",
+        imgUrl: "/tymultiverse/assets/java.jpg",
         linkUrl: ""
     },
     {
@@ -76,6 +76,15 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 						<div class="details">
 							<div class="tags">
 								{entry.data.tags.map((t) => <Pill>{t}</Pill>)}
+							</div>
+							<div class="publish-info">
+								<time datetime={entry.data.publishDate.toISOString()}>
+									{entry.data.publishDate.toLocaleDateString('zh-TW', {
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})}
+								</time>
 							</div>
 							<p class="description">{entry.data.description}</p>
 						</div>
@@ -123,6 +132,18 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 	.tags {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	.publish-info {
+		font-size: var(--text-sm);
+		color: var(--gray-400);
+		font-weight: 500;
+		margin-top: 0.5rem;
+	}
+
+	.publish-info time {
+		color: var(--accent-regular);
+		font-weight: 600;
 	}
 
 	.description {

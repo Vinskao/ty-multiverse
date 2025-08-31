@@ -1,0 +1,238 @@
+.videos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  justify-content: flex-start;
+}
+
+.video-item {
+  position: relative;
+  background: transparent;
+  border-radius: 0px;
+  overflow: hidden;
+  box-shadow: none;
+  width: 150px;
+  height: 240px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.video-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 240px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dance-video {
+  width: 150px;
+  height: 240px;
+  object-fit: contain;
+  border-radius: 0px;
+  background: #000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0 !important;
+  will-change: opacity;
+  box-sizing: border-box;
+}
+
+.dance-video.loading {
+  background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.9) 50%, rgba(0,0,0,0.9) 100%);
+  animation: smooth-loading 2s ease-in-out infinite;
+  position: relative;
+}
+
+.dance-video.loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid rgba(255,255,255,0.8);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes smooth-loading {
+  0%, 100% {
+    background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.9) 50%, rgba(0,0,0,0.9) 100%);
+  }
+  50% {
+    background: linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(30,30,30,0.9) 50%, rgba(10,10,10,0.9) 100%);
+  }
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.dance-video.active {
+  opacity: 1 !important;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 40px;
+  background: transparent;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  box-sizing: border-box;
+}
+
+.video-item:hover .video-overlay {
+  background: transparent;
+}
+
+.video-title {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .videos-grid {
+    padding: 15px;
+    gap: 0;
+  }
+
+  .video-item {
+    width: 110px;
+    height: 180px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .video-container {
+    width: 110px !important;
+    height: 180px !important;
+  }
+
+  .dance-video {
+    width: 110px !important;
+    height: 180px !important;
+  }
+
+  .video-overlay {
+    width: 110px !important;
+    height: 30px !important;
+    background: transparent !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .videos-grid {
+    padding: 10px;
+    gap: 0;
+  }
+
+  .video-item {
+    width: 90px;
+    height: 150px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .video-container {
+    width: 90px !important;
+    height: 150px !important;
+  }
+
+  .dance-video {
+    width: 90px !important;
+    height: 150px !important;
+  }
+
+  .video-overlay {
+    width: 90px !important;
+    height: 25px !important;
+    background: transparent !important;
+  }
+}
+
+.loading-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: var(--gradient-subtle);
+  border-radius: 1rem;
+  border: 1px solid var(--gray-800);
+  margin: 2rem 0;
+}
+
+.loading-status.hidden {
+  display: none;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--gray-800);
+  border-top: 3px solid var(--accent-light);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-status span {
+  color: var(--gray-300);
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+
+.loading-complete {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1));
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.loading-complete .loading-spinner {
+  border-top-color: #4caf50;
+}
+
+.loading-complete span {
+  color: #81c784;
+}
+
+.loading-error {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(255, 87, 34, 0.1));
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.loading-error .loading-spinner {
+  border-top-color: #f44336;
+}
+
+.loading-error span {
+  color: #ef5350;
+}

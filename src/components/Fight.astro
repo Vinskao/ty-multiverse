@@ -1,7 +1,20 @@
 ---
-// 從 API 獲取角色列表
-import '../styles/fight.css';
-const characterNames = ['default']; // 初始化為默認值，實際角色列表將從 API 獲取
+  // 從 API 獲取角色列表
+  import '../styles/fight.css';
+  const characterNames = ['default']; // 初始化為默認值，實際角色列表將從 API 獲取
+
+  // 檢查角色圖片是否存在
+  async function checkCharacterImageExists(characterName: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`, {
+        method: 'HEAD',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error(`檢查角色圖片失敗 ${characterName}:`, error);
+      return false;
+    }
+  }
 ---
 <div class="fightbutton">
   <button id="fightButton">Fight</button>
@@ -186,9 +199,22 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   
   // 初始化角色列表
   let characterNames = ['default'];
-  
+
   // 添加戰鬥狀態追蹤
   let fightCompleted = false;
+
+  // 檢查角色圖片是否存在（客戶端版本）
+  async function checkCharacterImageExistsClient(characterName: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`, {
+        method: 'HEAD',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error(`檢查角色圖片失敗 ${characterName}:`, error);
+      return false;
+    }
+  }
   
   // 從 API 獲取角色名稱列表（同步）
   async function fetchCharacterNames() {
@@ -215,7 +241,22 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       const names = await response.json();
 
       // 確保是數組格式
-      characterNames = Array.isArray(names) ? names : ['default'];
+      const allNames = Array.isArray(names) ? names : ['default'];
+
+      // 過濾掉圖片不存在的角色
+      const filteredNames: string[] = [];
+      for (const name of allNames) {
+        const hasImage = await checkCharacterImageExistsClient(name);
+        if (hasImage) {
+          filteredNames.push(name);
+          console.log(`✅ 角色 ${name} 圖片存在，加入列表`);
+        } else {
+          console.log(`❌ 角色 ${name} 圖片不存在，跳過`);
+        }
+      }
+
+      characterNames = filteredNames.length > 0 ? filteredNames : ['default'];
+      console.log(`📋 最終角色列表 (${characterNames.length} 個):`, characterNames);
     } catch (error) {
       console.error('❌ 獲取角色名稱列表失敗:', error);
       characterNames = ['default'];
@@ -315,7 +356,13 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       const button = document.createElement("button");
       button.textContent = name;
       button.className = "button";
-      button.onclick = () => selectFighter(side, `${config.baseImagePath}${name}.png`);
+      button.onclick = async () => {
+        try {
+          await selectFighter(side, `${config.baseImagePath}${name}.png`);
+        } catch (error) {
+          console.error(`選擇角色 ${name} 失敗:`, error);
+        }
+      };
       container.appendChild(button);
     });
 
@@ -401,9 +448,18 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   }
   
   // 選擇角色
-  function selectFighter(side: 'left' | 'right', imagePath: string) {
+  async function selectFighter(side: 'left' | 'right', imagePath: string) {
     const otherSide = side === "left" ? "right" : "left";
     const selectedName = characterNames.find(name => name === imagePath.split("/").pop()?.split(".")[0]) || null;
+
+    // 再次檢查圖片是否存在（防止快取問題）
+    if (selectedName) {
+      const hasImage = await checkCharacterImageExistsClient(selectedName);
+      if (!hasImage) {
+        console.error(`❌ 角色 ${selectedName} 圖片不存在，無法選擇`);
+        return;
+      }
+    }
 
     // 如果戰鬥已經完成，選擇新角色時清除所有角色
     if (fightCompleted) {
