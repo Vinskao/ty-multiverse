@@ -569,9 +569,14 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
             const characterVideos = document.querySelectorAll(`.dance-video[data-character="${character}"]`);
             const totalVideos = characterVideos.length;
 
-            if (totalVideos > 1 && videoIndex === totalVideos - 1) {
-              // 如果是多影片的最後一個，循環回到第一個
-              state.currentIndex = 0;
+            // 更新currentIndex到下一個影片
+            state.currentIndex = (videoIndex + 1) % totalVideos;
+
+            // 如果是最後一個影片循環到第一個，重置狀態
+            if (videoIndex === totalVideos - 1) {
+              state.playDirection = 'forward';
+              state.hasPlayedForward = false;
+              state.hasPlayedBackward = false;
             }
 
             // 清除處理標記，然後切換影片
@@ -695,11 +700,11 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         const singleVideo = characterVideos[0] as HTMLVideoElement;
         singleVideo.currentTime = 0;
         singleVideo.playbackRate = 1;
-        
+
         // 清除狀態標記
         delete singleVideo.dataset.processingEnded;
         delete singleVideo.dataset.playAttempted;
-        
+
         // 重新開始播放
         if (singleVideo.readyState >= 3) {
           singleVideo.dataset.playAttempted = 'true';
@@ -710,7 +715,7 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
             delete singleVideo.dataset.playAttempted;
           });
         }
-        
+
         // 重置狀態
         state.playDirection = 'forward';
         state.hasPlayedForward = false;
@@ -723,11 +728,12 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         state.currentIndex = 0;
       }
 
-      const nextIndex = (state.currentIndex + 1) % characterVideos.length;
-      const currentVideo = characterVideos[state.currentIndex] as HTMLVideoElement;
+      // 使用當前設定的currentIndex作為下一個要播放的影片
+      const nextIndex = state.currentIndex;
+      const currentVideo = characterVideos[(nextIndex - 1 + characterVideos.length) % characterVideos.length] as HTMLVideoElement;
       const nextVideo = characterVideos[nextIndex] as HTMLVideoElement;
 
-      console.log(`${character}: 從影片 ${state.currentIndex} 切換到影片 ${nextIndex}`);
+      console.log(`${character}: 切換到影片 ${nextIndex}`);
 
       if (!nextVideo) {
         console.error(`${character}: 找不到下一個影片 (索引: ${nextIndex})`);
