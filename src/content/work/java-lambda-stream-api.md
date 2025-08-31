@@ -1,6 +1,6 @@
 ---
 title: "java-lambda-stream-api"
-publishDate: 2024-03-04 17:00:00
+publishDate: "2024-03-04 17:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
