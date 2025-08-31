@@ -361,3 +361,201 @@ h5 {
   object-fit: cover;      /* Ensures video fills container while maintaining aspect ratio */
   background: #f5f5f5;    /* Fallback background color while video loads */
 }
+
+/* ====================================================== */
+/* 程式碼區塊亮暗模式支援 */
+/* ====================================================== */
+
+pre,
+code {
+  color: var(--gray-100);
+  background-color: var(--gray-900);
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace;
+}
+
+pre {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--gray-800);
+  background-color: var(--gray-900);
+  margin: 1rem 0;
+  line-height: 1.5;
+}
+
+code {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  background-color: var(--gray-800);
+}
+
+/* 行內程式碼樣式 */
+:not(pre) > code {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  background-color: var(--gray-800);
+  color: var(--gray-100);
+}
+
+/* 亮模式下的程式碼區塊樣式 */
+:root pre,
+:root code {
+  color: var(--gray-200);
+  background-color: var(--gray-800);
+}
+
+:root :not(pre) > code {
+  background-color: var(--gray-700);
+  color: var(--gray-200);
+}
+
+/* 暗模式下的程式碼區塊樣式 */
+.theme-dark pre,
+.theme-dark code {
+  color: var(--gray-100);
+  background-color: var(--gray-900);
+}
+
+.theme-dark :not(pre) > code {
+  background-color: var(--gray-800);
+  color: var(--gray-100);
+}
+
+/* 程式碼區塊內的語法高亮顏色 */
+.theme-dark pre .token.keyword {
+  color: #c792ea; /* 紫色 */
+}
+
+.theme-dark pre .token.string {
+  color: #c3e88d; /* 綠色 */
+}
+
+.theme-dark pre .token.comment {
+  color: var(--gray-500); /* 灰色 */
+  font-style: italic;
+}
+
+.theme-dark pre .token.function {
+  color: #82aaff; /* 藍色 */
+}
+
+.theme-dark pre .token.number {
+  color: #f78c6c; /* 橙色 */
+}
+
+.theme-dark pre .token.operator {
+  color: #89ddff; /* 淺藍色 */
+}
+
+/* 亮模式下的程式碼區塊語法高亮 */
+:root pre .token.keyword {
+  color: #7c4dff; /* 深紫色 */
+}
+
+:root pre .token.string {
+  color: #2e7d32; /* 深綠色 */
+}
+
+:root pre .token.comment {
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+:root pre .token.function {
+  color: #1976d2; /* 深藍色 */
+}
+
+:root pre .token.number {
+  color: #f57c00; /* 深橙色 */
+}
+
+:root pre .token.operator {
+  color: #0d47a1; /* 深藍色 */
+}
+
+/* 程式碼區塊的滾動條樣式 */
+pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  background: var(--gray-900);
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--gray-600);
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* 暗模式下的滾動條 */
+.theme-dark pre::-webkit-scrollbar-track {
+  background: var(--gray-800);
+}
+
+.theme-dark pre::-webkit-scrollbar-thumb {
+  background: var(--gray-500);
+}
+
+.theme-dark pre::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* 亮模式下的滾動條 */
+:root pre::-webkit-scrollbar-track {
+  background: var(--gray-700);
+}
+
+:root pre::-webkit-scrollbar-thumb {
+  background: var(--gray-500);
+}
+
+:root pre::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* 程式碼區塊的複製按鈕樣式（如果有的話） */
+pre .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--gray-800);
+  color: var(--gray-300);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+pre:hover .copy-button {
+  opacity: 1;
+}
+
+pre .copy-button:hover {
+  background: var(--gray-700);
+  color: var(--gray-100);
+}
+
+/* 程式碼區塊的語言標籤（如果有的話） */
+pre .language-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: var(--gray-800);
+  color: var(--gray-300);
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

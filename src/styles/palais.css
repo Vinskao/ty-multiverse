@@ -47,6 +47,12 @@
   margin-block-end: 0;
 }
 
+/* Ensure module buttons are always clickable above overlays */
+.system-container.module-buttons {
+  position: relative;
+  z-index: 20;
+}
+
 .system-container:first-of-type {
   margin-block-start: 0;
 }
@@ -110,6 +116,7 @@
   text-decoration: none;
   font-size: 1rem;
   transition: background 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
 }
 
 .module-button:hover {
