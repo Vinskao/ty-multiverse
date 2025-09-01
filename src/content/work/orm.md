@@ -62,9 +62,9 @@ ORM（物件關聯對應）是一種程式設計技術，用來把物件導向�
 | 問題 | 解答 |
 |------|------|
 | Reflection 只能用在抽象類別？ | ❌ 錯，任何類別都可以 |
-| `@Entity`、`@Column` 是怎麼作用的？ | ✅ 啟動時用 Reflection 掃描註解建立對應關係 |
-| ORM 是否會建立新 class？ | ❌ 一般不會<br>✅ 但為了延遲載入或攔截行為，會動態建立 Proxy class（subclass） |
-| Proxy class 是包覆還是繼承？ | ✅ 是**繼承原類別**，不是包覆（Decorator） |
+| `@Entity`、`@Column` 是怎麼作用的？ | 啟動時用 Reflection 掃描註解建立對應關係 |
+| ORM 是否會建立新 class？ | ❌ 一般不會<br>但為了延遲載入或攔截行為，會動態建立 Proxy class（subclass） |
+| Proxy class 是包覆還是繼承？ | 是**繼承原類別**，不是包覆（Decorator） |
 
 ### 進階機制
 - 使用 CGLIB/ByteBuddy 建立代理類別
@@ -82,13 +82,13 @@ ORM（物件關聯對應）是一種程式設計技術，用來把物件導向�
 
 | 功能 | JPA/Hibernate | Django ORM | MyBatis |
 |------|--------------|------------|---------|
-| 自動生成 SQL | ✅ 是 | ✅ 是 | ❌ 否 |
-| Entity 與 Table 對應 | ✅ 是（@Entity） | ✅ 是（Model） | 部分（需配置） |
-| 自動管理資料狀態 | ✅ 是 | ✅ 是 | ❌ 否 |
-| 延遲載入 / 快取 | ✅ 是（session） | ✅ 是（QuerySet） | ❌ 否（要自己控制） |
-| 使用 DDL 自動建表 | ✅ 是（schema auto） | ✅ 是（migrations） | ❌ 否 |
+| 自動生成 SQL | 是 | 是 | ❌ 否 |
+| Entity 與 Table 對應 | 是（@Entity） | 是（Model） | 部分（需配置） |
+| 自動管理資料狀態 | 是 | 是 | ❌ 否 |
+| 延遲載入 / 快取 | 是（session） | 是（QuerySet） | ❌ 否（要自己控制） |
+| 使用 DDL 自動建表 | 是（schema auto） | 是（migrations） | ❌ 否 |
 | 查詢語言 | JPQL | Django ORM API | XML/SQL |
-| 交易管理 | ✅ 是（@Transactional） | ✅ 是（atomic） | 部分（需配置） |
+| 交易管理 | 是（@Transactional） | 是（atomic） | 部分（需配置） |
 
 ## JPA/Hibernate 實作原理
 

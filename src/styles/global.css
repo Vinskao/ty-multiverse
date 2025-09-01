@@ -399,19 +399,7 @@ code {
   color: var(--gray-100);
 }
 
-/* 亮模式下的程式碼區塊樣式 */
-:root pre,
-:root code {
-  color: var(--gray-200);
-  background-color: var(--gray-800);
-}
-
-:root :not(pre) > code {
-  background-color: var(--gray-700);
-  color: var(--gray-200);
-}
-
-/* 暗模式下的程式碼區塊樣式 */
+/* 暗色主題下的程式碼區塊樣式 */
 .theme-dark pre,
 .theme-dark code {
   color: var(--gray-100);
@@ -445,34 +433,29 @@ code {
   color: #f78c6c; /* 橙色 */
 }
 
-.theme-dark pre .token.operator {
-  color: #89ddff; /* 淺藍色 */
+/* 程式碼區塊的複製按鈕樣式（如果有的話） */
+pre .copy-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--gray-800);
+  color: var(--gray-300);
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--theme-transition);
 }
 
-/* 亮模式下的程式碼區塊語法高亮 */
-:root pre .token.keyword {
-  color: #7c4dff; /* 深紫色 */
+pre:hover .copy-button {
+  opacity: 1;
 }
 
-:root pre .token.string {
-  color: #2e7d32; /* 深綠色 */
-}
-
-:root pre .token.comment {
-  color: var(--gray-600);
-  font-style: italic;
-}
-
-:root pre .token.function {
-  color: #1976d2; /* 深藍色 */
-}
-
-:root pre .token.number {
-  color: #f57c00; /* 深橙色 */
-}
-
-:root pre .token.operator {
-  color: #0d47a1; /* 深藍色 */
+pre .copy-button:hover {
+  background: var(--gray-700);
+  color: var(--gray-100);
 }
 
 /* 程式碼區塊的滾動條樣式 */
@@ -507,18 +490,39 @@ pre::-webkit-scrollbar-thumb:hover {
   background: var(--gray-400);
 }
 
-/* 亮模式下的滾動條 */
-:root pre::-webkit-scrollbar-track {
-  background: var(--gray-700);
+/* 程式碼區塊的滾動條樣式 */
+pre::-webkit-scrollbar {
+  height: 8px;
 }
 
-:root pre::-webkit-scrollbar-thumb {
+pre::-webkit-scrollbar-track {
+  background: var(--gray-900);
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--gray-600);
+  border-radius: 4px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
   background: var(--gray-500);
 }
 
-:root pre::-webkit-scrollbar-thumb:hover {
+/* 暗模式下的滾動條 */
+.theme-dark pre::-webkit-scrollbar-track {
+  background: var(--gray-800);
+}
+
+.theme-dark pre::-webkit-scrollbar-thumb {
+  background: var(--gray-500);
+}
+
+.theme-dark pre::-webkit-scrollbar-thumb:hover {
   background: var(--gray-400);
 }
+
+
 
 /* 程式碼區塊的複製按鈕樣式（如果有的話） */
 pre .copy-button {
@@ -545,6 +549,8 @@ pre .copy-button:hover {
   color: var(--gray-100);
 }
 
+
+
 /* 程式碼區塊的語言標籤（如果有的話） */
 pre .language-label {
   position: absolute;
@@ -559,3 +565,4 @@ pre .language-label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
