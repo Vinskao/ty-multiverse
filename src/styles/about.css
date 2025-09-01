@@ -84,12 +84,41 @@ filter: grayscale(0%);
   transition: transform 0.3s ease;
   filter: grayscale(20%);
   display: block;
+  position: relative;
 }
 
 .work-photo:hover {
   transform: scale(1.02);
-  filter: grayscale(0%);
+  filter: grayscale(0%) brightness(70%);
 }
+
+/* Overlay briefing inside work-photo */
+.work-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  padding: 0.75rem;
+}
+.work-photo-wrapper:hover .work-photo-overlay { display: block; }
+.work-photo-overlay .briefing-section.overlay-mode {
+  height: 100%;
+}
+
+/* Hide image when overlay visible but keep space - no JS flicker */
+.work-photo-wrapper:hover .work-photo { opacity: 0; visibility: hidden; }
+
+/* RWD for overlay */
+@media (min-width: 1024px) {
+  .work-photo-overlay { padding: 1rem; }
+}
+@media (max-width: 768px) {
+  .work-photo-overlay { padding: 0.5rem; }
+}
+@media (max-width: 480px) {
+  .work-photo-overlay { padding: 0.4rem; }
+}
+
+
 
 section {
 display: flex;
@@ -1307,7 +1336,7 @@ section:nth-child(3) {
 
 /* Dark theme adjustments for Mermaid */
 .theme-dark .mermaid-diagram {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.8);
   border-color: rgba(81, 70, 149, 0.4);
 }
 

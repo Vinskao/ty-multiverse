@@ -17,6 +17,17 @@ const token = url.searchParams.get('token');
     <div id="login-prompt" style="text-align: center; margin-top: 10px; color: #ff9800; display: none;">
         請先登入後再留言
     </div>
+
+    <!-- 登入遮罩層 -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="overlay-content">
+            <div class="overlay-icon">🔒</div>
+            <h3 class="overlay-title">請登入以查看留言</h3>
+            <div class="overlay-buttons">
+                <a href="/tymultiverse/login" class="btn-login" id="login-link">登入</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- 保存狀態指示器 - 顯示文檔是否已保存 -->
@@ -52,9 +63,14 @@ const token = url.searchParams.get('token');
         color: #e0e0e0;
     }
 
-    /* 未登入時隱藏工具欄 */
+    /* 未登入時隱藏工具欄和編輯區域 */
     .not-logged-in .ck.ck-toolbar {
         display: none !important;
+    }
+
+    .not-logged-in .ck.ck-editor__editable {
+        pointer-events: none !important;
+        opacity: 0.3 !important;
     }
 
     /* 編輯器容器的樣式 */
@@ -62,6 +78,7 @@ const token = url.searchParams.get('token');
         width: 100%;
         margin: 15px 0 5px 0;
         position: relative;
+        min-height: 200px; /* 確保有足夠空間顯示遮罩 */
     }
     
     /* 超強力覆蓋 */
@@ -187,6 +204,92 @@ const token = url.searchParams.get('token');
         border-radius: 5px;
         margin: 10px 0;
     }
+
+    /* 登入遮罩層樣式 */
+    .login-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(34, 34, 34, 0.95));
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999; /* 提高z-index確保覆蓋CKEditor */
+        border-radius: 8px;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    .login-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .overlay-content {
+        text-align: center;
+        color: #e0e0e0;
+        padding: 20px;
+        max-width: 300px;
+    }
+
+    .overlay-icon {
+        font-size: 36px;
+        margin-bottom: 15px;
+        opacity: 0.8;
+    }
+
+    .overlay-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0 0 20px 0;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .overlay-buttons {
+        display: flex;
+        justify-content: center;
+    }
+
+    .overlay-buttons a {
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: inline-block;
+        text-align: center;
+        background: linear-gradient(135deg, #2196f3, #1976d2);
+        color: white;
+        border-color: #2196f3;
+    }
+
+    .btn-login:hover {
+        background: linear-gradient(135deg, #1976d2, #1565c0);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(33, 150, 243, 0.3);
+    }
+
+    /* 響應式設計 */
+    @media (max-width: 480px) {
+        .overlay-content {
+            padding: 15px;
+        }
+
+        .overlay-title {
+            font-size: 16px;
+        }
+
+        .overlay-buttons a {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+    }
 </style>
 
 <script define:vars={{ hostUrl, EDITOR_ID: '1', username, token }}>
@@ -195,16 +298,26 @@ const token = url.searchParams.get('token');
         // 檢查登入狀態 - 增加更多的檢查條件
         const isLoggedIn = username || localStorage.getItem('username') || document.cookie.includes('refreshToken');
         const loginPrompt = document.getElementById('login-prompt');
+        const loginOverlay = document.getElementById('login-overlay');
         const editorContainer = document.getElementById('editor-container');
         const saveIndicator = document.getElementById('save-indicator');
-        
-        // 如果沒有登入，顯示提示並禁用編輯器
+
+        // 如果沒有登入，顯示遮罩層並禁用編輯器
         if (!isLoggedIn) {
             if (loginPrompt) loginPrompt.style.display = 'block';
+            if (loginOverlay) loginOverlay.classList.remove('hidden');
             if (editorContainer) editorContainer.classList.add('not-logged-in');
             if (saveIndicator) saveIndicator.style.display = 'none';
+
+            // 設置登入連結的redirect參數
+            const loginLink = document.getElementById('login-link');
+            if (loginLink) {
+                const currentPath = window.location.pathname + window.location.search;
+                loginLink.href = `/tymultiverse/login?redirect=${encodeURIComponent(currentPath)}`;
+            }
         } else {
             if (loginPrompt) loginPrompt.style.display = 'none';
+            if (loginOverlay) loginOverlay.classList.add('hidden');
         }
         
         // 直接使用 Astro 提供的 hostUrl 變數

@@ -1,0 +1,58 @@
+{
+    "quadrant1": {
+        "title": {
+            "en": "Deliberate Practice",
+            "zh": "刻意練習"
+        },
+        "content": {
+            "en": "I treat development as a puzzle game; every bug and bottleneck is a challenge. Real-time Pricing Platform: five after-hours sessions weekly refining design to ensure multi-source streaming works in real-time. Document Retrieval Service: parallel Redis + PostgreSQL via CompletableFuture; latency reduced 3s → 1.8s (-40%). Use AI tools, debugging as deliberate growth.",
+            "zh": "我把開發當成解謎遊戲；每個 bug、效能瓶頸都是挑戰。 即時報價平台：每週五次下班後優化設計，確保多來源串流即時處理。 文件檢索服務：用 CompletableFuture 並行 Redis + PostgreSQL；延遲從 3s → 1.8s（-40%）。 AI 工具，把 Debug 當成刻意成長。"
+        },
+        "extension": {
+            "en": "Concrete instances: real-time platform – tuned Redis Pub/Sub, added Redis Lua lock for idempotency, benchmarked throughput, integrated circuit breakers, Grafana dashboards for latency tracking; retrieval service – combined pgvector + pg_trgm hybrid search, async Redis + Postgres queries, added cache-stampede prevention, monitored with Prometheus, instrumented SLO burn rate alerts; AI stack – practiced embeddings with Hugging Face, tried transformer pipelines, Colab T4 GPU experiments, linear algebra refresher for vector similarity, built prompt templates with Cursor, LangChain prototype for doc Q&A; developer workflow – Jenkins CI setup, SonarQube scans, ChatGPT-generated unit tests, applied refactoring suggestions, versioned infra with Terraform, daily 30-min deliberate bug hunts.",
+            "zh": "具體實例：即時報價平台 – 調整 Redis Pub/Sub，加 Redis Lua 鎖做 idempotency，基準測試吞吐量，導入 circuit breaker，Grafana 追蹤延遲；文件檢索 – 混合檢索 pgvector + pg_trgm，Redis + Postgres 並行查詢，加入快取暴衝保護，用 Prometheus 監控，設計 SLO 燒毀率告警；AI 堆疊 – 練 Hugging Face embeddings，嘗試 transformer pipeline，在 Colab T4 GPU 實驗，線代複習理解向量相似度，用 Cursor 建立 prompt 模板，LangChain 文件問答原型；開發流程 – Jenkins CI、SonarQube 掃描，用 ChatGPT 生單元測試骨架，接收重構建議，Terraform 管理基礎設施，每天固定 30 分鐘解 bug 當練功。"
+        }
+    },
+    "quadrant2": {
+        "title": {
+            "en": "Foundations That Led Here",
+            "zh": "前山伏筆"
+        },
+        "content": {
+            "en": "EY Auditor: VBA macros revealed passion for redesigning processes, not following them. Far Eastern Bank Fintech PM: introduced RPA, first time I felt 'code could save the team hundreds of hours', built BNPL flows, payment dashboards, telco partnerships. Tarobo Investment Macro Associate: daily Python for trading APIs, more absorbed in coding than research. In traditional finance, I felt burnout: repetitive processes, limited creativity. FreeCodeCamp, iSpan training: step from PM to engineer; every debug confirmed my choice.",
+            "zh": "EY 審計：VBA 巨集讓我發現熱衷於改造流程，而非跟著流程。 遠東商銀 Fintech PM：導入 RPA，第一次感受到「程式碼能替團隊省下幾百小時」，建置 BNPL 流程、支付儀表板、電信合作。 Tarobo投資 Macro Associate：每日 Python 交易 API，投入程式多於研究。 在傳統金融裡，我感受到 倦怠：流程重複、創造性有限。 FreeCodeCamp、iSpan 訓練：從 PM 轉為能自己動手的工程師；每次 Debug 都驗證選擇正確。"
+        },
+        "extension": {
+            "en": "Detailed footprints: EY – automated reconciliations with VBA, built macros that reduced audit hours, optimized sampling logic, led cross-team checklists; Far Eastern Bank – RPA bot to handle 31 repetitive workflows, BNPL prototype with merchant settlement rules, built Power BI dashboards tracking KPIs, collaborated with telcos for digital wallets, mapped transaction events into auditable logs; Tarobo – integrated Shioaji for market tick data, designed automated backtest pipelines for volatility rebalancing, built Red-K trading logic, maintained multiple databases, automated ETL for cross-asset indicators, wrote daily emerging markets reports; transition path – FreeCodeCamp JavaScript certification, iSpan JavaEE training, side experiments with Django apps, Jenkins setup, Docker deployments; in small coding experiments, I found passion: turning logic in my mind into running systems. This contrast pushed me to commit to career transition. Not because finance was bad, but because I wanted 'creation' rather than 'documentation'; Toastmasters 8.5 years – trained to structure abstract ideas into vivid stories, public speaking skills enrich tech leadership; narrative – boredom in repetitive financial reports vs joy in automation and model prototyping, every successful script or API integration affirmed engineering as vocation.",
+            "zh": "具體足跡：EY – 用 VBA 自動化核對，建巨集節省稽核工時，優化抽樣邏輯，主導跨組清單；遠東商銀 – RPA 機器人自動化 31 項流程，做 BNPL 原型與商戶結算邏輯，建 Power BI KPI 儀表板，與電信合作開發數位錢包，交易事件映射成可稽核日誌；Tarobo – 串接 Shioaji 市場逐筆資料，設計自動回測流程（波動率再平衡、紅K 策略），維護多個資料庫，自動化 ETL 產出跨資產訊號，每日撰寫新興市場報告；轉職路徑 – FreeCodeCamp JS 證書、iSpan JavaEE 訓練，Side Project 嘗試 Django、Jenkins、Docker；在小小的程式實驗裡，我感受到 熱情：能把腦中邏輯轉成系統，看到它自動運行。這種反差推動我下決心轉職。不是因為金融不行，而是因為我想要「創造」而不是「記錄」；Toastmasters 8.5 年 – 把抽象觀點轉成鮮明故事，溝通技巧加強技術領導；心路 – 財報重複令人倦怠，程式自動化與模型原型帶來快樂，每段程式碼都印證工程才是志業。"
+        }
+    },
+    "quadrant3": {
+        "title": {
+            "en": "Battlefield",
+            "zh": "實戰場"
+        },
+        "content": {
+            "en": "Core: Spring Boot microservices, REST controllers, security filters. Django ASGI/ORM/REST. Celery async LLM retrieval. Docker/K8s for microservices. Redis Lua lock for real-time pricing; RabbitMQ for queue processing; PostgreSQL composite + GIN indexes, 5× retrieval boost. Algorithms: weekly LeetCode drills – Binary Trees, DP, Backtracking, Sliding Window.",
+            "zh": "核心：Spring Boot 微服務、REST 控制器、安全過濾器。 Django ASGI/ORM/REST。 Celery 非同步 LLM 檢索。 Docker/K8s 微服務。 Redis Lua 鎖做即時報價；RabbitMQ 處理佇列；PostgreSQL 複合+GIN 索引，檢索效能 5×。 演算法：每週 LeetCode 訓練 – 二元樹、DP、回溯、滑動視窗。"
+        },
+        "extension": {
+            "en": "Field evidence: API Gateway – rewrote JOIN queries, added composite indexes, built caching layers, measured 300→1500 QPS, added Prometheus alerts; retrieval systems – pg_trgm + pgvector hybrid, GIN + IVFFlat indexes, fallback logic to reduce hallucinations, provider rate-limiting; infra – containerized with Docker, K8s autoscaling, Terraform networking on OCI with VCN/Bastion/OKE; CI/CD – Jenkins pipelines; reliability – Redis session management, WebSocket STOMP push, chain-of-responsibility for exceptions, JUnit5/Mockito coverage; data – HikariCP tuning, ORM N+1 fix, batched queries reducing GC churn; Spring Boot – mastered layered architecture, Spring Security JWT filters, async @Scheduled tasks, optimized RestTemplate/WebClient. Algorithms – solved 200+ LeetCode problems: Binary Trees (Invert, Validate BST, Diameter), Dynamic Programming (Edit Distance, LCS, Palindromic Subsequence), Backtracking (Subsets II, Letter Combinations), Sliding Window & Hashing (Longest Substring, Anagrams, Group Anagrams). Each solved with production perspective: tree problems shaped caching/indexing mindset, DP improved scheduling/job partitioning, backtracking mapped to search optimizations.",
+            "zh": "實戰證據：API Gateway – 重寫 JOIN，加複合索引，建快取層，效能 300→1500 QPS，設 Prometheus 告警；檢索系統 – pg_trgm + pgvector 混合，GIN + IVFFlat 索引，fallback 策略降幻覺，API 呼叫限流；基礎設施 – Docker 容器化，K8s 自動擴展，OCI Terraform 建 VCN/Bastion/OKE；CI/CD – Jenkins pipeline；可靠性 – Redis 管理 session，WebSocket STOMP 推播，責任鏈處理例外，JUnit5/Mockito 測試覆蓋；資料 – HikariCP 多資料源調優，修 ORM N+1，批次查詢降 GC；Spring Boot – 熟練分層架構、Spring Security JWT 過濾器、非同步 @Scheduled 任務、RestTemplate/WebClient 優化。 演算法 – 已解 200+ LeetCode 題目：二元樹（反轉、驗證 BST、直徑）、動態規劃（編輯距離、LCS、回文子序列）、回溯（Subsets II、Letter Combinations）、滑動視窗與雜湊（Longest Substring、Anagrams、Group Anagrams）。每題轉化成實務洞見：樹題鍛鍊快取/索引思維，DP 提升排程與資源分割，回溯對應搜尋優化。"
+        }
+    },
+    "quadrant4": {
+        "title": {
+            "en": "Next Iteration",
+            "zh": "下個迴圈"
+        },
+        "content": {
+            "en": "Focus: high-concurrency architecture, asynchronous pipelines, distributed data systems, guided by DDIA. Product: build data-intensive flows that integrate AI modules, turn prototypes into user-facing MVPs. AI: generative models, prompt engineering, retrieval-augmented pipelines, embedding stores. Inspiration: Modular-style toolchains, assembling best-of-breed systems.",
+            "zh": "核心關注：高併發架構、非阻塞非同步管線與分散式資料系統設計，實作過程以《Designing Data-Intensive Applications》為方法論依據。 產品：設計能整合 AI 模組的資料流，將原型轉化為用戶可用的 MVP。 AI：生成式模型、提示工程、RAG 管線、embedding 儲存。 借鏡：像 Modular 一樣組合最優工具鏈，打造最佳系統。"
+        },
+        "extension": {
+            "en": "Forward roadmap: concurrency – refine Java CompletableFuture pools, explore Project Loom virtual threads, optimize non-blocking I/O with WebFlux and Netty; queues – benchmark RabbitMQ for throughput vs durability, backpressure handling, dead-letter strategies; database – incremental materialized views, sharding experiments, adaptive query caching; pipelines – batch embedding updates, retrieval accuracy tuning with hybrid pgvector + ANN, consistency checks across shards; AI – LLM-based doc routing, cost-aware tokenization, multi-provider orchestration, evaluation harness for accuracy/latency/cost tradeoffs; product – systematize side projects into MVPs, create feedback instrumentation, run A/B feature toggles, refine onboarding flows; team – knowledge base from Toastmasters, peer review rituals, ownership rotation. Guiding star: DDIA principles applied to AI systems – immutability, streaming-first, fault-tolerance, scalability, traceability – each new iteration strengthens data flow resilience while keeping product usable.",
+            "zh": "前瞻路線：併發 – 精練 Java CompletableFuture 線程池，探索 Project Loom 虛擬線程，用 WebFlux/Netty 做非阻塞 I/O；佇列 – RabbitMQ 測試耐久與吞吐，設計 backpressure 機制與死信佇列；資料庫 – 增量物化檢視、分片實驗、自適應查詢快取；資料流 – 批次更新 embedding，混合 pgvector + ANN 提升檢索準確率，跨分片一致性檢查；AI – 文件路由、token 成本控制、多模型協作，建立準確率/延遲/成本評估框架；產品 – 把 side project 系統化成 MVP，內建回饋監測，執行 A/B 測試，優化 onboarding 流程；團隊 – 借助 Toastmasters 訓練形成知識庫，建立 PR review 儀式，模組輪值。 指北星：以《DDIA》原則導入 AI 系統 – 不可變性、串流優先、容錯、可擴展、可追蹤，每次迭代都讓資料流更韌性，同時保證產品可用。"
+        }
+    }
+}

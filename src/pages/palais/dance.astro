@@ -83,12 +83,37 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
 
         const characterNames = await namesResponse.json() as string[];
         console.log(`從緩存載入的項目數: ${videoResourceManager.videoCache.size}`);
+        console.log(`API返回角色總數: ${characterNames.length}`);
 
-        // 過濾掉已知沒有影片的角色（利用緩存）
-        const charactersToCheck = characterNames.filter((character: string) => {
-          const cached = videoResourceManager.getCachedVideoExists(character);
-          return cached === undefined || cached === true; // 只檢查未知或已知有影片的
-        });
+        // 如果緩存中的角色數量與API返回的角色數量差異過大，清除舊緩存
+        const cacheSize = videoResourceManager.videoCache.size;
+        const apiSize = characterNames.length;
+        console.log(`緩存角色數: ${cacheSize}, API角色數: ${apiSize}`);
+        
+        if (cacheSize > 0 && Math.abs(apiSize - cacheSize) > 10) {
+          console.log(`檢測到角色數量差異過大 (緩存: ${cacheSize}, API: ${apiSize})，清除舊緩存`);
+          videoResourceManager.clearCache();
+        }
+
+        // 如果緩存被清除了，檢查所有角色；否則使用智能過濾
+        let charactersToCheck;
+        if (videoResourceManager.videoCache.size === 0) {
+          // 緩存被清除了，檢查所有角色
+          charactersToCheck = characterNames;
+          console.log(`緩存已清除，檢查所有 ${charactersToCheck.length} 個角色`);
+        } else {
+          // 使用智能過濾
+          charactersToCheck = characterNames.filter((character: string) => {
+            const cached = videoResourceManager.getCachedVideoExists(character);
+            // 對於已知沒有影片的角色，給予20%的重新檢查機會
+            if (cached === false) {
+              return Math.random() < 0.2; // 20%的機率重新檢查
+            }
+            // 對於未知或已知有影片的角色，都檢查
+            return cached === undefined || cached === true;
+          });
+          console.log(`使用智能過濾，實際檢查 ${charactersToCheck.length} 個角色`);
+        }
 
         updateLoadingStatus('loading', `檢查 ${charactersToCheck.length} 個角色的影片狀態...`);
 
@@ -342,9 +367,11 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         try {
           const cacheData = {
             timestamp: Date.now(),
-            data: Array.from(this.videoCache.entries())
+            data: Array.from(this.videoCache.entries()),
+            version: '1.0'
           };
           localStorage.setItem('dance_video_cache', JSON.stringify(cacheData));
+          console.log(`💾 已保存 ${this.videoCache.size} 個影片緩存項目到 localStorage`);
         } catch (error) {
           console.warn('無法保存影片緩存到 localStorage:', error);
         }
@@ -354,14 +381,25 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
       loadCacheFromStorage() {
         try {
           const stored = localStorage.getItem('dance_video_cache');
-          if (!stored) return;
+          if (!stored) {
+            console.log('📂 沒有找到本地影片緩存');
+            return;
+          }
 
           const cacheData = JSON.parse(stored);
           const now = Date.now();
           const expiryTime = this.cacheExpiryDays * 24 * 60 * 60 * 1000; // 7 天
 
+          // 檢查版本兼容性
+          if (cacheData.version !== '1.0') {
+            console.log('📅 緩存版本不匹配，清除舊緩存');
+            localStorage.removeItem('dance_video_cache');
+            return;
+          }
+
           // 檢查緩存是否過期
           if (now - cacheData.timestamp > expiryTime) {
+            console.log('⏰ 影片緩存已過期，清除舊緩存');
             localStorage.removeItem('dance_video_cache');
             return;
           }
@@ -371,9 +409,9 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
             this.videoCache.set(key, value);
           });
 
-          console.log(`載入影片存在性緩存: ${this.videoCache.size} 個項目`);
+          console.log(`📥 已載入 ${this.videoCache.size} 個影片緩存項目`);
         } catch (error) {
-          console.warn('無法從 localStorage 載入影片緩存:', error);
+          console.warn('❌ 無法從 localStorage 載入影片緩存:', error);
           localStorage.removeItem('dance_video_cache'); // 清除損壞的緩存
         }
       },
@@ -386,9 +424,15 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
       },
 
       cacheVideoExists(videoName, exists) {
+        const previousValue = this.videoCache.get(videoName);
         this.videoCache.set(videoName, exists);
-        // 定期保存到 localStorage（每 10 次操作保存一次）
-        if (this.videoCache.size % 10 === 0) {
+
+        // 如果值發生變化或緩存項目較少，立即保存
+        if (previousValue !== exists || this.videoCache.size <= 20) {
+          this.saveCacheToStorage();
+        }
+        // 否則每 5 次操作保存一次
+        else if (this.videoCache.size % 5 === 0) {
           this.saveCacheToStorage();
         }
       },
@@ -960,6 +1004,24 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
       alert('已清除所有影片存在性緩存，重新整理頁面將重新檢查所有角色的影片狀態。');
     };
 
+    // 立即重新載入所有角色 - 用戶可以在瀏覽器控制台執行 reloadAllCharacters()
+    (window as any).reloadAllCharacters = function() {
+      console.log('立即重新載入所有角色...');
+      // 清除緩存
+      videoResourceManager.clearCache();
+      // 立即重新載入頁面
+      window.location.reload(); // 強制從服務器重新載入
+    };
+
+    // 強制重新檢查所有角色 - 用戶可以在瀏覽器控制台執行 forceRefreshAllCharacters()
+    (window as any).forceRefreshAllCharacters = function() {
+      console.log('強制重新檢查所有角色...');
+      // 清除緩存
+      videoResourceManager.clearCache();
+      // 重新載入頁面
+      window.location.reload();
+    };
+
     // 暴露緩存統計函數供調試使用
     (window as any).getDanceCacheStats = function() {
       const cache = videoResourceManager.videoCache;
@@ -969,8 +1031,18 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         withoutVideos: Array.from(cache.entries()).filter(([_, hasVideo]) => !hasVideo).length,
         entries: Array.from(cache.entries())
       };
+      console.log('📊 影片緩存統計:');
+      console.log(`   總項目數: ${stats.total}`);
+      console.log(`   有影片: ${stats.withVideos}`);
+      console.log(`   無影片: ${stats.withVideos}`);
       console.table(stats.entries);
       return stats;
+    };
+
+    // 強制保存緩存到本地存儲
+    (window as any).saveDanceCache = function() {
+      videoResourceManager.saveCacheToStorage();
+      console.log('✅ 緩存已手動保存到 localStorage');
     };
 
     setTimeout(() => {
@@ -991,15 +1063,55 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
       });
     }, 3000);
 
-    // 載入影片存在性緩存
+    // 先載入影片存在性緩存，然後再開始載入內容
     videoResourceManager.loadCacheFromStorage();
 
-    // 開始載入影片內容
-    loadDanceContent();
+    // 確保緩存載入完成後再開始載入影片內容
+    setTimeout(() => {
+      console.log(`🎯 緩存載入完成，總共 ${videoResourceManager.videoCache.size} 個緩存項目`);
+
+      // 添加鍵盤快捷鍵
+      document.addEventListener('keydown', function(event) {
+        // Ctrl+F5 或 Ctrl+R 強制重新載入所有角色
+        if ((event.ctrlKey || event.metaKey) && (event.key === 'F5' || event.key === 'r')) {
+          event.preventDefault();
+          console.log('檢測到強制刷新快捷鍵 (Ctrl+F5/Ctrl+R)');
+          (window as any).forceRefreshAllCharacters();
+        }
+        // F5 單獨按下也強制刷新
+        else if (event.key === 'F5') {
+          event.preventDefault();
+          console.log('檢測到F5刷新');
+          (window as any).forceRefreshAllCharacters();
+        }
+      });
+
+      // 在頁面載入完成後顯示提示信息
+      setTimeout(() => {
+        console.log('💡 提示: 按 Ctrl+F5 或 F5 強制重新檢查所有角色');
+        console.log('💡 或者在控制台執行: forceRefreshAllCharacters()');
+      }, 2000);
+
+      // 開始載入影片內容
+      loadDanceContent();
+    }, 100); // 給緩存載入一點時間
 
     // 頁面卸載時保存緩存
     window.addEventListener('beforeunload', () => {
-      videoResourceManager.saveCacheToStorage();
+      try {
+        videoResourceManager.saveCacheToStorage();
+        console.log('💾 頁面卸載前已保存影片緩存');
+      } catch (error) {
+        console.warn('⚠️ 頁面卸載時保存緩存失敗:', error);
+      }
+    });
+
+    // 頁面獲取焦點時檢查緩存完整性
+    window.addEventListener('focus', () => {
+      // 確保緩存沒有損壞
+      if (videoResourceManager.videoCache.size > 0) {
+        console.log(`🔍 頁面重新獲得焦點，當前緩存項目: ${videoResourceManager.videoCache.size}`);
+      }
     });
   });
 </script>
