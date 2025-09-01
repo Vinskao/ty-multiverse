@@ -22,6 +22,7 @@
             { "name": "PHP 12", "level": "shade3" }
           ]
         },
+
         {
           "name": "Frameworks & Libraries",
           "description": {
@@ -42,9 +43,13 @@
             { "name": "Spring Session Redis", "level": "shade3" },
             { "name": "Quarkus 3", "level": "shade3" },
             { "name": "Django Rest", "level": "shade4" },
+            { "name": "Django ASGI", "level": "shade5" },
+            { "name": "WSGI Worker Pattern", "level": "shade4" },
             { "name": "Express.js", "level": "shade4" },
             { "name": "Laravel", "level": "shade3" },
             { "name": "FastAPI", "level": "shade3" },
+            { "name": "Async/Await", "level": "shade3" },
+            { "name": "Event Loop", "level": "shade4" },
             { "name": "ExecutorService", "level": "shade3" },
             { "name": "ConcurrentHashMap", "level": "shade3" }
           ]
@@ -230,6 +235,21 @@
             { "name": "Tomcat", "level": "shade3" }
           ]
         },
+
+        {
+          "name": "System Architecture",
+          "description": {
+            "en": [
+              "Implemented thread pool patterns for concurrent task processing and resource management in high-performance applications."
+            ],
+            "zh": [
+              "實作執行緒池模式以處理高性能應用中的併發任務與資源管理"
+            ]
+          },
+          "skills": [
+            { "name": "Thread Pool", "level": "shade3" }
+          ]
+        },
         {
           "name": "Monitoring & Visualization",
           "description": {
@@ -279,7 +299,7 @@
           },
           "skills": [
             { "name": "HTTP", "level": "shade1" },
-            { "name": "Web Socket", "level": "shade3" },
+            { "name": "WebSocket", "level": "shade3" },
             { "name": "STOMP", "level": "shade4" },
             { "name": "SSL/TLS", "level": "shade1" }
           ]
@@ -444,7 +464,10 @@
             { "name": "ChatOpenAI", "level": "shade5" },
             { "name": "LLMChain", "level": "shade5" },
             { "name": "PromptTemplate", "level": "shade5" },
-            { "name": "LangChain RAG", "level": "shade5" }
+            { "name": "LangChain RAG", "level": "shade5" },
+            { "name": "pgvector", "level": "shade4" },
+            { "name": "IVFFlat Index", "level": "shade5" },
+            { "name": "Vector Search", "level": "shade4" }
           ]
         },
         {
