@@ -1,0 +1,189 @@
+---
+// 載入briefing資料
+import briefingData from '../storages/briefing.json';
+import '../styles/briefing.css';
+
+// 獲取URL參數來檢查語言
+const url = new URL(Astro.request.url);
+const lang = (url.searchParams.get('lang') ?? 'en') as 'en' | 'zh';
+
+// Component props for variants
+interface Props {
+  showTitle?: boolean;
+  variant?: 'default' | 'overlay';
+}
+const { showTitle = true, variant = 'default' } = Astro.props as Props;
+const showExtensions = variant !== 'overlay';
+
+// 檢查登入狀態
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+const isLoggedIn = !!username && !!token;
+
+function sanitize(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^\s*(實例、短句|Real examples, short clauses)[:：]?\s*/i, '')
+    .trim();
+}
+
+function splitToList(text: string): string[] {
+  const cleaned = sanitize(text);
+  if (!cleaned) return [];
+  return cleaned
+    .split(/(?:[\n]|；|;|。)+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .slice(0, 12);
+}
+
+function splitContentToList(text: string): string[] {
+  if (!text) return [];
+  return text
+    .split(/(?<=[.!?。！？])\s+|;\s*/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && s !== '.');
+}
+
+const ext1 = splitToList(briefingData.quadrant1.extension[lang]);
+const ext2 = splitToList(briefingData.quadrant2.extension[lang]);
+const ext3 = splitToList(briefingData.quadrant3.extension[lang]);
+const ext4 = splitToList(briefingData.quadrant4.extension[lang]);
+
+const content1 = splitContentToList(briefingData.quadrant1.content[lang]);
+const content2 = splitContentToList(briefingData.quadrant2.content[lang]);
+const content3 = splitContentToList(briefingData.quadrant3.content[lang]);
+const content4 = splitContentToList(briefingData.quadrant4.content[lang]);
+---
+
+<section class={`briefing-section ${variant === 'overlay' ? 'overlay-mode' : ''}`}>
+    {showTitle && (<h2 class="section-title">Career Briefing</h2>)}
+    <div class="content">
+        <div class="quadrant-grid" id={variant === 'overlay' ? 'quadrant-grid-overlay' : 'quadrant-grid'}
+            <!-- Quadrant 1 -->
+            <div class="quadrant quadrant-1">
+                <div class="quadrant-header">
+                    <h3 class="quadrant-title">
+                        {briefingData.quadrant1.title[lang]}
+                    </h3>
+                </div>
+                <div class="quadrant-content">
+                    <ul class="content-list">
+                        {content1.map((item) => (<li>{item}</li>))}
+                    </ul>
+                    {showExtensions && (
+                      <div class="ext-panel">
+                          <ul>
+                              {ext1.map((item) => (<li>{item}</li>))}
+                          </ul>
+                      </div>
+                    )}
+                </div>
+            </div>
+
+            <!-- Quadrant 2 -->
+            <div class="quadrant quadrant-2">
+                <div class="quadrant-header">
+                    <h3 class="quadrant-title">
+                        {briefingData.quadrant2.title[lang]}
+                    </h3>
+                </div>
+                <div class="quadrant-content">
+                    <ul class="content-list">
+                        {content2.map((item) => (<li>{item}</li>))}
+                    </ul>
+                    {showExtensions && (
+                      <div class="ext-panel">
+                          <ul>
+                              {ext2.map((item) => (<li>{item}</li>))}
+                          </ul>
+                      </div>
+                    )}
+                </div>
+            </div>
+
+            <!-- Quadrant 3 -->
+            <div class="quadrant quadrant-3">
+                <div class="quadrant-header">
+                    <h3 class="quadrant-title">
+                        {briefingData.quadrant3.title[lang]}
+                    </h3>
+                </div>
+                <div class="quadrant-content">
+                    <ul class="content-list">
+                        {content3.map((item) => (<li>{item}</li>))}
+                    </ul>
+                    {showExtensions && (
+                      <div class="ext-panel">
+                          <ul>
+                              {ext3.map((item) => (<li>{item}</li>))}
+                          </ul>
+                      </div>
+                    )}
+                </div>
+            </div>
+
+            <!-- Quadrant 4 -->
+            <div class="quadrant quadrant-4">
+                <div class="quadrant-header">
+                    <h3 class="quadrant-title">
+                        {briefingData.quadrant4.title[lang]}
+                    </h3>
+                </div>
+                <div class="quadrant-content">
+                    <ul class="content-list">
+                        {content4.map((item) => (<li>{item}</li>))}
+                    </ul>
+                    {showExtensions && (
+                      <div class="ext-panel">
+                          <ul>
+                              {ext4.map((item) => (<li>{item}</li>))}
+                          </ul>
+                      </div>
+                    )}
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</section>
+
+<script>
+  function setupHoverEffects() {
+    // Get all quadrant grids - we need to process each one separately
+    const grids = document.querySelectorAll('#quadrant-grid');
+    
+    grids.forEach((grid, gridIndex) => {
+      // Check if this specific grid is in overlay mode
+      const inOverlay = !!grid.closest('.overlay-mode');
+      
+      if (inOverlay) {
+        return;
+      }
+      
+      const qNodes = grid.querySelectorAll('.quadrant');
+      
+      qNodes.forEach((q, idx) => {
+        q.addEventListener('mouseenter', () => {
+          grid.classList.remove('hover-q1','hover-q2','hover-q3','hover-q4');
+          grid.classList.add(`hover-q${idx+1}`);
+        });
+        
+        q.addEventListener('mouseleave', () => {
+          grid.classList.remove('hover-q1','hover-q2','hover-q3','hover-q4');
+        });
+      });
+    });
+  }
+  
+  // Initialize hover effects
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupHoverEffects);
+  } else {
+    setupHoverEffects();
+  }
+  </script>
+
+
+

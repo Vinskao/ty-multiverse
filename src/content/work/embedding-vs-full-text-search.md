@@ -1,5 +1,5 @@
 ---
-title: "Embedding vs Full-text Search"
+title: "embedding-vs-full-text-search"
 publishDate: "2025-08-27 02:00:00"
 img: /tymultiverse/assets/algorithm.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background

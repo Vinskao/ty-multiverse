@@ -460,6 +460,7 @@
           },
           "skills": [
             { "name": "LangChain", "level": "shade4" },
+            { "name": "LangGraph", "level": "shade4" },
             { "name": "OpenAI API", "level": "shade4" },
             { "name": "ChatOpenAI", "level": "shade5" },
             { "name": "LLMChain", "level": "shade5" },

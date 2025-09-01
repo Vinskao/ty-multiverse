@@ -1,0 +1,715 @@
+/* remove old briefing wrapper styles */
+
+.briefing-section {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+/* Overlay mode (renders inside work-photo) */
+.overlay-mode {
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    padding: 0;
+}
+.overlay-mode .section-title { display: none; }
+.overlay-mode .content { padding: 0; }
+.overlay-mode .quadrant-grid {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    gap: 0.8rem;
+}
+/* Only show titles in overlay - Large centered display */
+.overlay-mode .content-list { display: none !important; }
+.overlay-mode .ext-panel { display: none !important; }
+.overlay-mode .quadrant-header { 
+    margin: 0; 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-bottom: none;
+}
+.overlay-mode .quadrant-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+.overlay-mode .quadrant-content { 
+    padding: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex: 1;
+}
+.overlay-mode .quadrant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive overlay title sizes */
+@media (max-width: 768px) {
+    .overlay-mode .quadrant-title {
+        font-size: 1.8rem;
+    }
+}
+@media (max-width: 480px) {
+    .overlay-mode .quadrant-title {
+        font-size: 1.5rem;
+    }
+}
+
+.quadrant-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1.5rem;
+    width: 80vw;
+    height: 75vh;
+    margin: 0 auto 2rem auto;
+    transition: grid-template-columns 0.25s ease, grid-template-rows 0.25s ease;
+}
+
+.quadrant {
+    --qpad: 1.5rem;
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; /* contain ext-panel */
+    backdrop-filter: blur(10px);
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid:hover .quadrant:not(:hover) {
+    opacity: 0.85;
+}
+
+/* Resize layout on hover while keeping overall grid size - Subtle scaling */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 { 
+    grid-template-columns: 1.4fr 0.6fr; 
+    grid-template-rows: 1.4fr 0.6fr; 
+}
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 { 
+    grid-template-columns: 0.6fr 1.4fr; 
+    grid-template-rows: 1.4fr 0.6fr; 
+}
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 { 
+    grid-template-columns: 1.4fr 0.6fr; 
+    grid-template-rows: 0.6fr 1.4fr; 
+}
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 { 
+    grid-template-columns: 0.6fr 1.4fr; 
+    grid-template-rows: 0.6fr 1.4fr; 
+}
+
+/* Shrink fonts of non-hovered quadrants - Simplified selectors */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .quadrant-title,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .quadrant-title { 
+    font-size: 0.8rem !important; 
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .ext-panel ul { 
+    font-size: 0.7rem !important; 
+}
+
+/* Enlarge fonts of hovered quadrant - Simplified selectors */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title { font-size: 1.8rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title { font-size: 1.8rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title { font-size: 1.8rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title { font-size: 1.8rem !important; }
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li { font-size: 1.45rem !important; }
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li { font-size: 1.45rem !important; }
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li { font-size: 1.45rem !important; }
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li { font-size: 1.45rem !important; }
+
+/* Quadrant 1 - Practice (Green theme) */
+.quadrant-1 {
+    background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.15) 0%, 
+        rgba(76, 175, 80, 0.08) 100%);
+    border: 2px solid rgba(76, 175, 80, 0.3);
+}
+.quadrant-1:hover {
+    background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.2) 0%, 
+        rgba(76, 175, 80, 0.1) 100%);
+    border-color: rgba(76, 175, 80, 0.6);
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+    transform: translateY(-2px);
+}
+.quadrant-1 .ext-panel {
+    background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.15) 0%,
+        rgba(76, 175, 80, 0.08) 50%,
+        rgba(76, 175, 80, 0.05) 100%);
+    border-left: 2px solid rgba(76, 175, 80, 0.6);
+}
+.quadrant-1 .ext-panel li:before {
+    color: rgba(76, 175, 80, 0.8);
+}
+
+/* Quadrant 2 - Foundation (Blue theme) */
+.quadrant-2 {
+    background: linear-gradient(135deg, 
+        rgba(33, 150, 243, 0.15) 0%, 
+        rgba(33, 150, 243, 0.08) 100%);
+    border: 2px solid rgba(33, 150, 243, 0.3);
+}
+.quadrant-2:hover {
+    background: linear-gradient(135deg, 
+        rgba(33, 150, 243, 0.2) 0%, 
+        rgba(33, 150, 243, 0.1) 100%);
+    border-color: rgba(33, 150, 243, 0.6);
+    box-shadow: 0 8px 32px rgba(33, 150, 243, 0.3);
+    transform: translateY(-2px);
+}
+.quadrant-2 .ext-panel {
+    background: linear-gradient(135deg,
+        rgba(33, 150, 243, 0.15) 0%,
+        rgba(33, 150, 243, 0.08) 50%,
+        rgba(33, 150, 243, 0.05) 100%);
+    border-left: 2px solid rgba(33, 150, 243, 0.6);
+}
+.quadrant-2 .ext-panel li:before {
+    color: rgba(33, 150, 243, 0.8);
+}
+
+/* Quadrant 3 - Skills (Orange theme) */
+.quadrant-3 {
+    background: linear-gradient(135deg, 
+        rgba(255, 152, 0, 0.15) 0%, 
+        rgba(255, 152, 0, 0.08) 100%);
+    border: 2px solid rgba(255, 152, 0, 0.3);
+}
+.quadrant-3:hover {
+    background: linear-gradient(135deg, 
+        rgba(255, 152, 0, 0.2) 0%, 
+        rgba(255, 152, 0, 0.1) 100%);
+    border-color: rgba(255, 152, 0, 0.6);
+    box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
+    transform: translateY(-2px);
+}
+.quadrant-3 .ext-panel {
+    background: linear-gradient(135deg,
+        rgba(255, 152, 0, 0.15) 0%,
+        rgba(255, 152, 0, 0.08) 50%,
+        rgba(255, 152, 0, 0.05) 100%);
+    border-left: 2px solid rgba(255, 152, 0, 0.6);
+}
+.quadrant-3 .ext-panel li:before {
+    color: rgba(255, 152, 0, 0.8);
+}
+
+/* Quadrant 4 - Future (Purple theme) */
+.quadrant-4 {
+    background: linear-gradient(135deg, 
+        rgba(156, 39, 176, 0.15) 0%, 
+        rgba(156, 39, 176, 0.08) 100%);
+    border: 2px solid rgba(156, 39, 176, 0.3);
+}
+.quadrant-4:hover {
+    background: linear-gradient(135deg, 
+        rgba(156, 39, 176, 0.2) 0%, 
+        rgba(156, 39, 176, 0.1) 100%);
+    border-color: rgba(156, 39, 176, 0.6);
+    box-shadow: 0 8px 32px rgba(156, 39, 176, 0.3);
+    transform: translateY(-2px);
+}
+.quadrant-4 .ext-panel {
+    background: linear-gradient(135deg,
+        rgba(156, 39, 176, 0.15) 0%,
+        rgba(156, 39, 176, 0.08) 50%,
+        rgba(156, 39, 176, 0.05) 100%);
+    border-left: 2px solid rgba(156, 39, 176, 0.6);
+}
+.quadrant-4 .ext-panel li:before {
+    color: rgba(156, 39, 176, 0.8);
+}
+
+.quadrant-header {
+    margin-bottom: 1rem;
+}
+
+.quadrant-title {
+    color: var(--gray-0);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(81, 70, 149, 0.3);
+}
+
+.quadrant-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-right: 0;
+    position: relative;
+    transition: padding-right 0.3s ease;
+    overflow: visible;
+}
+
+/* Hover時內容區域縮到左半邊 */
+.briefing-section:not(.overlay-mode) .quadrant:hover .quadrant-content {
+    padding-right: calc(50% + var(--qpad));
+}
+
+.quadrant-content p {
+    color: var(--gray-200);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+    text-align: left;
+}
+
+.content-list {
+    list-style: disc;
+    padding: 0 8px 16px 1.25rem;
+    margin: 0;
+    color: var(--gray-200);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(81, 70, 149, 0.3) transparent;
+}
+
+.content-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.content-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content-list::-webkit-scrollbar-thumb {
+    background-color: rgba(81, 70, 149, 0.3);
+    border-radius: 3px;
+}
+
+.content-list::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(81, 70, 149, 0.5);
+}
+
+.content-list li {
+    margin-bottom: 0.75rem;
+    padding-left: 0;
+}
+
+.content-list li:last-child {
+    margin-bottom: 0;
+}
+
+/* Extension panel covers full quadrant height in right half and touches outer edge */
+.ext-panel {
+    position: absolute;
+    top: calc(0px - var(--qpad));
+    right: calc(0px - var(--qpad));
+    bottom: calc(0px - var(--qpad));
+    left: calc(50% - var(--qpad));
+    background: linear-gradient(135deg,
+        rgba(81, 70, 149, 0.15) 0%,
+        rgba(81, 70, 149, 0.08) 50%,
+        rgba(81, 70, 149, 0.05) 100%);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(81, 70, 149, 0.4);
+    border-left: 2px solid rgba(81, 70, 149, 0.6);
+    border-radius: 0 16px 16px 0;
+    padding: 12px 16px;
+    display: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    z-index: 1;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 12px rgba(81, 70, 149, 0.15);
+    transition: all 0.3s ease;
+}
+
+.briefing-section:not(.overlay-mode) .quadrant:hover .ext-panel {
+    display: block;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 6px 20px rgba(81, 70, 149, 0.25);
+}
+.ext-panel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 16px 0;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(81, 70, 149, 0.4) transparent;
+}
+
+.ext-panel ul::-webkit-scrollbar {
+    width: 4px;
+}
+.ext-panel ul::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+.ext-panel ul::-webkit-scrollbar-thumb {
+    background-color: rgba(81, 70, 149, 0.5);
+    border-radius: 2px;
+    border: none;
+}
+.ext-panel ul::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(81, 70, 149, 0.7);
+}
+
+.ext-panel li {
+    position: relative;
+    margin-bottom: 8px;
+    padding-left: 16px;
+    color: var(--gray-100);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    transition: color 0.2s ease;
+}
+
+.ext-panel li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: rgba(81, 70, 149, 0.8);
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.ext-panel li:hover {
+    color: var(--gray-50);
+}
+
+.ext-panel li:last-child {
+    margin-bottom: 0;
+}
+
+.quadrant-extension {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(81, 70, 149, 0.2);
+}
+
+.extension-text {
+    color: var(--gray-300) !important;
+    font-size: 0.85rem !important;
+    line-height: 1.5 !important;
+    font-style: italic;
+    margin: 0 !important;
+}
+
+/* removed login prompt */
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .briefing-section {
+        opacity: 0.8; /* 手機版稍微提高可見度 */
+    }
+
+    .quadrant-grid {
+        width: 90vw;
+        height: 80vh;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .quadrant { padding: 1rem; --qpad: 1rem; }
+    .ext-chip { font-size: 0.8rem; }
+
+    .quadrant-title {
+        font-size: 1.1rem;
+    }
+    /* Tablet hover effects - using class-based selectors */
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title {
+        font-size: 1.5rem;
+    }
+
+    .quadrant-content p {
+        font-size: 0.9rem;
+    }
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li {
+        font-size: 1.2rem;
+    }
+
+    .ext-panel ul {
+        font-size: 0.9rem;
+    }
+
+    .content-list {
+        font-size: 0.9rem;
+    }
+
+    .content-list li:before {
+        left: -0.8rem;
+    }
+
+    .ext-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: linear-gradient(135deg,
+            rgba(81, 70, 149, 0.12) 0%,
+            rgba(81, 70, 149, 0.06) 100%);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(81, 70, 149, 0.3);
+    }
+    .quadrant-content { padding-right: 0; }
+}
+
+@media (max-width: 480px) {
+    .quadrant-grid {
+        width: 95vw;
+        height: 85vh;
+        gap: 0.75rem;
+    }
+
+    .quadrant {
+        padding: 0.75rem;
+    }
+
+    .quadrant-title {
+        font-size: 1rem;
+    }
+    /* Mobile hover effects - using class-based selectors */
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title {
+        font-size: 1.4rem;
+    }
+
+    .quadrant-content p {
+        font-size: 0.85rem;
+    }
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li {
+        font-size: 1.1rem;
+    }
+
+    .content-list {
+        font-size: 0.85rem;
+    }
+
+    .ext-panel ul {
+        font-size: 0.8rem;
+    }
+
+    .content-list li:before {
+        left: -0.7rem;
+    }
+
+    .ext-panel ul { font-size: 0.85rem; }
+    .ext-panel li { font-size: 0.8rem; padding-left: 14px; margin-bottom: 6px; }
+    .ext-panel li:before { font-size: 0.7rem; }
+}
+
+/* 深色主題調整 */
+.theme-dark .quadrant {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(81, 70, 149, 0.4);
+}
+
+.theme-dark .quadrant-title {
+    color: rgba(230, 230, 230, 0.95);
+}
+
+.theme-dark .quadrant-content p {
+    color: rgba(220, 220, 220, 0.9);
+}
+
+.theme-dark .extension-text {
+    color: rgba(200, 200, 200, 0.8) !important;
+}
+
+.theme-dark .ext-panel {
+    background: linear-gradient(135deg,
+        rgba(81, 70, 149, 0.2) 0%,
+        rgba(81, 70, 149, 0.12) 50%,
+        rgba(81, 70, 149, 0.08) 100%);
+    border-color: rgba(81, 70, 149, 0.5);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 4px 12px rgba(81, 70, 149, 0.2);
+}
+
+.theme-dark .ext-panel li {
+    color: rgba(220, 220, 220, 0.9);
+}
+
+.theme-dark .ext-panel li:hover {
+    color: rgba(240, 240, 240, 1);
+}
+
+.theme-dark .briefing-login-prompt {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+.theme-dark .briefing-login-prompt p {
+    color: #ffb74d;
+}
+
+/* 動畫效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quadrant-grid { animation: fadeInUp 0.6s ease-out; }
+
+.quadrant:nth-child(1) { animation-delay: 0.1s; }
+.quadrant:nth-child(2) { animation-delay: 0.2s; }
+.quadrant:nth-child(3) { animation-delay: 0.3s; }
+.quadrant:nth-child(4) { animation-delay: 0.4s; }
+
+.quadrant {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+/* Print styles */
+@media print {
+    .briefing-section {
+        page-break-before: auto;
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+
+    .quadrant {
+        break-inside: avoid;
+        box-shadow: none !important;
+        background: none !important;
+        border: 1px solid #ccc !important;
+        margin-bottom: 1rem;
+    }
+
+    .quadrant-title {
+        color: black !important;
+    }
+
+    .quadrant-content p,
+    .extension-text {
+        color: black !important;
+    }
+}

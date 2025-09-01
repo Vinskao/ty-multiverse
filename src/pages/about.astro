@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
+import Briefing from "../components/briefing.astro";
 import '../styles/about.css';
 
 // Import the JSON data
@@ -39,13 +40,19 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
           >
 
           </Hero>
-          <img
-            width="1553"
-            height="873"
-            src="/tymultiverse/assets/zen-landscape.svg"
-            alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
-            class="work-photo"
-          />
+          <div class="work-photo-wrapper" style="position:relative; width:100%;">
+            <!-- Overlay quadrants rendered inside work-photo area -->
+            <div class="work-photo-overlay" aria-hidden="true">
+              <Briefing showTitle={false} variant="overlay" />
+            </div>
+            <img
+              width="1553"
+              height="873"
+              src="/tymultiverse/assets/zen-landscape.svg"
+              alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
+              class="work-photo"
+            />
+          </div>
         </div>
 
         <section>
@@ -59,7 +66,10 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
             </p>
           </div>
         </section>
-        
+
+        <!-- Briefing Section -->
+        <Briefing />
+
         <section>
           <h2 class="section-title">Project Experience</h2>
           <div class="content">
@@ -828,6 +838,9 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
         if (mermaidLib) {
           mermaidLib.initialize({ startOnLoad: true, theme: 'default' });
         }
+
+        // Work photo hover to show briefing
+        // Overlay handled purely by CSS hover on wrapper to avoid flicker
       });
     </script>
 
