@@ -20,7 +20,7 @@ tags:
 
 本文將用 Java 開發者的思維來解釋 Django 專案架構，透過與 Spring Boot 的類比，讓你快速理解 Django 的設計模式和架構理念。特別適合從 Java 轉移到 Python 的開發者。
 
-## 🧑‍💻 Django 專案基礎教學 + 設計模式對應
+## Django 專案基礎教學 + 設計模式對應
 
 ### 1️⃣ Django 與 Java 框架的類比
 
@@ -427,7 +427,7 @@ public class ReactiveController {
 
 ##### 補充：Spring Boot 一定要用到 Netty/WebFlux 才有真正非阻塞效果？
 
-**✅ 正確理解：**
+**正確理解：**
 
 ```java
 // ❌ Tomcat + @Async：只是 thread pool 切換（並行，但不是非阻塞）
@@ -442,7 +442,7 @@ public class TomcatAsyncController {
     }
 }
 
-// ✅ WebFlux + Netty：才是 event loop + 非阻塞 I/O
+// WebFlux + Netty：才是 event loop + 非阻塞 I/O
 @RestController
 public class WebFluxController {
     @GetMapping("/webflux")

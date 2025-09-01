@@ -77,16 +77,18 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 							<div class="tags">
 								{entry.data.tags.map((t) => <Pill>{t}</Pill>)}
 							</div>
-							<div class="publish-info">
-								<time datetime={entry.data.publishDate.toISOString()}>
-									{entry.data.publishDate.toLocaleDateString('zh-TW', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric'
-									})}
-								</time>
+							<div class="content-info">
+								<div class="publish-info">
+									<time datetime={entry.data.publishDate.toISOString()}>
+										{entry.data.publishDate.toLocaleDateString('zh-TW', {
+											year: 'numeric',
+											month: 'long',
+											day: 'numeric'
+										})}
+									</time>
+								</div>
+								<p class="description">{entry.data.description}</p>
 							</div>
-							<p class="description">{entry.data.description}</p>
 						</div>
 					</Hero>
 				</div>
@@ -124,21 +126,33 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		display: flex;
 		flex-direction: column;
 		padding: 0.5rem;
-		gap: 1.5rem;
-		justify-content: space-between;
-		align-items: center;
+		gap: 1rem;
+		justify-content: flex-start;
+		align-items: flex-start;
 	}
 
 	.tags {
 		display: flex;
 		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.content-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		width: 100%;
 	}
 
 	.publish-info {
 		font-size: var(--text-sm);
 		color: var(--gray-400);
 		font-weight: 500;
-		margin-top: 0.5rem;
+		line-height: 1.2;
+		margin: 0;
+		display: inline;
+		word-break: break-word;
+		overflow-wrap: break-word;
 	}
 
 	.publish-info time {
@@ -148,15 +162,25 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 
 	.description {
 		font-size: var(--text-lg);
-		max-width: 54ch;
+		line-height: 1.6;
+		margin: 0;
+		margin-top: 0.25rem;
+		color: var(--gray-200);
+		font-weight: 400;
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
 	}
 
 	.content {
-		max-width: 75ch;
-		margin-inline: auto;
+		width: 100%;            /* Responsive, takes full width of container */
+		max-width: 75ch;        /* Controls the maximum content width */
+		margin: 0 auto;         /* Centers the content horizontally */
 		line-height: 1.7;
 		font-size: var(--text-md);
 		color: var(--gray-200);
+		padding: 0 1rem;        /* Adds horizontal padding like the image */
+		box-sizing: border-box; /* Ensures padding is included in width calculation */
 	}
 
 	.content > :global(* + *) {
@@ -307,6 +331,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size: 0.9em;
 		border: 1px solid var(--gray-700);
+
 	}
 
 	.content :global(pre) {
@@ -318,7 +343,10 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		overflow-x: auto;
 		box-shadow: var(--shadow-md);
 		position: relative;
+
 	}
+
+
 
 	.content :global(pre code) {
 		background: none;
@@ -327,6 +355,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		color: var(--gray-200);
 		font-size: 0.95em;
 		line-height: 1.5;
+
 	}
 
 	.content :global(table) {
@@ -383,7 +412,12 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 
 		.details {
 			flex-direction: row;
-			gap: 2.5rem;
+			gap: 2rem;
+			align-items: flex-start;
+		}
+
+		.content-info {
+			flex: 1;
 		}
 
 		.content {
@@ -422,48 +456,414 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		}
 	}
 
-	@media (max-width: 768px) {
+	/* 超寬螢幕 - 最佳閱讀體驗 */
+	@media (min-width: 1440px) {
+		.content {
+			font-size: var(--text-lg);
+			line-height: 1.8;
+			max-width: 90ch;
+			margin: 0 auto;
+			padding: 0 3rem;        /* More generous padding on ultra-wide screens */
+		}
+
+		.content :global(h1) {
+			font-size: var(--text-6xl);
+			margin: 6rem 0 4rem 0;
+		}
+
+		.content :global(h2) {
+			font-size: var(--text-5xl);
+			margin: 5rem 0 3rem 0;
+		}
+
+		.content :global(h3) {
+			font-size: var(--text-4xl);
+			margin: 4rem 0 2.5rem 0;
+		}
+
+		.content :global(pre) {
+			padding: 3rem;
+			font-size: 1em;
+		}
+
+		.content :global(blockquote) {
+			font-size: var(--text-2xl);
+			padding: 3rem 4rem;
+		}
+
+		/* 超寬螢幕使用兩欄佈局 */
+		.content {
+			column-count: 2;
+			column-gap: 4rem;
+			column-rule: 1px solid var(--gray-800);
+		}
+
+		/* 防止標題跨欄 */
+		.content :global(h1),
+		.content :global(h2),
+		.content :global(h3),
+		.content :global(h4),
+		.content :global(h5) {
+			break-before: column;
+			break-after: avoid;
+		}
+
+		/* 程式碼區塊不分欄 */
+		.content :global(pre) {
+			break-inside: avoid;
+			column-span: all;
+		}
+
+		/* 表格不分欄 */
+		.content :global(table) {
+			break-inside: avoid;
+			column-span: all;
+		}
+
+		/* 圖片不分欄 */
+		.content :global(img) {
+			break-inside: avoid;
+			column-span: all;
+		}
+	}
+
+	/* 平板電腦 - 大尺寸 */
+	@media (min-width: 1024px) and (max-width: 1439px) {
+		.content {
+			font-size: var(--text-lg);
+			line-height: 1.8;
+			max-width: 85ch;
+			padding: 0 2rem;        /* More padding on larger screens */
+		}
+
+		.content :global(h1) {
+			font-size: var(--text-5xl);
+			margin: 5rem 0 3rem 0;
+		}
+
+		.content :global(h2) {
+			font-size: var(--text-4xl);
+			margin: 4rem 0 2.5rem 0;
+		}
+
+		.content :global(h3) {
+			font-size: var(--text-3xl);
+			margin: 3rem 0 2rem 0;
+		}
+
+		.content :global(pre) {
+			padding: 2.5rem;
+			font-size: 0.95em;
+		}
+
+		.content :global(blockquote) {
+			font-size: var(--text-xl);
+			padding: 2.5rem 3rem;
+		}
+	}
+
+	/* 平板電腦 - 中等尺寸 */
+	@media (min-width: 768px) and (max-width: 1023px) {
+		.content {
+			font-size: var(--text-md);
+			line-height: 1.7;
+			max-width: 75ch;
+			padding: 0 1.5rem;        /* Balanced padding for medium tablets */
+		}
+
+		.content :global(h1) {
+			font-size: var(--text-4xl);
+			margin: 3.5rem 0 2.5rem 0;
+		}
+
+		.content :global(h2) {
+			font-size: var(--text-3xl);
+			margin: 3rem 0 2rem 0;
+		}
+
+		.content :global(h3) {
+			font-size: var(--text-2xl);
+			margin: 2.5rem 0 1.5rem 0;
+		}
+
+		.content :global(pre) {
+			padding: 1.5rem;
+			font-size: 0.9em;
+		}
+
+		.content :global(blockquote) {
+			font-size: var(--text-lg);
+			padding: 2rem 2.5rem;
+		}
+	}
+
+	/* 平板電腦 - 小尺寸 */
+	@media (min-width: 640px) and (max-width: 767px) {
 		.content {
 			font-size: var(--text-base);
 			line-height: 1.6;
-			padding: 0 1rem;
+			max-width: 70ch;
+			padding: 0 1rem;        /* Reduced padding for smaller tablets */
 		}
 
 		.content :global(h1) {
 			font-size: var(--text-3xl);
-			margin: 2rem 0 1.5rem 0;
+			margin: 3rem 0 2rem 0;
 		}
 
 		.content :global(h2) {
 			font-size: var(--text-2xl);
-			margin: 1.5rem 0 1rem 0;
+			margin: 2.5rem 0 1.5rem 0;
 		}
 
 		.content :global(h3) {
 			font-size: var(--text-xl);
-			margin: 1.25rem 0 0.75rem 0;
+			margin: 2rem 0 1.25rem 0;
+		}
+
+		.content :global(pre) {
+			padding: 1.25rem;
+			font-size: 0.85em;
 		}
 
 		.content :global(blockquote) {
-			padding: 1rem 1.5rem;
-			margin: 1.5rem 0;
 			font-size: var(--text-md);
+			padding: 1.5rem 2rem;
+		}
+	}
+
+	/* 大型手機 */
+	@media (min-width: 480px) and (max-width: 639px) {
+		.content {
+			font-size: var(--text-base);
+			line-height: 1.6;
+			max-width: 65ch;
+			padding: 0 1rem;        /* Standard padding for large phones */
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(h1) {
+			font-size: var(--text-2xl);
+			margin: 2.5rem 0 1.5rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(h2) {
+			font-size: var(--text-xl);
+			margin: 2rem 0 1.25rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(h3) {
+			font-size: var(--text-lg);
+			margin: 1.75rem 0 1rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(p) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		.content :global(pre) {
 			padding: 1rem;
-			margin: 1.5rem 0;
-			font-size: 0.9em;
+			font-size: 0.8em;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.content :global(code) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(blockquote) {
+			font-size: var(--text-sm);
+			padding: 1.25rem 1.5rem;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		.content :global(table) {
-			font-size: 0.9em;
-			margin: 1.5rem 0;
+			display: block;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+	}
+
+	/* 小型手機 */
+	@media (max-width: 479px) {
+		.content {
+			font-size: var(--text-sm);
+			line-height: 1.6;
+			max-width: 100%;
+			padding: 0 0.75rem;        /* Slightly reduced padding for small phones */
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			hyphens: auto;
+		}
+
+		.content :global(h1) {
+			font-size: var(--text-xl);
+			margin: 2rem 0 1.25rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(h2) {
+			font-size: var(--text-lg);
+			margin: 1.75rem 0 1rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(h3) {
+			font-size: var(--text-md);
+			margin: 1.5rem 0 0.75rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(p) {
+			margin: 1rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			hyphens: auto;
+		}
+
+		.content :global(pre) {
+			padding: 0.75rem;
+			font-size: 0.75em;
+			margin: 1rem 0;
+			overflow-x: auto;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		.content :global(code) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			white-space: pre-wrap;
+		}
+
+		.content :global(blockquote) {
+			font-size: var(--text-sm);
+			padding: 1rem 1.25rem;
+			margin: 1.25rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(ul),
+		.content :global(ol) {
+			padding-left: 1.25rem;
+			margin: 1rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(li) {
+			margin: 0.5rem 0;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(table) {
+			display: block;
+			overflow-x: auto;
+			white-space: nowrap;
+			-webkit-overflow-scrolling: touch;
+			margin: 1rem 0;
+			font-size: 0.75em;
 		}
 
 		.content :global(th),
 		.content :global(td) {
-			padding: 0.75rem;
+			padding: 0.25rem 0.5rem;
+			white-space: nowrap;
+		}
+
+		.content :global(img) {
+			max-width: 100%;
+			height: auto;
+			border-radius: 0.25rem;
+		}
+
+		.content :global(a) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(strong),
+		.content :global(em) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(th),
+		.content :global(td) {
+			padding: 0.5rem 0.25rem;
+		}
+
+		/* 小屏優化：隱藏複雜的圖表或過大的圖片 */
+		.content :global(img) {
+			max-width: 100%;
+			height: auto;
+			border-radius: 0.5rem;
+		}
+
+		/* 確保列表項目不會太擠 */
+		.content :global(ul),
+		.content :global(ol) {
+			padding-left: 1.25rem;
+		}
+
+		.content :global(li) {
+			margin: 0.5rem 0;
+			line-height: 1.5;
+		}
+
+		/* 程式碼區塊在小螢幕上的處理 */
+		.content :global(pre) {
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		/* 確保表格在小螢幕上可滾動 */
+		.content :global(table) {
+			display: block;
+			overflow-x: auto;
+			white-space: nowrap;
+			-webkit-overflow-scrolling: touch;
+		}
+
+		/* 優化連結在觸控設備上的點擊區域 */
+		.content :global(a) {
+			min-height: 44px;
+			display: inline-block;
+			padding: 0.25rem 0;
+		}
+
+		/* 通用文字換行保護 */
+		.content :global(p),
+		.content :global(span),
+		.content :global(div) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+
+		.content :global(code):not(pre code) {
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			white-space: pre-wrap;
 		}
 	}
 </style>
