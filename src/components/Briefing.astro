@@ -157,8 +157,13 @@ const content4 = splitContentToList(briefingData.quadrant4.content[lang]);
     grids.forEach((grid, gridIndex) => {
       // Check if this specific grid is in overlay mode
       const inOverlay = !!grid.closest('.overlay-mode');
-      
-      if (inOverlay) {
+
+      // 在最小螢幕時禁用 hover 效果，避免字體重疊和佈局問題
+      const isSmallScreen = window.innerWidth <= 768;
+
+      if (inOverlay || isSmallScreen) {
+        // 對於小螢幕，確保所有內容都可見，不應用 hover 效果
+        grid.classList.remove('hover-q1','hover-q2','hover-q3','hover-q4');
         return;
       }
       
@@ -177,6 +182,15 @@ const content4 = splitContentToList(briefingData.quadrant4.content[lang]);
     });
   }
   
+  // Handle window resize to re-evaluate screen size
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      setupHoverEffects();
+    }, 100);
+  });
+
   // Initialize hover effects
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupHoverEffects);
