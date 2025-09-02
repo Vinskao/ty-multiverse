@@ -308,13 +308,16 @@
     border-radius: 0 16px 16px 0;
     padding: 16px 20px 16px 16px;
     display: none;
-    overflow: hidden;
+    overflow-y: auto; /* 垂直滾動 */
+    overflow-x: hidden; /* 隱藏水平滾動 */
     box-sizing: border-box;
     z-index: 10;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.1),
         0 4px 12px rgba(81, 70, 149, 0.15);
     transition: all 0.3s ease;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(81, 70, 149, 0.4) transparent;
 }
 
 .briefing-section:not(.overlay-mode) .quadrant:hover .ext-panel {
@@ -324,15 +327,24 @@
         0 6px 20px rgba(81, 70, 149, 0.25);
 }
 
+/* 當 extension 出現時，壓縮 content 內容到左邊 */
+.briefing-section:not(.overlay-mode) .quadrant:hover .content-list {
+    margin-right: calc(50% + 1rem); /* 壓縮到左半邊，留出 extension 空間 */
+    transition: margin-right 0.3s ease;
+}
+
+.briefing-section:not(.overlay-mode) .quadrant:hover .quadrant-content p {
+    margin-right: calc(50% + 1rem); /* 壓縮段落到左半邊 */
+    transition: margin-right 0.3s ease;
+}
+
 .ext-panel ul {
     list-style: none;
     margin: 0;
     padding: 0 0 8px 0;
     height: auto;
     max-height: none;
-    overflow: visible;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(81, 70, 149, 0.4) transparent;
+    overflow: visible; /* 讓父容器處理滾動 */
 }
 
 .ext-panel li {
@@ -478,6 +490,19 @@
         backdrop-filter: blur(6px);
         border: 1px solid rgba(81, 70, 149, 0.3);
         z-index: 10;
+        overflow-y: auto; /* 平板版也支援滾動 */
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(81, 70, 149, 0.4) transparent;
+    }
+
+    /* 平板版不壓縮 content，因為 extension 覆蓋整個象限 */
+    .briefing-section:not(.overlay-mode) .quadrant:hover .content-list {
+        margin-right: 0;
+    }
+
+    .briefing-section:not(.overlay-mode) .quadrant:hover .quadrant-content p {
+        margin-right: 0;
     }
 
     .quadrant-content {
@@ -637,6 +662,26 @@
 }
 
 .ext-panel ul::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(81, 70, 149, 0.7);
+}
+
+/* Extension panel 滾輪樣式 */
+.ext-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ext-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.ext-panel::-webkit-scrollbar-thumb {
+    background-color: rgba(81, 70, 149, 0.5);
+    border-radius: 2px;
+    border: none;
+}
+
+.ext-panel::-webkit-scrollbar-thumb:hover {
     background-color: rgba(81, 70, 149, 0.7);
 }
 
