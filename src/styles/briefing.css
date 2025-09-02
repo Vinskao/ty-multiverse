@@ -1,5 +1,6 @@
-/* remove old briefing wrapper styles */
+/* Career Briefing Styles - Clean Version */
 
+/* ===== BASE LAYOUT ===== */
 .briefing-section {
     opacity: 0.7;
     transition: opacity 0.3s ease;
@@ -12,84 +13,26 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-}
-
-/* Overlay mode (renders inside work-photo) */
-.overlay-mode {
-    opacity: 1;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    padding: 0;
-}
-.overlay-mode .section-title { display: none; }
-.overlay-mode .content { padding: 0; }
-.overlay-mode .quadrant-grid {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    gap: 0.8rem;
-}
-/* Only show titles in overlay - Large centered display */
-.overlay-mode .content-list { display: none !important; }
-.overlay-mode .ext-panel { display: none !important; }
-.overlay-mode .quadrant-header { 
-    margin: 0; 
-    flex: 1; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    border-bottom: none;
-}
-.overlay-mode .quadrant-title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    text-align: center;
-    margin: 0;
-    padding: 0;
-    border-bottom: none;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-.overlay-mode .quadrant-content { 
-    padding: 0; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    flex: 1;
-}
-.overlay-mode .quadrant {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Responsive overlay title sizes */
-@media (max-width: 768px) {
-    .overlay-mode .quadrant-title {
-        font-size: 1.8rem;
-    }
-}
-@media (max-width: 480px) {
-    .overlay-mode .quadrant-title {
-        font-size: 1.5rem;
-    }
+    height: auto; /* 動態高度 */
+    max-height: none; /* 移除最大高度限制 */
+    overflow: visible; /* 允許內容完全顯示 */
+    display: flex; /* 使用 flex 佈局 */
+    flex-direction: column; /* 垂直排列 */
 }
 
 .quadrant-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; /* 上面兩個象限平分空間 */
+    grid-template-rows: 1fr 1fr; /* 上下兩行平分空間 */
     gap: 1.5rem;
     width: 100%;
     max-width: 100%;
-    height: 85vh; /* 固定為視窗高度的 85% */
-    min-height: 600px; /* 最小高度保護 */
+    height: 80vh; /* 固定高度確保四個象限都可見 */
     margin: 0 0 2rem 0;
-    transition: grid-template-columns 0.25s ease, grid-template-rows 0.25s ease;
+    box-sizing: border-box;
+    transition: grid-template-columns 0.3s ease, grid-template-rows 0.3s ease;
+    overflow: visible; /* 允許內容可見 */
+    min-height: 80vh; /* 確保最小高度 */
 }
 
 .quadrant {
@@ -101,115 +44,14 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: hidden; /* contain ext-panel */
+    overflow: visible;
     backdrop-filter: blur(10px);
-    height: 100%; /* 確保每個象限填滿其網格區域 */
+    height: 100%; /* 填滿分配的 grid 空間 */
+    min-height: 0; /* 允許收縮 */
     box-sizing: border-box;
 }
 
-.briefing-section:not(.overlay-mode) .quadrant-grid:hover .quadrant:not(:hover) {
-    opacity: 0.85;
-}
-
-/* Resize layout on hover while keeping overall grid size - Subtle scaling */
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 { 
-    grid-template-columns: 1.4fr 0.6fr; 
-    grid-template-rows: 1.4fr 0.6fr; 
-}
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 { 
-    grid-template-columns: 0.6fr 1.4fr; 
-    grid-template-rows: 1.4fr 0.6fr; 
-}
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 { 
-    grid-template-columns: 1.4fr 0.6fr; 
-    grid-template-rows: 0.6fr 1.4fr; 
-}
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 { 
-    grid-template-columns: 0.6fr 1.4fr; 
-    grid-template-rows: 0.6fr 1.4fr; 
-}
-
-/* Shrink fonts of non-hovered quadrants - Simplified selectors */
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .quadrant-title,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .quadrant-title { 
-    font-size: 0.8rem !important; 
-}
-
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-2 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-3 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-4 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-1 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-3 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-4 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-1 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-2 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-4 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-1 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-2 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-3 .ext-panel ul { 
-    font-size: 0.7rem !important; 
-}
-
-/* Enlarge fonts of hovered quadrant - Simplified selectors */
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title { font-size: 1.35rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title { font-size: 1.35rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title { font-size: 1.35rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title { font-size: 1.35rem !important; }
-
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li { font-size: 1.05rem !important; }
-
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li { font-size: 1.05rem !important; }
-
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li { font-size: 1.05rem !important; }
-
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li { font-size: 1.45rem !important; }
-
+/* ===== QUADRANT THEMES ===== */
 /* Quadrant 1 - Practice (Green theme) */
 .quadrant-1 {
     background: linear-gradient(135deg, 
@@ -217,14 +59,15 @@
         rgba(76, 175, 80, 0.08) 100%);
     border: 2px solid rgba(76, 175, 80, 0.3);
 }
+
 .quadrant-1:hover {
     background: linear-gradient(135deg, 
         rgba(76, 175, 80, 0.2) 0%, 
         rgba(76, 175, 80, 0.1) 100%);
     border-color: rgba(76, 175, 80, 0.6);
     box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
-    transform: translateY(-2px);
 }
+
 .quadrant-1 .ext-panel {
     background: linear-gradient(135deg,
         rgba(76, 175, 80, 0.15) 0%,
@@ -232,6 +75,7 @@
         rgba(76, 175, 80, 0.05) 100%);
     border-left: 2px solid rgba(76, 175, 80, 0.6);
 }
+
 .quadrant-1 .ext-panel li:before {
     color: rgba(76, 175, 80, 0.8);
 }
@@ -243,14 +87,15 @@
         rgba(33, 150, 243, 0.08) 100%);
     border: 2px solid rgba(33, 150, 243, 0.3);
 }
+
 .quadrant-2:hover {
     background: linear-gradient(135deg, 
         rgba(33, 150, 243, 0.2) 0%, 
         rgba(33, 150, 243, 0.1) 100%);
     border-color: rgba(33, 150, 243, 0.6);
     box-shadow: 0 8px 32px rgba(33, 150, 243, 0.3);
-    transform: translateY(-2px);
 }
+
 .quadrant-2 .ext-panel {
     background: linear-gradient(135deg,
         rgba(33, 150, 243, 0.15) 0%,
@@ -258,6 +103,7 @@
         rgba(33, 150, 243, 0.05) 100%);
     border-left: 2px solid rgba(33, 150, 243, 0.6);
 }
+
 .quadrant-2 .ext-panel li:before {
     color: rgba(33, 150, 243, 0.8);
 }
@@ -269,14 +115,15 @@
         rgba(255, 152, 0, 0.08) 100%);
     border: 2px solid rgba(255, 152, 0, 0.3);
 }
+
 .quadrant-3:hover {
     background: linear-gradient(135deg, 
         rgba(255, 152, 0, 0.2) 0%, 
         rgba(255, 152, 0, 0.1) 100%);
     border-color: rgba(255, 152, 0, 0.6);
     box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
-    transform: translateY(-2px);
 }
+
 .quadrant-3 .ext-panel {
     background: linear-gradient(135deg,
         rgba(255, 152, 0, 0.15) 0%,
@@ -284,6 +131,7 @@
         rgba(255, 152, 0, 0.05) 100%);
     border-left: 2px solid rgba(255, 152, 0, 0.6);
 }
+
 .quadrant-3 .ext-panel li:before {
     color: rgba(255, 152, 0, 0.8);
 }
@@ -295,14 +143,15 @@
         rgba(156, 39, 176, 0.08) 100%);
     border: 2px solid rgba(156, 39, 176, 0.3);
 }
+
 .quadrant-4:hover {
     background: linear-gradient(135deg, 
         rgba(156, 39, 176, 0.2) 0%, 
         rgba(156, 39, 176, 0.1) 100%);
     border-color: rgba(156, 39, 176, 0.6);
     box-shadow: 0 8px 32px rgba(156, 39, 176, 0.3);
-    transform: translateY(-2px);
 }
+
 .quadrant-4 .ext-panel {
     background: linear-gradient(135deg,
         rgba(156, 39, 176, 0.15) 0%,
@@ -310,10 +159,79 @@
         rgba(156, 39, 176, 0.05) 100%);
     border-left: 2px solid rgba(156, 39, 176, 0.6);
 }
+
 .quadrant-4 .ext-panel li:before {
     color: rgba(156, 39, 176, 0.8);
 }
 
+/* ===== HOVER EFFECTS ===== */
+/* Hover 效果：選中象限變大，其他象限變小，字體大小調整 */
+
+/* 第一象限 hover 效果 */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 {
+    grid-template-columns: 2fr 1fr; /* 第一象限變大 */
+    grid-template-rows: 2fr 1fr; /* 第一象限變大 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 {
+    font-size: 1.1em; /* 選中象限字體變大 */
+    transform: scale(1.05); /* 輕微放大效果 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant:not(.quadrant-1) {
+    font-size: 0.8em; /* 其他象限字體明顯變小 */
+    opacity: 0.6; /* 其他象限變暗 */
+}
+
+/* 第二象限 hover 效果 */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 {
+    grid-template-columns: 1fr 2fr; /* 第二象限變大 */
+    grid-template-rows: 2fr 1fr; /* 第二象限變大 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 {
+    font-size: 1.1em; /* 選中象限字體變大 */
+    transform: scale(1.05); /* 輕微放大效果 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant:not(.quadrant-2) {
+    font-size: 0.8em; /* 其他象限字體明顯變小 */
+    opacity: 0.6; /* 其他象限變暗 */
+}
+
+/* 第三象限 hover 效果 */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 {
+    grid-template-columns: 2fr 1fr; /* 第三象限變大 */
+    grid-template-rows: 1fr 2fr; /* 第三象限變大 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 {
+    font-size: 1.1em; /* 選中象限字體變大 */
+    transform: scale(1.05); /* 輕微放大效果 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant:not(.quadrant-3) {
+    font-size: 0.8em; /* 其他象限字體明顯變小 */
+    opacity: 0.6; /* 其他象限變暗 */
+}
+
+/* 第四象限 hover 效果 */
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 {
+    grid-template-columns: 1fr 2fr; /* 第四象限變大 */
+    grid-template-rows: 1fr 2fr; /* 第四象限變大 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 {
+    font-size: 1.1em; /* 選中象限字體變大 */
+    transform: scale(1.05); /* 輕微放大效果 */
+}
+
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant:not(.quadrant-4) {
+    font-size: 0.8em; /* 其他象限字體明顯變小 */
+    opacity: 0.6; /* 其他象限變暗 */
+}
+
+/* ===== CONTENT STRUCTURE ===== */
 .quadrant-header {
     margin-bottom: 1rem;
 }
@@ -334,35 +252,10 @@
     gap: 1rem;
     padding-right: 0;
     position: relative;
-    transition: padding-right 0.3s ease;
-    overflow-y: auto; /* 添加垂直滾動 */
-    overflow-x: hidden; /* 隱藏水平滾動 */
-    min-height: 0; /* 允許 flex 子項縮小 */
+    overflow: visible; /* 讓內容可見 */
+    min-height: 0; /* 允許收縮 */
     scrollbar-width: thin;
     scrollbar-color: rgba(81, 70, 149, 0.3) transparent;
-}
-
-/* WebKit 瀏覽器滾動條樣式 */
-.quadrant-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.quadrant-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.quadrant-content::-webkit-scrollbar-thumb {
-    background-color: rgba(81, 70, 149, 0.3);
-    border-radius: 3px;
-}
-
-.quadrant-content::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(81, 70, 149, 0.5);
-}
-
-/* Hover時內容區域縮到左半邊 */
-.briefing-section:not(.overlay-mode) .quadrant:hover .quadrant-content {
-    padding-right: calc(50% + var(--qpad));
 }
 
 .quadrant-content p {
@@ -380,27 +273,13 @@
     color: var(--gray-200);
     line-height: 1.6;
     font-size: 0.95rem;
-    max-height: 100%;
-    overflow-y: auto;
+    flex: 1; /* 填滿剩餘空間 */
+    overflow-y: auto; /* 垂直滾動 */
+    overflow-x: hidden; /* 隱藏水平滾動 */
     scrollbar-width: thin;
     scrollbar-color: rgba(81, 70, 149, 0.3) transparent;
-}
-
-.content-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.content-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.content-list::-webkit-scrollbar-thumb {
-    background-color: rgba(81, 70, 149, 0.3);
-    border-radius: 3px;
-}
-
-.content-list::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(81, 70, 149, 0.5);
+    transition: font-size 0.3s ease; /* 字體大小變化動畫 */
+    min-height: 0; /* 允許收縮 */
 }
 
 .content-list li {
@@ -412,7 +291,7 @@
     margin-bottom: 0;
 }
 
-/* Extension panel covers full quadrant height in right half and touches outer edge */
+/* ===== EXTENSION PANEL ===== */
 .ext-panel {
     position: absolute;
     top: calc(0px - var(--qpad));
@@ -427,11 +306,11 @@
     border: 1px solid rgba(81, 70, 149, 0.4);
     border-left: 2px solid rgba(81, 70, 149, 0.6);
     border-radius: 0 16px 16px 0;
-    padding: 12px 16px;
+    padding: 16px 20px 16px 16px;
     display: none;
     overflow: hidden;
     box-sizing: border-box;
-    z-index: 2; /* 提升 z-index 確保在滾動條之上 */
+    z-index: 10;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.1),
         0 4px 12px rgba(81, 70, 149, 0.15);
@@ -444,36 +323,23 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.15),
         0 6px 20px rgba(81, 70, 149, 0.25);
 }
+
 .ext-panel ul {
     list-style: none;
     margin: 0;
-    padding: 0 0 16px 0;
-    max-height: 100%;
-    overflow-y: auto;
+    padding: 0 0 8px 0;
+    height: auto;
+    max-height: none;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: rgba(81, 70, 149, 0.4) transparent;
-}
-
-.ext-panel ul::-webkit-scrollbar {
-    width: 4px;
-}
-.ext-panel ul::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
-}
-.ext-panel ul::-webkit-scrollbar-thumb {
-    background-color: rgba(81, 70, 149, 0.5);
-    border-radius: 2px;
-    border: none;
-}
-.ext-panel ul::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(81, 70, 149, 0.7);
 }
 
 .ext-panel li {
     position: relative;
     margin-bottom: 8px;
-    padding-left: 16px;
+    padding-left: 18px;
+    padding-right: 4px;
     color: var(--gray-100);
     font-size: 0.9rem;
     line-height: 1.5;
@@ -498,91 +364,105 @@
     margin-bottom: 0;
 }
 
-.quadrant-extension {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(81, 70, 149, 0.2);
+/* ===== OVERLAY MODE ===== */
+.overlay-mode {
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    padding: 0;
 }
 
-.extension-text {
-    color: var(--gray-300) !important;
-    font-size: 0.85rem !important;
-    line-height: 1.5 !important;
-    font-style: italic;
-    margin: 0 !important;
+.overlay-mode .section-title { 
+    display: none; 
 }
 
-/* removed login prompt */
+.overlay-mode .content { 
+    padding: 0; 
+}
 
-/* 響應式設計 */
+.overlay-mode .quadrant-grid {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    gap: 0.8rem;
+}
+
+.overlay-mode .content-list { 
+    display: none !important; 
+}
+
+.overlay-mode .ext-panel { 
+    display: none !important; 
+}
+
+.overlay-mode .quadrant-header { 
+    margin: 0; 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-bottom: none;
+}
+
+.overlay-mode .quadrant-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.overlay-mode .quadrant-content { 
+    padding: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex: 1;
+}
+
+.overlay-mode .quadrant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
     .briefing-section {
-        opacity: 0.8; /* 手機版稍微提高可見度 */
+        opacity: 0.8;
     }
 
     .quadrant-grid {
-        width: 100%;
-        max-width: 100%;
-        height: 90vh; /* 平板稍微增加高度比例 */
-        min-height: 500px;
         grid-template-columns: 1fr;
-        grid-template-rows: repeat(4, 1fr); /* 固定四個等高區塊 */
+        grid-template-rows: repeat(4, 1fr); /* 四個象限平等分配 */
         gap: 1rem;
+        height: 70vh; /* 固定高度確保四個象限都可見 */
+        min-height: 70vh; /* 確保最小高度 */
+        overflow: visible; /* 允許內容可見 */
     }
 
-    .quadrant { padding: 1rem; --qpad: 1rem; }
-    .ext-chip { font-size: 0.8rem; }
+    .quadrant { 
+        padding: 1rem; 
+        --qpad: 1rem; 
+    }
 
     .quadrant-title {
         font-size: 1.1rem;
-    }
-    /* Tablet hover effects - using class-based selectors */
-    /* 在觸控設備上禁用 hover 放大效果，避免跳動 */
-    @media (hover: none) and (pointer: coarse) {
-        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1,
-        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2,
-        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3,
-        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 {
-            grid-template-columns: 1fr;
-            grid-template-rows: none;
-        }
-        .briefing-section:not(.overlay-mode) .quadrant-grid .quadrant-title {
-            font-size: 1.2rem !important;
-        }
     }
 
     .quadrant-content p {
         font-size: 0.9rem;
     }
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li {
-        font-size: 1.2rem;
-    }
-
-    .ext-panel ul {
-        font-size: 0.9rem;
-    }
 
     .content-list {
         font-size: 0.9rem;
-    }
-
-    .content-list li:before {
-        left: -0.8rem;
     }
 
     .ext-panel {
@@ -597,23 +477,27 @@
             rgba(81, 70, 149, 0.06) 100%);
         backdrop-filter: blur(6px);
         border: 1px solid rgba(81, 70, 149, 0.3);
-        z-index: 3; /* 確保在移動端也在滾動條之上 */
+        z-index: 10;
     }
+
     .quadrant-content {
         padding-right: 0;
-        overflow-y: auto; /* 確保移動端也有滾動功能 */
-        -webkit-overflow-scrolling: touch; /* iOS 平滑滾動 */
+        overflow: hidden; /* 隱藏溢出，讓子元素處理滾動 */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .overlay-mode .quadrant-title {
+        font-size: 1.8rem;
     }
 }
 
 @media (max-width: 480px) {
     .quadrant-grid {
-        width: 100%;
-        max-width: 100%;
-        height: 95vh; /* 手機版最大高度比例 */
-        min-height: 400px;
         gap: 0.75rem;
-        grid-template-rows: repeat(4, 1fr); /* 保持四個等高區塊 */
+        grid-template-rows: repeat(4, 1fr); /* 四個象限平等分配 */
+        height: 60vh; /* 固定高度確保四個象限都可見 */
+        min-height: 60vh; /* 確保最小高度 */
+        overflow: visible; /* 允許內容可見 */
     }
 
     .quadrant {
@@ -623,60 +507,69 @@
     .quadrant-title {
         font-size: 1rem;
     }
-    /* Mobile hover effects - using class-based selectors */
-    /* 同上，手機上禁用 hover 放大效果 */
-    @media (hover: none) and (pointer: coarse) {
-        .briefing-section:not(.overlay-mode) .quadrant-grid .quadrant-title {
-            font-size: 1.1rem !important;
-        }
-    }
 
     .quadrant-content p {
         font-size: 0.85rem;
     }
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li {
-        font-size: 1.1rem;
-    }
 
     .content-list {
         font-size: 0.85rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+    }
+
+    .content-list li {
+        margin-bottom: 0.5rem;
+        padding-left: 1rem;
     }
 
     .ext-panel ul {
         font-size: 0.8rem;
     }
 
-    .content-list li:before {
-        left: -0.7rem;
+    .ext-panel li { 
+        font-size: 0.8rem; 
+        padding-left: 14px; 
+        margin-bottom: 6px; 
     }
 
-    .ext-panel ul { font-size: 0.85rem; }
-    .ext-panel li { font-size: 0.8rem; padding-left: 14px; margin-bottom: 6px; }
-    .ext-panel li:before { font-size: 0.7rem; }
+    .ext-panel li:before { 
+        font-size: 0.7rem; 
+    }
 
-    /* 手機版確保滾動功能 */
+    /* 手機版隱藏 extension panel 節省空間 */
+    .briefing-section:not(.overlay-mode) .quadrant .ext-panel {
+        display: none !important;
+    }
+
+    /* 手機版簡化 hover 效果 - 調整字體大小和透明度 */
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3,
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 {
+        font-size: 1.1em; /* 選中象限字體變大 */
+        transform: scale(1.02); /* 輕微放大 */
+    }
+
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant:not(.quadrant-1),
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant:not(.quadrant-2),
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant:not(.quadrant-3),
+    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant:not(.quadrant-4) {
+        font-size: 0.85em; /* 其他象限字體明顯變小 */
+        opacity: 0.7; /* 其他象限變暗 */
+    }
+
     .quadrant-content {
-        overflow-y: auto;
+        overflow: hidden; /* 隱藏溢出，讓子元素處理滾動 */
         -webkit-overflow-scrolling: touch;
+    }
+
+    .overlay-mode .quadrant-title {
+        font-size: 1.5rem;
     }
 }
 
-/* 深色主題調整 */
+/* ===== DARK THEME ===== */
 .theme-dark .quadrant {
     background: rgba(0, 0, 0, 0.2);
     border-color: rgba(81, 70, 149, 0.4);
@@ -688,10 +581,6 @@
 
 .theme-dark .quadrant-content p {
     color: rgba(220, 220, 220, 0.9);
-}
-
-.theme-dark .extension-text {
-    color: rgba(200, 200, 200, 0.8) !important;
 }
 
 .theme-dark .ext-panel {
@@ -713,16 +602,45 @@
     color: rgba(240, 240, 240, 1);
 }
 
-.theme-dark .briefing-login-prompt {
-    background: rgba(255, 152, 0, 0.15);
-    border-color: rgba(255, 152, 0, 0.4);
+/* ===== SCROLLBAR STYLES ===== */
+.quadrant-content::-webkit-scrollbar,
+.content-list::-webkit-scrollbar,
+.ext-panel ul::-webkit-scrollbar {
+    width: 6px;
 }
 
-.theme-dark .briefing-login-prompt p {
-    color: #ffb74d;
+.quadrant-content::-webkit-scrollbar-track,
+.content-list::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-/* 動畫效果 */
+.ext-panel ul::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.quadrant-content::-webkit-scrollbar-thumb,
+.content-list::-webkit-scrollbar-thumb {
+    background-color: rgba(81, 70, 149, 0.3);
+    border-radius: 3px;
+}
+
+.ext-panel ul::-webkit-scrollbar-thumb {
+    background-color: rgba(81, 70, 149, 0.5);
+    border-radius: 2px;
+    border: none;
+}
+
+.quadrant-content::-webkit-scrollbar-thumb:hover,
+.content-list::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(81, 70, 149, 0.5);
+}
+
+.ext-panel ul::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(81, 70, 149, 0.7);
+}
+
+/* ===== ANIMATIONS ===== */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -734,19 +652,21 @@
     }
 }
 
-.quadrant-grid { animation: fadeInUp 0.6s ease-out; }
-
-.quadrant:nth-child(1) { animation-delay: 0.1s; }
-.quadrant:nth-child(2) { animation-delay: 0.2s; }
-.quadrant:nth-child(3) { animation-delay: 0.3s; }
-.quadrant:nth-child(4) { animation-delay: 0.4s; }
+.quadrant-grid { 
+    animation: fadeInUp 0.6s ease-out; 
+}
 
 .quadrant {
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0;
 }
 
-/* Print styles */
+.quadrant:nth-child(1) { animation-delay: 0.1s; }
+.quadrant:nth-child(2) { animation-delay: 0.2s; }
+.quadrant:nth-child(3) { animation-delay: 0.3s; }
+.quadrant:nth-child(4) { animation-delay: 0.4s; }
+
+/* ===== PRINT STYLES ===== */
 @media print {
     .briefing-section {
         page-break-before: auto;
@@ -766,8 +686,7 @@
         color: black !important;
     }
 
-    .quadrant-content p,
-    .extension-text {
+    .quadrant-content p {
         color: black !important;
     }
 }
