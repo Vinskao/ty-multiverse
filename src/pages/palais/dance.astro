@@ -56,6 +56,10 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
           <div id="videos-grid" class="videos-grid">
             <!-- 影片內容將動態載入 -->
           </div>
+
+          <!-- 清除緩存按鈕 -->
+          <button id="cache-clear-btn" class="cache-clear-btn" type="button">
+          </button>
         </main>
       </div>
     </BaseLayout>
@@ -1092,11 +1096,70 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         console.log('💡 或者在控制台執行: forceRefreshAllCharacters()');
       }, 2000);
 
-      // 開始載入影片內容
-      loadDanceContent();
-    }, 100); // 給緩存載入一點時間
+          // 開始載入影片內容
+    loadDanceContent();
 
-    // 頁面卸載時保存緩存
+    // 設置清除緩存按鈕事件
+    setupCacheClearButton();
+  }, 100);
+
+  // 清除緩存按鈕設置函數
+  function setupCacheClearButton() {
+    const cacheClearBtn = document.getElementById('cache-clear-btn') as HTMLButtonElement;
+    if (cacheClearBtn) {
+      cacheClearBtn.addEventListener('click', async function() {
+        // 確認用戶是否真的要清除緩存
+        const confirmed = confirm('確定要清除所有影片緩存並重新載入嗎？\n這將會重新檢查所有角色的影片狀態，可能需要一些時間。');
+
+        if (!confirmed) {
+          return;
+        }
+
+        console.log('用戶確認清除緩存並重新載入');
+
+        // 設置按鈕為處理中狀態
+        cacheClearBtn.classList.add('processing');
+        cacheClearBtn.textContent = '正在清除緩存...';
+        cacheClearBtn.disabled = true;
+
+        try {
+          // 清除緩存
+          videoResourceManager.clearCache();
+
+          // 顯示清除緩存的狀態
+          updateLoadingStatus('loading', '緩存已清除，正在重新載入...');
+
+          // 等待一下讓用戶看到狀態變化
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // 清除現有的影片元素
+          const videosGrid = document.getElementById('videos-grid');
+          if (videosGrid) {
+            videosGrid.innerHTML = '';
+          }
+
+          // 重置所有狀態
+          videoGroups = [];
+          characterStates.clear();
+
+          // 重新開始載入內容
+          await loadDanceContent();
+
+          // 顯示完成狀態
+          updateLoadingStatus('complete', '✅ 緩存已清除，所有影片已重新載入');
+
+        } catch (error) {
+          console.error('清除緩存時發生錯誤:', error);
+          updateLoadingStatus('error', '❌ 清除緩存時發生錯誤，請重新整理頁面');
+        } finally {
+          // 恢復按鈕狀態
+          cacheClearBtn.classList.remove('processing');
+          cacheClearBtn.textContent = '清除緩存並重新載入';
+          cacheClearBtn.disabled = false;
+        }
+      });
+    }
+  }
     window.addEventListener('beforeunload', () => {
       try {
         videoResourceManager.saveCacheToStorage();

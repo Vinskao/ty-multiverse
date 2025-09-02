@@ -103,7 +103,7 @@
   // 刷新數據
   async function refreshData() {
     try {
-      const btn = document.getElementById('refresh-cache-btn');
+      const btn = document.getElementById('refresh-cache-btn') as HTMLButtonElement;
       if (btn) {
         btn.textContent = '🔄 刷新中...';
         btn.disabled = true;
@@ -133,11 +133,11 @@
     } catch (error) {
       console.error('刷新數據失敗:', error);
       
-      const btn = document.getElementById('refresh-cache-btn');
+      const btn = document.getElementById('refresh-cache-btn') as HTMLButtonElement;
       if (btn) {
         btn.textContent = '❌ 失敗';
         btn.style.background = '#ff4757';
-        
+
         setTimeout(() => {
           btn.textContent = '刷新數據';
           btn.style.background = '#2ed573';
