@@ -39,10 +39,12 @@ function splitToList(text: string): string[] {
 
 function splitContentToList(text: string): string[] {
   if (!text) return [];
-  return text
-    .split(/(?<=[.!?。！？])\s+|;\s*/)
+  // 先優先以換行分段；若無，退回標點切分
+  const hasLineBreak = /\n/.test(text);
+  const parts = (hasLineBreak ? text.split(/\n+/) : text.split(/(?<=[.!?。！？])\s+|;\s*/))
     .map((s) => s.trim())
     .filter((s) => s.length > 0 && s !== '.');
+  return parts;
 }
 
 const ext1 = splitToList(briefingData.quadrant1.extension[lang]);
