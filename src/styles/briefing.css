@@ -185,30 +185,30 @@
 }
 
 /* Enlarge fonts of hovered quadrant - Simplified selectors */
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title { font-size: 1.3rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title { font-size: 1.3rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title { font-size: 1.3rem !important; }
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title { font-size: 1.3rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title { font-size: 1.35rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title { font-size: 1.35rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title { font-size: 1.35rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title { font-size: 1.35rem !important; }
 
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .content-list,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-content p,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li { font-size: 1.1rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .ext-panel li { font-size: 1.05rem !important; }
 
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .content-list,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-content p,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li { font-size: 1.1rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .ext-panel li { font-size: 1.05rem !important; }
 
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .content-list,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-content p,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li { font-size: 1.1rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .ext-panel li { font-size: 1.05rem !important; }
 
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .content-list,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
 .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
-.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li { font-size: 1.1rem !important; }
+.briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li { font-size: 1.45rem !important; }
 
 /* Quadrant 1 - Practice (Green theme) */
 .quadrant-1 {
@@ -570,7 +570,7 @@
     .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-content p,
     .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel ul,
     .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .ext-panel li {
-        font-size: 1.0rem;
+        font-size: 1.2rem;
     }
 
     .ext-panel ul {
