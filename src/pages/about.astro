@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
+import Briefing from "../components/Briefing.astro";
 import '../styles/about.css';
 
 // Import the JSON data
@@ -40,8 +41,10 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
           </Hero>
           <div class="work-photo-wrapper" style="position:relative; width:100%;">
-            <!-- Overlay text for hover -->
-            <div class="work-photo-overlay" aria-hidden="true"></div>
+            <!-- Mask overlay with slogan -->
+            <div class="work-photo-overlay" aria-hidden="true">
+              <div class="mask-text">To Make a Difference.</div>
+            </div>
             <img
               width="1553"
               height="873"
@@ -64,7 +67,8 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
           </div>
         </section>
 
-        <!-- Briefing Section - Now integrated as overlay in hero section -->
+        <!-- Briefing Section -->
+        <Briefing />
 
         <section>
           <h2 class="section-title">Project Experience</h2>

@@ -92,49 +92,47 @@ filter: grayscale(0%);
   filter: grayscale(0%) brightness(70%);
 }
 
-/* Overlay text inside work-photo */
-.work-photo-overlay {
+/* Overlay briefing inside work-photo */
+/* Overlay for work-photo: replaced with mask text */
+.work-photo-overlay { 
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-
-.work-photo-wrapper:hover .work-photo-overlay {
-  opacity: 1;
-}
-
-/* Text overlay content */
+.work-photo-wrapper:hover .work-photo-overlay { opacity: 1; }
 .work-photo-overlay::before {
-  content: "To Make a Difference.";
-  color: white;
-  font-size: 2rem;
-  font-weight: 600;
-  text-align: center;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.1em;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+.work-photo-overlay .mask-text {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
 
-/* RWD for overlay text */
+/* Keep image visible; only show mask over it */
+.work-photo-wrapper:hover .work-photo { opacity: 1; visibility: visible; }
+
+/* RWD for overlay */
 @media (min-width: 1024px) {
-  .work-photo-overlay::before {
-    font-size: 2.5rem;
-  }
+  .work-photo-overlay { padding: 1rem; }
 }
 @media (max-width: 768px) {
-  .work-photo-overlay::before {
-    font-size: 1.8rem;
-  }
+  .work-photo-overlay { padding: 0.5rem; }
 }
 @media (max-width: 480px) {
-  .work-photo-overlay::before {
-    font-size: 1.5rem;
-  }
+  .work-photo-overlay { padding: 0.4rem; }
 }
 
 
