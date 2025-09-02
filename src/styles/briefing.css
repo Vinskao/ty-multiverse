@@ -3,6 +3,15 @@
 .briefing-section {
     opacity: 0.7;
     transition: opacity 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.briefing-section .content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Overlay mode (renders inside work-photo) */
@@ -74,11 +83,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    grid-auto-rows: minmax(180px, 1fr);
     gap: 1.5rem;
-    width: min(1100px, 90vw);
-    height: auto;
-    margin: 0 auto 2rem auto;
+    width: 100%;
+    max-width: 100%;
+    height: 85vh; /* 固定為視窗高度的 85% */
+    min-height: 600px; /* 最小高度保護 */
+    margin: 0 0 2rem 0;
     transition: grid-template-columns 0.25s ease, grid-template-rows 0.25s ease;
 }
 
@@ -88,12 +98,13 @@
     padding: 1.5rem;
     transition: all 0.3s ease;
     border: 2px solid transparent;
-    min-height: 200px;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden; /* contain ext-panel */
     backdrop-filter: blur(10px);
+    height: 100%; /* 確保每個象限填滿其網格區域 */
+    box-sizing: border-box;
 }
 
 .briefing-section:not(.overlay-mode) .quadrant-grid:hover .quadrant:not(:hover) {
@@ -488,10 +499,12 @@
     }
 
     .quadrant-grid {
-        width: 92vw;
-        height: auto;
+        width: 100%;
+        max-width: 100%;
+        height: 90vh; /* 平板稍微增加高度比例 */
+        min-height: 500px;
         grid-template-columns: 1fr;
-        grid-auto-rows: auto;
+        grid-template-rows: repeat(4, 1fr); /* 固定四個等高區塊 */
         gap: 1rem;
     }
 
@@ -568,9 +581,12 @@
 
 @media (max-width: 480px) {
     .quadrant-grid {
-        width: 95vw;
-        height: auto;
+        width: 100%;
+        max-width: 100%;
+        height: 95vh; /* 手機版最大高度比例 */
+        min-height: 400px;
         gap: 0.75rem;
+        grid-template-rows: repeat(4, 1fr); /* 保持四個等高區塊 */
     }
 
     .quadrant {
