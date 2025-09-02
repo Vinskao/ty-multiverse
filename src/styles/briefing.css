@@ -74,9 +74,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
+    grid-auto-rows: minmax(180px, 1fr);
     gap: 1.5rem;
-    width: 80vw;
-    height: 75vh;
+    width: min(1100px, 90vw);
+    height: auto;
     margin: 0 auto 2rem auto;
     transition: grid-template-columns 0.25s ease, grid-template-rows 0.25s ease;
 }
@@ -487,9 +488,10 @@
     }
 
     .quadrant-grid {
-        width: 90vw;
-        height: 80vh;
+        width: 92vw;
+        height: auto;
         grid-template-columns: 1fr;
+        grid-auto-rows: auto;
         gap: 1rem;
     }
 
@@ -500,11 +502,18 @@
         font-size: 1.1rem;
     }
     /* Tablet hover effects - using class-based selectors */
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title {
-        font-size: 1.5rem;
+    /* 在觸控設備上禁用 hover 放大效果，避免跳動 */
+    @media (hover: none) and (pointer: coarse) {
+        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1,
+        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2,
+        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3,
+        .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 {
+            grid-template-columns: 1fr;
+            grid-template-rows: none;
+        }
+        .briefing-section:not(.overlay-mode) .quadrant-grid .quadrant-title {
+            font-size: 1.2rem !important;
+        }
     }
 
     .quadrant-content p {
@@ -560,7 +569,7 @@
 @media (max-width: 480px) {
     .quadrant-grid {
         width: 95vw;
-        height: 85vh;
+        height: auto;
         gap: 0.75rem;
     }
 
@@ -572,11 +581,11 @@
         font-size: 1rem;
     }
     /* Mobile hover effects - using class-based selectors */
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q1 .quadrant-1 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q2 .quadrant-2 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q3 .quadrant-3 .quadrant-title,
-    .briefing-section:not(.overlay-mode) .quadrant-grid.hover-q4 .quadrant-4 .quadrant-title {
-        font-size: 1.4rem;
+    /* 同上，手機上禁用 hover 放大效果 */
+    @media (hover: none) and (pointer: coarse) {
+        .briefing-section:not(.overlay-mode) .quadrant-grid .quadrant-title {
+            font-size: 1.1rem !important;
+        }
     }
 
     .quadrant-content p {
