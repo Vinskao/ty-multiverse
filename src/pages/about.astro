@@ -4,7 +4,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
-import Briefing from "../components/Briefing.astro";
 import '../styles/about.css';
 
 // Import the JSON data
@@ -41,10 +40,8 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
           </Hero>
           <div class="work-photo-wrapper" style="position:relative; width:100%;">
-            <!-- Overlay quadrants rendered inside work-photo area -->
-            <div class="work-photo-overlay" aria-hidden="true">
-              <Briefing showTitle={false} variant="overlay" />
-            </div>
+            <!-- Overlay text for hover -->
+            <div class="work-photo-overlay" aria-hidden="true"></div>
             <img
               width="1553"
               height="873"
