@@ -136,19 +136,27 @@
               "Integrated PostgreSQL with Keycloak SSO, LangChain, and multiple backend REST API frameworks",
               "Maintained DB Access Layer for MSSQL in JBoss EAP",
               "Upgraded JBoss from EAP 7 to EAP 8 and containerized JBoss 7 for 20+ servers",
-              "Used PostgreSQL transaction blocks (with Spring @Transactional) to ensure atomic updates for order matching, record insertion, and position updates. Designed composite indexes (e.g., status + timestamp) for efficient query of latest records, and avoided unnecessary indexes to balance write performance."
+              "Used PostgreSQL transaction blocks (with Spring @Transactional) to ensure atomic updates for order matching, record insertion, and position updates. Designed composite indexes (e.g., status + timestamp) for efficient query of latest records, and avoided unnecessary indexes to balance write performance.",
+              "Implemented N-Gram indexing for full-text search using PostgreSQL pg_trgm extension, supporting fuzzy matching and similarity search across multiple languages. Built hybrid search systems combining N-Gram and vector search for semantic and character-level text retrieval."
             ],
             "zh": [
               "將 PostgreSQL 與 Keycloak SSO、LangChain 及多個後端 REST API 框架整合",
               "維護 JBoss EAP 中的 MSSQL 資料存取層",
               "將 JBoss 從 EAP 7 升級至 EAP 8，並為 20+ 伺服器將 JBoss 7 容器化",
-              "使用 PostgreSQL 交易區塊（搭配 Spring @Transactional）確保訂單撮合、資料插入與持倉更新的原子性；設計複合索引（如 status + timestamp）以高效查詢最新紀錄，並避免不必要索引以平衡寫入效能"
+              "使用 PostgreSQL 交易區塊（搭配 Spring @Transactional）確保訂單撮合、資料插入與持倉更新的原子性；設計複合索引（如 status + timestamp）以高效查詢最新紀錄，並避免不必要索引以平衡寫入效能",
+              "使用 PostgreSQL pg_trgm 擴展實作 N-Gram 索引以支援全文檢索，實現跨多語言的模糊匹配與相似度搜索。建構混合檢索系統結合 N-Gram 與向量搜索，以實現語義與字元層級的文本檢索"
             ]
           },
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
             { "name": "PGVector", "level": "shade5" },
             { "name": "pg_trgm", "level": "shade4" },
+            { "name": "N-Gram Index", "level": "shade3" },
+            { "name": "Trigram Search", "level": "shade3" },
+            { "name": "Fuzzy Search", "level": "shade3" },
+            { "name": "Full Text Search", "level": "shade2" },
+            { "name": "GIN Index", "level": "shade4" },
+            { "name": "Hybrid Search", "level": "shade4" },
             { "name": "MSSQL", "level": "shade1" },
             { "name": "SQLite", "level": "shade1" },
             { "name": "MySQL", "level": "shade3" },
@@ -451,11 +459,13 @@
           "description": {
             "en": [
               "For Maya Sawa V1, Built knowledge-based RAG chatbot using FastAPI framework with LangChain and OpenAI APIs with multi-character personality system. Implemented name detection for character profiles, semantic search for people, and vector similarity search for document context. Used LLMChain and PromptTemplate to build query workflows with personality prompt builders. Parsed and embedded documents, exposed query interface via FastAPI, and orchestrated flow with tools and chains. Integrated Redis for chat history management and session storage. Built multi-layered architecture with API Layer (FastAPI Router), Q&A Layer (QAChain, PageAnalyzer), Support Layer (NameDetector, ProfileManager, PeopleWeaponManager, PersonalityPromptBuilder, VectorStore, ChatHistoryManager), and External Services integration (OpenAI API, People System API, PostgreSQL, Redis).",
-              "For Maya Sawa V2, Built advanced QA system using Django framework with hybrid search capabilities combining trigram and vector search in PostgreSQL using pg_trgm and pgvector extensions. Implemented full-text retrieval pipeline with GIN indexes for trigram search and IVFFlat indexes for vector search. Added support for multiple AI providers (OpenAI, Gemini, Qwen, Mock) through AIResponseService. Built comprehensive service layer with FilterChainManager, KMSourceManager, ChatHistoryService, and AIResponseService. Enhanced data layer with PostgreSQL, Redis, and Celery Broker integration. Maintained backward compatibility while adding advanced features like model management, health checks, and legacy chat history support."
+              "For Maya Sawa V2, Built advanced QA system using Django framework with hybrid search capabilities combining trigram and vector search in PostgreSQL using pg_trgm and pgvector extensions. Implemented full-text retrieval pipeline with GIN indexes for trigram search and IVFFlat indexes for vector search. Added support for multiple AI providers (OpenAI, Gemini, Qwen, Mock) through AIResponseService. Built comprehensive service layer with FilterChainManager, KMSourceManager, ChatHistoryService, and AIResponseService. Enhanced data layer with PostgreSQL, Redis, and Celery Broker integration. Maintained backward compatibility while adding advanced features like model management, health checks, and legacy chat history support.",
+              "Implemented N-Gram indexing techniques in AI applications for fuzzy text matching and semantic search. Used PostgreSQL pg_trgm extension for trigram-based similarity search, enabling typo-tolerant queries and multi-language text retrieval in RAG systems."
             ],
             "zh": [
               "Maya Sawa V1：使用 FastAPI 框架與 LangChain 及 OpenAI API 構建具備多角色個性系統的知識型 RAG 聊天機器人。實作名稱檢測以獲取角色檔案、語義搜尋以查找人物，以及向量相似度搜尋以獲取文件上下文。透過 LLMChain 與 PromptTemplate 建立查詢流程，並使用個性提示詞建構器。解析並嵌入文件，透過 FastAPI 提供查詢介面，並以多工具與 Chain 協調流程。整合 Redis 進行聊天歷史管理與會話儲存。建構多層架構包含 API 層（FastAPI Router）、Q&A 層（QAChain、PageAnalyzer）、支援層（NameDetector、ProfileManager、PeopleWeaponManager、PersonalityPromptBuilder、VectorStore、ChatHistoryManager）以及外部服務整合（OpenAI API、People System API、PostgreSQL、Redis）。",
-              "Maya Sawa V2：使用 Django 框架建構進階問答系統，透過 pg_trgm 與 pgvector 擴展增強系統，結合 PostgreSQL 中的 trigram 與向量搜尋能力。實作全文檢索管道，使用 GIN 索引進行 trigram 搜尋，IVFFlat 索引進行向量搜尋。透過 AIResponseService 新增多 AI 提供者支援（OpenAI、Gemini、Qwen、Mock）。建構完整的服務層，包含 FilterChainManager、KMSourceManager、ChatHistoryService 與 AIResponseService。增強資料層，整合 PostgreSQL、Redis 與 Celery Broker。在保持向後相容性的同時，新增模型管理、健康檢查與舊版聊天歷史支援等進階功能。"
+              "Maya Sawa V2：使用 Django 框架建構進階問答系統，透過 pg_trgm 與 pgvector 擴展增強系統，結合 PostgreSQL 中的 trigram 與向量搜尋能力。實作全文檢索管道，使用 GIN 索引進行 trigram 搜尋，IVFFlat 索引進行向量搜尋。透過 AIResponseService 新增多 AI 提供者支援（OpenAI、Gemini、Qwen、Mock）。建構完整的服務層，包含 FilterChainManager、KMSourceManager、ChatHistoryService 與 AIResponseService。增強資料層，整合 PostgreSQL、Redis 與 Celery Broker。在保持向後相容性的同時，新增模型管理、健康檢查與舊版聊天歷史支援等進階功能。",
+              "在 AI 應用中實作 N-Gram 索引技術以支援模糊文本匹配與語義搜索。使用 PostgreSQL pg_trgm 擴展進行 trigram 相似度搜索，在 RAG 系統中實現容錯查詢與多語言文本檢索。"
             ]
           },
           "skills": [
@@ -468,7 +478,10 @@
             { "name": "LangChain RAG", "level": "shade5" },
             { "name": "pgvector", "level": "shade4" },
             { "name": "IVFFlat Index", "level": "shade5" },
-            { "name": "Vector Search", "level": "shade4" }
+            { "name": "Vector Search", "level": "shade4" },
+            { "name": "N-Gram in RAG", "level": "shade4" },
+            { "name": "Trigram Similarity", "level": "shade4" },
+            { "name": "Fuzzy Text Matching", "level": "shade4" }
           ]
         },
         {
