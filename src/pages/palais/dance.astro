@@ -59,6 +59,7 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
 
           <!-- 清除緩存按鈕 -->
           <button id="cache-clear-btn" class="cache-clear-btn" type="button">
+            清除緩存並重新載入
           </button>
         </main>
       </div>
@@ -187,6 +188,8 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
 
         const response = await fetch(url, {
           method: 'HEAD',
+          // 添加 cache: 'no-cache' 來避免使用瀏覽器緩存
+          cache: 'no-cache'
         });
         return response.ok;
       } catch (error) {
@@ -204,13 +207,14 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
 
     async function getCharacterVideos(baseUrl: string, character: string): Promise<Array<{src: string, title: string}>> {
       const videos: Array<{src: string, title: string}> = [];
+      const cacheBustParam = Date.now(); // 添加時間戳來避免瀏覽器緩存
 
       // 檢查主要影片
       const mainVideoName = character;
       const hasMain = await checkVideoExists(baseUrl, mainVideoName);
       if (hasMain) {
         videos.push({
-          src: constructVideoUrl(baseUrl, mainVideoName),
+          src: constructVideoUrl(baseUrl, mainVideoName) + '?t=' + cacheBustParam,
           title: mainVideoName
         });
         console.log(`找到影片: ${mainVideoName}.mp4`);
@@ -226,7 +230,7 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
           const exists = await checkVideoExists(baseUrl, numberedVideoName);
           if (exists) {
             videos.push({
-              src: constructVideoUrl(baseUrl, numberedVideoName),
+              src: constructVideoUrl(baseUrl, numberedVideoName) + '?t=' + cacheBustParam,
               title: `${character} ${index}`
             });
             console.log(`找到影片: ${numberedVideoName}.mp4`);
@@ -454,6 +458,7 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
         try {
           const response = await fetch(`${baseUrl}/images/people/${videoName}.mp4`, {
             method: 'HEAD',
+            cache: 'no-cache' // 避免使用瀏覽器緩存
           });
           const exists = response.ok;
           this.cacheVideoExists(videoName, exists);
@@ -1119,31 +1124,74 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
 
         // 設置按鈕為處理中狀態
         cacheClearBtn.classList.add('processing');
-        cacheClearBtn.textContent = '正在清除緩存...';
+        cacheClearBtn.textContent = '正在清除緩存並重新載入...';
         cacheClearBtn.disabled = true;
 
         try {
-          // 清除緩存
-          videoResourceManager.clearCache();
+      // 清除緩存
+      videoResourceManager.clearCache();
 
-          // 顯示清除緩存的狀態
-          updateLoadingStatus('loading', '緩存已清除，正在重新載入...');
+          // 強制清除瀏覽器影片緩存 - 清除所有已存在的影片元素
+      console.log('🔄 開始強制清除瀏覽器影片緩存...');
+      const existingVideos = document.querySelectorAll('.dance-video');
+      console.log(`🗑️ 找到 ${existingVideos.length} 個現有影片元素，正在清除...`);
 
-          // 等待一下讓用戶看到狀態變化
-          await new Promise(resolve => setTimeout(resolve, 1000));
+      existingVideos.forEach((video, index) => {
+        const videoElement = video as HTMLVideoElement;
+        // 清除影片源並強制重新加載
+        videoElement.src = '';
+        videoElement.load();
+        // 從 DOM 中移除
+        videoElement.remove();
+        if (index < 5) { // 只記錄前5個以避免過多日誌
+          console.log(`🗑️ 已清除影片元素: ${videoElement.getAttribute('data-character')}`);
+        }
+      });
 
-          // 清除現有的影片元素
-          const videosGrid = document.getElementById('videos-grid');
-          if (videosGrid) {
-            videosGrid.innerHTML = '';
-          }
+      if (existingVideos.length >= 5) {
+        console.log(`🗑️ ... 還有 ${existingVideos.length - 5} 個影片元素也被清除`);
+      }
 
-          // 重置所有狀態
-          videoGroups = [];
-          characterStates.clear();
+      // 清除瀏覽器的 Cache Storage
+      if ('caches' in window) {
+        try {
+          caches.keys().then(names => {
+            console.log(`🗂️ 找到 ${names.length} 個瀏覽器緩存，正在清除...`);
+            names.forEach(name => {
+              caches.delete(name);
+              console.log(`🗂️ 已清除瀏覽器緩存: ${name}`);
+            });
+          });
+        } catch (e) {
+          console.log('⚠️ 清除瀏覽器緩存失敗:', e);
+        }
+      } else {
+        console.log('ℹ️ 瀏覽器不支持 Cache Storage API');
+      }
 
-          // 重新開始載入內容
-          await loadDanceContent();
+      console.log('✅ 瀏覽器緩存清除完成，現在將重新載入所有影片...');
+
+      // 顯示清除緩存的狀態
+      updateLoadingStatus('loading', '緩存已清除，正在重新載入...');
+
+      // 等待一下讓用戶看到狀態變化
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 清除現有的影片元素
+      const videosGrid = document.getElementById('videos-grid');
+      if (videosGrid) {
+        videosGrid.innerHTML = '';
+      }
+
+      // 重置所有狀態
+      videoGroups = [];
+      characterStates.clear();
+      videoResourceManager.preloadedVideos.clear();
+      videoResourceManager.loadingVideos.clear();
+      videoResourceManager.preloadQueue.length = 0;
+
+      // 重新開始載入內容
+      await loadDanceContent();
 
           // 顯示完成狀態
           updateLoadingStatus('complete', '✅ 緩存已清除，所有影片已重新載入');
