@@ -5,6 +5,9 @@ import '../styles/qabot.css';
 <!-- 已抽出共用 HTML 至 QAPlatform.astro -->
 
 <script>
+  // Global language manager
+  // eslint-disable-next-line
+  const __LANG_LOADED = (() => { try { if (!(window as any).AppLang) { const s=document.createElement('script'); s.src='/tymultiverse/scripts/lang.js'; s.async=false; document.head.appendChild(s);} } catch(_){} })();
   // 將訊息配置直接打包，避免正式環境 404
   // @ts-ignore
   import messages from '../storages/messages.json';
@@ -237,9 +240,22 @@ import '../styles/qabot.css';
     // 初始化狀態
     private initializeState() {
       this.state.userId = this.getOrCreateUserId();
-      this.state.currentLanguage = localStorage.getItem('qabot_language') || 'chinese';
+      // Initialize language from global AppLang
+      this.state.currentLanguage = ((window as any).AppLang ? (window as any).AppLang.getQALang() : (localStorage.getItem('qabot_language') || 'chinese'));
       this.updateLanguageButton();
       this.updateInputPlaceholder();
+
+      // Listen to global language changes
+      if ((window as any).AppLang && typeof (window as any).AppLang.onChange === 'function') {
+        (window as any).AppLang.onChange(({ qaLang }) => {
+          if (qaLang && qaLang !== this.state.currentLanguage) {
+            this.state.currentLanguage = qaLang;
+            this.reinitializeChat();
+            this.updateLanguageButton();
+            this.updateInputPlaceholder();
+          }
+        });
+      }
     }
 
     // 載入消息配置
@@ -1406,7 +1422,12 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
     // 切換語言
     private toggleLanguage() {
       this.state.currentLanguage = this.state.currentLanguage === 'chinese' ? 'english' : 'chinese';
-      localStorage.setItem('qabot_language', this.state.currentLanguage);
+      // Persist via global and local for backward-compat
+      if ((window as any).AppLang) {
+        (window as any).AppLang.set(this.state.currentLanguage === 'chinese' ? 'zh' : 'en');
+      } else {
+        localStorage.setItem('qabot_language', this.state.currentLanguage);
+      }
       this.updateLanguageButton();
       this.updateInputPlaceholder();
       

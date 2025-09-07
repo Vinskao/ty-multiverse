@@ -30,8 +30,8 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
     <div class="stack gap-20">
       <main class="wrapper about">
         <div class="lang-toggle" style="text-align:right;margin-bottom:1rem;">
-          <a href="?lang=en" class={lang === 'en' ? 'active' : ''}>EN</a> |
-          <a href="?lang=zh" class={lang === 'zh' ? 'active' : ''}>中文</a>
+          <a id="langEnLink" href="?lang=en" class={lang === 'en' ? 'active' : ''}>EN</a> |
+          <a id="langZhLink" href="?lang=zh" class={lang === 'zh' ? 'active' : ''}>中文</a>
         </div>
         <div class="hero-section">
           <Hero
@@ -825,6 +825,71 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
           </div>
         </section>
       </main>
+    <!-- Global language manager -->
+    <script src="/tymultiverse/scripts/lang.js" is:inline></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initialize from global AppLang if available
+        try {
+          // Wait for AppLang to be available (since it's loaded asynchronously)
+          const initLanguage = () => {
+            if (!(window as any).AppLang) {
+              setTimeout(initLanguage, 50); // Retry after 50ms
+              return;
+            }
+
+            const current = (window as any).AppLang.get();
+            const urlParam = new URLSearchParams(window.location.search).get('lang');
+            const normalizedUrl = urlParam && urlParam.toLowerCase().startsWith('zh') ? 'zh' : (urlParam ? 'en' : null);
+
+            // If URL param exists but differs from global state, update global to match URL
+            if (normalizedUrl && normalizedUrl !== current) {
+              (window as any).AppLang.set(normalizedUrl);
+            } else if (!urlParam) {
+              // No URL param → add it to match global state
+              const target = current === 'zh' ? '?lang=zh' : '?lang=en';
+              window.history.replaceState({}, '', target);
+            }
+
+            // Update toggle active state
+            document.getElementById('langEnLink')?.classList.toggle('active', current === 'en');
+            document.getElementById('langZhLink')?.classList.toggle('active', current === 'zh');
+          };
+
+          initLanguage();
+
+          // Click handlers to set global language, keep UI same
+          const en = document.getElementById('langEnLink');
+          const zh = document.getElementById('langZhLink');
+          en && en.addEventListener('click', (e) => {
+            e.preventDefault();
+            (window as any).AppLang && (window as any).AppLang.set('en');
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', 'en');
+            window.location.href = url.toString();
+          });
+          zh && zh.addEventListener('click', (e) => {
+            e.preventDefault();
+            (window as any).AppLang && (window as any).AppLang.set('zh');
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', 'zh');
+            window.location.href = url.toString();
+          });
+
+          // React to language changes from other pages/components
+          (window as any).AppLang && (window as any).AppLang.onChange(({ code }) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', code);
+            // Use replaceState to avoid adding to history stack and prevent loops
+            window.history.replaceState({}, '', url.toString());
+
+            // Update toggle active state without causing re-render
+            document.getElementById('langEnLink')?.classList.toggle('active', code === 'en');
+            document.getElementById('langZhLink')?.classList.toggle('active', code === 'zh');
+          });
+        } catch (_) {}
+      });
+    </script>
 
       <ResumePreview />
       <ContactCTA />
