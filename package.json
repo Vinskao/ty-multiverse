@@ -20,7 +20,7 @@
     "@firebase/storage": "^0.13.7",
     "@google-cloud/storage": "^7.5.0",
     "@types/glob": "^8.1.0",
-    "astro": "^5.7.4",
+    "astro": "^5.13.5",
     "axios": "^1.6.2",
     "bootstrap": "^5.3.2",
     "cors": "^2.8.5",
