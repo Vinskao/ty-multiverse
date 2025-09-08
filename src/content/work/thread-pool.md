@@ -203,7 +203,7 @@ public class AsyncMessageService {
             String messageJson = objectMapper.writeValueAsString(message);
             // 使用當前線程 (Virtual Thread) 發送到 RabbitMQ
             rabbitTemplate.convertAndSend(
-                RabbitMQConfig.TYMB_EXCHANGE,
+                RabbitMQConfig.USER_DATA_EXCHANGE,
                 getRoutingKey(queueName),
                 messageJson
             );
@@ -220,7 +220,7 @@ public class AsyncMessageService {
 @Configuration
 @SpringBootApplication
 @EnableAsync
-public class TYMBackendApplication {
+public class UserDataBackendApplication {
 
     @Bean(name = "threadPoolTaskExecutor", destroyMethod = "shutdown")
     ExecutorService threadPoolTaskExecutor() {
@@ -280,8 +280,8 @@ public class UserDataConsumer {
             // 在 Virtual Thread 中處理消息
             AsyncMessageDTO message = objectMapper.readValue(messageJson, AsyncMessageDTO.class);
 
-            List<People> peopleList = peopleService.getAllPeopleOptimized();
-            asyncResultService.storeCompletedResult(message.getRequestId(), peopleList);
+            List<User> userList = userService.getAllUsersOptimized();
+            asyncResultService.storeCompletedResult(message.getRequestId(), userList);
 
             logger.info("✅ Consumer Virtual Thread 處理完成: {}", message.getRequestId());
         } catch (Exception e) {
@@ -295,10 +295,10 @@ public class UserDataConsumer {
 #### **2. Consumer 配置**
 ```java
 @SpringBootApplication
-public class TyMultiverseConsumerApplication {
+public class UserDataConsumerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TyMultiverseConsumerApplication.class, args);
+        SpringApplication.run(UserDataConsumerApplication.class, args);
         // Spring Boot 自動配置 Virtual Threads 用於 RabbitMQ Consumer
     }
 }
@@ -320,17 +320,17 @@ public class TyMultiverseConsumerApplication {
 
 ```java
 @RestController
-public class PeopleController {
+public class UserController {
 
     @Autowired
-    private PeopleService peopleService;
+    private UserService userService;
 
     // 🎯 同步API：直接使用 Virtual Threads 處理
-    @GetMapping("/tymultiverse/people/names")
-    public ResponseEntity<?> getAllPeopleNames() {
+    @GetMapping("/api/users/names")
+    public ResponseEntity<?> getAllUserNames() {
         try {
             // 在 Virtual Thread 中直接執行 DB 查詢
-            List<String> names = peopleService.getAllPeopleNames();
+            List<String> names = userService.getAllUserNames();
             return new ResponseEntity<>(names, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(
@@ -370,7 +370,7 @@ public class PeopleController {
 ```java
 // 🎯 Spring Boot 自動使用 Virtual Threads 處理所有 HTTP 請求
 @RestController
-public class PeopleController {
+public class UserController {
     @PostMapping("/get-all")  // 這個請求線程就是 Virtual Thread
     public ResponseEntity<?> getAllPeople() {
         // 無論同步或異步，這裡都是 Virtual Thread
@@ -409,13 +409,13 @@ public class SomeService {
 #### **4. 同步業務邏輯 (請求線程)**
 ```java
 @RestController
-public class PeopleController {
+public class UserController {
 
     // 🎯 同步 API 也使用 Virtual Threads
     @GetMapping("/names")
-    public ResponseEntity<?> getAllPeopleNames() {
+    public ResponseEntity<?> getAllUserNames() {
         // 直接 DB 查詢也在 Virtual Thread 中執行
-        List<String> names = peopleService.getAllPeopleNames();
+        List<String> names = userService.getAllUserNames();
         return ResponseEntity.ok(names);
     }
 }
@@ -467,7 +467,7 @@ public class TYMBackendApplication {
 @Async("threadPoolTaskExecutor")  // 使用 Virtual Thread
 public void processWithMQ(String data) {
     // 1. 在 Virtual Thread 中處理業務邏輯
-    List<People> result = peopleService.getAllPeopleOptimized();
+    List<User> result = peopleService.getAllPeopleOptimized();
 
     // 2. 發送到 MQ (仍然在同一個 Virtual Thread)
     rabbitTemplate.convertAndSend("queue", result);
@@ -479,7 +479,7 @@ public void processWithMQ(String data) {
 @Async("threadPoolTaskExecutor")  // 使用 Virtual Thread
 public void processWithoutMQ(String data) {
     // 1. 在 Virtual Thread 中處理業務邏輯
-    List<People> result = peopleService.getAllPeopleOptimized();
+    List<User> result = peopleService.getAllPeopleOptimized();
 
     // 2. 直接返回結果 (仍然在同一個 Virtual Thread)
     return result;
@@ -490,7 +490,7 @@ public void processWithoutMQ(String data) {
 ```java
 public void processSync(String data) {  // 使用當前請求線程
     // 這裡使用的是 HTTP 請求的 Virtual Thread
-    List<People> result = peopleService.getAllPeopleOptimized();
+    List<User> result = peopleService.getAllPeopleOptimized();
     return result;
 }
 ```
