@@ -16,7 +16,7 @@
             ]
           },
           "skills": [
-            { "name": "Java 8 11 17", "level": "shade1" },
+            { "name": "Java 8 11 17 21", "level": "shade1" },
             { "name": "Python 3", "level": "shade3" },
             { "name": "Node.js", "level": "shade3" },
             { "name": "PHP 12", "level": "shade3" }
@@ -51,7 +51,13 @@
             { "name": "Async/Await", "level": "shade3" },
             { "name": "Event Loop", "level": "shade4" },
             { "name": "ExecutorService", "level": "shade3" },
-            { "name": "ConcurrentHashMap", "level": "shade3" }
+            { "name": "ConcurrentHashMap", "level": "shade3" },
+            { "name": "Virtual Threads", "level": "shade2" },
+            { "name": "ForkJoinPool", "level": "shade4" },
+            { "name": "Continuation", "level": "shade5" },
+            { "name": "Fiber", "level": "shade5" },
+            { "name": "@RabbitListener", "level": "shade3" },
+            { "name": "VirtualThreadTaskExecutor", "level": "shade4" }
           ]
         },
         {
@@ -223,7 +229,8 @@
           "skills": [
             { "name": "Terraform", "level": "shade4" },
             { "name": "Ansible", "level": "shade4" },
-            { "name": "Helm", "level": "shade5" }
+            { "name": "Helm", "level": "shade5" },
+            { "name": "YAML", "level": "shade2" }
           ]
         },
         {
