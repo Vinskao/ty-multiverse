@@ -133,6 +133,9 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 
 	.tags {
 		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
 		gap: 0.5rem;
 		margin-bottom: 0.5rem;
 	}
@@ -672,8 +675,9 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content :global(pre) {
 			padding: 1rem;
 			font-size: 0.8em;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		.content :global(code) {
@@ -777,16 +781,18 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content :global(table) {
 			display: block;
 			overflow-x: auto;
-			white-space: nowrap;
-			-webkit-overflow-scrolling: touch;
 			margin: 1rem 0;
 			font-size: 0.75em;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		.content :global(th),
 		.content :global(td) {
 			padding: 0.25rem 0.5rem;
-			white-space: nowrap;
+			white-space: normal;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		.content :global(img) {
@@ -833,16 +839,15 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content :global(pre) {
 			white-space: pre-wrap;
 			word-wrap: break-word;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
+			overflow-wrap: break-word;
 		}
 
 		/* 確保表格在小螢幕上可滾動 */
 		.content :global(table) {
 			display: block;
 			overflow-x: auto;
-			white-space: nowrap;
-			-webkit-overflow-scrolling: touch;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
 		}
 
 		/* 優化連結在觸控設備上的點擊區域 */
