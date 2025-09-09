@@ -183,12 +183,11 @@
               "實作基於 RabbitMQ 的非同步訊息處理架構，採用 producer-consumer 模式。設計 TYMBackendApplication 作為 producer，整合 AsyncMessageService 與 RabbitMQConfig 進行訊息發布。部署 RabbitMQ 4.1 Management 伺服器作為訊息代理，具備佇列管理與非同步處理能力。建構專用 Consumer Pod 進行訊息處理與資料庫寫入操作，確保可靠訊息傳遞與容錯機制。此架構實現後端服務與資料庫操作間的可擴展、解耦通訊，支援高吞吐量訊息處理並保證傳遞語義。"
             ]
           },
-          "skills": [
+            "skills": [
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
             { "name": "Redis", "level": "shade3" },
-            { "name": "Celery", "level": "shade4" },
-            { "name": "RabbitMQ", "level": "shade3" }
+            { "name": "Celery", "level": "shade4" }
           ]
         }
       ]
@@ -247,7 +246,8 @@
           },
           "skills": [
             { "name": "JBoss EAP 7 8", "level": "shade1" },
-            { "name": "Tomcat", "level": "shade3" }
+            { "name": "Tomcat", "level": "shade3" },
+            { "name": "RabbitMQ", "level": "shade3" }
           ]
         },
 

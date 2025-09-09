@@ -60,10 +60,10 @@ graph TD
         F[wildland<br>需要 admin 權限]
         G[palais<br>需要 admin 權限]
         H[control<br>需要 user 權限]
+
+        Note over F,G: 管理員專用功能
+        Note over H: 用戶權限即可使用
     end
-    
-    Note over F,G: 管理員專用功能
-    Note over H: 用戶權限即可使用
 ```
 
 ### 認證與權限驗證流程
