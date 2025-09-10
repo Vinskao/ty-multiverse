@@ -24,6 +24,64 @@ interface ExperienceItem {
 const lang = (Astro.url.searchParams.get('lang') ?? 'en') as LangKey;
 const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
+// Function to highlight dates in project descriptions
+function highlightDates(text: string): string {
+  const dateRegex = /(\d{4}\/\d{1,2}(?:\s*~\s*(?:\d{4}\/\d{1,2}|Present))?)/g;
+  return text.replace(dateRegex, '<span class="date-highlight">$1</span>');
+}
+
+function parseProject(project: string, lang: LangKey): {
+  head: string;
+  bullets: string[];
+  dataModuleName?: string;
+  dataModuleDetails: string[];
+} {
+  const isZh = lang === 'zh';
+  const respMarker = isZh ? '；主要負責：' : ' — Responsibilities:';
+  const dmMarker = isZh ? '；資料模組：' : ' — Data Module:';
+
+  const respIdx = project.indexOf(respMarker);
+  if (respIdx === -1) {
+    return { head: project, bullets: [], dataModuleDetails: [] };
+  }
+
+  const head = project.substring(0, respIdx).trim();
+  const rest = project.substring(respIdx + respMarker.length).trim();
+
+  let dataModule: string | undefined;
+  let respPart = rest;
+  const dmIdx = rest.indexOf(dmMarker);
+  if (dmIdx !== -1) {
+    respPart = rest.substring(0, dmIdx).trim();
+    dataModule = rest.substring(dmIdx + dmMarker.length).trim();
+  }
+
+  const bullets = (isZh
+    ? respPart.split(/；+/)
+    : respPart.split(/\s*,\s*/))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  let dataModuleName: string | undefined;
+  let dataModuleDetails: string[] = [];
+  if (dataModule) {
+    // Extract name and details inside parentheses (both half/full width)
+    const openIdx = dataModule.indexOf('(') !== -1 ? dataModule.indexOf('(') : dataModule.indexOf('（');
+    const closeIdx = dataModule.lastIndexOf(')') !== -1 ? dataModule.lastIndexOf(')') : dataModule.lastIndexOf('）');
+    if (openIdx !== -1 && closeIdx !== -1 && closeIdx > openIdx) {
+      dataModuleName = dataModule.substring(0, openIdx).trim();
+      const inner = dataModule.substring(openIdx + 1, closeIdx).trim();
+      dataModuleDetails = (isZh ? inner.split(/；+/) : inner.split(/\s*,\s*/))
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+    } else {
+      dataModuleName = dataModule.trim();
+    }
+  }
+
+  return { head, bullets, dataModuleName, dataModuleDetails };
+}
+
 ---
 
 <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
@@ -80,14 +138,40 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
                     <h3>{job.title}</h3>
                     <div class="job-meta">
                       <span class="company">{job.company}</span>
-                      <span class="period">{job.period}</span>
+                      <span class="period"><span class="date-highlight">{job.period}</span></span>
                     </div>
                   </div>
                   <div class="project-experience">
                     <ul>
-                      {job.projectExperience[lang].map((project) => (
-                        <li>{project}</li>
-                      ))}
+                      {job.projectExperience[lang].map((project) => {
+                        const parsed = parseProject(project, lang);
+                        // highlight dates only in the head text
+                        const dateHighlightedHead = highlightDates(parsed.head);
+                        return (
+                          <li>
+                            <span set:html={dateHighlightedHead}></span>
+                            {(parsed.bullets.length > 0 || parsed.dataModuleName || parsed.dataModuleDetails.length > 0) && (
+                              <ul class="sub-bullets">
+                                {parsed.bullets.map((b) => (
+                                  <li>{b}</li>
+                                ))}
+                                {parsed.dataModuleName && (
+                                  <li>
+                                    {parsed.dataModuleName}
+                                    {parsed.dataModuleDetails.length > 0 && (
+                                      <ul class="sub-bullets">
+                                        {parsed.dataModuleDetails.map((d) => (
+                                          <li>{d}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </li>
+                                )}
+                              </ul>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>
@@ -103,7 +187,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
               <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
                 <div class="education-header">
                   <h3>{item.institution}</h3>
-                  <span class="education-period">{item.period}</span>
+                  <span class="education-period"><span class="date-highlight">{item.period}</span></span>
                 </div>
                 <ul>
                   {item.programs.map((program) => (
@@ -901,8 +985,89 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
       document.addEventListener('DOMContentLoaded', () => {
         const mermaidLib = window['mermaid'];
         if (mermaidLib) {
-          mermaidLib.initialize({ startOnLoad: true, theme: 'default' });
+          // 根據當前主題設定 Mermaid 主題
+          const isDarkMode = document.documentElement.classList.contains('theme-dark');
+          mermaidLib.initialize({
+            startOnLoad: true,
+            theme: isDarkMode ? 'dark' : 'default',
+            themeVariables: isDarkMode ? {
+              background: '#2a2a2a',
+              primaryColor: '#00d4ff',
+              primaryTextColor: '#ffffff',
+              primaryBorderColor: '#00d4ff',
+              lineColor: '#cccccc',
+              secondaryColor: '#ff6b6b',
+              tertiaryColor: '#4ecdc4',
+              textColor: '#ffffff',
+              mainBkg: '#333333',
+              secondBkg: '#444444',
+              border1: '#666666',
+              border2: '#888888'
+            } : {
+              background: '#ffffff',
+              primaryColor: '#1f5bff',
+              primaryTextColor: '#0b1a33',
+              primaryBorderColor: '#1f5bff',
+              lineColor: '#2e3a59',
+              secondaryColor: '#ff3b30',
+              tertiaryColor: '#00b894',
+              textColor: '#0b1a33',
+              mainBkg: '#f7f9fc',
+              secondBkg: '#eef3fb',
+              border1: '#cfd8ea',
+              border2: '#b7c4df'
+            }
+          });
         }
+
+        // 監聽主題變化，重新初始化 Mermaid
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+              const isDarkMode = document.documentElement.classList.contains('theme-dark');
+              if (mermaidLib) {
+                mermaidLib.initialize({
+                  startOnLoad: true,
+                  theme: isDarkMode ? 'dark' : 'default',
+                  themeVariables: isDarkMode ? {
+                    background: '#2a2a2a',
+                    primaryColor: '#00d4ff',
+                    primaryTextColor: '#ffffff',
+                    primaryBorderColor: '#00d4ff',
+                    lineColor: '#cccccc',
+                    secondaryColor: '#ff6b6b',
+                    tertiaryColor: '#4ecdc4',
+                    textColor: '#ffffff',
+                    mainBkg: '#333333',
+                    secondBkg: '#444444',
+                    border1: '#666666',
+                    border2: '#888888'
+                  } : {
+                    background: '#ffffff',
+                    primaryColor: '#1f5bff',
+                    primaryTextColor: '#0b1a33',
+                    primaryBorderColor: '#1f5bff',
+                    lineColor: '#2e3a59',
+                    secondaryColor: '#ff3b30',
+                    tertiaryColor: '#00b894',
+                    textColor: '#0b1a33',
+                    mainBkg: '#f7f9fc',
+                    secondBkg: '#eef3fb',
+                    border1: '#cfd8ea',
+                    border2: '#b7c4df'
+                  }
+                });
+                // 重新渲染所有圖表
+                mermaidLib.init();
+              }
+            }
+          });
+        });
+
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
 
         // Work photo hover to show briefing
         // Overlay handled purely by CSS hover on wrapper to avoid flicker

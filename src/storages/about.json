@@ -1,7 +1,7 @@
 {
   "background": {
-          "en": "KTY is a Java Backend Engineer who joined the industry in March 2024 after banking MA experience in digital finance PM and trading research.\nSkilled in Spring Boot multi-layered systems, PostgreSQL optimization, Redis caching, RabbitMQ, multi-threading, non-blocking I/O, RESTful API, WebSocket, enterprise security (Keycloak/JWT/OAuth2), and CI/CD with Jenkins, Docker, Kubernetes.\nExperienced in OCI private node cloud architecture, Java 17 upgrades, RHEL/JBoss modernization, and exploring AI-powered knowledge systems with LangChain and PostgreSQL hybrid search.",
-          "zh": "KTY 是一名 Java 後端工程師，於 2024 年 3 月加入業界，先前曾任銀行 MA，負責 數位金融專案管理與交易研究。\n擅長 Spring Boot 多層架構系統、PostgreSQL 優化、Redis 快取、RabbitMQ、多執行緒與非阻塞 I/O、RESTful API、WebSocket，以及 企業級安全（Keycloak/JWT/OAuth2），並熟悉 Jenkins、Docker、Kubernetes 的 CI/CD 流程。\n同時具備 OCI 私有節點雲架構、Java 17 升級、RHEL/JBoss 現代化 的實務經驗，並探索 結合 LangChain 與 PostgreSQL 混合檢索的 AI 知識系統。"
+          "en": "KTY is a Java Backend Engineer who joined the industry in March 2024 after roles as a banking MA (digital finance PM) and a trading-room big data researcher.\nSkilled in Spring Boot multi-layered systems, PostgreSQL optimization, Redis caching, RabbitMQ, multi-threading, non-blocking I/O, RESTful API, WebSocket, enterprise security (Keycloak/JWT/OAuth2), and CI/CD with Jenkins, Docker, Kubernetes.\nExperienced in OCI private node cloud architecture, Java 17 upgrades, RHEL/JBoss modernization, and exploring AI-powered knowledge systems with LangChain and PostgreSQL hybrid search.",
+          "zh": "KTY 是一名 Java 後端工程師，於 2024 年 3 月加入業界，先前曾任銀行 MA（數位金融專案管理）與交易室大數據研究員。\n擅長 Spring Boot 多層架構系統、PostgreSQL 優化、Redis 快取、RabbitMQ、多執行緒與非阻塞 I/O、RESTful API、WebSocket，以及 企業級安全（Keycloak/JWT/OAuth2），並熟悉 Jenkins、Docker、Kubernetes 的 CI/CD 流程。\n同時具備 OCI 私有節點雲架構、Java 17 升級、RHEL/JBoss 現代化 的實務經驗，並探索 結合 LangChain 與 PostgreSQL 混合檢索的 AI 知識系統。"
   },
   "experience": [
     {
@@ -10,20 +10,20 @@
       "period": "2024/3~Present",
       "projectExperience": {
         "en": [
-          "Document Management System: Built multi-layered Spring Boot application with comprehensive backend features (@EnableRetry, @EnableCaching, @EnableRedisHttpSession, @EnableWebSecurity, @EnableMethodSecurity); designed dual PostgreSQL data sources with HikariCP connection pools, implementing composite indexes, batch queries, and N+1 query optimization; implemented WebSocket and RESTful APIs; established unit testing with JUnit5/Mockito and monitoring with Grafana/Prometheus",
-          "External Portal & Portal Website: Implemented Redis-based caching with TTL management, session storage, and distributed locks for high-concurrency scenarios; configured @EnableRedisHttpSession with session timeout and fixation protection; built comprehensive error handling system with ordered exception handlers",
-          "Customer Portal Q&A Assistant System: Developed FastAPI-based QA system with LangChain integration, implementing multi-character personality-based RAG chatbots and hybrid retrieval pipelines; implemented PostgreSQL pg_trgm and pgvector extensions with GIN and IVFFlat indexes for advanced semantic search; built support for multiple LLM APIs with fallback strategies and no-knowledge handling to reduce hallucination risks",
-          "DevOps Management Portal: Configured enterprise-grade security with @EnableWebSecurity, @EnableMethodSecurity, JWT Authentication, OAuth2 Resource Server, and CORS; designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication",
-          "DevOps Team Lab: Designed OCI VCN architecture with Bastion, Public/Private Subnets, OKE clusters, and Load Balancer using Terraform",
-          "System Modernization & Deployment: Built JBoss War Deployment CI/CD Pipeline for UAT/PROD (10+ UAT servers); implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose; led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17; upgraded RHEL from 7 to 8 for 20+ servers"
+          "2025/04 ~ Present - Document Management System: Built multi-layered Spring Boot application with comprehensive backend features (@EnableRetry, @EnableCaching, @EnableRedisHttpSession, @EnableWebSecurity, @EnableMethodSecurity); designed dual PostgreSQL data sources with HikariCP connection pools, implementing composite indexes, batch queries, and N+1 query optimization; implemented WebSocket and RESTful APIs; established unit testing with JUnit5/Mockito and monitoring with Grafana/Prometheus — Responsibilities: designed document access control and versioning APIs, implemented real-time file event notifications via WebSocket, optimized PostgreSQL indexes and batch queries — Data Module: DocCore (structure: Document/Version/ACL, logic: versioning & lifecycle, interface: REST + WebSocket)",
+          "2025/01 ~ 2025/03 - External Portal & Portal Website: Implemented Redis-based caching with TTL management, session storage, and distributed locks for high-concurrency scenarios; configured @EnableRedisHttpSession with session timeout and fixation protection; built comprehensive error handling system with ordered exception handlers — Responsibilities: engineered Redis caching and session strategy (TTL, locks), implemented ordered global exception handling, tuned high-concurrency endpoints — Data Module: PortalCache (structure: Session/CacheEntry, logic: TTL cache & distributed lock, interface: REST + Redis Session)",
+          "2024/10 ~ 2024/12 - Customer Portal Q&A Assistant System: Developed FastAPI-based QA system with LangChain integration, implementing multi-character personality-based RAG chatbots and hybrid retrieval pipelines; implemented PostgreSQL pg_trgm and pgvector extensions with GIN and IVFFlat indexes for advanced semantic search; built support for multiple LLM APIs with fallback strategies and no-knowledge handling to reduce hallucination risks — Responsibilities: built RAG pipeline with pg_trgm/pgvector, integrated multi-LLM fallback, designed prompts and no-knowledge responses — Data Module: RAGCore (structure: ArticleEmbedding/TrigramIndex/ChatHistory, logic: hybrid retrieval & prompt assembly & fallback, interface: FastAPI + LLM adapters)",
+          "2024/08 ~ 2024/09 - DevOps Management Portal: Configured enterprise-grade security with @EnableWebSecurity, @EnableMethodSecurity, JWT Authentication, OAuth2 Resource Server, and CORS; designed and implemented enterprise SSO solutions using Keycloak and RedHat SSO for secure authentication — Responsibilities: implemented JWT/OAuth2 resource server, integrated Keycloak SSO, defined fine-grained role policies — Data Module: SecAuth (structure: User/Role/Policy, logic: JWT validation & RBAC & SSO, interface: OAuth2 endpoints + protected REST)",
+          "2024/06 ~ 2024/07 - DevOps Team Lab: Designed OCI VCN architecture with Bastion, Public/Private Subnets, OKE clusters, and Load Balancer using Terraform — Responsibilities: provisioned OCI VCN and OKE with Terraform, configured load balancers and routing, automated cluster bootstrapping — Data Module: InfraIaC (structure: VCN/Subnet/OKESpec, logic: declarative provisioning & routing, interface: Terraform modules/variables)",
+          "2024/03 ~ 2024/05 - System Modernization & Deployment: Built JBoss War Deployment CI/CD Pipeline for UAT/PROD (10+ UAT servers); implemented Linux offline deployment strategies and containerized applications using Kubernetes and Docker Compose; led comprehensive upgrade of JBoss, MVC, and Spring/Spring Boot applications from Java 8/11 to Java 17; upgraded RHEL from 7 to 8 for 20+ servers — Responsibilities: created JBoss WAR CI/CD, containerized services (Kubernetes/Docker Compose), executed Java 17 and RHEL 8 upgrades with rollout plans — Data Module: ReleaseKit (structure: Pipeline/Artifact/DeploymentPlan, logic: CI/CD stages & rollout & health checks, interface: Jenkins pipeline + K8s manifests)"
         ],
         "zh": [
-          "文件管理系統：建置多層次 Spring Boot 應用，整合完整後端功能（@EnableRetry、@EnableCaching、@EnableRedisHttpSession、@EnableWebSecurity、@EnableMethodSecurity）；設計雙 PostgreSQL 資料來源與 HikariCP 連線池，實作複合索引、批次查詢與 N+1 查詢優化；實作 WebSocket 與 RESTful API；建立 JUnit5/Mockito 單元測試與 Grafana/Prometheus 監控",
-          "外部專區與入口網站：實作 Redis 基礎快取系統，包含 TTL 管理、會話儲存與分布式鎖，以應對高併發情境；配置 @EnableRedisHttpSession 與會話逾時及固定攻擊防護；建立完整的錯誤處理系統，包含有序的異常處理器",
-          "客戶專區附加的問答輔助系統：開發 FastAPI 基礎問答系統，整合 LangChain，實作多角色個性化 RAG 聊天機器人與混合檢索管道；實作 PostgreSQL pg_trgm 與 pgvector 擴展，使用 GIN 與 IVFFlat 索引以提供進階語義搜尋；建立對多 LLM API 的支援，包含回退策略與無知識處理，以降低幻覺風險",
-          "DevOps 管理後台：配置企業級安全防護（@EnableWebSecurity、@EnableMethodSecurity、JWT 認證、OAuth2 資源伺服器、CORS）；使用 Keycloak 與 RedHat SSO 設計並實作企業級 SSO 解決方案，確保安全驗證",
-          "DevOps Team Lab：設計 OCI VCN 架構，包含 Bastion、Public/Private Subnets、OKE 叢集與負載平衡器，使用 Terraform 建置",
-          "系統現代化與部署：建置 JBoss War Deployment CI/CD Pipeline for UAT/PROD（10+ UAT 伺服器）；實作 Linux 離線部署策略，並使用 Kubernetes 與 Docker Compose 將應用容器化；主導將 JBoss、MVC 與 Spring/Spring Boot 應用從 Java 8/11 升級至 Java 17；為 20+ 台伺服器將 RHEL 從 7 升級至 8"
+          "2025/04 ~ Present - 文件管理系統：建置多層次 Spring Boot 應用，整合完整後端功能（@EnableRetry、@EnableCaching、@EnableRedisHttpSession、@EnableWebSecurity、@EnableMethodSecurity）；設計雙 PostgreSQL 資料來源與 HikariCP 連線池，實作複合索引、批次查詢與 N+1 查詢優化；實作 WebSocket 與 RESTful API；建立 JUnit5/Mockito 單元測試與 Grafana/Prometheus 監控；主要負責：設計文件權限與版本控管 API、以 WebSocket 推送檔案事件通知、優化 PostgreSQL 索引與批次查詢；資料模組：DocCore（資料結構：Document/Version/ACL；操作邏輯：版本控管與生命週期；存取介面：REST + WebSocket）",
+          "2025/01 ~ 2025/03 - 外部專區與入口網站：實作 Redis 基礎快取系統，包含 TTL 管理、會話儲存與分布式鎖，以應對高併發情境；配置 @EnableRedisHttpSession 與會話逾時及固定攻擊防護；建立完整的錯誤處理系統，包含有序的異常處理器；主要負責：規劃 Redis 快取／Session 策略（TTL、分散式鎖）、落實有序全域錯誤處理、調校高併發端點；資料模組：PortalCache（資料結構：Session/CacheEntry；操作邏輯：TTL 快取與分散式鎖；存取介面：REST + Redis Session）",
+          "2024/10 ~ 2024/12 - 客戶專區附加的問答輔助系統：開發 FastAPI 基礎問答系統，整合 LangChain，實作多角色個性化 RAG 聊天機器人與混合檢索管道；實作 PostgreSQL pg_trgm 與 pgvector 擴展，使用 GIN 與 IVFFlat 索引以提供進階語義搜尋；建立對多 LLM API 的支援，包含回退策略與無知識處理，以降低幻覺風險；主要負責：建置結合 pg_trgm/pgvector 的 RAG 流程、整合多家 LLM 回退機制、設計 Prompt 與無知識回應；資料模組：RAGCore（資料結構：ArticleEmbedding/TrigramIndex/ChatHistory；操作邏輯：混合檢索、Prompt 組裝與回退；存取介面：FastAPI + LLM adapters）",
+          "2024/08 ~ 2024/09 - DevOps 管理後台：配置企業級安全防護（@EnableWebSecurity、@EnableMethodSecurity、JWT 認證、OAuth2 資源伺服器、CORS）；使用 Keycloak 與 RedHat SSO 設計並實作企業級 SSO 解決方案，確保安全驗證；主要負責：實作 JWT/OAuth2 資源伺服器、整合 Keycloak SSO、制定細粒度角色授權規則；資料模組：SecAuth（資料結構：User/Role/Policy；操作邏輯：JWT 驗證、RBAC 與 SSO；存取介面：OAuth2 endpoints + 受保護 REST）",
+          "2024/06 ~ 2024/07 - DevOps Team Lab：設計 OCI VCN 架構，包含 Bastion、Public/Private Subnets、OKE 叢集與負載平衡器，使用 Terraform 建置；主要負責：以 Terraform 佈署 OCI VCN 與 OKE、配置負載平衡與路由、自動化叢集啟動流程；資料模組：InfraIaC（資料結構：VCN/Subnet/OKESpec；操作邏輯：宣告式佈署與路由；存取介面：Terraform modules/variables）",
+          "2024/03 ~ 2024/05 - 系統現代化與部署：建置 JBoss War Deployment CI/CD Pipeline for UAT/PROD（10+ UAT 伺服器）；實作 Linux 離線部署策略，並使用 Kubernetes 與 Docker Compose 將應用容器化；主導將 JBoss、MVC 與 Spring/Spring Boot 應用從 Java 8/11 升級至 Java 17；為 20+ 台伺服器將 RHEL 從 7 升級至 8；主要負責：建立 JBoss WAR CI/CD、以 Kubernetes/Docker Compose 進行容器化、執行 Java 17 與 RHEL 8 升級與滾動發佈；資料模組：ReleaseKit（資料結構：Pipeline/Artifact/DeploymentPlan；操作邏輯：CI/CD 階段與滾動發佈與健康檢查；存取介面：Jenkins pipeline + K8s manifests）"
         ]
       }
     },
@@ -33,16 +33,16 @@
       "period": "2022/9~2023/1",
       "projectExperience": {
           "en": [
-            "Built automated reporting workflows; integrated SinoPac Shioaji trading API for market data ingestion and strategy prototyping, designing real-time market analysis data processing pipelines; utilized pandas, numpy and scipy for futures price and implied volatility data analysis, implementing automated backtesting frameworks and quantitative trading strategies (Red K strategy, volatility-based dynamic rebalancing strategy)",
-            "Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis, utilized scikit-learn, statsmodels and scipy for data analysis and statistical modeling, structuring complex market data into actionable insights through systematic data flow analysis",
-            "Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies, mapping market behavior patterns to investment decision frameworks",
-            "Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis, optimizing data flow architecture for multi-source financial data integration"
+            "2022/09 ~ 2022/10 - Built automated reporting workflows; integrated SinoPac Shioaji trading API for market data ingestion and strategy prototyping, designing real-time market analysis data processing pipelines; utilized pandas, numpy and scipy for futures price and implied volatility data analysis, implementing automated backtesting frameworks and quantitative trading strategies (Red K strategy, volatility-based dynamic rebalancing strategy)",
+            "2022/10 ~ 2022/11 - Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis, utilized scikit-learn, statsmodels and scipy for data analysis and statistical modeling, structuring complex market data into actionable insights through systematic data flow analysis",
+            "2022/11 ~ 2022/12 - Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies, mapping market behavior patterns to investment decision frameworks",
+            "2022/12 ~ 2023/01 - Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis, optimizing data flow architecture for multi-source financial data integration"
           ],
           "zh": [
-            "建置自動化報表工作流程；整合永豐金 Shioaji API 進行市場數據攝取與策略原型開發，設計即時市場分析的數據處理管道；運用 pandas、numpy 與 scipy 進行期貨價格與隱含波動率數據分析，實作自動化回測框架與量化交易策略（紅K策略、基於隱含波動率動態切換的再平衡策略）",
-            "每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析，運用 scikit-learn、statsmodels 與 scipy 進行數據分析與統計建模，透過系統化數據流程分析將複雜市場數據結構化為可執行洞察",
-            "分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略，將市場行為模式對應至投資決策框架",
-            "維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析，優化多源金融數據整合的數據流程架構"
+            "2022/09 ~ 2022/10 - 建置自動化報表工作流程；整合永豐金 Shioaji API 進行市場數據攝取與策略原型開發，設計即時市場分析的數據處理管道；運用 pandas、numpy 與 scipy 進行期貨價格與隱含波動率數據分析，實作自動化回測框架與量化交易策略（紅K策略、基於隱含波動率動態切換的再平衡策略）",
+            "2022/10 ~ 2022/11 - 每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析，運用 scikit-learn、statsmodels 與 scipy 進行數據分析與統計建模，透過系統化數據流程分析將複雜市場數據結構化為可執行洞察",
+            "2022/11 ~ 2022/12 - 分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略，將市場行為模式對應至投資決策框架",
+            "2022/12 ~ 2023/01 - 維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析，優化多源金融數據整合的數據流程架構"
           ]
         }
     },
@@ -52,18 +52,18 @@
       "period": "2021/8~2022/5",
       "projectExperience": {
           "en": [
-            "Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews, translating complex business requirements into structured data flows",
-            "Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies, analyzing user journey flows and payment processing logic",
-            "Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting, mapping product features to user behavior patterns",
-            "Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency, designing workflow logic and data validation processes; implemented open-source RPA solutions using Python with Selenium for process automation and workflow optimization",
-            "Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations, analyzing integration requirements and data exchange protocols"
+            "2021/08 ~ 2021/09 - Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews, translating complex business requirements into structured data flows",
+            "2021/10 ~ 2021/11 - Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies, analyzing user journey flows and payment processing logic",
+            "2021/12 ~ 2022/01 - Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting, mapping product features to user behavior patterns",
+            "2022/02 ~ 2022/03 - Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency, designing workflow logic and data validation processes; implemented open-source RPA solutions using Python with Selenium for process automation and workflow optimization",
+            "2022/04 ~ 2022/05 - Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations, analyzing integration requirements and data exchange protocols"
           ],
           "zh": [
-            "使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視，將複雜業務需求轉化為結構化數據流程",
-            "撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案，分析用戶旅程流程與支付處理邏輯",
-            "進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告，將產品功能對應至用戶行為模式",
-            "管理數位支付部門 31 項作業流程，確保合規與效率，設計工作流程邏輯與數據驗證程序；導入開源 RPA 解決方案，使用 Python 搭配 Selenium 進行流程自動化與工作流程優化",
-            "提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地，分析整合需求與數據交換協議"
+            "2021/08 ~ 2021/09 - 使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視，將複雜業務需求轉化為結構化數據流程",
+            "2021/10 ~ 2021/11 - 撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案，分析用戶旅程流程與支付處理邏輯",
+            "2021/12 ~ 2022/01 - 進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告，將產品功能對應至用戶行為模式",
+            "2022/02 ~ 2022/03 - 管理數位支付部門 31 項作業流程，確保合規與效率，設計工作流程邏輯與數據驗證程序；導入開源 RPA 解決方案，使用 Python 搭配 Selenium 進行流程自動化與工作流程優化",
+            "2022/04 ~ 2022/05 - 提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地，分析整合需求與數據交換協議"
           ]
         }
     },
@@ -73,20 +73,20 @@
       "period": "2019/9~2020/3",
       "projectExperience": {
           "en": [
-            "Automated reconciliation workflow using Excel VBA to accelerate audit working papers, designing logical data validation processes for financial data integrity",
-            "Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements, analyzing financial data flows and transaction processing logic",
-            "Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds, mapping complex financial product structures to audit testing frameworks",
-            "Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies, developing systematic approaches to financial data analysis and anomaly detection",
-            "Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis, creating data-driven risk assessment models",
-            "Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements, structuring financial reporting data flows for compliance and analysis purposes"
+            "2019/09 ~ 2019/10 - Automated reconciliation workflow using Excel VBA to accelerate audit working papers, designing logical data validation processes for financial data integrity",
+            "2019/10 ~ 2019/11 - Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements, analyzing financial data flows and transaction processing logic",
+            "2019/11 ~ 2019/12 - Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds, mapping complex financial product structures to audit testing frameworks",
+            "2019/12 ~ 2020/01 - Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies, developing systematic approaches to financial data analysis and anomaly detection",
+            "2020/01 ~ 2020/02 - Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis, creating data-driven risk assessment models",
+            "2020/02 ~ 2020/03 - Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements, structuring financial reporting data flows for compliance and analysis purposes"
           ],
           "zh": [
-            "使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業，設計財務數據完整性的邏輯驗證程序",
-            "為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益，分析財務數據流程與交易處理邏輯",
-            "協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序，將複雜金融產品結構對應至稽核測試框架",
-            "執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異，開發財務數據分析與異常檢測的系統化方法",
-            "編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析，建立數據驅動的風險評估模型",
-            "稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表，為合規與分析目的結構化財務報告數據流程"
+            "2019/09 ~ 2019/10 - 使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業，設計財務數據完整性的邏輯驗證程序",
+            "2019/10 ~ 2019/11 - 為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益，分析財務數據流程與交易處理邏輯",
+            "2019/11 ~ 2019/12 - 協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序，將複雜金融產品結構對應至稽核測試框架",
+            "2019/12 ~ 2020/01 - 執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異，開發財務數據分析與異常檢測的系統化方法",
+            "2020/01 ~ 2020/02 - 編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析，建立數據驅動的風險評估模型",
+            "2020/02 ~ 2020/03 - 稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表，為合規與分析目的結構化財務報告數據流程"
           ]
         }
     }
