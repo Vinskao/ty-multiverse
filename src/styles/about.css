@@ -336,6 +336,24 @@ list-style-type: none;
 padding-left: 0;
 }
 
+.project-experience ul.sub-bullets {
+list-style-type: disc;
+padding-left: 1.5rem;
+margin-top: 0.4rem;
+}
+
+.project-experience ul.sub-bullets > li {
+margin: 0.25rem 0;
+line-height: 1.5;
+}
+
+/* nested sub-bullets use circle */
+.project-experience ul.sub-bullets ul.sub-bullets {
+list-style-type: circle;
+padding-left: 1.25rem;
+margin-top: 0.25rem;
+}
+
 .project-experience li,
 .responsibilities li {
 position: relative;
@@ -1333,9 +1351,9 @@ section:nth-child(3) {
 .mermaid-diagram {
   margin-top: 0.8rem;
   padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff; /* 淺色模式白底，提升對比度 */
   border-radius: 12px;
-  border: 1px solid rgba(81, 70, 149, 0.2);
+  border: 1px solid rgba(46, 58, 89, 0.2);
   overflow-x: auto;
 }
 
@@ -1353,12 +1371,70 @@ section:nth-child(3) {
 
 /* Dark theme adjustments for Mermaid */
 .theme-dark .mermaid-diagram {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(81, 70, 149, 0.4);
+  background: #2a2a2a; /* 更深的灰色背景 */
+  border: 2px solid rgba(100, 100, 100, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .theme-dark .mermaid-diagram .mermaid {
-  filter: invert(0.9) hue-rotate(180deg);
+  filter: none;
+  /* 設定深色模式主題的顏色變數 */
+  --mermaid-bg: #2a2a2a;
+  --mermaid-primary-color: #00d4ff; /* 亮藍色作為主要顏色 */
+  --mermaid-secondary-color: #ff6b6b; /* 珊瑚紅作為次要顏色 */
+  --mermaid-tertiary-color: #4ecdc4; /* 青色作為第三色 */
+  --mermaid-primary-border-color: #00d4ff;
+  --mermaid-secondary-border-color: #ff6b6b;
+  --mermaid-tertiary-border-color: #4ecdc4;
+  --mermaid-primary-text-color: #ffffff;
+  --mermaid-secondary-text-color: #ffffff;
+  --mermaid-tertiary-text-color: #ffffff;
+  --mermaid-line-color: #cccccc;
+  --mermaid-text-color: #ffffff;
+  --mermaid-main-bkg-color: #333333;
+  --mermaid-second-bkg-color: #444444;
+  --mermaid-border1: #666666;
+  --mermaid-border2: #888888;
+  --mermaid-note-bkg-color: #333333;
+  --mermaid-note-text-color: #ffffff;
+  --mermaid-note-border-color: #666666;
+}
+
+/* 確保 Mermaid 圖表內的文字在深色背景下清晰可見 */
+.theme-dark .mermaid-diagram .mermaid text {
+  fill: #ffffff !important;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.theme-dark .mermaid-diagram .mermaid .edgeLabel {
+  color: #ffffff !important;
+}
+
+.theme-dark .mermaid-diagram .mermaid .edgePath {
+  stroke: #cccccc !important;
+  stroke-width: 2px;
+}
+
+.theme-dark .mermaid-diagram .mermaid .node {
+  fill: #333333 !important;
+  stroke: #666666 !important;
+  stroke-width: 2px;
+}
+
+.theme-dark .mermaid-diagram .mermaid .node:hover {
+  fill: #444444 !important;
+  stroke: #888888 !important;
+}
+
+.theme-dark .mermaid-diagram .mermaid .flowchart-link {
+  stroke: #00d4ff !important;
+  stroke-width: 3px;
+}
+
+.theme-dark .mermaid-diagram .mermaid .marker {
+  fill: #00d4ff !important;
 }
 
 /* Name Section */
@@ -1439,6 +1515,40 @@ section:nth-child(3) {
 .theme-dark .skill-description a:hover,
 .theme-dark .skill-subdescription a:hover {
   color: #66b3ff;
+}
+
+/* Date Highlight Styles */
+.date-highlight {
+  color: #ff6b35;
+  font-weight: 600;
+  background-color: rgba(255, 107, 53, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Dark theme adjustments for date highlights */
+.theme-dark .date-highlight {
+  color: #ff8c42;
+  background-color: rgba(255, 140, 66, 0.15);
+}
+
+/* Responsive adjustments for date highlights */
+@media (max-width: 768px) {
+  .date-highlight {
+    font-size: 0.85rem;
+    padding: 1px 4px;
+    letter-spacing: 0.3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .date-highlight {
+    font-size: 0.8rem;
+    padding: 1px 3px;
+    letter-spacing: 0.2px;
+  }
 }
 
 /* --- Intro Statement Styles --- */
