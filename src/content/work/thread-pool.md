@@ -1,5 +1,5 @@
 ---
-title: "TY Multiverse Consumer - Virtual Threads 實戰指南"
+title: "thread-pool"
 publishDate: "2025-09-08 02:00:00"
 img: /tymultiverse/assets/algorithm.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
