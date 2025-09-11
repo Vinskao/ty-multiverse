@@ -30,6 +30,15 @@ function highlightDates(text: string): string {
   return text.replace(dateRegex, '<span class="date-highlight">$1</span>');
 }
 
+// Normalize string for de-duplication
+function normalizeForDedup(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g, ' ')
+    .replace(/[、，,；;：:。.!！？?（）()\[\]{}\-–—\u00A0]+/g, '');
+}
+
 function parseProject(project: string, lang: LangKey): {
   head: string;
   bullets: string[];
@@ -56,11 +65,18 @@ function parseProject(project: string, lang: LangKey): {
     dataModule = rest.substring(dmIdx + dmMarker.length).trim();
   }
 
-  const bullets = (isZh
+  const rawBullets = (isZh
     ? respPart.split(/；+/)
     : respPart.split(/\s*,\s*/))
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
+  const seen = new Set<string>();
+  const bullets = rawBullets.filter((s) => {
+    const key = normalizeForDedup(s);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   let dataModuleName: string | undefined;
   let dataModuleDetails: string[] = [];
@@ -71,9 +87,16 @@ function parseProject(project: string, lang: LangKey): {
     if (openIdx !== -1 && closeIdx !== -1 && closeIdx > openIdx) {
       dataModuleName = dataModule.substring(0, openIdx).trim();
       const inner = dataModule.substring(openIdx + 1, closeIdx).trim();
-      dataModuleDetails = (isZh ? inner.split(/；+/) : inner.split(/\s*,\s*/))
+      const dmRaw = (isZh ? inner.split(/；+/) : inner.split(/\s*,\s*/))
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
+      const dmSeen = new Set<string>();
+      dataModuleDetails = dmRaw.filter((s) => {
+        const key = normalizeForDedup(s);
+        if (dmSeen.has(key)) return false;
+        dmSeen.add(key);
+        return true;
+      });
     } else {
       dataModuleName = dataModule.trim();
     }
@@ -502,7 +525,17 @@ function parseProject(project: string, lang: LangKey): {
                                       pubLB --> workers
                                       intLB --> workers
 
-                                      classDef net fill:#eee,stroke:#999;
+                                      %% Improve contrast with vivid class definitions
+                                      classDef host fill:#eef3fb,stroke:#1f5bff,color:#0b1a33;
+                                      classDef control fill:#ede7f6,stroke:#5e35b1,color:#0b1a33;
+                                      classDef compute fill:#e8f5e9,stroke:#43a047,color:#0b1a33;
+                                      classDef net fill:#fff3e0,stroke:#fb8c00,color:#0b1a33;
+
+                                      %% Assign classes for better differentiation
+                                      class bastion host;
+                                      class pubLB,intLB,cp control;
+                                      class operator,workers compute;
+                                      class pubRT,privRT net;
                                   </pre>
                                 </div>
                               )}
@@ -514,10 +547,11 @@ function parseProject(project: string, lang: LangKey): {
     B --> C[Consumer<br/>Spring Boot<br/>JDBC Processing]
     C --> D[PostgreSQL<br/>Database]
     
-    classDef producer fill:#e1f5fe
-    classDef mq fill:#f3e5f5
-    classDef consumer fill:#e8f5e8
-    classDef database fill:#ffebee
+    %% Vivid, high-contrast class colors for light theme
+    classDef producer fill:#bbdefb,stroke:#1e88e5,color:#0b1a33
+    classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
+    classDef consumer fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
+    classDef database fill:#ffcdd2,stroke:#c62828,color:#0b1a33
     
     class A producer
     class B mq
