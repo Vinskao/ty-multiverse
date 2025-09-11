@@ -356,19 +356,8 @@ margin-top: 0.25rem;
 
 .project-experience li,
 .responsibilities li {
-position: relative;
-padding-left: 1.5rem;
 margin-bottom: 0.8rem;
 line-height: 1.6;
-}
-
-.project-experience li::before,
-.responsibilities li::before {
-content: '•';
-position: absolute;
-left: 0;
-color: #514695;
-font-weight: bold;
 }
 
 .skills-section {
@@ -1375,6 +1364,175 @@ section:nth-child(3) {
   border: 2px solid rgba(100, 100, 100, 0.3);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Fix Platforms diagram node visibility */
+.theme-dark .mermaid-diagram .mermaid .node[class*="net"] {
+  fill: #4a4a4a !important;
+  stroke: #888888 !important;
+  stroke-width: 2px !important;
+}
+
+.theme-dark .mermaid-diagram .mermaid .node[class*="net"] text {
+  fill: #ffffff !important;
+  font-weight: 500;
+}
+
+/* Light theme fixes for Platforms diagram */
+.mermaid-diagram .mermaid .node[class*="net"] {
+  fill: #f8f9fa !important;
+  stroke: #6c757d !important;
+  stroke-width: 2px !important;
+}
+/* Dark theme vivid classes for Platforms diagram */
+.theme-dark .mermaid-diagram .mermaid .node[class*="host"] {
+  fill: #1f2a44 !important;
+  stroke: #5b7cff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="control"] {
+  fill: #2a1f44 !important;
+  stroke: #a06bff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="compute"] {
+  fill: #1f4428 !important;
+  stroke: #5ad67d !important;
+}
+
+/* Dark theme vivid classes for NoSQL diagram */
+.theme-dark .mermaid-diagram .mermaid .node[class*="producer"] {
+  fill: #0f345a !important;
+  stroke: #4aa3ff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="mq"] {
+  fill: #3b0f5a !important;
+  stroke: #b36bff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="consumer"] {
+  fill: #0f5a2a !important;
+  stroke: #5aff8d !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="database"] {
+  fill: #5a1f1f !important;
+  stroke: #ff6b6b !important;
+}
+
+/* Ensure text visibility for dark theme classes */
+.theme-dark .mermaid-diagram .mermaid .node[class*="host"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="control"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="compute"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="producer"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="mq"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="consumer"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="database"] text {
+  fill: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Ensure edges and arrow markers remain visible */
+.mermaid-diagram .mermaid .edgePath path {
+  stroke: #2e3a59 !important;
+  stroke-width: 2px !important;
+}
+.mermaid-diagram .mermaid .marker path,
+.mermaid-diagram .mermaid .marker {
+  fill: #2e3a59 !important;
+  stroke: #2e3a59 !important;
+}
+
+.theme-dark .mermaid-diagram .mermaid .edgePath path {
+  stroke: #e6e6e6 !important;
+  stroke-width: 2.2px !important;
+}
+.theme-dark .mermaid-diagram .mermaid .marker path,
+.theme-dark .mermaid-diagram .mermaid .marker {
+  fill: #e6e6e6 !important;
+  stroke: #e6e6e6 !important;
+}
+
+/* High-contrast classes for last three diagrams (api/process/agent/workflow/capability/data/external) */
+/* Light theme vivid fills */
+.mermaid-diagram .mermaid .node[class*="api"] {
+  fill: #c8e6c9 !important; /* green 100 */
+  stroke: #2e7d32 !important; /* green 800 */
+}
+.mermaid-diagram .mermaid .node[class*="process"] {
+  fill: #ffecb3 !important; /* amber 200 */
+  stroke: #ff8f00 !important; /* amber 800 */
+}
+.mermaid-diagram .mermaid .node[class*="agent"] {
+  fill: #bbdefb !important; /* blue 100 */
+  stroke: #1565c0 !important; /* blue 800 */
+}
+.mermaid-diagram .mermaid .node[class*="workflow"] {
+  fill: #ffe0b2 !important; /* orange 200 */
+  stroke: #ef6c00 !important; /* orange 800 */
+}
+.mermaid-diagram .mermaid .node[class*="capability"] {
+  fill: #f8bbd0 !important; /* pink 200 */
+  stroke: #c2185b !important; /* pink 800 */
+}
+.mermaid-diagram .mermaid .node[class*="data"] {
+  fill: #dcedc8 !important; /* light green 200 */
+  stroke: #2e7d32 !important; /* green 800 */
+}
+.mermaid-diagram .mermaid .node[class*="external"] {
+  fill: #e1bee7 !important; /* purple 200 */
+  stroke: #6a1b9a !important; /* purple 800 */
+}
+.mermaid-diagram .mermaid .node[class*="api"] text,
+.mermaid-diagram .mermaid .node[class*="process"] text,
+.mermaid-diagram .mermaid .node[class*="agent"] text,
+.mermaid-diagram .mermaid .node[class*="workflow"] text,
+.mermaid-diagram .mermaid .node[class*="capability"] text,
+.mermaid-diagram .mermaid .node[class*="data"] text,
+.mermaid-diagram .mermaid .node[class*="external"] text {
+  fill: #0b1a33 !important;
+  font-weight: 600;
+}
+
+/* Dark theme vivid fills */
+.theme-dark .mermaid-diagram .mermaid .node[class*="api"] {
+  fill: #0f3a28 !important;
+  stroke: #51d88a !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="process"] {
+  fill: #3a2a0f !important;
+  stroke: #ffb84d !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="agent"] {
+  fill: #102b4c !important;
+  stroke: #4aa3ff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="workflow"] {
+  fill: #3a2300 !important;
+  stroke: #ffa31a !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="capability"] {
+  fill: #3a1122 !important;
+  stroke: #ff5c93 !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="data"] {
+  fill: #10331a !important;
+  stroke: #34c759 !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="external"] {
+  fill: #27103a !important;
+  stroke: #b26bff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .node[class*="api"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="process"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="agent"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="workflow"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="capability"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="data"] text,
+.theme-dark .mermaid-diagram .mermaid .node[class*="external"] text {
+  fill: #ffffff !important;
+  font-weight: 600;
+}
+
+.mermaid-diagram .mermaid .node[class*="net"] text {
+  fill: #212529 !important;
+  font-weight: 500;
 }
 
 .theme-dark .mermaid-diagram .mermaid {
