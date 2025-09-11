@@ -119,15 +119,27 @@
       },
       "skills": [
         { "name": "JavaScript", "level": "shade1" },
+        { "name": "TypeScript", "level": "shade2" },
         { "name": "Vue.js 2 3", "level": "shade2" },
         { "name": "React.js", "level": "shade3" },
+        { "name": "React Hooks", "level": "shade3" },
+        { "name": "React Context", "level": "shade4" },
         { "name": "jQuery", "level": "shade1" },
         { "name": "AJAX", "level": "shade1" },
+        { "name": "Axios", "level": "shade3" },
+        { "name": "Bootstrap", "level": "shade2" },
+        { "name": "SweetAlert2", "level": "shade4" },
+        { "name": "HTML2Canvas", "level": "shade4" },
+        { "name": "JSPDF", "level": "shade4" },
         { "name": "Jest", "level": "shade5" },
         { "name": "Astro", "level": "shade2" },
+        { "name": "MDX", "level": "shade3" },
         { "name": "Handlebars", "level": "shade2" },
         { "name": "Thymeleaf", "level": "shade2" },
-        { "name": "CKEditor 5", "level": "shade2" }
+        { "name": "CKEditor 5", "level": "shade2" },
+        { "name": "Webpack", "level": "shade2" },
+        { "name": "Bundle", "level": "shade3" },
+        { "name": "D3", "level": "shade3" }
       ]
     },
     {
