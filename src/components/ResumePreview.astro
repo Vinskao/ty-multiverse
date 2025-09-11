@@ -29,6 +29,8 @@
       clone.querySelector('#preview-pdf-btn')?.remove();
       clone.querySelectorAll('.work-photo').forEach(el => el.remove());
       clone.querySelectorAll('.title, .tagline').forEach(el => el.remove());
+      // Remove Career Briefing section in preview
+      clone.querySelectorAll('.briefing-section').forEach(el => el.remove());
 
       // Smart page break logic - only break if section has substantial content
       const allSecs = Array.from(clone.querySelectorAll('section'));

@@ -1947,3 +1947,61 @@ section:nth-child(3) {
     max-width: none !important;
   }
 }
+
+/* Force visible borders for Mermaid shapes in light/dark modes */
+/* Light mode: use black borders on nodes/clusters (avoid white) */
+.mermaid-diagram .mermaid .node rect,
+.mermaid-diagram .mermaid .node circle,
+.mermaid-diagram .mermaid .node ellipse,
+.mermaid-diagram .mermaid .node polygon,
+.mermaid-diagram .mermaid .cluster rect {
+  stroke: #000000 !important;
+  stroke-width: 2px !important;
+}
+
+/* Dark mode: use white borders on nodes/clusters (avoid black) */
+.theme-dark .mermaid-diagram .mermaid .node rect,
+.theme-dark .mermaid-diagram .mermaid .node circle,
+.theme-dark .mermaid-diagram .mermaid .node ellipse,
+.theme-dark .mermaid-diagram .mermaid .node polygon,
+.theme-dark .mermaid-diagram .mermaid .cluster rect {
+  stroke: #ffffff !important;
+  stroke-width: 2px !important;
+}
+
+/* Dark mode: ensure connectors/arrows are white */
+.theme-dark .mermaid-diagram .mermaid .edgePath path,
+.theme-dark .mermaid-diagram .mermaid .flowchart-link {
+  stroke: #ffffff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .marker path,
+.theme-dark .mermaid-diagram .mermaid .marker {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Light mode: ensure high-contrast text and lines for Mermaid */
+.mermaid-diagram .mermaid text {
+  fill: #0b1a33 !important;
+  font-weight: 600;
+}
+.mermaid-diagram .mermaid .edgeLabel {
+  color: #0b1a33 !important;
+  font-weight: 600;
+}
+/* Sequence diagram lines in light mode */
+.mermaid-diagram .mermaid .messageLine0,
+.mermaid-diagram .mermaid .messageLine1,
+.mermaid-diagram .mermaid .loopLine {
+  stroke: #2e3a59 !important;
+  stroke-width: 2px !important;
+}
+/* Sequence diagram actors in light mode */
+.mermaid-diagram .mermaid .actor rect {
+  stroke: #000000 !important;
+  stroke-width: 2px !important;
+}
+.mermaid-diagram .mermaid .actor text {
+  fill: #0b1a33 !important;
+  font-weight: 600;
+}
