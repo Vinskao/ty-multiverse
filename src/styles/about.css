@@ -1446,6 +1446,18 @@ section:nth-child(3) {
   fill: #ffffff !important;
 }
 
+/* Dark mode: ensure class diagram boxes and activation bars are dark */
+.theme-dark .mermaid-diagram .mermaid .classGroup rect {
+  fill: #333333 !important;
+  stroke: #ffffff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .activation0,
+.theme-dark .mermaid-diagram .mermaid .activation1,
+.theme-dark .mermaid-diagram .mermaid .activation2 {
+  fill: #333333 !important;
+  stroke: #ffffff !important;
+}
+
 /* Fix Platforms diagram node visibility */
 .theme-dark .mermaid-diagram .mermaid .node[class*="net"] {
   fill: #4a4a4a !important;
@@ -2120,4 +2132,22 @@ section:nth-child(3) {
 .mermaid-diagram .mermaid .actor text {
   fill: #0b1a33 !important;
   font-weight: 600;
+}
+
+/* Light mode: ensure ALL node/blocks have light backgrounds */
+.mermaid-diagram .mermaid .node rect,
+.mermaid-diagram .mermaid .node circle,
+.mermaid-diagram .mermaid .node ellipse,
+.mermaid-diagram .mermaid .node polygon {
+  fill: #ffffff !important;
+}
+.mermaid-diagram .mermaid .classGroup rect {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
+}
+.mermaid-diagram .mermaid .activation0,
+.mermaid-diagram .mermaid .activation1,
+.mermaid-diagram .mermaid .activation2 {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
 }
