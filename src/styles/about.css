@@ -1366,6 +1366,86 @@ section:nth-child(3) {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Universal dark theme rules for ALL Mermaid elements */
+.theme-dark .mermaid-diagram .mermaid * {
+  color: #ffffff !important;
+}
+
+/* All nodes in dark theme */
+.theme-dark .mermaid-diagram .mermaid .node rect,
+.theme-dark .mermaid-diagram .mermaid .node circle,
+.theme-dark .mermaid-diagram .mermaid .node ellipse,
+.theme-dark .mermaid-diagram .mermaid .node polygon,
+.theme-dark .mermaid-diagram .mermaid .cluster rect,
+.theme-dark .mermaid-diagram .mermaid .actor rect {
+  fill: #333333 !important;
+  stroke: #ffffff !important;
+  stroke-width: 2px !important;
+}
+
+/* All text in dark theme */
+.theme-dark .mermaid-diagram .mermaid text,
+.theme-dark .mermaid-diagram .mermaid .messageText,
+.theme-dark .mermaid-diagram .mermaid .actor text,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* All lines and paths in dark theme */
+.theme-dark .mermaid-diagram .mermaid .edgePath path,
+.theme-dark .mermaid-diagram .mermaid .flowchart-link,
+.theme-dark .mermaid-diagram .mermaid .messageLine0,
+.theme-dark .mermaid-diagram .mermaid .messageLine1,
+.theme-dark .mermaid-diagram .mermaid .loopLine,
+.theme-dark .mermaid-diagram .mermaid .activation0,
+.theme-dark .mermaid-diagram .mermaid .activation1,
+.theme-dark .mermaid-diagram .mermaid .activation2 {
+  stroke: #ffffff !important;
+  stroke-width: 2px !important;
+}
+
+/* All markers and arrows in dark theme */
+.theme-dark .mermaid-diagram .mermaid .marker path,
+.theme-dark .mermaid-diagram .mermaid .marker,
+.theme-dark .mermaid-diagram .mermaid .arrowMarkerPath {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Dark mode: edge labels (Yes/No, People found, SSH 22, SSH Proxy, kubectl 6443) */
+.theme-dark .mermaid-diagram .mermaid .edgeLabel rect,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel .label rect,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel .labelBox {
+  fill: #333333 !important;
+  stroke: #ffffff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .edgeLabel,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel text,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel span,
+.theme-dark .mermaid-diagram .mermaid .edgeLabel div {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Ensure ALL strokes are light in dark mode */
+.theme-dark .mermaid-diagram .mermaid path,
+.theme-dark .mermaid-diagram .mermaid line,
+.theme-dark .mermaid-diagram .mermaid polyline {
+  stroke: #ffffff !important;
+}
+
+/* Sequence diagram notes in dark mode */
+.theme-dark .mermaid-diagram .mermaid .note rect {
+  fill: #333333 !important;
+  stroke: #ffffff !important;
+}
+.theme-dark .mermaid-diagram .mermaid .note text {
+  fill: #ffffff !important;
+}
+
 /* Fix Platforms diagram node visibility */
 .theme-dark .mermaid-diagram .mermaid .node[class*="net"] {
   fill: #4a4a4a !important;
@@ -1430,13 +1510,13 @@ section:nth-child(3) {
 
 /* Ensure edges and arrow markers remain visible */
 .mermaid-diagram .mermaid .edgePath path {
-  stroke: #2e3a59 !important;
+  stroke: #000000 !important;
   stroke-width: 2px !important;
 }
 .mermaid-diagram .mermaid .marker path,
 .mermaid-diagram .mermaid .marker {
-  fill: #2e3a59 !important;
-  stroke: #2e3a59 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
 }
 
 .theme-dark .mermaid-diagram .mermaid .edgePath path {
@@ -1985,16 +2065,52 @@ section:nth-child(3) {
   fill: #0b1a33 !important;
   font-weight: 600;
 }
+.mermaid-diagram .mermaid .cluster rect {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
+}
+.mermaid-diagram .mermaid .note rect {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
+}
+.mermaid-diagram .mermaid .note text {
+  fill: #0b1a33 !important;
+}
+.mermaid-diagram .mermaid .actor rect {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
+}
+.mermaid-diagram .mermaid .actor text {
+  fill: #0b1a33 !important;
+}
+.mermaid-diagram .mermaid path,
+.mermaid-diagram .mermaid line,
+.mermaid-diagram .mermaid polyline {
+  stroke: #000000 !important;
+}
 .mermaid-diagram .mermaid .edgeLabel {
   color: #0b1a33 !important;
   font-weight: 600;
+}
+/* Light mode: edge label backgrounds */
+.mermaid-diagram .mermaid .edgeLabel rect,
+.mermaid-diagram .mermaid .edgeLabel .label rect,
+.mermaid-diagram .mermaid .edgeLabel .labelBox {
+  fill: #ffffff !important;
+  stroke: #000000 !important;
 }
 /* Sequence diagram lines in light mode */
 .mermaid-diagram .mermaid .messageLine0,
 .mermaid-diagram .mermaid .messageLine1,
 .mermaid-diagram .mermaid .loopLine {
-  stroke: #2e3a59 !important;
+  stroke: #000000 !important;
   stroke-width: 2px !important;
+}
+
+/* Flowchart connector lines in light mode */
+.mermaid-diagram .mermaid .flowchart-link {
+  stroke: #000000 !important;
+  stroke-width: 2px;
 }
 /* Sequence diagram actors in light mode */
 .mermaid-diagram .mermaid .actor rect {

@@ -1028,30 +1028,65 @@ function parseProject(project: string, lang: LangKey): {
               background: '#2a2a2a',
               primaryColor: '#00d4ff',
               primaryTextColor: '#ffffff',
-              primaryBorderColor: '#00d4ff',
-              lineColor: '#cccccc',
+              primaryBorderColor: '#ffffff',
+              lineColor: '#ffffff',
               secondaryColor: '#ff6b6b',
               tertiaryColor: '#4ecdc4',
               textColor: '#ffffff',
               mainBkg: '#333333',
               secondBkg: '#444444',
-              border1: '#666666',
-              border2: '#888888'
+              border1: '#ffffff',
+              border2: '#ffffff',
+              // Sequence diagram specific
+              actorBkg: '#333333',
+              actorTextColor: '#ffffff',
+              actorLineColor: '#ffffff',
+              signalColor: '#ffffff',
+              signalTextColor: '#ffffff',
+              // Class diagram specific
+              classText: '#ffffff',
+              // Flowchart specific
+              edgeLabelBackground: '#333333',
+              clusterBkg: '#333333',
+              clusterBorder: '#ffffff',
+              defaultLinkColor: '#ffffff',
+              titleColor: '#ffffff',
+              nodeTextColor: '#ffffff'
             } : {
               background: '#ffffff',
               primaryColor: '#1f5bff',
               primaryTextColor: '#0b1a33',
-              primaryBorderColor: '#1f5bff',
-              lineColor: '#2e3a59',
+              primaryBorderColor: '#000000',
+              lineColor: '#000000',
               secondaryColor: '#ff3b30',
               tertiaryColor: '#00b894',
               textColor: '#0b1a33',
               mainBkg: '#f7f9fc',
               secondBkg: '#eef3fb',
-              border1: '#cfd8ea',
-              border2: '#b7c4df'
+              border1: '#000000',
+              border2: '#000000',
+              // Sequence diagram specific
+              actorBkg: '#f7f9fc',
+              actorTextColor: '#0b1a33',
+              actorLineColor: '#000000',
+              signalColor: '#000000',
+              signalTextColor: '#0b1a33',
+              // Class diagram specific
+              classText: '#0b1a33',
+              // Flowchart specific
+              edgeLabelBackground: '#ffffff',
+              clusterBkg: '#f7f9fc',
+              clusterBorder: '#000000',
+              defaultLinkColor: '#000000',
+              titleColor: '#0b1a33',
+              nodeTextColor: '#0b1a33'
             }
           });
+          
+          // Force re-render all diagrams after theme change
+          setTimeout(() => {
+            mermaidLib.init();
+          }, 100);
         }
 
         // 監聽主題變化，重新初始化 Mermaid
@@ -1067,32 +1102,64 @@ function parseProject(project: string, lang: LangKey): {
                     background: '#2a2a2a',
                     primaryColor: '#00d4ff',
                     primaryTextColor: '#ffffff',
-                    primaryBorderColor: '#00d4ff',
-                    lineColor: '#cccccc',
+                    primaryBorderColor: '#ffffff',
+                    lineColor: '#ffffff',
                     secondaryColor: '#ff6b6b',
                     tertiaryColor: '#4ecdc4',
                     textColor: '#ffffff',
                     mainBkg: '#333333',
                     secondBkg: '#444444',
-                    border1: '#666666',
-                    border2: '#888888'
+                    border1: '#ffffff',
+                    border2: '#ffffff',
+                    // Sequence diagram specific
+                    actorBkg: '#333333',
+                    actorTextColor: '#ffffff',
+                    actorLineColor: '#ffffff',
+                    signalColor: '#ffffff',
+                    signalTextColor: '#ffffff',
+                    // Class diagram specific
+                    classText: '#ffffff',
+                    // Flowchart specific
+                    edgeLabelBackground: '#333333',
+                    clusterBkg: '#333333',
+                    clusterBorder: '#ffffff',
+                    defaultLinkColor: '#ffffff',
+                    titleColor: '#ffffff',
+                    nodeTextColor: '#ffffff'
                   } : {
                     background: '#ffffff',
                     primaryColor: '#1f5bff',
                     primaryTextColor: '#0b1a33',
-                    primaryBorderColor: '#1f5bff',
-                    lineColor: '#2e3a59',
+                    primaryBorderColor: '#000000',
+                    lineColor: '#000000',
                     secondaryColor: '#ff3b30',
                     tertiaryColor: '#00b894',
                     textColor: '#0b1a33',
                     mainBkg: '#f7f9fc',
                     secondBkg: '#eef3fb',
-                    border1: '#cfd8ea',
-                    border2: '#b7c4df'
+                    border1: '#000000',
+                    border2: '#000000',
+                    // Sequence diagram specific
+                    actorBkg: '#f7f9fc',
+                    actorTextColor: '#0b1a33',
+                    actorLineColor: '#000000',
+                    signalColor: '#000000',
+                    signalTextColor: '#0b1a33',
+                    // Class diagram specific
+                    classText: '#0b1a33',
+                    // Flowchart specific
+                    edgeLabelBackground: '#ffffff',
+                    clusterBkg: '#f7f9fc',
+                    clusterBorder: '#000000',
+                    defaultLinkColor: '#000000',
+                    titleColor: '#0b1a33',
+                    nodeTextColor: '#0b1a33'
                   }
                 });
                 // 重新渲染所有圖表
-                mermaidLib.init();
+                setTimeout(() => {
+                  mermaidLib.init();
+                }, 100);
               }
             }
           });
