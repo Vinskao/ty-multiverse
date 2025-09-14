@@ -177,13 +177,19 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 
 	.content {
 		width: 100%;            /* Responsive, takes full width of container */
-		max-width: 75ch;        /* Controls the maximum content width */
+		max-width: 83rem;       /* Match wrapper max-width for consistent width */
 		margin: 0 auto;         /* Centers the content horizontally */
 		line-height: 1.7;
 		font-size: var(--text-md);
 		color: var(--gray-200);
 		padding: 0 1rem;        /* Adds horizontal padding like the image */
 		box-sizing: border-box; /* Ensures padding is included in width calculation */
+		/* 防止內容在極端放大時超出容器 */
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		min-width: 0;
+		hyphens: auto;
+		overflow: hidden; /* 防止內容超出容器 */
 	}
 
 	.content > :global(* + *) {
@@ -256,6 +262,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		height: auto;
 		margin: 2rem auto;
 		display: block;
+		object-fit: contain;
 	}
 
 	.content :global(img):hover {
@@ -294,6 +301,8 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 	.content :global(ol) {
 		margin: 1.5rem 0;
 		padding-left: 2rem;
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.content :global(li) {
@@ -334,7 +343,9 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 		font-size: 0.9em;
 		border: 1px solid var(--gray-700);
-
+		white-space: normal;
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.content :global(pre) {
@@ -344,6 +355,9 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		padding: 1.5rem;
 		margin: 2rem 0;
 		overflow-x: auto;
+		max-width: 100%;
+		word-wrap: break-word;
+		white-space: pre-wrap; /* 可換行，避免超出容器 */
 		box-shadow: var(--shadow-md);
 		position: relative;
 
@@ -358,7 +372,9 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		color: var(--gray-200);
 		font-size: 0.95em;
 		line-height: 1.5;
-
+		word-break: break-word;
+		overflow-wrap: anywhere;
+		white-space: pre-wrap;
 	}
 
 	.content :global(table) {
@@ -369,6 +385,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		border-radius: 0.75rem;
 		overflow: hidden;
 		box-shadow: var(--shadow-sm);
+		table-layout: fixed;
 	}
 
 	.content :global(th) {
@@ -378,12 +395,16 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		text-align: left;
 		font-weight: 600;
 		border-bottom: 2px solid var(--accent-dark);
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.content :global(td) {
 		padding: 1rem;
 		border-bottom: 1px solid var(--gray-800);
 		color: var(--gray-200);
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.content :global(tr:hover) {
@@ -397,6 +418,57 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		transition: text-decoration-color var(--theme-transition);
 		color: var(--accent-regular);
 		font-weight: 500;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+	}
+
+	/* 全域覆蓋規則 - 確保文章內容不會破版 */
+	.content :global(*) {
+		box-sizing: border-box;
+		min-width: 0; /* 防止 flex 子項不縮小 */
+		max-width: 100%; /* 防止內容超出容器 */
+		word-break: break-word;
+		overflow-wrap: anywhere;
+		white-space: normal;
+	}
+
+	.content :global(img) {
+		max-width: 100% !important;
+		height: auto !important;
+		object-fit: contain;
+		display: block;
+		margin: 2rem auto;
+		border-radius: 1.5rem;
+	}
+
+	.content :global(table) {
+		width: 100% !important;
+		table-layout: fixed !important;
+		word-break: break-word !important;
+		overflow-wrap: anywhere !important;
+	}
+
+	/* 表格內部也全面限制寬度與換行，避免撐破容器 */
+	.content :global(table thead),
+	.content :global(table tbody),
+	.content :global(table tr),
+	.content :global(table th),
+	.content :global(table td) {
+		max-width: 100%;
+		word-break: break-word;
+		overflow-wrap: anywhere;
+		white-space: normal;
+	}
+
+	/* 內嵌媒體與外嵌內容防溢出 */
+	.content :global(iframe),
+	.content :global(embed),
+	.content :global(video),
+	.content :global(svg) {
+		max-width: 100%;
+		width: 100%;
+		height: auto;
+		display: block;
 	}
 
 	.back-link:hover,
@@ -464,7 +536,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-lg);
 			line-height: 1.8;
-			max-width: 90ch;
+			max-width: min(83rem, 95vw); /* 限制為視窗寬度 95% 內 */
 			margin: 0 auto;
 			padding: 0 3rem;        /* More generous padding on ultra-wide screens */
 		}
@@ -494,11 +566,11 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 			padding: 3rem 4rem;
 		}
 
-		/* 超寬螢幕使用兩欄佈局 */
+		/* 超寬螢幕：維持單欄佈局避免放大時破版 */
 		.content {
-			column-count: 2;
-			column-gap: 4rem;
-			column-rule: 1px solid var(--gray-800);
+			column-count: 1;
+			column-gap: 0;
+			column-rule: none;
 		}
 
 		/* 防止標題跨欄 */
@@ -535,7 +607,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-lg);
 			line-height: 1.8;
-			max-width: 85ch;
+			max-width: min(83rem, 95vw);
 			padding: 0 2rem;        /* More padding on larger screens */
 		}
 
@@ -570,7 +642,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-md);
 			line-height: 1.7;
-			max-width: 75ch;
+			max-width: min(83rem, 98vw);
 			padding: 0 1.5rem;        /* Balanced padding for medium tablets */
 		}
 
@@ -605,7 +677,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-base);
 			line-height: 1.6;
-			max-width: 70ch;
+			max-width: 98vw;
 			padding: 0 1rem;        /* Reduced padding for smaller tablets */
 		}
 
@@ -640,7 +712,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-base);
 			line-height: 1.6;
-			max-width: 65ch;
+			max-width: 98vw;
 			padding: 0 1rem;        /* Standard padding for large phones */
 			word-wrap: break-word;
 			overflow-wrap: break-word;
@@ -704,7 +776,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-sm);
 			line-height: 1.6;
-			max-width: 100%;
+			max-width: 98vw;
 			padding: 0 0.75rem;        /* Slightly reduced padding for small phones */
 			word-wrap: break-word;
 			overflow-wrap: break-word;
@@ -848,6 +920,8 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 			overflow-x: auto;
 			word-wrap: break-word;
 			overflow-wrap: break-word;
+			max-width: 100%;
+			box-sizing: border-box;
 		}
 
 		/* 優化連結在觸控設備上的點擊區域 */
