@@ -10,6 +10,7 @@ tags:
   - Reactive Programming
   - Message Queue
   - JPA
+  - R2DBC
   - Java
 ---
 
@@ -240,3 +241,55 @@ public Mono<Void> processComplexMessage(ComplexMessage message) {
 ```
 
 這個架構既保持了系統的穩定性，又能在需要的地方發揮 WebFlux 的優勢，是現代化改造的理想選擇。
+
+## 九、R2DBC（Reactive Relational Database Connectivity）補充
+
+### 1) 背景
+
+傳統 JDBC 為阻塞式（blocking I/O）：
+- 呼叫 `jdbcTemplate.query(...)` 之後，執行緒會阻塞直到資料庫回應。
+- 在 WebFlux 這種 non-blocking/reactive 架構中，阻塞的 JDBC 會讓執行緒池被卡住，抵消 reactive 的優勢。
+
+為了在反應式環境下存取關聯式資料庫，Spring 生態系提供了 R2DBC（Reactive Relational Database Connectivity）。
+
+### 2) R2DBC 的特性
+
+- 非阻塞 I/O：以 Netty 或非同步驅動與資料庫互動。
+- Publisher-based API：回傳 `Flux<T>` 或 `Mono<T>`，可與 WebFlux pipeline 無縫整合。
+- 支援多種關聯式資料庫：PostgreSQL、MySQL、SQL Server 等皆有 R2DBC driver。
+- 與 JDBC API 不相容：並非換 JAR 即可使用，API 與用法完全不同。
+
+### 3) R2DBC vs JDBC 對比
+
+| 特性 | JDBC | R2DBC |
+|------|------|-------|
+| 執行模型 | Blocking I/O | Non-blocking I/O |
+| API | ResultSet / Statement | Reactive Streams（Flux/Mono）|
+| 適用場景 | 傳統 Servlet、Thread-per-request | WebFlux、Netty-based reactive app |
+| 資源利用 | 一個查詢占用一個 Thread | 少量 Thread 處理大量請求 |
+
+### 4) 範例比較
+
+JDBC（阻塞）
+```java
+List<User> users = jdbcTemplate.query("SELECT * FROM users", userRowMapper);
+```
+
+R2DBC（非阻塞）
+```java
+Flux<User> users = databaseClient.sql("SELECT * FROM users")
+    .map(row -> new User(row.get("id", Long.class), row.get("name", String.class)))
+    .all();
+```
+
+上述 `users` 是 Publisher，需在 reactive 流程中 `subscribe()` 或經由 WebFlux 回傳給客戶端才會觸發查詢。
+
+### 5) 適用情境與本文架構融合
+
+- 專案為 WebFlux + Reactive Stack（高併發 I/O 密集）→ 強烈建議使用 R2DBC，避免 JDBC 阻塞成為瓶頸。
+- 專案為傳統 Spring MVC + Thread-per-request → 繼續使用 JDBC，沒有必要強改。
+- 只是在 Producer 端加入 MQ 或採用 Virtual Threads → JDBC 仍可用；VT 能降低阻塞成本。
+
+與本文的「Producer（MVC/VT）→ MQ → Consumer（WebFlux）→ JPA」架構對齊：
+- 短中期：Consumer 端先以 `Mono.fromCallable(...)`/`Schedulers.boundedElastic()` 包裝 JPA，逐步導入 reactive 型別與流程。
+- 長期：若 Consumer 對 DB I/O 依賴重且併發壓力高，再將 Consumer 的持久層由 JPA 過渡到 R2DBC，讓整條消費鏈路真正 non-blocking。
