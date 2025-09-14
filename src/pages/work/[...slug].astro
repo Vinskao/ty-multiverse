@@ -352,16 +352,81 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		background: linear-gradient(135deg, var(--gray-900), var(--gray-800));
 		border: 1px solid var(--gray-700);
 		border-radius: 0.75rem;
-		padding: 1.5rem;
+		padding: 2.5rem 1.5rem 1.5rem 1.5rem; /* 增加頂部空間，避免工具欄遮擋程式碼 */
 		margin: 2rem 0;
 		overflow-x: auto;
 		max-width: 100%;
-		word-wrap: break-word;
-		white-space: pre-wrap; /* 可換行，避免超出容器 */
+		white-space: pre; /* 預設保留縮排與不換行 */
 		box-shadow: var(--shadow-md);
 		position: relative;
-
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'SFMono-Regular', 'Consolas', monospace;
+		font-size: 0.875em;
+		line-height: 1.5;
 	}
+
+	/* 讓 pre 內所有節點都繼承 white-space，避免被全域規則覆蓋而吃掉前導空格 */
+	.content :global(pre * ) {
+		white-space: inherit !important;
+		font-family: inherit;
+		tab-size: inherit;
+		-moz-tab-size: inherit;
+		-o-tab-size: inherit;
+	}
+
+	/* 語言徽章 */
+	.content :global(pre[data-lang]::before) {
+		content: attr(data-lang);
+		position: absolute;
+		top: 0.5rem;
+		left: 0.75rem;
+		padding: 0.1rem 0.5rem;
+		font-size: 0.75rem;
+		letter-spacing: 0.03em;
+		background: var(--gray-800);
+		border: 1px solid var(--gray-700);
+		border-radius: 0.5rem;
+		color: var(--gray-300);
+		text-transform: uppercase;
+		pointer-events: none;
+	}
+
+	/* 代碼區工具列（複製） */
+	.content :global(pre .code-actions) {
+		position: absolute;
+		top: 0.75rem; /* 向下移動一點，避免與語言徽章重疊 */
+		right: 0.75rem;
+		display: flex;
+		gap: 0.25rem; /* 減少按鈕間距 */
+		flex-wrap: wrap; /* 允許換行 */
+		max-width: calc(100% - 1.5rem); /* 限制最大寬度 */
+	}
+
+	.content :global(pre .code-actions .code-btn) {
+		appearance: none;
+		border: 1px solid var(--gray-700);
+		background: var(--gray-800);
+		color: var(--gray-200);
+		font-size: 0.7rem; /* 稍微減小字體 */
+		line-height: 1;
+		padding: 0.25rem 0.4rem; /* 減少內邊距 */
+		border-radius: 0.3rem;
+		cursor: pointer;
+		transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+		font-family: inherit; /* 保持一致的字體 */
+		min-width: auto; /* 不設定最小寬度 */
+	}
+
+	.content :global(pre .code-actions .code-btn:hover) {
+		background: var(--gray-750, #2b2b2b);
+		border-color: var(--gray-600);
+		color: var(--gray-100);
+	}
+
+	/* 複製完成提示效果 */
+	.content :global(pre.copy-done) {
+		box-shadow: 0 0 0 2px var(--accent-light) inset, var(--shadow-md);
+	}
+
 
 
 
@@ -370,11 +435,14 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		border: none;
 		padding: 0;
 		color: var(--gray-200);
-		font-size: 0.95em;
-		line-height: 1.5;
-		word-break: break-word;
-		overflow-wrap: anywhere;
-		white-space: pre-wrap;
+		font-family: inherit; /* 繼承 pre 的等寬字體 */
+		font-size: inherit;   /* 繼承 pre 的字體大小 */
+		line-height: inherit; /* 繼承行高 */
+		white-space: inherit; /* 關鍵：與 pre 保持一致，保留前導空格 */
+		display: block; /* 確保代碼區塊正確顯示 */
+		tab-size: 4; /* 設定 Tab 寬度為 4 個空格 */
+		-moz-tab-size: 4;
+		-o-tab-size: 4;
 	}
 
 	.content :global(table) {
@@ -538,7 +606,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 			line-height: 1.8;
 			max-width: min(83rem, 95vw); /* 限制為視窗寬度 95% 內 */
 			margin: 0 auto;
-			padding: 0 3rem;        /* More generous padding on ultra-wide screens */
+			padding: 0 2rem;        /* 收斂左右留白，強化代碼區可視範圍 */
 		}
 
 		.content :global(h1) {
@@ -946,3 +1014,86 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		}
 	}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+	const pres = document.querySelectorAll('.content pre');
+	pres.forEach(pre => {
+		// 推斷語言：從子 code 的 class，例如 language-java / lang-java
+		const codeEl = pre.querySelector('code');
+		if (codeEl) {
+			const cls = (codeEl as HTMLElement).className || '';
+			const langMatch = cls.match(/(?:language|lang)-([a-z0-9+#]+)/i);
+			if (langMatch) {
+				let lang = langMatch[1];
+				// 語言名稱映射，顯示更友好的名稱
+				const langMap: Record<string, string> = {
+					'js': 'JavaScript',
+					'ts': 'TypeScript',
+					'jsx': 'React',
+					'tsx': 'React+TS',
+					'py': 'Python',
+					'java': 'Java',
+					'cpp': 'C++',
+					'c': 'C',
+					'cs': 'C#',
+					'php': 'PHP',
+					'ruby': 'Ruby',
+					'go': 'Go',
+					'rust': 'Rust',
+					'sql': 'SQL',
+					'html': 'HTML',
+					'css': 'CSS',
+					'scss': 'SCSS',
+					'less': 'Less',
+					'json': 'JSON',
+					'xml': 'XML',
+					'yaml': 'YAML',
+					'yml': 'YAML',
+					'sh': 'Shell',
+					'bash': 'Bash',
+					'powershell': 'PowerShell'
+				};
+				lang = langMap[lang] || lang;
+				pre.setAttribute('data-lang', lang);
+			}
+		}
+
+		// 建立工具列
+		const actions = document.createElement('div');
+		actions.className = 'code-actions';
+
+		const copyBtn = document.createElement('button');
+		copyBtn.className = 'code-btn';
+		copyBtn.type = 'button';
+		copyBtn.textContent = 'Copy';
+
+		actions.appendChild(copyBtn);
+		pre.appendChild(actions);
+
+		copyBtn.addEventListener('click', async () => {
+			let text = '';
+			if (codeEl) {
+				// 保留原始的縮排和換行
+				text = codeEl.textContent || '';
+			} else {
+				// 如果沒有 code 標籤，直接從 pre 獲取
+				text = pre.textContent || '';
+			}
+
+			// 移除前後空白，但保留內部縮排
+			text = text.trim();
+
+			try {
+				await navigator.clipboard.writeText(text);
+				pre.classList.add('copy-done');
+				copyBtn.textContent = 'Copied';
+				setTimeout(() => { pre.classList.remove('copy-done'); copyBtn.textContent = 'Copy'; }, 1200);
+			} catch (err) {
+				console.warn('複製失敗:', err);
+			}
+		});
+
+	});
+});
+</script>
