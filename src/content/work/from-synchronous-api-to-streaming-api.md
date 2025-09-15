@@ -19,7 +19,7 @@ tags:
 
 這篇文章會帶你從 同步 API（一次回傳整包結果），走到 串流 API（邊處理邊回傳），並逐步拆解原理、架構、程式碼和最佳實踐。即使你是第一次聽到 Streaming API，也能跟著理解並想像它的應用場景。
 
-## 🌏 生活比喻：同步 vs 串流
+## 生活比喻：同步 vs 串流
 
 **同步 API**：像去餐廳點菜，要等主廚把整道菜做好後才端上來。
 
@@ -47,7 +47,7 @@ tags:
 - 可以隨時中斷 / 切換請求
 - 特別適合聊天 AI、即時數據、直播彈幕等場景
 
-## 🏗️ 架構轉換大圖
+## 架構轉換大圖
 
 | 元件 | 同步 API | Streaming API |
 |------|----------|---------------|
@@ -56,7 +56,7 @@ tags:
 | 資料庫 | 儲存整段訊息 | 新增 `streaming_messages`，存分段 |
 | 中介層 | Celery 任務排程 | Redis 快取狀態，記錄進度 |
 
-## 📦 核心資料設計
+## 核心資料設計
 
 ### Redis：管理會話狀態
 
@@ -111,7 +111,7 @@ ORDER BY chunk_sequence;
 2. Server → 生成完整結果
 3. User → 一次收到 JSON
 
-👉 **體驗**：長時間空白，突然跳出結果
+體驗：長時間空白，突然跳出結果
 
 ### Streaming 模式
 
@@ -121,9 +121,9 @@ ORDER BY chunk_sequence;
 4. Server → 傳送 `complete`
 5. User → 即時看到逐字輸出
 
-👉 **體驗**：像聊天一樣自然
+體驗：像聊天一樣自然
 
-## 🔄 正確實作流程
+## 正確實作流程
 
 ### 訊息傳輸流程
 
@@ -161,7 +161,7 @@ async def send_chunk(websocket, chunk):
 ws.send(chunk)  # 本身就是非阻塞
 ```
 
-## 🚀 實作路徑（簡化版）
+## 實作路徑（簡化版）
 
 ### 前端
 - 建立 WebSocket 連線
@@ -180,7 +180,7 @@ ws.send(chunk)  # 本身就是非阻塞
 - 使用 daphne 或 uvicorn 啟動 ASGI
 - Redis + PostgreSQL 配合 Channels
 
-## 📋 核心實作項目
+## 核心實作項目
 
 | 層級 | 項目 | 說明 |
 |------|------|------|
@@ -258,7 +258,7 @@ async def replay_message(session_id: str):
 | **部署** | ASGI 服務器 | 支援 WebSocket 協議 |
 
 
-## 🚀 部署和測試
+## 部署和測試
 
 ### 1. 資料庫遷移
 ```bash
