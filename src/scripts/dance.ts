@@ -141,39 +141,39 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 創建影片元素
   function createVideoElement(character: string, video: {src: string, title: string}, index: number, isMain: boolean = false) {
-    const item = document.createElement('div');
-    item.className = 'video-item';
+        const item = document.createElement('div');
+        item.className = 'video-item';
     item.setAttribute('data-character', character);
 
-    const container = document.createElement('div');
-    container.className = 'video-container';
+        const container = document.createElement('div');
+        container.className = 'video-container';
 
-    const videoElement = document.createElement('video');
+        const videoElement = document.createElement('video');
     videoElement.id = `video-${character}-${index}`;
     videoElement.className = `dance-video ${isMain ? 'active' : 'always-visible'}`;
-    videoElement.muted = true;
+        videoElement.muted = true;
     videoElement.preload = isMain || index <= 1 ? 'auto' : 'metadata';
-    videoElement.playsInline = true;
+        videoElement.playsInline = true;
     videoElement.setAttribute('data-character', character);
     videoElement.setAttribute('data-video-index', index.toString());
-    (videoElement as any).dataset.visible = 'false';
+        (videoElement as any).dataset.visible = 'false';
     if (!isMain) (videoElement as any).dataset.standalone = 'true';
 
-    const source = document.createElement('source');
-    source.src = video.src;
-    source.type = 'video/mp4';
-    videoElement.appendChild(source);
-    container.appendChild(videoElement);
+        const source = document.createElement('source');
+        source.src = video.src;
+        source.type = 'video/mp4';
+        videoElement.appendChild(source);
+        container.appendChild(videoElement);
 
-    const overlay = document.createElement('div');
-    overlay.className = 'video-overlay';
-    const title = document.createElement('div');
-    title.className = 'video-title';
+        const overlay = document.createElement('div');
+        overlay.className = 'video-overlay';
+        const title = document.createElement('div');
+        title.className = 'video-title';
     title.textContent = video.title;
-    overlay.appendChild(title);
-    container.appendChild(overlay);
+        overlay.appendChild(title);
+        container.appendChild(overlay);
 
-    item.appendChild(container);
+        item.appendChild(container);
     return item;
   }
 
@@ -238,16 +238,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     const loadingStatus = document.getElementById('loading-status');
     if (!loadingStatus) return;
 
-    const text = loadingStatus.querySelector('span');
+      const text = loadingStatus.querySelector('span');
     if (text) text.textContent = message;
 
-    loadingStatus.classList.remove('loading-complete', 'loading-error', 'hidden');
+      loadingStatus.classList.remove('loading-complete', 'loading-error', 'hidden');
 
-    if (status === 'complete') {
-      loadingStatus.classList.add('loading-complete');
+      if (status === 'complete') {
+        loadingStatus.classList.add('loading-complete');
       setTimeout(() => loadingStatus.classList.add('hidden'), 3000);
-    } else if (status === 'error') {
-      loadingStatus.classList.add('loading-error');
+      } else if (status === 'error') {
+        loadingStatus.classList.add('loading-error');
     }
   }
 
@@ -367,16 +367,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (video.dataset.eventsBound === 'true') return;
 
       const character = video.getAttribute('data-character')!;
-      const videoIndex = parseInt(video.getAttribute('data-video-index') || '0');
+    const videoIndex = parseInt(video.getAttribute('data-video-index') || '0');
 
       video.addEventListener('loadstart', () => {
-        videoResourceManager.startLoading(video);
-        video.classList.add('loading');
-      });
+      videoResourceManager.startLoading(video);
+      video.classList.add('loading');
+    });
 
       video.addEventListener('canplay', () => {
-        videoResourceManager.finishLoading(video);
-        video.classList.remove('loading');
+      videoResourceManager.finishLoading(video);
+      video.classList.remove('loading');
 
         if (shouldTryPlay(video, character, videoIndex)) {
           tryPlayVideo(video, character, videoIndex);
@@ -386,21 +386,21 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
 
       video.addEventListener('error', () => {
-        videoResourceManager.finishLoading(video);
-        video.classList.remove('loading');
-        delete video.dataset.playAttempted;
-      });
+      videoResourceManager.finishLoading(video);
+      video.classList.remove('loading');
+      delete video.dataset.playAttempted;
+    });
 
       video.addEventListener('play', () => {
-        video.classList.add('is-playing');
-      });
+      video.classList.add('is-playing');
+    });
 
       video.addEventListener('pause', () => {
-        video.classList.remove('is-playing');
-      });
+      video.classList.remove('is-playing');
+    });
 
       video.addEventListener('ended', () => {
-        delete video.dataset.playAttempted;
+      delete video.dataset.playAttempted;
 
         if (!video.classList.contains('active')) return;
         if (video.dataset.processingEnded) return;
@@ -456,30 +456,30 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   function handleVideoEnded(video: HTMLVideoElement, character: string, videoIndex: number) {
-    const state = characterStates.get(character);
-    if (!state) {
-      delete video.dataset.processingEnded;
-      return;
-    }
+      const state = characterStates.get(character);
+      if (!state) {
+        delete video.dataset.processingEnded;
+        return;
+      }
 
-    if (state.playDirection === 'forward') {
-      state.playDirection = 'backward';
-      state.hasPlayedForward = true;
-      delete video.dataset.processingEnded;
-      manualReversePlayback(video, character);
+        if (state.playDirection === 'forward') {
+          state.playDirection = 'backward';
+          state.hasPlayedForward = true;
+          delete video.dataset.processingEnded;
+          manualReversePlayback(video, character);
     } else {
-      state.playDirection = 'forward';
-      state.hasPlayedBackward = true;
+          state.playDirection = 'forward';
+          state.hasPlayedBackward = true;
 
-      const characterVideos = document.querySelectorAll(`.dance-video[data-character="${character}"]`);
+          const characterVideos = document.querySelectorAll(`.dance-video[data-character="${character}"]`);
       state.currentIndex = (videoIndex + 1) % characterVideos.length;
 
       if (videoIndex === characterVideos.length - 1) {
-        state.hasPlayedForward = false;
-        state.hasPlayedBackward = false;
-      }
+            state.hasPlayedForward = false;
+            state.hasPlayedBackward = false;
+          }
 
-      delete video.dataset.processingEnded;
+          delete video.dataset.processingEnded;
       setTimeout(() => switchToNextVideo(character, video), 10);
     }
   }
@@ -510,7 +510,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const reverseFrame = () => {
       if (!video.classList.contains('active') || !isReversing) {
-        video.dataset.reverseAnimationId = '';
+          video.dataset.reverseAnimationId = '';
         return;
       }
 
@@ -603,9 +603,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
 
       if (nextVideo.readyState >= 3 && !nextVideo.dataset.playAttempted) {
-        nextVideo.dataset.playAttempted = 'true';
+          nextVideo.dataset.playAttempted = 'true';
         nextVideo.play().catch(() => {
-          delete nextVideo.dataset.playAttempted;
+              delete nextVideo.dataset.playAttempted;
           if (nextVideo.readyState < 3) setTimeout(tryPlay, 100);
         });
       } else if (nextVideo.readyState < 3) {
@@ -625,9 +625,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // 預載下一個影片
     const preloadIndex = (nextIndex + 1) % characterVideos.length;
-    const preloadVideo = characterVideos[preloadIndex] as HTMLVideoElement;
+      const preloadVideo = characterVideos[preloadIndex] as HTMLVideoElement;
     if (preloadVideo && preloadVideo.readyState < 2 && videoResourceManager.canLoadVideo()) {
-      preloadVideo.preload = 'metadata';
+          preloadVideo.preload = 'metadata';
     }
   }
 
@@ -639,17 +639,17 @@ document.addEventListener("DOMContentLoaded", async function () {
       const state = characterStates.get(character);
       if (!state) return;
 
-      const currentVideo = characterVideos[state.currentIndex] as HTMLVideoElement;
+        const currentVideo = characterVideos[state.currentIndex] as HTMLVideoElement;
       if (!currentVideo?.classList.contains('active') || currentVideo.dataset.visible !== 'true') return;
 
-      if (currentVideo.paused && !currentVideo.seeking) {
-        const now = Date.now();
+          if (currentVideo.paused && !currentVideo.seeking) {
+            const now = Date.now();
         const lastTime = currentVideo.dataset.lastActiveTime;
         if (!lastTime || now - parseInt(lastTime) > 10000) {
-          switchToNextVideo(character);
-        }
-      } else {
-        currentVideo.dataset.lastActiveTime = Date.now().toString();
+                switchToNextVideo(character);
+            }
+          } else {
+            currentVideo.dataset.lastActiveTime = Date.now().toString();
       }
     }, 5000);
   }
@@ -664,8 +664,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (!viewportObserver) {
       viewportObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          const video = entry.target as HTMLVideoElement;
+      entries.forEach(entry => {
+        const video = entry.target as HTMLVideoElement;
           const isVisible = entry.isIntersecting && entry.intersectionRatio > 0.3;
 
           video.dataset.visible = isVisible ? 'true' : 'false';
@@ -678,9 +678,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             }, 50);
           } else if (!isVisible && !video.paused) {
             try { video.pause(); } catch {}
-          }
-        });
-      }, { threshold: [0, 0.3, 0.6, 1] });
+        }
+      });
+    }, { threshold: [0, 0.3, 0.6, 1] });
     }
 
     videos.forEach(v => {
@@ -697,7 +697,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // 設置事件監聽器
     document.querySelectorAll('.video-item').forEach(item => {
-      const character = item.getAttribute('data-character');
+    const character = item.getAttribute('data-character');
       if (character) setupBackupTimer(character);
     });
 
@@ -735,7 +735,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       try {
         await clearCacheAndReload();
         updateLoadingStatus('complete', '✅ 緩存已清除，所有影片已重新載入');
-      } catch (error) {
+    } catch (error) {
         updateLoadingStatus('error', '❌ 清除緩存時發生錯誤');
       } finally {
         btn.classList.remove('processing');

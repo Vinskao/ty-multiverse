@@ -3,7 +3,7 @@
 
 <div class="pdf-export-section">
   <button id="preview-pdf-btn" class="export-btn">Preview Resume</button>
-  <button id="preview-briefing-btn" class="export-btn outline">Project briefing</button>
+  <button id="preview-briefing-btn" class="export-btn outline">Project Briefing</button>
 </div>
 
 <script type="module">
@@ -13,6 +13,11 @@
   function openPreview(mode) {
     // mode: 'resume' | 'tech'
     try {
+      // Detect current language from URL or global state
+      const urlParams = new URLSearchParams(window.location.search);
+      const langParam = urlParams.get('lang');
+      const currentLang = (langParam && langParam.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
+
       const aboutSection = document.querySelector('.about');
       if (!aboutSection) throw new Error('About section not found');
 
@@ -75,12 +80,15 @@
       });
 
       // Build HTML for the new window
-      const title = mode === 'tech' ? 'Project Briefing' : 'Resume Preview';
+      const displayTitle = mode === 'tech' ? 'Project Briefing' : 'Resume Preview';
+      const langSuffix = currentLang === 'zh' ? '-zh' : '-en';
+      const baseFilename = mode === 'tech' ? 'project-tyk' : 'resume-tyk';
+      const filename = baseFilename + langSuffix;
       const docHTML = `<!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8" />
-            <title>${title}</title>
+            <title>${filename}</title>
             ${styles}
             <style>
               /* Print adjustments */

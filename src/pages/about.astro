@@ -247,17 +247,44 @@ function parseProject(project: string, lang: LangKey): {
                   </div>
                 )}
                 
-                {job.title === "Open Source Backend Engineer" && (
+                {job.title === "Freelancer" && (
                   <div class="skills-section">
-                    {skillsData.categories.map((category) => (
+                    {skillsData.categories
+                      .filter((category) => ['Backend Development', 'AI', 'Tools'].includes(category.name))
+                      .map((category) => (
                       <div class="skill-category">
                         <h5>{category.name}</h5>
                         {category.subcategories ? (
-                          category.subcategories.map((subcategory) => (
+                          category.subcategories
+                            .filter((subcategory) => {
+                              // Only show relevant subcategories for Freelancer
+                              if (category.name === "Backend Development") {
+                                return ["Languages", "Frameworks & Libraries"].includes(subcategory.name);
+                              }
+                              if (category.name === "AI") {
+                                return subcategory.name === "Frameworks & APIs";
+                              }
+                              if (category.name === "Tools") {
+                                return subcategory.name === "Others";
+                              }
+                              return false;
+                            })
+                            .map((subcategory) => (
                             <div class="skill-subcategory">
                               <h6>{subcategory.name}</h6>
                               <div class="skill-tags">
-                                {subcategory.skills.map((skill) => {
+                                {(
+                                  // Only show PHP and Laravel for Backend Development
+                                  category.name === "Backend Development" && subcategory.name === "Languages"
+                                    ? subcategory.skills.filter((s) => s.name === 'PHP 12')
+                                    : category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
+                                      ? subcategory.skills.filter((s) => ['Laravel', 'FastAPI'].includes(s.name))
+                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
+                                        ? subcategory.skills.filter((s) => ['LangChain','OpenAI API','ChatOpenAI','LLMChain','PromptTemplate','LangChain RAG'].includes(s.name))
+                                      : category.name === "Tools" && subcategory.name === "Others"
+                                        ? subcategory.skills.filter((s) => s.name === 'WordPress')
+                                        : []
+                                ).map((skill) => {
                                   const gradeMap = {
                                     'shade1': 'S',
                                     'shade2': 'A', 
@@ -275,7 +302,201 @@ function parseProject(project: string, lang: LangKey): {
                               </div>
                               {(subcategory as any).description && (subcategory as any).description[lang] && (subcategory as any).description[lang].length > 0 && (
                                 <ul class="skill-subdescription">
-                                  {(subcategory as any).description[lang].map((desc: string, index: number) => (
+                                  {(
+                                    // Show relevant descriptions for Freelancer
+                                    category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
+                                      ? (subcategory as any).description[lang].filter((desc: string) => /Laravel|FastAPI/i.test(desc))
+                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
+                                        ? (subcategory as any).description[lang].filter((desc: string) => /LangChain/i.test(desc))
+                                        : []
+                                  ).map((desc: string) => (
+                                    <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                              {/* Maya Sawa V1 Architecture Diagrams for AI Frameworks & APIs */}
+                              {category.name === "AI" && subcategory.name === "Frameworks & APIs" && (
+                                <>
+                                  <br />
+                                  <a href="https://github.com/Vinskao/maya-sawa" target="_blank">Maya Sawa V1</a>
+                                  <div class="mermaid-diagram margin-top">
+                                    <pre class="mermaid">
+                                      {`graph TD
+    A["User Request</br>(/qa/query)"] --> B{FastAPI Router};
+    B --> C["qa_chain.get_answer(query)"];
+    C --> D{"Detect names in query"};
+    
+    %% Name Detection Branch
+    D -- "Names found" --> E["Fetch character profiles</br>from DB"];
+    E --> F{"Profile found?"};
+    F -- "Yes" --> G["Create prompt with</br>character profile"];
+    F -- "No" --> H["Respond 'not found'"];
+    
+    %% No Names Branch
+    D -- "No names found" --> I{"Semantic search for people"};
+    I -- "People found" --> J["Generate answer from</br>search results"];
+    I -- "No one found" --> K["Similarity search</br>in Vector Store"];
+    K --> L["Create prompt with</br>document context"];
+    
+    %% Unified Processing
+    G --> M["Invoke LLM"];
+    J --> M;
+    L --> M;
+    H --> N["Return final answer"];
+    M --> N;
+    N --> O["Save chat history"];
+    O --> P["Return AI answer"];
+    P --> B;`}
+                                    </pre>
+                                  </div>
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`flowchart TD
+    subgraph "API Layer"
+        APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
+    end
+
+    subgraph "Q&A Layer"
+        QAChain["QAChain"]
+        PageAnalyzer["PageAnalyzer"]
+    end
+
+    subgraph "Support Layer"
+        NameDetector["NameDetector"]
+        ProfileManager["ProfileManager"]
+        PeopleWeaponManager["PeopleWeaponManager"]
+        PersonalityPromptBuilder["PersonalityPromptBuilder"]
+        NameAdapter["NameAdapter"]
+        VectorStore["PostgresVectorStore"]
+        ChatHistoryManager["ChatHistoryManager"]
+        ConfigManager["ConfigManager"]
+        ConnectionPoolManager["ConnectionPoolManager"]
+        Scheduler["ArticleSyncScheduler"]
+    end
+
+    subgraph "External Services"
+        OpenAIAPI["OpenAI API<br/>Chat & Embeddings"]
+        PeopleAPI["People System API<br/>/tymb/people/*"]
+        ArticleAPI["Public Article API<br/>/paprika/articles"]
+        PostgresDB["PostgreSQL"]
+        RedisDB["Redis"]
+    end
+
+    Client["Client / Frontend"] --> APIRouter
+    APIRouter --> QAChain
+    APIRouter --> PageAnalyzer
+    APIRouter --> VectorStore
+    APIRouter --> ChatHistoryManager
+    APIRouter --> Scheduler
+
+    ChatHistoryManager --> RedisDB
+
+    QAChain --> NameDetector
+    QAChain --> ProfileManager
+    QAChain --> PeopleWeaponManager
+    QAChain --> PersonalityPromptBuilder
+    QAChain --> NameAdapter
+    QAChain --> VectorStore
+
+    PageAnalyzer --> QAChain
+
+    NameDetector --> OpenAIAPI
+    QAChain --> OpenAIAPI
+
+    ProfileManager --> PeopleAPI
+    PeopleWeaponManager --> PeopleAPI
+
+    VectorStore --> PostgresDB
+    VectorStore --> ArticleAPI
+
+    PeopleWeaponManager --> PostgresDB
+
+    ConfigManager --> PostgresDB
+    ConnectionPoolManager --> PostgresDB
+    Scheduler --> ArticleAPI`}
+                                    </pre>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div class="skill-tags">
+                            {category.skills.map((skill) => {
+                              const gradeMap = {
+                                'shade1': 'S',
+                                'shade2': 'A', 
+                                'shade3': 'B',
+                                'shade4': 'C',
+                                'shade5': 'D'
+                              };
+                              return (
+                                <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
+                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                  {skill.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {(category as any).description && (category as any).description[lang] && (category as any).description[lang].length > 0 && (
+                          <ul class="skill-description">
+                            {(category as any).description[lang].map((desc: string, index: number) => (
+                              <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {job.title === "Open Source Backend Engineer" && (
+                  <div class="skills-section">
+                    {skillsData.categories.map((category) => (
+                      <div class="skill-category">
+                        <h5>{category.name}</h5>
+                        {category.subcategories ? (
+                          category.subcategories.map((subcategory) => (
+                            <div class="skill-subcategory">
+                              <h6>{subcategory.name}</h6>
+                              <div class="skill-tags">
+                                {(
+                                  category.name === "Backend Development" && subcategory.name === "Languages"
+                                    ? subcategory.skills.filter((s) => s.name !== 'PHP 12')
+                                    : category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
+                                      ? subcategory.skills.filter((s) => !['Laravel', 'FastAPI'].includes(s.name))
+                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
+                                        ? subcategory.skills.filter((s) => !['LangChain','OpenAI API','ChatOpenAI','LLMChain','PromptTemplate','LangChain RAG'].includes(s.name))
+                                        : category.name === "Tools" && subcategory.name === "Others"
+                                          ? subcategory.skills.filter((s) => s.name !== 'WordPress')
+                                          : subcategory.skills
+                                ).map((skill) => {
+                                  const gradeMap = {
+                                    'shade1': 'S',
+                                    'shade2': 'A', 
+                                    'shade3': 'B',
+                                    'shade4': 'C',
+                                    'shade5': 'D'
+                                  };
+                                  return (
+                                    <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
+                                          data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                      {skill.name}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                              {(subcategory as any).description && (subcategory as any).description[lang] && (subcategory as any).description[lang].length > 0 && (
+                                <ul class="skill-subdescription">
+                                  {(
+                                    // Filter out PHP/Laravel/FastAPI descriptions for Open Source Backend Engineer
+                                    category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
+                                      ? (subcategory as any).description[lang].filter((desc: string) => !/Laravel|FastAPI|LangChain/i.test(desc))
+                                      : (subcategory as any).description[lang]
+                                  ).map((desc: string) => (
                                     <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
                                     </li>
                                   ))}
@@ -563,105 +784,6 @@ function parseProject(project: string, lang: LangKey): {
                               {subcategory.name === "Frameworks & APIs" && (
                                 <>
                                   {/* --- AI Frameworks & APIs Architecture Diagrams --- */}
-                                  <br />
-                                  <a href="https://github.com/Vinskao/maya-sawa" target="_blank">Maya Sawa V1</a>
-                                  <div class="mermaid-diagram margin-top">
-                                    <pre class="mermaid">
-                                      {`graph TD
-    A["User Request</br>(/qa/query)"] --> B{FastAPI Router};
-    B --> C["qa_chain.get_answer(query)"];
-    C --> D{"Detect names in query"};
-    
-    %% Name Detection Branch
-    D -- "Names found" --> E["Fetch character profiles</br>from DB"];
-    E --> F{"Profile found?"};
-    F -- "Yes" --> G["Create prompt with</br>character profile"];
-    F -- "No" --> H["Respond 'not found'"];
-    
-    %% No Names Branch
-    D -- "No names found" --> I{"Semantic search for people"};
-    I -- "People found" --> J["Generate answer from</br>search results"];
-    I -- "No one found" --> K["Similarity search</br>in Vector Store"];
-    K --> L["Create prompt with</br>document context"];
-    
-    %% Unified Processing
-    G --> M["Invoke LLM"];
-    J --> M;
-    L --> M;
-    H --> N["Return final answer"];
-    M --> N;
-    N --> O["Save chat history"];
-    O --> P["Return AI answer"];
-    P --> B;`}
-                                    </pre>
-                                  </div>
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`flowchart TD
-    subgraph "API Layer"
-        APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
-    end
-
-    subgraph "Q&A Layer"
-        QAChain["QAChain"]
-        PageAnalyzer["PageAnalyzer"]
-    end
-
-    subgraph "Support Layer"
-        NameDetector["NameDetector"]
-        ProfileManager["ProfileManager"]
-        PeopleWeaponManager["PeopleWeaponManager"]
-        PersonalityPromptBuilder["PersonalityPromptBuilder"]
-        NameAdapter["NameAdapter"]
-        VectorStore["PostgresVectorStore"]
-        ChatHistoryManager["ChatHistoryManager"]
-        ConfigManager["ConfigManager"]
-        ConnectionPoolManager["ConnectionPoolManager"]
-        Scheduler["ArticleSyncScheduler"]
-    end
-
-    subgraph "External Services"
-        OpenAIAPI["OpenAI API<br/>Chat & Embeddings"]
-        PeopleAPI["People System API<br/>/tymb/people/*"]
-        ArticleAPI["Public Article API<br/>/paprika/articles"]
-        PostgresDB["PostgreSQL"]
-        RedisDB["Redis"]
-    end
-
-    Client["Client / Frontend"] --> APIRouter
-    APIRouter --> QAChain
-    APIRouter --> PageAnalyzer
-    APIRouter --> VectorStore
-    APIRouter --> ChatHistoryManager
-    APIRouter --> Scheduler
-
-    ChatHistoryManager --> RedisDB
-
-    QAChain --> NameDetector
-    QAChain --> ProfileManager
-    QAChain --> PeopleWeaponManager
-    QAChain --> PersonalityPromptBuilder
-    QAChain --> NameAdapter
-    QAChain --> VectorStore
-
-    PageAnalyzer --> QAChain
-
-    NameDetector --> OpenAIAPI
-    QAChain --> OpenAIAPI
-
-    ProfileManager --> PeopleAPI
-    PeopleWeaponManager --> PeopleAPI
-
-    VectorStore --> PostgresDB
-    VectorStore --> ArticleAPI
-
-    PeopleWeaponManager --> PostgresDB
-
-    ConfigManager --> PostgresDB
-    ConnectionPoolManager --> PostgresDB
-    Scheduler --> ArticleAPI`}
-                                    </pre>
-                                  </div>
                                   <br />
                                   <a href="https://github.com/Vinskao/maya-sawa-v2" target="_blank">Maya Sawa V2</a>
                                   <div class="mermaid-diagram">

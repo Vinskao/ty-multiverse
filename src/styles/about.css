@@ -1578,7 +1578,7 @@ section:nth-child(3) {
 .mermaid-diagram .mermaid .node[class*="capability"] text,
 .mermaid-diagram .mermaid .node[class*="data"] text,
 .mermaid-diagram .mermaid .node[class*="external"] text {
-  fill: #0b1a33 !important;
+  fill: #000000 !important;
   font-weight: 600;
 }
 
@@ -1623,7 +1623,7 @@ section:nth-child(3) {
 }
 
 .mermaid-diagram .mermaid .node[class*="net"] text {
-  fill: #212529 !important;
+  fill: #000000 !important;
   font-weight: 500;
 }
 
@@ -2074,7 +2074,7 @@ section:nth-child(3) {
 
 /* Light mode: ensure high-contrast text and lines for Mermaid */
 .mermaid-diagram .mermaid text {
-  fill: #0b1a33 !important;
+  fill: #000000 !important;
   font-weight: 600;
 }
 .mermaid-diagram .mermaid .cluster rect {
@@ -2086,14 +2086,14 @@ section:nth-child(3) {
   stroke: #000000 !important;
 }
 .mermaid-diagram .mermaid .note text {
-  fill: #0b1a33 !important;
+  fill: #000000 !important;
 }
 .mermaid-diagram .mermaid .actor rect {
   fill: #ffffff !important;
   stroke: #000000 !important;
 }
 .mermaid-diagram .mermaid .actor text {
-  fill: #0b1a33 !important;
+  fill: #000000 !important;
 }
 .mermaid-diagram .mermaid path,
 .mermaid-diagram .mermaid line,
@@ -2101,7 +2101,7 @@ section:nth-child(3) {
   stroke: #000000 !important;
 }
 .mermaid-diagram .mermaid .edgeLabel {
-  color: #0b1a33 !important;
+  color: #000000 !important;
   font-weight: 600;
 }
 /* Light mode: edge label backgrounds */
