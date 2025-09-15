@@ -27,7 +27,7 @@ WebFlux 與 MQ 的最佳結合策略：只在需要的地方用
 
 **MQ (Message Queue)**：解決 **服務解耦** 與 **削峰填谷**，適合處理長時間或大量寫入的操作。
 
-👉 WebFlux 是「API 層併發優化」，MQ 是「系統間解耦與削峰」；兩者並不是替代關係，而是互補。
+WebFlux 是「API 層併發優化」，MQ 是「系統間解耦與削峰」；兩者並不是替代關係，而是互補。
 
 ## 二、三種架構詳細比較
 
@@ -86,7 +86,7 @@ MQ 端點：enqueue → 立刻回 202 Accepted（附 requestId）。
 
 這個架構是相當務實的折衷方案：
 
-### 🔎 架構流程
+### 架構流程
 
 1. **Producer Controller (Virtual Thread / Spring MVC)**
    - API 進來後，Controller 用虛擬執行緒執行
@@ -119,7 +119,7 @@ MQ 端點：enqueue → 立刻回 202 Accepted（附 requestId）。
 - **JPA 還是阻塞**：即使在 WebFlux consumer 裡，也得小心不要直接用 JPA block Reactor thread，要用 boundedElastic 或 Mono.fromCallable 包裝
 - **監控與除錯複雜**：鏈路上既有虛擬執行緒，又有 reactive pipeline，需要更嚴謹的可觀測性
 
-### 🎯 適用場景
+### 適用場景
 
 這個組合很適合：
 
@@ -151,7 +151,7 @@ MQ 端點：enqueue → 立刻回 202 Accepted（附 requestId）。
 
 ## 七、落地建議
 
-### 🚀 建議
+### 建議
 
 這個組合其實是滿 **務實的折衷方案**：
 
@@ -168,7 +168,7 @@ MQ 端點：enqueue → 立刻回 202 Accepted（附 requestId）。
 3. **若 Producer 撐不住** → 升級到 B 或 C
 4. **Consumer 端先考慮 WebFlux**，因為真正的 I/O 壓力在這裡
 
-### 🎯 最終建議
+### 最終建議
 
 **短期**：保持 MVC + MQ，Producer 端統一回 202。
 
@@ -176,7 +176,7 @@ MQ 端點：enqueue → 立刻回 202 Accepted（附 requestId）。
 
 **長期**：若 Producer 壓力大，再把 MQ 端點切到 WebFlux。
 
-👉 換句話說：
+換句話說：
 WebFlux 是錦上添花，MQ 是雪中送炭；先解決系統瓶頸，再考慮導入 WebFlux。
 
 ## 八、Consumer WebFlux + JPA 實作範例

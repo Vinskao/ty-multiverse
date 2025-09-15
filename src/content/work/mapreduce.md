@@ -62,7 +62,7 @@ HDFS 的運作方式：
 4. **Reduce 階段**：Reducer 聚合同一個 key 的所有 value，產生結果。
 5. **輸出**：結果寫回 HDFS，分散成多個檔案。
 
-👉 簡單比喻：
+簡單比喻：
 
 - **Map** = 老師批改自己班級的試卷。
 - **Shuffle** = 把同一科目的試卷集中給一位科目老師。
@@ -83,7 +83,7 @@ MapReduce 的流程和 **Producer-Consumer 模式** 也很相似：
 - **Shuffle 更聰明**：不只是傳輸，還要確保同一個 key 的資料集中到同一 Reducer，並排好序。
 - **MapReduce 是批次**：必須等 Map 任務結束，Reduce 才能開始；Producer-Consumer 則可即時流式處理。
 
-👉 可以說：**MapReduce = 加強版的 Producer-Consumer，內建分流、排序、聚合機制**。
+可以說：**MapReduce = 加強版的 Producer-Consumer，內建分流、排序、聚合機制**。
 
 ## 5. 與 JavaScript 的 map/reduce 方法比較
 
@@ -203,4 +203,4 @@ public class WordCountReducer extends Reducer<Text, IntWritable, Text, IntWritab
 3. **生態系統**：Hadoop/Spark 生態豐富
 4. **企業應用**：廣泛用於生產環境
 
-👉 **學習建議**：從 Java Stream API 開始理解函數式數據處理，再進階到 Hadoop MapReduce，最後掌握 Spark 等新世代框架。
+學習建議：從 Java Stream API 開始理解函數式數據處理，再進階到 Hadoop MapReduce，最後掌握 Spark 等新世代框架。

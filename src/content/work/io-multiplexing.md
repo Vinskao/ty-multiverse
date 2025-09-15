@@ -20,7 +20,7 @@ tags:
 
 從底層的 select/poll/epoll，到應用層的事件迴圈設計，再到具體框架的選擇，這篇文章將帶你完整理解現代 Web 架構的演進之路。
 
-## 📞 OS 的「三種聽電話方法」
+## OS 的「三種聽電話方法」
 
 想像電腦要「接電話」（處理很多 socket 連線）。
 
@@ -57,7 +57,7 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 - **事件驅動**：OS 主動通知，不用輪詢
 - **無上限**：理論上可以監聽數百萬個 socket
 
-## 🎡 Event Loop（事件迴圈）
+## Event Loop（事件迴圈）
 
 有了 epoll/kqueue/IOCP 這些「聰明的點名系統」，程式就可以：
 
@@ -72,9 +72,9 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 - **不會傻傻地每個都檢查**
 - **資源利用率極高**
 
-### **🛠️ Process（行程）與 Worker（工作程序）**
+### **Process（行程）與 Worker（工作程序）**
 
-#### **🔍 Process（行程，程序）的本質**
+#### **Process（行程，程序）的本質**
 **核心定義：** Process = 作業系統給一個程式分配的獨立資源單位。
 
 **它可以是什麼：**
@@ -89,7 +89,7 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 
 **比喻：** 一間餐廳，有自己的廚房、冰箱、員工，不跟別家共享。
 
-#### **🎯 Node.js Process 的特別代表性**
+#### **Node.js Process 的特別代表性**
 Node.js 世界最能體現 process 的本質：
 
 **預設架構：** 只開「一個 process」跑 event loop。
@@ -103,7 +103,7 @@ Node.js 世界最能體現 process 的本質：
 
 **Node Process 本質：** 「一個 event loop + 一堆系統 API callback queue」，request 只是其中一種事件。
 
-#### **👷 Worker（工作程序）**
+#### **Worker（工作程序）**
 **定義：** 一個特殊角色的 process → 專門拿來「處理 request」。
 
 **本質：** worker = process（只不過工作是「處理 request」）。
@@ -122,7 +122,7 @@ Node.js 世界最能體現 process 的本質：
 
 重點：**你不用自己挑選 select/epoll/kqueue**。
 
-### **🎭 框架的智慧選擇：**
+### **框架的智慧選擇：**
 - **Linux** → 自動使用 `epoll`
 - **macOS/FreeBSD** → 自動使用 `kqueue`
 - **Windows** → 自動使用 `IOCP`
@@ -132,11 +132,11 @@ Node.js 世界最能體現 process 的本質：
 - **Django ASGI** → uvicorn/daphne 自動選擇
 - **Node.js** → libuv 自動選擇
 
-## 🔄 事件迴圈 vs 框架：誰是誰的「原住民」？
+## 事件迴圈 vs 框架：誰是誰的「原住民」？
 
 理解了 I/O 多工的技術後，讓我們來看看不同框架如何與事件迴圈共存。
 
-### **🌟 Node.js：天生的事件迴圈原住民**
+### **Node.js：天生的事件迴圈原住民**
 
 ```javascript
 // Node.js 從一開始就是事件驅動
@@ -188,7 +188,7 @@ public class ReactiveController {
 - **MVC**：Thread Pool + 阻塞 I/O（1 萬連線 = 1 萬 thread）
 - **WebFlux**：Netty + 事件迴圈（1 萬連線 = 幾十個 thread）
 
-### **🐍 Python：WSGI vs ASGI 的世代差異**
+### **Python：WSGI vs ASGI 的世代差異**
 
 #### **傳統 WSGI（阻塞模式）**
 ```python
@@ -216,7 +216,7 @@ async def hello():
 - **WSGI**：同步阻塞，thread-per-request
 - **ASGI**：async/await + uvloop 事件迴圈
 
-### **🤔 為什麼 Java/Python 不做「原生事件迴圈」？**
+### **為什麼 Java/Python 不做「原生事件迴圈」？**
 
 #### **1️⃣ 語言設計的歷史包袱**
 - **Java**：從 JDK 1.0 就定位「多執行緒 + JVM」，Thread/synchronized 是核心
@@ -233,7 +233,7 @@ async def hello():
 - **非同步程式碼**：callback hell、async/await 複雜度較高
 - **除錯困難**：事件迴圈的 stack trace 很難追蹤
 
-### **📊 框架對比表：誰跑在事件迴圈上？**
+### **框架對比表：誰跑在事件迴圈上？**
 
 | 框架 | 模式 | 底層技術 | 連線處理方式 | 是否事件迴圈 |
 |------|------|----------|--------------|---------------|
@@ -244,7 +244,7 @@ async def hello():
 | **Django ASGI** | 現代 | uvicorn/daphne + uvloop | 事件迴圈 + 多 worker | ✅ 現代 |
 | **FastAPI** | 現代 | uvicorn + uvloop | 事件迴圈 | ✅ 現代 |
 
-### **📋 模式對比表：事件迴圈 vs 傳統同步 vs 消息隊列**
+### **模式對比表：事件迴圈 vs 傳統同步 vs 消息隊列**
 
 | 模式                   | I/O 模型                             | 任務排程 / Producer-Consumer      | CPU 密集                         | Memory 使用                  | 適合場景                  | 面試說法                          |
 | -------------------- | ---------------------------------- | ----------------------------- | ------------------------------ | -------------------------- | --------------------- | ----------------------------- |
@@ -252,7 +252,7 @@ async def hello():
 | **傳統同步 + 消息隊列**      | 每個請求一個 thread，阻塞 I/O               | Broker 實現可靠 Producer/Consumer | CPU 密集直接在 thread 執行            | 每個請求占用一個 thread → memory 貴 | 分布式任務、企業後端            | 「同步 I/O + EDA，容易理解但 memory 貴」 |
 | **事件迴圈（單純內存 queue）** | 非阻塞 async / coroutine / event loop | 內存 queue 管理任務，僅進程內有效          | CPU 密集需多事件迴圈或 thread pool      | 少量 thread，memory 省         | I/O 密集、單進程 / 單 worker | 「事件驅動但不算完整 EDA，適合高併發輕量任務」     |
 
-### **🎯 事件迴圈的局限性：為什麼 Node.js 不是後端主流？**
+### **事件迴圈的局限性：為什麼 Node.js 不是後端主流？**
 
 儘管事件迴圈很強大，但它也有天生限制：
 
@@ -277,7 +277,7 @@ app.get('/heavy-calculation', (req, res) => {
 - **錯誤處理**：uncaughtException 會終止整個 process
 - **擴展性**：很難充分利用多核心 CPU
 
-### **💡 結論：事件迴圈是未來的趨勢，但不是唯一解**
+### **結論：事件迴圈是未來的趨勢，但不是唯一解**
 
 1. **WebFlux/ASGI/Node.js**：事件迴圈為核心，適合 I/O 密集應用
 2. **傳統 MVC/WSGI**：Thread Pool 為核心，適合 CPU 密集或簡單應用
@@ -285,9 +285,9 @@ app.get('/heavy-calculation', (req, res) => {
 
 **關鍵洞察：** 事件迴圈不是銀彈，它解決了 I/O 阻塞的問題，但帶來了程式設計複雜度的提升。選擇框架時，要根據你的應用特性來決定！
 
-## 🌍 傳統世界 vs 新世界
+## 傳統世界 vs 新世界
 
-### **🔴 傳統世界：Spring MVC、Django WSGI**
+### **傳統世界：Spring MVC、Django WSGI**
 
 ```java
 // Spring MVC：一個請求 = 一個 thread
@@ -309,7 +309,7 @@ public class TraditionalController {
 
 **比喻：** 「來了一個客人，派一個專屬服務生，服務生要等廚房上菜，就只能乾等，不能去做別的事。」
 
-### **🟢 新世界：Spring WebFlux、Django ASGI**
+### **新世界：Spring WebFlux、Django ASGI**
 
 ```java
 // Spring WebFlux：一個 thread 管理所有請求
@@ -351,7 +351,7 @@ public class ReactiveController {
 - **傳統框架**：thread-per-request，靠數量取勝
 - **現代框架**：event loop + I/O 多工，靠智慧取勝
 
-### **🎪 實戰建議：**
+### **實戰建議：**
 - **新專案**：優先考慮 Spring WebFlux / Django ASGI
 - **舊專案**：評估遷移成本 vs 效能收益
 - **混合部署**：傳統框架處理簡單請求，現代框架處理高併發

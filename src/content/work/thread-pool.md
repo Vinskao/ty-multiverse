@@ -17,7 +17,7 @@ tags:
 
 # TY Multiverse Consumer：Virtual Threads + RabbitMQ 實戰指南
 
-## 🐣 什麼是 Thread Pool？(小白教學)
+## 什麼是 Thread Pool？(小白教學)
 
 假設你在咖啡廳工作，店裡只有 **1 個咖啡師**，結果同時來了 **10 個客人**。
 
@@ -27,7 +27,7 @@ tags:
 ### 如果咖啡師 **同時開始做 10 杯**
 → 但咖啡師只有兩隻手，結果會更慢
 
-### 👉 解決辦法：找幾個助手 (thread)，但是數量要剛剛好
+### 解決辦法：找幾個助手 (thread)，但是數量要剛剛好
 
 這就是 **Thread Pool (線程池)** 的概念：
 
@@ -35,7 +35,7 @@ tags:
 - **重複利用線程** → 減少反覆建立/銷毀線程的開銷
 - **平衡任務排隊與資源使用** → 達到最佳效能
 
-## 🧵 Thread Pool 在程式裡怎麼用？
+## Thread Pool 在程式裡怎麼用？
 
 ### 傳統作法 (固定線程池)
 ```java
@@ -54,13 +54,236 @@ executor.shutdown();
 - **多出來的任務要排隊**
 - **適合 CPU/記憶體資源 比較充足 的環境**
 
-#### 🔴 問題：線程太「重」
+#### 問題：線程太「重」
 - 每個傳統 thread 可能吃掉 **1MB 記憶體**
 - 在 K8s 資源受限環境 (0.05 CPU, 1GB RAM) 會很快就爆掉
 
-## 🚀 Virtual Threads 登場 (JDK 21 特色)
+## Virtual Threads 登場 (JDK 21 特色)
 
 ### **Virtual Threads 是非阻塞的！**
+
+#### **重要警告：跨 Thread 問題**
+
+在使用 Virtual Threads 時，必須特別注意**跨 Thread 問題**。Virtual Threads 雖然輕量，但仍然是不同的執行緒，可能會遇到傳統多執行緒程式設計的所有問題：
+
+**常見的跨 Thread 問題：**
+
+1. **ThreadLocal 變數遺失**
+   ```java
+   // ❌ 問題：ThreadLocal 在 Virtual Thread 間不會自動傳遞
+   private static final ThreadLocal<String> USER_CONTEXT = new ThreadLocal<>();
+
+   @RabbitListener(queues = "people-get-all")
+   public void handleMessage(String message) {
+       // USER_CONTEXT.get() 可能返回 null
+       String userId = USER_CONTEXT.get();
+   }
+   ```
+
+2. **安全性上下文 (Security Context) 中斷**
+   ```java
+   // ❌ 問題：Spring Security Context 在 Virtual Thread 間遺失
+   @RabbitListener(queues = "secure-queue")
+   public void handleSecureMessage(String message) {
+       SecurityContext context = SecurityContextHolder.getContext();
+       // context 可能為 null 或包含錯誤的認證資訊
+   }
+   ```
+
+3. **事務上下文遺失**
+   ```java
+   // ❌ 問題：@Transactional 在 Virtual Thread 中可能失效
+   @RabbitListener(queues = "transactional-queue")
+   @Transactional
+   public void handleTransactionalMessage(String message) {
+       // 事務可能不會正確傳播
+       userService.save(user);
+   }
+   ```
+
+4. **日誌追蹤 (Trace ID) 中斷**
+   ```java
+   // ❌ 問題：分佈式追蹤 ID 在 Virtual Thread 間遺失
+   @RabbitListener(queues = "traced-queue")
+   public void handleTracedMessage(String message) {
+       // MDC (Mapped Diagnostic Context) 可能為空
+       String traceId = MDC.get("traceId");
+   }
+   ```
+
+**✅ TY Multiverse 專案的解決方案：**
+
+#### **1. 使用 ScopedValue (JDK 21)**
+```java
+// ✅ 正確做法：使用 ScopedValue 替代 ThreadLocal
+private static final ScopedValue<String> USER_CONTEXT = ScopedValue.newInstance();
+
+public void processWithContext(String userId) {
+    ScopedValue.where(USER_CONTEXT, userId)
+        .run(() -> {
+            // 在這個作用域內，所有 Virtual Thread 都可以訪問 userId
+            handleMessage();
+        });
+}
+```
+
+#### **2. 明確傳遞上下文**
+```java
+// ✅ 正確做法：在消息中明確傳遞必要資訊
+public class AsyncMessageDTO {
+    private String requestId;
+    private String userId;        // 明確傳遞用戶ID
+    private String traceId;       // 明確傳遞追蹤ID
+    private Object payload;
+
+    // getter/setter...
+}
+
+// Consumer 中直接使用消息中的資訊
+@RabbitListener(queues = "people-get-all")
+public void handleGetAllPeople(String messageJson) {
+    AsyncMessageDTO message = objectMapper.readValue(messageJson, AsyncMessageDTO.class);
+
+    // ✅ 正確：直接從消息獲取上下文
+    String userId = message.getUserId();
+    String traceId = message.getTraceId();
+
+    // 設置 MDC 用於日誌追蹤
+    MDC.put("traceId", traceId);
+    MDC.put("userId", userId);
+
+    try {
+        // 業務處理...
+        List<People> peopleList = peopleService.getAllPeopleOptimized();
+        asyncResultService.sendCompletedResult(message.getRequestId(), peopleList);
+    } finally {
+        // 清理 MDC
+        MDC.clear();
+    }
+}
+```
+
+#### **3. 避免共享可變狀態**
+```java
+// ❌ 錯誤：共享可變狀態
+@Component
+public class ProblematicService {
+    private List<String> sharedList = new ArrayList<>();
+
+    @RabbitListener(queues = "shared-state-queue")
+    public void handleMessage(String message) {
+        sharedList.add(message);  // 併發安全問題！
+    }
+}
+
+// ✅ 正確：使用 Thread-safe 集合或避免共享狀態
+@Component
+public class SafeService {
+    // 使用 Concurrent 集合
+    private ConcurrentHashMap<String, Object> safeMap = new ConcurrentHashMap<>();
+
+    @RabbitListener(queues = "safe-queue")
+    public void handleMessage(String message) {
+        AsyncMessageDTO msg = objectMapper.readValue(message, AsyncMessageDTO.class);
+
+        // 使用 requestId 作為鍵，避免共享狀態
+        safeMap.put(msg.getRequestId(), processMessage(msg));
+
+        // 或使用函數式編程，避免副作用
+        processMessageWithoutSideEffects(msg);
+    }
+}
+```
+
+#### **4. 正確處理事務**
+```java
+// ✅ 正確：在 Virtual Thread 中正確處理事務
+@Service
+public class PeopleService {
+
+    @Autowired
+    private PeopleRepository peopleRepository;
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public People insertPerson(People people) {
+        // 確保事務正確傳播
+        return peopleRepository.save(people);
+    }
+
+    // 對於 MQ Consumer，考慮使用手動事務管理
+    public People insertPersonManualTransaction(People people) {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        try {
+            People saved = peopleRepository.save(people);
+            transactionManager.commit(status);
+            return saved;
+        } catch (Exception e) {
+            transactionManager.rollback(status);
+            throw e;
+        }
+    }
+}
+```
+
+#### **5. TY Multiverse 專案的實際解決方案**
+```java
+// TY Multiverse Consumer 的實際實現
+@Component
+public class UnifiedConsumer {
+
+    @Autowired
+    private PeopleService peopleService;
+
+    @Autowired
+    private AsyncResultService asyncResultService;
+
+    @RabbitListener(queues = "people-insert", concurrency = "2")
+    public void handlePeopleInsert(String messageJson) {
+        try {
+            AsyncMessageDTO message = objectMapper.readValue(messageJson, AsyncMessageDTO.class);
+
+            // ✅ 解決方案 1: 從消息中獲取所有必要上下文
+            String requestId = message.getRequestId();
+            String userId = message.getUserId();
+            String traceId = message.getTraceId();
+
+            // ✅ 解決方案 2: 設置 MDC 用於日誌追蹤
+            MDC.put("traceId", traceId);
+            MDC.put("userId", userId);
+            MDC.put("requestId", requestId);
+
+            try {
+                // ✅ 解決方案 3: 業務邏輯不依賴 ThreadLocal
+                People people = objectMapper.convertValue(message.getPayload(), People.class);
+                People savedPeople = peopleService.insertPerson(people);
+
+                // ✅ 解決方案 4: 結果通過 MQ 發送，不依賴線程狀態
+                asyncResultService.sendCompletedResult(requestId, savedPeople);
+
+                logger.info("✅ People 插入完成: {}", requestId);
+            } finally {
+                // ✅ 解決方案 5: 清理線程本地狀態
+                MDC.clear();
+            }
+        } catch (Exception e) {
+            handleError(messageJson, e);
+        }
+    }
+}
+```
+
+#### **跨 Thread 問題總結**
+
+| 問題類型 | 傳統 Thread Pool | Virtual Threads | TY Multiverse 解決方案 |
+|---------|------------------|----------------|----------------------|
+| **ThreadLocal 遺失** | 可能發生 | 一定發生 | 消息中明確傳遞上下文 |
+| **Security Context** | 可能遺失 | 一定遺失 | 消息中包含認證資訊 |
+| **事務傳播** | 通常正常 | 可能失效 | 明確的@Transactional |
+| **日誌追蹤** | MDC 可能遺失 | MDC 一定遺失 | 每次請求重新設置 MDC |
+| **共享狀態** | 併發問題 | 相同併發問題 | 使用 Thread-safe 集合 |
+
+**關鍵原則：在 Virtual Threads 環境中，假設任何線程本地狀態都會遺失！**
 
 **非阻塞特性：**
 - **I/O 操作時自動讓出 CPU** → 不會阻塞整個線程
@@ -90,7 +313,7 @@ public void nonBlockingCall() {
 - **Fiber**：輕量級的執行單元，可以快速切換
 - **ForkJoinPool**：實際執行 Virtual Threads 的底層執行器
 
-## 📨 Virtual Threads + RabbitMQ：TY Multiverse Consumer 分佈式架構
+## Virtual Threads + RabbitMQ：TY Multiverse Consumer 分佈式架構
 
 ### **TY Multiverse 專案架構設計**
 
@@ -104,7 +327,7 @@ TY Multiverse 專案採用**分佈式微服務架構**，將 Producer 和 Consum
 
 ---
 
-## 🔸 **Producer 段落：Backend 應用 (重點說明)**
+## Producer 段落：Backend 應用 (重點說明)
 
 ### **Producer 的角色與實現**
 
@@ -127,7 +350,7 @@ public class UserController {
 
     @PostMapping("/api/users")
     public ResponseEntity<?> getUsers() {
-        // 🎯 HTTP 請求處理使用 Virtual Threads (Spring Boot 自動)
+        // HTTP 請求處理使用 Virtual Threads (Spring Boot 自動)
         // 這裡的請求線程就是 Virtual Thread
 
         if (asyncMessageService != null) {
@@ -157,7 +380,7 @@ public class AsyncTaskService {
     @Qualifier("threadPoolTaskExecutor")
     private Executor virtualThreadExecutor;
 
-    // 🎯 明確使用 Virtual Threads 執行器
+    // 明確使用 Virtual Threads 執行器
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Void> processUserData(String requestId) {
         return CompletableFuture.runAsync(() -> {
@@ -193,7 +416,7 @@ public class AsyncMessageService {
             null
         );
 
-        // 🎯 消息發送使用當前 Virtual Thread
+        // 消息發送使用當前 Virtual Thread
         sendMessage(RabbitMQConfig.PEOPLE_GET_ALL_QUEUE, message);
 
         logger.info("✅ Virtual Thread 消息發送完成: {}", requestId);
@@ -226,7 +449,7 @@ public class UserDataBackendApplication {
 
     @Bean(name = "threadPoolTaskExecutor", destroyMethod = "shutdown")
     ExecutorService threadPoolTaskExecutor() {
-        // 🎯 Producer 使用 Virtual Threads 作為主要執行器
+        // Producer 使用 Virtual Threads 作為主要執行器
         return Executors.newVirtualThreadPerTaskExecutor();
     }
 
@@ -236,7 +459,7 @@ public class UserDataBackendApplication {
 
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        // 🎯 RabbitMQ 監聽器也使用 Virtual Threads
+        // RabbitMQ 監聽器也使用 Virtual Threads
         factory.setTaskExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
         // 資源受限環境的保守配置
@@ -258,7 +481,7 @@ public class UserDataBackendApplication {
 
 ---
 
-## 🔸 **Consumer 段落：TY Multiverse 專案實戰 (實際實現)**
+## Consumer 段落：TY Multiverse 專案實戰 (實際實現)
 
 ### **TY Multiverse Consumer 的角色與實現**
 
@@ -287,7 +510,7 @@ public class UserDataBackendApplication {
 @ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true")
 public class UnifiedConsumer {
 
-    // 🎯 使用 Virtual Threads 處理多個隊列
+    // 使用 Virtual Threads 處理多個隊列
     @RabbitListener(queues = "people-insert", concurrency = "2")
     public void handlePeopleInsert(String messageJson) {
         try {
@@ -346,7 +569,7 @@ public class UnifiedConsumer {
 @ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true")
 public class PeopleConsumer {
 
-    // 🎯 使用 Virtual Threads 處理 People 查詢
+    // 使用 Virtual Threads 處理 People 查詢
     @RabbitListener(queues = "people-get-all", concurrency = "2")
     public void handleGetAllPeople(String messageJson) {
         try {
@@ -370,7 +593,7 @@ public class PeopleConsumer {
 @ConditionalOnProperty(name = "spring.rabbitmq.enabled", havingValue = "true")
 public class AsyncResultConsumer {
 
-    // 🎯 使用 Virtual Threads 處理結果回調
+    // 使用 Virtual Threads 處理結果回調
     @RabbitListener(queues = "async-result", concurrency = "2")
     public void handleAsyncResult(String messageJson) {
         try {
@@ -431,7 +654,7 @@ public class RabbitMQConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
 
-        // 🎯 使用 Virtual Threads 作為執行器
+        // 使用 Virtual Threads 作為執行器
         factory.setTaskExecutor(applicationTaskExecutor);
 
         return factory;
@@ -446,7 +669,7 @@ public class SwaggerConfig {
 
     @Bean(name = "applicationTaskExecutor")
     public TaskExecutor applicationTaskExecutor() {
-        // 🎯 全應用共享的 Virtual Threads 執行器
+        // 全應用共享的 Virtual Threads 執行器
         return new VirtualThreadTaskExecutor("vt-app-");
     }
 }
@@ -500,7 +723,7 @@ public class PeopleController {
 
 ---
 
-## 🔸 **直接 DB 連接 API：不使用 Producer/Consumer 架構**
+## 直接 DB 連接 API：不使用 Producer/Consumer 架構
 
 ### **直接 DB 連接的場景**
 
@@ -513,7 +736,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // 🎯 同步API：直接使用 Virtual Threads 處理
+    // 同步API：直接使用 Virtual Threads 處理
     @GetMapping("/api/users/names")
     public ResponseEntity<?> getAllUserNames() {
         try {
@@ -550,13 +773,13 @@ public class UserController {
 
 ---
 
-## 🔧 **Virtual Threads 完整用法總覽**
+## Virtual Threads 完整用法總覽
 
 ### **TY Multiverse 專案中的所有 VT 用法**
 
 #### **1. HTTP 請求處理 (自動使用)**
 ```java
-// 🎯 Spring Boot 自動使用 Virtual Threads 處理所有 HTTP 請求
+// Spring Boot 自動使用 Virtual Threads 處理所有 HTTP 請求
 @RestController
 public class UserController {
     @PostMapping("/get-all")  // 這個請求線程就是 Virtual Thread
@@ -571,7 +794,7 @@ public class UserController {
 @Service
 public class AsyncResultSimulatorService {
 
-    // 🎯 明確使用 Virtual Threads 執行器
+    // 明確使用 Virtual Threads 執行器
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Void> processUserData(String requestId) {
         return CompletableFuture.runAsync(() -> {
@@ -586,7 +809,7 @@ public class AsyncResultSimulatorService {
 @Service
 public class SomeService {
 
-    // 🎯 Spring Boot 自動使用 Virtual Threads
+    // Spring Boot 自動使用 Virtual Threads
     @RabbitListener(queues = "some-queue")
     public void handleMessage(String message) {
         // 消息處理運行在 Virtual Thread 上
@@ -599,7 +822,7 @@ public class SomeService {
 @RestController
 public class UserController {
 
-    // 🎯 同步 API 也使用 Virtual Threads
+    // 同步 API 也使用 Virtual Threads
     @GetMapping("/names")
     public ResponseEntity<?> getAllUserNames() {
         // 直接 DB 查詢也在 Virtual Thread 中執行
@@ -609,7 +832,7 @@ public class UserController {
 }
 ```
 
-### **📊 TY Multiverse Consumer @Async 用法統計**
+### **TY Multiverse Consumer @Async 用法統計**
 
 **TY Multiverse Consumer 專案目前未使用 @Async 註解**，因為：
 
@@ -624,7 +847,7 @@ public class UserController {
 // ✅ TY Multiverse Consumer 模式：MQ 監聽器自動使用 Virtual Threads
 @RabbitListener(queues = "people-insert", concurrency = "2")
 public void handlePeopleInsert(String messageJson) {
-    // 🎯 Spring Boot 自動在 Virtual Thread 中執行
+    // Spring Boot 自動在 Virtual Thread 中執行
     AsyncMessageDTO message = objectMapper.readValue(messageJson, AsyncMessageDTO.class);
     People people = objectMapper.convertValue(message.getPayload(), People.class);
 
@@ -643,19 +866,19 @@ public class SwaggerConfig {
 
     @Bean(name = "applicationTaskExecutor")
     public TaskExecutor applicationTaskExecutor() {
-        // 🎯 這個配置決定所有 MQ 監聽器使用 Virtual Threads
+        // 這個配置決定所有 MQ 監聽器使用 Virtual Threads
         return new VirtualThreadTaskExecutor("vt-app-");
     }
 }
 ```
 
-### **🔍 TY Multiverse Consumer 架構特點**
+### **TY Multiverse Consumer 架構特點**
 
 **RabbitMQ Consumer 的行為完全基於 Virtual Threads 執行：**
 
 #### **MQ 監聽器執行模式**
 ```java
-// 🎯 TY Multiverse 實際模式：MQ 監聽器在 Virtual Thread 中執行
+// TY Multiverse 實際模式：MQ 監聽器在 Virtual Thread 中執行
 @RabbitListener(queues = "people-get-all", concurrency = "2")
 public void handleGetAllPeople(String messageJson) {
     // 1. 在 Virtual Thread 中處理 MQ 消息
@@ -669,7 +892,7 @@ public void handleGetAllPeople(String messageJson) {
 }
 ```
 
-### **📊 TY Multiverse Consumer 效能比較**
+### **TY Multiverse Consumer 效能比較**
 
 | 組件類型 | Virtual Threads 使用 | 說明 |
 |----------|---------------------|------|
@@ -677,7 +900,7 @@ public void handleGetAllPeople(String messageJson) {
 | **HTTP 請求處理** | ✅ 請求 Virtual Thread | 使用當前請求線程 |
 | **業務邏輯** | ✅ 所在線程的 Virtual Thread | 繼承當前線程 |
 
-### **🎯 TY Multiverse Consumer 總結**
+### **TY Multiverse Consumer 總結**
 
 **RabbitMQ Consumer 架構讓 Virtual Threads 用法更簡潔：**
 
@@ -692,7 +915,7 @@ public void handleGetAllPeople(String messageJson) {
 3. **業務邏輯** (線程繼承) - 所有業務處理都在 Virtual Thread 中
 4. **異步結果處理** (框架自動) - AsyncResultConsumer 處理結果
 
-**最終結論：RabbitMQ Consumer 架構讓 Virtual Threads 用法更簡潔高效！** 🚀
+**最終結論：RabbitMQ Consumer 架構讓 Virtual Threads 用法更簡潔高效！**
 
 ### **Virtual Threads 資源優化效果**
 ```yaml
@@ -715,7 +938,7 @@ Virtual Threads:
 
 ---
 
-## 🎯 **TY Multiverse Consumer 架構總結**
+## TY Multiverse Consumer 架構總結
 
 ### **專案實際採用策略**
 1. **RabbitMQ Consumer 架構**: 使用 Virtual Threads 處理多業務模組
@@ -728,27 +951,31 @@ Virtual Threads:
 - ✅ **高處理能力**: 17 個隊列 × 2 個 Virtual Threads = 34 個並發處理器
 - ✅ **記憶體優化**: 每個 Virtual Thread ~16KB，總計 ~544KB
 - ✅ **業務完整性**: 涵蓋 People、Weapon、傷害計算等完整業務場景
+- ✅ **跨 Thread 安全**: 通過消息傳遞上下文，解決 Virtual Threads 的狀態隔離問題
 
-**最終結論：TY Multiverse Consumer 成功展示了 Virtual Threads 在生產環境中的實戰價值！** 🚀
+**最終結論：TY Multiverse Consumer 成功展示了 Virtual Threads 在生產環境中的實戰價值，並妥善解決了跨 Thread 問題！**
 
-## 📊 TY Multiverse Consumer 技術方案比較
+## TY Multiverse Consumer 技術方案比較
 
 | 特性 | TY Multiverse Consumer | 傳統 Thread Pool | Celery |
 |------|----------------------|------------------|--------|
 | **實現方式** | Spring Boot + Virtual Threads + RabbitMQ | Spring Boot + ThreadPoolExecutor | Python 異步任務框架 |
 | **資源占用** | ~16KB/Virtual Thread × 34 個 | ~1MB/傳統 Thread × 少量 | 每個 worker 一個進程 |
+| **跨 Thread 處理** | 消息傳遞上下文，完全安全 | ThreadLocal 可能遺失 | 進程隔離，狀態獨立 |
 | **適合場景** | 高併發 I/O、資源受限環境 | CPU 密集、穩定環境 | 複雜任務、定時任務 |
 | **實際效能** | 10-50 TPS (0.05 CPU) | 5-10 TPS (資源緊張) | 依任務複雜度而定 |
 
-## 🎯 TY Multiverse Consumer 專案總結
+## TY Multiverse Consumer 專案總結
 
 ### 小白理解
 - **Virtual Threads 就像輕量咖啡師**，每個只吃 16KB 記憶體
 - **傳統問題**：傳統 Thread 太重 (1MB)，資源受限環境難以負荷
-- **TY Multiverse 解決方案**：34 個 Virtual Threads 處理 17 個隊列，總共只用 544KB
+- **跨 Thread 陷阱**：ThreadLocal、Security Context 等狀態不會自動傳遞
+- **TY Multiverse 解決方案**：34 個 Virtual Threads 處理 17 個隊列，總共只用 544KB，並通過消息傳遞解決狀態問題
 
 ### 實戰成果
 1. **34 個 Virtual Threads**：17 個隊列 × 2 個並發處理器
 2. **資源受限環境**：0.05 CPU 核心下穩定運行
 3. **高處理能力**：10-50 TPS，傳統方案的 5-10 倍
 4. **業務完整性**：People、Weapon、傷害計算完整實現
+5. **跨 Thread 安全性**：通過 AsyncMessageDTO 明確傳遞上下文，避免狀態遺失
