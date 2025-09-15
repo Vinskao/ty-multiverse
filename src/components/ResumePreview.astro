@@ -3,14 +3,15 @@
 
 <div class="pdf-export-section">
   <button id="preview-pdf-btn" class="export-btn">Preview Resume</button>
+  <button id="preview-briefing-btn" class="export-btn outline">Project briefing</button>
 </div>
 
 <script type="module">
   const btn = document.getElementById('preview-pdf-btn');
+  const briefingBtn = document.getElementById('preview-briefing-btn');
 
-  btn?.addEventListener('click', () => {
-    btn.disabled = true;
-
+  function openPreview(mode) {
+    // mode: 'resume' | 'tech'
     try {
       const aboutSection = document.querySelector('.about');
       if (!aboutSection) throw new Error('About section not found');
@@ -24,13 +25,37 @@
         .map(el => el.outerHTML)
         .join('\n');
 
-      // Remove preview button & non-essential hero photo from clone
+      // Clone content to manipulate
       const clone = aboutSection.cloneNode(true);
+
+      // Remove preview buttons & non-essential hero photo from clone
       clone.querySelector('#preview-pdf-btn')?.remove();
+      clone.querySelector('#preview-briefing-btn')?.remove();
       clone.querySelectorAll('.work-photo').forEach(el => el.remove());
       clone.querySelectorAll('.title, .tagline').forEach(el => el.remove());
       // Remove Career Briefing section in preview
       clone.querySelectorAll('.briefing-section').forEach(el => el.remove());
+
+      // Filter sections based on mode
+      const sectionNodes = Array.from(clone.querySelectorAll('section'));
+      const getHeadingText = (sec) => (sec.querySelector('h2')?.textContent || '').trim();
+
+      if (mode === 'resume') {
+        const allowed = new Set(['Background', 'Project Experience', 'Education']);
+        sectionNodes.forEach(sec => {
+          const h = getHeadingText(sec);
+          if (!allowed.has(h)) {
+            sec.remove();
+          }
+        });
+      } else if (mode === 'tech') {
+        sectionNodes.forEach(sec => {
+          const h = getHeadingText(sec);
+          if (h !== 'Tech Experience') {
+            sec.remove();
+          }
+        });
+      }
 
       // Smart page break logic - only break if section has substantial content
       const allSecs = Array.from(clone.querySelectorAll('section'));
@@ -50,11 +75,12 @@
       });
 
       // Build HTML for the new window
+      const title = mode === 'tech' ? 'Project Briefing' : 'Resume Preview';
       const docHTML = `<!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8" />
-            <title>Resume Preview</title>
+            <title>${title}</title>
             ${styles}
             <style>
               /* Print adjustments */
@@ -106,7 +132,6 @@
                 if (window.mermaid) {
                   window.mermaid.initialize({ startOnLoad: true, theme: 'default' });
                 }
-                // 若需要列印，可手動在瀏覽器選單中列印
               });
             <\/script>
           </body>
@@ -121,14 +146,21 @@
         const nicePath = '/tymultiverse/about';
         printWin.history.replaceState(null, '', nicePath);
       } catch (e) { /* ignore cross-origin issues */ }
-
-      // Re-enable button after preview window is ready
-      btn.disabled = false;
-
     } catch (err) {
       console.error(err);
-      btn.disabled = false;
     }
+  }
+
+  btn?.addEventListener('click', () => {
+    btn.disabled = true;
+    openPreview('resume');
+    btn.disabled = false;
+  });
+
+  briefingBtn?.addEventListener('click', () => {
+    briefingBtn.disabled = true;
+    openPreview('tech');
+    briefingBtn.disabled = false;
   });
 </script>
 
@@ -136,6 +168,7 @@
   .pdf-export-section {
     display: flex;
     justify-content: center;
+    gap: 12px;
     margin: 3rem 0;
     padding: 2rem;
   }
@@ -168,5 +201,18 @@
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+  }
+
+  .export-btn.outline {
+    background: transparent;
+    color: #514695;
+    border: 2px solid #514695;
+    box-shadow: none;
+  }
+
+  .export-btn.outline:hover:not(:disabled) {
+    background: #514695;
+    color: #fff;
+    transform: translateY(-2px) scale(1.03);
   }
 </style> 
