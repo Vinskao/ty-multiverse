@@ -139,6 +139,26 @@ SELECT * FROM auth_user WHERE id = 1;
 - 版本控制
 
 ### 4. 查詢優化
-- `select_related()`：外鍵關聯
-- `prefetch_related()`：多對多關聯
-- `only()`/`defer()`：欄位選擇
+
+#### N+1 查詢問題解決
+**核心原則**：只要避免在迴圈內部進行資料庫查詢，就能有效解決 SQL 的 N+1 問題。
+
+這個核心原則背後的邏輯是：在處理一組資料時，我們應該盡量將所有的資料庫操作打包成單一、高效的查詢，而不是針對每一個項目都重複發出請求。
+
+**常見優化方法**：
+- `select_related()`：外鍵關聯（一次性 JOIN 查詢）
+- `prefetch_related()`：多對多關聯（批量預載入）
+- `only()`/`defer()`：欄位選擇（減少資料傳輸）
+
+**範例對比**：
+```python
+# ❌ N+1 問題：在迴圈中查詢
+users = User.objects.all()
+for user in users:
+    print(user.profile.name)  # 每個 user 都會觸發一次資料庫查詢
+
+# ✅ 優化後：一次性查詢
+users = User.objects.select_related('profile').all()
+for user in users:
+    print(user.profile.name)  # 不會觸發額外的資料庫查詢
+```
