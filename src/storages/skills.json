@@ -40,24 +40,27 @@
           "skills": [
             { "name": "Spring Framework 6", "level": "shade3" },
             { "name": "Spring Boot 2 3", "level": "shade1" },
+            { "name": "Spring WebFlux", "level": "shade2" },
+            { "name": "Netty", "level": "shade3" },
             { "name": "Spring Session Redis", "level": "shade3" },
             { "name": "Quarkus 3", "level": "shade3" },
-            { "name": "Django Rest", "level": "shade4" },
-            { "name": "Django ASGI", "level": "shade5" },
-            { "name": "WSGI Worker Pattern", "level": "shade4" },
-            { "name": "Express.js", "level": "shade4" },
-            { "name": "Laravel", "level": "shade3" },
-            { "name": "FastAPI", "level": "shade3" },
-            { "name": "Async/Await", "level": "shade3" },
-            { "name": "Event Loop", "level": "shade4" },
+            { "name": "Reactive Streams", "level": "shade5" },
             { "name": "ExecutorService", "level": "shade3" },
             { "name": "ConcurrentHashMap", "level": "shade3" },
             { "name": "Virtual Threads", "level": "shade2" },
             { "name": "ForkJoinPool", "level": "shade4" },
+            { "name": "VirtualThreadTaskExecutor", "level": "shade4" },
             { "name": "Continuation", "level": "shade5" },
             { "name": "Fiber", "level": "shade5" },
-            { "name": "@RabbitListener", "level": "shade3" },
-            { "name": "VirtualThreadTaskExecutor", "level": "shade4" }
+            { "name": "Django Rest", "level": "shade4" },
+            { "name": "Django ASGI", "level": "shade5" },
+            { "name": "WSGI Worker Pattern", "level": "shade4" },
+            { "name": "FastAPI", "level": "shade3" },
+            { "name": "Laravel", "level": "shade3" },
+            { "name": "Express.js", "level": "shade4" },
+            { "name": "Async/Await", "level": "shade3" },
+            { "name": "Event Loop", "level": "shade4" },
+            { "name": "@RabbitListener", "level": "shade3" }
           ]
         },
         {
@@ -96,7 +99,6 @@
             { "name": "Servlet 5", "level": "shade3" },
             { "name": "Maven", "level": "shade2" },
             { "name": "Poetry", "level": "shade3" },
-            { "name": "Exception Handling", "level": "shade3" },
             { "name": "Chain of Responsibility", "level": "shade3" }
           ]
         }
@@ -167,6 +169,7 @@
           },
           "skills": [
             { "name": "PostgreSQL", "level": "shade1" },
+            { "name": "R2DBC", "level": "shade2" },
             { "name": "PGVector", "level": "shade5" },
             { "name": "pg_trgm", "level": "shade4" },
             { "name": "N-Gram Index", "level": "shade3" },
