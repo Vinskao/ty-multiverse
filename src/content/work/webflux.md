@@ -92,6 +92,15 @@ public Mono<UserDetails> getUserDetails() {
 
 ---
 
+### 🧭 高階理由：為什麼要用 Reactive（取代傳統阻塞式）
+
+- **非阻塞（non-blocking）**：等待資料庫/IO 時不佔用執行緒，執行緒可去服務其他請求 → 更高併發。
+- **更好的資源利用**：大量短 IO 等待場景下，少掉 thread context switching 與 thread pool 泄壓成本。
+- **可組合（composability）**：`Mono`/`Flux` 自然串接多個 async 操作（DB、外部服務、cache），可讀性佳、易測試。
+- **內建錯誤處理與背壓**：以 operator 在串流層面處理錯誤與流量控制，避免淹爆下游。
+
+> 一句話：Reactive 把「等待」變成「讓出」，把「例外/流量控制」變成「資料流上的組態」。
+
 ## 🔧 第二章：核心概念 - Mono 與 Flux
 
 ### 📦 什麼是 Mono 和 Flux？
@@ -524,28 +533,188 @@ public Flux<User> getUsersWithBackpressure() {
 
 ---
 
-## 📚 第六章：學習資源與下一步
+## 🔬 第六章：實戰加值 - 控制器逐行拆解與常見寫法
 
-### 📖 學習建議
+### 針對這段程式：逐行理由（超細節）
 
-1. **從簡單開始**：先掌握基本概念，再學習複雜應用
-2. **多寫代碼**：理論理解後，要通過實踐鞏固
-3. **循序漸進**：不要一次學太多，先掌握一種模式
+原始：
 
-### 🎯 下一步學習
+```java
+return peopleService.getAllPeople()               // Flux<Person>
+    .collectList()                                // Mono<List<Person>>
+    .map(people -> ResponseEntity.ok(people))     // Mono<ResponseEntity<List<Person>>>
+    .onErrorResume(error -> Mono.just(
+        ResponseEntity.internalServerError().build()));
+```
 
-- **基礎鞏固**：多練習 Mono/Flux 的基本操作
-- **應用實戰**：將 Reactive 應用到實際項目中
-- **架構設計**：學習如何設計 Reactive 系統
-- **性能優化**：掌握背壓控制和資源管理
+逐行理由：
 
-### 📚 推薦資源
+- `peopleService.getAllPeople()`：回傳 `Flux<Person>`，代表可能很多筆，資料會陸續到來。為何不用 `List`？因底層可能是 non-blocking driver/來源，`Flux` 才能把非同步元素串起來。
+- `.collectList()`：把 `Flux` 聚合為 `Mono<List<Person>>`，等「所有人」到齊再一次回傳。若 API 需要完整 JSON 陣列才適合。注意大量資料會佔用記憶體；需要 streaming 時就別收集。
+- `.map(people -> ResponseEntity.ok(people))`：同步把值包成 HTTP 回應，用 `map` 即可（不是另一個 `Mono`）。`map` vs `flatMap`：同步→`map`；若 lambda 內會回傳 `Mono/Flux`，才用 `flatMap`。
+- `.onErrorResume(...)`：上游任一節點出錯時改以備援 Publisher 取代，能自訂 HTTP 狀態/內容。也可依情境改 `onErrorReturn`（固定值）、`onErrorMap`（轉例外）、或 `doOnError`（紀錄）。
 
-- **官方文檔**：Spring WebFlux 官方文檔
-- **實戰項目**：查看本專案的完整實現
-- **社區資源**：Stack Overflow、GitHub Issues
+### 常見替代寫法（何時用哪一種）
+
+A. 直接回 `Flux`（stream/lazy）— 客戶端可逐筆消費或資料量大：
+
+```java
+@GetMapping("/people")
+public Flux<Person> getAllPeople() {
+    return peopleService.getAllPeople();
+}
+```
+
+B. 回 `Mono<ResponseEntity<Flux<Person>>>`（需要自訂 header 或狀態）：
+
+```java
+@GetMapping("/people")
+public Mono<ResponseEntity<Flux<Person>>> getAllPeople() {
+    Flux<Person> flux = peopleService.getAllPeople();
+    return Mono.just(ResponseEntity.ok().body(flux));
+}
+```
+
+C. 回 `List`（一次要完整陣列；小量資料最簡單）：
+
+```java
+public Mono<ResponseEntity<List<Person>>> getAllPeople() { /* 如上 */ }
+```
+
+### Operator 心法：`map` / `flatMap` / `onErrorResume`
+
+- **`map(T -> R)`**：同步把值轉成另一個值，`R` 不是 `Mono/Flux`。
+- **`flatMap(T -> Mono<R>)`**：lambda 回傳 `Mono/Flux`（非同步），`flatMap` 會攤平。
+- **`onErrorResume(e -> Mono<T>)`**：錯誤時切換到另一個 Publisher（可依例外型別決策）。
+- 相關：`onErrorReturn(value)` 固定備援、`doOnError(e -> ...)` 僅副作用（例如 log）。
+
+範例比較：
+
+```java
+// map（同步）
+.collectList()
+.map(list -> ResponseEntity.ok(list))
+
+// flatMap（lambda 回傳 Mono）
+.collectList()
+.flatMap(list -> Mono.just(ResponseEntity.ok(list)))
+// 兩者等價；此處用 flatMap 屬多餘，非同步時才需要。
+```
+
+### 注意事項（常踩到的坑）
+
+- 別在 reactive chain 內做 blocking call（如 `jdbcTemplate.query(...)`、`Thread.sleep`、阻塞檔案 I/O）。
+  - 若不得不 blocking：
+    ```java
+    return Mono.fromCallable(() -> blockingCall())
+        .subscribeOn(Schedulers.boundedElastic());
+    ```
+- `collectList()` 會把所有元素放記憶體，資料量大請避免。
+- Controller 端不要手動 `.subscribe()`，讓框架接手訂閱。
+- 不要吞掉例外：
+  ```java
+  .doOnError(e -> log.error("getAllPeople failed", e))
+  .onErrorResume(e -> Mono.just(ResponseEntity.status(500).build()));
+  ```
+
+### 記憶小技巧（AIM）
+
+- **A = Aggregate**：是否要聚合成完整 `List`？
+- **I = Immediate transform**：只是同步包裝（`map`）還是要非同步呼叫（`flatMap`）？
+- **M = Manage errors**：要 fallback/預設值/直接 propagate？回 500 還是其他？
+
+流程速記：
+
+1) 數量？（多筆流→`Flux`；要一次拿完→`collectList`）
+2) 轉換？（同步→`map`；非同步→`flatMap`）
+3) 錯誤？（`onErrorResume/onErrorReturn`；僅 log→`doOnError`）
+
+### 小練習
+
+1) 把 `collectList()` 改成直接回 `Flux<Person>`（簡單 Controller）。
+2) 模擬 service 丟錯：請記錄 log 並回 503（`onErrorResume` + `doOnError`）。
+3) 從 cache（`Mono`）查不到才去 DB（`Flux`），把兩者串在一起（`switchIfEmpty` 或 `flatMapMany`）。
+
+範例 1（直接回 Flux）：
+
+```java
+@GetMapping("/people")
+public Flux<Person> getAllPeople() {
+    return peopleService.getAllPeople(); // 框架會把 Flux 序列化
+}
+```
+
+### Cache（Mono）查不到才去 DB（Flux）
+
+核心 API：`switchIfEmpty`（上游無資料→切換到另一個 Publisher）。
+
+```java
+Mono<Person> cacheResult = cacheService.getPersonById(id); // Mono<Person>
+Flux<Person> dbResult = peopleRepository.findById(id);     // Flux<Person>
+
+return cacheResult
+    .flatMapMany(Flux::just)   // Mono<Person> → Flux<Person>
+    .switchIfEmpty(dbResult);  // cache miss → fallback to DB
+```
+
+若 DB 也是單筆（`Mono`）：
+
+```java
+return cacheResult.switchIfEmpty(dbResult); // 兩邊同為 Mono<Person>
+```
+
+放進 Controller 並處理錯誤（回 503）：
+
+```java
+@GetMapping("/person/{id}")
+public Mono<ResponseEntity<Person>> getPerson(@PathVariable String id) {
+    Mono<Person> cacheResult = cacheService.getPersonById(id);
+    Mono<Person> dbResult = peopleRepository.findById(id);
+
+    return cacheResult
+        .switchIfEmpty(dbResult)
+        .map(ResponseEntity::ok)
+        .doOnError(e -> log.error("getPerson failed", e))
+        .onErrorResume(e -> Mono.just(ResponseEntity.status(503).build()));
+}
+```
 
 ---
+
+## 📨 第八章：與 MQ 整合 - Reactive 消費流程逐步解析
+
+以 RabbitMQ 手動 ack 模式為例（示意）：
+
+```java
+@Component
+public class ReactivePeopleConsumer {
+    @PostConstruct
+    public void startConsumers() {
+        reactiveReceiver.consumeManualAck("people.get-all.queue", new ConsumeOptions().qos(2))
+            .flatMap(delivery -> parseMessage(delivery.getBody())
+                .flatMap(message -> {
+                    String requestId = message.getRequestId();
+                    return peopleService.getAllPeople()
+                        .collectList()
+                        .flatMap(people -> asyncResultService.sendCompletedResultReactive(requestId, people))
+                        .doOnSuccess(v -> delivery.ack())
+                        .onErrorResume(e -> asyncResultService.sendFailedResultReactive(requestId, e.getMessage())
+                            .doOnSuccess(v -> delivery.nack(false)));
+                }), 2) // 並發控制
+            .subscribe();
+    }
+}
+```
+
+逐步說明：
+
+- `consumeManualAck(..., qos(2))`：訂閱佇列（手動 ack），最多 2 筆未 ack 並行中。
+- 外層 `flatMap`：每個 `delivery` 非同步處理後合併。
+- `parseMessage(...)`：解析 JSON → `Mono<Message>`。
+- 業務查詢：`getAllPeople().collectList()` → `Mono<List<Person>>`。
+- 成功：`sendCompletedResultReactive(...)` 後 `delivery.ack()`。
+- 失敗：`onErrorResume` 走 `sendFailedResultReactive(...)` 並 `delivery.nack(false)`（是否重回佇列視需求）。
+- 結尾 `subscribe()`：啟動整個 pipeline（消費者常駐）。
 
 ## 🔧 第七章：實戰指南 - 遷移實戰
 
@@ -645,10 +814,72 @@ public class UserController {
 
 ---
 
-## 🎉 結語
-
-你已經完成了從初學者到實戰專家的 Reactive 編程學習之旅！
-
-**記住**：Reactive 編程的核心在於**非同步思維**和**數據流處理**。不要被複雜的概念嚇倒，從簡單的例子開始，一步一步深入。
-
 **Happy Coding! 🚀**
+
+---
+
+## ❓ 附錄 A：為什麼不用 try/catch？（Reactive 錯誤處理的本質）
+
+- 傳統同步寫法：呼叫會「立刻」回傳，例外也會「立刻」丟出，所以 `try/catch` 能攔住。
+- Reactive：`Flux/Mono` 是「未來的資料流」，錯誤在「訂閱」時才可能發生，離開了目前方法 scope，`try/catch` 幾乎攔不到。
+- 正確作法：在 pipeline 中用 operator 處理。
+
+```java
+return peopleService.getAllPeople()
+    .collectList()
+    .map(ResponseEntity::ok)
+    .doOnError(e -> log.error("getAllPeople failed", e))
+    .onErrorResume(e -> Mono.just(ResponseEntity.internalServerError().build()));
+```
+
+---
+
+## 🧩 附錄 B：flatMap 的底層邏輯（簡述）
+
+- `map`：一對一，同步轉換，回普通值。
+- `flatMap`：一對多/非同步，lambda 產生 `Publisher`，Reactor 幫你「展開並合併」。
+- 直覺流程（簡化）：訂閱上游 → 對每個元素套 `mapper` 得到 `Publisher` → 訂閱每個內層 `Publisher` → 合併輸出與錯誤。
+
+偽碼感：
+
+```java
+source.flatMap(mapper) ≈ Flux.create(emitter -> {
+  source.subscribe(t -> {
+    Publisher<R> inner = mapper.apply(t);
+    inner.subscribe(emitter::next, emitter::error, () -> {});
+  }, emitter::error, emitter::complete);
+});
+```
+
+---
+
+## 🪄 附錄 C：匿名類別 → lambda（演進速查）
+
+介面：
+
+```java
+public interface Consumer<T> { void accept(T t); }
+```
+
+有名類別：
+
+```java
+class PrintConsumer implements Consumer<String> {
+  public void accept(String s) { System.out.println(s); }
+}
+names.forEach(new PrintConsumer());
+```
+
+匿名類別：
+
+```java
+names.forEach(new Consumer<String>() {
+  @Override public void accept(String s) { System.out.println(s); }
+});
+```
+
+lambda（SAM 介面）：
+
+```java
+names.forEach(s -> System.out.println(s));
+```
