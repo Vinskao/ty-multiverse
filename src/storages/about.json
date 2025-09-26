@@ -28,7 +28,7 @@
     {
       "title": "Freelancer",
       "company": "Self-Employed (Client Sources Confidential)",
-      "period": "2023/3~2024/3",
+      "period": "2023/3~2024/1",
       "projectExperience": {
         "en": [
           "2023/03 ~ 2023/05 - Restaurant Booking & CMS Platform (Vue 3 + Spring Boot): Built booking + CMS with Vue 3 frontend and Spring Boot API — Responsibilities: designed JWT/RBAC, shipped core CMS (employee/customer/branch/coupon/menu/order/reservation), delivered BI dashboards and Dockerized deployment — Data Module: RestaurantCMS (structure: Request → Router → Controller → Service → Repository → Database with POJO entities, logic: JWT/RBAC & order/reservation workflows & analytics, interface: REST API + JWT + SQL Server)",
