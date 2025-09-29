@@ -3188,7 +3188,7 @@
       "Java": "請告訴我關於 Java 開發的知識，包括核心概念、最佳實踐和常見問題解決方案。",
       "OOP及DI框架": "我想了解面向對象編程和依賴注入框架的設計原則和實現方式。",
       "部署實踐": "請分享關於應用程序部署、容器化和 DevOps 實踐的經驗。",
-      "網路問題": "我想了解網路編程、協議和常見網路問題的診斷與解決方法。",
+      "redis 及 mq 的差異": "我想了解 Redis 及 MQ 的差異，包括它們的適用場景和整合方式。",
       "了解妳": "妳是誰？"
     }
   },
@@ -6531,7 +6531,7 @@
       "Java": "Please tell me about Java development, including core concepts, best practices, and common problem solutions.",
       "OOP及DI框架": "I want to understand the design principles and implementation of object-oriented programming and dependency injection frameworks.",
       "部署實踐": "Please share your experience with application deployment, containerization, and DevOps practices.",
-      "網路問題": "I want to understand network programming, protocols, and diagnosis and solutions for common network issues.",
+      "redis 及 mq 的差異": "I want to understand the differences between Redis and MQ, including their applicable scenarios and integration methods.",
       "了解妳": "Who are you?"
     }
   }
