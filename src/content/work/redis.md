@@ -21,6 +21,42 @@ Redis 是一個**基於記憶體的 Key-Value 資料庫**，特色是：
 
 👉 **簡單說**：Redis 就像「一個超快的白板筆記本」，只要你記得 key，就能瞬間找到對應的 value。
 
+# 設計背後的理由
+
+## 記憶體為核心 → 需要高效結構
+
+- Redis 完全基於記憶體存儲（Memory-first DB），不像傳統 DB 依賴磁碟與索引。
+- 因此設計了操作時間複雜度可控、低延遲的資料結構（O(1)、O(logN)）：
+  - **String** → 單值存取最快（O(1)）
+  - **Hash** → 減少 key 爆炸、節省記憶體
+  - **List** → 可當佇列，操作頭尾元素為 O(1)
+  - **Set** → 天然去重，支援集合運算
+
+## 簡化常見應用場景
+
+Redis 不是要取代關聯式資料庫，而是要「補強快取 + 協調 + 即時計算」。因此挑選了後端最常見、覆蓋度高的結構：
+
+- 需要快取值 → String
+- 需要存物件屬性 → Hash
+- 需要佇列/排程 → List
+- 需要集合運算（好友、標籤、去重） → Set
+
+→ 這些場景已涵蓋約 80% 的分散式系統需求。
+
+## 支援高併發與分散式協調
+
+如果只有 String，所有功能都要靠字串拼接與自訂序列化，笨重且容易出錯。Redis 直接提供多種結構，讓伺服器之間協調任務更直覺：
+
+- **Hash** → 儲存任務狀態
+- **List** → 佇列化工作分派
+- **Set** → 控制唯一性／去重
+- **Pub/Sub** → 即時事件通知
+
+## 降低開發者心智成本
+
+與其讓工程師用 String 自行封裝 JSON、再寫 parser，Redis 乾脆內建 Hash / List / Set，能直接操作「半結構化資料」，
+減少膠水程式碼與重複造輪子，降低錯誤率與認知負擔。
+
 # Redis 在 TY Multiverse Backend 中的三大應用
 
 ## (A) 非同步結果查詢（Async Result）
@@ -154,7 +190,67 @@ Redis 就能扮演這個「鎖的協調者」：
 
 **總結**：單機鎖只保護「同一個 JVM 裡的多執行緒」，分散式鎖要保護「多台 JVM、多台機器上的多執行緒」。
 
-### 2. SET NX PX：最簡單的分散式鎖
+### 2. 分布式互斥鎖 (Distributed Mutex Lock) 實戰場景
+
+#### lock:order:close 屬於什麼類型的鎖？
+
+`lock:order:close` 屬於**分布式互斥鎖 (Distributed Mutex Lock)**，作用是保證「同一個資源 / 任務」在同一時間只能被**一個節點**執行。
+
+#### 典型場景：定時任務（CronJob）防重複執行
+
+例如：你有 3 台服務器都會跑「每分鐘關閉過期訂單」的任務
+
+**如果沒有鎖**：
+- 3 台同時關閉，訂單可能被重複處理
+- 同一筆訂單可能被多次標記為「已關閉」
+
+**加鎖後**：
+- 只有 1 台成功搶到鎖，其他節點會跳過
+- 整個「關閉訂單批次」任務只會被執行一次
+
+👉 所以 `lock:order:close` 是一個**全局任務級的鎖**，不是針對單筆訂單，而是整個「關閉訂單批次」任務。
+
+#### ❓ 是不是 CRUD 前後都要查 Redis 鎖？
+
+**答案：不是所有 CRUD 都要加 Redis 鎖，要看情境。**
+
+##### 1. 不用鎖的情況（大部分 CRUD）
+- **一般查詢（Read）**：直接靠資料庫索引
+- **一般新增、修改、刪除**：DB 已有唯一鍵、交易鎖保護
+- **這些直接靠資料庫（transaction、索引、唯一鍵）就能保證一致性，不需要 Redis 鎖。**
+
+##### 2. 需要鎖的情況（跨機 / 高併發爭用）
+
+###### 定時任務防重複
+- 多台機器同時執行批次任務（例如關閉訂單、發送通知）
+- → 需要 Redis 全局鎖，保證只有一台跑。
+
+###### 資源爭用（跨機器）
+- 多個節點同時操作「同一個資源」，DB 鎖不足以保護時
+- 例如：
+  - 多個節點同時扣同一個商品庫存（要鎖 `lock:product:123:stock`）
+  - 同時更新同一個用戶錢包餘額（要鎖 `lock:user:1001:balance`）
+
+###### 避免重複請求
+- 使用者短時間內點了兩次「付款」
+- → 透過 Redis 鎖，確保同一個訂單只處理一次。
+
+### 4. 為什麼分散式鎖用 String？
+
+#### 鎖的本質 = 某個「key 是否存在」
+分散式鎖的核心邏輯就是：
+
+- 如果這個 key **不存在** → 代表「沒有人持有鎖」，我可以加鎖
+- 如果這個 key **存在** → 代表「鎖已被別人持有」，我不能加鎖
+
+👉 這個檢查「有或沒有」的語意，剛好就是 **String key 存不存在** 最直覺。
+
+#### Redis 的 SET key value NX PX 天然支援鎖需求
+- **NX** → 保證只有當 key 不存在時才能設置（確保鎖唯一性）
+- **PX** → 自動設置過期時間，避免死鎖（機器掛了還一直佔鎖）
+- **value** → 存一個唯一識別（通常是 UUID），用來辨識誰持有鎖，釋放時也能比對
+
+### 5. SET NX PX：最簡單的分散式鎖
 
 Redis 的核心命令：
 ```bash
@@ -165,7 +261,21 @@ SET lockKey uniqueValue NX PX 30000
 - **PX 30000** = 設定 TTL（30 秒），避免節點掛掉後鎖永遠不釋放（死鎖）
 - **uniqueValue** = 用 UUID 來標識「誰」拿到鎖，避免錯刪
 
-解鎖用 Lua 腳本檢查是不是自己持有的鎖：
+### 6. 判斷是否加鎖成功
+
+#### 成功 (第一次搶到鎖的機器)
+- **Redis 回覆 OK**
+- 後端開始執行對應的 CRUD / 批次任務
+
+#### 失敗 (鎖已經存在)
+- **Redis 回覆 null**
+- 後端知道「這個任務正在被別台機器執行」
+
+**有兩種處理方式：**
+- **直接跳過** → 什麼都不做（適合定時任務，避免重複跑）
+- **重試等待** → sleep 一下再 retry（適合資源搶佔或佇列消費場景）
+
+### 7. 解鎖用 Lua 腳本檢查是不是自己持有的鎖
 ```lua
 if redis.call("get", KEYS[1]) == ARGV[1] then
   return redis.call("del", KEYS[1])
@@ -174,159 +284,9 @@ else
 end
 ```
 
-#### 🔍 Lua 腳本詳細解釋
+說明：在同一個 Lua 腳本內同時檢查與刪除，確保原子性。
 
-##### 完整腳本分析
-```lua
-if redis.call('get', KEYS[1]) == ARGV[1] then
-  return redis.call('del', KEYS[1])
-else
-  return 0
-end
-```
-
-##### 1. if ... then ... else ... end 條件判斷結構
-Lua 的條件判斷結構，和 Java / Python 類似：
-
-```lua
-if 條件 then
-    -- 條件為 true 時執行
-else
-    -- 條件為 false 時執行
-end
-```
-
-**注意**：`end` 是必要的（Lua 用 `end` 來關閉控制結構，而不是大括號 `{}`）。
-
-##### 2. redis.call() - Redis 指令執行 API
-在 Redis 裡跑 Lua 腳本時，提供了一個 API：
-
-```lua
-redis.call("命令", 參數...)
-```
-
-它就是在腳本裡執行原生 Redis 指令。
-
-範例：
-```lua
-redis.call("set", "foo", "bar")
-redis.call("get", "foo") -- 回傳 "bar"
-```
-
-這樣保證 **檢查 + 刪除** 在同一個 Lua 腳本裡完成，不會被其他 client 插隊 → **原子性**。
-
-##### 3. KEYS[1] - 傳進來的 Key 列表
-Redis 執行 Lua 時，會把「傳進來的 key 列表」放在全域變數 `KEYS` 裡。
-
-- `KEYS` 是一個陣列（array），從 1 開始（Lua 陣列索引是 1-based，不是 Java 的 0-based）
-- `KEYS[1]` 就代表呼叫腳本時傳進來的第一個 key
-
-範例呼叫：
-```bash
-EVAL "return KEYS[1]" 1 lock:order:123
-```
-→ 回傳 `"lock:order:123"`
-
-##### 4. ARGV[1] - 傳進來的參數列表
-Redis 也會把「傳進來的參數」放在全域變數 `ARGV` 裡。
-
-- 跟 `KEYS` 類似，它也是 array，從 1 開始
-- `ARGV[1]` 就是呼叫腳本時傳進來的第一個參數
-
-範例呼叫：
-```bash
-EVAL "return ARGV[1]" 0 hello-world
-```
-→ 回傳 `"hello-world"`
-
-##### 5. == 比較運算子
-Lua 的比較運算子，和 Java 一樣表示「等於」。
-
-```lua
-if redis.call("get", KEYS[1]) == ARGV[1]
-```
-→ 如果這個 key 的值等於我傳進來的 UUID，就代表是「我自己上的鎖」。
-
-##### 6. return 回傳值
-從 Lua 腳本回傳值給呼叫方（Java、Redis CLI）。
-
-- `redis.call('del', KEYS[1])` 會回傳刪掉的 key 數量：1（成功）或 0（失敗）
-- `return 0` → 代表沒有刪除（因為不是你持有的鎖）
-
-#### 🔄 程式流程解釋
-
-1. **讀取鎖**：`redis.call("get", KEYS[1])`
-2. **判斷是否等於我持有的 token**：`(上一步結果) == ARGV[1]`
-3. **如果是** → 刪除鎖，並回傳 1
-4. **如果不是** → 不動，回傳 0
-
-#### 📝 核心邏輯拆解
-
-##### `redis.call('get', KEYS[1]) == ARGV[1]`
-- `redis.call('get', KEYS[1])` → 執行 Redis 指令 GET someKey，讀取某個 key 的值
-- `KEYS[1]` → 呼叫 Lua 時傳進來的第一個 key，例如 `lock:order:123`
-- `ARGV[1]` → 呼叫 Lua 時傳進來的第一個參數，通常是隨機生成的 UUID（代表「這把鎖是我加的」）
-- `==` → Lua 的「等於」比較
-
-**意義**：檢查這個鎖的值是不是我的 UUID，確認這把鎖真的是我加的，而不是別人加的。
-
-##### `redis.call('del', KEYS[1])`
-- `redis.call('del', KEYS[1])` → 執行 Redis 指令 DEL someKey，刪掉某個 key
-- `KEYS[1]` → 仍然是傳進來的那個鎖，例如 `lock:order:123`
-- DEL 指令的回傳值：1（刪掉成功）或 0（key 不存在）
-
-**意義**：把這個鎖刪掉，並且回傳結果給呼叫方。
-
-#### 🎯 整體串起來的流程
-
-1. 先用 `GET key` 看看這把鎖是不是我的 `(UUID == ARGV[1])`
-2. 如果是我的 → `DEL key` 把它刪掉
-3. 如果不是我的 → 不刪，回傳 0
-
-**實戰範例**：
-```bash
-EVAL "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end" \
-1 lock:order:123 7f2a-uuid-abc
-```
-
-Redis 會先做 `GET lock:order:123`：
-- 如果 value == `"7f2a-uuid-abc"` → 就執行 `DEL lock:order:123`，回傳 1
-- 如果不是 → 直接回傳 0
-
-#### ⚠️ 重要澄清：KEYS[1] 不是固定位置
-**誤解澄清**：Redis 並不是「每個操作都在位置 1 上做」，這邊的 `KEYS[1]` 和 `ARGV[1]` 其實只是 Lua 腳本呼叫時傳進來的參數陣列。
-
-**Redis Lua 執行規則**：
-```bash
-EVAL <script> <numkeys> key1 key2 ... arg1 arg2 ...
-```
-
-- `<numkeys>`：告訴 Redis「前面有幾個參數是 key」
-- `key1 key2 ...`：這些會被放進 `KEYS` 陣列
-- `arg1 arg2 ...`：這些會被放進 `ARGV` 陣列
-
-**範例**：
-```bash
-EVAL "return {KEYS[1], ARGV[1]}" 1 lock:order:123 my-uuid
-```
-
-執行結果會回傳：
-1. `"lock:order:123"`
-2. `"my-uuid"`
-
-**為什麼要分 KEYS 和 ARGV？**
-- `KEYS`：專門放 Redis 的 key 名稱（比如 `lock:order:123`、`user:1`）
-- `ARGV`：放參數值（比如隨機生成的 UUID、數字、狀態字串）
-
-這樣可以確保：
-- Key 的分布正確（Redis Cluster 模式下很重要，因為 key 要能正確 hash slot）
-- 避免開發者把 key 和參數混在一起
-
-👉 **所以不是 Redis「操作都在 1 的位置上做」，而是：在 Lua 裡你自己呼叫時傳進來的第 1 個 key → 存在 `KEYS[1]`，你傳進來的第 1 個一般參數 → 存在 `ARGV[1]`。**
-
-👉 這就是「最小可用的分散式鎖」。
-
-### 3. 可重入鎖（Reentrant Lock）
+### 8. 可重入鎖（Reentrant Lock）
 
 #### 問題
 在 Java `synchronized` 中，如果同一個執行緒已經持有鎖，可以再次進入而不會死鎖。但 Redis 基礎版的鎖做不到。
@@ -348,7 +308,7 @@ lockKey → { "owner": "UUID-123", "count": 2 }
 
 👉 這就是**可重入鎖**，防止「同一節點」死鎖。
 
-### 4. 公平鎖（Fair Lock）
+### 9. 公平鎖（Fair Lock）
 
 #### 問題
 一般鎖是「先到先搶」，但在高併發下可能出現**飢餓問題**：某些請求總是搶不到。
@@ -362,7 +322,7 @@ lockKey → { "owner": "UUID-123", "count": 2 }
 
 👉 這就是**公平鎖**，類似 Java `ReentrantLock(true)`，避免某些節點一直餓死。
 
-### 5. CountDownLatch（倒數閘門）
+### 10. CountDownLatch（倒數閘門）
 
 #### 問題
 有些場景需要「等多個任務都完成再繼續」，例如：需要等待 3 個服務都初始化完，才能對外提供 API。
@@ -390,7 +350,7 @@ GET latchKey
 
 👉 這就實現了**跨節點的 CountDownLatch**。
 
-### 6. 為什麼選擇 Redisson？
+### 11. 為什麼選擇 Redisson？
 
 手寫 `SET NX PX + Lua` 只夠處理最基本的「誰先拿到鎖就誰執行」。
 
@@ -545,3 +505,15 @@ INFO 查看記憶體、命中率、連線數。
 - Async 結果查詢延遲
 - 鎖競爭失敗率
 - 快取命中率
+
+### 快取命中率（Cache Hit Ratio）
+
+定義：衡量快取是否有效的核心指標。當請求讀取資料時，資料在快取中稱為命中（Hit），不在快取中稱為未命中（Miss）。
+
+公式：
+
+```
+Hit Ratio = Cache Hits / (Cache Hits + Cache Misses) × 100%
+```
+
+例子：100 次查詢中 80 次命中、20 次未命中 → 命中率 = 80 / 100 = 80%。
