@@ -37,6 +37,71 @@ Redis 是一個**基於記憶體的 Key-Value 資料庫**，特色是：
 - **支援 TTL（過期時間）** → 結果自動清理（30 分鐘）。
 - **高速讀取** → 適合大量輪詢，不會壓垮主資料庫。
 
+### 🔄 幂等性保證的詳細工作流程
+
+#### 完整的處理邏輯
+在非同步訊息系統中，為了防止重複處理和確保結果一致性，我們實現了基於 Redis 的幂等性保證機制。
+
+##### 四種可能的執行路徑
+
+###### 路徑1：首次正常處理
+```java
+setIfAbsent 返回 true（鍵不存在，設置成功）
+alreadyProcessed 为 null（Mono.empty()）
+```
+觸發 `switchIfEmpty` → `cachedFlow.switchIfEmpty(queryFlow)`
+最終執行 `queryFlow`（資料庫查詢）
+
+###### 路徑2：重複請求命中快取
+```java
+setIfAbsent 返回 false（鍵已存在）
+alreadyProcessed 为 Boolean.FALSE
+```
+直接執行 `cachedFlow`（Redis快取）
+
+###### 路徑3：重複請求快取失效
+```java
+setIfAbsent 返回 false（鍵已存在）
+alreadyProcessed 为 Boolean.FALSE
+cachedFlow 返回 Mono.empty()（快取失效）
+```
+觸發 `switchIfEmpty(queryFlow)`，執行資料庫查詢
+
+###### 路徑4：系統異常重試
+```java
+setIfAbsent 返回 false（鍵已存在）
+alreadyProcessed 为 Boolean.FALSE
+```
+如果之前處理失敗過，通過快取或重新查詢保證結果一致性
+
+#### ⏱️ 為什麼選擇5分鐘過期時間？
+
+##### 考慮因素：
+- **處理時間窗口**：給非同步操作足夠的處理時間
+- **重複請求頻率**：防止短時間內大量重複請求
+- **資源清理**：避免Redis中累積太多過期鍵
+- **業務時效性**：5分鐘內重複請求通常是異常情況
+
+#### 🆚 幂等性 vs 快取的區別
+
+| 特性 | 幂等性保證 | 快取機制 |
+|------|------------|----------|
+| **目的** | 防止重複處理 | 提升性能 |
+| **鍵設計** | `idempotent:{operation}:{requestId}` | `cache:{operation}:{params}` |
+| **過期時間** | 較長（5分鐘） | 較短（60秒） |
+| **作用範圍** | 全域請求級別 | 資料級別 |
+
+#### 📨 在非同步訊息系統中的重要性
+由於使用了 RabbitMQ 非同步訊息佇列，訊息可能因為網路問題、服務重啟等原因被重複投遞。Redis 幂等性保證確保了：
+
+- **訊息重複消費防護**
+- **結果一致性**
+- **系統容錯性**
+- **資源浪費控制**
+
+#### 💡 總結
+這個幂等性實現是一個典型的**分散式鎖 + 快取雙重保證的模式**，既防止了重複處理，又提供了性能優化，在非同步訊息處理的場景中特別重要。
+
 ## (B) 分散式鎖（避免多實例重複工作）
 
 ### 🖥️ 單機鎖 vs 分散式鎖：為什麼需要分散式鎖？
@@ -108,6 +173,156 @@ else
   return 0
 end
 ```
+
+#### 🔍 Lua 腳本詳細解釋
+
+##### 完整腳本分析
+```lua
+if redis.call('get', KEYS[1]) == ARGV[1] then
+  return redis.call('del', KEYS[1])
+else
+  return 0
+end
+```
+
+##### 1. if ... then ... else ... end 條件判斷結構
+Lua 的條件判斷結構，和 Java / Python 類似：
+
+```lua
+if 條件 then
+    -- 條件為 true 時執行
+else
+    -- 條件為 false 時執行
+end
+```
+
+**注意**：`end` 是必要的（Lua 用 `end` 來關閉控制結構，而不是大括號 `{}`）。
+
+##### 2. redis.call() - Redis 指令執行 API
+在 Redis 裡跑 Lua 腳本時，提供了一個 API：
+
+```lua
+redis.call("命令", 參數...)
+```
+
+它就是在腳本裡執行原生 Redis 指令。
+
+範例：
+```lua
+redis.call("set", "foo", "bar")
+redis.call("get", "foo") -- 回傳 "bar"
+```
+
+這樣保證 **檢查 + 刪除** 在同一個 Lua 腳本裡完成，不會被其他 client 插隊 → **原子性**。
+
+##### 3. KEYS[1] - 傳進來的 Key 列表
+Redis 執行 Lua 時，會把「傳進來的 key 列表」放在全域變數 `KEYS` 裡。
+
+- `KEYS` 是一個陣列（array），從 1 開始（Lua 陣列索引是 1-based，不是 Java 的 0-based）
+- `KEYS[1]` 就代表呼叫腳本時傳進來的第一個 key
+
+範例呼叫：
+```bash
+EVAL "return KEYS[1]" 1 lock:order:123
+```
+→ 回傳 `"lock:order:123"`
+
+##### 4. ARGV[1] - 傳進來的參數列表
+Redis 也會把「傳進來的參數」放在全域變數 `ARGV` 裡。
+
+- 跟 `KEYS` 類似，它也是 array，從 1 開始
+- `ARGV[1]` 就是呼叫腳本時傳進來的第一個參數
+
+範例呼叫：
+```bash
+EVAL "return ARGV[1]" 0 hello-world
+```
+→ 回傳 `"hello-world"`
+
+##### 5. == 比較運算子
+Lua 的比較運算子，和 Java 一樣表示「等於」。
+
+```lua
+if redis.call("get", KEYS[1]) == ARGV[1]
+```
+→ 如果這個 key 的值等於我傳進來的 UUID，就代表是「我自己上的鎖」。
+
+##### 6. return 回傳值
+從 Lua 腳本回傳值給呼叫方（Java、Redis CLI）。
+
+- `redis.call('del', KEYS[1])` 會回傳刪掉的 key 數量：1（成功）或 0（失敗）
+- `return 0` → 代表沒有刪除（因為不是你持有的鎖）
+
+#### 🔄 程式流程解釋
+
+1. **讀取鎖**：`redis.call("get", KEYS[1])`
+2. **判斷是否等於我持有的 token**：`(上一步結果) == ARGV[1]`
+3. **如果是** → 刪除鎖，並回傳 1
+4. **如果不是** → 不動，回傳 0
+
+#### 📝 核心邏輯拆解
+
+##### `redis.call('get', KEYS[1]) == ARGV[1]`
+- `redis.call('get', KEYS[1])` → 執行 Redis 指令 GET someKey，讀取某個 key 的值
+- `KEYS[1]` → 呼叫 Lua 時傳進來的第一個 key，例如 `lock:order:123`
+- `ARGV[1]` → 呼叫 Lua 時傳進來的第一個參數，通常是隨機生成的 UUID（代表「這把鎖是我加的」）
+- `==` → Lua 的「等於」比較
+
+**意義**：檢查這個鎖的值是不是我的 UUID，確認這把鎖真的是我加的，而不是別人加的。
+
+##### `redis.call('del', KEYS[1])`
+- `redis.call('del', KEYS[1])` → 執行 Redis 指令 DEL someKey，刪掉某個 key
+- `KEYS[1]` → 仍然是傳進來的那個鎖，例如 `lock:order:123`
+- DEL 指令的回傳值：1（刪掉成功）或 0（key 不存在）
+
+**意義**：把這個鎖刪掉，並且回傳結果給呼叫方。
+
+#### 🎯 整體串起來的流程
+
+1. 先用 `GET key` 看看這把鎖是不是我的 `(UUID == ARGV[1])`
+2. 如果是我的 → `DEL key` 把它刪掉
+3. 如果不是我的 → 不刪，回傳 0
+
+**實戰範例**：
+```bash
+EVAL "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end" \
+1 lock:order:123 7f2a-uuid-abc
+```
+
+Redis 會先做 `GET lock:order:123`：
+- 如果 value == `"7f2a-uuid-abc"` → 就執行 `DEL lock:order:123`，回傳 1
+- 如果不是 → 直接回傳 0
+
+#### ⚠️ 重要澄清：KEYS[1] 不是固定位置
+**誤解澄清**：Redis 並不是「每個操作都在位置 1 上做」，這邊的 `KEYS[1]` 和 `ARGV[1]` 其實只是 Lua 腳本呼叫時傳進來的參數陣列。
+
+**Redis Lua 執行規則**：
+```bash
+EVAL <script> <numkeys> key1 key2 ... arg1 arg2 ...
+```
+
+- `<numkeys>`：告訴 Redis「前面有幾個參數是 key」
+- `key1 key2 ...`：這些會被放進 `KEYS` 陣列
+- `arg1 arg2 ...`：這些會被放進 `ARGV` 陣列
+
+**範例**：
+```bash
+EVAL "return {KEYS[1], ARGV[1]}" 1 lock:order:123 my-uuid
+```
+
+執行結果會回傳：
+1. `"lock:order:123"`
+2. `"my-uuid"`
+
+**為什麼要分 KEYS 和 ARGV？**
+- `KEYS`：專門放 Redis 的 key 名稱（比如 `lock:order:123`、`user:1`）
+- `ARGV`：放參數值（比如隨機生成的 UUID、數字、狀態字串）
+
+這樣可以確保：
+- Key 的分布正確（Redis Cluster 模式下很重要，因為 key 要能正確 hash slot）
+- 避免開發者把 key 和參數混在一起
+
+👉 **所以不是 Redis「操作都在 1 的位置上做」，而是：在 Lua 裡你自己呼叫時傳進來的第 1 個 key → 存在 `KEYS[1]`，你傳進來的第 1 個一般參數 → 存在 `ARGV[1]`。**
 
 👉 這就是「最小可用的分散式鎖」。
 
