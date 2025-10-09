@@ -29,12 +29,14 @@
             "en": [
               "Developed CRUD APIs using Spring Boot framework with SSO server integration",
               "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval",
-              "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources."
+              "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources.",
+              "Built gRPC microservices architecture with Protocol Buffers for efficient inter-service communication. Implemented both gRPC server and client stubs for PeopleService, enabling high-performance RPC calls between Gateway and Backend services."
             ],
             "zh": [
               "使用 Spring Boot 框架開發 CRUD API，並整合 SSO 伺服器",
               "以 FastAPI 與 LangChain 架構知識管理問答系統；透過 Laravel API 注入資料，儲存於 PostgreSQL 並轉換為向量嵌入以進行語義檢索",
-              "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理"
+              "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理",
+              "建構 gRPC 微服務架構，使用 Protocol Buffers 實現高效能的服務間通訊。實作 PeopleService 的 gRPC 伺服器與客戶端 Stub，使 Gateway 與 Backend 服務間能夠進行高效能 RPC 調用。"
             ]
           },
           "skills": [
@@ -60,7 +62,15 @@
             { "name": "Express.js", "level": "shade4" },
             { "name": "Async/Await", "level": "shade3" },
             { "name": "Event Loop", "level": "shade4" },
-            { "name": "@RabbitListener", "level": "shade3" }
+            { "name": "@RabbitListener", "level": "shade3" },
+            { "name": "gRPC", "level": "shade3" },
+            { "name": "Protocol Buffers", "level": "shade3" },
+            { "name": "gRPC Stub", "level": "shade3" },
+            { "name": "gRPC Client", "level": "shade3" },
+            { "name": "gRPC Server", "level": "shade3" },
+            { "name": "Microservices", "level": "shade2" },
+            { "name": "API Gateway", "level": "shade2" },
+            { "name": "Spring Cloud Gateway", "level": "shade3" }
           ]
         },
         {
@@ -202,6 +212,10 @@
             { "name": "MongoDB", "level": "shade4" },
             { "name": "Firebase", "level": "shade4" },
             { "name": "Redis", "level": "shade3" },
+            { "name": "RabbitMQ", "level": "shade3" },
+            { "name": "Message Queue", "level": "shade3" },
+            { "name": "Asynchronous Processing", "level": "shade3" },
+            { "name": "Producer-Consumer Pattern", "level": "shade3" },
             { "name": "Celery", "level": "shade4" }
           ]
         }
@@ -284,18 +298,21 @@
           "name": "Monitoring & Visualization",
           "description": {
             "en": [
-              "Integrated Prometheus with Spring Boot Actuator for collecting JVM and custom metrics. Visualized real-time data using Grafana dashboards. Used Kiali to monitor service mesh topology and Istio routing behaviors. Monitored JBoss runtime via Jolokia and collected traces with Instana."
+              "Integrated Prometheus with Spring Boot Actuator for collecting JVM and custom metrics. Visualized real-time data using Grafana dashboards. Monitored JBoss runtime via Jolokia and collected traces with Instana."
             ],
             "zh": [
-              "整合 Prometheus 與 Spring Boot Actuator 收集 JVM 與自訂指標，並以 Grafana 儀表板視覺化即時資料。使用 Kiali 監控服務網格拓撲與 Istio 路由行為。透過 Jolokia 監控 JBoss 執行狀態，並以 Instana 收集 Trace"
+              "整合 Prometheus 與 Spring Boot Actuator 收集 JVM 與自訂指標，並以 Grafana 儀表板視覺化即時資料。透過 Jolokia 監控 JBoss 執行狀態，並以 Instana 收集 Trace"
             ]
           },
           "skills": [
             { "name": "Grafana", "level": "shade4" },
             { "name": "Prometheus", "level": "shade4" },
-            { "name": "Kiali", "level": "shade4" },
             { "name": "Jolokia", "level": "shade3" },
-            { "name": "Instana", "level": "shade4" }
+            { "name": "Instana", "level": "shade4" },
+            { "name": "Resilience4j", "level": "shade3" },
+            { "name": "Circuit Breaker", "level": "shade3" },
+            { "name": "Micrometer", "level": "shade3" },
+            { "name": "Spring Boot Actuator", "level": "shade2" }
           ]
         }
       ]
@@ -329,25 +346,26 @@
           },
           "skills": [
             { "name": "HTTP", "level": "shade1" },
+            { "name": "HTTP/1.1", "level": "shade1" },
+            { "name": "HTTP/2", "level": "shade2" },
             { "name": "WebSocket", "level": "shade3" },
             { "name": "STOMP", "level": "shade4" },
             { "name": "SSL/TLS", "level": "shade1" }
           ]
         },
         {
-          "name": "Service Mesh & Load Balancing",
+          "name": "Load Balancing & Ingress",
           "description": {
             "en": [
               "Deployed Nginx Ingress Controller with all services exposed through ingress and cert-manager TLS, and Nginx Static File Server for serving static files.",
-              "Configured Istio ingress gateway with routing policies and mTLS for internal services. Applied round-robin load balancing for stateless services and integrated Nginx for static assets delivery. Used cert-manager with ACME to issue and auto-renew TLS certs for ingress."
+              "Applied round-robin load balancing for stateless services and integrated Nginx for static assets delivery. Used cert-manager with ACME to issue and auto-renew TLS certificates for ingress."
             ],
             "zh": [
               "部署 Nginx Ingress Controller，透過 Ingress 暴露所有服務並以 cert-manager 發行 TLS 憑證，同時使用 Nginx Static File Server 提供靜態檔案",
-              "設定 Istio Ingress Gateway 路由策略與 mTLS 來保護內部服務。對無狀態服務採用 Round-Robin 負載均衡，並整合 Nginx 以傳送靜態資源。使用 cert-manager 搭配 ACME 發行並自動續期 Ingress TLS 憑證"
+              "對無狀態服務採用 Round-Robin 負載均衡，並整合 Nginx 以傳送靜態資源。使用 cert-manager 搭配 ACME 發行並自動續期 Ingress TLS 憑證"
             ]
           },
           "skills": [
-            { "name": "Istio", "level": "shade4" },
             { "name": "Ingress", "level": "shade1" },
             { "name": "Nginx Ingress Controller", "level": "shade2" },
             { "name": "Nginx Static File Server", "level": "shade3" },
