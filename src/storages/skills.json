@@ -326,7 +326,8 @@
       },
       "skills": [
         { "name": "Jenkins", "level": "shade3" },
-        { "name": "Docker BuildKit", "level": "shade5" }
+        { "name": "Docker BuildKit", "level": "shade5" },
+        { "name": "GitHub Package", "level": "shade3" }
       ]
     },
     {
@@ -455,7 +456,8 @@
             { "name": "Cursor", "level": "shade1" },
             { "name": "Yum Repository", "level": "shade3" },
             { "name": "Satellite", "level": "shade4" },
-            { "name": "Google Apps Script", "level": "shade3" }
+            { "name": "Google Apps Script", "level": "shade3" },
+            { "name": "GitHub Submodule", "level": "shade3" }
           ]
         }
       ]
