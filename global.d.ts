@@ -1,7 +1,7 @@
-/// <reference path="../.astro/types.d.ts" />
+// Global type declarations for Astro
 /// <reference types="astro/client" />
 
-// 環境變數類型聲明
+// Environment variables type declarations
 interface ImportMetaEnv {
   readonly PUBLIC_TYMB_URL: string
   readonly PUBLIC_TYMG_URL: string
@@ -18,10 +18,4 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv
-}
-
-// 允許 TypeScript 直接 import JSON 檔案
-declare module "*.json" {
-  const value: any;
-  export default value;
 }

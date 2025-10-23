@@ -1,9 +1,6 @@
 export function getApiBaseUrl(): string {
-	// 開發環境使用 localhost:8000，生產環境使用 PUBLIC_API_BASE_URL
-	if (import.meta.env.DEV) {
-		return 'http://localhost:8000';
-	}
-	return (import.meta as any).env.PUBLIC_API_BASE_URL || '';
+	// 使用 PUBLIC_API_BASE_URL，開發和生產環境都一樣
+	return (import.meta as any).env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
 }
 
 export function getOrCreateUserId(storageKey: string = 'qabot_user_id'): string {

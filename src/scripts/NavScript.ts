@@ -96,7 +96,7 @@ export class NavController {
       }
 
       // 使用 auth 服務執行登出
-      const success = await logout(refreshToken);
+      const success = await logout.logout(refreshToken);
       if (success) {
         window.location.href = '/tymultiverse/';
       } else {
@@ -111,7 +111,7 @@ export class NavController {
   private async validateAdminAccess() {
     try {
       if (this.isLoggedIn && this.token) {
-        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/guardian/admin`;        
+        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/auth/admin`;        
         // 使用 fetch 直接調用管理員端點來驗證權限
         const response = await fetch(apiUrl, {
           method: 'GET',
@@ -145,7 +145,7 @@ export class NavController {
   private async validateUserAccess() {
     try {
       if (this.isLoggedIn && this.token) {
-        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/guardian/user`;
+        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/auth/user`;
         
         // 使用 fetch 直接調用用戶端點來驗證權限
         const response = await fetch(apiUrl, {

@@ -75,9 +75,10 @@ class CharacterService {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      // 直接使用後端 API，不使用代理
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
-      console.log('🌐 使用後端 URL:', baseUrl);
+      // 通過 Gateway API 調用
+      const { config } = await import('./config');
+      const baseUrl = config.api.baseUrl;
+      console.log('🌐 使用 Gateway URL:', baseUrl);
       console.log('📤 發送請求到:', `${baseUrl}/people/get-all`);
       console.log('📋 請求頭:', headers);
       

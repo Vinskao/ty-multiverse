@@ -90,7 +90,8 @@ class ServiceManager {
     // API 連接健康檢查
     this.monitorService.registerHealthCheck('API Connection', async () => {
       try {
-        const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
+        const { config } = await import('./config');
+        const baseUrl = config.api.baseUrl;
         const response = await fetch(`${baseUrl}/health`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },

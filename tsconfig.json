@@ -7,5 +7,10 @@
     ],
     "jsx": "preserve"
   },
-  "exclude": ["**/*.astro"]
+  "include": ["global.d.ts", "src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".astro"
+  ]
 }

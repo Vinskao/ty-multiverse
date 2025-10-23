@@ -73,7 +73,7 @@ sequenceDiagram
     participant Client
     participant Router
     participant Keycloak
-    participant Guardian
+    participant Auth
     participant API
     participant DB
     
@@ -86,15 +86,15 @@ sequenceDiagram
     API-->>Keycloak: 返回 access_token 和 refresh_token
     Keycloak-->>Client: 重定向回應用 + tokens
     
-    Note over Client,Guardian: 三層權限驗證系統
-    Client->>Guardian: 第一層：管理員權限驗證 (/guardian/admin)
-    Guardian-->>Client: 200 OK (管理員) / 403 Forbidden
-    
-    Client->>Guardian: 第二層：用戶權限驗證 (/guardian/user)
-    Guardian-->>Client: 200 OK (用戶) / 401 Unauthorized
-    
-    Client->>Guardian: 第三層：基本權限檢查 (token 存在)
-    Guardian-->>Client: 驗證結果
+    Note over Client,Auth: 三層權限驗證系統
+    Client->>Auth: 第一層：管理員權限驗證 (/auth/admin)
+    Auth-->>Client: 200 OK (管理員) / 403 Forbidden
+
+    Client->>Auth: 第二層：用戶權限驗證 (/auth/user)
+    Auth-->>Client: 200 OK (用戶) / 401 Unauthorized
+
+    Client->>Auth: 第三層：基本權限檢查 (token 存在)
+    Auth-->>Client: 驗證結果
     
     Client->>Router: 帶驗證結果訪問資源
     Router-->>Client: 返回對應權限的資源
@@ -111,12 +111,12 @@ sequenceDiagram
     Client->>Router: 重定向到登入頁
 ```
 
-### Guardian API 權限系統
+### Auth API 權限系統
 
 #### 權限層級
-- **Admin (管理員)**：可訪問 `/guardian/admin`，需要 `manage-users` 角色
-- **User (用戶)**：可訪問 `/guardian/user`，任何有效 token
-- **Visitor (訪客)**：可訪問 `/guardian/visitor`，無需驗證
+- **Admin (管理員)**：可訪問 `/auth/admin`，需要 `manage-users` 角色
+- **User (用戶)**：可訪問 `/auth/user`，任何有效 token
+- **Visitor (訪客)**：可訪問 `/auth/visitor`，無需驗證
 
 #### 驗證流程
 1. **第一層**：嘗試管理員權限驗證
@@ -129,21 +129,35 @@ sequenceDiagram
    - 有 token → 設定 `hasUserAccess = true`, `isAdmin = false`
    - 無 token → 設定所有權限為 `false`
 
-#### Guardian API 端點
+#### Auth API 端點
 
 ```typescript
 // 管理員端點
-GET /guardian/admin
+GET /auth/admin
 Authorization: Bearer <token>
 Response: 200 OK / 403 Forbidden / 401 Unauthorized
 
-// 用戶端點  
-GET /guardian/user
+// 用戶端點
+GET /auth/user
 Authorization: Bearer <token>
 Response: 200 OK / 401 Unauthorized
 
 // 訪客端點
-GET /guardian/visitor
+GET /auth/visitor
+Response: 200 OK
+
+// 認證測試端點
+POST /auth/test
+Authorization: Bearer <token>
+Response: 200 OK / 401 Unauthorized
+
+// 登出測試端點
+POST /auth/logout-test
+Authorization: Bearer <token>
+Response: 200 OK / 401 Unauthorized
+
+// 健康檢查端點
+GET /auth/health
 Response: 200 OK
 ```
 

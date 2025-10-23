@@ -7,6 +7,9 @@
     "start": "node ./dist/server/entry.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
     "astro": "astro"
   },
   "dependencies": {
@@ -41,9 +44,14 @@
     "undici": "^7.4.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/cors": "^2.8.14",
     "@types/jquery": "^3.5.29",
-    "@types/node": "^20.7.1"
+    "@types/node": "^20.7.1",
+    "jsdom": "^27.0.1",
+    "vitest": "^4.0.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-musl": "4.9.5"

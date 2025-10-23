@@ -1,5 +1,390 @@
-import { TYMB_URL } from '../config';
 import { storageService } from './storageService';
+import { config } from './config';
+
+// 為了兼容性，添加環境變量訪問
+const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+
+// 抽象基類 - API 請求基礎類別
+abstract class BaseAPI {
+  protected baseUrl: string;
+  protected timeout: number;
+
+  constructor(baseUrl: string = config.api.baseUrl, timeout: number = config.api.timeout) {
+    this.baseUrl = baseUrl;
+    this.timeout = timeout;
+  }
+
+  // 抽象方法 - 子類別必須實現
+  protected abstract getEndpoint(): string;
+  protected abstract getRequiredRole(): string | null;
+
+  // 通用請求方法
+  protected async makeRequest(method: string = 'GET', body?: any): Promise<any> {
+    const url = `${this.baseUrl}${this.getEndpoint()}`;
+    const headers: Record<string, string> = {
+      ...config.api.headers
+    };
+
+    // 獲取 token
+    const token = storageService.get(storageService.KEYS.TOKEN);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const requestOptions: RequestInit = {
+      method,
+      headers
+    };
+
+    if (body && method !== 'GET') {
+      requestOptions.body = JSON.stringify(body);
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      const response = await fetch(url, {
+        ...requestOptions,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed for ${this.getEndpoint()}:`, error);
+      throw error;
+    }
+  }
+
+  // 驗證用戶權限
+  protected async validateAccess(): Promise<boolean> {
+    const requiredRole = this.getRequiredRole();
+    if (!requiredRole) {
+      return true; // 公開端點，無需驗證
+    }
+
+    try {
+      // 這裡可以實現更複雜的權限驗證邏輯
+      // 目前簡化為檢查 token 是否存在
+      const token = storageService.get(storageService.KEYS.TOKEN);
+      return !!token;
+    } catch (error) {
+      console.error('Access validation failed:', error);
+      return false;
+    }
+  }
+
+  // 公共 API 方法
+  public async call(): Promise<any> {
+    const hasAccess = await this.validateAccess();
+    if (!hasAccess) {
+      throw new Error('Access denied');
+    }
+
+    return this.makeRequest();
+  }
+}
+
+// 管理員端點 API
+export class AdminAPI extends BaseAPI {
+  protected getEndpoint(): string {
+    return '/auth/admin';
+  }
+
+  protected getRequiredRole(): string {
+    return 'manage-users';
+  }
+
+  // 管理員專用方法
+  public async getAdminInfo(): Promise<any> {
+    return this.call();
+  }
+}
+
+// 用戶端點 API
+export class UserAPI extends BaseAPI {
+  protected getEndpoint(): string {
+    return '/auth/user';
+  }
+
+  protected getRequiredRole(): string | null {
+    return null; // 任何有效 token 都可以
+  }
+
+  // 用戶專用方法
+  public async getUserInfo(): Promise<any> {
+    return this.call();
+  }
+}
+
+// 公開端點 API
+export class VisitorAPI extends BaseAPI {
+  protected getEndpoint(): string {
+    return '/auth/visitor';
+  }
+
+  protected getRequiredRole(): string | null {
+    return null; // 公開端點，無需驗證
+  }
+
+  // 公開方法
+  public async getVisitorInfo(): Promise<any> {
+    return this.call();
+  }
+}
+
+// Auth 服務主類別
+export class AuthService {
+  private adminAPI: AdminAPI;
+  private userAPI: UserAPI;
+  private visitorAPI: VisitorAPI;
+
+  constructor() {
+    // Auth API 直接調用 Backend，不通過 Gateway
+    this.adminAPI = new AdminAPI(config.api.backendUrl);
+    this.userAPI = new UserAPI(config.api.backendUrl);
+    this.visitorAPI = new VisitorAPI(config.api.backendUrl);
+  }
+
+  // 測試管理員端點
+  public async testAdminEndpoint(): Promise<any> {
+    try {
+      const result = await this.adminAPI.getAdminInfo();
+      console.log('Admin endpoint test result:', result);
+      return result;
+    } catch (error) {
+      console.error('Admin endpoint test failed:', error);
+      throw error;
+    }
+  }
+
+  // 測試用戶端點
+  public async testUserEndpoint(): Promise<any> {
+    try {
+      const result = await this.userAPI.getUserInfo();
+      console.log('User endpoint test result:', result);
+      return result;
+    } catch (error) {
+      console.error('User endpoint test failed:', error);
+      throw error;
+    }
+  }
+
+  // 測試公開端點
+  public async testVisitorEndpoint(): Promise<any> {
+    try {
+      const result = await this.visitorAPI.getVisitorInfo();
+      console.log('Visitor endpoint test result:', result);
+      return result;
+    } catch (error) {
+      console.error('Visitor endpoint test failed:', error);
+      throw error;
+    }
+  }
+
+  // 測試完整的認證整合功能
+  public async testAuthIntegration(refreshToken?: string): Promise<any> {
+    try {
+      const url = `${config.api.baseUrl}/auth/test`;
+      const headers: Record<string, string> = {
+        ...config.api.headers
+      };
+
+      // 獲取 token
+      const token = storageService.get(storageService.KEYS.TOKEN);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const requestOptions: RequestInit = {
+        method: 'POST',
+        headers
+      };
+
+      if (refreshToken) {
+        requestOptions.body = `refreshToken=${encodeURIComponent(refreshToken)}`;
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+
+      const response = await fetch(url, requestOptions);
+
+      if (!response.ok) {
+        throw new Error(`Auth integration test failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Auth integration test result:', result);
+      return result;
+    } catch (error) {
+      console.error('Auth integration test failed:', error);
+      throw error;
+    }
+  }
+
+  // 測試登出功能
+  public async testLogout(refreshToken: string): Promise<any> {
+    try {
+      const url = `${config.api.baseUrl}/auth/logout-test`;
+      const headers: Record<string, string> = {
+        ...config.api.headers,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      };
+
+      // 獲取 token
+      const token = storageService.get(storageService.KEYS.TOKEN);
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const requestOptions: RequestInit = {
+        method: 'POST',
+        headers,
+        body: `refreshToken=${encodeURIComponent(refreshToken)}`
+      };
+
+      const response = await fetch(url, requestOptions);
+
+      if (!response.ok) {
+        throw new Error(`Logout test failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Logout test result:', result);
+      return result;
+    } catch (error) {
+      console.error('Logout test failed:', error);
+      throw error;
+    }
+  }
+
+  // 健康檢查
+  public async healthCheck(): Promise<any> {
+    try {
+      const url = `${config.api.baseUrl}/auth/health`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: config.api.headers
+      });
+
+      if (!response.ok) {
+        throw new Error(`Health check failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Auth health check result:', result);
+      return result;
+    } catch (error) {
+      console.error('Health check failed:', error);
+      throw error;
+    }
+  }
+
+  // 批量測試所有端點
+  public async testAllEndpoints(): Promise<{
+    admin: any;
+    user: any;
+    visitor: any;
+    authTest: any;
+    healthCheck: any;
+  }> {
+    const results = {
+      admin: null,
+      user: null,
+      visitor: null,
+      authTest: null,
+      healthCheck: null
+    };
+
+    try {
+      results.healthCheck = await this.healthCheck();
+    } catch (error) {
+      console.error('Health check failed:', error);
+    }
+
+    try {
+      results.visitor = await this.testVisitorEndpoint();
+    } catch (error) {
+      console.error('Visitor endpoint failed:', error);
+    }
+
+    try {
+      results.user = await this.testUserEndpoint();
+    } catch (error) {
+      console.error('User endpoint failed:', error);
+    }
+
+    try {
+      results.admin = await this.testAdminEndpoint();
+    } catch (error) {
+      console.error('Admin endpoint failed:', error);
+    }
+
+    try {
+      const refreshToken = storageService.get(storageService.KEYS.REFRESH_TOKEN) as string;
+      results.authTest = await this.testAuthIntegration(refreshToken || undefined);
+    } catch (error) {
+      console.error('Auth integration test failed:', error);
+    }
+
+    return results;
+  }
+
+  // 獲取當前用戶的 token
+  public getCurrentToken(): string | null {
+    return storageService.get(storageService.KEYS.TOKEN);
+  }
+
+  // 檢查是否有有效的 token
+  public hasValidToken(): boolean {
+    const token = this.getCurrentToken();
+    return !!token;
+  }
+
+  // 執行登出操作
+  public async logout(refreshToken?: string): Promise<boolean> {
+    try {
+      // 保存當前主題設置
+      const currentTheme = localStorage.getItem('theme');
+
+      // 如果有 refresh token，調用後端登出 API
+      if (refreshToken) {
+        await this.testLogout(refreshToken);
+      }
+
+      // 清除除了主題以外的所有數據
+      Object.keys(localStorage).forEach(key => {
+        if (key !== 'theme') {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // 清除所有 cookie
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+      }
+
+      // 確保主題設置被保留（如果原本有的話）
+      if (currentTheme) {
+        localStorage.setItem('theme', currentTheme);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error during logout:', error);
+      return false;
+    }
+  }
+}
 
 // 驗證狀態追踪
 let isVerifying = false;
@@ -14,38 +399,29 @@ let verificationInterval = null; // 追踪定期驗證的 interval
  * @param {string} refreshToken - 刷新令牌
  * @returns {Promise<{valid: boolean, tokenRefreshed: boolean, accessToken: string|null, refreshToken: string|null}>}
  */
-export async function verifyToken(token: string, refreshToken: string): Promise<{
+async function verifyToken(token: string, refreshToken: string): Promise<{
   valid: boolean;
   tokenRefreshed: boolean;
   accessToken?: string;
   refreshToken?: string;
 }> {
-  // console.log('verifyToken - Starting token verification');
-  // console.log('verifyToken - Token exists:', !!token);
-  // console.log('verifyToken - Refresh Token exists:', !!refreshToken);
-  // console.log('verifyToken - TYMB_URL:', TYMB_URL);
-  
   // 如果沒有提供 token，嘗試從 storageService 獲取
   if (!token) {
     token = storageService.get(storageService.KEYS.TOKEN);
-    // console.log('verifyToken - Retrieved token from storage:', !!token);
   }
-  
+
   // 如果沒有提供 refreshToken，嘗試從 storageService 獲取
   if (!refreshToken) {
     refreshToken = storageService.get(storageService.KEYS.REFRESH_TOKEN);
-    // console.log('verifyToken - Retrieved refresh token from storage:', !!refreshToken);
   }
-  
+
   // 如果 token 沒有變化，跳過驗證
   if (token === lastToken) {
-    // console.log('verifyToken - Token unchanged, skipping verification');
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
 
   // 如果正在驗證或距離上次驗證時間太短，則跳過
   if (isVerifying || Date.now() - lastVerifyTime < VERIFY_COOLDOWN) {
-    // console.log('verifyToken - Skipping token verification - too soon or already verifying');
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
 
@@ -56,18 +432,16 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
   try {
     // 構建 API URL
     const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
-    // console.log('verifyToken - API URL:', apiUrl.toString());
 
     // 構建請求體
     const formData = new FormData();
     formData.append('token', token);
-    
+
     // 如果有 refresh token，添加到請求體中
     if (refreshToken && refreshToken.trim() !== '') {
       formData.append('refreshToken', refreshToken);
     }
 
-    // console.log('verifyToken - Sending request to introspect endpoint');
     const response = await fetch(apiUrl.toString(), {
       method: 'POST',
       headers: {
@@ -78,20 +452,15 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
       mode: 'cors'
     });
 
-    // console.log('verifyToken - Response status:', response.status);
-    
     if (response.ok) {
       const data = await response.json();
-      // console.log('verifyToken - Token introspection data:', data);
 
       // 檢查 token 是否有效
       if (data.active) {
-        // console.log('verifyToken - Token is active');
         // 如果是新的 token，就更新前端儲存的 token
         if (data.access_token) {
-          // console.log('verifyToken - New access token received');
           // 保存新的 token 到 storageService（僅在瀏覽器環境中）
-          if (storageService.isBrowser()) {
+          if (typeof window !== 'undefined') {
             storageService.set(storageService.KEYS.TOKEN, data.access_token);
             if (data.refresh_token) {
               storageService.set(storageService.KEYS.REFRESH_TOKEN, data.refresh_token);
@@ -104,10 +473,9 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
             refreshToken: data.refresh_token
           };
         }
-        
-        // console.log('verifyToken - Token is valid but not refreshed');
+
         // 保存當前的 token 到 storageService（僅在瀏覽器環境中）
-        if (storageService.isBrowser()) {
+        if (typeof window !== 'undefined') {
           storageService.set(storageService.KEYS.TOKEN, token);
           if (refreshToken) {
             storageService.set(storageService.KEYS.REFRESH_TOKEN, refreshToken);
@@ -119,19 +487,8 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
           accessToken: token,
           refreshToken: refreshToken
         };
-      } else {
-        // console.log('verifyToken - Token is not active');
-      }
-    } else {
-      // console.log('verifyToken - Response not OK');
-      try {
-        const errorData = await response.json();
-        // console.log('verifyToken - Error data:', errorData);
-      } catch (e) {
-        // console.log('verifyToken - Could not parse error response');
       }
     }
-    // console.log('verifyToken - Token validation failed');
     return {
       valid: false,
       tokenRefreshed: false,
@@ -139,7 +496,6 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
       refreshToken: null
     };
   } catch (error) {
-    // console.error('verifyToken - Token verification failed:', error);
     return {
       valid: false,
       tokenRefreshed: false,
@@ -158,7 +514,7 @@ export async function verifyToken(token: string, refreshToken: string): Promise<
  * @param {Function} onTokenRefreshed - token 刷新時的回調
  * @param {Function} onTokenInvalid - token 無效時的回調
  */
-export function startTokenVerification(
+function startTokenVerification(
   token: string,
   refreshToken: string,
   onTokenRefreshed: (newToken: string, newRefreshToken: string) => void,
@@ -198,110 +554,23 @@ export function startTokenVerification(
 /**
  * 停止 token 驗證
  */
-export function stopTokenVerification(): void {
+function stopTokenVerification(): void {
   if (verificationInterval) {
     clearInterval(verificationInterval);
     verificationInterval = null;
   }
 }
 
-/**
- * 驗證 refresh token 是否有效
- * @param refreshToken - 要驗證的 refresh token
- * @returns Promise<boolean> - token 是否有效
- */
-export async function validateRefreshToken(refreshToken: string): Promise<boolean> {
-  try {
-    const response = await fetch(`${TYMB_URL}/keycloak/validate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+// 創建單例實例
+export const authService = new AuthService();
 
-    if (!response.ok) {
-      console.error('Token validation failed:', response.status);
-      return false;
-    }
+// 導出認證相關函數以保持向後兼容性
+export {
+  verifyToken,
+  startTokenVerification,
+  stopTokenVerification,
+  authService as logout
+};
 
-    const data = await response.json();
-    return data.valid === true;
-  } catch (error) {
-    console.error('Error validating token:', error);
-    return false;
-  }
-}
-
-/**
- * 執行登出操作
- * @param refreshToken - 要註銷的 refresh token
- * @returns Promise<boolean> - 登出是否成功
- */
-export async function logout(refreshToken: string): Promise<boolean> {
-  try {
-    // 保存當前主題設置
-    const currentTheme = localStorage.getItem('theme');
-
-    // 構建登出 URL
-    const logoutUrl = new URL(`${TYMB_URL}/keycloak/logout`);
-    
-    // 構建請求體
-    const formData = new FormData();
-    formData.append('refreshToken', refreshToken);
-
-    // 發送登出請求
-    const response = await fetch(logoutUrl.toString(), {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-      mode: 'cors'
-    });
-
-    if (!response.ok) {
-      console.error('Logout failed:', response.status);
-      return false;
-    }
-
-    // 清除除了主題以外的所有數據
-    Object.keys(localStorage).forEach(key => {
-      if (key !== 'theme') {
-        localStorage.removeItem(key);
-      }
-    });
-
-    // 清除所有 cookie
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i];
-      const eqPos = cookie.indexOf('=');
-      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-      document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-    }
-
-    // 確保主題設置被保留（如果原本有的話）
-    if (currentTheme) {
-      localStorage.setItem('theme', currentTheme);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error during logout:', error);
-    return false;
-  }
-}
-
-/**
- * 執行登入操作
- * @param {string} clientId - 客戶端 ID
- * @param {string} realm - 領域名稱
- * @param {string} redirectUri - 重定向 URI
- * @param {string} ssoUrl - SSO 服務器 URL
- */
-export function login(clientId: string, realm: string, redirectUri: string, ssoUrl: string): void {
-  // 構建授權 URL
-  const authorizationUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  
-  // 重定向到授權頁面
-  window.location.href = authorizationUrl;
-} 
+// 導出類型
+export type { BaseAPI };

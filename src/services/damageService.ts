@@ -56,7 +56,8 @@ class DamageService {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
+      const { config } = await import('./config');
+      const baseUrl = config.api.baseUrl;
       // 傷害計算 URL
 
       const response = await fetch(`${baseUrl}/people/damageWithWeapon?name=${encodeURIComponent(characterName)}`, {
