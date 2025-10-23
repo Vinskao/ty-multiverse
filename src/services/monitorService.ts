@@ -140,7 +140,8 @@ class MonitorService {
   // 更新 Consumer 狀態
   private async updateConsumerStatus(): Promise<void> {
     try {
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
+      const { config } = await import('./config');
+      const baseUrl = config.api.baseUrl;
       
       // 檢查 Consumer 連接狀態
       const response = await fetch(`${baseUrl}/health/consumer`, {

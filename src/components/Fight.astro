@@ -219,9 +219,8 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 從 API 獲取角色名稱列表（同步）
   async function fetchCharacterNames() {
     try {
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
-
-      const response = await fetch(`${baseUrl}/people/names`, {
+      // 使用前端 API 代理端點
+      const response = await fetch('/api/people/names', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -267,9 +266,8 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 根據名稱獲取角色詳細信息（同步）
   async function fetchCharacterByName(name: string) {
     try {
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
-
-      const response = await fetch(`${baseUrl}/people/get-by-name`, {
+      // 使用前端 API 代理端點
+      const response = await fetch('/api/people/get-by-name', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1373,11 +1371,10 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
-      const response = await fetch(`${baseUrl}/weapons/owner/${ownerName}`, {
+      // 使用前端服務層而不是直接調用後端
+      const response = await fetch(`/api/weapons/owner/${ownerName}`, {
         method: "GET",
-        headers,
-        credentials: 'include'
+        headers
       });
 
       // 武器 API 響應

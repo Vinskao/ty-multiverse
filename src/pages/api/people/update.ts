@@ -7,15 +7,13 @@ export const POST: APIRoute = async ({ request }) => {
     
     console.log('🔄 處理 people/update 請求:', requestBody);
     
-    // Get the backend URL from environment or use default
-    const backendUrl = import.meta.env.DEV 
-      ? 'http://localhost:8080/tymb/people/update'
-      : `${import.meta.env.PUBLIC_TYMB_URL || 'https://peoplesystem.tatdvsonorth.com/tymb'}/people/update`;
+    // Get the gateway URL from environment or use default
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/people/update`;
     
-    console.log('📡 轉發到後端:', backendUrl);
-    
-    // Forward the request to the backend server
-    const response = await fetch(backendUrl, {
+    console.log('📡 轉發到 Gateway:', gatewayUrl);
+
+    // Forward the request to the gateway server
+    const response = await fetch(gatewayUrl, {
       method: 'POST',
       headers: {
         'accept': '*/*',

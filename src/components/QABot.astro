@@ -298,10 +298,8 @@ import '../styles/qabot.css';
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
       try {
-        if (!import.meta.env.PUBLIC_TYMB_URL) {
-  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
-}
-const apiBase = import.meta.env.PUBLIC_TYMB_URL;
+        // 使用前端 API 代理端點而不是直接調用後端
+        const apiBase = '';
         const token = localStorage.getItem('token');
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'
@@ -312,7 +310,7 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
         }
         
         
-        const resp = await fetch(`${apiBase}/people/names`, {
+        const resp = await fetch('/api/people/names', {
           method: 'GET',
           headers,
           credentials: 'include'
@@ -1148,7 +1146,7 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
 
     // 調用 QA API
     private async callQAAPI(payload: string | object) {
-      const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
       const apiPathPrefix = '/maya-sawa';
       
       // 如果是字符串，構建基本 payload
@@ -1191,7 +1189,7 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
     // 載入聊天歷史
     private async loadChatHistory() {
       try {
-        const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+        const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
         const apiPathPrefix = '/maya-sawa';
         
         const token = localStorage.getItem('token');
@@ -1260,7 +1258,7 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
     // 載入更多歷史記錄
     private async loadMoreHistory() {
       try {
-        const apiBaseUrl = import.meta.env.DEV ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || '');
+        const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
         const apiPathPrefix = '/maya-sawa';
         
         const token = localStorage.getItem('token');
@@ -1915,14 +1913,24 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
     private renderAnalysisCard(answer: string, analysisType: string, contentLength: number) {
       const currentLang = this.state.currentLanguage;
       const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
-      const labels = templates?.labels || {};
-      const metadata = templates?.metadata || {};
-      
+      const labels = templates?.labels || {
+        page_summary: '📄 頁面摘要',
+        page_key_points: '🔍 重點提取',
+        page_technical: '⚙️ 技術分析',
+        page_qa: '❓ 問題生成'
+      };
+      const metadata = templates?.metadata || {
+        content_length: '內容長度',
+        source: '來源',
+        reanalyze: '🔄 重新分析',
+        copy_result: '📋 複製結果'
+      };
+
       const typeLabels: Record<string, string> = {
-        'page_summary': labels.page_summary || '📄 頁面摘要',
-        'page_key_points': labels.page_key_points || '🔍 重點提取',
-        'page_technical': labels.page_technical || '⚙️ 技術分析',
-        'page_qa': labels.page_qa || '❓ 問題生成'
+        'page_summary': labels.page_summary,
+        'page_key_points': labels.page_key_points,
+        'page_technical': labels.page_technical,
+        'page_qa': labels.page_qa
       };
       
       const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answer));
@@ -2001,13 +2009,18 @@ const apiBase = import.meta.env.PUBLIC_TYMB_URL;
         // 生成用戶提示消息
         const currentLang = this.state.currentLanguage;
         const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
-        const labels = templates?.labels || {};
-        
+        const labels = templates?.labels || {
+          page_summary: '📄 頁面摘要',
+          page_key_points: '🔍 重點提取',
+          page_technical: '⚙️ 技術分析',
+          page_qa: '❓ 問題生成'
+        };
+
         const typeLabels: Record<string, string> = {
-          summary: labels.page_summary || '📄 頁面摘要',
-          key_points: labels.page_key_points || '🔍 重點提取',
-          technical: labels.page_technical || '⚙️ 技術分析',
-          qa: labels.page_qa || '❓ 問題生成'
+          summary: labels.page_summary,
+          key_points: labels.page_key_points,
+          technical: labels.page_technical,
+          qa: labels.page_qa
         };
         
         const userPrompt = currentLang === 'english' 

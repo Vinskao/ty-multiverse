@@ -83,7 +83,7 @@
 </div>
 
 <script type="module">
-    const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+    // 使用前端 API 代理端點而不是直接調用後端
     const dropZone = document.getElementById('dropZone');
     const imageGallery = document.getElementById('imageGallery');
 
@@ -128,10 +128,8 @@
     }
 
     function saveToDatabase(base64Data) {
-        axios.post(`${baseUrl}/gallery/save`, {
-            id: 0,
-            imageBase64: base64Data,
-            uploadTime: new Date().toISOString(),
+        axios.post('/api/gallery/save', {
+            imageBase64: base64Data
         }).then(response => {
             if (response.status === 200) {
                 console.log('Image saved to database');
@@ -143,7 +141,7 @@
     }
 
     function fetchGalleryImages() {
-        axios.post(`${baseUrl}/gallery/getAll`)
+        axios.post('/api/gallery/getAll')
             .then(response => {
                 const images = response.data;
                 imageGallery.innerHTML = ''; // Clear current gallery
@@ -168,7 +166,7 @@
     }
 
     function deleteImage(imageId) {
-        axios.post(`${baseUrl}/gallery/delete`, { id: imageId })
+        axios.post('/api/gallery/delete', { id: imageId })
             .then(response => {
                 if (response.status === 204) {
                     // console.log('Image deleted');

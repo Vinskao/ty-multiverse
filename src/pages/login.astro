@@ -1,26 +1,25 @@
 ---
 // 獲取環境變數
+import { BACKEND_URL, SSO_URL, CLIENT_ID, REALM } from '../config';
+
 if (!import.meta.env.PUBLIC_TYMB_URL) {
   throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
 }
-const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
-const SSO_URL = import.meta.env.PUBLIC_SSO_URL;
+
 const PEOPLE_IMG_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-const clientId = import.meta.env.PUBLIC_CLIENT_ID;
-const realm = import.meta.env.PUBLIC_REALM;
-const redirectUri = `${TYMB_URL}/keycloak/redirect`;
+const redirectUri = `${BACKEND_URL}/keycloak/redirect`;
 
 // 生成 Keycloak 的授權 URL
-const authorizationUrl = `${SSO_URL}/realms/${realm}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+const authorizationUrl = `${SSO_URL}/realms/${REALM}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
   redirectUri
 )}`;
 
 // 除錯：印出實際的授權 URL 和 redirect_uri
 console.log('=== 前端授權 URL 除錯 ===');
-console.log('TYMB_URL:', TYMB_URL);
+console.log('BACKEND_URL:', BACKEND_URL);
 console.log('SSO_URL:', SSO_URL);
-console.log('Client ID:', clientId);
-console.log('Realm:', realm);
+console.log('Client ID:', CLIENT_ID);
+console.log('Realm:', REALM);
 console.log('Redirect URI:', redirectUri);
 console.log('完整授權 URL:', authorizationUrl);
 

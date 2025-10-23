@@ -536,7 +536,7 @@ function parseProject(project: string, lang: LangKey): {
                                               +Token Introspect
                                           }
                                           
-                                          class Guardian {
+                                          class Auth {
                                               +User Management
                                               +Admin Operations
                                               +Token Validation
@@ -602,7 +602,7 @@ function parseProject(project: string, lang: LangKey): {
                                           TYMBackendApplication --> SessionConfig
                                           
                                           SecurityConfig --> KeycloakController
-                                          SecurityConfig --> Guardian
+                                          SecurityConfig --> Auth
                                           SecurityConfig --> SessionConfig
                                           
                                           SessionConfig --> RedisConfig

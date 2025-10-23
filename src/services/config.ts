@@ -2,19 +2,21 @@
 export const config = {
   // API 配置
   api: {
-    baseUrl: import.meta.env.PUBLIC_TYMB_URL,
+    baseUrl: import.meta.env.PUBLIC_TYMG_URL || import.meta.env.PUBLIC_TYMB_URL || import.meta.env.PUBLIC_API_BASE_URL,
+    backendUrl: import.meta.env.PUBLIC_TYMB_URL,
+    gatewayUrl: import.meta.env.PUBLIC_TYMG_URL,
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     }
   },
-  
+
   // 資源配置
   resources: {
     peopleImageUrl: import.meta.env.PUBLIC_PEOPLE_IMAGE_URL,
   },
-  
+
   // 路由配置
   routes: {
     login: '/tymultiverse/login',

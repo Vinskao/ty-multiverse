@@ -1,9 +1,9 @@
 ---
-// 從環境變數獲取 API 基礎 URL
-if (!import.meta.env.PUBLIC_TYMB_URL) {
-  throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
+// 從環境變數獲取 API 基礎 URL - 現在使用 Gateway
+if (!import.meta.env.PUBLIC_TYMG_URL) {
+  throw new Error('PUBLIC_TYMG_URL 環境變量未設置');
 }
-const hostUrl = import.meta.env.PUBLIC_TYMB_URL;
+const hostUrl = import.meta.env.PUBLIC_TYMG_URL;
 
 // 獲取 URL 參數來檢查登入狀態
 const url = new URL(Astro.request.url);
@@ -323,12 +323,25 @@ const token = url.searchParams.get('token');
         // 直接使用 Astro 提供的 hostUrl 變數
         const API_BASE_URL = hostUrl;
         
+        // 獲取 JWT token
+        const getAuthToken = () => {
+            return localStorage.getItem('accessToken') || localStorage.getItem('token') || null;
+        };
+
         // 配置 axios 實例
         const apiClient = axios.create({
             baseURL: API_BASE_URL,
             timeout: 10000,
-            headers: { 'Content-Type': 'application/json' },
-            auth: { username: 'admin', password: 'admin' }
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        // 添加 JWT token 到請求頭
+        apiClient.interceptors.request.use((config) => {
+            const token = getAuthToken();
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
         });
         
         // Base64 上傳適配器 - 直接將圖片轉換為 base64 而不上傳到服務器
@@ -373,6 +386,28 @@ const token = url.searchParams.get('token');
                 else if (error.request) showStatus('獲取內容失敗: 未收到伺服器響應', 'error');
                 else showStatus(`獲取內容失敗: ${error.message}`, 'error');
                 return localStorage.getItem('editorContent') || '';
+            }
+        }
+
+        // 獲取草稿內容
+        async function fetchDraft() {
+            try {
+                const response = await apiClient.post('/ckeditor/get-draft', { editor: EDITOR_ID });
+                return response.data.content || '';
+            } catch (error) {
+                console.error('獲取草稿失敗:', error);
+                return '';
+            }
+        }
+
+        // 保存草稿
+        async function saveDraft(content) {
+            try {
+                await apiClient.post('/ckeditor/save-draft', { editor: EDITOR_ID, content });
+                return true;
+            } catch (error) {
+                console.error('保存草稿失敗:', error);
+                return false;
             }
         }
 
@@ -459,14 +494,24 @@ const token = url.searchParams.get('token');
                 console.error('設置黑色主題時出錯:', e);
             }
             
-            // 初始化內容
-            const initialContent = await fetchContent();
+            // 初始化內容：優先載入草稿，沒有草稿再載入正式內容
+            let initialContent = '';
+            if (isLoggedIn) {
+                initialContent = await fetchDraft(); // 先嘗試載入草稿
+                if (!initialContent) {
+                    initialContent = await fetchContent(); // 沒有草稿就載入正式內容
+                }
+            } else {
+                initialContent = await fetchContent(); // 未登入時載入正式內容
+            }
+
             if (initialContent) {
                 editor.setData(initialContent);
             }
 
             // 監聽內容變化
             let saveTimeout;
+            let draftTimeout;
             editor.model.document.on('change:data', () => {
                 if (!isLoggedIn) {
                     showStatus('請先登入後再編輯', 'warning');
@@ -474,18 +519,38 @@ const token = url.searchParams.get('token');
                     return;
                 }
                 updateSaveIndicator(false);
+
+                // 清除之前的定時器
                 clearTimeout(saveTimeout);
+                clearTimeout(draftTimeout);
+
+                // 每 30 秒自動保存草稿
+                draftTimeout = setTimeout(() => {
+                    const data = editor.getData();
+                    saveDraft(data);
+                    showStatus('草稿已自動保存', 'info');
+                }, 30000);
+
+                // 每 2 秒檢查是否需要保存正式內容
                 saveTimeout = setTimeout(() => {
                     const data = editor.getData();
                     saveContent(data);
                 }, 2000);
             });
             
-            // 離開頁面時儲存內容
+            // 離開頁面時儲存內容和草稿
             window.addEventListener('beforeunload', (event) => {
-                if (saveTimeout) {
-                    const data = editor.getData();
-                    localStorage.setItem('editorContent', data);
+                const data = editor.getData();
+
+                // 保存到本地存儲作為備份
+                localStorage.setItem('editorContent', data);
+
+                // 如果有未保存的更改，提示用戶
+                if (saveTimeout || draftTimeout) {
+                    // 異步保存草稿（不會阻塞頁面離開）
+                    if (isLoggedIn) {
+                        saveDraft(data);
+                    }
                     event.preventDefault();
                     event.returnValue = '有未儲存的更改，確定要離開嗎？';
                 }
