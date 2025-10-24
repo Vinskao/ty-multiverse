@@ -62,61 +62,26 @@ class CharacterService {
 
   // 從 API 獲取角色數據
   private async fetchCharactersFromAPI(): Promise<Character[]> {
-    const serviceManager = (await import('./serviceManager')).default.getInstance();
-    
-    return await serviceManager.executeAPI(async () => {
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      // 通過 Gateway API 調用
-      const { config } = await import('./config');
-      const baseUrl = config.api.baseUrl;
-      console.log('🌐 使用 Gateway URL:', baseUrl);
-      console.log('📤 發送請求到:', `${baseUrl}/people/get-all`);
-      console.log('📋 請求頭:', headers);
-      
-      const response = await fetch(`${baseUrl}/people/get-all`, {
-        method: "POST",
-        headers,
-        body: '{}', // 根據API規範，body可以是空JSON或省略
-        credentials: 'include'
-      });
-      
-      console.log('📡 API 響應狀態:', response.status, response.statusText);
-      console.log('📡 響應頭:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API 錯誤詳情:', errorText);
-        throw new Error(`API 返回錯誤: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('📥 收到數據:', data);
-      
-      // 檢查是否為異步處理響應
-      if (data.status === 'processing' || data.requestId) {
-        console.log('⏳ 檢測到異步處理，開始輪詢結果...');
-        console.log('🆔 RequestId:', data.requestId);
-        return await this.pollForResult(data.requestId, baseUrl);
-      }
-      
-      // 檢查是否為陣列（直接響應）
-      if (Array.isArray(data)) {
-        console.log('✅ 收到直接響應數據');
-        return data;
-      }
-      
-      console.error('❌ 未知的數據格式:', data);
-      throw new Error('API 返回無效數據格式');
-    }, 'CharacterService.getCharacters');
+    // 使用統一的 peopleService 替代直接調用 Gateway API
+    const { peopleService } = await import('./peopleService');
+    const people = await peopleService.getAllPeopleAndWait();
+
+    // 轉換為 Character 格式
+    return people.map(person => ({
+      id: 0, // People 沒有 id，使用 0
+      name: person.name,
+      nameOriginal: person.nameOriginal,
+      physicPower: person.physicPower || 0,
+      magicPower: person.magicPower || 0,
+      utilityPower: person.utilityPower || 0,
+      attributes: person.attributes,
+      faction: '', // People 沒有 faction
+      armyName: '', // People 沒有 armyName
+      totalPower: (person.physicPower || 0) + (person.magicPower || 0) + (person.utilityPower || 0),
+      weaponBonus: 0, // 暫時設置為 0
+      hasBonus: false,
+      weaponData: null
+    }));
   }
 
   // 輪詢結果直到完成

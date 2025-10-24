@@ -219,25 +219,9 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 從 API 獲取角色名稱列表（同步）
   async function fetchCharacterNames() {
     try {
-      // 使用前端 API 代理端點
-      const response = await fetch('/api/people/names', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      console.log('📡 API 響應狀態:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API 錯誤詳情:', errorText);
-        throw new Error(`API 錯誤: ${response.status} - ${errorText}`);
-      }
-
-      const names = await response.json();
+      // 使用統一的 peopleService
+      const { peopleService } = await import('../services/peopleService');
+      const names = await peopleService.getAllPeopleNames();
 
       // 確保是數組格式
       const allNames = Array.isArray(names) ? names : ['default'];
@@ -266,24 +250,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 根據名稱獲取角色詳細信息（同步）
   async function fetchCharacterByName(name: string) {
     try {
-      // 使用前端 API 代理端點
-      const response = await fetch('/api/people/get-by-name', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({ name })
-      });
+      // 使用統一的 peopleService
+      const { peopleService } = await import('../services/peopleService');
+      const person = await peopleService.getPersonByNameAndWait(name);
 
-      if (!response.ok) {
-        throw new Error(`獲取角色信息失敗: ${response.status}`);
-      }
-
-      const characterData = await response.json();
-
-      return characterData;
+      return person;
     } catch (error) {
       console.error(`❌ 獲取角色 ${name} 信息失敗:`, error);
       throw error;
@@ -1359,49 +1330,11 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
     // 通用的武器 API 調用函數（異步處理）
   async function fetchWeaponData(ownerName: string) {
     try {
-      // 開始獲取武器數據
+      // 使用統一的 weaponService
+      const { weaponService } = await import('../services/weaponService');
+      const weapons = await weaponService.getWeaponsByOwner(ownerName);
 
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      // 使用前端服務層而不是直接調用後端
-      const response = await fetch(`/api/weapons/owner/${ownerName}`, {
-        method: "GET",
-        headers
-      });
-
-      // 武器 API 響應
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ 武器 API 錯誤:`, errorText);
-        throw new Error(`武器 API 錯誤: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      // 武器 API 數據
-
-      // 檢查是否是異步處理
-      if (data.requestId && data.status === 'processing') {
-        // 武器數據正在處理中，開始輪詢
-        return await pollWeaponData(data.requestId, baseUrl);
-      }
-
-      // 如果直接返回數據
-      if (Array.isArray(data)) {
-        // 獲取到武器數據
-        return data;
-      }
-
-      // 武器數據格式異常
-      return [];
+      return weapons;
     } catch (error) {
       console.error(`❌ 獲取武器數據失敗 (${ownerName}):`, error);
       return [];

@@ -32,6 +32,94 @@ graph TD
     Client --> |緩存數據| BrowserCache
 ```
 
+## API 文檔
+
+### 前端統一 API 管理
+
+前端採用統一的 API 管理架構，所有 API 調用都通過 `src/pages/api/` 下的端點統一管理，並使用 `src/services/` 中的服務層進行調用。
+
+#### People 模組 API
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/api/people/names` | GET | 獲取所有角色名稱 | 無 | `string[]` |
+| `/api/people/get-by-name` | POST | 根據名稱查詢角色 | `{ name: string }` | `Person` |
+| `/api/people/update` | POST | 更新角色資訊 | `Person` | `Person` |
+
+#### Weapons 模組 API
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/api/weapons/index` | GET | 獲取所有武器 | 無 | `Weapon[]` |
+| `/api/weapons/[name]` | GET | 根據名稱獲取武器 | URL 參數: name | `Weapon` |
+| `/api/weapons/owner/[ownerName]` | GET | 根據所有者獲取武器 | URL 參數: ownerName | `Weapon[]` |
+
+#### Gallery 模組 API
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/api/gallery/getAll` | POST | 獲取所有圖片 | 無 | `GalleryImage[]` |
+| `/api/gallery/getById` | GET | 根據ID獲取圖片 | Query: `id` | `GalleryImage` |
+| `/api/gallery/save` | POST | 保存圖片 | `{ imageBase64: string }` | `GalleryImage` |
+| `/api/gallery/update` | POST | 更新圖片 | `{ id: number, imageBase64?: string }` | `GalleryImage` |
+| `/api/gallery/delete` | POST | 刪除圖片 | `{ id: number }` | `void` |
+
+#### Blackjack 遊戲 API
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/api/deckofcards/blackjack/start` | POST | 開始遊戲 | `{ playerName: string }` | `GameState` |
+| `/api/deckofcards/blackjack/hit` | POST | 抽牌 | `{ gameId: string }` | `GameState` |
+| `/api/deckofcards/blackjack/stand` | POST | 停牌 | `{ gameId: string }` | `GameState` |
+| `/api/deckofcards/blackjack/end` | POST | 結束遊戲 | `{ gameId: string }` | `GameResult` |
+| `/api/deckofcards/blackjack/state` | POST | 獲取遊戲狀態 | `{ gameId: string }` | `GameState` |
+| `/api/deckofcards/blackjack/status` | POST | 獲取遊戲狀態 | `{ gameId: string }` | `GameStatus` |
+
+#### 其他 API
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/api/qa-proxy` | POST | QA 系統代理 | `{ text: string }` | QA 回應 |
+| `/api/sync-characters` | POST | 同步角色到 Google Apps Script | `Character[]` | `{ success: boolean, characterCount: number }` |
+
+### 服務層架構
+
+所有前端組件都通過統一的服務層調用 API：
+
+```
+組件 (Component) → 服務層 (Service) → API 端點 (API Route) → 後端 (Backend)
+```
+
+#### 可用的服務
+
+- **peopleService** - 處理 People 模組相關操作
+- **weaponService** - 處理 Weapons 模組相關操作
+- **galleryService** - 處理 Gallery 模組相關操作
+- **syncService** - 處理數據同步相關操作
+- **characterService** - 處理角色數據緩存和獲取
+
+#### 服務使用示例
+
+```typescript
+// 使用 peopleService
+import { peopleService } from '../services/peopleService';
+
+// 獲取所有角色名稱
+const names = await peopleService.getAllPeopleNames();
+
+// 獲取特定角色
+const person = await peopleService.getPersonByNameAndWait('角色名稱');
+```
+
+### API 調用統一原則
+
+1. **統一入口**: 所有 API 調用通過 `/api/*` 端點
+2. **服務層封裝**: 使用服務層處理業務邏輯和錯誤處理
+3. **類型安全**: 使用 TypeScript 類型定義確保數據結構一致性
+4. **錯誤處理**: 統一的錯誤處理和用戶提示
+5. **認證管理**: 自動處理 JWT token 認證
+6. **響應快取**: 適當使用緩存減少重複請求
+
 ### 路由架構
 
 ```mermaid

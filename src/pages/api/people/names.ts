@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async () => {
   try {
-    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/people/names`;
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/people/get-all`;
 
     console.log('🔄 代理 people/names 請求到 Gateway:', gatewayUrl);
 
@@ -19,9 +19,12 @@ export const GET: APIRoute = async () => {
     }
 
     const result = await response.json();
-    console.log('✅ people/names 代理成功:', result);
+    console.log('✅ people/get-all 代理成功:', result);
 
-    return new Response(JSON.stringify(result), {
+    // 從完整的 People 數據中提取名稱
+    const names = result.people ? result.people.map((person: any) => person.name) : [];
+
+    return new Response(JSON.stringify(names), {
       status: 200,
       headers: {
         'Content-Type': 'application/json'

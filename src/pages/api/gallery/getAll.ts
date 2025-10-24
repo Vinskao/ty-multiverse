@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async () => {
   try {
-    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/gallery/getAll`;
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/gallery/get-all`;
 
     console.log('🔄 代理 gallery/getAll 請求到 Gateway:', gatewayUrl);
 
