@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = async ({ request }) => {
   try {
-    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/weapons`;
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/weapons/get-all`;
 
     console.log('🔄 代理 weapons 請求: GET all weapons');
 
@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/weapons`;
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/weapons/get-all`;
 
     console.log('🔄 代理 weapons 請求: POST create/update weapon');
 

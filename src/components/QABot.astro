@@ -298,42 +298,24 @@ import '../styles/qabot.css';
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
       try {
-        // 使用前端 API 代理端點而不是直接調用後端
-        const apiBase = '';
-        const token = localStorage.getItem('token');
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json'
-        };
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        
-        
-        const resp = await fetch('/api/people/names', {
-          method: 'GET',
-          headers,
-          credentials: 'include'
-        });
-                
-        if (resp.ok) {
-          const names = await resp.json();
-          
-          if (Array.isArray(names)) {
-            // 確保 Maya 在列表內
-            if (!names.includes('Maya')) names.unshift('Maya');
-            this.state.availableBots = names;
-            
-            // 初始化後先過濾無句庫的
-            if (this.messages) this.pruneAvailableBots();
-            
-            this.state.currentBotIndex = names.indexOf('Maya');
-            return; // 成功後直接返回
-          }
+        // 使用統一的 peopleService
+        const { peopleService } = await import('../services/peopleService');
+        const names = await peopleService.getAllPeopleNames();
+
+        if (Array.isArray(names)) {
+          // 確保 Maya 在列表內
+          if (!names.includes('Maya')) names.unshift('Maya');
+          this.state.availableBots = names;
+
+          // 初始化後先過濾無句庫的
+          if (this.messages) this.pruneAvailableBots();
+
+          this.state.currentBotIndex = names.indexOf('Maya');
+          return; // 成功後直接返回
         } else {
           // API 調用失敗，顯示 Sweet Alert 提示用戶先登入
           this.showLoginAlert();
-          console.warn('❌ API回應錯誤:', resp.status, resp.statusText);
+          console.warn('❌ API回應錯誤: 無效的數據格式');
         }
       } catch (err) {
         // 網路錯誤，顯示 Sweet Alert 提示用戶先登入

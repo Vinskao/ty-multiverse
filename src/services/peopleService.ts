@@ -106,6 +106,14 @@ class PeopleService {
   // 1. People 模組 APIs
 
   /**
+   * 獲取所有角色名稱
+   */
+  async getAllPeopleNames(): Promise<string[]> {
+    const response = await this.makeRequest<string[]>('/api/people/names');
+    return response.data;
+  }
+
+  /**
    * 插入單個角色
    */
   async insertPerson(person: Person): Promise<ProducerResponse> {

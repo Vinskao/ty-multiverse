@@ -15,7 +15,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/gallery/getById`;
+    const gatewayUrl = `${import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg'}/gallery/get-by-id`;
 
     console.log('🔄 代理 gallery/getById 請求:', { id });
 
@@ -57,5 +57,6 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 };
+
 
 
