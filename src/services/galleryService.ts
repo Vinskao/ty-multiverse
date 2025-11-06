@@ -54,7 +54,7 @@ class GalleryService {
    * 保存圖片
    */
   async saveImage(request: GallerySaveRequest): Promise<GalleryImage> {
-    const response = await this.makeRequest<GalleryImage>('/api/gallery/save', 'POST', request);
+    const response = await this.makeRequest<GalleryImage>('/gallery/save', 'POST', request);
     return response.data;
   }
 
@@ -62,7 +62,7 @@ class GalleryService {
    * 獲取所有圖片
    */
   async getAllImages(): Promise<GalleryImage[]> {
-    const response = await this.makeRequest<GalleryImage[]>('/api/gallery/getAll', 'POST');
+    const response = await this.makeRequest<GalleryImage[]>('/gallery/getAll', 'POST');
     return response.data;
   }
 
@@ -70,7 +70,7 @@ class GalleryService {
    * 根據ID獲取圖片
    */
   async getImageById(id: number): Promise<GalleryImage> {
-    const response = await this.makeRequest<GalleryImage>(`/api/gallery/getById?id=${id}`);
+    const response = await this.makeRequest<GalleryImage>(`/gallery/getById?id=${id}`);
     return response.data;
   }
 
@@ -78,7 +78,7 @@ class GalleryService {
    * 更新圖片
    */
   async updateImage(request: GalleryUpdateRequest): Promise<GalleryImage> {
-    const response = await this.makeRequest<GalleryImage>('/api/gallery/update', 'POST', request);
+    const response = await this.makeRequest<GalleryImage>('/gallery/update', 'POST', request);
     return response.data;
   }
 
@@ -86,7 +86,7 @@ class GalleryService {
    * 刪除圖片
    */
   async deleteImage(request: GalleryDeleteRequest): Promise<void> {
-    await this.makeRequest('/api/gallery/delete', 'POST', request);
+    await this.makeRequest('/gallery/delete', 'POST', request);
   }
 }
 

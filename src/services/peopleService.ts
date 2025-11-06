@@ -117,7 +117,7 @@ class PeopleService {
    * 插入單個角色
    */
   async insertPerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/insert', 'POST', person);
+    const response = await this.makeRequest<ProducerResponse>('/people/insert', 'POST', person);
     return response.data;
   }
 
@@ -125,7 +125,7 @@ class PeopleService {
    * 更新角色
    */
   async updatePerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/update', 'POST', person);
+    const response = await this.makeRequest<ProducerResponse>('/people/update', 'POST', person);
     return response.data;
   }
 
@@ -133,7 +133,7 @@ class PeopleService {
    * 批量插入角色
    */
   async insertMultiplePeople(people: Person[]): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/insert-multiple', 'POST', people);
+    const response = await this.makeRequest<ProducerResponse>('/people/insert-multiple', 'POST', people);
     return response.data;
   }
 
@@ -141,7 +141,7 @@ class PeopleService {
    * 獲取所有角色
    */
   async getAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/get-all', 'POST');
+    const response = await this.makeRequest<ProducerResponse>('/people/get-all', 'POST');
     return response.data;
   }
 
@@ -149,7 +149,7 @@ class PeopleService {
    * 根據名稱查詢角色
    */
   async getPersonByName(name: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/get-by-name', 'POST', { name });
+    const response = await this.makeRequest<ProducerResponse>('/people/get-by-name', 'POST', { name });
     return response.data;
   }
 
@@ -157,7 +157,7 @@ class PeopleService {
    * 刪除所有角色
    */
   async deleteAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/people/delete-all', 'POST');
+    const response = await this.makeRequest<ProducerResponse>('/people/delete-all', 'POST');
     return response.data;
   }
 
@@ -167,7 +167,7 @@ class PeopleService {
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/weapons');
+    const response = await this.makeRequest<ProducerResponse>('/weapons');
     return response.data;
   }
 
@@ -175,7 +175,7 @@ class PeopleService {
    * 保存武器
    */
   async saveWeapon(weapon: Weapon): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/tymg/weapons', 'POST', weapon);
+    const response = await this.makeRequest<ProducerResponse>('/weapons', 'POST', weapon);
     return response.data;
   }
 
@@ -185,7 +185,7 @@ class PeopleService {
    * 計算角色武器傷害
    */
   async calculateDamage(personName: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>(`/tymg/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
+    const response = await this.makeRequest<ProducerResponse>(`/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
     return response.data;
   }
 
@@ -195,7 +195,7 @@ class PeopleService {
    * 查詢請求狀態
    */
   async getRequestStatus(requestId: string): Promise<RequestStatus> {
-    const response = await this.makeRequest<RequestStatus>(`/tymg/api/request-status/${requestId}`);
+    const response = await this.makeRequest<RequestStatus>(`/api/request-status/${requestId}`);
     return response.data;
   }
 
@@ -203,7 +203,7 @@ class PeopleService {
    * 檢查請求是否存在
    */
   async checkRequestExists(requestId: string): Promise<{ requestId: string; exists: boolean }> {
-    const response = await this.makeRequest<{ requestId: string; exists: boolean }>(`/tymg/api/request-status/${requestId}/exists`);
+    const response = await this.makeRequest<{ requestId: string; exists: boolean }>(`/api/request-status/${requestId}/exists`);
     return response.data;
   }
 
@@ -211,7 +211,7 @@ class PeopleService {
    * 移除請求狀態
    */
   async removeRequestStatus(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/tymg/api/request-status/${requestId}`, 'DELETE');
+    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/api/request-status/${requestId}`, 'DELETE');
     return response.data;
   }
 
@@ -221,7 +221,7 @@ class PeopleService {
    * 查詢 People 結果
    */
   async getPeopleResult<T = any>(requestId: string): Promise<ResultResponse<T>> {
-    const response = await this.makeRequest<ResultResponse<T>>(`/tymg/people/result/${requestId}`);
+    const response = await this.makeRequest<ResultResponse<T>>(`/people/result/${requestId}`);
     return response.data;
   }
 
@@ -229,7 +229,7 @@ class PeopleService {
    * 檢查結果是否存在
    */
   async checkResultExists(requestId: string): Promise<{ requestId: string; exists: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; exists: boolean; message: string }>(`/tymg/people/result/${requestId}/exists`);
+    const response = await this.makeRequest<{ requestId: string; exists: boolean; message: string }>(`/people/result/${requestId}/exists`);
     return response.data;
   }
 
@@ -237,7 +237,7 @@ class PeopleService {
    * 清理結果
    */
   async cleanupResult(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/tymg/people/result/${requestId}`, 'DELETE');
+    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/people/result/${requestId}`, 'DELETE');
     return response.data;
   }
 

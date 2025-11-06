@@ -51,7 +51,7 @@ class WeaponService {
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<Weapon[]> {
-    const response = await this.makeRequest<Weapon[]>('/api/weapons/index');
+    const response = await this.makeRequest<Weapon[]>('/weapons');
     return response.data;
   }
 
@@ -59,7 +59,7 @@ class WeaponService {
    * 根據名稱獲取武器
    */
   async getWeaponByName(name: string): Promise<Weapon> {
-    const response = await this.makeRequest<Weapon>(`/api/weapons/${encodeURIComponent(name)}`);
+    const response = await this.makeRequest<Weapon>(`/weapons/${encodeURIComponent(name)}`);
     return response.data;
   }
 
@@ -67,7 +67,7 @@ class WeaponService {
    * 根據所有者獲取武器
    */
   async getWeaponsByOwner(ownerName: string): Promise<Weapon[]> {
-    const response = await this.makeRequest<Weapon[]>(`/api/weapons/owner/${encodeURIComponent(ownerName)}`);
+    const response = await this.makeRequest<Weapon[]>(`/weapons/owner/${encodeURIComponent(ownerName)}`);
     return response.data;
   }
 
@@ -75,7 +75,7 @@ class WeaponService {
    * 保存武器
    */
   async saveWeapon(weapon: WeaponSaveRequest): Promise<Weapon> {
-    const response = await this.makeRequest<Weapon>('/tymg/weapons', 'POST', weapon);
+    const response = await this.makeRequest<Weapon>('/weapons', 'POST', weapon);
     return response.data;
   }
 }
