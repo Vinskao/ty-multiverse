@@ -149,8 +149,8 @@ graph TD
         G[palais<br>需要 admin 權限]
         H[control<br>需要 user 權限]
 
-        Note over F,G: 管理員專用功能
-        Note over H: 用戶權限即可使用
+        Note over F,G: Administrator functions only
+        Note over H: User access required
     end
 ```
 
@@ -371,18 +371,18 @@ graph TD
     D --> F[Backend gRPC Service<br/>Port 9090]
 
     subgraph "Spring Cloud Gateway Routes"
-        G[/api/request-status/**<br/>GET, DELETE]
-        H[/api/people/result/**<br/>GET, DELETE]
-        I[/auth/**<br/>GET, POST]
-        J[/health/**<br/>GET]
-        K[/actuator/**<br/>GET]
+        G["/api/request-status/**<br/>GET, DELETE"]
+        H["/api/people/result/**<br/>GET, DELETE"]
+        I["/auth/**<br/>GET, POST"]
+        J["/health/**<br/>GET"]
+        K["/actuator/**<br/>GET"]
     end
 
     subgraph "Manual gRPC Controllers"
-        L[/people/**<br/>gRPC PeopleService]
-        M[/weapons/**<br/>gRPC WeaponService]
-        N[/gallery/**<br/>gRPC GalleryService]
-        O[/deckofcards/**<br/>gRPC DeckofcardsService]
+        L["/people/**<br/>gRPC PeopleService"]
+        M["/weapons/**<br/>gRPC WeaponService"]
+        N["/gallery/**<br/>gRPC GalleryService"]
+        O["/deckofcards/**<br/>gRPC DeckofcardsService"]
     end
 
     C --> G
