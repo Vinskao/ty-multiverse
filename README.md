@@ -358,6 +358,68 @@ graph TD
 2. React 組件使用共享資源
 3. 組件渲染結果被整合到最終的 HTML 輸出中
 
+### API Gateway 路由架構
+
+```mermaid
+graph TD
+    A[Frontend Request<br/>http://localhost:8082/tymg/*] --> B{Gateway Router}
+
+    B --> C[Spring Cloud Gateway<br/>Simple HTTP Routes]
+    B --> D[Manual Controllers<br/>gRPC + Complex Logic]
+
+    C --> E[Backend REST API<br/>Port 8080]
+    D --> F[Backend gRPC Service<br/>Port 9090]
+
+    subgraph "Spring Cloud Gateway Routes"
+        G[/api/request-status/**<br/>GET, DELETE]
+        H[/api/people/result/**<br/>GET, DELETE]
+        I[/auth/**<br/>GET, POST]
+        J[/health/**<br/>GET]
+        K[/actuator/**<br/>GET]
+    end
+
+    subgraph "Manual gRPC Controllers"
+        L[/people/**<br/>gRPC PeopleService]
+        M[/weapons/**<br/>gRPC WeaponService]
+        N[/gallery/**<br/>gRPC GalleryService]
+        O[/deckofcards/**<br/>gRPC DeckofcardsService]
+    end
+
+    C --> G
+    C --> H
+    C --> I
+    C --> J
+    C --> K
+
+    D --> L
+    D --> M
+    D --> N
+    D --> O
+
+    G --> E
+    H --> E
+    I --> E
+    J --> E
+    K --> E
+
+    L --> F
+    M --> F
+    N --> F
+    O --> F
+
+    %% Styling
+    style A fill:#3b82f6,stroke:#1d4ed8,stroke-width:3px,color:#ffffff
+    style B fill:#f59e0b,stroke:#d97706,stroke-width:3px,color:#000000
+    style C fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
+    style D fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
+    style E fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#ffffff
+    style F fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+
+    %% Subgraph styling
+    classDef gatewayGroup fill:#f0fdf4,stroke:#86efac,stroke-width:2px
+    classDef manualGroup fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+```
+
 ### Astro Pages 路由運作機制
 
 1. **路由類型**
