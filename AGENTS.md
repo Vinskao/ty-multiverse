@@ -337,15 +337,15 @@ Services Layer (src/services/)
 **Target:** Backend (TYMB) - Direct (NO Gateway)  
 **Authentication:** Bearer Token
 
-| Frontend Endpoint | Method | Description | Full URL | Backend Endpoint | Auth Required | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|------------------|---------------|--------|-------------|-------------|
-| `/auth/admin` | GET | Test admin endpoint | `http://localhost:8080/tymb/auth/admin` | `/auth/admin` | ✅ | ✅ | 401 | Unauthorized - No token provided |
-| `/auth/user` | GET | Test user endpoint | `http://localhost:8080/tymb/auth/user` | `/auth/user` | ✅ | ✅ | 401 | Unauthorized - No token provided |
-| `/auth/visitor` | GET | Test visitor endpoint | `http://localhost:8080/tymb/auth/visitor` | `/auth/visitor` | ❌ | ✅ | 200 | OK - Public endpoint accessible |
-| `/auth/test` | POST | Auth integration test | `http://localhost:8080/tymb/auth/test` | `/auth/test` | ✅ | ✅ | 401 | Unauthorized - No token provided |
-| `/auth/logout-test` | POST | Logout test | `http://localhost:8080/tymb/auth/logout-test` | `/auth/logout-test` | ✅ | ✅ | 401 | Unauthorized - No token provided |
-| `/auth/health` | GET | Health check | `http://localhost:8080/tymb/auth/health` | `/auth/health` | ❌ | ✅ | 200 | OK - Health check passed |
-| `/keycloak/introspect` | POST | Token validation & refresh | `http://localhost:8080/tymb/keycloak/introspect` | `/keycloak/introspect` | ❌ | ✅ | 400 | Bad Request - Invalid token format |
+| Frontend Endpoint | Method | Description | Full URL | Backend Endpoint | Auth Required | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|------------------|---------------|--------|-------------|-------------|-----------|
+| `/auth/admin` | GET | Test admin endpoint | `http://localhost:8080/tymb/auth/admin` | `/auth/admin` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
+| `/auth/user` | GET | Test user endpoint | `http://localhost:8080/tymb/auth/user` | `/auth/user` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
+| `/auth/visitor` | GET | Test visitor endpoint | `http://localhost:8080/tymb/auth/visitor` | `/auth/visitor` | ❌ | ✅ | 200 | OK - Public endpoint accessible | ✅ Backend: Public endpoint allows anonymous access |
+| `/auth/test` | POST | Auth integration test | `http://localhost:8080/tymb/auth/test` | `/auth/test` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
+| `/auth/logout-test` | POST | Logout test | `http://localhost:8080/tymb/auth/logout-test` | `/auth/logout-test` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
+| `/auth/health` | GET | Health check | `http://localhost:8080/tymb/auth/health` | `/auth/health` | ❌ | ✅ | 200 | OK - Health check passed | ✅ Backend: Health endpoint returns OK |
+| `/keycloak/introspect` | POST | Token validation & refresh | `http://localhost:8080/tymb/keycloak/introspect` | `/keycloak/introspect` | ❌ | ✅ | 400 | Bad Request - Invalid token format | ✅ Backend: Keycloak validation rejects invalid token format |
 
 **Request Flow:**
 ```
@@ -366,26 +366,26 @@ Frontend → Backend (/tymb/auth/*, /tymb/keycloak/*) - DIRECT (bypasses Gateway
 
 #### Producer APIs (Initiate Request)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Returns | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|-------------------|------------------|---------|------|--------|-------------|-------------|
-| `/people/insert` | POST | Insert single person | `http://localhost:8082/tymg/people/insert` | `/people/insert` | gRPC: `InsertPerson(data)` | RequestId | ✅ | ✅ | 201 | Created - Request queued successfully |
-| `/people/update` | POST | Update person | `http://localhost:8082/tymg/people/update` | `/people/update` | gRPC: `UpdatePerson(data)` | RequestId | ✅ | ✅ | 200 | OK - Update request accepted |
-| `/people/insert-multiple` | POST | Batch insert people | `http://localhost:8082/tymg/people/insert-multiple` | `/people/insert-multiple` | gRPC: `InsertMultiplePeople(data)` | RequestId | ✅ | ✅ | 201 | Created - Batch request queued |
-| `/people/get-all` | POST | Get all people | `http://localhost:8082/tymg/people/get-all` | `/people/get-all` | gRPC: `GetAllPeople()` | RequestId | ✅ | ✅ | 202 | Accepted - Async request initiated |
-| `/people/get-by-name` | POST | Get person by name | `http://localhost:8082/tymg/people/get-by-name` | `/people/get-by-name` | gRPC: `GetPersonByName(name)` | RequestId | ✅ | ✅ | 200 | OK - Query request accepted |
-| `/people/delete-all` | POST | Delete all people | `http://localhost:8082/tymg/people/delete-all` | `/people/delete-all` | gRPC: `DeleteAllPeople()` | RequestId | ✅ | ✅ | 204 | No Content - Delete request queued |
-| `/people/damageWithWeapon` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/people/damageWithWeapon` | `/people/damageWithWeapon` | RequestId | ✅ | ✅ | 500 | Internal Error - Missing person data |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Returns | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|-------------------|------------------|---------|------|--------|-------------|-------------|-----------|
+| `/people/insert` | POST | Insert single person | `http://localhost:8082/tymg/people/insert` | `/people/insert` | gRPC: `InsertPerson(data)` | RequestId | ✅ | ✅ | 201 | Created - Request queued successfully | ✅ Gateway→gRPC→Consumer |
+| `/people/update` | POST | Update person | `http://localhost:8082/tymg/people/update` | `/people/update` | gRPC: `UpdatePerson(data)` | RequestId | ✅ | ✅ | 200 | OK - Update request accepted | ✅ Gateway→gRPC→Consumer |
+| `/people/insert-multiple` | POST | Batch insert people | `http://localhost:8082/tymg/people/insert-multiple` | `/people/insert-multiple` | gRPC: `InsertMultiplePeople(data)` | RequestId | ✅ | ✅ | 201 | Created - Batch request queued | ✅ Gateway→gRPC→Consumer |
+| `/people/get-all` | POST | Get all people | `http://localhost:8082/tymg/people/get-all` | `/people/get-all` | gRPC: `GetAllPeople()` | RequestId | ✅ | ✅ | 202 | Accepted - Async request initiated | ✅ Gateway→gRPC→Consumer |
+| `/people/get-by-name` | POST | Get person by name | `http://localhost:8082/tymg/people/get-by-name` | `/people/get-by-name` | gRPC: `GetPersonByName(name)` | RequestId | ✅ | ✅ | 200 | OK - Query request accepted | ✅ Gateway→gRPC→Consumer |
+| `/people/delete-all` | POST | Delete all people | `http://localhost:8082/tymg/people/delete-all` | `/people/delete-all` | gRPC: `DeleteAllPeople()` | RequestId | ✅ | ✅ | 204 | No Content - Delete request queued | ✅ Gateway→gRPC→Consumer |
+| `/people/damageWithWeapon` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/people/damageWithWeapon` | `/people/damageWithWeapon` | RequestId | ✅ | ✅ | 500 | Internal Error - Missing person data | ❌ Gateway(500)←Backend(400): "Character not found or invalid" |
 
 #### Consumer APIs (Fetch Results)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Endpoint | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|---------------|------------------|------|--------|-------------|-------------|
-| `/api/request-status/{requestId}` | GET | Get request status | `http://localhost:8082/tymg/api/request-status/{requestId}` | `/api/request-status/{requestId}` | `/api/request-status/{requestId}` | ✅ | ✅ | 500 | Internal Error - RequestId not found in Redis |
-| `/api/request-status/{requestId}/exists` | GET | Check if request exists | `http://localhost:8082/tymg/api/request-status/{requestId}/exists` | `/api/request-status/{requestId}/exists` | `/api/request-status/{requestId}/exists` | ✅ | ✅ | 200 | OK - Exists check completed |
-| `/api/request-status/{requestId}` | DELETE | Remove request status | `http://localhost:8082/tymg/api/request-status/{requestId}` | `/api/request-status/{requestId}` | `/api/request-status/{requestId}` | ✅ | ✅ | 405 | Method Not Allowed - Route not configured |
-| `/people/result/{requestId}` | GET | Get result data | `http://localhost:8082/tymg/people/result/{requestId}` | `/people/result/{requestId}` | `/api/people/result/{requestId}` | ✅ | ✅ | 500 | Internal Error - Result not found in Redis |
-| `/people/result/{requestId}/exists` | GET | Check if result exists | `http://localhost:8082/tymg/people/result/{requestId}/exists` | `/people/result/{requestId}/exists` | `/api/people/result/{requestId}/exists` | ✅ | ✅ | 500 | Internal Error - Redis connection issue |
-| `/people/result/{requestId}` | DELETE | Cleanup result | `http://localhost:8082/tymg/people/result/{requestId}` | `/people/result/{requestId}` | `/api/people/result/{requestId}` | ✅ | ✅ | 405 | Method Not Allowed - Route not configured |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Endpoint | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|---------------|------------------|------|--------|-------------|-------------|-----------|
+| `/api/request-status/{requestId}` | GET | Get request status | `http://localhost:8082/tymg/api/request-status/{requestId}` | `/api/request-status/{requestId}` | `/api/request-status/{requestId}` | ✅ | ✅ | 404 | Not Found - Request not found in Redis | ✅ Spring Cloud Gateway→Backend: Correctly forwards 404 response |
+| `/api/request-status/{requestId}/exists` | GET | Check if request exists | `http://localhost:8082/tymg/api/request-status/{requestId}/exists` | `/api/request-status/{requestId}/exists` | `/api/request-status/{requestId}/exists` | ✅ | ✅ | 200 | OK - Exists check completed | ✅ Gateway→Backend: Success |
+| `/api/request-status/{requestId}` | DELETE | Remove request status | `http://localhost:8082/tymg/api/request-status/{requestId}` | `/api/request-status/{requestId}` | `/api/request-status/{requestId}` | ✅ | ✅ | 404 | Not Found - Request already deleted/expired | ✅ Spring Cloud Gateway→Backend: Correctly forwards DELETE and 404 response |
+| `/people/result/{requestId}` | GET | Get result data | `http://localhost:8082/tymg/people/result/{requestId}` | `/people/result/{requestId}` | `/api/people/result/{requestId}` | ✅ | ✅ | 404 | Not Found - Result not found or expired | ✅ Spring Cloud Gateway→Backend: Correctly forwards 404 response |
+| `/people/result/{requestId}/exists` | GET | Check if result exists | `http://localhost:8082/tymg/people/result/{requestId}/exists` | `/people/result/{requestId}/exists` | `/api/people/result/{requestId}/exists` | ✅ | ✅ | 200 | OK - Exists check completed | ✅ Spring Cloud Gateway→Backend: Successfully implemented endpoint |
+| `/people/result/{requestId}` | DELETE | Cleanup result | `http://localhost:8082/tymg/people/result/{requestId}` | `/people/result/{requestId}` | `/api/people/result/{requestId}` | ✅ | ✅ | 404 | Not Found - Result already deleted/expired | ✅ Spring Cloud Gateway→Backend: Correctly forwards DELETE and 404 response |
 
 **Request Flow:**
 ```
@@ -412,12 +412,12 @@ Frontend → Gateway (/tymg/people/* via context-path) → Message Queue (Rabbit
 **Target:** Gateway (TYMG) → Backend  
 **Pattern:** Synchronous (gRPC)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|
-| `/weapons` | GET | Get all weapons | `http://localhost:8082/tymg/weapons` | `/weapons` | gRPC: `GetAllWeapons()` | ✅ | ✅ | 200 | OK - Empty weapon list returned |
-| `/weapons/{name}` | GET | Get weapon by name | `http://localhost:8082/tymg/weapons/{name}` | `/weapons/{name}` | gRPC: `GetWeaponById(name)` | ✅ | ✅ | 500 | Internal Error - Weapon not found |
-| `/weapons/owner/{ownerName}` | GET | Get weapons by owner | `http://localhost:8082/tymg/weapons/owner/{ownerName}` | `/weapons/owner/{ownerName}` | gRPC: `GetWeaponsByOwner(owner)` | ✅ | ✅ | 200 | OK - Empty owner weapon list |
-| `/weapons` | POST | Save weapon | `http://localhost:8082/tymg/weapons` | `/weapons` | gRPC: `CreateWeapon(data)` | ✅ | ✅ | 500 | Internal Error - Invalid weapon data |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|-----------|
+| `/weapons` | GET | Get all weapons | `http://localhost:8082/tymg/weapons` | `/weapons` | gRPC: `GetAllWeapons()` | ✅ | ✅ | 200 | OK - Empty weapon list returned | ✅ Gateway→gRPC→Backend: Success |
+| `/weapons/{name}` | GET | Get weapon by name | `http://localhost:8082/tymg/weapons/{name}` | `/weapons/{name}` | gRPC: `GetWeaponById(name)` | ✅ | ✅ | 500 | Internal Error - Weapon not found | ❌ Gateway(500)←Backend(404): Weapon "TestWeapon" not found in DB |
+| `/weapons/owner/{ownerName}` | GET | Get weapons by owner | `http://localhost:8082/tymg/weapons/owner/{ownerName}` | `/weapons/owner/{ownerName}` | gRPC: `GetWeaponsByOwner(owner)` | ✅ | ✅ | 200 | OK - Empty owner weapon list | ✅ Gateway→gRPC→Backend: Success (empty result) |
+| `/weapons` | POST | Save weapon | `http://localhost:8082/tymg/weapons` | `/weapons` | gRPC: `CreateWeapon(data)` | ✅ | ✅ | 500 | Internal Error - Invalid weapon data | ❌ Gateway→gRPC: Missing required fields in request |
 
 **Request Flow:**
 ```
@@ -450,9 +450,9 @@ Frontend → Gateway (/tymg/weapons/* via context-path) → gRPC Client → Back
 **Target:** Gateway (TYMG) → Backend  
 **Pattern:** Synchronous (recently changed from async)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|
-| `/people/damageWithWeapon?name={name}` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/people/damageWithWeapon` | `/people/damageWithWeapon` | ✅ | ✅ | 500 | Internal Error - Person not found |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|-----------|
+| `/people/damageWithWeapon?name={name}` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/people/damageWithWeapon` | `/people/damageWithWeapon` | ✅ | ✅ | 400 | Bad Request - Person not found | ✅ Gateway correctly forwards Backend's 400 response |
 
 **Features:**
 - Now returns damage value directly (synchronous)
@@ -465,13 +465,13 @@ Frontend → Gateway (/tymg/weapons/* via context-path) → gRPC Client → Back
 **Target:** Gateway (TYMG) → Backend  
 **Pattern:** Synchronous (gRPC)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|
-| `/gallery/save` | POST | Save image | `http://localhost:8082/tymg/gallery/save` | `/gallery/save` | gRPC: `SaveImage(data)` | ✅ | ✅ | 500 | Internal Error - Missing required fields |
-| `/gallery/getAll` | POST | Get all images | `http://localhost:8082/tymg/gallery/getAll` | `/gallery/getAll` | gRPC: `GetAllImages()` | ✅ | ✅ | 200 | OK - Empty gallery list returned |
-| `/gallery/getById?id={id}` | GET | Get image by ID | `http://localhost:8082/tymg/gallery/getById` | `/gallery/getById` | gRPC: `GetImageById(id)` | ✅ | ✅ | 500 | Internal Error - Image not found |
-| `/gallery/update` | POST | Update image | `http://localhost:8082/tymg/gallery/update` | `/gallery/update` | gRPC: `UpdateImage(data)` | ✅ | ✅ | 500 | Internal Error - Invalid update data |
-| `/gallery/delete` | POST | Delete image | `http://localhost:8082/tymg/gallery/delete` | `/gallery/delete` | gRPC: `DeleteImage(id)` | ✅ | ✅ | 204 | No Content - Delete request accepted |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|-----------|
+| `/gallery/save` | POST | Save image | `http://localhost:8082/tymg/gallery/save` | `/gallery/save` | gRPC: `SaveImage(data)` | ✅ | ✅ | 500 | Internal Error - Missing required fields | ❌ Gateway→gRPC: Missing required image data fields |
+| `/gallery/getAll` | POST | Get all images | `http://localhost:8082/tymg/gallery/getAll` | `/gallery/getAll` | gRPC: `GetAllImages()` | ✅ | ✅ | 200 | OK - Empty gallery list returned | ✅ Gateway→gRPC→Backend: Success (empty result) |
+| `/gallery/getById?id={id}` | GET | Get image by ID | `http://localhost:8082/tymg/gallery/getById` | `/gallery/getById` | gRPC: `GetImageById(id)` | ✅ | ✅ | 500 | Internal Error - Image not found | ❌ Gateway→gRPC→Backend: Image ID not found in DB |
+| `/gallery/update` | POST | Update image | `http://localhost:8082/tymg/gallery/update` | `/gallery/update` | gRPC: `UpdateImage(data)` | ✅ | ✅ | 500 | Internal Error - Invalid update data | ❌ Gateway→gRPC: Missing or invalid update fields |
+| `/gallery/delete` | POST | Delete image | `http://localhost:8082/tymg/gallery/delete` | `/gallery/delete` | gRPC: `DeleteImage(id)` | ✅ | ✅ | 204 | No Content - Delete request accepted | ✅ Gateway→gRPC→Backend: Success |
 
 **Request Flow:**
 ```
@@ -488,9 +488,9 @@ Frontend → Gateway (/tymg/gallery/* via context-path) → gRPC Client → Back
 **Target:** Gateway (TYMG) → External (Google Apps Script)  
 **Pattern:** Synchronous with long timeout
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Target | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|--------------|--------|------|--------|-------------|-------------|
-| `/api/sync-characters` | POST | Sync to Google Apps Script | `http://localhost:8082/tymg/api/sync-characters` | `/api/sync-characters` | External | ❌ | ✅ | 500 | Internal Error - External service unreachable |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Target | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|--------------|--------|------|--------|-------------|-------------|-----------|
+| `/api/sync-characters` | POST | Sync to Google Apps Script | `http://localhost:8082/tymg/api/sync-characters` | `/api/sync-characters` | External | ❌ | ✅ | 500 | Internal Error - External service unreachable | ❌ Gateway: Google Apps Script URL not configured or unreachable |
 
 ### Monitor Service APIs
 
@@ -498,10 +498,10 @@ Frontend → Gateway (/tymg/gallery/* via context-path) → gRPC Client → Back
 **Target:** Gateway (TYMG)  
 **Pattern:** Synchronous health checks
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Auth | Tested | Status Code | Test Result |
-|-------------------|--------|-------------|----------|--------------|------|--------|-------------|-------------|
-| `/health` | GET | API health check | `http://localhost:8082/tymg/health` | `/health` | ❌ | ✅ | 500 | Internal Error - Backend health check failed |
-| `/health/consumer` | GET | Consumer status check | `http://localhost:8082/tymg/health/consumer` | `/health/consumer` | ❌ | ✅ | 500 | Internal Error - RabbitMQ consumer not connected |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Auth | Tested | Status Code | Test Result | Log Trace |
+|-------------------|--------|-------------|----------|--------------|------|--------|-------------|-------------|-----------|
+| `/health` | GET | API health check | `http://localhost:8082/tymg/health` | `/health` | ❌ | ✅ | 200 | OK - Health check passed | ✅ Spring Cloud Gateway→Backend: Successfully forwards health check |
+| `/health/consumer` | GET | Consumer status check | `http://localhost:8082/tymg/health/consumer` | `/health/consumer` | ❌ | ✅ | 500 | Internal Error - RabbitMQ consumer not connected | ❌ Gateway: Consumer health check route not configured |
 
 **Features:**
 - Auto health check every 30 seconds
@@ -529,7 +529,8 @@ Frontend → Gateway (/tymg/gallery/* via context-path) → gRPC Client → Back
 - ✅ **Unified Routing**: All Gateway Controllers use context-path `/tymg`
 - ✅ **Direct Backend Access**: Auth endpoints bypass Gateway for security
 - ✅ **gRPC Forwarding**: Most Gateway endpoints forward via gRPC to Backend services
-- ✅ **Spring Boot Best Practice**: Using `server.servlet.context-path` for unified prefixing
+- ✅ **Spring Cloud Gateway**: Implemented hybrid routing architecture
+- ✅ **Route Priority**: Dedicated gRPC Controllers > Spring Cloud Gateway > Fallback Router
 
 ### API Usage Examples
 
