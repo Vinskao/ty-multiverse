@@ -372,7 +372,7 @@ graph TD
 
     subgraph "Spring Cloud Gateway Routes"
         G["/api/request-status/**<br/>GET, DELETE"]
-        H["/api/people/result/**<br/>GET, DELETE"]
+        H["/api/async/result/**<br/>GET, DELETE"]
         I["/auth/**<br/>GET, POST"]
         J["/health/**<br/>GET"]
         K["/actuator/**<br/>GET"]

@@ -20,11 +20,27 @@ export interface ApiRequestOptions {
   timeout?: number;
 }
 
+export interface BackendApiResponse<T = any> {
+  success: boolean;
+  code: number;
+  message: string;
+  timestamp: string;
+  data: T;
+  requestId?: string;
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  error?: string;
+  stackTrace?: string;
+}
+
 export interface ApiResponse<T = any> {
   status: number;
   ok: boolean;
   /** Parsed JSON body when possible, otherwise raw text */
   data: T;
+  /** Backend API response wrapper (if present) */
+  backendResponse?: BackendApiResponse<T>;
 }
 
 // Core implementation – no framework/runtime specifics so it can be reused in workers etc.
@@ -65,9 +81,24 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
     clearTimeout(timer);
 
     let responseData: any;
+    let backendResponse: BackendApiResponse<T> | undefined;
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       responseData = await res.json();
+
+      // Check if this is a BackendApiResponse format
+      if (responseData && typeof responseData === 'object' &&
+          'success' in responseData && 'code' in responseData && 'message' in responseData) {
+        backendResponse = responseData as BackendApiResponse<T>;
+
+        // For successful responses, extract the actual data
+        if (backendResponse.success && backendResponse.data !== undefined) {
+          responseData = backendResponse.data;
+        } else {
+          // For error responses, throw an error with the backend message
+          throw new ApiError(backendResponse.code, backendResponse.message);
+        }
+      }
     } else {
       responseData = await res.text();
     }
@@ -77,7 +108,12 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
       throw new ApiError(res.status, responseData);
     }
 
-    return { status: res.status, ok: true, data: responseData as T };
+    return {
+      status: res.status,
+      ok: true,
+      data: responseData as T,
+      backendResponse
+    };
   } catch (err) {
     if (err instanceof ApiError) {
       throw err;

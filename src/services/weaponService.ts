@@ -2,7 +2,7 @@
  * Weapon Service - 處理 Weapon 模組的 API 調用
  */
 
-import { apiService, ApiResponse } from './apiService';
+import { apiService, ApiResponse, BackendApiResponse } from './apiService';
 import { config } from './config';
 
 // 類型定義
