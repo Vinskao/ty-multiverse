@@ -191,7 +191,7 @@ export class AuthService {
   // 測試完整的認證整合功能
   public async testAuthIntegration(refreshToken?: string): Promise<any> {
     try {
-      const url = `${config.api.baseUrl}/auth/test`;
+      const url = `${config.api.backendUrl}/tymb/auth/test`;
       const headers: Record<string, string> = {
         ...config.api.headers
       };
@@ -227,10 +227,10 @@ export class AuthService {
     }
   }
 
-  // 測試登出功能
+  // 測試登出功能 - 直接访问Backend，绕过Gateway
   public async testLogout(refreshToken: string): Promise<any> {
     try {
-      const url = `${config.api.baseUrl}/auth/logout-test`;
+      const url = `${config.api.backendUrl}/tymb/auth/logout-test`;
       const headers: Record<string, string> = {
         ...config.api.headers,
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -266,7 +266,7 @@ export class AuthService {
   // 健康檢查
   public async healthCheck(): Promise<any> {
     try {
-      const url = `${config.api.baseUrl}/auth/health`;
+      const url = `${config.api.backendUrl}/tymb/auth/health`;
       const response = await fetch(url, {
         method: 'GET',
         headers: config.api.headers

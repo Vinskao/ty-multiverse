@@ -2,7 +2,7 @@
  * People Service - 處理 People 模組的 Producer APIs
  */
 
-import { apiService, ApiResponse } from './apiService';
+import { apiService, ApiResponse, BackendApiResponse } from './apiService';
 import { config } from './config';
 
 // 類型定義
@@ -218,10 +218,10 @@ class PeopleService {
   // 5. 結果查詢 APIs
 
   /**
-   * 查詢 People 結果
+   * 查詢異步處理結果
    */
   async getPeopleResult<T = any>(requestId: string): Promise<ResultResponse<T>> {
-    const response = await this.makeRequest<ResultResponse<T>>(`/people/result/${requestId}`);
+    const response = await this.makeRequest<ResultResponse<T>>(`/async/result/${requestId}`);
     return response.data;
   }
 
@@ -229,7 +229,7 @@ class PeopleService {
    * 檢查結果是否存在
    */
   async checkResultExists(requestId: string): Promise<{ requestId: string; exists: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; exists: boolean; message: string }>(`/people/result/${requestId}/exists`);
+    const response = await this.makeRequest<{ requestId: string; exists: boolean; message: string }>(`/async/result/${requestId}/exists`);
     return response.data;
   }
 
@@ -237,7 +237,7 @@ class PeopleService {
    * 清理結果
    */
   async cleanupResult(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/people/result/${requestId}`, 'DELETE');
+    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/async/result/${requestId}`, 'DELETE');
     return response.data;
   }
 

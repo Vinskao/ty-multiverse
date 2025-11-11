@@ -47,45 +47,23 @@ class DamageService {
     const serviceManager = (await import('./serviceManager')).default.getInstance();
 
     return await serviceManager.executeAPI(async () => {
-      const token = localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        "Accept": "application/json"
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
+      const { apiService } = await import('./apiService');
       const { config } = await import('./config');
-      const baseUrl = config.api.baseUrl;
-      // 傷害計算 URL
+      
+      // 使用 Gateway URL（優先）
+      const baseUrl = config.api.gatewayUrl || config.api.baseUrl;
 
-      const response = await fetch(`${baseUrl}/people/damageWithWeapon?name=${encodeURIComponent(characterName)}`, {
-        method: "GET",
-        headers,
-        credentials: 'include'
+      const response = await apiService.request({
+        url: `${baseUrl}/people/damageWithWeapon?name=${encodeURIComponent(characterName)}`,
+        method: 'GET',
+        auth: true,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ 傷害計算 API 錯誤:', errorText);
-        throw new Error(`傷害計算 API 錯誤: ${response.status} - ${errorText}`);
-      }
-
-      // 根據用戶說明，這現在是同步API，直接返回數值
-      const textData = await response.text();
-      console.log(`📥 傷害計算原始響應:`, textData);
-
-      // 嘗試解析為JSON
-      let data;
-      try {
-        data = JSON.parse(textData);
-        console.log(`📥 傷害計算JSON數據:`, data);
-      } catch {
-        // 如果不是JSON，直接當作數字字符串處理
-        data = textData;
-        console.log(`📥 傷害計算文本數據:`, data);
-      }
+      const data = response.data;
+      console.log(`📥 傷害計算響應:`, data);
 
       // 檢查是否為數字
       if (typeof data === 'number') {
@@ -96,13 +74,11 @@ class DamageService {
       // 檢查是否為字符串數字
       const damageValue = parseInt(String(data), 10);
       if (!isNaN(damageValue)) {
-        // 解析傷害值
         return damageValue;
       }
 
       // 如果是對象，嘗試提取數值
       if (typeof data === 'object' && data !== null) {
-        // 檢查常見的數值字段
         const possibleFields = ['damage', 'value', 'result', 'totalDamage'];
         for (const field of possibleFields) {
           if (data[field] !== undefined) {
