@@ -7,6 +7,8 @@ import '../styles/galwall.css';
 </div>
 
 <script>
+  import { peopleService } from '../services/peopleService';
+
   let frontList: string[] = [];
   let backList: string[] = [];
   const baseImagePath = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/";
@@ -24,22 +26,8 @@ import '../styles/galwall.css';
   // 獲取角色列表
   async function fetchCharacterNames() {
     try {
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:8080/tymb';
-
-      const response = await fetch(`${baseUrl}/people/names`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error(`API 錯誤: ${response.status}`);
-      }
-
-      const names = await response.json();
+      console.log('🔄 Galwall 使用 peopleService 獲取角色名稱列表...');
+      const names = await peopleService.getAllPeopleNames();
       console.log('✅ Galwall 獲取角色名稱列表成功:', names);
 
       // 確保是數組格式

@@ -3,7 +3,8 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { peopleService, Person, Weapon, DamageCalculation } from './peopleService';
+import { peopleService } from './peopleService';
+import type { Person, Weapon, DamageCalculation } from './peopleService';
 
 export interface UsePeopleServiceState<T = any> {
   data: T | null;

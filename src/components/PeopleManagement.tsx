@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePeopleManagement, useInsertMultiplePeople, useDeleteAllPeople } from '../services/usePeopleService';
-import { Person, Weapon } from '../services/peopleService';
+import type { Person, Weapon } from '../services/peopleService';
 
 export default function PeopleManagement() {
   const {

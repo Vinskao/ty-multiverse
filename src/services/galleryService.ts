@@ -2,7 +2,8 @@
  * Gallery Service - 處理 Gallery 模組的 API 調用
  */
 
-import { apiService, ApiResponse } from './apiService';
+import { apiService } from './apiService';
+import type { ApiResponse } from './apiService';
 import { config } from './config';
 
 // 類型定義

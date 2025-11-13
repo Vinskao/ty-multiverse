@@ -1708,24 +1708,13 @@ import '../styles/levellist.css';
         }
       `;
       document.head.appendChild(style);
-      // 使用新的同步 API 獲取角色列表和詳細信息
-      const baseUrl = import.meta.env.PUBLIC_TYMB_URL;
+      // 使用 peopleService 獲取角色列表和詳細信息
+      const { peopleService } = await import('../services/peopleService');
 
       // 1. 先獲取角色名稱列表
-      const namesResponse = await fetch(`${baseUrl}/people/names`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      if (!namesResponse.ok) {
-        throw new Error(`獲取角色名稱列表失敗: ${namesResponse.status}`);
-      }
-
-      const characterNames = await namesResponse.json();
+      console.log('🔄 Levellist 使用 peopleService 獲取角色名稱列表...');
+      const characterNames = await peopleService.getAllPeopleNames();
+      console.log('✅ Levellist 獲取角色名稱列表成功:', characterNames);
 
       // 確保是數組格式
       if (!Array.isArray(characterNames)) {
@@ -1920,7 +1909,7 @@ import '../styles/levellist.css';
           }
         });
       } else {
-        alert(`載入失敗: ${error.message}`);
+        console.error(`載入失敗: ${error.message}`);
       }
     }
   });

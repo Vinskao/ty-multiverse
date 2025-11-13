@@ -91,8 +91,13 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
           'success' in responseData && 'code' in responseData && 'message' in responseData) {
         backendResponse = responseData as BackendApiResponse<T>;
 
+        // For 202 Accepted (async) responses, keep the full response (includes requestId)
+        if (backendResponse.code === 202 && backendResponse.success) {
+          // Return the full response for async operations
+          responseData = backendResponse as any;
+        }
         // For successful responses, extract the actual data
-        if (backendResponse.success && backendResponse.data !== undefined) {
+        else if (backendResponse.success && backendResponse.data !== undefined) {
           responseData = backendResponse.data;
         } else {
           // For error responses, throw an error with the backend message

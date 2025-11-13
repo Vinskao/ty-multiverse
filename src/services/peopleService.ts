@@ -2,7 +2,8 @@
  * People Service - 處理 People 模組的 Producer APIs
  */
 
-import { apiService, ApiResponse, BackendApiResponse } from './apiService';
+import { apiService } from './apiService';
+import type { ApiResponse, BackendApiResponse } from './apiService';
 import { config } from './config';
 
 // 類型定義
@@ -109,56 +110,124 @@ class PeopleService {
    * 獲取所有角色名稱
    */
   async getAllPeopleNames(): Promise<string[]> {
-    const response = await this.makeRequest<string[]>('/api/people/names');
-    return response.data;
+    // 由于后端现在是异步处理，我们需要等待结果
+    return this.getAllPeopleNamesAndWait();
+  }
+
+  /**
+   * 獲取所有角色名稱並等待結果（異步處理）
+   */
+  async getAllPeopleNamesAndWait(): Promise<string[]> {
+    try {
+      // 1. 发起异步请求获取所有角色
+      const producerResponse = await this.getAllPeople();
+
+      // 2. 轮询等待处理完成
+      const status = await this.pollUntilComplete(producerResponse.requestId);
+
+      if (status.status === 'ERROR') {
+        throw new Error(status.message);
+      }
+
+      // 3. 获取最终结果
+      const result = await this.getPeopleResult<Person[]>(producerResponse.requestId);
+
+      // 4. 提取角色名称
+      return result.data.map(person => person.name);
+    } catch (error) {
+      console.error('獲取角色名稱失敗:', error);
+      throw error;
+    }
   }
 
   /**
    * 插入單個角色
    */
   async insertPerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/insert', 'POST', person);
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/insert', 'POST', person);
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 更新角色
    */
   async updatePerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/update', 'POST', person);
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/update', 'POST', person);
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 批量插入角色
    */
   async insertMultiplePeople(people: Person[]): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/insert-multiple', 'POST', people);
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/insert-multiple', 'POST', people);
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 獲取所有角色
    */
   async getAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/get-all', 'POST');
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/get-all', 'POST');
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 根據名稱查詢角色
    */
   async getPersonByName(name: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/get-by-name', 'POST', { name });
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/get-by-name', 'POST', { name });
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 刪除所有角色
    */
   async deleteAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/people/delete-all', 'POST');
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/people/delete-all', 'POST');
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   // 2. Weapon 模組 APIs
@@ -167,16 +236,30 @@ class PeopleService {
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/weapons');
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/weapons');
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   /**
    * 保存武器
    */
   async saveWeapon(weapon: Weapon): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>('/weapons', 'POST', weapon);
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>('/weapons', 'POST', weapon);
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   // 3. 傷害計算 API
@@ -185,8 +268,15 @@ class PeopleService {
    * 計算角色武器傷害
    */
   async calculateDamage(personName: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<ProducerResponse>(`/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
-    return response.data;
+    const response = await this.makeRequest<BackendApiResponse<any>>(`/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
+    const backendResponse = response.data;
+    
+    // Map BackendApiResponse (202) to ProducerResponse format
+    return {
+      requestId: backendResponse.requestId!,
+      status: 'processing',
+      message: backendResponse.message
+    };
   }
 
   // 4. 狀態查詢 APIs

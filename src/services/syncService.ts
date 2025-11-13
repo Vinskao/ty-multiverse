@@ -2,7 +2,8 @@
  * Sync Service - 處理數據同步 API 調用
  */
 
-import { apiService, ApiResponse, BackendApiResponse } from './apiService';
+import { apiService } from './apiService';
+import type { ApiResponse, BackendApiResponse } from './apiService';
 import { config } from './config';
 
 // 類型定義
