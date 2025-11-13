@@ -8,8 +8,8 @@
  * 記錄其他錯誤以便分析資料設計問題
  */
 
-const BACKEND_URL = 'http://localhost:8080/tymb';
-const GATEWAY_URL = 'http://localhost:8082/tymg';
+const BACKEND_URL = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080/tymb';
+const GATEWAY_URL = process.env.PUBLIC_GATEWAY_URL || 'http://localhost:8082/tymg';
 
 const testResults = [];
 let totalTests = 0;
