@@ -47,7 +47,7 @@
   // 緩存管理功能
   async function updateCacheStatus() {
     try {
-      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characterService = (await import('../services/api/characterService')).default.getInstance();
       const status = characterService.getCacheStatus();
       
       const statusElement = document.getElementById('cache-status');
@@ -78,7 +78,7 @@
   // 清除緩存
   async function clearCache() {
     try {
-      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characterService = (await import('../services/api/characterService')).default.getInstance();
       characterService.clearCache();
       
       // 顯示成功訊息
@@ -109,7 +109,7 @@
         btn.disabled = true;
       }
       
-      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characterService = (await import('../services/api/characterService')).default.getInstance();
       await characterService.refreshCharacters();
       
       // 顯示成功訊息

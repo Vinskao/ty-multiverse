@@ -2,16 +2,76 @@
  * People Service - 處理 People 模組的 Producer APIs
  */
 
-import { apiService } from './apiService';
+import { apiService, ApiError } from './apiService';
 import type { ApiResponse, BackendApiResponse } from './apiService';
-import { config } from './config';
+import { config } from '../core/config';
 
 // 類型定義
 export interface Person {
+  // Primary key
   name: string;
-  age: number;
-  level: number;
+
+  // Basic info
+  nameOriginal?: string;
+  codeName?: string;
+
+  // Powers
+  physicPower?: number;
+  magicPower?: number;
+  utilityPower?: number;
+
+  // Personal details
+  dob?: string;
+  race?: string;
   attributes?: string;
+  gender?: string;
+  assSize?: string;
+  boobsSize?: string;
+  heightCm?: number;
+  weightKg?: number;
+
+  // Professional info
+  profession?: string;
+  combat?: string;
+  favoriteFoods?: string;
+  job?: string;
+  physics?: string;
+  knownAs?: string;
+  personality?: string;
+
+  // Interests
+  interest?: string;
+  likes?: string;
+  dislikes?: string;
+  concubine?: string;
+
+  // Affiliations
+  faction?: string;
+  armyId?: number;
+  armyName?: string;
+  deptId?: number;
+  deptName?: string;
+  originArmyId?: number;
+  originArmyName?: string;
+
+  // Other
+  gaveBirth?: boolean;
+  email?: string;
+  age?: number;
+  proxy?: string;
+
+  // Attributes (JSON strings)
+  baseAttributes?: string;
+  bonusAttributes?: string;
+  stateAttributes?: string;
+
+  // Metadata
+  createdAt?: string;
+  updatedAt?: string;
+  version?: number;
+
+  // For compatibility
+  level?: number; // Legacy field, can be derived from powers
 }
 
 export interface Weapon {
@@ -58,50 +118,29 @@ class PeopleService {
     this.baseUrl = config.api?.baseUrl || '';
   }
 
-  // 基本 API 請求方法
-  private async makeRequest<T = any>(
-    endpoint: string,
-    method: 'GET' | 'POST' | 'DELETE' = 'GET',
-    body?: any
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`;
-    return apiService.request({
-      url,
-      method,
-      body,
-      auth: true,
-    });
-  }
+/**
+   * 使用輪詢方式等待異步處理結果
+   */
+  private async waitForResult(requestId: string, options?: { maxAttempts?: number; interval?: number }): Promise<RequestStatus> {
+    const maxAttempts = options?.maxAttempts ?? 30;
+    const interval = options?.interval ?? 1000;
 
-  // 輪詢狀態直到完成
-  private async pollUntilComplete(
-    requestId: string,
-    maxAttempts: number = 30,
-    interval: number = 2000
-  ): Promise<RequestStatus> {
-    return new Promise((resolve, reject) => {
-      let attempts = 0;
-
-      const poll = async () => {
-        try {
-          attempts++;
-          const response = await this.makeRequest<RequestStatus>(`/tymg/api/request-status/${requestId}`);
-
-          if (response.data.status === 'SUCCESS' || response.data.status === 'ERROR') {
-            resolve(response.data);
-          } else if (attempts >= maxAttempts) {
-            reject(new Error(`輪詢超時，請求ID: ${requestId}`));
-          } else {
-            // 繼續輪詢
-            setTimeout(poll, interval);
-          }
-        } catch (error) {
-          reject(error);
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const status = await this.getRequestStatus(requestId);
+        if (status.status === 'SUCCESS' || status.status === 'ERROR') {
+          return status;
         }
-      };
+      } catch (error) {
+        if (!(error instanceof ApiError && error.status === 404)) {
+          throw error;
+        }
+      }
 
-      poll();
-    });
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error(`等待結果超時，requestId=${requestId}`);
   }
 
   // 1. People 模組 APIs
@@ -119,21 +158,9 @@ class PeopleService {
    */
   async getAllPeopleNamesAndWait(): Promise<string[]> {
     try {
-      // 1. 发起异步请求获取所有角色
-      const producerResponse = await this.getAllPeople();
-
-      // 2. 轮询等待处理完成
-      const status = await this.pollUntilComplete(producerResponse.requestId);
-
-      if (status.status === 'ERROR') {
-        throw new Error(status.message);
-      }
-
-      // 3. 获取最终结果
-      const result = await this.getPeopleResult<Person[]>(producerResponse.requestId);
-
-      // 4. 提取角色名称
-      return result.data.map(person => person.name);
+      // 1. 发起异步请求获取所有角色名称（使用专门的 /people/names 端点）
+      const response = await apiService.makeRequest<string[]>(this.baseUrl, '/api/people/names', 'GET');
+      return response.data;
     } catch (error) {
       console.error('獲取角色名稱失敗:', error);
       throw error;
@@ -144,7 +171,7 @@ class PeopleService {
    * 插入單個角色
    */
   async insertPerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/insert', 'POST', person);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert', 'POST', person);
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -159,7 +186,7 @@ class PeopleService {
    * 更新角色
    */
   async updatePerson(person: Person): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/update', 'POST', person);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/update', 'POST', person);
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -174,7 +201,7 @@ class PeopleService {
    * 批量插入角色
    */
   async insertMultiplePeople(people: Person[]): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/insert-multiple', 'POST', people);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert-multiple', 'POST', people);
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -189,7 +216,7 @@ class PeopleService {
    * 獲取所有角色
    */
   async getAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/get-all', 'POST');
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/get-all', 'POST');
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -204,7 +231,7 @@ class PeopleService {
    * 根據名稱查詢角色
    */
   async getPersonByName(name: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/get-by-name', 'POST', { name });
+    const response = await apiService.makeRequest<BackendApiResponse<any>>('/people/get-by-name', 'POST', { name });
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -219,7 +246,7 @@ class PeopleService {
    * 刪除所有角色
    */
   async deleteAllPeople(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/people/delete-all', 'POST');
+    const response = await apiService.makeRequest<BackendApiResponse<any>>('/people/delete-all', 'POST');
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -236,7 +263,7 @@ class PeopleService {
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/weapons');
+    const response = await apiService.makeRequest<BackendApiResponse<any>>('/weapons');
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -251,7 +278,7 @@ class PeopleService {
    * 保存武器
    */
   async saveWeapon(weapon: Weapon): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>('/weapons', 'POST', weapon);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>('/weapons', 'POST', weapon);
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -268,7 +295,7 @@ class PeopleService {
    * 計算角色武器傷害
    */
   async calculateDamage(personName: string): Promise<ProducerResponse> {
-    const response = await this.makeRequest<BackendApiResponse<any>>(`/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(`/people/damageWithWeapon?name=${encodeURIComponent(personName)}`);
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -282,26 +309,36 @@ class PeopleService {
   // 4. 狀態查詢 APIs
 
   /**
-   * 查詢請求狀態
+   * 查詢請求狀態（使用異步結果端點）
    */
   async getRequestStatus(requestId: string): Promise<RequestStatus> {
-    const response = await this.makeRequest<RequestStatus>(`/api/request-status/${requestId}`);
-    return response.data;
+    const response = await apiService.makeRequest<ResultResponse<any>>(`/api/async/result/${requestId}`);
+    const result = response.data;
+    return {
+      requestId,
+      status: result.status === 'completed' ? 'SUCCESS' : result.status === 'failed' ? 'ERROR' : 'PROCESSING',
+      message: result.message || '',
+      data: result.data,
+      timestamp: Date.now()
+    };
   }
 
   /**
    * 檢查請求是否存在
    */
   async checkRequestExists(requestId: string): Promise<{ requestId: string; exists: boolean }> {
-    const response = await this.makeRequest<{ requestId: string; exists: boolean }>(`/api/request-status/${requestId}/exists`);
-    return response.data;
+    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}/exists`);
+    return {
+      requestId,
+      exists: response.data.exists
+    };
   }
 
   /**
    * 移除請求狀態
    */
   async removeRequestStatus(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/api/request-status/${requestId}`, 'DELETE');
+    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}`, 'DELETE');
     return response.data;
   }
 
@@ -311,7 +348,7 @@ class PeopleService {
    * 查詢異步處理結果
    */
   async getPeopleResult<T = any>(requestId: string): Promise<ResultResponse<T>> {
-    const response = await this.makeRequest<ResultResponse<T>>(`/async/result/${requestId}`);
+    const response = await apiService.makeRequest<ResultResponse<T>>(`/async/result/${requestId}`);
     return response.data;
   }
 
@@ -319,7 +356,7 @@ class PeopleService {
    * 檢查結果是否存在
    */
   async checkResultExists(requestId: string): Promise<{ requestId: string; exists: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; exists: boolean; message: string }>(`/async/result/${requestId}/exists`);
+    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}/exists`);
     return response.data;
   }
 
@@ -327,7 +364,7 @@ class PeopleService {
    * 清理結果
    */
   async cleanupResult(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await this.makeRequest<{ requestId: string; removed: boolean; message: string }>(`/async/result/${requestId}`, 'DELETE');
+    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}`, 'DELETE');
     return response.data;
   }
 
@@ -337,75 +374,40 @@ class PeopleService {
    * 插入角色並等待結果
    */
   async insertPersonAndWait(person: Person): Promise<Person> {
-    const producerResponse = await this.insertPerson(person);
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<Person>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/api/people/insert', 'POST', person);
+    return response.data;
   }
 
   /**
    * 獲取所有角色並等待結果
    */
   async getAllPeopleAndWait(): Promise<Person[]> {
-    const producerResponse = await this.getAllPeople();
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<Person[]>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/api/people/get-all', 'POST');
+    return response.data;
   }
 
   /**
    * 根據名稱查詢角色並等待結果
    */
   async getPersonByNameAndWait(name: string): Promise<Person> {
-    const producerResponse = await this.getPersonByName(name);
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<Person>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/api/people/get-by-name', 'POST', { name });
+    return response.data;
   }
 
   /**
    * 獲取所有武器並等待結果
    */
   async getAllWeaponsAndWait(): Promise<Weapon[]> {
-    const producerResponse = await this.getAllWeapons();
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<Weapon[]>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<Weapon[]>(this.baseUrl, '/api/people/weapons', 'GET');
+    return response.data;
   }
 
   /**
    * 計算傷害並等待結果
    */
   async calculateDamageAndWait(personName: string): Promise<DamageCalculation> {
-    const producerResponse = await this.calculateDamage(personName);
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<DamageCalculation>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<DamageCalculation>(this.baseUrl, '/api/people/damage', 'GET', null, { name: personName });
+    return response.data;
   }
 
   // 7. 工具方法
@@ -424,27 +426,15 @@ class PeopleService {
    * 批量操作：插入多個角色並等待結果
    */
   async insertMultiplePeopleAndWait(people: Person[]): Promise<Person[]> {
-    const producerResponse = await this.insertMultiplePeople(people);
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
-    
-    const result = await this.getPeopleResult<Person[]>(producerResponse.requestId);
-    return result.data;
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/api/people/insert-multiple', 'POST', people);
+    return response.data;
   }
 
   /**
    * 刪除所有角色並等待結果
    */
   async deleteAllPeopleAndWait(): Promise<void> {
-    const producerResponse = await this.deleteAllPeople();
-    const status = await this.pollUntilComplete(producerResponse.requestId);
-    
-    if (status.status === 'ERROR') {
-      throw new Error(status.message);
-    }
+    await this.makeRequest('/api/people/delete-all', 'POST');
   }
 }
 

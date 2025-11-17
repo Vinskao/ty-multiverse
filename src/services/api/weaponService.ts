@@ -4,7 +4,7 @@
 
 import { apiService } from './apiService';
 import type { ApiResponse, BackendApiResponse } from './apiService';
-import { config } from './config';
+import { config } from '../core/config';
 
 // 類型定義
 export interface Weapon {
@@ -31,28 +31,13 @@ class WeaponService {
     this.baseUrl = config.api?.baseUrl || '';
   }
 
-  // 基本 API 請求方法
-  private async makeRequest<T = any>(
-    endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-    body?: any
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`;
-    return apiService.request({
-      url,
-      method,
-      body,
-      auth: true,
-    });
-  }
-
-  // Weapon APIs
+// Weapon APIs
 
   /**
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<Weapon[]> {
-    const response = await this.makeRequest<Weapon[]>('/weapons');
+    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', '/weapons');
     return response.data;
   }
 
@@ -60,7 +45,7 @@ class WeaponService {
    * 根據名稱獲取武器
    */
   async getWeaponByName(name: string): Promise<Weapon> {
-    const response = await this.makeRequest<Weapon>(`/weapons/${encodeURIComponent(name)}`);
+    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', `/weapons/${encodeURIComponent(name)}`);
     return response.data;
   }
 
@@ -68,7 +53,7 @@ class WeaponService {
    * 根據所有者獲取武器
    */
   async getWeaponsByOwner(ownerName: string): Promise<Weapon[]> {
-    const response = await this.makeRequest<Weapon[]>(`/weapons/owner/${encodeURIComponent(ownerName)}`);
+    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', `/weapons/owner/${encodeURIComponent(ownerName)}`);
     return response.data;
   }
 
@@ -76,7 +61,7 @@ class WeaponService {
    * 保存武器
    */
   async saveWeapon(weapon: WeaponSaveRequest): Promise<Weapon> {
-    const response = await this.makeRequest<Weapon>('/weapons', 'POST', weapon);
+    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', '/weapons', 'POST', weapon);
     return response.data;
   }
 }

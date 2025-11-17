@@ -140,7 +140,7 @@ class MonitorService {
   // 更新 Consumer 狀態
   private async updateConsumerStatus(): Promise<void> {
     try {
-      const { config } = await import('./config');
+      const { config } = await import('../core/config');
       const baseUrl = config.api.baseUrl;
       
       // 檢查 Consumer 連接狀態

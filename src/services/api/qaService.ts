@@ -1,6 +1,6 @@
 // QA 服務
 import { apiService } from './apiService';
-import { config } from './config';
+import { config } from '../core/config';
 
 export interface QARequest {
   text: string;

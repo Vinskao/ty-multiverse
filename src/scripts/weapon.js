@@ -112,7 +112,7 @@ export async function applyWeaponDamage(character, weapons) {
     if (!characterName) throw new Error("Character name is missing");
 
     // 動態導入 damageService
-    const DamageService = (await import('../services/damageService.js')).default;
+    const DamageService = (await import('../services/api/damageService.js')).default;
     const damageService = DamageService.getInstance();
     
     // 獲取傷害值（自動處理緩存、重試等）

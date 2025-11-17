@@ -1,5 +1,5 @@
-import { storageService } from '../services/storageService';
-import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/auth';
+import { storageService } from '../services/core/storageService';
+import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
 
 // Nav 組件的 JavaScript 邏輯
 export class NavController {

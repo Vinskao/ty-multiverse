@@ -1,7 +1,7 @@
 // 服務管理器 - 整合所有服務的統一入口
 import RetryService from './retryService';
 import ErrorHandler, { ErrorType } from './errorHandler';
-import MonitorService from './monitorService';
+import MonitorService from '../monitoring/monitorService';
 
 export interface ServiceConfig {
   retry: Partial<any>;

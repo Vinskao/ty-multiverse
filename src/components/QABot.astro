@@ -299,7 +299,7 @@ import '../styles/qabot.css';
     private async fetchBotNames() {
       try {
         // 使用統一的 peopleService
-        const { peopleService } = await import('../services/peopleService');
+        const { peopleService } = await import('../services/api/peopleService');
         const names = await peopleService.getAllPeopleNames();
 
         if (Array.isArray(names)) {

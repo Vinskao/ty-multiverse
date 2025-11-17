@@ -1,6 +1,6 @@
 // Blackjack 遊戲服務
 import { apiService } from './apiService';
-import { config } from './config';
+import { config } from '../core/config';
 
 export interface GameState {
   playerCards: string[];
@@ -24,18 +24,34 @@ class BlackjackService {
     // 使用 Gateway URL（優先）
     this.baseUrl = `${config.api.gatewayUrl || config.api.baseUrl}/blackjack`;
   }
+  /**
+   * 統一的 API 請求方法
+   */
+  private async makeRequest<T = any>(
+    endpoint: string,
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+    body?: any,
+    options?: { auth?: boolean; headers?: Record<string, string> }
+  ): Promise<T> {
+    const { auth = true, headers = {} } = options || {};
+    
+    return apiService.makeRequestData<T>(this.baseUrl, endpoint, method, body, {
+      auth,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers
+      }
+    });
+  }
+
+
 
   /**
    * 檢查遊戲服務狀態
    */
   async checkStatus(): Promise<GameStatus> {
     try {
-      const response = await apiService.request<GameStatus>({
-        url: `${this.baseUrl}/status`,
-        method: 'GET',
-        auth: false
-      });
-      return response.data;
+      return await this.makeRequest<GameStatus>('/status', 'GET', undefined, { auth: false });
     } catch (error) {
       return { available: false, message: 'Service unavailable' };
     }
@@ -45,36 +61,21 @@ class BlackjackService {
    * 開始新遊戲
    */
   async startGame(): Promise<GameState> {
-    const response = await apiService.request<GameState>({
-      url: `${this.baseUrl}/start`,
-      method: 'POST',
-      auth: true
-    });
-    return response.data;
+    return await this.makeRequest<GameState>('/start', 'POST');
   }
 
   /**
    * 玩家要牌
    */
   async hit(): Promise<GameState> {
-    const response = await apiService.request<GameState>({
-      url: `${this.baseUrl}/hit`,
-      method: 'POST',
-      auth: true
-    });
-    return response.data;
+    return await this.makeRequest<GameState>('/hit', 'POST');
   }
 
   /**
    * 玩家停牌
    */
   async stand(): Promise<GameState> {
-    const response = await apiService.request<GameState>({
-      url: `${this.baseUrl}/stand`,
-      method: 'POST',
-      auth: true
-    });
-    return response.data;
+    return await this.makeRequest<GameState>('/stand', 'POST');
   }
 
   /**
