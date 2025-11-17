@@ -1,5 +1,5 @@
-import { storageService } from './storageService';
-import { config } from './config';
+import { storageService } from '../core/storageService';
+import { config } from '../core/config';
 
 // 為了兼容性，添加環境變量訪問
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;

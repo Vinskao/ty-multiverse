@@ -220,7 +220,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   async function fetchCharacterNames() {
     try {
       // 使用統一的 peopleService
-      const { peopleService } = await import('../services/peopleService');
+      const { peopleService } = await import('../services/api/peopleService');
       const names = await peopleService.getAllPeopleNames();
 
       // 確保是數組格式
@@ -251,7 +251,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   async function fetchCharacterByName(name: string) {
     try {
       // 使用統一的 peopleService
-      const { peopleService } = await import('../services/peopleService');
+      const { peopleService } = await import('../services/api/peopleService');
       const person = await peopleService.getPersonByNameAndWait(name);
 
       return person;
@@ -624,7 +624,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
           }
 
           // 使用新的傷害計算服務獲取總傷害值
-          const damageService = (await import('../services/damageService')).default.getInstance();
+          const damageService = (await import('../services/api/damageService')).default.getInstance();
           const totalDamage = await damageService.getCharacterDamage(ownerName);
 
           if (totalDamage > 0) {
@@ -1331,7 +1331,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   async function fetchWeaponData(ownerName: string) {
     try {
       // 使用統一的 weaponService
-      const { weaponService } = await import('../services/weaponService');
+      const { weaponService } = await import('../services/api/weaponService');
       const weapons = await weaponService.getWeaponsByOwner(ownerName);
 
       return weapons;

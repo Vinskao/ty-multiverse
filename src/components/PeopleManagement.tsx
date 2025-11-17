@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { usePeopleManagement, useInsertMultiplePeople, useDeleteAllPeople } from '../services/usePeopleService';
-import type { Person, Weapon } from '../services/peopleService';
+import { usePeopleManagement, useInsertMultiplePeople, useDeleteAllPeople } from '../services/hooks/usePeopleService';
+import type { Person, Weapon } from '../services/api/peopleService';
 
 export default function PeopleManagement() {
   const {

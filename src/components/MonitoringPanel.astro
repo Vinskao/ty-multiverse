@@ -332,7 +332,7 @@
     }
 
     private async initializeServiceManager() {
-      const ServiceManager = (await import('../services/serviceManager')).default;
+      const ServiceManager = (await import('../services/core/serviceManager')).default;
       this.serviceManager = ServiceManager.getInstance();
     }
 

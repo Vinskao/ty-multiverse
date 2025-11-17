@@ -4,7 +4,7 @@
 
 import { apiService } from './apiService';
 import type { ApiResponse, BackendApiResponse } from './apiService';
-import { config } from './config';
+import { config } from '../core/config';
 
 // 類型定義
 export interface SyncCharactersRequest {
@@ -32,13 +32,9 @@ class SyncService {
     body?: any,
     timeout?: number
   ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`;
-    return apiService.request({
-      url,
-      method,
-      body,
+    return apiService.makeRequest<T>(this.baseUrl, endpoint, method, body, { 
       auth: false, // 這個 API 不需要認證
-      timeout,
+      timeout 
     });
   }
 

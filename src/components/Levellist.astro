@@ -424,7 +424,7 @@ import '../styles/levellist.css';
     const fetchLatestPower = async () => {
       try {
         // 使用新的傷害計算服務
-        const damageService = (await import('../services/damageService')).default.getInstance();
+        const damageService = (await import('../services/api/damageService')).default.getInstance();
         const damageValue = await damageService.getCharacterDamage(character.name);
         if (damageValue > 0) {
           powerText.textContent = `Total Power: ${damageValue}`;
@@ -1015,7 +1015,7 @@ import '../styles/levellist.css';
         // 查詢最新總戰力
         try {
           // 使用新的傷害計算服務
-          const damageService = (await import('../services/damageService')).default.getInstance();
+          const damageService = (await import('../services/api/damageService')).default.getInstance();
           const damageValue = await damageService.getCharacterDamage(character.name);
           
           if (damageValue > 0) {
@@ -1125,7 +1125,7 @@ import '../styles/levellist.css';
           };
           
           // 使用統一的 peopleService
-          const { peopleService } = await import('../services/peopleService');
+          const { peopleService } = await import('../services/api/peopleService');
           await peopleService.updatePersonAndWait(currentData);
           // 更新成功
           
@@ -1336,12 +1336,12 @@ import '../styles/levellist.css';
       console.log('🔄 開始同步所有角色數據...');
       
       // 1. 使用共用的角色服務獲取所有角色數據
-      const characterService = (await import('../services/characterService')).default.getInstance();
+      const characterService = (await import('../services/api/characterService')).default.getInstance();
       const characters = await characterService.refreshCharacters(); // 強制刷新
       console.log(`✅ 成功獲取 ${characters.length} 個角色數據`);
       
       // 2. 透過統一的 syncService 發送到 Google Apps Script
-      const { syncService } = await import('../services/syncService');
+      const { syncService } = await import('../services/api/syncService');
       const syncResult = await syncService.syncCharactersToGoogleAppsScript(characters);
       console.log('✅ 同步結果:', syncResult);
       
@@ -1709,7 +1709,7 @@ import '../styles/levellist.css';
       `;
       document.head.appendChild(style);
       // 使用 peopleService 獲取角色列表和詳細信息
-      const { peopleService } = await import('../services/peopleService');
+      const { peopleService } = await import('../services/api/peopleService');
 
       // 1. 先獲取角色名稱列表
       console.log('🔄 Levellist 使用 peopleService 獲取角色名稱列表...');
@@ -1777,7 +1777,7 @@ import '../styles/levellist.css';
 
             try {
               // 使用新的傷害計算服務
-              const damageService = (await import('../services/damageService')).default.getInstance();
+              const damageService = (await import('../services/api/damageService')).default.getInstance();
               const damageValue = await damageService.getCharacterDamage(name);
               if (damageValue > 0) {
                 totalPower = damageValue;

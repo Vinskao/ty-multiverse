@@ -44,11 +44,11 @@ class DamageService {
 
   // 從 API 獲取傷害值（現在是同步API）
   private async fetchDamageFromAPI(characterName: string): Promise<number> {
-    const serviceManager = (await import('./serviceManager')).default.getInstance();
+    const serviceManager = (await import('../core/serviceManager')).default.getInstance();
 
     return await serviceManager.executeAPI(async () => {
       const { apiService } = await import('./apiService');
-      const { config } = await import('./config');
+      const { config } = await import('../core/config');
       
       // 使用 Gateway URL（優先）
       const baseUrl = config.api.gatewayUrl || config.api.baseUrl;
@@ -96,104 +96,7 @@ class DamageService {
     }, `DamageService.getCharacterDamage.${characterName}`);
   }
 
-  // 輪詢傷害計算結果
-  private async pollForDamageResult(requestId: string, baseUrl: string, maxAttempts: number = 8, interval: number = 5000): Promise<number> {
-    // 調整輪詢參數以在 40 秒內完成 (8 次 * 5 秒 = 40 秒)
-    maxAttempts = Math.min(maxAttempts, 8);
-    interval = Math.max(interval, 5000);
-    // 開始輪詢傷害結果
-    
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        // 傷害輪詢嘗試
-        
-        // 檢查結果是否存在
-        const existsUrl = `${baseUrl}/api/request-status/${requestId}/exists`;
-        // 檢查傷害結果存在
-        
-        const existsResponse = await fetch(existsUrl, {
-          credentials: 'include'
-        });
-        
-        
-        if (existsResponse.ok) {
-          const existsData = await existsResponse.json();
-          // 傷害結果存在檢查
 
-          // 如果 exists 為 false，等待3秒後停止輪詢
-          if (!existsData.exists) {
-            // 結果不存在，3秒後停止輪詢
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            // 結果不存在，肯定沒到隊列裡面，停止輪詢
-            throw new Error('結果不存在，肯定沒到隊列裡面');
-          }
-
-          if (existsData.exists) {
-            // 獲取結果
-            const resultUrl = `${baseUrl}/api/request-status/${requestId}`;
-            // 獲取傷害結果
-            
-            const resultResponse = await fetch(resultUrl, {
-              credentials: 'include'
-            });
-            
-            // 傷害結果響應
-            
-            if (!resultResponse.ok) {
-              const errorText = await resultResponse.text();
-              console.error('❌ 傷害結果獲取失敗:', errorText);
-              throw new Error(`傷害結果獲取失敗: ${resultResponse.status} - ${errorText}`);
-            }
-            
-            const result = await resultResponse.json();
-            // 獲取傷害結果成功
-            
-            // 檢查是否還在處理中
-            if (result.status === 'processing' || result.data === null) {
-              // 傷害結果仍在處理中，繼續等待
-              // 不要立即 continue，而是等待後再繼續
-              if (attempt < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, interval));
-                continue;
-              } else {
-                throw new Error('傷害計算輪詢超時');
-              }
-            }
-            
-            // 檢查是否有錯誤
-            if (result.error) {
-              console.error('❌ 傷害處理結果有錯誤:', result.error);
-              throw new Error(`傷害處理錯誤: ${result.error}`);
-            }
-            
-            // 解析傷害值
-            const damageValue = this.parseDamageValue(result);
-            return damageValue;
-          }
-        } else {
-          // 傷害存在檢查失敗
-        }
-        
-        // 結果還不存在，繼續等待
-        // 傷害結果還不存在，繼續等待
-        if (attempt < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, interval));
-          continue;
-        } else {
-          throw new Error('傷害計算輪詢超時');
-        }
-        
-      } catch (error) {
-        console.error(`❌ 傷害輪詢嘗試 ${attempt} 失敗:`, error);
-        if (attempt === maxAttempts) {
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, interval));
-      }
-    }
-    
-    throw new Error('傷害計算輪詢超時');
-  }
 
   // 解析傷害值
   private parseDamageValue(result: any): number {

@@ -2,8 +2,8 @@
  * Generic API Service
  */
 
-import { storageService } from './storageService';
-import { config } from './config';
+import { storageService } from '../core/storageService';
+import { config } from '../core/config';
 
 export interface ApiRequestOptions {
   /** Absolute or relative URL of the API endpoint */
@@ -135,6 +135,47 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * 通用 API 請求方法 - 返回完整響應
+ */
+async function makeRequest<T = any>(
+  baseUrl: string,
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any,
+  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number }
+): Promise<ApiResponse<T>> {
+  const { auth = true, headers = {}, timeout } = options || {};
+  
+  return apiRequest({
+    url: `${baseUrl}${endpoint}`,
+    method,
+    body,
+    auth,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers
+    },
+    timeout
+  });
+}
+
+/**
+ * 通用 API 請求方法 - 只返回數據
+ */
+async function makeRequestData<T = any>(
+  baseUrl: string,
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any,
+  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number }
+): Promise<T> {
+  const response = await makeRequest<T>(baseUrl, endpoint, method, body, options);
+  return response.data;
+}
+
 export const apiService = {
   request: apiRequest,
+  makeRequest,
+  makeRequestData,
 };
