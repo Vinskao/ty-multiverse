@@ -3,7 +3,7 @@ declare global {
   interface Window {
     TY_MULTIVERSE_CONFIG?: {
       tymbUrl: string;
-      apiBaseUrl: string;
+      peopleImageUrl: string;
     };
   }
 }
@@ -22,7 +22,7 @@ if (!isLoggedIn) {
 }
 
 const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
-const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
+const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://peoplesystem.tatdvsonorth.com';
 ---
 
 <!DOCTYPE html>
@@ -32,10 +32,10 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
     <script async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
     <link rel="stylesheet" href="/src/styles/dance.css">
-    <script define:vars={{ tymbUrl, apiBaseUrl }}>
+    <script define:vars={{ tymbUrl, peopleImageUrl }}>
       window.TY_MULTIVERSE_CONFIG = {
         tymbUrl: tymbUrl,
-        apiBaseUrl: apiBaseUrl
+        peopleImageUrl: peopleImageUrl
       };
     </script>
   </head>
@@ -53,14 +53,17 @@ const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL;
             <div class="loading-spinner"></div>
             <span>正在載入角色和影片資料...</span>
           </div>
+          
+          <!-- 清除緩存按鈕 -->
+          <div class="cache-control-container">
+            <button id="cache-clear-btn" class="cache-clear-btn" type="button">
+              清除緩存並重新載入
+            </button>
+          </div>
+          
           <div id="videos-grid" class="videos-grid">
             <!-- 影片內容將動態載入 -->
           </div>
-
-          <!-- 清除緩存按鈕 -->
-          <button id="cache-clear-btn" class="cache-clear-btn" type="button">
-            清除緩存並重新載入
-          </button>
         </main>
       </div>
     </BaseLayout>

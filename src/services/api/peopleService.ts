@@ -155,12 +155,60 @@ class PeopleService {
 
   /**
    * 獲取所有角色名稱並等待結果（異步處理）
+   * 
+   * 注意：如果通過 Gateway (PUBLIC_TYMG_URL)，應該使用 /api/people/names，
+   * Gateway 的 AsyncPeopleProxyController 會自動等待異步結果並返回數據。
+   * 如果直接訪問 Backend (PUBLIC_TYMB_URL)，則需要手動處理異步響應。
    */
   async getAllPeopleNamesAndWait(): Promise<string[]> {
     try {
-      // 1. 发起异步请求获取所有角色名称（使用专门的 /people/names 端点）
-      const response = await apiService.makeRequest<string[]>(this.baseUrl, '/api/people/names', 'GET');
-      return response.data;
+      // 檢查是否通過 Gateway（Gateway 有專門的 /api/people/names 端點，會自動等待結果）
+      const isGateway = this.baseUrl.includes('/tymg') || this.baseUrl.includes('8082');
+      
+      if (isGateway) {
+        // 通過 Gateway：使用 /api/people/names，Gateway 會自動等待異步結果
+        const response = await apiService.makeRequest<string[]>(this.baseUrl, '/api/people/names', 'GET');
+        
+        // Gateway 的 AsyncPeopleProxyController 會直接返回數據（不是 202）
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        
+        // 如果 backendResponse 中有 data
+        if (response.backendResponse?.data && Array.isArray(response.backendResponse.data)) {
+          return response.backendResponse.data;
+        }
+        
+        throw new Error('Gateway 返回的數據格式錯誤');
+      } else {
+        // 直接訪問 Backend：需要手動處理異步響應
+        const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/names', 'GET');
+        
+        // 檢查是否是異步響應（202）
+        if (response.backendResponse?.code === 202 && response.backendResponse?.requestId) {
+          // 輪詢結果
+          const requestId = response.backendResponse.requestId;
+          const result = await this.waitForResult(requestId, { maxAttempts: 30, interval: 1000 });
+          
+          if (result.status === 'SUCCESS' && result.data) {
+            return Array.isArray(result.data) ? result.data : [];
+          } else {
+            throw new Error(result.message || '獲取角色名稱失敗');
+          }
+        }
+        
+        // 如果是直接返回的數據
+        if (Array.isArray(response.data)) {
+          return response.data;
+        }
+        
+        // 如果 backendResponse 中有 data
+        if (response.backendResponse?.data && Array.isArray(response.backendResponse.data)) {
+          return response.backendResponse.data;
+        }
+        
+        throw new Error('無法解析角色名稱列表');
+      }
     } catch (error) {
       console.error('獲取角色名稱失敗:', error);
       throw error;
@@ -312,7 +360,7 @@ class PeopleService {
    * 查詢請求狀態（使用異步結果端點）
    */
   async getRequestStatus(requestId: string): Promise<RequestStatus> {
-    const response = await apiService.makeRequest<ResultResponse<any>>(`/api/async/result/${requestId}`);
+    const response = await apiService.makeRequest<ResultResponse<any>>(this.baseUrl, `/api/async/result/${requestId}`, 'GET');
     const result = response.data;
     return {
       requestId,
