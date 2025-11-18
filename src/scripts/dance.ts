@@ -6,9 +6,17 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 工具函數：構建影片URL並檢查存在性
   async function getVideoUrl(baseUrl: string, videoName: string): Promise<string | null> {
-    const url = baseUrl.includes('/images/people')
-      ? `${baseUrl}/${videoName}.mp4`
-      : `${baseUrl}/images/people/${videoName}.mp4`;
+    // 確保 baseUrl 以 /images/people 結尾，或添加該路徑
+    let url: string;
+    if (baseUrl.endsWith('/images/people')) {
+      url = `${baseUrl}/${videoName}.mp4`;
+    } else if (baseUrl.includes('/images/people')) {
+      url = `${baseUrl}/${videoName}.mp4`;
+    } else {
+      // 如果 baseUrl 不包含 /images/people，添加該路徑
+      const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      url = `${cleanBaseUrl}/images/people/${videoName}.mp4`;
+    }
 
     try {
       const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
@@ -21,15 +29,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   // 載入角色和影片內容
   async function loadDanceContent() {
     const config = (window as any).TY_MULTIVERSE_CONFIG || {};
-    const { tymbUrl, apiBaseUrl } = config;
+    const { tymbUrl, peopleImageUrl } = config;
 
     try {
       updateLoadingStatus('loading', '正在獲取角色列表...');
 
-      const response = await fetch(`${tymbUrl}/people/names`);
-      if (!response.ok) throw new Error('無法獲取角色列表');
-
-      const characterNames = await response.json() as string[];
+      // 使用 peopleService 獲取角色名稱列表（處理異步響應）
+      const { peopleService } = await import('../services/api/peopleService');
+      const characterNames = await peopleService.getAllPeopleNamesAndWait();
+      
+      if (!Array.isArray(characterNames) || characterNames.length === 0) {
+        throw new Error('角色列表為空或格式錯誤');
+      }
 
       // 智能過濾角色
       const charactersToCheck = videoResourceManager.videoCache.size === 0
@@ -48,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (grid) grid.innerHTML = '';
 
       async function processOne(character: string) {
-        const videos = await getCharacterVideos(apiBaseUrl!, character);
+        const videos = await getCharacterVideos(peopleImageUrl!, character);
         if (videos.length > 0) {
           const group = { character, videos };
           videoGroups.push(group);

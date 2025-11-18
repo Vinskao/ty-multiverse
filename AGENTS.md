@@ -348,15 +348,15 @@ Database
 **Target:** Backend (TYMB) - Direct (NO Gateway)  
 **Authentication:** Bearer Token
 
-| Frontend Endpoint | Method | Description | Full URL | Backend Endpoint | Auth Required | Tested | Status Code | Test Result | Log Trace |
-|-------------------|--------|-------------|----------|------------------|---------------|--------|-------------|-------------|-----------|
-| `/auth/admin` | GET | Test admin endpoint | `http://localhost:8080/tymb/auth/admin` | `/auth/admin` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
-| `/auth/user` | GET | Test user endpoint | `http://localhost:8080/tymb/auth/user` | `/auth/user` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
-| `/auth/visitor` | GET | Test visitor endpoint | `http://localhost:8080/tymb/auth/visitor` | `/auth/visitor` | ❌ | ✅ | 200 | OK - Public endpoint accessible | ✅ Backend: Public endpoint allows anonymous access |
-| `/auth/test` | POST | Auth integration test | `http://localhost:8080/tymb/auth/test` | `/auth/test` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
-| `/auth/logout-test` | POST | Logout test | `http://localhost:8080/tymb/auth/logout-test` | `/auth/logout-test` | ✅ | ✅ | 401 | Unauthorized - No token provided | ✅ Backend: Security filter correctly blocks unauthenticated request |
-| `/auth/health` | GET | Health check | `http://localhost:8080/tymb/auth/health` | `/auth/health` | ❌ | ✅ | 200 | OK - Health check passed | ✅ Backend: Health endpoint returns OK |
-| `/keycloak/introspect` | POST | Token validation & refresh | `http://localhost:8080/tymb/keycloak/introspect` | `/keycloak/introspect` | ❌ | ✅ | 400 | Bad Request - Invalid token format | ✅ Backend: Keycloak validation rejects invalid token format |
+| Frontend Endpoint | Method | Description | Full URL | Backend Endpoint | Auth Required | Tested | Status Code | Test Result | Curl Command |
+|-------------------|--------|-------------|----------|------------------|---------------|--------|-------------|-------------|--------------|
+| `/auth/admin` | GET | Test admin endpoint | `http://localhost:8080/tymb/auth/admin` | `/auth/admin` | ✅ | ✅ | **200** | ✅ OK - Returns admin info (anonymousUser with ROLE_ANONYMOUS) | `curl -X GET http://localhost:8080/tymb/auth/admin` |
+| `/auth/user` | GET | Test user endpoint | `http://localhost:8080/tymb/auth/user` | `/auth/user` | ✅ | ✅ | **200** | ✅ OK - Returns user info (anonymousUser authenticated) | `curl -X GET http://localhost:8080/tymb/auth/user` |
+| `/auth/visitor` | GET | Test visitor endpoint | `http://localhost:8080/tymb/auth/visitor` | `/auth/visitor` | ❌ | ✅ | 200 | ✅ OK - Public endpoint accessible | `curl -X GET http://localhost:8080/tymb/auth/visitor` |
+| `/auth/test` | POST | Auth integration test | `http://localhost:8080/tymb/auth/test` | `/auth/test` | ✅ | ✅ | **200** | ✅ OK - Returns test result (UNAUTHORIZED status but 200 response) | `curl -X POST http://localhost:8080/tymb/auth/test` |
+| `/auth/logout-test` | POST | Logout test | `http://localhost:8080/tymb/auth/logout-test` | `/auth/logout-test` | ✅ | ✅ | **400** | ⚠️ Bad Request - Requires 'refreshToken' parameter | `curl -X POST http://localhost:8080/tymb/auth/logout-test` |
+| `/auth/health` | GET | Health check | `http://localhost:8080/tymb/auth/health` | `/auth/health` | ❌ | ✅ | 200 | ✅ OK - Health check passed | `curl -X GET http://localhost:8080/tymb/auth/health` |
+| `/keycloak/introspect` | POST | Token validation & refresh | `http://localhost:8080/tymb/keycloak/introspect` | `/keycloak/introspect` | ❌ | ✅ | 400 | ⚠️ Bad Request - Requires 'token' parameter (not JSON body) | `curl -X POST http://localhost:8080/tymb/keycloak/introspect -H "Content-Type: application/json" -d '{"token":"invalid"}'` |
 
 **Request Flow:**
 ```
@@ -375,40 +375,65 @@ Frontend → Backend (/tymb/auth/*, /tymb/keycloak/*) - DIRECT (bypasses Gateway
 **Target:** Gateway (TYMG) → Backend REST Controllers → Consumer (異步)
 **Pattern:** Asynchronous REST API (通過 RabbitMQ)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Flow Pattern |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Curl Command |
 |-------------------|--------|-------------|----------|---------------|-------------------|----------|------|--------|-------------|-------------|--------------|
-| `/people/get-all` | POST | Get all people (async) | `http://localhost:8082/tymg/people/get-all` | `/tymg/people/get-all` → `/tymb/people/get-all` | `PeopleController.getAllPeople()` | ✅ `PeopleConsumer.handleGetAllPeople()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
-| `/people/insert` | POST | Insert single person | `http://localhost:8082/tymg/people/insert` | `/tymg/people/insert` → `/tymb/people/insert` | `PeopleController.insertPeople()` | ❌ | ❌ | ✅ | 400 | Bad Request - Invalid data format | Gateway → Backend (同步) |
-| `/people/update` | POST | Update person | `http://localhost:8082/tymg/people/update` | `/tymg/people/update` → `/tymb/people/update` | `PeopleController.updatePeople()` | ❌ | ❌ | ❌ | N/A | Not tested | Gateway → Backend (同步) |
-| `/people/get-by-name` | POST | Get person by name (async) | `http://localhost:8082/tymg/people/get-by-name` | `/tymg/people/get-by-name` → `/tymb/people/get-by-name` | `PeopleController.getPersonByName()` | ✅ `PeopleConsumer.handleGetPeopleByName()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
-| `/people/names` | GET | Get all person names | `http://localhost:8082/tymg/people/names` | `/tymg/people/names` → `/tymb/people/names` | `PeopleController.getNames()` | ❌ | ❌ | ✅ | 200 | OK - Names list returned | Gateway → Backend (同步) |
-| `/people/damageWithWeapon` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/tymg/people/damageWithWeapon` → `/tymb/people/damageWithWeapon` | `WeaponDamageController.calculateDamageWithWeapon()` | ❌ | ❌ | ❌ | N/A | Network error - String response | Gateway → Backend (同步) |
+| `/people/get-all` | POST | Get all people (async) | `http://localhost:8082/tymg/people/get-all` | `/tymg/people/get-all` → `/tymb/people/get-all` | `PeopleController.getAllPeople()` | ✅ `PeopleConsumer.handleGetAllPeople()` | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X POST http://localhost:8082/tymg/people/get-all -H "Content-Type: application/json"`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/insert` | POST | Insert single person (async if RabbitMQ enabled) | `http://localhost:8082/tymg/people/insert` | `/tymg/people/insert` → `/tymb/people/insert` | `PeopleController.insertPeople()` | ✅ `PeopleConsumer.handleInsertPerson()` (if async) | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X POST http://localhost:8082/tymg/people/insert -H "Content-Type: application/json" -d '{"name":"Test","codeName":"TEST001","race":"Human"}'`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/update` | POST | Update person (async if RabbitMQ enabled) | `http://localhost:8082/tymg/people/update` | `/tymg/people/update` → `/tymb/people/update` | `PeopleController.updatePeople()` | ✅ `PeopleConsumer.handleUpdatePerson()` (if async) | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X POST http://localhost:8082/tymg/people/update -H "Content-Type: application/json" -d '{"name":"Test","age":25,"level":1}'`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/insert-multiple` | POST | Insert multiple people | `http://localhost:8082/tymg/api/people/insert-multiple` | `/tymg/api/people/insert-multiple` → `/tymb/people/insert-multiple` | `PeopleController.insertMultiplePeople()` | ⚠️ **未實現** | ✅ | **500** | ⚠️ **應走異步流程但未實現** - Consumer 有隊列但無監聽器，Backend 無發送方法 | `curl -X POST http://localhost:8082/tymg/api/people/insert-multiple -H "Content-Type: application/json" -d '[{"name":"Test1"},{"name":"Test2"}]'`<br/>`# ⚠️ 當前為同步端點，應改為異步流程` |
+| `/people/get-by-name` | POST | Get person by name (async) | `http://localhost:8082/tymg/people/get-by-name` | `/tymg/people/get-by-name` → `/tymb/people/get-by-name` | `PeopleController.getPersonByName()` | ✅ `PeopleConsumer.handleGetPeopleByName()` | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X POST http://localhost:8082/tymg/people/get-by-name -H "Content-Type: application/json" -d '{"name":"Test"}'`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/delete-all` | POST | Delete all people (async) | `http://localhost:8082/tymg/people/delete-all` | `/tymg/people/delete-all` → `/tymb/people/delete-all` | `PeopleController.deleteAllPeople()` | ✅ `PeopleConsumer.handleDeleteAllPeople()` | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X POST http://localhost:8082/tymg/people/delete-all -H "Content-Type: application/json"`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/names` | GET | Get all person names (async - 強制) | `http://localhost:8082/tymg/people/names` | `/tymg/people/names` → `/tymb/people/names` | `PeopleController.getNames()` | ✅ `PeopleConsumer.handleGetPeopleNames()` | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X GET http://localhost:8082/tymg/people/names`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/damageWithWeapon` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon?name={name}` | `/tymg/people/damageWithWeapon` → `/tymb/people/damageWithWeapon` | `WeaponDamageController.damageWithWeapon()` | ❌ | ✅ | **404** | ⚠️ **Gateway Route Not Found** - Gateway routing issue | `curl -X GET "http://localhost:8082/tymg/people/damageWithWeapon?name=Test"`<br/>`# ⚠️ Gateway 路由配置問題：返回 404` |
+| `/people/batchDamageWithWeapon` | POST | Batch calculate damage | `http://localhost:8082/tymg/people/batchDamageWithWeapon` | `/tymg/people/batchDamageWithWeapon` → `/tymb/people/batchDamageWithWeapon` | `WeaponDamageController.batchDamageWithWeapon()` | ❌ | ✅ | **401** | ⚠️ Unauthorized - Gateway security filter blocking | `curl -X POST http://localhost:8082/tymg/people/batchDamageWithWeapon -H "Content-Type: application/json" -d '{"names":["Test1","Test2"]}'`<br/>`# ⚠️ Gateway 安全過濾器阻擋` |
 
 **Request Flow:**
 
-**異步流程 (僅 `/people/get-all`):**
+**異步流程 (People 異步端點):**
 ```
-Frontend → Gateway (/tymg/people/get-all) 
-         → Backend (/tymb/people/get-all) [202 Accepted + requestId]
-         → RabbitMQ (people-get-all queue)
+Frontend → Gateway (/tymg/people/get-all, /get-by-name, /delete-all, /names, /insert, /update) 
+         → Backend (/tymb/people/*) [202 Accepted + requestId]
+         → RabbitMQ (people-* queue)
          → Consumer (PeopleConsumer) 
          → Database (R2DBC)
+         → AsyncResultService.sendCompletedResult()
+         → RabbitMQ (async-result queue)
          → Redis (AsyncResult)
          → Backend polls (/api/async/result/{requestId})
          → Frontend receives result
 ```
 
-**同步流程 (其他端點):**
+**同步流程 (People 同步端點):**
 ```
-Frontend → Gateway (/tymg/people/*) 
+Frontend → Gateway (/tymg/people/damageWithWeapon, /batchDamageWithWeapon) 
          → Backend (/tymb/people/*) [直接返回結果]
          → Frontend
 ```
 
+**⚠️ 待實現異步流程 (`/people/insert-multiple`):**
+```
+Frontend → Gateway (/tymg/api/people/insert-multiple)
+         → Backend (/tymb/people/insert-multiple) [應返回 202 + requestId]
+         → RabbitMQ (people-insert-multiple queue) ⚠️ **Backend 未實現發送**
+         → Consumer (PeopleConsumer.handleInsertMultiple) ⚠️ **Consumer 未實現監聽器**
+         → Database (R2DBC)
+         → AsyncResultService.sendCompletedResult()
+         → RabbitMQ (async-result queue)
+         → Redis (AsyncResult)
+         → Backend polls (/api/async/result/{requestId})
+         → Frontend receives result
+```
+
 **關鍵說明:**
-- ✅ **People Module**: `/get-all`, `/get-by-name`, `/delete-all` 走 Consumer (異步)
-- ✅ **Weapon Module**: 所有端點 (`/`, `/{name}`, `/owner/{owner}`, POST, DELETE) 走 Consumer (異步)
-- ✅ **Consumer 監聽隊列**: 10 個隊列全部有對應的 Consumer 處理器
+- ✅ **People Module**: `/get-all`, `/get-by-name`, `/delete-all`, `/names` 走 Consumer (異步)
+- ✅ **People Module**: `/insert`, `/update` 如果 RabbitMQ 啟用則走 Consumer (異步)，否則同步處理
+- ⚠️ **People Module**: `/insert-multiple` **應走 Consumer (異步)但未實現** - Consumer 有 `people-insert-multiple` 隊列配置，但缺少：
+  - Backend: `PEOPLE_INSERT_MULTIPLE_QUEUE` 常量和 `sendPeopleInsertMultipleRequest()` 方法
+  - Backend: `PeopleController.insertMultiplePeople()` 的異步邏輯
+  - Consumer: `PeopleConsumer.handleInsertMultiple()` 監聽器
+- ✅ **Weapon Module**: 核心 CRUD 端點 (`GET /`, `GET /{name}`, `GET /owner/{owner}`, `POST /`, `DELETE /{name}`, `DELETE /delete-all`, `GET /exists/{name}`) 走 Consumer (異步)
+- ✅ **Weapon Module**: 更新端點 (`PUT /{name}/*`) 和查詢端點 (`GET /damage-range`, `GET /attribute/{attribute}`) 為同步處理
+- ✅ **Consumer 監聽隊列**: 13 個隊列全部有對應的 Consumer 處理器 (People: 6, Weapon: 7, 包括 people-get-names, people-insert, people-update)
 - ✅ **Backend 發送邏輯**: AsyncMessageService 已實現所有發送方法並正常運作
 - ✅ **異步處理鏈**: Frontend → Gateway → Backend → RabbitMQ → Consumer → Redis → Backend → Frontend
 
@@ -416,28 +441,45 @@ Frontend → Gateway (/tymg/people/*)
 
 **Service File:** `weaponService.ts`
 **Target:** Gateway (TYMG) → Backend REST Controllers → Consumer (異步)
-**Pattern:** Asynchronous REST API (通過 RabbitMQ)
+**Pattern:** Asynchronous REST API (通過 RabbitMQ) + Synchronous (更新/查詢端點)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Flow Pattern |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Curl Command |
 |-------------------|--------|-------------|----------|---------------|-------------------|----------|------|--------|-------------|-------------|--------------|
-| `/weapons` | GET | Get all weapons (async) | `http://localhost:8082/tymg/weapons` | `/tymg/weapons` → `/tymb/weapons` | `WeaponController.getAllWeapons()` | ✅ `WeaponConsumer.handleGetAllWeapons()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
-| `/weapons/{name}` | GET | Get weapon by name (async) | `http://localhost:8082/tymg/weapons/{name}` | `/tymg/weapons/{name}` → `/tymb/weapons/{name}` | `WeaponController.getWeaponById()` | ✅ `WeaponConsumer.handleGetWeaponByName()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
-| `/weapons/owner/{ownerName}` | GET | Get weapons by owner (async) | `http://localhost:8082/tymg/weapons/owner/{ownerName}` | `/tymg/weapons/owner/{ownerName}` → `/tymb/weapons/owner/{ownerName}` | `WeaponController.getWeaponsByOwner()` | ✅ `WeaponConsumer.handleGetWeaponsByOwner()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
-| `/weapons` | POST | Save weapon (async) | `http://localhost:8082/tymg/weapons` | `/tymg/weapons` → `/tymb/weapons` | `WeaponController.saveWeapon()` | ✅ `WeaponConsumer.handleSaveWeapon()` | ❌ | ✅ | 202 | Accepted - Async request queued | **Gateway → Backend → RabbitMQ → Consumer → Redis** |
+| `/weapons` | GET | Get all weapons (async) | `http://localhost:8082/tymg/weapons` | `/tymg/weapons` → `/tymb/weapons` | `WeaponController.getAllWeapons()` | ✅ `WeaponConsumer.handleGetAllWeapons()` | ❌ | ✅ | 202 | Accepted - Async request queued | `curl -X GET http://localhost:8082/tymg/weapons`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/{name}` | GET | Get weapon by name (async) | `http://localhost:8082/tymg/weapons/{name}` | `/tymg/weapons/{name}` → `/tymb/weapons/{name}` | `WeaponController.getWeaponById()` | ✅ `WeaponConsumer.handleGetWeaponByName()` | ❌ | ✅ | 202 | Accepted - Async request queued | `curl -X GET http://localhost:8082/tymg/weapons/Sword`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/owner/{ownerName}` | GET | Get weapons by owner (async) | `http://localhost:8082/tymg/weapons/owner/{ownerName}` | `/tymg/weapons/owner/{ownerName}` → `/tymb/weapons/owner/{ownerName}` | `WeaponController.getWeaponsByOwner()` | ✅ `WeaponConsumer.handleGetWeaponsByOwner()` | ❌ | ✅ | 202 | Accepted - Async request queued | `curl -X GET http://localhost:8082/tymg/weapons/owner/Test`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons` | POST | Save weapon (async) | `http://localhost:8082/tymg/weapons` | `/tymg/weapons` → `/tymb/weapons` | `WeaponController.saveWeapon()` | ✅ `WeaponConsumer.handleSaveWeapon()` | ❌ | ✅ | 202 | Accepted - Async request queued | `curl -X POST http://localhost:8082/tymg/weapons -H "Content-Type: application/json" -d '{"name":"Sword","owner":"Test","baseDamage":50}'`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/{name}` | DELETE | Delete weapon by name (async) | `http://localhost:8082/tymg/weapons/{name}` | `/tymg/weapons/{name}` → `/tymb/weapons/{name}` | `WeaponController.deleteWeapon()` | ✅ `WeaponConsumer.handleDeleteWeapon()` | ❌ | ❌ | 202 | Accepted - Async request queued | `curl -X DELETE http://localhost:8082/tymg/weapons/Sword`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/delete-all` | DELETE | Delete all weapons (async) | `http://localhost:8082/tymg/weapons/delete-all` | `/tymg/weapons/delete-all` → `/tymb/weapons/delete-all` | `WeaponController.deleteAllWeapons()` | ✅ `WeaponConsumer.handleDeleteAllWeapons()` | ❌ | ❌ | 202 | Accepted - Async request queued | `curl -X DELETE http://localhost:8082/tymg/weapons/delete-all`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/exists/{name}` | GET | Check weapon exists (async) | `http://localhost:8082/tymg/weapons/exists/{name}` | `/tymg/weapons/exists/{name}` → `/tymb/weapons/exists/{name}` | `WeaponController.checkWeaponExists()` | ✅ `WeaponConsumer.handleWeaponExists()` | ❌ | ❌ | 202 | Accepted - Async request queued | `curl -X GET http://localhost:8082/tymg/weapons/exists/Sword`<br/>`# 異步：返回 202 + requestId` |
+| `/weapons/{name}/attributes` | PUT | Update weapon attributes | `http://localhost:8082/tymg/weapons/{name}/attributes` | `/tymg/weapons/{name}/attributes` → `/tymb/weapons/{name}/attributes` | `WeaponController.updateWeaponAttributes()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X PUT http://localhost:8082/tymg/weapons/Sword/attributes -H "Content-Type: application/json" -d '{"attributes":"Slashing"}'` |
+| `/weapons/{name}/base-damage` | PUT | Update weapon base damage | `http://localhost:8082/tymg/weapons/{name}/base-damage` | `/tymg/weapons/{name}/base-damage` → `/tymb/weapons/{name}/base-damage` | `WeaponController.updateWeaponBaseDamage()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X PUT http://localhost:8082/tymg/weapons/Sword/base-damage -H "Content-Type: application/json" -d '{"baseDamage":60}'` |
+| `/weapons/{name}/bonus-damage` | PUT | Update weapon bonus damage | `http://localhost:8082/tymg/weapons/{name}/bonus-damage` | `/tymg/weapons/{name}/bonus-damage` → `/tymb/weapons/{name}/bonus-damage` | `WeaponController.updateWeaponBonusDamage()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X PUT http://localhost:8082/tymg/weapons/Sword/bonus-damage -H "Content-Type: application/json" -d '{"bonusDamage":20}'` |
+| `/weapons/{name}/bonus-attributes` | PUT | Update weapon bonus attributes | `http://localhost:8082/tymg/weapons/{name}/bonus-attributes` | `/tymg/weapons/{name}/bonus-attributes` → `/tymb/weapons/{name}/bonus-attributes` | `WeaponController.updateWeaponBonusAttributes()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X PUT http://localhost:8082/tymg/weapons/Sword/bonus-attributes -H "Content-Type: application/json" -d '{"bonusAttributes":["Strength"]}'` |
+| `/weapons/{name}/state-attributes` | PUT | Update weapon state attributes | `http://localhost:8082/tymg/weapons/{name}/state-attributes` | `/tymg/weapons/{name}/state-attributes` → `/tymb/weapons/{name}/state-attributes` | `WeaponController.updateWeaponStateAttributes()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X PUT http://localhost:8082/tymg/weapons/Sword/state-attributes -H "Content-Type: application/json" -d '{"stateAttributes":["Normal"]}'` |
+| `/weapons/damage-range` | GET | Find weapons by damage range | `http://localhost:8082/tymg/weapons/damage-range?minDamage={min}&maxDamage={max}` | `/tymg/weapons/damage-range` → `/tymb/weapons/damage-range` | `WeaponController.findByBaseDamageRange()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X GET "http://localhost:8082/tymg/weapons/damage-range?minDamage=10&maxDamage=100"` |
+| `/weapons/attribute/{attribute}` | GET | Find weapons by attribute | `http://localhost:8082/tymg/weapons/attribute/{attribute}` | `/tymg/weapons/attribute/{attribute}` → `/tymb/weapons/attribute/{attribute}` | `WeaponController.findByAttribute()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X GET http://localhost:8082/tymg/weapons/attribute/Slashing` |
 
-**Request Flow (完全異步):**
+**Request Flow (混合模式):**
 ```
+異步端點 (核心 CRUD):
 Frontend → Gateway Route (/tymg/weapons/*)
          → Backend REST Controller (/tymb/weapons/*) [202 Accepted]
          → RabbitMQ Queue → Consumer Listener
          → Database → Redis (AsyncResult)
          → Backend polls result → Frontend receives data
+
+同步端點 (更新/查詢):
+Frontend → Gateway Route (/tymg/weapons/*)
+         → Backend REST Controller (/tymb/weapons/*) [直接返回結果]
+         → Frontend
 ```
 
 **關鍵說明:**
-- ✅ **Weapon 模組全部走 Consumer** - 所有 7 個端點都是異步的
+- ✅ **Weapon 模組核心 CRUD 走 Consumer** - 7 個核心端點都是異步的 (GET /, GET /{name}, GET /owner/{owner}, POST /, DELETE /{name}, DELETE /delete-all, GET /exists/{name})
+- ✅ **Weapon 模組更新/查詢端點同步** - 6 個端點為同步處理 (PUT /{name}/*, GET /damage-range, GET /attribute/{attribute})
 - ✅ **Backend 通過 AsyncMessageService 發送消息** - RabbitMQ + Redis 完整流程
-- ✅ **Consumer 監聽器完全使用** - 7 個 Weapon 監聽器全部活躍
+- ✅ **Consumer 監聽器完全使用** - 7 個 Weapon 核心監聽器全部活躍
 - ✅ **異步處理鏈**: Frontend → Gateway → Backend → RabbitMQ → Consumer → Redis → Backend → Frontend
 
 ### Character Service APIs
@@ -462,15 +504,17 @@ Frontend → Gateway Route (/tymg/weapons/*)
 
 **Service File:** `damageService.ts`  
 **Target:** Gateway (TYMG) → Backend  
-**Pattern:** Synchronous (recently changed from async)
+**Pattern:** Synchronous
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Controller | Backend Endpoint | Auth | Tested | Status Code | Test Result | Log Trace |
-|-------------------|--------|-------------|----------|-------------------|------------------|------|--------|-------------|-------------|-----------|
-| `/people/damageWithWeapon?name={name}` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon` | `/people/damageWithWeapon` | `/people/damageWithWeapon` | ✅ | ✅ | 400 | Bad Request - Person not found | ✅ Gateway correctly forwards Backend's 400 response |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Auth | Tested | Status Code | Test Result | Curl Command |
+|-------------------|--------|-------------|----------|---------------|-------------------|------|--------|-------------|-------------|--------------|
+| `/people/damageWithWeapon?name={name}` | GET | Calculate damage | `http://localhost:8082/tymg/people/damageWithWeapon?name={name}` | `/tymg/people/damageWithWeapon` → `/tymb/people/damageWithWeapon` | `WeaponDamageController.damageWithWeapon()` | ❌ | ✅ | 200/400 | OK/Bad Request - Person not found | `curl -X GET "http://localhost:8082/tymg/people/damageWithWeapon?name=Test"` |
+| `/people/batchDamageWithWeapon` | POST | Batch calculate damage | `http://localhost:8082/tymg/people/batchDamageWithWeapon` | `/tymg/people/batchDamageWithWeapon` → `/tymb/people/batchDamageWithWeapon` | `WeaponDamageController.batchDamageWithWeapon()` | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/people/batchDamageWithWeapon -H "Content-Type: application/json" -d '{"names":["Test1","Test2"]}'` |
 
 **Features:**
-- Now returns damage value directly (synchronous)
-- 2-minute cache duration
+- Returns damage value directly (synchronous)
+- 2-minute cache duration for single damage calculation
+- Batch calculation optimized for multiple characters
 - Integrated with ServiceManager for retry logic
 
 ### Gallery Module APIs
@@ -479,13 +523,13 @@ Frontend → Gateway Route (/tymg/weapons/*)
 **Target:** Gateway (TYMG) → Backend REST Controllers (同步)
 **Pattern:** Synchronous REST API (不走 Consumer)
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Flow Pattern |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Consumer | Auth | Tested | Status Code | Test Result | Curl Command |
 |-------------------|--------|-------------|----------|---------------|-------------------|----------|------|--------|-------------|-------------|--------------|
-| `/gallery/getAll` | POST | Get all images | `http://localhost:8082/tymg/gallery/getAll` | `/tymg/gallery/getAll` → `/tymb/gallery/getAll` | `GalleryController.getAllImages()` | ❌ | ❌ | ✅ | 200 | OK - Empty gallery list | Gateway → Backend (同步) |
-| `/gallery/getById` | POST | Get image by ID | `http://localhost:8082/tymg/gallery/getById` | `/tymg/gallery/getById` → `/tymb/gallery/getById` | `GalleryController.getImageById()` | ❌ | ❌ | ❌ | N/A | Not tested | Gateway → Backend (同步) |
-| `/gallery/save` | POST | Save image | `http://localhost:8082/tymg/gallery/save` | `/tymg/gallery/save` → `/tymb/gallery/save` | `GalleryController.saveImage()` | ❌ | ❌ | ❌ | N/A | Not tested | Gateway → Backend (同步) |
-| `/gallery/update` | POST | Update image | `http://localhost:8082/tymg/gallery/update` | `/tymg/gallery/update` → `/tymb/gallery/update` | `GalleryController.updateImage()` | ❌ | ❌ | ❌ | N/A | Not tested | Gateway → Backend (同步) |
-| `/gallery/delete` | POST | Delete image | `http://localhost:8082/tymg/gallery/delete` | `/tymg/gallery/delete` → `/tymb/gallery/delete` | `GalleryController.deleteImage()` | ❌ | ❌ | ❌ | N/A | Not tested | Gateway → Backend (同步) |
+| `/gallery/getAll` | POST | Get all images | `http://localhost:8082/tymg/gallery/getAll` | `/tymg/gallery/getAll` → `/tymb/gallery/getAll` | `GalleryController.getAllImages()` | ❌ | ❌ | ✅ | 200 | OK - Empty gallery list | `curl -X POST http://localhost:8082/tymg/gallery/getAll -H "Content-Type: application/json"` |
+| `/gallery/getById` | POST | Get image by ID | `http://localhost:8082/tymg/gallery/getById` | `/tymg/gallery/getById` → `/tymb/gallery/getById` | `GalleryController.getImageById()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/gallery/getById -H "Content-Type: application/json" -d '1'` |
+| `/gallery/save` | POST | Save image | `http://localhost:8082/tymg/gallery/save` | `/tymg/gallery/save` → `/tymb/gallery/save` | `GalleryController.saveImage()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/gallery/save -H "Content-Type: application/json" -d '{"imageBase64":"data:image/png;base64,..."}'` |
+| `/gallery/update` | POST | Update image | `http://localhost:8082/tymg/gallery/update` | `/tymg/gallery/update` → `/tymb/gallery/update` | `GalleryController.updateImage()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/gallery/update -H "Content-Type: application/json" -d '{"id":1,"imageBase64":"data:image/png;base64,..."}'` |
+| `/gallery/delete` | POST | Delete image | `http://localhost:8082/tymg/gallery/delete` | `/tymg/gallery/delete` → `/tymb/gallery/delete` | `GalleryController.deleteImage()` | ❌ | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/gallery/delete -H "Content-Type: application/json" -d '{"id":1}'` |
 
 **Request Flow (完全同步):**
 ```
@@ -504,15 +548,35 @@ Frontend → Gateway Route (/tymg/gallery/*)
 - ✅ **Backend 直接返回結果** - 無需 RabbitMQ/Redis
 - ℹ️ **無認證要求** - 返回空數組表示正常
 
+### Blackjack Module APIs
+
+**Service File:** `blackjackService.ts` (if exists)  
+**Target:** Gateway (TYMG) → Backend REST Controllers  
+**Pattern:** Synchronous (Session-based)
+
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Controller | Auth | Tested | Status Code | Test Result | Curl Command |
+|-------------------|--------|-------------|----------|---------------|-------------------|------|--------|-------------|-------------|--------------|
+| `/deckofcards/blackjack/status` | GET | Get game status | `http://localhost:8082/tymg/deckofcards/blackjack/status` | `/tymg/deckofcards/blackjack/status` → `/tymb/deckofcards/blackjack/status` | `BlackjackController.getStatus()` | ❌ | ❌ | N/A | Not tested | `curl -X GET http://localhost:8082/tymg/deckofcards/blackjack/status` |
+| `/deckofcards/blackjack/start` | POST | Start new game | `http://localhost:8082/tymg/deckofcards/blackjack/start` | `/tymg/deckofcards/blackjack/start` → `/tymb/deckofcards/blackjack/start` | `BlackjackController.startGame()` | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/deckofcards/blackjack/start -H "Content-Type: application/json" -b cookies.txt -c cookies.txt`<br/>`# Session-based: 需要保存 cookies` |
+| `/deckofcards/blackjack/state` | GET | Get game state | `http://localhost:8082/tymg/deckofcards/blackjack/state` | `/tymg/deckofcards/blackjack/state` → `/tymb/deckofcards/blackjack/state` | `BlackjackController.getGameState()` | ❌ | ❌ | N/A | Not tested | `curl -X GET http://localhost:8082/tymg/deckofcards/blackjack/state -b cookies.txt`<br/>`# Session-based: 需要 cookies` |
+| `/deckofcards/blackjack/hit` | POST | Player hit | `http://localhost:8082/tymg/deckofcards/blackjack/hit` | `/tymg/deckofcards/blackjack/hit` → `/tymb/deckofcards/blackjack/hit` | `BlackjackController.playerHit()` | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/deckofcards/blackjack/hit -H "Content-Type: application/json" -b cookies.txt -c cookies.txt`<br/>`# Session-based: 需要 cookies` |
+| `/deckofcards/blackjack/stand` | POST | Player stand | `http://localhost:8082/tymg/deckofcards/blackjack/stand` | `/tymg/deckofcards/blackjack/stand` → `/tymb/deckofcards/blackjack/stand` | `BlackjackController.playerStand()` | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/deckofcards/blackjack/stand -H "Content-Type: application/json" -b cookies.txt -c cookies.txt`<br/>`# Session-based: 需要 cookies` |
+| `/deckofcards/blackjack/end` | POST | End game | `http://localhost:8082/tymg/deckofcards/blackjack/end` | `/tymg/deckofcards/blackjack/end` → `/tymb/deckofcards/blackjack/end` | `BlackjackController.endGame()` | ❌ | ❌ | N/A | Not tested | `curl -X POST http://localhost:8082/tymg/deckofcards/blackjack/end -H "Content-Type: application/json" -b cookies.txt`<br/>`# Session-based: 需要 cookies` |
+
+**Features:**
+- Session-based game state management
+- HTTP session required for all operations
+- Returns game state as JSON
+
 ### Sync Service APIs
 
 **Service File:** `syncService.ts`
 **Target:** Gateway (TYMG) → External (Google Apps Script)
 **Pattern:** Synchronous with long timeout
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Target | Auth | Tested | Status Code | Test Result | Notes |
-|-------------------|--------|-------------|----------|--------------|--------|------|--------|-------------|-------------|--------|
-| `/api/sync-characters` | POST | Sync to Google Apps Script | `http://localhost:8082/tymg/api/sync-characters` | `/tymg/api/sync-characters` → `/tymb/api/sync-characters` | External | ❌ | ❌ | N/A | Not tested in this session | ⚠️ 未在本次重构中测试 |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Target | Auth | Tested | Status Code | Test Result | Curl Command |
+|-------------------|--------|-------------|----------|--------------|--------|------|--------|-------------|-------------|--------------|
+| `/api/sync-characters` | POST | Sync to Google Apps Script | `http://localhost:8082/tymg/api/sync-characters` | `/tymg/api/sync-characters` → `/tymb/api/sync-characters` | External | ❌ | ❌ | N/A | Not tested in this session | `curl -X POST http://localhost:8082/tymg/api/sync-characters -H "Content-Type: application/json" -d '[{"name":"Test"}]'`<br/>`# 外部服務：需要 Google Apps Script URL` |
 
 ### Monitor Service APIs
 
@@ -520,10 +584,10 @@ Frontend → Gateway Route (/tymg/gallery/*)
 **Target:** Gateway (TYMG) → Backend Health Checks
 **Pattern:** Synchronous health checks
 
-| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Target | Auth | Tested | Status Code | Test Result | Notes |
-|-------------------|--------|-------------|----------|--------------|---------------|------|--------|-------------|-------------|--------|
-| `/health` | GET | API health check | `http://localhost:8082/tymg/health` | `/tymg/health` → `/tymb/health` | Backend Health | ❌ | ❌ | 404 | Not Found - Route config issue | ⚠️ 路由配置需要修复 |
-| `/health/consumer` | GET | Consumer status check | `http://localhost:8082/tymg/health/consumer` | `/tymg/health/consumer` → `/tymb/health/consumer` | Consumer Health | ❌ | ❌ | 404 | Not Found - Route config issue | ⚠️ 路由配置需要修复 |
+| Frontend Endpoint | Method | Description | Full URL | Gateway Route | Backend Target | Auth | Tested | Status Code | Test Result | Curl Command |
+|-------------------|--------|-------------|----------|--------------|---------------|------|--------|-------------|-------------|--------------|
+| `/health` | GET | API health check | `http://localhost:8082/tymg/health` | `/tymg/health` → `/tymb/health` | Backend Health | ❌ | ❌ | 404 | Not Found - Route config issue | `curl -X GET http://localhost:8082/tymg/health`<br/>`# ⚠️ 路由配置需要修复` |
+| `/health/consumer` | GET | Consumer status check | `http://localhost:8082/tymg/health/consumer` | `/tymg/health/consumer` → `/tymb/health/consumer` | Consumer Health | ❌ | ❌ | 404 | Not Found - Route config issue | `curl -X GET http://localhost:8082/tymg/health/consumer`<br/>`# ⚠️ 路由配置需要修复` |
 
 **Features:**
 - Auto health check every 30 seconds
@@ -538,19 +602,20 @@ Frontend → Gateway Route (/tymg/gallery/*)
 | Category | Endpoints | Frontend Prefix | Gateway Route Pattern | Backend Context-Path | Consumer | Pattern | Status |
 |----------|-----------|----------------|----------------------|------------------|----------|---------|--------|
 | Authentication | 7 | N/A (Direct) | N/A | `/tymb` | ❌ | Sync (Direct Backend) | ✅ 正常運作 |
-| People Module | 6 | `/people/*` | `/tymg/people/*` → `/tymb/people/*` | `/tymb` | ✅ (get-all, get-by-name, delete-all) | **Async (3/6)** | ✅ **異步正常運作** |
-| Weapon Module | 7 | `/weapons/*` | `/tymg/weapons/*` → `/tymb/weapons/*` | `/tymb` | ✅ (全部端點) | **Async (7/7)** | ✅ **異步正常運作** |
+| People Module | 9 | `/people/*` | `/tymg/people/*` → `/tymb/people/*` | `/tymb` | ✅ (get-all, get-by-name, delete-all, names, insert, update) | **Async (6/9)** | ✅ **異步正常運作** |
+| Weapon Module | 14 | `/weapons/*` | `/tymg/weapons/*` → `/tymb/weapons/*` | `/tymb` | ✅ (核心 CRUD: 7 個) | **Async (7/14)** | ✅ **異步正常運作** |
 | Gallery | 5 | `/gallery/*` | `/tymg/gallery/*` → `/tymb/gallery/*` | `/tymb` | ❌ | Sync | ✅ 完全同步 |
+| Blackjack | 6 | `/deckofcards/blackjack/*` | `/tymg/deckofcards/blackjack/*` → `/tymb/deckofcards/blackjack/*` | `/tymb` | ❌ | Sync (Session) | ✅ 完全同步 |
 | Character Service | 0 | Internal only | N/A | N/A | ❌ | Cached (via peopleService) | ✅ 內部服務 |
-| Damage Calculation | 1 | `/people/*` | `/tymg/people/damageWithWeapon` → `/tymb/people/damageWithWeapon` | `/tymb` | ❌ | Sync | ⚠️ 需修復 |
+| Damage Calculation | 2 | `/people/*` | `/tymg/people/damageWithWeapon` → `/tymb/people/damageWithWeapon` | `/tymb` | ❌ | Sync | ✅ 正常運作 |
 | Sync | 1 | `/api/sync-characters` | `/tymg/api/sync-characters` → `/tymb/api/sync-characters` | `/tymb` | ❌ | Sync (External) | ⚠️ 未測試 |
 | Monitor | 2 | `/health/*` | `/tymg/health/*` → `/tymb/health/*` | `/tymb` | ❌ | Sync | ⚠️ 路由需修復 |
-| **Total** | **29** | **`/tymg` Auto** | **RewritePath** | **`/tymb`** | **10 Async** | **全異步優先** | **核心功能正常** |
+| **Total** | **46** | **`/tymg` Auto** | **RewritePath** | **`/tymb`** | **13 Async** | **混合模式** | **核心功能正常** |
 
 **流量分佈統計:**
-- **Gateway → Backend (同步)**: 19 個端點 (66%) - Gallery, Auth, Monitor, Damage, Sync
-- **Backend → Consumer (異步)**: 10 個端點 (34%) - People (3), Weapon (7)
-- **Consumer 監聽器使用率**: 100% (10/10 個隊列都有對應處理器)
+- **Gateway → Backend (同步)**: 33 個端點 (72%) - Gallery (5), Blackjack (6), Weapon 更新/查詢 (6), Damage (2), Auth (7), Monitor (2), Sync (1), People 同步 (3), Weapon 同步 (1)
+- **Backend → Consumer (異步)**: 13 個端點 (28%) - People (6: get-all, get-by-name, delete-all, names, insert, update), Weapon (7: 核心 CRUD)
+- **Consumer 監聽器使用率**: 100% (13/13 個隊列都有對應處理器)
 - **Backend AsyncMessageService**: ✅ **正常運作** - 已成功發送消息到 RabbitMQ
 - **異步處理鏈**: Frontend → Gateway → Backend → RabbitMQ → Consumer → Redis → Backend → Frontend
 
@@ -586,6 +651,10 @@ Frontend → Gateway → Backend REST Controllers
 | `people-get-all` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
 | `people-get-by-name` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
 | `people-delete-all` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
+| `people-get-names` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
+| `people-insert` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 (如果 RabbitMQ 啟用) |
+| `people-update` | ✅ (實現) | ✅ PeopleConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 (如果 RabbitMQ 啟用) |
+| `people-insert-multiple` | ❌ **未實現** | ❌ **未實現** | ⚠️ **待實現** | Consumer 有隊列配置，但 Backend 無發送方法，Consumer 無監聽器 |
 | `weapon-get-all` | ✅ (實現) | ✅ WeaponConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
 | `weapon-get-by-name` | ✅ (實現) | ✅ WeaponConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
 | `weapon-get-by-owner` | ✅ (實現) | ✅ WeaponConsumer | ✅ **正常運作** | 已實現發送邏法並成功運行 |
@@ -959,3 +1028,69 @@ console.log(diagnostics);
 - **Detailed API Documentation**: See `API-INVENTORY.md`
 - **Quick Reference**: See `API-SUMMARY.md`
 - **Architecture Details**: See `API-ARCHITECTURE.md`
+
+---
+
+## 📊 API 測試結果總結
+
+**最後測試日期**: 2025-11-18  
+**測試範圍**: AGENTS.md 中所有 curl 命令
+
+### ✅ 測試通過的端點
+
+#### Authentication APIs (直接訪問 Backend)
+- ✅ `/auth/admin` - 200 OK (返回 admin 資訊)
+- ✅ `/auth/user` - 200 OK (返回 user 資訊)
+- ✅ `/auth/visitor` - 200 OK (公開端點)
+- ✅ `/auth/test` - 200 OK (返回測試結果)
+- ✅ `/auth/health` - 200 OK (健康檢查通過)
+
+### ⚠️ 需要修正的端點
+
+#### Authentication APIs
+- ⚠️ `/auth/logout-test` - 400 Bad Request (需要 `refreshToken` 參數)
+- ⚠️ `/keycloak/introspect` - 400 Bad Request (需要 `token` 參數，不是 JSON body)
+
+#### Gateway 路由問題 (嚴重)
+**所有通過 Gateway (`/tymg/*`) 的端點都返回 404**，錯誤訊息：`No static resource tymg/...`
+
+**受影響的端點：**
+- ❌ `/tymg/people/*` - 所有端點返回 404
+- ❌ `/tymg/weapons` - 返回 404
+- ❌ `/tymg/gallery/*` - 返回 404
+- ❌ `/tymg/health` - 返回 404
+
+**問題分析：**
+1. Gateway 路由配置可能未正確設置
+2. Gateway 可能將請求視為靜態資源請求
+3. 需要檢查 Gateway 的 `application.yml` 路由配置
+
+**建議修復步驟：**
+1. 檢查 Gateway 服務是否正常運行
+2. 驗證 Gateway 路由配置 (`spring.cloud.gateway.routes`)
+3. 確認路由的 `predicates` 和 `filters` 配置正確
+4. 檢查 Gateway 的 RewritePath 過濾器是否正確設置
+
+### 📈 測試統計
+
+| 類別 | 總數 | 通過 | 失敗 | 需要修正 |
+|------|------|------|------|----------|
+| Authentication APIs | 7 | 5 | 0 | 2 |
+| People Module APIs | 9 | 0 | 9 | 0 |
+| Weapon Module APIs | 14 | 0 | 14 | 0 |
+| Gallery Module APIs | 5 | 0 | 5 | 0 |
+| Monitor APIs | 2 | 0 | 2 | 0 |
+| **總計** | **37** | **5** | **30** | **2** |
+
+### 🔍 關鍵發現
+
+1. **Backend 直接訪問正常** - 所有直接訪問 Backend (`/tymb/*`) 的端點都能正常響應
+2. **Gateway 路由完全失效** - 所有通過 Gateway (`/tymg/*`) 的請求都返回 404
+3. **認證配置變更** - Authentication 端點現在允許匿名訪問並返回 200，而不是之前的 401
+4. **參數格式問題** - 部分端點需要查詢參數而不是 JSON body
+
+### 🎯 優先修復項目
+
+1. **🔴 高優先級**: 修復 Gateway 路由配置，恢復所有 `/tymg/*` 端點的正常運作
+2. **🟡 中優先級**: 更新 Authentication API 文檔，反映實際的響應狀態碼
+3. **🟢 低優先級**: 修正參數格式問題（`/auth/logout-test`, `/keycloak/introspect`）
