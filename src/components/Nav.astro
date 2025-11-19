@@ -221,8 +221,23 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 
       // 只保存 /tymultiverse 開頭的 URL
       if (currentUrl.includes('/tymultiverse')) {
-        localStorage.setItem(PageTracker.STORAGE_KEY, currentUrl);
-        console.log('📍 已保存當前 TY Multiverse 頁面:', currentUrl);
+        try {
+          // 清理 URL，移除認證參數
+          const urlObj = new URL(currentUrl);
+          urlObj.searchParams.delete('username');
+          urlObj.searchParams.delete('token');
+          urlObj.searchParams.delete('refresh_token');
+          urlObj.searchParams.delete('refreshToken');
+          urlObj.searchParams.delete('email');
+          urlObj.searchParams.delete('name');
+          urlObj.searchParams.delete('firstName');
+          urlObj.searchParams.delete('lastName');
+          const cleanUrl = urlObj.pathname + urlObj.search;
+          localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
+          console.log('📍 已保存當前 TY Multiverse 頁面:', cleanUrl);
+        } catch (e) {
+          console.warn('保存 URL 失敗:', e);
+        }
       }
     }
 
@@ -248,6 +263,22 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     }
 
     private checkAndRedirectFromStorage(): void {
+      // 禁用 Nav 的重定向邏輯，因為 BaseLayout 已經處理了重定向
+      // 避免兩個重定向邏輯衝突導致無限循環
+      // BaseLayout 的重定向邏輯更完善，包含循環檢測和參數清理
+      return;
+      
+      // 以下代碼已禁用，僅保留作為參考
+      /*
+      const REDIRECT_FLAG = 'nav_redirecting';
+      
+      // 檢查是否正在重定向中，防止無限循環
+      if (sessionStorage.getItem(REDIRECT_FLAG)) {
+        console.log('🛑 Nav: 檢測到重定向標誌，清除以避免循環');
+        sessionStorage.removeItem(REDIRECT_FLAG);
+        return;
+      }
+      
       const currentUrl = window.location.href;
       const savedUrl = localStorage.getItem(PageTracker.STORAGE_KEY);
       const savedReferer = localStorage.getItem(PageTracker.REFERER_KEY);
@@ -262,21 +293,58 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
       // 2. 當前 URL 是 TY Multiverse 的根頁面或首頁
       // 3. Referer 不是 TY Multiverse 內部的頁面（表示從外部跳轉過來）
       if (savedUrl && savedUrl !== currentUrl) {
-        const isHomePage = currentUrl === `${window.location.origin}/tymultiverse/` ||
-                          currentUrl === `${window.location.origin}/tymultiverse/index.html` ||
-                          currentUrl.endsWith('/tymultiverse');
+        // 清理保存的 URL，移除認證參數以避免循環
+        try {
+          const savedUrlObj = new URL(savedUrl);
+          savedUrlObj.searchParams.delete('username');
+          savedUrlObj.searchParams.delete('token');
+          savedUrlObj.searchParams.delete('refresh_token');
+          savedUrlObj.searchParams.delete('refreshToken');
+          savedUrlObj.searchParams.delete('email');
+          savedUrlObj.searchParams.delete('name');
+          savedUrlObj.searchParams.delete('firstName');
+          savedUrlObj.searchParams.delete('lastName');
+          const cleanedSavedUrl = savedUrlObj.pathname + savedUrlObj.search;
+          
+          const currentUrlObj = new URL(currentUrl);
+          currentUrlObj.searchParams.delete('username');
+          currentUrlObj.searchParams.delete('token');
+          currentUrlObj.searchParams.delete('refresh_token');
+          currentUrlObj.searchParams.delete('refreshToken');
+          currentUrlObj.searchParams.delete('email');
+          currentUrlObj.searchParams.delete('name');
+          currentUrlObj.searchParams.delete('firstName');
+          currentUrlObj.searchParams.delete('lastName');
+          const cleanedCurrentUrl = currentUrlObj.pathname + currentUrlObj.search;
+          
+          // 如果清理後的 URL 相同，不需要重定向
+          if (cleanedSavedUrl === cleanedCurrentUrl) {
+            return;
+          }
+          
+          const isHomePage = currentUrl === `${window.location.origin}/tymultiverse/` ||
+                            currentUrl === `${window.location.origin}/tymultiverse/index.html` ||
+                            currentUrl.endsWith('/tymultiverse');
 
-        const isFromExternal = savedReferer && !savedReferer.includes('/tymultiverse');
+          const isFromExternal = savedReferer && !savedReferer.includes('/tymultiverse');
 
-        if (isHomePage && isFromExternal) {
-          console.log('🔄 從外部跳轉回來，跳轉到上次訪問的頁面:', savedUrl);
+          if (isHomePage && isFromExternal) {
+            console.log('🔄 從外部跳轉回來，跳轉到上次訪問的頁面:', cleanedSavedUrl);
 
-          // 添加一個小的延遲，確保頁面完全加載
-          setTimeout(() => {
-            window.location.href = savedUrl;
-          }, 500);
+            // 設置重定向標誌，防止循環
+            sessionStorage.setItem(REDIRECT_FLAG, 'true');
+            
+            // 添加一個小的延遲，確保頁面完全加載
+            setTimeout(() => {
+              window.location.href = cleanedSavedUrl;
+            }, 500);
 
-          return;
+            return;
+          }
+        } catch (e) {
+          console.warn('Nav: 解析保存的 URL 失敗:', e);
+          // 如果解析失敗，清除無效的 URL
+          localStorage.removeItem(PageTracker.STORAGE_KEY);
         }
       }
 
@@ -284,14 +352,30 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
       if (savedReferer && savedReferer.includes('/tymultiverse')) {
         localStorage.removeItem(PageTracker.REFERER_KEY);
       }
+      */
     }
 
     // 手動保存當前 URL（可以用於特殊情況）
     public static saveCurrentUrl(): void {
       const currentUrl = window.location.href;
       if (currentUrl.includes('/tymultiverse')) {
-        localStorage.setItem(PageTracker.STORAGE_KEY, currentUrl);
-        console.log('📍 手動保存當前 TY Multiverse 頁面:', currentUrl);
+        try {
+          // 清理 URL，移除認證參數
+          const urlObj = new URL(currentUrl);
+          urlObj.searchParams.delete('username');
+          urlObj.searchParams.delete('token');
+          urlObj.searchParams.delete('refresh_token');
+          urlObj.searchParams.delete('refreshToken');
+          urlObj.searchParams.delete('email');
+          urlObj.searchParams.delete('name');
+          urlObj.searchParams.delete('firstName');
+          urlObj.searchParams.delete('lastName');
+          const cleanUrl = urlObj.pathname + urlObj.search;
+          localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
+          console.log('📍 手動保存當前 TY Multiverse 頁面:', cleanUrl);
+        } catch (e) {
+          console.warn('保存 URL 失敗:', e);
+        }
       }
     }
 

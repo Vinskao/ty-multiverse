@@ -22,22 +22,54 @@ export class NavController {
 
   private getUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // 優先從 URL 參數讀取（登入後的重定向會帶這些參數）
     this.username = urlParams.get('username');
     this.token = urlParams.get('token');
     // 支援兩種參數名：refreshToken 和 refresh_token
     this.refreshToken = urlParams.get('refreshToken') || urlParams.get('refresh_token');
-    this.isLoggedIn = !!this.username;
     
-    // 將 token 儲存到 localStorage 中，供其他組件使用
-    if (this.token) {
-      localStorage.setItem('token', this.token);
+    // 如果 URL 中沒有參數，嘗試從 localStorage 讀取（處理頁面刷新或導航的情況）
+    if (!this.username) {
+      this.username = localStorage.getItem('username');
     }
-    if (this.refreshToken) {
-      localStorage.setItem('refreshToken', this.refreshToken);
+    if (!this.token) {
+      this.token = localStorage.getItem('token');
     }
-    if (this.username) {
-      localStorage.setItem('username', this.username);
+    if (!this.refreshToken) {
+      this.refreshToken = localStorage.getItem('refreshToken');
     }
+    
+    // 判斷是否登入：有 username 和 token 就認為已登入
+    this.isLoggedIn = !!(this.username && this.token);
+
+    // 除錯日誌
+    console.log('🔐 NavScript 登入狀態檢查:', {
+      username: this.username,
+      hasToken: !!this.token,
+      isLoggedIn: this.isLoggedIn,
+      currentPath: window.location.pathname,
+      urlParams: Object.fromEntries(urlParams.entries())
+    });
+    
+    // 將 token 儲存到 localStorage 中，供其他組件使用（如果 URL 中有新值，更新 localStorage）
+    if (urlParams.get('token')) {
+      localStorage.setItem('token', urlParams.get('token')!);
+    }
+    if (urlParams.get('refreshToken') || urlParams.get('refresh_token')) {
+      localStorage.setItem('refreshToken', urlParams.get('refreshToken') || urlParams.get('refresh_token')!);
+    }
+    if (urlParams.get('username')) {
+      localStorage.setItem('username', urlParams.get('username')!);
+    }
+    
+    // 除錯日誌
+    console.log('🔐 登入狀態檢查:');
+    console.log('  URL 參數 username:', urlParams.get('username'));
+    console.log('  URL 參數 token:', urlParams.get('token') ? '存在' : '不存在');
+    console.log('  localStorage username:', localStorage.getItem('username'));
+    console.log('  localStorage token:', localStorage.getItem('token') ? '存在' : '不存在');
+    console.log('  最終判斷 isLoggedIn:', this.isLoggedIn);
   }
 
   private setupEventListeners() {
@@ -91,28 +123,44 @@ export class NavController {
             localStorage.removeItem(key);
           }
         });
-        window.location.href = '/tymultiverse/';
+        // 清除保存的頁面路徑，防止重定向循環
+        localStorage.removeItem('lastVisitedPath');
+        sessionStorage.removeItem('lastVisitedPath_redirecting');
+        console.log('🔄 Token 無效，停留在當前頁面');
+        // 禁用重定向，防止循環
+        // window.location.href = '/tymultiverse/';
         return;
       }
 
       // 使用 auth 服務執行登出
       const success = await logout.logout(refreshToken);
       if (success) {
-        window.location.href = '/tymultiverse/';
+        // 清除保存的頁面路徑，防止重定向循環
+        localStorage.removeItem('lastVisitedPath');
+        sessionStorage.removeItem('lastVisitedPath_redirecting');
+        console.log('🔄 登出成功，停留在當前頁面');
+        // 禁用重定向，防止循環
+        // window.location.href = '/tymultiverse/';
       } else {
         console.error('Logout failed');
       }
     } catch (error) {
       console.error('Error during logout:', error);
-      window.location.href = '/tymultiverse/';
+      // 清除保存的頁面路徑，防止重定向循環
+      localStorage.removeItem('lastVisitedPath');
+      sessionStorage.removeItem('lastVisitedPath_redirecting');
+      console.log('🔄 登出錯誤，停留在當前頁面');
+      // 禁用重定向，防止循環
+      // window.location.href = '/tymultiverse/';
     }
   }
 
   private async validateAdminAccess() {
     try {
       if (this.isLoggedIn && this.token) {
-        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/auth/admin`;        
-        // 使用 fetch 直接調用管理員端點來驗證權限
+        const gatewayUrl = import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg';
+        const apiUrl = `${gatewayUrl}/auth/admin`;        
+        // 使用 fetch 通過 Gateway 調用管理員端點來驗證權限
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
@@ -145,9 +193,10 @@ export class NavController {
   private async validateUserAccess() {
     try {
       if (this.isLoggedIn && this.token) {
-        const apiUrl = `${import.meta.env.PUBLIC_TYMB_URL}/auth/user`;
+        const gatewayUrl = import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg';
+        const apiUrl = `${gatewayUrl}/auth/user`;
         
-        // 使用 fetch 直接調用用戶端點來驗證權限
+        // 使用 fetch 通過 Gateway 調用用戶端點來驗證權限
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
@@ -251,7 +300,12 @@ export class NavController {
         () => {
           console.log('Token invalid');
           // 清除登入狀態
-          window.location.href = '/tymultiverse/';
+          // 清除保存的頁面路徑，防止重定向循環
+          localStorage.removeItem('lastVisitedPath');
+          sessionStorage.removeItem('lastVisitedPath_redirecting');
+          console.log('🔄 Token 無效，停留在當前頁面');
+          // 禁用重定向，防止循環
+          // window.location.href = '/tymultiverse/';
         }
       );
     }
@@ -267,8 +321,19 @@ export class NavController {
     const wildlandLink = document.querySelector('a[href*="/tymultiverse/wildland"]') as HTMLAnchorElement;
     const palaisLink = document.querySelector('a[href*="/tymultiverse/palais"]') as HTMLAnchorElement;
 
+    // 在登入頁面上始終顯示登入鏈接，不隱藏
+    const isOnLoginPage = window.location.pathname === '/tymultiverse/login';
+
     if (loginLink) {
-      loginLink.style.display = this.isLoggedIn ? 'none' : 'block';
+      const shouldHide = this.isLoggedIn && !isOnLoginPage;
+      console.log('🔗 NavScript: 登入鏈接顯示邏輯:', {
+        isLoggedIn: this.isLoggedIn,
+        isOnLoginPage,
+        shouldHide,
+        currentPath: window.location.pathname,
+        loginLinkHref: loginLink.getAttribute('href')
+      });
+      loginLink.style.display = shouldHide ? 'none' : 'block';
     }
     if (logoutLink) {
       logoutLink.style.display = this.isLoggedIn ? 'block' : 'none';

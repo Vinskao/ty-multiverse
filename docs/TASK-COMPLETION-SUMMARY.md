@@ -91,7 +91,7 @@ grpc:
 ```yaml
 # 新增同步服務路由
 - id: sync-characters-route
-  uri: '@BACKEND_SERVICE_URL@'
+  uri: '@PUBLIC_TYMB_URL@'
   predicates:
     - Path=/api/sync-characters
     - Method=POST
@@ -100,7 +100,7 @@ grpc:
 
 # 新增 Consumer 健康檢查路由
 - id: health-consumer-route
-  uri: '@BACKEND_SERVICE_URL@'
+  uri: '@PUBLIC_TYMB_URL@'
   predicates:
     - Path=/health/consumer
     - Method=GET
