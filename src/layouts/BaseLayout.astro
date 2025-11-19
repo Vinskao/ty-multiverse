@@ -38,39 +38,32 @@ const { title, description } = Astro.props;
 			})();
 
 			// --- 最後訪問頁面記憶 & 還原 ---
+			// 暫時完全禁用重定向邏輯，防止無限循環
 			(function() {
 				try {
 					const STORAGE_KEY = 'lastVisitedPath';
 					const currentPath = window.location.pathname + window.location.search;
-					// 移除帶有認證資訊的查詢參數版本，用於儲存與比較
-					const urlObj     = new URL(window.location.href);
-					urlObj.searchParams.delete('username');
-					urlObj.searchParams.delete('token');
-					urlObj.searchParams.delete('refresh_token');
-					const cleanPath   = urlObj.pathname + urlObj.search;
-					const isLoginPage = currentPath.startsWith('/login');
-					// 1) 如果在首頁且有暫存的最後頁面且不是帶 token/username 的跳轉，就自動導向
-					//    但僅在 referrer 同源的情況下才導向，避免使用者直接輸入網址或從外部連結進站時被誤導
-					const sameOriginReferrer = document.referrer && new URL(document.referrer).origin === window.location.origin;
 
-					if (
-					  !isLoginPage &&
-					  sameOriginReferrer &&
-					  (currentPath === '/' || currentPath === '/tymultiverse' || currentPath === '/tymultiverse/')
-					) {
-						const lastPath = localStorage.getItem(STORAGE_KEY);
-						if (lastPath && lastPath !== currentPath) {
-							console.log('🔀 重新導向到最後訪問頁面:', lastPath);
-							window.location.replace(lastPath);
-							return;
-						}
-					}
+					const isLoginPage = currentPath.startsWith('/login');
+					const isHomePage = currentPath === '/' || currentPath === '/tymultiverse' || currentPath === '/tymultiverse/' || currentPath.startsWith('/tymultiverse/index');
+
 					// 2) 非登入頁面且不含認證參數時，記錄乾淨路徑
-					if (!isLoginPage && !urlObj.searchParams.has('token')) {
+					if (!isLoginPage && !isHomePage) {
+						// 移除帶有認證資訊的查詢參數版本，用於儲存
+						const urlObj = new URL(window.location.href);
+						urlObj.searchParams.delete('username');
+						urlObj.searchParams.delete('token');
+						urlObj.searchParams.delete('refresh_token');
+						urlObj.searchParams.delete('refreshToken');
+						urlObj.searchParams.delete('email');
+						urlObj.searchParams.delete('name');
+						urlObj.searchParams.delete('firstName');
+						urlObj.searchParams.delete('lastName');
+						const cleanPath = urlObj.pathname + urlObj.search;
 						localStorage.setItem(STORAGE_KEY, cleanPath);
 					}
 				} catch(e) {
-					console.warn('lastVisitedPath 儲存/還原失敗', e);
+					console.warn('lastVisitedPath 儲存失敗', e);
 				}
 			})();
 		</script>

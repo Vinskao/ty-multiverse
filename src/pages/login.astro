@@ -7,7 +7,9 @@ if (!import.meta.env.PUBLIC_TYMB_URL) {
 }
 
 const PEOPLE_IMG_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-const redirectUri = `${BACKEND_URL}/keycloak/redirect`;
+// 使用 Gateway 的 Keycloak redirect 端點
+const GATEWAY_URL = import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg';
+const redirectUri = `${GATEWAY_URL}/keycloak/redirect`;
 
 // 生成 Keycloak 的授權 URL
 const authorizationUrl = `${SSO_URL}/realms/${REALM}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
@@ -16,26 +18,60 @@ const authorizationUrl = `${SSO_URL}/realms/${REALM}/protocol/openid-connect/aut
 
 // 除錯：印出實際的授權 URL 和 redirect_uri
 console.log('=== 前端授權 URL 除錯 ===');
-console.log('BACKEND_URL:', BACKEND_URL);
+console.log('GATEWAY_URL:', GATEWAY_URL);
 console.log('SSO_URL:', SSO_URL);
 console.log('Client ID:', CLIENT_ID);
 console.log('Realm:', REALM);
 console.log('Redirect URI:', redirectUri);
 console.log('完整授權 URL:', authorizationUrl);
 
-// 頁面加載時觸發跳轉
-function redirectToLogin() {
-  console.log('準備跳轉到:', authorizationUrl);
-  window.location.href = authorizationUrl;
-}
-
-// 加入內嵌的 JavaScript 來觸發跳轉
+// 注意：已移除自動跳轉，改為手動按鈕觸發
 ---
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Redirecting to Login...</title>
+  <script is:inline>
+    // 在頁面加載的最早階段攔截 window.location.replace 和 assign，防止跳轉到主頁
+    (function() {
+      window.__TYM_LOGIN_REDIRECTING__ = false;
+      
+      // 保存原始方法
+      const originalReplace = window.location.replace;
+      const originalAssign = window.location.assign;
+      
+      // 攔截 replace 方法
+      window.location.replace = function(url) {
+        // 如果正在登入跳轉，且目標是主頁，則阻止
+        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url.includes('/tymultiverse/') || url === '/' || url.endsWith('/tymultiverse') || url.includes(window.location.origin + '/tymultiverse'))) {
+          console.log('🛡️ 阻止 window.location.replace 跳轉到主頁:', url);
+          return;
+        }
+        // 允許跳轉到 Keycloak
+        if (url && (url.includes('peoplesystem.tatdvsonorth.com') || url.includes('keycloak'))) {
+          console.log('✅ 允許 window.location.replace 跳轉到 Keycloak');
+          return originalReplace.call(this, url);
+        }
+        return originalReplace.call(this, url);
+      };
+      
+      // 攔截 assign 方法
+      window.location.assign = function(url) {
+        // 如果正在登入跳轉，且目標是主頁，則阻止
+        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url.includes('/tymultiverse/') || url === '/' || url.endsWith('/tymultiverse') || url.includes(window.location.origin + '/tymultiverse'))) {
+          console.log('🛡️ 阻止 window.location.assign 跳轉到主頁:', url);
+          return;
+        }
+        // 允許跳轉到 Keycloak
+        if (url && (url.includes('peoplesystem.tatdvsonorth.com') || url.includes('keycloak'))) {
+          console.log('✅ 允許 window.location.assign 跳轉到 Keycloak');
+          return originalAssign.call(this, url);
+        }
+        return originalAssign.call(this, url);
+      };
+    })();
+  </script>
   <style>
     body {
       display: flex;
@@ -92,22 +128,337 @@ function redirectToLogin() {
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
       margin: 0;
     }
+
+    .login-button {
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white !important;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      border: 2px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 12px;
+      cursor: pointer !important;
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.7) !important;
+      transition: all 0.3s ease;
+      margin: 30px auto 0 auto !important;
+      text-decoration: none !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+      z-index: 10000 !important;
+      width: 200px !important;
+      height: auto !important;
+      text-align: center !important;
+      font-family: Arial, sans-serif !important;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      color: white;
+      text-decoration: none;
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .error-button {
+      cursor: not-allowed !important;
+      opacity: 0.7 !important;
+      background: linear-gradient(135deg, #666 0%, #999 100%) !important;
+      border-color: #ff4444 !important;
+    }
+
+    .error-message {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
   </style>
-  <script define:vars={{ authorizationUrl }}>
-    // 立即執行，避免等待圖片等資源載入
-    (() => {
-      // 立即重定向，不阻塞在 window.onload
-      window.location.replace(authorizationUrl);
-    })();
+  <script define:vars={{ authorizationUrl, redirectUri, GATEWAY_URL, SSO_URL, CLIENT_ID, REALM }}>
+    // 立即輸出環境變數信息（在頁面載入時就輸出，不等待 DOM）
+    console.log('=== 前端授權 URL 除錯 ===');
+    console.log('GATEWAY_URL:', GATEWAY_URL);
+    console.log('SSO_URL:', SSO_URL);
+    console.log('CLIENT_ID:', CLIENT_ID);
+    console.log('REALM:', REALM);
+    console.log('redirectUri:', redirectUri);
+    console.log('authorizationUrl:', authorizationUrl);
+    console.log('完整授權 URL:', authorizationUrl);
+
+    // 檢查環境變數是否正確設置
+    function checkEnvironmentVariables() {
+      const errors = [];
+      if (!GATEWAY_URL) errors.push('GATEWAY_URL 未設置');
+      if (!SSO_URL) errors.push('SSO_URL 未設置');
+      if (!CLIENT_ID) errors.push('CLIENT_ID 未設置');
+      if (!REALM) errors.push('REALM 未設置');
+      if (!authorizationUrl) errors.push('authorizationUrl 未生成');
+      
+      if (errors.length > 0) {
+        const errorMsg = document.getElementById('error-message');
+        if (errorMsg) {
+          errorMsg.textContent = '配置錯誤: ' + errors.join(', ');
+          errorMsg.classList.add('show');
+        }
+        console.error('❌ 環境變數檢查失敗:', errors);
+        return false;
+      }
+      console.log('✅ 環境變數檢查通過');
+      return true;
+    }
+
+    // 執行登入跳轉（必須是全局函數，才能被 onclick 調用）
+    function performLogin() {
+      console.log('=== 🔐 執行登入跳轉 ===');
+      console.log('authorizationUrl:', authorizationUrl);
+      console.log('redirectUri:', redirectUri);
+      
+      if (!checkEnvironmentVariables()) {
+        console.error('❌ 環境變數檢查失敗，無法跳轉');
+        return;
+      }
+
+      const targetUrl = authorizationUrl;
+      
+      try {
+        console.log('🚀 準備跳轉到 Keycloak...');
+        console.log('📍 目標 URL:', targetUrl);
+        
+        // 確保 URL 存在
+        if (!targetUrl) {
+          console.error('❌ authorizationUrl 為空，無法跳轉');
+          return;
+        }
+        
+        // 驗證 URL 格式
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+          console.error('❌ URL 格式錯誤，不是有效的 HTTP/HTTPS URL:', targetUrl);
+          return;
+        }
+        
+        // 使用最直接的方法：創建隱藏的 <a> 標籤並立即點擊
+        // 這是最可靠的方法，因為它模擬用戶點擊，不會被大多數攔截器阻止
+        console.log('🔗 使用 <a> 標籤方法跳轉...');
+        
+        const link = document.createElement('a');
+        link.href = targetUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        // 立即點擊，不延遲
+        link.click();
+        
+        // 清理
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+        
+        console.log('✅ 跳轉指令已發送');
+        
+        // 如果 1 秒後還在當前頁面，可能是被攔截了
+        setTimeout(() => {
+          const currentUrl = window.location.href;
+          if (!currentUrl.includes('keycloak') && !currentUrl.includes('peoplesystem.tatdvsonorth.com')) {
+            console.warn('⚠️ 跳轉可能被攔截，當前仍在:', currentUrl);
+            console.warn('⚠️ 嘗試使用 window.location.assign...');
+            
+            // 備用方法：使用 window.location.assign
+            try {
+              window.location.assign(targetUrl);
+            } catch (e) {
+              console.error('❌ window.location.assign 也失敗:', e);
+              
+              // 最後備用：顯示可點擊的鏈接
+              const errorMsg = document.getElementById('error-message');
+              if (errorMsg) {
+                errorMsg.innerHTML = `跳轉被攔截，請點擊以下鏈接：<br/><a href="${targetUrl}" target="_self" style="color: #667eea; text-decoration: underline; word-break: break-all; font-size: 14px;">${targetUrl}</a>`;
+                errorMsg.classList.add('show');
+              }
+            }
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('❌ 跳轉失敗:', error);
+        const errorMsg = document.getElementById('error-message');
+        if (errorMsg) {
+          errorMsg.innerHTML = `跳轉失敗: ${error.message}<br/><a href="${targetUrl}" target="_self" style="color: #667eea; text-decoration: underline; word-break: break-all; font-size: 14px;">點擊這裡手動跳轉</a>`;
+          errorMsg.classList.add('show');
+        }
+      }
+    }
+    
+    // 同時設置為 window 屬性，確保全局可訪問
+    window.performLogin = performLogin;
+
+    // 設置全局標誌，防止其他代碼攔截跳轉
+    window.__TYM_LOGIN_REDIRECTING__ = false;
+    
+    // 在文檔級別添加早期事件監聽器，防止其他代碼攔截
+    // 使用 capture 階段和最高優先級，確保最先執行
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      const link = target.closest ? target.closest('a#login-link') : null;
+      
+      if (link && link.id === 'login-link') {
+        const targetUrl = link.getAttribute('data-auth-url') || authorizationUrl || link.href;
+        
+        // 如果是外部 Keycloak 鏈接，立即阻止所有其他處理器並跳轉
+        if (targetUrl && (targetUrl.includes('peoplesystem.tatdvsonorth.com') || targetUrl.includes('keycloak'))) {
+          console.log('🛡️ 檢測到登入鏈接點擊，阻止攔截並執行跳轉');
+          
+          // 設置標誌，告訴其他代碼不要攔截
+          window.__TYM_LOGIN_REDIRECTING__ = true;
+          
+          // 清除可能干擾的 localStorage 項（如 lastVisitedPath）
+          try {
+            localStorage.removeItem('lastVisitedPath');
+            localStorage.removeItem('lastVisitedTymultiverseUrl');
+            console.log('🧹 已清除可能干擾的 localStorage 項');
+          } catch (err) {
+            console.warn('⚠️ 清除 localStorage 失敗:', err);
+          }
+          
+          // 阻止所有後續事件處理器
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          // 立即執行跳轉（使用 href 而不是 replace，避免歷史記錄問題）
+          console.log('🚀 強制跳轉到:', targetUrl);
+          
+          // 使用多種方法確保跳轉成功
+          try {
+            // 方法 1: 直接設置 href
+            window.location.href = targetUrl;
+            
+            // 如果 50ms 後還在當前頁面，嘗試其他方法
+            setTimeout(() => {
+              const currentHref = window.location.href;
+              if (!currentHref.includes('peoplesystem.tatdvsonorth.com') && !currentHref.includes('keycloak')) {
+                console.warn('⚠️ 跳轉可能失敗，當前仍在:', currentHref);
+                console.warn('⚠️ 嘗試使用 window.location.assign');
+                try {
+                  window.location.assign(targetUrl);
+                } catch (err) {
+                  console.error('❌ window.location.assign 失敗:', err);
+                  // 最後嘗試：創建表單提交
+                  const form = document.createElement('form');
+                  form.method = 'GET';
+                  form.action = targetUrl;
+                  form.style.display = 'none';
+                  document.body.appendChild(form);
+                  form.submit();
+                }
+              }
+            }, 50);
+          } catch (error) {
+            console.error('❌ 跳轉失敗:', error);
+            // 最後備用：顯示錯誤消息
+            const errorMsg = document.getElementById('error-message');
+            if (errorMsg) {
+              errorMsg.innerHTML = `跳轉失敗，請手動訪問：<br/><a href="${targetUrl}" target="_blank" style="color: #667eea; text-decoration: underline; word-break: break-all; font-size: 14px;">${targetUrl}</a>`;
+              errorMsg.classList.add('show');
+            }
+          }
+        }
+      }
+    }, { capture: true, passive: false });
+
+    // 頁面載入時只檢查環境變數，不自動跳轉
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('📄 頁面載入完成');
+      console.log('💡 提示：點擊「點擊登入」按鈕開始登入流程');
+      checkEnvironmentVariables();
+      
+      // 檢查登入鏈接的 href 屬性
+      const loginLink = document.getElementById('login-link');
+      if (loginLink) {
+        console.log('🔗 登入鏈接元素找到:', loginLink);
+        console.log('🔗 登入鏈接 href:', loginLink.href);
+        console.log('🔗 authorizationUrl 變數:', authorizationUrl);
+
+        // 強制確保按鈕可見 - 多重保障
+        loginLink.style.display = 'block !important';
+        loginLink.style.visibility = 'visible !important';
+        loginLink.style.opacity = '1 !important';
+        loginLink.style.position = 'relative !important';
+        loginLink.style.zIndex = '10000 !important';
+        loginLink.style.width = '200px !important';
+        loginLink.style.height = 'auto !important';
+        loginLink.style.margin = '30px auto 0 auto !important';
+        loginLink.style.border = '2px solid rgba(255, 255, 255, 0.3) !important';
+
+        // 確保元素在 DOM 中的位置正確
+        loginLink.style.removeProperty('display');
+        loginLink.style.setProperty('display', 'block', 'important');
+        
+        // 確保鏈接的 href 正確設置
+        if (loginLink.href !== authorizationUrl && authorizationUrl) {
+          console.warn('⚠️ 鏈接 href 與 authorizationUrl 不匹配，更新中...');
+          if (loginLink.tagName === 'A') {
+            loginLink.href = authorizationUrl;
+          }
+          loginLink.setAttribute('data-auth-url', authorizationUrl);
+        }
+        
+        // 添加點擊事件監聽器（備用，主要處理在文檔級別）
+        loginLink.addEventListener('click', (e) => {
+          console.log('🖱️ 鏈接元素級別點擊事件觸發');
+          // 文檔級別的監聽器應該已經處理了跳轉
+          // 這裡只記錄日誌，不執行額外操作
+        });
+      } else {
+        console.error('❌ 找不到登入鏈接元素');
+        // 如果找不到，嘗試創建一個
+        const body = document.body;
+        if (body && authorizationUrl) {
+          const newLoginLink = document.createElement('a');
+          newLoginLink.id = 'login-link';
+          newLoginLink.className = 'login-button';
+          newLoginLink.href = authorizationUrl;
+          newLoginLink.setAttribute('data-auth-url', authorizationUrl);
+          newLoginLink.textContent = '點擊登入';
+          newLoginLink.target = '_self';
+          const characterContainer = document.querySelector('.character-container');
+          if (characterContainer && characterContainer.nextSibling) {
+            body.insertBefore(newLoginLink, characterContainer.nextSibling);
+          } else {
+            body.appendChild(newLoginLink);
+          }
+          console.log('✅ 已創建新的登入鏈接元素');
+        }
+      }
+    });
   </script>
 </head>
 <body>
-  <p>Redirecting to login...</p>
+  <p>請點擊下方按鈕開始登入</p>
   <div class="character-container">
     <img src={PEOPLE_IMG_URL + "/DraenyFighting.png"} alt="Draeny" class="character-image" />
     <img src={PEOPLE_IMG_URL + "/SoraneFighting.png"} alt="Miyu" class="character-image" />
     <img src={PEOPLE_IMG_URL + "/MedicisFighting.png"} alt="Zexu" class="character-image" />
     <img src={PEOPLE_IMG_URL + "/SamuiFighting.png"} alt="SamuiFighting" class="character-image" />
   </div>
+  {authorizationUrl ? (
+    <a href={authorizationUrl} class="login-button" id="login-link" target="_self" data-auth-url={authorizationUrl}>點擊登入</a>
+  ) : (
+    <div class="login-button error-button" id="login-link" onclick="alert('授權 URL 未生成，請檢查環境變數配置')">點擊登入（配置錯誤）</div>
+  )}
+  <div id="error-message" class="error-message"></div>
+  <p style="color: #888; font-size: 12px; margin-top: 20px;">
+    💡 提示：請打開瀏覽器控制台（F12）查看詳細日誌
+  </p>
+  <p style="color: #888; font-size: 12px; margin-top: 10px;">
+    🔗 授權 URL: <span id="auth-url-display" style="color: #667eea; word-break: break-all;">{authorizationUrl}</span>
+  </p>
 </body>
 </html>

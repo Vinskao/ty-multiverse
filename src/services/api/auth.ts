@@ -3,6 +3,7 @@ import { config } from '../core/config';
 
 // 為了兼容性，添加環境變量訪問
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+const TYMG_URL = import.meta.env.PUBLIC_TYMG_URL;
 
 // 抽象基類 - API 請求基礎類別
 abstract class BaseAPI {
@@ -94,7 +95,7 @@ abstract class BaseAPI {
 // 管理員端點 API
 export class AdminAPI extends BaseAPI {
   protected getEndpoint(): string {
-    return '/auth/admin';
+    return '/tymg/auth/admin';
   }
 
   protected getRequiredRole(): string {
@@ -110,7 +111,7 @@ export class AdminAPI extends BaseAPI {
 // 用戶端點 API
 export class UserAPI extends BaseAPI {
   protected getEndpoint(): string {
-    return '/auth/user';
+    return '/tymg/auth/user';
   }
 
   protected getRequiredRole(): string | null {
@@ -126,7 +127,7 @@ export class UserAPI extends BaseAPI {
 // 公開端點 API
 export class VisitorAPI extends BaseAPI {
   protected getEndpoint(): string {
-    return '/auth/visitor';
+    return '/tymg/auth/visitor';
   }
 
   protected getRequiredRole(): string | null {
@@ -146,10 +147,11 @@ export class AuthService {
   private visitorAPI: VisitorAPI;
 
   constructor() {
-    // Auth API 直接調用 Backend，不通過 Gateway
-    this.adminAPI = new AdminAPI(config.api.backendUrl);
-    this.userAPI = new UserAPI(config.api.backendUrl);
-    this.visitorAPI = new VisitorAPI(config.api.backendUrl);
+    // Auth API 通過 Gateway 調用
+    const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
+    this.adminAPI = new AdminAPI(gatewayUrl);
+    this.userAPI = new UserAPI(gatewayUrl);
+    this.visitorAPI = new VisitorAPI(gatewayUrl);
   }
 
   // 測試管理員端點
@@ -191,7 +193,8 @@ export class AuthService {
   // 測試完整的認證整合功能
   public async testAuthIntegration(refreshToken?: string): Promise<any> {
     try {
-      const url = `${config.api.backendUrl}/tymb/auth/test`;
+      const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
+      const url = `${gatewayUrl}/tymg/keycloak/introspect`;
       const headers: Record<string, string> = {
         ...config.api.headers
       };
@@ -208,7 +211,10 @@ export class AuthService {
       };
 
       if (refreshToken) {
-        requestOptions.body = `refreshToken=${encodeURIComponent(refreshToken)}`;
+        requestOptions.body = `token=${encodeURIComponent(token || '')}&refreshToken=${encodeURIComponent(refreshToken)}`;
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      } else if (token) {
+        requestOptions.body = `token=${encodeURIComponent(token)}`;
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
       }
 
@@ -227,10 +233,11 @@ export class AuthService {
     }
   }
 
-  // 測試登出功能 - 直接访问Backend，绕过Gateway
+  // 測試登出功能 - 通過 Gateway 調用 Keycloak logout
   public async testLogout(refreshToken: string): Promise<any> {
     try {
-      const url = `${config.api.backendUrl}/tymb/auth/logout-test`;
+      const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
+      const url = `${gatewayUrl}/tymg/keycloak/logout`;
       const headers: Record<string, string> = {
         ...config.api.headers,
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -254,7 +261,7 @@ export class AuthService {
         throw new Error(`Logout test failed: ${response.status}`);
       }
 
-      const result = await response.json();
+      const result = await response.text(); // Gateway logout 返回字符串
       console.log('Logout test result:', result);
       return result;
     } catch (error) {
@@ -266,7 +273,8 @@ export class AuthService {
   // 健康檢查
   public async healthCheck(): Promise<any> {
     try {
-      const url = `${config.api.backendUrl}/tymb/auth/health`;
+      const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
+      const url = `${gatewayUrl}/tymg/actuator/health`;
       const response = await fetch(url, {
         method: 'GET',
         headers: config.api.headers
@@ -430,8 +438,9 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
   lastToken = token;
 
   try {
-    // 構建 API URL
-    const apiUrl = new URL(`${TYMB_URL}/keycloak/introspect`);
+    // 構建 API URL - 通過 Gateway
+    const gatewayUrl = TYMG_URL || config.api.gatewayUrl || config.api.baseUrl || TYMB_URL;
+    const apiUrl = new URL(`${gatewayUrl}/tymg/keycloak/introspect`);
 
     // 構建請求體
     const formData = new FormData();

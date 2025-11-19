@@ -1,5 +1,14 @@
 # TY Multiverse Frontend - Agent Guide
 
+## 📁 文档组织规定
+
+**重要**：所有非 `AGENTS.md` 和 `README.md` 的 Markdown 文档都必须放在项目的 `/docs` 目录下。
+
+- ✅ **允许在根目录**：`AGENTS.md`、`README.md`
+- ✅ **必须放在 `/docs`**：所有其他 `.md` 文件（如 `FINAL_ANSWER.md`、`API_CONFIGURATION_SUMMARY.md` 等）
+- 📂 **文档目录结构**：`/docs/` 目录下可以创建子目录来组织相关文档
+- ⚠️ **例外**：`src/content/work/` 目录下的 `.md` 文件是内容文件，不属于项目文档
+
 ## Project Overview
 
 TY Multiverse Frontend is a modern web application built with Astro framework, providing a rich user interface for the TY Multiverse system. It features dynamic content management, interactive components, and seamless integration with the backend services.

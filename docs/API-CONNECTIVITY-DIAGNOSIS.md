@@ -111,12 +111,12 @@ spring:
     gateway:
       routes:
         - id: health-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/health/**
         
         - id: async-request-status-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/api/request-status/**
             - Method=GET,DELETE  # ⚠️ 缺少 GET /{id}/exists 的配置
@@ -199,7 +199,7 @@ spring:
       routes:
         # 補充 exists 端點路由
         - id: request-status-exists-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/api/request-status/*/exists
             - Method=GET
@@ -207,7 +207,7 @@ spring:
             - StripPrefix=0
 
         - id: async-result-exists-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/api/async/result/*/exists
             - Method=GET
@@ -216,7 +216,7 @@ spring:
 
         # 同步服務路由
         - id: sync-characters-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/api/sync-characters
             - Method=POST
@@ -225,7 +225,7 @@ spring:
 
         # Consumer 健康檢查
         - id: health-consumer-route
-          uri: '@BACKEND_SERVICE_URL@'
+          uri: '@PUBLIC_TYMB_URL@'
           predicates:
             - Path=/health/consumer
             - Method=GET

@@ -83,6 +83,7 @@ pipeline {
                         withCredentials([
                             string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
                             string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
+                            string(credentialsId: 'PUBLIC_TYMG_URL', variable: 'PUBLIC_TYMG_URL'),
                             string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
@@ -113,6 +114,7 @@ pipeline {
                             usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD'),
                             string(credentialsId: 'PUBLIC_DECKOFCARDS_URL', variable: 'PUBLIC_DECKOFCARDS_URL'),
                             string(credentialsId: 'PUBLIC_TYMB_URL', variable: 'PUBLIC_TYMB_URL'),
+                            string(credentialsId: 'PUBLIC_TYMG_URL', variable: 'PUBLIC_TYMG_URL'),
                             string(credentialsId: 'PUBLIC_SSO_URL', variable: 'PUBLIC_SSO_URL'),
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
@@ -128,6 +130,7 @@ pipeline {
                                     --no-cache \
                                     --build-arg PUBLIC_DECKOFCARDS_URL="${PUBLIC_DECKOFCARDS_URL}" \
                                     --build-arg PUBLIC_TYMB_URL="${PUBLIC_TYMB_URL}" \
+                                    --build-arg PUBLIC_TYMG_URL="${PUBLIC_TYMG_URL}" \
                                     --build-arg PUBLIC_SSO_URL="${PUBLIC_SSO_URL}" \
                                     --build-arg PUBLIC_FRONTEND_URL="${PUBLIC_FRONTEND_URL}" \
                                     --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
