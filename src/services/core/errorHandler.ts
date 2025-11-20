@@ -97,8 +97,40 @@ class ErrorHandler {
     context?: string,
     additionalInfo?: any
   ): ErrorInfo {
-    const errorMessage = typeof error === 'string' ? error : error.message || 'Unknown error';
-    const errorName = error.name || 'UnknownError';
+    // 安全地提取錯誤消息，確保始終是字符串
+    let errorMessage: string;
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error instanceof Error) {
+      errorMessage = error.message || 'Unknown error';
+    } else if (error && typeof error === 'object') {
+      // 如果 error.message 是對象，嘗試序列化
+      if (error.message) {
+        if (typeof error.message === 'string') {
+          errorMessage = error.message;
+        } else if (typeof error.message === 'object') {
+          try {
+            errorMessage = JSON.stringify(error.message);
+          } catch {
+            errorMessage = String(error.message);
+          }
+        } else {
+          errorMessage = String(error.message);
+        }
+      } else if (error.toString && typeof error.toString === 'function' && error.toString() !== '[object Object]') {
+        errorMessage = error.toString();
+      } else {
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch {
+          errorMessage = 'Unknown error';
+        }
+      }
+    } else {
+      errorMessage = String(error) || 'Unknown error';
+    }
+    
+    const errorName = error?.name || (error instanceof Error ? error.name : 'UnknownError');
     
     let type = ErrorType.UNKNOWN;
     let severity = ErrorSeverity.MEDIUM;

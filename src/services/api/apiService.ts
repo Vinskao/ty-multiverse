@@ -101,7 +101,11 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
           responseData = backendResponse.data;
         } else {
           // For error responses, throw an error with the backend message
-          throw new ApiError(backendResponse.code, backendResponse.message);
+          // 確保 message 是字符串
+          const errorMessage = typeof backendResponse.message === 'string' 
+            ? backendResponse.message 
+            : (backendResponse.error || `Backend error (code: ${backendResponse.code})`);
+          throw new ApiError(backendResponse.code, errorMessage);
         }
       }
     } else {
@@ -110,7 +114,27 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
 
     if (!res.ok) {
       // Throw a typed error so callers can handle based on status
-      throw new ApiError(res.status, responseData);
+      // 確保 responseData 是字符串格式
+      let errorMessage: string;
+      if (typeof responseData === 'string') {
+        errorMessage = responseData;
+      } else if (responseData && typeof responseData === 'object') {
+        // 嘗試提取錯誤消息
+        if (responseData.message && typeof responseData.message === 'string') {
+          errorMessage = responseData.message;
+        } else if (responseData.error && typeof responseData.error === 'string') {
+          errorMessage = responseData.error;
+        } else {
+          try {
+            errorMessage = JSON.stringify(responseData);
+          } catch {
+            errorMessage = `HTTP ${res.status} Error`;
+          }
+        }
+      } else {
+        errorMessage = `HTTP ${res.status} Error`;
+      }
+      throw new ApiError(res.status, errorMessage);
     }
 
     return {
