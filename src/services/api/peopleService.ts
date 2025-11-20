@@ -156,18 +156,18 @@ class PeopleService {
   /**
    * 獲取所有角色名稱並等待結果（異步處理）
    * 
-   * 注意：如果通過 Gateway (PUBLIC_TYMG_URL)，應該使用 /api/people/names，
+   * 注意：如果通過 Gateway (PUBLIC_TYMG_URL)，應該使用 /people/names，
    * Gateway 的 AsyncPeopleProxyController 會自動等待異步結果並返回數據。
    * 如果直接訪問 Backend (PUBLIC_TYMB_URL)，則需要手動處理異步響應。
    */
   async getAllPeopleNamesAndWait(): Promise<string[]> {
     try {
-      // 檢查是否通過 Gateway（Gateway 有專門的 /api/people/names 端點，會自動等待結果）
+      // 檢查是否通過 Gateway（Gateway 有專門的 /people/names 端點，會自動等待結果）
       const isGateway = this.baseUrl.includes('/tymg') || this.baseUrl.includes('8082');
       
       if (isGateway) {
-        // 通過 Gateway：使用 /api/people/names，Gateway 會自動等待異步結果
-        const response = await apiService.makeRequest<string[]>(this.baseUrl, '/api/people/names', 'GET');
+        // 通過 Gateway：使用 /people/names，Gateway 會自動等待異步結果
+        const response = await apiService.makeRequest<string[]>(this.baseUrl, '/people/names', 'GET');
         
         // Gateway 的 AsyncPeopleProxyController 會直接返回數據（不是 202）
         if (Array.isArray(response.data)) {
@@ -422,7 +422,7 @@ class PeopleService {
    * 插入角色並等待結果
    */
   async insertPersonAndWait(person: Person): Promise<Person> {
-    const response = await apiService.makeRequest<Person>(this.baseUrl, '/api/people/insert', 'POST', person);
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/insert', 'POST', person);
     return response.data;
   }
 
@@ -430,7 +430,7 @@ class PeopleService {
    * 獲取所有角色並等待結果
    */
   async getAllPeopleAndWait(): Promise<Person[]> {
-    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/api/people/get-all', 'POST');
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/get-all', 'POST');
     return response.data;
   }
 
@@ -438,7 +438,7 @@ class PeopleService {
    * 根據名稱查詢角色並等待結果
    */
   async getPersonByNameAndWait(name: string): Promise<Person> {
-    const response = await apiService.makeRequest<Person>(this.baseUrl, '/api/people/get-by-name', 'POST', { name });
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/get-by-name', 'POST', { name });
     return response.data;
   }
 
@@ -446,7 +446,7 @@ class PeopleService {
    * 獲取所有武器並等待結果
    */
   async getAllWeaponsAndWait(): Promise<Weapon[]> {
-    const response = await apiService.makeRequest<Weapon[]>(this.baseUrl, '/api/people/weapons', 'GET');
+    const response = await apiService.makeRequest<Weapon[]>(this.baseUrl, '/people/weapons', 'GET');
     return response.data;
   }
 
@@ -454,7 +454,7 @@ class PeopleService {
    * 計算傷害並等待結果
    */
   async calculateDamageAndWait(personName: string): Promise<DamageCalculation> {
-    const response = await apiService.makeRequest<DamageCalculation>(this.baseUrl, '/api/people/damage', 'GET', null, { name: personName });
+    const response = await apiService.makeRequest<DamageCalculation>(this.baseUrl, '/people/damage', 'GET', null, { name: personName });
     return response.data;
   }
 
@@ -474,7 +474,7 @@ class PeopleService {
    * 批量操作：插入多個角色並等待結果
    */
   async insertMultiplePeopleAndWait(people: Person[]): Promise<Person[]> {
-    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/api/people/insert-multiple', 'POST', people);
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/insert-multiple', 'POST', people);
     return response.data;
   }
 
@@ -482,7 +482,7 @@ class PeopleService {
    * 刪除所有角色並等待結果
    */
   async deleteAllPeopleAndWait(): Promise<void> {
-    await this.makeRequest('/api/people/delete-all', 'POST');
+    await this.makeRequest('/people/delete-all', 'POST');
   }
 }
 

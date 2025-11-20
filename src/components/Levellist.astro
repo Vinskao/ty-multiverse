@@ -201,7 +201,17 @@ import '../styles/levellist.css';
   // no longer require weapon calculation helper here
   
   const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
+  const TYMG_URL = import.meta.env.PUBLIC_TYMG_URL;
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+  
+  // 檢查 Gateway URL（用於 API 調用）
+  if (!TYMG_URL) {
+    console.error('⚠️ PUBLIC_TYMG_URL 環境變量未設置，API 調用可能失敗');
+  }
+  
+  // baseUrl 應該使用 Gateway URL（TYMG），不應該 fallback 到 Backend URL（TYMB）
+  // 因為它們是完全不同的服務器，不是並行的
+  const baseUrl = TYMG_URL;
   
   // 定義基本戰力等級
   const BASE_POWER_LEVELS = [
@@ -1126,7 +1136,10 @@ import '../styles/levellist.css';
           
           // 使用統一的 peopleService
           const { peopleService } = await import('../services/api/peopleService');
-          await peopleService.updatePersonAndWait(currentData);
+          // updatePerson 返回 ProducerResponse，需要輪詢結果
+          const updateResponse = await peopleService.updatePerson(currentData);
+          // 如果需要等待結果，可以使用輪詢邏輯，但這裡先直接調用更新
+          console.log('角色更新請求已提交:', updateResponse);
           // 更新成功
           
           // 使用 SweetAlert2 顯示成功訊息
@@ -1744,22 +1757,15 @@ import '../styles/levellist.css';
               };
             }
             
-            // 獲取角色詳細信息（同步）
-            const characterResponse = await fetch(`${baseUrl}/people/get-by-name`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              credentials: 'include',
-              body: JSON.stringify({ name })
-            });
-
-            if (!characterResponse.ok) {
-              throw new Error(`獲取角色 ${name} 信息失敗: ${characterResponse.status}`);
+            // 獲取角色詳細信息（使用 peopleService，自動使用正確的 Gateway URL）
+            let character: any;
+            try {
+              // 使用 peopleService 的同步方法獲取角色信息
+              character = await peopleService.getPersonByNameAndWait(name);
+            } catch (error) {
+              console.error(`獲取角色 ${name} 信息失敗:`, error);
+              throw new Error(`獲取角色 ${name} 信息失敗: ${error instanceof Error ? error.message : String(error)}`);
             }
-
-            const character = await characterResponse.json();
 
             // 基本能力值
             const physicPower = parseInt(String(character?.physicPower || 0), 10);

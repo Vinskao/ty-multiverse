@@ -158,7 +158,6 @@ export class AuthService {
   public async testAdminEndpoint(): Promise<any> {
     try {
       const result = await this.adminAPI.getAdminInfo();
-      console.log('Admin endpoint test result:', result);
       return result;
     } catch (error) {
       console.error('Admin endpoint test failed:', error);
@@ -170,7 +169,6 @@ export class AuthService {
   public async testUserEndpoint(): Promise<any> {
     try {
       const result = await this.userAPI.getUserInfo();
-      console.log('User endpoint test result:', result);
       return result;
     } catch (error) {
       console.error('User endpoint test failed:', error);
@@ -182,7 +180,6 @@ export class AuthService {
   public async testVisitorEndpoint(): Promise<any> {
     try {
       const result = await this.visitorAPI.getVisitorInfo();
-      console.log('Visitor endpoint test result:', result);
       return result;
     } catch (error) {
       console.error('Visitor endpoint test failed:', error);
@@ -194,7 +191,8 @@ export class AuthService {
   public async testAuthIntegration(refreshToken?: string): Promise<any> {
     try {
       const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
-      const url = `${gatewayUrl}/tymg/keycloak/introspect`;
+      // gatewayUrl 已經包含 /tymg，不需要重複添加
+      const url = `${gatewayUrl}/keycloak/introspect`;
       const headers: Record<string, string> = {
         ...config.api.headers
       };
@@ -211,10 +209,10 @@ export class AuthService {
       };
 
       if (refreshToken) {
-        requestOptions.body = `token=${encodeURIComponent(token || '')}&refreshToken=${encodeURIComponent(refreshToken)}`;
+        requestOptions.body = `token=${encodeURIComponent(String(token || ''))}&refreshToken=${encodeURIComponent(String(refreshToken))}`;
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
       } else if (token) {
-        requestOptions.body = `token=${encodeURIComponent(token)}`;
+        requestOptions.body = `token=${encodeURIComponent(String(token))}`;
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
       }
 
@@ -225,7 +223,6 @@ export class AuthService {
       }
 
       const result = await response.json();
-      console.log('Auth integration test result:', result);
       return result;
     } catch (error) {
       console.error('Auth integration test failed:', error);
@@ -234,38 +231,60 @@ export class AuthService {
   }
 
   // 測試登出功能 - 通過 Gateway 調用 Keycloak logout
-  public async testLogout(refreshToken: string): Promise<any> {
+  public async testLogout(refreshToken: string, idToken?: string): Promise<any> {
     try {
-      const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
-      const url = `${gatewayUrl}/tymg/keycloak/logout`;
+      const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl || TYMG_URL || TYMB_URL;
+      
+      // 確保 gatewayUrl 格式正確（不包含結尾斜線）
+      let baseUrl = gatewayUrl.endsWith('/') ? gatewayUrl.slice(0, -1) : gatewayUrl;
+      
+      // 確保 baseUrl 包含 /tymg 前綴（Gateway 的路徑前綴）
+      // Gateway 端點是 /tymg/keycloak/logout
+      if (!baseUrl.includes('/tymg')) {
+        // 如果 baseUrl 是 http://localhost:8082，添加 /tymg
+        baseUrl = baseUrl + '/tymg';
+      }
+      
+      // 構建完整的 API URL - Gateway 端點: /tymg/keycloak/logout
+      const url = `${baseUrl}/keycloak/logout`;
+
       const headers: Record<string, string> = {
-        ...config.api.headers,
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
       };
 
-      // 獲取 token
-      const token = storageService.get(storageService.KEYS.TOKEN);
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      // 構建請求體 - 使用 form-urlencoded 格式
+      const formParams = new URLSearchParams();
+      formParams.append('refreshToken', refreshToken);
+      // 如果有 id_token，也添加到請求中（用於清除服務器端 session）
+      if (idToken) {
+        formParams.append('idToken', idToken);
       }
 
       const requestOptions: RequestInit = {
         method: 'POST',
         headers,
-        body: `refreshToken=${encodeURIComponent(refreshToken)}`
+        body: formParams.toString(),
+        credentials: 'include',
+        mode: 'cors'
       };
-
+      
       const response = await fetch(url, requestOptions);
-
+      const responseText = await response.text();
+      
       if (!response.ok) {
-        throw new Error(`Logout test failed: ${response.status}`);
+        throw new Error(`Logout test failed: ${response.status} - ${responseText}`);
       }
 
-      const result = await response.text(); // Gateway logout 返回字符串
-      console.log('Logout test result:', result);
-      return result;
+      return responseText;
     } catch (error) {
-      console.error('Logout test failed:', error);
+      console.error('❌ Logout test failed:', error);
+      if (error instanceof Error) {
+        console.error('錯誤詳情:', {
+          message: error.message,
+          stack: error.stack
+        });
+      }
       throw error;
     }
   }
@@ -285,7 +304,6 @@ export class AuthService {
       }
 
       const result = await response.json();
-      console.log('Auth health check result:', result);
       return result;
     } catch (error) {
       console.error('Health check failed:', error);
@@ -355,40 +373,93 @@ export class AuthService {
   }
 
   // 執行登出操作
-  public async logout(refreshToken?: string): Promise<boolean> {
+  public async logout(refreshToken?: string, idToken?: string): Promise<boolean> {
     try {
       // 保存當前主題設置
       const currentTheme = localStorage.getItem('theme');
 
-      // 如果有 refresh token，調用後端登出 API
+      // Step 1: 如果有 refresh token，先調用 Gateway API 撤銷 token
       if (refreshToken) {
-        await this.testLogout(refreshToken);
+        try {
+          await this.testLogout(refreshToken, idToken);
+        } catch (e) {
+          // 忽略錯誤，繼續執行登出流程
+        }
       }
 
-      // 清除除了主題以外的所有數據
+      // Step 2: 清除本地存儲（除了主題）
       Object.keys(localStorage).forEach(key => {
         if (key !== 'theme') {
           localStorage.removeItem(key);
         }
       });
 
+      // 清除所有 sessionStorage
+      sessionStorage.clear();
+
       // 清除所有 cookie
       const cookies = document.cookie.split(';');
       for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i];
+        const cookie = cookies[i].trim();
         const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        const name = eqPos > -1 ? cookie.substring(0, eqPos) : cookie;
+        // 清除多個路徑的 cookie
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse`;
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse/`;
       }
 
-      // 確保主題設置被保留（如果原本有的話）
+      // 確保主題設置被保留
       if (currentTheme) {
         localStorage.setItem('theme', currentTheme);
       }
 
+      // Step 3: 跳轉到 Keycloak 的 end_session_endpoint 清除服務器端 session
+      // 這是關鍵步驟：Keycloak 需要瀏覽器級別的跳轉才能清除 session cookie
+      const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+      const realm = import.meta.env.PUBLIC_REALM || 'PeopleSystem';
+      
+      // 構建登出後要跳回來的網址（前端首頁）
+      const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/tymultiverse/');
+      
+      // 構建 Keycloak end_session_endpoint URL
+      let logoutUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirectUri}`;
+
+      // 如果有 id_token，加上 id_token_hint 可以避免 Keycloak 詢問確認
+      if (idToken) {
+        logoutUrl += `&id_token_hint=${encodeURIComponent(idToken)}`;
+      }
+      
+      // 跳轉到 Keycloak 登出頁面（這會清除服務器端 session）
+      window.location.href = logoutUrl;
+
+      // 注意：這行代碼不會執行，因為頁面會跳轉
       return true;
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('❌ Error during logout:', error);
+      
+      // 即使出錯，也清除本地數據
+      try {
+        const currentTheme = localStorage.getItem('theme');
+        localStorage.clear();
+        if (currentTheme) {
+          localStorage.setItem('theme', currentTheme);
+        }
+        sessionStorage.clear();
+      } catch (cleanupError) {
+        console.error('清理數據時出錯:', cleanupError);
+      }
+      
+      // 嘗試跳轉到 Keycloak（即使出錯）
+      try {
+        const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+        const realm = import.meta.env.PUBLIC_REALM || 'PeopleSystem';
+        const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/tymultiverse/');
+        window.location.href = `${ssoUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirectUri}`;
+      } catch (redirectError) {
+        console.error('跳轉失敗:', redirectError);
+      }
+      
       return false;
     }
   }
@@ -428,6 +499,17 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
 
+  // 檢查 token 是否為空
+  if (!token || token.trim() === '') {
+    console.warn('⚠️ Token 為空，跳過驗證');
+    return {
+      valid: false,
+      tokenRefreshed: false,
+      accessToken: null,
+      refreshToken: null
+    };
+  }
+
   // 如果正在驗證或距離上次驗證時間太短，則跳過
   if (isVerifying || Date.now() - lastVerifyTime < VERIFY_COOLDOWN) {
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
@@ -440,26 +522,56 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
   try {
     // 構建 API URL - 通過 Gateway
     const gatewayUrl = TYMG_URL || config.api.gatewayUrl || config.api.baseUrl || TYMB_URL;
-    const apiUrl = new URL(`${gatewayUrl}/tymg/keycloak/introspect`);
+    
+    // 確保 gatewayUrl 格式正確（不包含結尾斜線）
+    const baseUrl = gatewayUrl.endsWith('/') ? gatewayUrl.slice(0, -1) : gatewayUrl;
+    
+    // 構建完整的 API URL
+    const apiUrl = `${baseUrl}/keycloak/introspect`;
 
-    // 構建請求體
-    const formData = new FormData();
-    formData.append('token', token);
+    // 構建請求體 - 使用 application/x-www-form-urlencoded 格式
+    const formParams = new URLSearchParams();
+    formParams.append('token', token);
 
     // 如果有 refresh token，添加到請求體中
     if (refreshToken && refreshToken.trim() !== '') {
-      formData.append('refreshToken', refreshToken);
+      formParams.append('refreshToken', refreshToken);
     }
 
-    const response = await fetch(apiUrl.toString(), {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formData,
+      body: formParams.toString(),
       credentials: 'include',
       mode: 'cors'
     });
+
+    // 處理錯誤響應（400, 401 等）
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Token 驗證失敗: HTTP ${response.status} - ${errorText}`);
+      
+      // 如果是 400 或 401，token 無效
+      if (response.status === 400 || response.status === 401) {
+        return {
+          valid: false,
+          tokenRefreshed: false,
+          accessToken: null,
+          refreshToken: null
+        };
+      }
+      
+      // 其他錯誤也視為無效
+      return {
+        valid: false,
+        tokenRefreshed: false,
+        accessToken: null,
+        refreshToken: null
+      };
+    }
 
     if (response.ok) {
       const data = await response.json();

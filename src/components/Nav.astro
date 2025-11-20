@@ -47,16 +47,17 @@ const textLinks: { label: string; href: string; isActive: boolean; adminOnly?: b
       href: `/tymultiverse/control/?username=${username}&token=${token}`,
       isActive: currentPath.startsWith("/tymultiverse/control")
     },
+    // Wildland 和 Palais 始終渲染（如果已登入），但由前端 JavaScript 控制顯示（基於 admin 權限）
     { 
       label: "Wildland", 
       adminOnly: true, 
-      href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
+      href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken || ''}`,
       isActive: currentPath.startsWith("/tymultiverse/wildland")
     },
     { 
       label: "Palais", 
       adminOnly: true, 
-      href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken}`,
+      href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken || ''}`,
       isActive: currentPath.startsWith("/tymultiverse/palais")
     }
   ] : [])
