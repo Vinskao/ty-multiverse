@@ -16,13 +16,24 @@
             ]
           },
           "skills": [
-            { "name": "Java 8 11 17 21", "level": "shade1" },
-            { "name": "Python 3", "level": "shade3" },
-            { "name": "Node.js", "level": "shade3" },
-            { "name": "PHP 12", "level": "shade3" }
+            {
+              "name": "Java 8 11 17 21",
+              "level": "shade1"
+            },
+            {
+              "name": "Python 3",
+              "level": "shade3"
+            },
+            {
+              "name": "Node.js",
+              "level": "shade3"
+            },
+            {
+              "name": "PHP 12",
+              "level": "shade3"
+            }
           ]
         },
-
         {
           "name": "Frameworks & Libraries",
           "description": {
@@ -40,37 +51,130 @@
             ]
           },
           "skills": [
-            { "name": "Spring Framework 6", "level": "shade3" },
-            { "name": "Spring Boot 2 3", "level": "shade1" },
-            { "name": "Spring WebFlux", "level": "shade2" },
-            { "name": "Netty", "level": "shade3" },
-            { "name": "Spring Session Redis", "level": "shade3" },
-            { "name": "Quarkus 3", "level": "shade3" },
-            { "name": "Reactive Streams", "level": "shade5" },
-            { "name": "ExecutorService", "level": "shade3" },
-            { "name": "ConcurrentHashMap", "level": "shade3" },
-            { "name": "Virtual Threads", "level": "shade2" },
-            { "name": "ForkJoinPool", "level": "shade4" },
-            { "name": "VirtualThreadTaskExecutor", "level": "shade4" },
-            { "name": "Continuation", "level": "shade5" },
-            { "name": "Fiber", "level": "shade5" },
-            { "name": "Django Rest", "level": "shade4" },
-            { "name": "Django ASGI", "level": "shade5" },
-            { "name": "WSGI Worker Pattern", "level": "shade4" },
-            { "name": "FastAPI", "level": "shade3" },
-            { "name": "Laravel", "level": "shade3" },
-            { "name": "Express.js", "level": "shade4" },
-            { "name": "Async/Await", "level": "shade3" },
-            { "name": "Event Loop", "level": "shade4" },
-            { "name": "@RabbitListener", "level": "shade3" },
-            { "name": "gRPC", "level": "shade3" },
-            { "name": "Protocol Buffers", "level": "shade3" },
-            { "name": "gRPC Stub", "level": "shade3" },
-            { "name": "gRPC Client", "level": "shade3" },
-            { "name": "gRPC Server", "level": "shade3" },
-            { "name": "Microservices", "level": "shade2" },
-            { "name": "API Gateway", "level": "shade2" },
-            { "name": "Spring Cloud Gateway", "level": "shade3" }
+            {
+              "name": "Spring Framework 6",
+              "level": "shade3"
+            },
+            {
+              "name": "Spring Boot 2 3",
+              "level": "shade1"
+            },
+            {
+              "name": "Spring WebFlux",
+              "level": "shade2"
+            },
+            {
+              "name": "Netty",
+              "level": "shade3"
+            },
+            {
+              "name": "Spring Session Redis",
+              "level": "shade3"
+            },
+            {
+              "name": "Quarkus 3",
+              "level": "shade3"
+            },
+            {
+              "name": "Reactive Streams",
+              "level": "shade5"
+            },
+            {
+              "name": "ExecutorService",
+              "level": "shade3"
+            },
+            {
+              "name": "ConcurrentHashMap",
+              "level": "shade3"
+            },
+            {
+              "name": "Virtual Threads",
+              "level": "shade2"
+            },
+            {
+              "name": "ForkJoinPool",
+              "level": "shade4"
+            },
+            {
+              "name": "VirtualThreadTaskExecutor",
+              "level": "shade4"
+            },
+            {
+              "name": "Continuation",
+              "level": "shade5"
+            },
+            {
+              "name": "Fiber",
+              "level": "shade5"
+            },
+            {
+              "name": "Django Rest",
+              "level": "shade4"
+            },
+            {
+              "name": "Django ASGI",
+              "level": "shade5"
+            },
+            {
+              "name": "WSGI Worker Pattern",
+              "level": "shade4"
+            },
+            {
+              "name": "FastAPI",
+              "level": "shade3"
+            },
+            {
+              "name": "Laravel",
+              "level": "shade3"
+            },
+            {
+              "name": "Express.js",
+              "level": "shade4"
+            },
+            {
+              "name": "Async/Await",
+              "level": "shade3"
+            },
+            {
+              "name": "Event Loop",
+              "level": "shade4"
+            },
+            {
+              "name": "@RabbitListener",
+              "level": "shade3"
+            },
+            {
+              "name": "gRPC",
+              "level": "shade3"
+            },
+            {
+              "name": "Protocol Buffers",
+              "level": "shade3"
+            },
+            {
+              "name": "gRPC Stub",
+              "level": "shade3"
+            },
+            {
+              "name": "gRPC Client",
+              "level": "shade3"
+            },
+            {
+              "name": "gRPC Server",
+              "level": "shade3"
+            },
+            {
+              "name": "Microservices",
+              "level": "shade2"
+            },
+            {
+              "name": "API Gateway",
+              "level": "shade2"
+            },
+            {
+              "name": "Spring Cloud Gateway",
+              "level": "shade3"
+            }
           ]
         },
         {
@@ -84,11 +188,26 @@
             ]
           },
           "skills": [
-            { "name": "JPA", "level": "shade1" },
-            { "name": "Mybatis 3", "level": "shade1" },
-            { "name": "JDBCTemplate", "level": "shade1" },
-            { "name": "Mongoose.js", "level": "shade4" },
-            { "name": "HikariCP", "level": "shade2" }
+            {
+              "name": "JPA",
+              "level": "shade1"
+            },
+            {
+              "name": "Mybatis 3",
+              "level": "shade1"
+            },
+            {
+              "name": "JDBCTemplate",
+              "level": "shade1"
+            },
+            {
+              "name": "Mongoose.js",
+              "level": "shade4"
+            },
+            {
+              "name": "HikariCP",
+              "level": "shade2"
+            }
           ]
         },
         {
@@ -102,14 +221,38 @@
             ]
           },
           "skills": [
-            { "name": "Swagger", "level": "shade1" },
-            { "name": "RESTful API", "level": "shade1" },
-            { "name": "JUnit 5", "level": "shade2" },
-            { "name": "Mokito", "level": "shade3" },
-            { "name": "Servlet 5", "level": "shade3" },
-            { "name": "Maven", "level": "shade2" },
-            { "name": "Poetry", "level": "shade3" },
-            { "name": "Chain of Responsibility", "level": "shade3" }
+            {
+              "name": "Swagger",
+              "level": "shade1"
+            },
+            {
+              "name": "RESTful API",
+              "level": "shade1"
+            },
+            {
+              "name": "JUnit 5",
+              "level": "shade2"
+            },
+            {
+              "name": "Mokito",
+              "level": "shade3"
+            },
+            {
+              "name": "Servlet 5",
+              "level": "shade3"
+            },
+            {
+              "name": "Maven",
+              "level": "shade2"
+            },
+            {
+              "name": "Poetry",
+              "level": "shade3"
+            },
+            {
+              "name": "Chain of Responsibility",
+              "level": "shade3"
+            }
           ]
         }
       ]
@@ -130,28 +273,94 @@
         ]
       },
       "skills": [
-        { "name": "JavaScript", "level": "shade1" },
-        { "name": "TypeScript", "level": "shade2" },
-        { "name": "Vue.js 2 3", "level": "shade2" },
-        { "name": "React.js", "level": "shade3" },
-        { "name": "React Hooks", "level": "shade3" },
-        { "name": "React Context", "level": "shade4" },
-        { "name": "jQuery", "level": "shade1" },
-        { "name": "AJAX", "level": "shade1" },
-        { "name": "Axios", "level": "shade3" },
-        { "name": "Bootstrap", "level": "shade2" },
-        { "name": "SweetAlert2", "level": "shade4" },
-        { "name": "HTML2Canvas", "level": "shade4" },
-        { "name": "JSPDF", "level": "shade4" },
-        { "name": "Jest", "level": "shade5" },
-        { "name": "Astro", "level": "shade2" },
-        { "name": "MDX", "level": "shade3" },
-        { "name": "Handlebars", "level": "shade2" },
-        { "name": "Thymeleaf", "level": "shade2" },
-        { "name": "CKEditor 5", "level": "shade2" },
-        { "name": "Webpack", "level": "shade2" },
-        { "name": "Bundle", "level": "shade3" },
-        { "name": "D3", "level": "shade3" }
+        {
+          "name": "JavaScript",
+          "level": "shade1"
+        },
+        {
+          "name": "TypeScript",
+          "level": "shade2"
+        },
+        {
+          "name": "Vue.js 2 3",
+          "level": "shade2"
+        },
+        {
+          "name": "React.js",
+          "level": "shade3"
+        },
+        {
+          "name": "React Hooks",
+          "level": "shade3"
+        },
+        {
+          "name": "React Context",
+          "level": "shade4"
+        },
+        {
+          "name": "jQuery",
+          "level": "shade1"
+        },
+        {
+          "name": "AJAX",
+          "level": "shade1"
+        },
+        {
+          "name": "Axios",
+          "level": "shade3"
+        },
+        {
+          "name": "Bootstrap",
+          "level": "shade2"
+        },
+        {
+          "name": "SweetAlert2",
+          "level": "shade4"
+        },
+        {
+          "name": "HTML2Canvas",
+          "level": "shade4"
+        },
+        {
+          "name": "JSPDF",
+          "level": "shade4"
+        },
+        {
+          "name": "Jest",
+          "level": "shade5"
+        },
+        {
+          "name": "Astro",
+          "level": "shade2"
+        },
+        {
+          "name": "MDX",
+          "level": "shade3"
+        },
+        {
+          "name": "Handlebars",
+          "level": "shade2"
+        },
+        {
+          "name": "Thymeleaf",
+          "level": "shade2"
+        },
+        {
+          "name": "CKEditor 5",
+          "level": "shade2"
+        },
+        {
+          "name": "Webpack",
+          "level": "shade2"
+        },
+        {
+          "name": "Bundle",
+          "level": "shade3"
+        },
+        {
+          "name": "D3",
+          "level": "shade3"
+        }
       ]
     },
     {
@@ -178,20 +387,62 @@
             ]
           },
           "skills": [
-            { "name": "PostgreSQL", "level": "shade1" },
-            { "name": "R2DBC", "level": "shade2" },
-            { "name": "PGVector", "level": "shade5" },
-            { "name": "pg_trgm", "level": "shade4" },
-            { "name": "N-Gram Index", "level": "shade3" },
-            { "name": "Trigram Search", "level": "shade3" },
-            { "name": "Fuzzy Search", "level": "shade3" },
-            { "name": "Full Text Search", "level": "shade2" },
-            { "name": "GIN Index", "level": "shade4" },
-            { "name": "Hybrid Search", "level": "shade4" },
-            { "name": "MSSQL", "level": "shade1" },
-            { "name": "SQLite", "level": "shade1" },
-            { "name": "MySQL", "level": "shade3" },
-            { "name": "Informix", "level": "shade5" }
+            {
+              "name": "PostgreSQL",
+              "level": "shade1"
+            },
+            {
+              "name": "R2DBC",
+              "level": "shade2"
+            },
+            {
+              "name": "PGVector",
+              "level": "shade5"
+            },
+            {
+              "name": "pg_trgm",
+              "level": "shade4"
+            },
+            {
+              "name": "N-Gram Index",
+              "level": "shade3"
+            },
+            {
+              "name": "Trigram Search",
+              "level": "shade3"
+            },
+            {
+              "name": "Fuzzy Search",
+              "level": "shade3"
+            },
+            {
+              "name": "Full Text Search",
+              "level": "shade2"
+            },
+            {
+              "name": "GIN Index",
+              "level": "shade4"
+            },
+            {
+              "name": "Hybrid Search",
+              "level": "shade4"
+            },
+            {
+              "name": "MSSQL",
+              "level": "shade1"
+            },
+            {
+              "name": "SQLite",
+              "level": "shade1"
+            },
+            {
+              "name": "MySQL",
+              "level": "shade3"
+            },
+            {
+              "name": "Informix",
+              "level": "shade5"
+            }
           ]
         },
         {
@@ -208,15 +459,39 @@
               "實作基於 RabbitMQ 的非同步訊息處理架構，採用 producer-consumer 模式。設計 TYMBackendApplication 作為 producer，整合 AsyncMessageService 與 RabbitMQConfig 進行訊息發布。部署 RabbitMQ 4.1 Management 伺服器作為訊息代理，具備佇列管理與非同步處理能力。建構專用 Consumer Pod 進行訊息處理與資料庫寫入操作，確保可靠訊息傳遞與容錯機制。此架構實現後端服務與資料庫操作間的可擴展、解耦通訊，支援高吞吐量訊息處理並保證傳遞語義。"
             ]
           },
-            "skills": [
-            { "name": "MongoDB", "level": "shade4" },
-            { "name": "Firebase", "level": "shade4" },
-            { "name": "Redis", "level": "shade3" },
-            { "name": "RabbitMQ", "level": "shade3" },
-            { "name": "Message Queue", "level": "shade3" },
-            { "name": "Asynchronous Processing", "level": "shade3" },
-            { "name": "Producer-Consumer Pattern", "level": "shade3" },
-            { "name": "Celery", "level": "shade4" }
+          "skills": [
+            {
+              "name": "MongoDB",
+              "level": "shade4"
+            },
+            {
+              "name": "Firebase",
+              "level": "shade4"
+            },
+            {
+              "name": "Redis",
+              "level": "shade3"
+            },
+            {
+              "name": "RabbitMQ",
+              "level": "shade3"
+            },
+            {
+              "name": "Message Queue",
+              "level": "shade3"
+            },
+            {
+              "name": "Asynchronous Processing",
+              "level": "shade3"
+            },
+            {
+              "name": "Producer-Consumer Pattern",
+              "level": "shade3"
+            },
+            {
+              "name": "Celery",
+              "level": "shade4"
+            }
           ]
         }
       ]
@@ -237,11 +512,26 @@
             ]
           },
           "skills": [
-            { "name": "Docker", "level": "shade1" },
-            { "name": "Podman", "level": "shade1" },
-            { "name": "Kubernetes", "level": "shade1" },
-            { "name": "Bare Metal K8S", "level": "shade2" },
-            { "name": "OCP K8S", "level": "shade5" }
+            {
+              "name": "Docker",
+              "level": "shade1"
+            },
+            {
+              "name": "Podman",
+              "level": "shade1"
+            },
+            {
+              "name": "Kubernetes",
+              "level": "shade1"
+            },
+            {
+              "name": "Bare Metal K8S",
+              "level": "shade2"
+            },
+            {
+              "name": "OCP K8S",
+              "level": "shade5"
+            }
           ]
         },
         {
@@ -255,10 +545,22 @@
             ]
           },
           "skills": [
-            { "name": "Terraform", "level": "shade4" },
-            { "name": "Ansible", "level": "shade4" },
-            { "name": "Helm", "level": "shade5" },
-            { "name": "YAML", "level": "shade2" }
+            {
+              "name": "Terraform",
+              "level": "shade4"
+            },
+            {
+              "name": "Ansible",
+              "level": "shade4"
+            },
+            {
+              "name": "Helm",
+              "level": "shade5"
+            },
+            {
+              "name": "YAML",
+              "level": "shade2"
+            }
           ]
         },
         {
@@ -274,12 +576,20 @@
             ]
           },
           "skills": [
-            { "name": "JBoss EAP 7 8", "level": "shade1" },
-            { "name": "Tomcat", "level": "shade3" },
-            { "name": "RabbitMQ", "level": "shade3" }
+            {
+              "name": "JBoss EAP 7 8",
+              "level": "shade1"
+            },
+            {
+              "name": "Tomcat",
+              "level": "shade3"
+            },
+            {
+              "name": "RabbitMQ",
+              "level": "shade3"
+            }
           ]
         },
-
         {
           "name": "System Architecture",
           "description": {
@@ -291,7 +601,10 @@
             ]
           },
           "skills": [
-            { "name": "Thread Pool", "level": "shade3" }
+            {
+              "name": "Thread Pool",
+              "level": "shade3"
+            }
           ]
         },
         {
@@ -305,14 +618,38 @@
             ]
           },
           "skills": [
-            { "name": "Grafana", "level": "shade4" },
-            { "name": "Prometheus", "level": "shade4" },
-            { "name": "Jolokia", "level": "shade3" },
-            { "name": "Instana", "level": "shade4" },
-            { "name": "Resilience4j", "level": "shade3" },
-            { "name": "Circuit Breaker", "level": "shade3" },
-            { "name": "Micrometer", "level": "shade3" },
-            { "name": "Spring Boot Actuator", "level": "shade2" }
+            {
+              "name": "Grafana",
+              "level": "shade4"
+            },
+            {
+              "name": "Prometheus",
+              "level": "shade4"
+            },
+            {
+              "name": "Jolokia",
+              "level": "shade3"
+            },
+            {
+              "name": "Instana",
+              "level": "shade4"
+            },
+            {
+              "name": "Resilience4j",
+              "level": "shade3"
+            },
+            {
+              "name": "Circuit Breaker",
+              "level": "shade3"
+            },
+            {
+              "name": "Micrometer",
+              "level": "shade3"
+            },
+            {
+              "name": "Spring Boot Actuator",
+              "level": "shade2"
+            }
           ]
         }
       ]
@@ -321,13 +658,26 @@
       "name": "CI/CD",
       "pillClass": "pill10",
       "description": {
-        "en": ["Built Jenkins Server and implemented CI/CD pipelines using Jenkins and Jenkins Credentials for Spring Boot, Django, Laravel, and Astro projects"],
-        "zh": ["搭建 Jenkins 伺服器，並為 Spring Boot、Django、Laravel 與 Astro 專案實作 CI/CD 流水線"]
+        "en": [
+          "Built Jenkins Server and implemented CI/CD pipelines using Jenkins and Jenkins Credentials for Spring Boot, Django, Laravel, and Astro projects"
+        ],
+        "zh": [
+          "搭建 Jenkins 伺服器，並為 Spring Boot、Django、Laravel 與 Astro 專案實作 CI/CD 流水線"
+        ]
       },
       "skills": [
-        { "name": "Jenkins", "level": "shade3" },
-        { "name": "Docker BuildKit", "level": "shade5" },
-        { "name": "GitHub Package", "level": "shade3" }
+        {
+          "name": "Jenkins",
+          "level": "shade3"
+        },
+        {
+          "name": "Docker BuildKit",
+          "level": "shade5"
+        },
+        {
+          "name": "GitHub Package",
+          "level": "shade3"
+        }
       ]
     },
     {
@@ -346,12 +696,30 @@
             ]
           },
           "skills": [
-            { "name": "HTTP", "level": "shade1" },
-            { "name": "HTTP/1.1", "level": "shade1" },
-            { "name": "HTTP/2", "level": "shade2" },
-            { "name": "WebSocket", "level": "shade3" },
-            { "name": "STOMP", "level": "shade4" },
-            { "name": "SSL/TLS", "level": "shade1" }
+            {
+              "name": "HTTP",
+              "level": "shade1"
+            },
+            {
+              "name": "HTTP/1.1",
+              "level": "shade1"
+            },
+            {
+              "name": "HTTP/2",
+              "level": "shade2"
+            },
+            {
+              "name": "WebSocket",
+              "level": "shade3"
+            },
+            {
+              "name": "STOMP",
+              "level": "shade4"
+            },
+            {
+              "name": "SSL/TLS",
+              "level": "shade1"
+            }
           ]
         },
         {
@@ -367,12 +735,30 @@
             ]
           },
           "skills": [
-            { "name": "Ingress", "level": "shade1" },
-            { "name": "Nginx Ingress Controller", "level": "shade2" },
-            { "name": "Nginx Static File Server", "level": "shade3" },
-            { "name": "Public Load Balancer", "level": "shade1" },
-            { "name": "NAT Gateway", "level": "shade5" },
-            { "name": "Egress", "level": "shade5" }
+            {
+              "name": "Ingress",
+              "level": "shade1"
+            },
+            {
+              "name": "Nginx Ingress Controller",
+              "level": "shade2"
+            },
+            {
+              "name": "Nginx Static File Server",
+              "level": "shade3"
+            },
+            {
+              "name": "Public Load Balancer",
+              "level": "shade1"
+            },
+            {
+              "name": "NAT Gateway",
+              "level": "shade5"
+            },
+            {
+              "name": "Egress",
+              "level": "shade5"
+            }
           ]
         }
       ]
@@ -395,10 +781,22 @@
             ]
           },
           "skills": [
-            { "name": "OCI", "level": "shade3" },
-            { "name": "OKE", "level": "shade3" },
-            { "name": "Bastion", "level": "shade4" },
-            { "name": "GCP", "level": "shade5" }
+            {
+              "name": "OCI",
+              "level": "shade3"
+            },
+            {
+              "name": "OKE",
+              "level": "shade3"
+            },
+            {
+              "name": "Bastion",
+              "level": "shade4"
+            },
+            {
+              "name": "GCP",
+              "level": "shade5"
+            }
           ]
         }
       ]
@@ -419,9 +817,18 @@
             ]
           },
           "skills": [
-            { "name": "Linux", "level": "shade1" },
-            { "name": "RHEL 7 8 Runtime Image", "level": "shade2" },
-            { "name": "Ubuntu", "level": "shade1" }
+            {
+              "name": "Linux",
+              "level": "shade1"
+            },
+            {
+              "name": "RHEL 7 8 Runtime Image",
+              "level": "shade2"
+            },
+            {
+              "name": "Ubuntu",
+              "level": "shade1"
+            }
           ]
         },
         {
@@ -435,8 +842,14 @@
             ]
           },
           "skills": [
-            { "name": "Shell", "level": "shade1" },
-            { "name": "Bash", "level": "shade1" }
+            {
+              "name": "Shell",
+              "level": "shade1"
+            },
+            {
+              "name": "Bash",
+              "level": "shade1"
+            }
           ]
         },
         {
@@ -452,12 +865,34 @@
             ]
           },
           "skills": [
-            { "name": "WordPress", "level": "shade2" },
-            { "name": "Cursor", "level": "shade1" },
-            { "name": "Yum Repository", "level": "shade3" },
-            { "name": "Satellite", "level": "shade4" },
-            { "name": "Google Apps Script", "level": "shade3" },
-            { "name": "GitHub Submodule", "level": "shade3" }
+            {
+              "name": "WordPress",
+              "level": "shade2"
+            },
+            {
+              "name": "Cursor",
+              "level": "shade1"
+            },
+            {
+              "name": "Antigravity",
+              "level": "shade1"
+            },
+            {
+              "name": "Yum Repository",
+              "level": "shade3"
+            },
+            {
+              "name": "Satellite",
+              "level": "shade4"
+            },
+            {
+              "name": "Google Apps Script",
+              "level": "shade3"
+            },
+            {
+              "name": "GitHub Submodule",
+              "level": "shade3"
+            }
           ]
         }
       ]
@@ -480,15 +915,44 @@
         ]
       },
       "skills": [
-        { "name": "Keycloak 18 26", "level": "shade1" },
-        { "name": "Keycloak SPI", "level": "shade2" },
-        { "name": "RedHat SSO 7", "level": "shade1" },
-        { "name": "Authorization Code Flow", "level": "shade2" },
-        { "name": "JWT", "level": "shade2", "specialClass": "jwt" },
-        { "name": "Spring Security", "level": "shade3", "specialClass": "spring-security" },
-        { "name": "Digital Signature", "level": "shade3" },
-        { "name": "OAuth2", "level": "shade2" },
-        { "name": "Java Keystore", "level": "shade1" }
+        {
+          "name": "Keycloak 18 26",
+          "level": "shade1"
+        },
+        {
+          "name": "Keycloak SPI",
+          "level": "shade2"
+        },
+        {
+          "name": "RedHat SSO 7",
+          "level": "shade1"
+        },
+        {
+          "name": "Authorization Code Flow",
+          "level": "shade2"
+        },
+        {
+          "name": "JWT",
+          "level": "shade2",
+          "specialClass": "jwt"
+        },
+        {
+          "name": "Spring Security",
+          "level": "shade3",
+          "specialClass": "spring-security"
+        },
+        {
+          "name": "Digital Signature",
+          "level": "shade3"
+        },
+        {
+          "name": "OAuth2",
+          "level": "shade2"
+        },
+        {
+          "name": "Java Keystore",
+          "level": "shade1"
+        }
       ]
     },
     {
@@ -511,19 +975,58 @@
             ]
           },
           "skills": [
-            { "name": "LangChain", "level": "shade4" },
-            { "name": "LangGraph", "level": "shade4" },
-            { "name": "OpenAI API", "level": "shade4" },
-            { "name": "ChatOpenAI", "level": "shade5" },
-            { "name": "LLMChain", "level": "shade5" },
-            { "name": "PromptTemplate", "level": "shade5" },
-            { "name": "LangChain RAG", "level": "shade5" },
-            { "name": "pgvector", "level": "shade4" },
-            { "name": "IVFFlat Index", "level": "shade5" },
-            { "name": "Vector Search", "level": "shade4" },
-            { "name": "N-Gram in RAG", "level": "shade4" },
-            { "name": "Trigram Similarity", "level": "shade4" },
-            { "name": "Fuzzy Text Matching", "level": "shade4" }
+            {
+              "name": "LangChain",
+              "level": "shade4"
+            },
+            {
+              "name": "LangGraph",
+              "level": "shade4"
+            },
+            {
+              "name": "OpenAI API",
+              "level": "shade4"
+            },
+            {
+              "name": "ChatOpenAI",
+              "level": "shade5"
+            },
+            {
+              "name": "LLMChain",
+              "level": "shade5"
+            },
+            {
+              "name": "PromptTemplate",
+              "level": "shade5"
+            },
+            {
+              "name": "LangChain RAG",
+              "level": "shade5"
+            },
+            {
+              "name": "pgvector",
+              "level": "shade4"
+            },
+            {
+              "name": "IVFFlat Index",
+              "level": "shade5"
+            },
+            {
+              "name": "Vector Search",
+              "level": "shade4"
+            },
+            {
+              "name": "N-Gram in RAG",
+              "level": "shade4"
+            },
+            {
+              "name": "Trigram Similarity",
+              "level": "shade4"
+            },
+            {
+              "name": "Fuzzy Text Matching",
+              "level": "shade4"
+            }
           ]
         },
         {
@@ -537,9 +1040,18 @@
             ]
           },
           "skills": [
-            { "name": "WSL2", "level": "shade5" },
-            { "name": "NVIDIA Container Toolkit", "level": "shade5" },
-            { "name": "Colab", "level": "shade4" }
+            {
+              "name": "WSL2",
+              "level": "shade5"
+            },
+            {
+              "name": "NVIDIA Container Toolkit",
+              "level": "shade5"
+            },
+            {
+              "name": "Colab",
+              "level": "shade4"
+            }
           ]
         }
       ]

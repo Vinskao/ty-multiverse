@@ -11,6 +11,8 @@ export default defineConfig({
   }),
   base: '/tymultiverse',
   integrations: [react(), mdx(), sitemap()],
+  // Enable view transitions for SPA-like navigation
+  viewTransitions: true,
   markdown: {
     remarkPlugins: []
   },

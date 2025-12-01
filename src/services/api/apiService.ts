@@ -4,44 +4,21 @@
 
 import { storageService } from '../core/storageService';
 import { config } from '../core/config';
+import type { 
+  ApiRequestOptions, 
+  BackendApiResponse, 
+  ApiResponse 
+} from '../../common/types';
+import { 
+  parseResponseText, 
+  shouldParseAsJson,
+  safeJsonStringify 
+} from '../../common/utils';
+import { isObject, isString } from '../../common/helpers';
+import { CONTENT_TYPE, DEFAULT_API_TIMEOUT } from '../../common/constants';
 
-export interface ApiRequestOptions {
-  /** Absolute or relative URL of the API endpoint */
-  url: string;
-  /** HTTP method – default 'GET' */
-  method?: 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  /** Optional request payload – automatically stringified for non-GET verbs */
-  body?: any;
-  /** Extra headers supplied by the caller */
-  headers?: Record<string, string>;
-  /** Whether to attach Bearer token – defaults to true */
-  auth?: boolean;
-  /** Per-request timeout (ms) – falls back to global config */
-  timeout?: number;
-}
-
-export interface BackendApiResponse<T = any> {
-  success: boolean;
-  code: number;
-  message: string;
-  timestamp: string;
-  data: T;
-  requestId?: string;
-  total?: number;
-  page?: number;
-  pageSize?: number;
-  error?: string;
-  stackTrace?: string;
-}
-
-export interface ApiResponse<T = any> {
-  status: number;
-  ok: boolean;
-  /** Parsed JSON body when possible, otherwise raw text */
-  data: T;
-  /** Backend API response wrapper (if present) */
-  backendResponse?: BackendApiResponse<T>;
-}
+// Re-export types for backward compatibility
+export type { ApiRequestOptions, BackendApiResponse, ApiResponse };
 
 // Core implementation – no framework/runtime specifics so it can be reused in workers etc.
 async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiResponse<T>> {
@@ -51,11 +28,11 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
     body,
     headers: customHeaders = {},
     auth = true,
-    timeout = config.api?.timeout ?? 15_000,
+    timeout = config.api?.timeout ?? DEFAULT_API_TIMEOUT,
   } = options;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    'Content-Type': CONTENT_TYPE.JSON,
     ...customHeaders,
   };
 
@@ -74,7 +51,7 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
     const res = await fetch(url, {
       method,
       headers,
-      body: method === 'GET' || method === 'HEAD' ? undefined : JSON.stringify(body),
+      body: method === 'GET' || method === 'HEAD' ? undefined : safeJsonStringify(body, '{}'),
       signal: controller.signal,
     });
 
@@ -83,11 +60,15 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
     let responseData: any;
     let backendResponse: BackendApiResponse<T> | undefined;
     const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      responseData = await res.json();
+    
+    // Read response body once - we'll parse it based on content-type
+    const responseText = await res.text();
+    
+    // Parse response text using common utility (handles JSON/text automatically)
+    responseData = parseResponseText(responseText, contentType);
 
-      // Check if this is a BackendApiResponse format
-      if (responseData && typeof responseData === 'object' &&
+    // Only process as BackendApiResponse if we successfully parsed JSON and it's an object
+    if (isObject(responseData) && 
           'success' in responseData && 'code' in responseData && 'message' in responseData) {
         backendResponse = responseData as BackendApiResponse<T>;
 
@@ -102,34 +83,27 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
         } else {
           // For error responses, throw an error with the backend message
           // 確保 message 是字符串
-          const errorMessage = typeof backendResponse.message === 'string' 
+        const errorMessage = isString(backendResponse.message)
             ? backendResponse.message 
             : (backendResponse.error || `Backend error (code: ${backendResponse.code})`);
           throw new ApiError(backendResponse.code, errorMessage);
         }
-      }
-    } else {
-      responseData = await res.text();
     }
 
     if (!res.ok) {
       // Throw a typed error so callers can handle based on status
       // 確保 responseData 是字符串格式
       let errorMessage: string;
-      if (typeof responseData === 'string') {
+      if (isString(responseData)) {
         errorMessage = responseData;
-      } else if (responseData && typeof responseData === 'object') {
+      } else if (isObject(responseData)) {
         // 嘗試提取錯誤消息
-        if (responseData.message && typeof responseData.message === 'string') {
+        if (isString(responseData.message)) {
           errorMessage = responseData.message;
-        } else if (responseData.error && typeof responseData.error === 'string') {
+        } else if (isString(responseData.error)) {
           errorMessage = responseData.error;
         } else {
-          try {
-            errorMessage = JSON.stringify(responseData);
-          } catch {
-            errorMessage = `HTTP ${res.status} Error`;
-          }
+          errorMessage = safeJsonStringify(responseData, `HTTP ${res.status} Error`);
         }
       } else {
         errorMessage = `HTTP ${res.status} Error`;
@@ -177,7 +151,7 @@ async function makeRequest<T = any>(
     body,
     auth,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': CONTENT_TYPE.JSON,
       ...headers
     },
     timeout

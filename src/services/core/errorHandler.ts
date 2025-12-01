@@ -1,4 +1,6 @@
 // 錯誤處理服務 - 統一的錯誤處理和分類
+import { safeJsonStringify } from '../../common/utils';
+
 export enum ErrorType {
   NETWORK = 'NETWORK',
   AUTHENTICATION = 'AUTHENTICATION',
@@ -109,22 +111,14 @@ class ErrorHandler {
         if (typeof error.message === 'string') {
           errorMessage = error.message;
         } else if (typeof error.message === 'object') {
-          try {
-            errorMessage = JSON.stringify(error.message);
-          } catch {
-            errorMessage = String(error.message);
-          }
+          errorMessage = safeJsonStringify(error.message, String(error.message));
         } else {
           errorMessage = String(error.message);
         }
       } else if (error.toString && typeof error.toString === 'function' && error.toString() !== '[object Object]') {
         errorMessage = error.toString();
       } else {
-        try {
-          errorMessage = JSON.stringify(error);
-        } catch {
-          errorMessage = 'Unknown error';
-        }
+        errorMessage = safeJsonStringify(error, 'Unknown error');
       }
     } else {
       errorMessage = String(error) || 'Unknown error';
@@ -404,7 +398,7 @@ class ErrorHandler {
 
   // 導出錯誤日誌
   exportErrorLogs(): string {
-    return JSON.stringify(this.errorLogs, null, 2);
+    return safeJsonStringify(this.errorLogs, '[]');
   }
 
   // 獲取錯誤統計

@@ -1,4 +1,6 @@
 // localStorage 管理服務
+import { safeJsonParse, safeJsonStringify } from '../../common/utils';
+
 export const storageService = {
   // 存儲鍵名常量
   KEYS: {
@@ -29,7 +31,7 @@ export const storageService = {
       return;
     }
     try {
-      const serializedValue = JSON.stringify(value);
+      const serializedValue = safeJsonStringify(value, '{}');
       localStorage.setItem(key, serializedValue);
     } catch (error) {
       console.error('Error saving to localStorage:', error);
@@ -47,12 +49,12 @@ export const storageService = {
       if (!item) return defaultValue;
       
       // 嘗試解析為 JSON，如果失敗則返回原始字符串
-      try {
-        return JSON.parse(item) as T;
-      } catch (parseError) {
-        // 如果不是有效的 JSON，則返回原始字符串
-        return item as unknown as T;
+      const parsed = safeJsonParse<T>(item, null);
+      if (parsed !== null) {
+        return parsed;
       }
+      // 如果不是有效的 JSON，則返回原始字符串
+      return item as unknown as T;
     } catch (error) {
       console.error('Error reading from localStorage:', error);
       return defaultValue;

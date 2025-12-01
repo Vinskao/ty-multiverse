@@ -1,4 +1,6 @@
 // 傷害計算服務
+import { safeJsonParse } from '../../common/utils';
+
 export interface DamageResponse {
   requestId: string;
   message: string;
@@ -139,11 +141,9 @@ class DamageService {
       
       // 嘗試解析 JSON 字符串
       if (typeof result === 'string') {
-        try {
-          const parsed = JSON.parse(result);
+        const parsed = safeJsonParse(result, null);
+        if (parsed !== null) {
           return this.parseDamageValue(parsed);
-        } catch {
-          // 忽略 JSON 解析錯誤
         }
       }
     }

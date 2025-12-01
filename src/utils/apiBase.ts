@@ -1,7 +1,6 @@
 /**
  * 統一的 API 基礎 URL
- * 開發環境：使用環境變數 PUBLIC_TYMB_URL 或默認 http://localhost:8080/tymb
- * 生產環境：使用環境變數 PUBLIC_TYMB_URL
+ * @deprecated 请使用 common/constants 中的 API_BASE
+ * 此文件保留用于向后兼容
  */
-export const API_BASE = import.meta.env.PUBLIC_TYMB_URL || 
-  (import.meta.env.DEV ? 'http://localhost:8080/tymb' : '/tymb'); 
+export { API_BASE } from '../common/constants'; 

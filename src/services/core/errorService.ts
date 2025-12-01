@@ -1,4 +1,4 @@
-import type { ErrorResponse } from '../types/error';
+import type { ErrorResponse } from '../../common/types';
 
 export class ErrorService {
   static handleError(error: any): void {

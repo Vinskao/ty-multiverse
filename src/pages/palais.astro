@@ -19,46 +19,28 @@ if (!isLoggedIn) {
   return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 ---
-
-<!DOCTYPE html>
-<meta charset="UTF-8" />
-<html>
-  <head>
-    <!-- Styles moved to src/styles/palais.css imported via front-matter -->
-
-    <script
-      async
-      src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-    ></script>
-    <script
-      async
-      defer
-      src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js">
-    </script>
-  </head>
-  <body>
-    <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
-      <div class="stack gap-20">
-        <main class="wrapper stack gap-8">
-          <Hero
-            title="Palais"
-            tagline="Welcome to Lily Palais."
-            align="start"
-          />
-          <div class="galwall-container">
-            <Galwall />
-          </div>
-          <div class="system-container module-buttons">
-            <a href={`/tymultiverse/palais/fight?username=${username}&token=${token}`} class="module-button">Fight</a>
-            <a href={`/tymultiverse/palais/group?username=${username}&token=${token}`} class="module-button">Group</a>
-            <a href={`/tymultiverse/palais/dance?username=${username}&token=${token}`} class="module-button">Dance</a>
-          </div>
-          <div class="system-container">
-            <Levellist />
-          </div>
-        </main>
+<BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+      <Hero
+        title="Palais"
+        tagline="Welcome to Lily Palais."
+        align="start"
+      />
+      <div class="system-container module-buttons">
+        <a href={`/tymultiverse/palais/fight?username=${username}&token=${token}`} class="module-button">Fight</a>
+        <a href={`/tymultiverse/palais/group?username=${username}&token=${token}`} class="module-button">Group</a>
+        <a href={`/tymultiverse/palais/dance?username=${username}&token=${token}`} class="module-button">Dance</a>
       </div>
+      <div class="galwall-container">
+        <Galwall />
+      </div>
+      <div class="system-container">
+        <Levellist />
+      </div>
+    </main>
+  </div>
+</BaseLayout>
 
-    </BaseLayout>
-  </body>
-</html>
+<script async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>

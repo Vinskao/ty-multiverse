@@ -25,49 +25,44 @@ const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
 const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://peoplesystem.tatdvsonorth.com';
 ---
 
-<!DOCTYPE html>
-<meta charset="UTF-8" />
-<html>
-  <head>
-    <script async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
-    <link rel="stylesheet" href="/src/styles/dance.css">
-    <script define:vars={{ tymbUrl, peopleImageUrl }}>
-      window.TY_MULTIVERSE_CONFIG = {
-        tymbUrl: tymbUrl,
-        peopleImageUrl: peopleImageUrl
-      };
-    </script>
-  </head>
-  <body>
-    <BaseLayout title="Dance | TY Multiverse" description="Dance video collection">
-      <div class="stack gap-20">
-        <main class="wrapper stack gap-8">
-          <Hero
-            title="Dance"
-            tagline="Enjoy the dance performances."
-            align="start"
-          />
+<BaseLayout title="Dance | TY Multiverse" description="Dance video collection">
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+      <Hero
+        title="Dance"
+        tagline="Enjoy the dance performances."
+        align="start"
+      />
 
-          <div id="loading-status" class="loading-status">
-            <div class="loading-spinner"></div>
-            <span>正在載入角色和影片資料...</span>
-          </div>
-          
-          <!-- 清除緩存按鈕 -->
-          <div class="cache-control-container">
-            <button id="cache-clear-btn" class="cache-clear-btn" type="button">
-              清除緩存並重新載入
-            </button>
-          </div>
-          
-          <div id="videos-grid" class="videos-grid">
-            <!-- 影片內容將動態載入 -->
-          </div>
-        </main>
+      <div id="loading-status" class="loading-status">
+        <div class="loading-spinner"></div>
+        <span>正在載入角色和影片資料...</span>
       </div>
-    </BaseLayout>
-  </body>
-</html>
+      
+      <!-- 清除緩存按鈕 -->
+      <div class="cache-control-container">
+        <button id="cache-clear-btn" class="cache-clear-btn" type="button">
+          清除緩存並重新載入
+        </button>
+      </div>
+      
+      <div id="videos-grid" class="videos-grid">
+        <!-- 影片內容將動態載入 -->
+      </div>
+    </main>
+  </div>
+</BaseLayout>
 
-<script src="/src/scripts/dance.ts"></script>
+<script async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+<link rel="stylesheet" href="/src/styles/dance.css">
+<script define:vars={{ tymbUrl, peopleImageUrl }}>
+  window.TY_MULTIVERSE_CONFIG = {
+    tymbUrl: tymbUrl,
+    peopleImageUrl: peopleImageUrl
+  };
+</script>
+
+<script>
+  import '../../scripts/dance.ts';
+</script>
