@@ -41,6 +41,28 @@ const links = [
 			<CKEditor />
 			<div class="article-count">
 				<p class="article-count-text">📚 Total {projects.length} articles</p>
+				<div class="sync-section" style="margin-top: 1rem; text-align: center;">
+					<button id="sync-articles-btn" class="sync-btn" style="
+						background: #007acc;
+						color: white;
+						border: none;
+						padding: 0.75rem 1.5rem;
+						border-radius: 6px;
+						cursor: pointer;
+						font-size: 0.9rem;
+						font-weight: 500;
+						transition: all 0.2s ease;
+						box-shadow: 0 2px 4px rgba(0, 122, 204, 0.2);
+					">
+						🔄 Sync Articles to DB
+					</button>
+					<div id="sync-status" class="sync-status" style="
+						margin-top: 0.5rem;
+						font-size: 0.85rem;
+						min-height: 1.2em;
+						font-weight: 500;
+					"></div>
+				</div>
 			</div>
 			<Grid variant="offset">
 				{
@@ -57,6 +79,55 @@ const links = [
 		</main>
 		<ContactCTA />
 	</div>
+
+	<script>
+		import { syncService } from '../services/api/syncService';
+
+		document.addEventListener('DOMContentLoaded', () => {
+			const syncBtn = document.getElementById('sync-articles-btn') as HTMLButtonElement;
+			const syncStatus = document.getElementById('sync-status');
+
+			if (syncBtn && syncStatus) {
+				syncBtn.addEventListener('click', async () => {
+					try {
+						// 禁用按鈕並顯示載入狀態
+						syncBtn.disabled = true;
+						syncBtn.style.background = '#666';
+						syncBtn.textContent = '🔄 Syncing...';
+						syncStatus.textContent = 'Preparing to sync articles...';
+						syncStatus.style.color = '#666';
+
+						// 執行同步
+						const result = await syncService.syncArticlesToBackend();
+
+						if (result.success) {
+							syncStatus.textContent = `✅ ${result.message} (${result.articleCount} articles)`;
+							syncStatus.style.color = '#28a745';
+							syncBtn.style.background = '#28a745';
+							syncBtn.textContent = '✅ Synced!';
+						} else {
+							throw new Error(result.message);
+						}
+
+					} catch (error) {
+						console.error('Sync failed:', error);
+						syncStatus.textContent = `❌ Sync failed: ${error.message}`;
+						syncStatus.style.color = '#dc3545';
+						syncBtn.style.background = '#dc3545';
+						syncBtn.textContent = '❌ Retry';
+					} finally {
+						syncBtn.disabled = false;
+						// 3秒後恢復原始狀態
+						setTimeout(() => {
+							syncBtn.style.background = '#007acc';
+							syncBtn.textContent = '🔄 Sync Articles to DB';
+							syncStatus.textContent = '';
+						}, 3000);
+					}
+				});
+			}
+		});
+	</script>
 </BaseLayout>
 
 </body>
