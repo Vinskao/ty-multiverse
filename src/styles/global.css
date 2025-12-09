@@ -566,3 +566,22 @@ pre .language-label {
   letter-spacing: 0.05em;
 }
 
+
+
+/* 文章數量顯示樣式 */
+.article-count {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.article-count-text {
+  display: inline-block;
+  background: var(--gradient-accent);
+  color: var(--gray-999);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--accent-regular);
+}

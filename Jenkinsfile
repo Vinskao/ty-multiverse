@@ -43,7 +43,7 @@ pipeline {
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
                   - name: kubectl
-                    image: bitnami/kubectl:latest
+                    image: bitnami/kubectl:1.30.7
                     command: ["/bin/sh"]
                     args: ["-c", "while true; do sleep 30; done"]
                     imagePullPolicy: Always
