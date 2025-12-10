@@ -23,6 +23,10 @@ export interface SyncArticlesResponse {
   message: string;
   result?: any;
   articleCount: number;
+  vectorizedCount?: number;
+  vectorResult?: any;
+  purgedCount?: number;
+  purgeResult?: any;
 }
 
 export interface ArticlePreview {

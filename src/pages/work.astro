@@ -39,8 +39,8 @@ const links = [
 
 			<BlackJack />
 			<CKEditor />
-			<div class="article-count">
-				<p class="article-count-text">📚 Total {projects.length} articles</p>
+			<div class="article-count" style="text-align: center;">
+				<p class="article-count-text" style="margin: 0 auto;">📚 Total {projects.length} articles</p>
 				<div class="sync-section" style="margin-top: 1rem; text-align: center;">
 					<button id="sync-articles-btn" class="sync-btn" style="
 						background: #007acc;
@@ -101,7 +101,15 @@ const links = [
 						const result = await syncService.syncArticlesToBackend();
 
 						if (result.success) {
-							syncStatus.textContent = `✅ ${result.message} (${result.articleCount} articles)`;
+							const vectorInfo =
+								typeof result.vectorizedCount === 'number'
+									? `, embeddings: ${result.vectorizedCount}`
+									: '';
+							const purgeInfo =
+								typeof result.purgedCount === 'number'
+									? `, purged: ${result.purgedCount}`
+									: '';
+							syncStatus.textContent = `✅ ${result.message} (${result.articleCount} articles${vectorInfo}${purgeInfo})`;
 							syncStatus.style.color = '#28a745';
 							syncBtn.style.background = '#28a745';
 							syncBtn.textContent = '✅ Synced!';
