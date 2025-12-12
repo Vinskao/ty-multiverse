@@ -243,7 +243,7 @@
   box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
 }
 
 .cache-clear-btn:hover {
@@ -265,8 +265,8 @@
 }
 
 .cache-clear-btn::before {
-  content: "🗑️";
-  font-size: 1.2em;
+  content: "";
+  display: none;
 }
 
 .cache-clear-btn.processing::before {

@@ -1151,16 +1151,61 @@ import '../styles/qabot.css';
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/d561518d-b8ed-4308-a1e9-2bf807b6d0c3',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          sessionId:'debug-session',
+          runId:'pre-fix',
+          hypothesisId:'H1',
+          location:'QABot.astro:callQAAPI:beforeFetch',
+          message:'About to fetch QA API',
+          data:{
+            apiBaseUrl,
+            apiPathPrefix,
+            url:`${apiBaseUrl}${apiPathPrefix}/qa/query`,
+            hasToken:!!token,
+            credentialsMode:'omit',
+            origin: window.location.origin,
+            payloadType: typeof payload
+          },
+          timestamp:Date.now()
+        })
+      }).catch(()=>{});
+      // #endregion
+
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
         method: 'POST',
         headers,
         body: JSON.stringify(finalPayload),
-        credentials: 'include'
+        // 移除 credentials 設定以避免 CORS 問題
+        credentials: 'omit'
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/d561518d-b8ed-4308-a1e9-2bf807b6d0c3',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          sessionId:'debug-session',
+          runId:'pre-fix',
+          hypothesisId:'H2',
+          location:'QABot.astro:callQAAPI:afterFetch',
+          message:'QA API fetch ok',
+          data:{
+            status: response.status,
+            ok: response.ok,
+            url: response.url
+          },
+          timestamp:Date.now()
+        })
+      }).catch(()=>{});
+      // #endregion
 
       // 調試日誌：查看 API 回傳
       // console.log('callQAAPI response =>', result);
@@ -1185,7 +1230,8 @@ import '../styles/qabot.css';
         
         const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
           headers,
-          credentials: 'include'
+          // 移除 credentials 設定以避免 CORS 問題
+          credentials: 'omit'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -1254,7 +1300,8 @@ import '../styles/qabot.css';
         
         const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
           headers,
-          credentials: 'include'
+          // 移除 credentials 設定以避免 CORS 問題
+          credentials: 'omit'
         });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 

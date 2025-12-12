@@ -42,13 +42,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         throw new Error('角色列表為空或格式錯誤');
       }
 
-      // 智能過濾角色
-      const charactersToCheck = videoResourceManager.videoCache.size === 0
-        ? characterNames
-        : characterNames.filter(name => {
-            const cached = videoResourceManager.getCachedVideoExists(name);
-            return cached === undefined || cached === true || (cached === false && Math.random() < 0.2);
-          });
+      // 始終檢查全部角色，避免因緩存判定為缺失而長期跳過
+      const charactersToCheck = characterNames;
 
       updateLoadingStatus('loading', `檢查 ${charactersToCheck.length} 個角色的影片狀態...`);
 
