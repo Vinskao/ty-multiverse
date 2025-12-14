@@ -577,7 +577,7 @@ export class NavController {
     }) as HTMLAnchorElement[];
     
     wildlandLinks.forEach(wildlandLink => {
-      const shouldShowWildland = this.isLoggedIn; // show whenever logged in
+      const shouldShowWildland = this.isLoggedIn && this.isAdmin;
       wildlandLink.style.display = shouldShowWildland ? 'block' : 'none';
       
       // 同時隱藏父元素（li）如果存在
@@ -600,7 +600,7 @@ export class NavController {
     }) as HTMLAnchorElement[];
     
     palaisLinks.forEach(palaisLink => {
-      const shouldShowPalais = this.isLoggedIn; // show whenever logged in
+      const shouldShowPalais = this.isLoggedIn && this.isAdmin;
       palaisLink.style.display = shouldShowPalais ? 'block' : 'none';
       
       // 同時隱藏父元素（li）如果存在

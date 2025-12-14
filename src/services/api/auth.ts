@@ -551,8 +551,11 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
 
     // 處理錯誤響應（400, 401 等）
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Token 驗證失敗: HTTP ${response.status} - ${errorText}`);
+      // 只有非 400/401 錯誤才打印詳細日誌
+      if (response.status !== 400 && response.status !== 401) {
+        const errorText = await response.text();
+        console.error(`Token 驗證失敗: HTTP ${response.status} - ${errorText}`);
+      }
       
       // 如果是 400 或 401，token 無效
       if (response.status === 400 || response.status === 401) {

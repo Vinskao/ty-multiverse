@@ -15,19 +15,20 @@ import '../styles/qabotv2.css';
 </div>
 
 <script>
-  import { getApiBaseUrl, getOrCreateUserId, escapeHtml } from '../scripts/qabotShared';
+  import { getApiBaseUrl } from '../scripts/qabotShared';
+  import { api } from '../utils/api';
+  import { QABotBase } from '../utils/qabotBase';
 
-  class QABotV2 {
-    private messagesEl: HTMLElement;
+  class QABotV2 extends QABotBase {
     private inputEl: HTMLInputElement;
     private sendBtn: HTMLButtonElement;
     private modelSel: HTMLSelectElement;
     private kbEl: HTMLInputElement;
-    private userId: string;
     private apiBase: string;
-    private pollingTasks: Map<string, NodeJS.Timeout> = new Map();
 
     constructor() {
+      super('chatMessages'); // Initialize base class with messages container ID
+
       // 將控制列移到 header 底下（若尚未在正確位置）
       const container = document.getElementById('qaBotContainer') as HTMLElement;
       const header = container?.querySelector('.chat-header') as HTMLElement | null;
@@ -36,19 +37,21 @@ import '../styles/qabotv2.css';
         container.insertBefore(controls, container.children[1]);
       }
 
-      this.messagesEl = document.getElementById('chatMessages') as HTMLElement;
       this.inputEl = document.getElementById('userInput') as HTMLInputElement;
       this.sendBtn = document.getElementById('sendButton') as HTMLButtonElement;
       this.modelSel = document.getElementById('v2Model') as HTMLSelectElement;
       this.kbEl = document.getElementById('v2UseKb') as HTMLInputElement;
-      this.userId = getOrCreateUserId('qabot_user_id');
       this.apiBase = getApiBaseUrl();
 
+      this.initialize();
+    }
+
+    public initialize(): void {
       this.bindEvents();
       this.loadModels();
     }
 
-    private bindEvents() {
+    public bindEvents() {
       this.sendBtn.addEventListener('click', () => this.ask());
       this.inputEl.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -61,18 +64,9 @@ import '../styles/qabotv2.css';
     public show() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'flex'; }
     public hide() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'none'; }
 
-    private appendMessage(html: string) {
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      this.messagesEl.appendChild(div);
-      this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
-    }
-
     private async loadModels() {
       try {
-        const resp = await fetch(`${this.apiBase}/maya-v2/available-models/`, { credentials: 'include' });
-        if (!resp.ok) throw new Error(`models ${resp.status}`);
-        const data = await resp.json();
+        const data = await api.getAvailableModels();
         
         console.log('Models API response:', data);
         
@@ -108,8 +102,8 @@ import '../styles/qabotv2.css';
       this.inputEl.value = '';
       
       // 顯示用戶消息
-      this.appendMessage(`<div class=\"message user-message\"><div class=\"message-content\"><p>${escapeHtml(q)}</p></div></div>`);
-      
+      this.appendMessage(`<div class="message user-message"><div class="message-content"><p>${this.escapeHtml(q)}</p></div></div>`);
+
       // 顯示等待UI
       this.showLoadingMessage();
       
@@ -117,125 +111,79 @@ import '../styles/qabotv2.css';
         const payload = {
           question: q,
           model_name: this.modelSel.value,
-          sync: false, // 使用異步處理
+          sync: true, // 強制使用同步處理，避開後端隊列問題
           use_knowledge_base: !!this.kbEl.checked
         };
-        
-        const resp = await fetch(`${this.apiBase}/maya-v2/ask-with-model/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          credentials: 'include'
-        });
-        
-        if (!resp.ok) throw new Error(`ask ${resp.status}`);
-        const data = await resp.json();
-        
-        // 檢查是否有 task_id
-        if (data.task_id) {
+
+        const data = await api.askWithModel(payload);
+        console.log('🤖 Ask API Response:', data);
+
+        // 嘗試獲取任務ID (支援多種命名格式)
+        const taskId = data.task_id || data.request_id || data.requestId;
+
+        // 檢查是否有 taskId
+        if (taskId) {
+          console.log('Starting polling for task:', taskId);
           // 開始輪詢任務狀態
-          this.startPollingTask(data.task_id, q);
+          this.startPollingForTask(taskId, q);
+        } else if (data.ai_response || data.answer || data.text) {
+          // 如果直接返回了結果（同步模式或快速響應）
+          this.hideLoadingMessage();
+          this.displayAIResponse(data);
         } else {
-          throw new Error('未收到任務ID');
+          console.error('Unexpected response format - missing task_id or content:', data);
+          throw new Error('未收到任務ID或有效回應 (Check console for details)');
         }
       } catch (e) {
         // 隱藏等待UI
         this.hideLoadingMessage();
-        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml((e as Error).message)}</p></div></div>`);
+        this.showErrorMessage((e as Error).message);
       }
     }
 
-    private startPollingTask(taskId: string, originalQuestion: string) {
-      // 清除之前的輪詢（如果存在）
-      if (this.pollingTasks.has(taskId)) {
-        clearTimeout(this.pollingTasks.get(taskId)!);
-      }
+    private startPollingForTask(taskId: string, originalQuestion: string) {
+      super.startPollingTask(taskId, async () => {
+        const data = await api.getTaskStatus(taskId);
 
-      const pollTask = async () => {
-        try {
-          const resp = await fetch(`${this.apiBase}/maya-v2/task-status/${taskId}`, {
-            credentials: 'include'
-          });
-          
-          if (!resp.ok) throw new Error(`task status ${resp.status}`);
-          const data = await resp.json();
-          
-          // 調試信息
-          console.log('Task status response:', data);
-          
-          switch (data.status) {
-            case 'SUCCESS':
-              // 任務完成
-              console.log('Task completed successfully:', data);
-              this.hideLoadingMessage();
-              this.displayAIResponse(data);
-              this.pollingTasks.delete(taskId);
-              break;
-              
-            case 'FAILURE':
-              // 任務失敗
-              console.log('Task failed:', data);
-              this.hideLoadingMessage();
-              const errorMsg = data.error || '任務處理失敗';
-              this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ ${escapeHtml(errorMsg)}</p></div></div>`);
-              this.pollingTasks.delete(taskId);
-              break;
-              
-            case 'PENDING':
-            case 'STARTED':
-              // 任務仍在處理中，繼續輪詢
-              console.log('Task still processing:', data.status);
-              this.updateLoadingMessage(data.status === 'STARTED' ? '處理中...' : '等待中...');
-              this.pollingTasks.set(taskId, setTimeout(pollTask, 2000)); // 2秒後再次檢查
-              break;
-              
-            default:
-              // 未知狀態
-              console.log('Unknown task status:', data.status);
-              this.hideLoadingMessage();
-              this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 未知任務狀態: ${data.status}</p></div></div>`);
-              this.pollingTasks.delete(taskId);
-          }
-        } catch (e) {
-          // 輪詢錯誤
-          console.error('Polling error:', e);
-          this.hideLoadingMessage();
-          this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 輪詢任務狀態失敗: ${escapeHtml((e as Error).message)}</p></div></div>`);
-          this.pollingTasks.delete(taskId);
+        // 調試信息
+        console.log('Task status response:', data);
+
+        switch (data.status) {
+          case 'SUCCESS':
+            // 任務完成
+            console.log('Task completed successfully:', data);
+            this.hideLoadingMessage();
+            this.displayAIResponse(data);
+            this.stopPollingTask(taskId);
+            break;
+
+          case 'FAILURE':
+            // 任務失敗
+            console.log('Task failed:', data);
+            this.hideLoadingMessage();
+            const errorMsg = data.error || '任務處理失敗';
+            this.showErrorMessage(errorMsg);
+            this.stopPollingTask(taskId);
+            break;
+
+          case 'PENDING':
+          case 'STARTED':
+            // 任務仍在處理中，繼續輪詢
+            console.log('Task still processing:', data.status);
+            this.updateLoadingMessage(data.status === 'STARTED' ? '處理中...' : '等待中...');
+            // Continue polling (handled by base class)
+            break;
+
+          default:
+            // 未知狀態
+            console.log('Unknown task status:', data.status);
+            this.hideLoadingMessage();
+            this.showErrorMessage(`未知任務狀態: ${data.status}`);
+            this.stopPollingTask(taskId);
         }
-      };
-
-      // 開始輪詢
-      this.pollingTasks.set(taskId, setTimeout(pollTask, 1000)); // 1秒後開始第一次檢查
+      });
     }
 
-    private showLoadingMessage() {
-      const loadingEl = document.getElementById('loadingMessage') as HTMLElement;
-      if (loadingEl) {
-        const clone = loadingEl.cloneNode(true) as HTMLElement;
-        clone.style.display = 'block';
-        clone.id = 'v2LoadingMessage';
-        this.messagesEl.appendChild(clone);
-        this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
-      }
-    }
-
-    private updateLoadingMessage(message: string) {
-      const loadingEl = document.getElementById('v2LoadingMessage');
-      if (loadingEl) {
-        const messageEl = loadingEl.querySelector('.loading-text');
-        if (messageEl) {
-          messageEl.textContent = message;
-        }
-      }
-    }
-
-    private hideLoadingMessage() {
-      const loadingEl = document.getElementById('v2LoadingMessage');
-      if (loadingEl) {
-        loadingEl.remove();
-      }
-    }
 
     private displayAIResponse(data: any) {
       try {
@@ -253,7 +201,7 @@ import '../styles/qabotv2.css';
           <div class=\"message bot-message\">
             <div class=\"message-content-wrapper\">
               <div class=\"message-header\">
-                <span class=\"ai-name\">${escapeHtml(modelInfo.name || 'AI')}</span>
+                <span class="ai-name">${this.escapeHtml(modelInfo.name || 'AI')}</span>
                 ${knowledgeUsed ? '<span class=\"knowledge-badge\">🧠 知識庫</span>' : ''}
               </div>
               <div class=\"message-content\">
@@ -267,7 +215,7 @@ import '../styles/qabotv2.css';
         this.appendMessage(responseHTML);
       } catch (e) {
         console.error('Error displaying AI response:', e);
-        this.appendMessage(`<div class=\"message bot-message\"><div class=\"message-content\"><p style=\"color:#b91c1c\">❌ 回應格式錯誤</p></div></div>`);
+        this.showErrorMessage('回應格式錯誤');
       }
     }
 
@@ -313,10 +261,10 @@ import '../styles/qabotv2.css';
             <span class=\"citation-number\">${index + 1}</span>
             <div class=\"citation-content\">
               <div class=\"citation-source\">
-                <span class=\"citation-id\">${escapeHtml(source)}</span>
-                ${linkUrl ? `<a href=\"${linkUrl}\" target=\"_blank\" class=\"citation-link\">📄 ${escapeHtml(linkText)}</a>` : ''}
+                <span class="citation-id">${this.escapeHtml(source)}</span>
+                ${linkUrl ? `<a href="${linkUrl}" target="_blank" class="citation-link">📄 ${this.escapeHtml(linkText)}</a>` : ''}
               </div>
-              ${content ? `<div class=\"citation-text\">${escapeHtml(content)}</div>` : ''}
+              ${content ? `<div class="citation-text">${this.escapeHtml(content)}</div>` : ''}
               ${citation.relevance_score ? `<div class=\"citation-score\">相關度: ${(citation.relevance_score * 100).toFixed(1)}%</div>` : ''}
             </div>
           </div>
@@ -338,10 +286,7 @@ import '../styles/qabotv2.css';
 
     // 清理方法，用於停止所有輪詢
     public cleanup() {
-      this.pollingTasks.forEach((timeout) => {
-        clearTimeout(timeout);
-      });
-      this.pollingTasks.clear();
+      super.cleanup();
     }
   }
 

@@ -20,6 +20,46 @@ export default defineConfig({
     enabled: false
   },
   vite: {
+    server: {
+      proxy: {
+        // 原有的本地後端代理
+        '/maya-sawa': {
+          target: 'https://peoplesystem.tatdvsonorth.com',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy, options) => {
+            proxy.on('error', (err, req, res) => {
+              console.log('proxy error', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              console.log('Sending Request to the Target:', req.method, req.url);
+            });
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+            });
+          },
+        },
+        // 新增：代理遠端 API
+        '/maya-v2': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false, // 如果是自簽證書可設為 false
+          rewrite: (path) => path, // 保持路徑不變
+          // 不設置 credentials，讓前端控制
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              // 移除可能存在的 cookie 標頭，因為我們使用 token 認證
+              proxyReq.removeHeader('cookie');
+              proxyReq.removeHeader('Cookie');
+              console.log('Proxying to:', req.url);
+            });
+            proxy.on('error', (err, req, res) => {
+              console.error('Proxy error:', err);
+            });
+          },
+        }
+      }
+    },
     build: {
       rollupOptions: {
         output: {
