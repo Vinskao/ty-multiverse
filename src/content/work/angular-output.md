@@ -518,3 +518,351 @@ this.itemAdded.emit(item);
 ```
 
 **父組件使用方式完全相同**，無需修改 HTML 範本。
+
+## 🎯 Angular 17+ 新特性：@defer 指令詳解
+
+除了 Signal-based Outputs，Angular 17 還引入了 `@defer` 指令，這是一個強大的**延遲載入（Deferred Loading）**機制。讓我們深入探討這個革命性的功能。
+
+### 什麼是 @defer？
+
+**`@defer`** 是 Angular 17 中引入的控制流指令，用於**延遲載入組件或組件的一部分**，直到特定條件滿足時才進行渲染。這對於提升應用程式的初始載入效能至關重要。
+
+### 基本語法
+
+```typescript
+@defer {
+  <comments />
+} @placeholder {
+  <p>Future comments</p>
+} @loading {
+  <p>Loading comments...</p>
+}
+```
+
+### 語法解析
+
+#### 1. `@defer` 區塊 - 主內容
+```typescript
+@defer {
+  <comments />
+}
+```
+- **作用**：定義需要延遲載入的主要內容
+- **行為**：當觸發條件滿足時，才會載入和渲染 `<comments />` 組件
+- **預設觸發**：組件首次可見時（進入視窗）
+
+#### 2. `@placeholder` 區塊 - 預留位置
+```typescript
+@placeholder {
+  <p>Future comments</p>
+}
+```
+- **作用**：在主內容載入前顯示的替代內容
+- **行為**：立即渲染，提供即時的視覺回饋
+- **用途**：改善使用者體驗，避免空白區域
+
+#### 3. `@loading` 區塊 - 載入狀態
+```typescript
+@loading {
+  <p>Loading comments...</p>
+}
+```
+- **作用**：在主內容載入期間顯示的載入指示器
+- **行為**：主內容開始載入但尚未完成時顯示
+- **用途**：提供載入進度的視覺回饋
+
+#### 4. `@error` 區塊 - 錯誤處理
+```typescript
+@error {
+  <p>Failed to load comments</p>
+}
+```
+- **作用**：當載入過程發生錯誤時顯示的內容
+- **行為**：載入失敗時自動顯示
+- **用途**：提供錯誤處理和降級體驗
+
+### 延遲載入策略
+
+#### 1. 視窗進入 (預設)
+```typescript
+@defer {
+  <comments />
+}
+```
+- **觸發時機**：組件進入視窗時
+- **使用場景**：非立即需要的內容，如評論區、相關文章等
+
+#### 2. 互動觸發
+```typescript
+@defer (on interaction) {
+  <modal />
+}
+```
+- **觸發時機**：使用者與元素互動時（如點擊、滑鼠移入）
+- **使用場景**：模態框、工具提示、下拉選單等
+
+#### 3. 滑鼠移入觸發
+```typescript
+@defer (on hover) {
+  <tooltip />
+}
+```
+- **觸發時機**：滑鼠移到元素上時
+- **使用場景**：工具提示、預覽圖片等
+
+#### 4. 立即觸發
+```typescript
+@defer (on immediate) {
+  <critical-component />
+}
+```
+- **觸發時機**：立即載入（但仍在下一個變更偵測週期）
+- **使用場景**：需要立即但不阻塞初始渲染的內容
+
+#### 5. 計時器觸發
+```typescript
+@defer (on timer(5s)) {
+  <delayed-content />
+}
+```
+- **觸發時機**：指定時間後
+- **使用場景**：延遲載入的廣告、分析腳本等
+
+#### 6. 條件觸發
+```typescript
+@defer (when conditionExpression) {
+  <conditional-content />
+}
+```
+- **觸發時機**：當條件表達式為 true 時
+- **使用場景**：基於狀態的動態載入
+
+### 實際應用範例
+
+#### 範例 1：評論區延遲載入
+```typescript
+@Component({
+  template: `
+    <article>
+      <h1>{{ article.title }}</h1>
+      <p>{{ article.content }}</p>
+
+      <!-- 評論區延遲載入 -->
+      @defer {
+        <comments [articleId]="article.id" />
+      } @placeholder {
+        <div class="comments-placeholder">
+          <button (click)="loadComments()">載入評論</button>
+        </div>
+      } @loading {
+        <div class="loading-spinner">載入評論中...</div>
+      }
+    </article>
+  `
+})
+export class ArticleComponent {
+  loadComments() {
+    // 手動觸發載入
+  }
+}
+```
+
+#### 範例 2：互動式模態框
+```typescript
+@defer (on interaction) {
+  <user-modal [user]="selectedUser" />
+} @placeholder {
+  <button class="user-button" (click)="openModal()">
+    檢視使用者資訊
+  </button>
+} @loading {
+  <div class="modal-loading">載入使用者資料...</div>
+}
+```
+
+#### 範例 3：條件式載入
+```typescript
+@defer (when showAdvancedFeatures) {
+  <advanced-dashboard />
+} @placeholder {
+  <button (click)="enableAdvancedMode()">
+    啟用進階模式
+  </button>
+}
+```
+
+### 效能優勢
+
+#### 1. 初始包體大小減少
+- **原理**：延遲載入的組件不會包含在初始 JavaScript 包中
+- **效果**：減少初始載入時間，提升 First Contentful Paint (FCP)
+
+#### 2. 記憶體使用優化
+- **原理**：未使用的組件不會被實例化
+- **效果**：降低應用程式的記憶體佔用
+
+#### 3. 網路流量節省
+- **原理**：按需載入，減少不必要的網路請求
+- **效果**：改善在慢速網路環境下的使用者體驗
+
+### 技術細節
+
+#### 載入機制
+```typescript
+// Angular 內部處理流程
+1. 渲染 @placeholder 內容
+2. 監聽觸發條件
+3. 條件滿足時動態載入組件
+4. 替換 @placeholder 為實際內容
+5. 執行變更偵測和生命週期鉤子
+```
+
+#### 組件分割
+```typescript
+// 自動程式碼分割
+// 原始組件
+// ├── main.bundle.js (核心)
+// └── comments.bundle.js (延遲載入)
+
+// 觸發載入時才下載 comments.bundle.js
+```
+
+#### 依賴注入
+```typescript
+// 延遲載入的組件可以使用完整的 DI 容器
+// 與立即載入的組件沒有差異
+```
+
+### 最佳實踐
+
+#### 1. 識別延遲載入候選組件
+```typescript
+// ✅ 適合延遲載入
+- 評論區、討論區
+- 模態框、對話框
+- 工具提示、說明文字
+- 進階功能區塊
+- 圖片畫廊的詳細資訊
+
+// ❌ 不適合延遲載入
+- 主要內容、核心功能
+- 導航元件
+- 全域狀態相關組件
+- 立即需要的用戶介面
+```
+
+#### 2. 設計優質的 Placeholder
+```typescript
+// 提供有意義的預留位置
+@placeholder {
+  <div class="skeleton-loader">
+    <div class="skeleton-title"></div>
+    <div class="skeleton-content"></div>
+  </div>
+}
+```
+
+#### 3. 錯誤處理策略
+```typescript
+@defer {
+  <complex-component />
+} @error {
+  <div class="error-state">
+    <p>組件載入失敗，請重新整理頁面</p>
+    <button (click)="retry()">重試</button>
+  </div>
+}
+```
+
+#### 4. 效能監控
+```typescript
+// 使用 Angular DevTools 監控
+// - 載入時間
+// - 包體大小
+// - 記憶體使用量
+```
+
+### 瀏覽器支援
+
+- **Chrome/Edge**: 87+
+- **Firefox**: 78+
+- **Safari**: 14+
+- **支援程度**: 現代瀏覽器的原生支援
+
+### 與其他技術的比較
+
+#### vs. 手動延遲載入
+```typescript
+// 傳統方式：手動處理
+@Component({
+  template: `
+    <div *ngIf="isLoaded; else loading">
+      <comments />
+    </div>
+    <ng-template #loading>
+      <p>Loading...</p>
+    </ng-template>
+  `
+})
+export class MyComponent implements OnInit {
+  isLoaded = false;
+
+  ngOnInit() {
+    // 手動載入邏輯
+    import('./comments.component').then(() => {
+      this.isLoaded = true;
+    });
+  }
+}
+
+// @defer 方式：宣告式
+@defer {
+  <comments />
+} @loading {
+  <p>Loading...</p>
+}
+```
+
+#### 優勢比較
+- **程式碼簡潔性**: @defer 更簡潔
+- **自動化程度**: @defer 自動處理程式碼分割
+- **錯誤處理**: @defer 內建錯誤處理
+- **觸發條件**: @defer 支援多種觸發策略
+
+### 遷移指南
+
+#### 從手動延遲載入遷移
+```typescript
+// 舊方式
+<div *ngIf="commentsLoaded">
+  <comments />
+</div>
+
+// 新方式
+@defer (when commentsLoaded) {
+  <comments />
+}
+```
+
+#### 從第三方庫遷移
+```typescript
+// 如果使用 ngx-loadable 或類似庫
+// 可以逐步替換為 @defer
+
+@defer {
+  <heavy-component />
+} @loading {
+  <loading-spinner />
+}
+```
+
+### 總結
+
+`@defer` 是 Angular 17 的一個革命性功能，它提供了：
+
+- **🚀 效能提升**：減少初始載入時間和包體大小
+- **🎯 開發體驗**：宣告式的延遲載入語法
+- **🔧 靈活性**：多種觸發條件和狀態處理
+- **📱 使用者體驗**：平滑的載入過渡和錯誤處理
+
+這個功能讓 Angular 開發者能夠輕鬆實現現代 web 應用程式的最佳實踐，大幅提升應用程式的效能和使用者體驗。
