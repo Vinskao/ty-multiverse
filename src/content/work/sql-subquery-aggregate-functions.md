@@ -5,6 +5,7 @@ img: /tymultiverse/assets/SQL.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/02/29
+category: Database
 tags:
   - Subquery
   - Count

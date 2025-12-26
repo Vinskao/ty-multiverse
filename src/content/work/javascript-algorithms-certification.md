@@ -5,6 +5,7 @@ img: /tymultiverse/assets/stock-3.jpg
 img_alt: Pearls of silky soft white cotton, bubble up under vibrant lighting
 description: |
   Click the image to verify the authentic copy.
+category: JavaScript
 tags:
   - Functional Programming
   - Object Oriented Programming

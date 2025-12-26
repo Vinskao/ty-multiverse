@@ -5,6 +5,7 @@ export const config = {
     baseUrl: import.meta.env.PUBLIC_TYMG_URL || import.meta.env.PUBLIC_TYMB_URL || import.meta.env.PUBLIC_API_BASE_URL,
     backendUrl: import.meta.env.PUBLIC_TYMB_URL,
     gatewayUrl: import.meta.env.PUBLIC_TYMG_URL,
+    mayaSawaUrl: import.meta.env.PUBLIC_MAYA_SAWA_URL || 'http://localhost:8000',
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',

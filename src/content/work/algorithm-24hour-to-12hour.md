@@ -5,6 +5,7 @@ img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   24小時制轉12小時制算法實現
+category: Algorithm
 tags:
   - algorithm
   - time

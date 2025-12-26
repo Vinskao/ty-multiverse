@@ -5,6 +5,8 @@ img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   TY Multiverse Spring Boot 中間件與責任鏈模式實戰指南：從核心概念到專案應用，掌握 Filter、Interceptor、ControllerAdvice 的實戰技巧
+level: advance
+category: Spring Boot
 tags:
   - Spring Boot
   - Middleware

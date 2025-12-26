@@ -4,6 +4,7 @@ publishDate: "2025-04-24 10:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: Understanding higher-order functions and flatMap in Reactor framework - clarifying the confusion between recursion and functional composition.
+category: Design Pattern
 tags:
   - Java
   - Reactive Programming

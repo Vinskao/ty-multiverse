@@ -5,6 +5,8 @@ img: /tymultiverse/assets/langchain.png
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   LangChain vs LangGraph 精要教學指南：深入比較兩個 LLM 框架的差異、應用場景與實作範例，幫助開發者選擇適合的工具建構 AI 應用
+level: advance
+category: AI
 tags:
   - LangChain
   - LangGraph

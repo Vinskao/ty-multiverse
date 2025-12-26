@@ -5,6 +5,7 @@ img: /tymultiverse/assets/django.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   Django專案基礎教學 + 設計模式對應，用Java思維理解Django架構
+category: Spring Boot
 tags:
   - Django
   - Python

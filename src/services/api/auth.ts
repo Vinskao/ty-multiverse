@@ -124,19 +124,36 @@ export class UserAPI extends BaseAPI {
   }
 }
 
-// 公開端點 API
+// 公開端點 API - 改為使用 Maya Sawa Voyeur
 export class VisitorAPI extends BaseAPI {
   protected getEndpoint(): string {
-    return '/tymg/auth/visitor';
+    return '/maya-sawa/voyeur/count/'; // Maya Sawa voyeur count endpoint
   }
 
   protected getRequiredRole(): string | null {
     return null; // 公開端點，無需驗證
   }
 
-  // 公開方法
-  public async getVisitorInfo(): Promise<any> {
+  // 獲取訪客計數
+  public async getVisitorCount(): Promise<any> {
     return this.call();
+  }
+
+  // 增加訪客計數
+  public async incrementVisitorCount(): Promise<any> {
+    return this.call('/maya-sawa/voyeur/increment/', 'POST');
+  }
+
+  // 推送訪客數據到隊列
+  public async pushVisitorData(value: number = 1): Promise<any> {
+    const formData = new FormData();
+    formData.append('value', value.toString());
+    return this.call('/maya-sawa/voyeur/push/', 'POST', formData);
+  }
+
+  // 保持向後兼容的方法
+  public async getVisitorInfo(): Promise<any> {
+    return this.getVisitorCount();
   }
 }
 
@@ -149,9 +166,12 @@ export class AuthService {
   constructor() {
     // Auth API 通過 Gateway 調用
     const gatewayUrl = config.api.gatewayUrl || config.api.baseUrl;
+    // Visitor API 直接連接到 Maya Sawa (voyeur 功能)
+    const mayaSawaUrl = config.api.mayaSawaUrl || 'http://localhost:8000';
+
     this.adminAPI = new AdminAPI(gatewayUrl);
     this.userAPI = new UserAPI(gatewayUrl);
-    this.visitorAPI = new VisitorAPI(gatewayUrl);
+    this.visitorAPI = new VisitorAPI(mayaSawaUrl);
   }
 
   // 測試管理員端點

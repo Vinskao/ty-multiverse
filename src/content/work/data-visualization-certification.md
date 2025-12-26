@@ -5,6 +5,7 @@ img: /tymultiverse/assets/stock-1.jpg
 img_alt: Iridescent ripples of a bright blue and pink liquid
 description: |
   Click the image to verify the authentic copy.
+category: Certification
 tags:
   - Nested Array
   - AJAX

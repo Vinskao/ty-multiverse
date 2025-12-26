@@ -5,6 +5,7 @@ img: /tymultiverse/assets/container.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/03/16
+category: Docker
 tags:
   - MSSQL
   - Azure SQL Edge

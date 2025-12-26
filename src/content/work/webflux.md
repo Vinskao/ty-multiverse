@@ -4,6 +4,8 @@ publishDate: "2025-09-16 16:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: WebFlux 與 MQ 的最佳結合策略：只在需要的地方用，從 MVC 到全 Reactive 的演進路徑
+level: advance
+category: Spring Boot
 tags:
   - WebFlux
   - Spring Boot

@@ -5,6 +5,7 @@ img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   Deque (ArrayDeque) 標準語法速查表，包含 Stack、Queue 和雙端操作的完整語法對照
+category: Algorithm
 tags:
   - algorithm
   - data-structure

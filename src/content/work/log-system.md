@@ -4,6 +4,7 @@ publishDate: "2025-09-15 10:00:00"
 img: /tymultiverse/assets/algorithm.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: TY Multiverse 專案 - 從傳統日誌系統升級到現代雲端日誌系統的完整指南
+category: DevOps
 tags:
   - 日誌系統
   - SLF4J

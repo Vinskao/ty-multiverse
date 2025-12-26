@@ -4,6 +4,8 @@ publishDate: "2025-09-08 02:00:00"
 img: /tymultiverse/assets/algorithm.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: TY Multiverse Consumer 專案 - Virtual Threads + RabbitMQ 實戰指南
+level: advance
+category: Concurrency
 tags:
   - Virtual Threads
   - RabbitMQ Consumer

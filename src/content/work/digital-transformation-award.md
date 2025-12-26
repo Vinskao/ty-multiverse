@@ -5,6 +5,7 @@ img: /tymultiverse/assets/stock-4.jpg
 img_alt: Soft pink and baby blue water ripples together in a subtle texture.
 description: |
   Click the image to verify the authentic copy.
+category: Certification
 tags:
   - Digital Transformation
 ---

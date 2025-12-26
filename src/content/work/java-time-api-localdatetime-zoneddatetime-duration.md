@@ -5,6 +5,7 @@ img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: |
   2024/02/25
+category: Java
 tags:
   - LocalDateTime
   - ZonedDateTime

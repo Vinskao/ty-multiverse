@@ -5,6 +5,7 @@ img: /tymultiverse/assets/mongodb-logo.jpg
 img_alt: mongo pic
 description: |
   2024/02/25
+category: Database
 tags:
   - MongoDB Atlas
   - Node.js

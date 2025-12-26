@@ -4,6 +4,7 @@ publishDate: "2025-05-24T10:00:00.000Z"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: Understanding Spring Boot
+category: Spring Boot
 tags:
   - IOC
   - AOP

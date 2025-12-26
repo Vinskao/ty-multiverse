@@ -9,6 +9,8 @@ export const collections = {
 			tags: z.array(z.string()),
 			img: z.string(),
 			img_alt: z.string().optional(),
+			level: z.enum(['basic', 'advance']).optional().default('basic'),
+			category: z.string().optional(),
 		}),
 	}),
 };

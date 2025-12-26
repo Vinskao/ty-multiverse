@@ -4,6 +4,8 @@ publishDate: "2025-08-23 10:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: A comprehensive guide to consumer design and architecture in message queue systems, covering backend producer to RabbitMQ to consumer to database patterns.
+level: advance
+category: Spring Boot
 tags:
   - Message Queue
   - RabbitMQ

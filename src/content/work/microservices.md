@@ -4,6 +4,8 @@ publishDate: "2025-02-24 10:00:00"
 img: /tymultiverse/assets/java.jpg
 img_alt: A bright pink sheet of paper used to wrap flowers curves in front of rich blue background
 description: A comprehensive guide to Spring Boot microservices architecture, covering API Gateway, gRPC communication, and practical implementation strategies.
+level: advance
+category: Spring Boot
 tags:
   - Microservices
   - Spring Boot

@@ -5,6 +5,7 @@ img: /tymultiverse/assets/mongodb-logo.jpg
 img_alt: mongo pic
 description: |
   2024/02/26
+category: Database
 tags:
   - Document
   - Document-Oriented Database
