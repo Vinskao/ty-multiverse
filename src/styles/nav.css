@@ -1,10 +1,13 @@
 /* Nav 組件樣式 */
 nav {
   z-index: 9999;
-  position: relative;
+  position: sticky;
+  top: 0;
   font-family: var(--font-brand);
   font-weight: 500;
   margin-bottom: 3.5rem;
+  background-color: var(--gray-999);
+  border-bottom: 1px solid var(--gray-800);
 }
 
 .menu-header {

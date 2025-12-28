@@ -90,7 +90,17 @@ const { title, description } = Astro.props;
 
 		<script>
 			// Add "loaded" class once the document has completely loaded.
-			addEventListener('load', () => document.documentElement.classList.add('loaded'));
+			// 支援 View Transitions 的客戶端導航
+			function addLoadedClass() {
+				document.documentElement.classList.add('loaded');
+			}
+			addEventListener('load', addLoadedClass);
+			// View Transitions 導航後也觸發
+			document.addEventListener('astro:page-load', addLoadedClass);
+			// 如果頁面已經載入完成，立即添加
+			if (document.readyState === 'complete') {
+				addLoadedClass();
+			}
 			
 			// 頁面內容提取輔助函數
 			(window as any).extractPageContent = function() {

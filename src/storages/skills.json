@@ -290,6 +290,10 @@
           "level": "shade3"
         },
         {
+          "name": "Angular.js",
+          "level": "shade5"
+        },
+        {
           "name": "React Hooks",
           "level": "shade3"
         },

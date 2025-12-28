@@ -604,7 +604,7 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content {
 			font-size: var(--text-lg);
 			line-height: 1.8;
-			max-width: min(83rem, 95vw); /* 限制為視窗寬度 95% 內 */
+			max-width: 83rem;
 			margin: 0 auto;
 			padding: 0 2rem;        /* 收斂左右留白，強化代碼區可視範圍 */
 		}
@@ -632,41 +632,6 @@ const currentPageIndex = imageLinks.findIndex((imageLink) => imageLink.imgUrl ==
 		.content :global(blockquote) {
 			font-size: var(--text-2xl);
 			padding: 3rem 4rem;
-		}
-
-		/* 超寬螢幕：維持單欄佈局避免放大時破版 */
-		.content {
-			column-count: 1;
-			column-gap: 0;
-			column-rule: none;
-		}
-
-		/* 防止標題跨欄 */
-		.content :global(h1),
-		.content :global(h2),
-		.content :global(h3),
-		.content :global(h4),
-		.content :global(h5) {
-			break-before: column;
-			break-after: avoid;
-		}
-
-		/* 程式碼區塊不分欄 */
-		.content :global(pre) {
-			break-inside: avoid;
-			column-span: all;
-		}
-
-		/* 表格不分欄 */
-		.content :global(table) {
-			break-inside: avoid;
-			column-span: all;
-		}
-
-		/* 圖片不分欄 */
-		.content :global(img) {
-			break-inside: avoid;
-			column-span: all;
 		}
 	}
 

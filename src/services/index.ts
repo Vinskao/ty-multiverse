@@ -24,7 +24,6 @@ export { default as SyncService } from './api/syncService';
 
 // 新增服務
 export { qaService, type QARequest, type QAResponse } from './api/qaService';
-export { blackjackService, type GameState, type GameStatus } from './api/blackjackService';
 
 // 認證服務
 export { verifyToken, type AuthResult } from './api/auth';

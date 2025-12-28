@@ -7,7 +7,6 @@ import ContactCTA from '../components/ContactCTA.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
 import Hero from '../components/Hero.astro';
 import Grid from '../components/Grid.astro';
-import BlackJack from '../components/BlackJack.astro';
 import CKEditor from '../components/CKEditor.astro';
 
 const projects = (await getCollection('work')).sort(
@@ -37,7 +36,6 @@ const links = [
 			/>
 
 
-			<BlackJack />
 			<CKEditor />
 			<div class="article-count" style="text-align: center;">
 				<p class="article-count-text" style="margin: 0 auto;">📚 Total {projects.length} articles</p>

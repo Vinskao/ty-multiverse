@@ -1,22 +1,49 @@
 // 加上tooltip
-document.addEventListener("DOMContentLoaded", () => {
-    // 定義提示文字
-    const shadeDescriptions = {
-        shade1: "Score 5 Strong",
-        shade2: "Score 4 Sufficient",
-        shade3: "Score 3 Understood",
-        shade4: "Score 2 Applicable",
-        shade5: "Score 1 Basic",
-    };
+// 使用 astro:page-load 來支援 View Transitions 的客戶端導航
 
-    // 分數映射
-    const shadeScores = {
-        shade1: 5,
-        shade2: 4,
-        shade3: 3,
-        shade4: 2,
-        shade5: 1,
-    };
+// 定義提示文字（全域常量）
+const shadeDescriptions = {
+    shade1: "Score 5 Strong",
+    shade2: "Score 4 Sufficient",
+    shade3: "Score 3 Understood",
+    shade4: "Score 2 Applicable",
+    shade5: "Score 1 Basic",
+};
+
+// 分數映射（全域常量）
+const shadeScores = {
+    shade1: 5,
+    shade2: 4,
+    shade3: 3,
+    shade4: 2,
+    shade5: 1,
+};
+
+// 全域 tooltip 元素（只創建一次）
+let globalTooltip = null;
+
+function getOrCreateTooltip() {
+    if (globalTooltip && document.body.contains(globalTooltip)) {
+        return globalTooltip;
+    }
+    
+    globalTooltip = document.createElement("div");
+    globalTooltip.id = "global-pill-tooltip";
+    globalTooltip.style.position = "absolute";
+    globalTooltip.style.padding = "5px 10px";
+    globalTooltip.style.backgroundColor = "#333";
+    globalTooltip.style.color = "#fff";
+    globalTooltip.style.borderRadius = "4px";
+    globalTooltip.style.fontSize = "12px";
+    globalTooltip.style.display = "none";
+    globalTooltip.style.zIndex = "1000";
+    globalTooltip.style.pointerEvents = "none";
+    document.body.appendChild(globalTooltip);
+    return globalTooltip;
+}
+
+function initTooltips() {
+    const tooltip = getOrCreateTooltip();
 
     // 計算每個類別的總分數
     function calculateCategoryScores() {
@@ -35,29 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // 找到類別標題
             const title = category.querySelector('h5');
-            if (title) {
-                // 添加總分 - 改為小字格式
+            if (title && !title.dataset.scoreAdded) {
+                // 添加總分 - 改為小字格式（標記已添加避免重複）
                 title.innerHTML = `${title.textContent} <sup style="font-size: 0.65em; color: #888; margin-left: 4px;">${totalScore}</sup>`;
+                title.dataset.scoreAdded = 'true';
             }
         });
     }
 
-    // 建立提示框元素
-    const tooltip = document.createElement("div");
-    tooltip.style.position = "absolute";
-    tooltip.style.padding = "5px 10px";
-    tooltip.style.backgroundColor = "#333";
-    tooltip.style.color = "#fff";
-    tooltip.style.borderRadius = "4px";
-    tooltip.style.fontSize = "12px";
-    tooltip.style.display = "none";
-    tooltip.style.zIndex = "1000";
-    tooltip.style.pointerEvents = "none";
-    document.body.appendChild(tooltip);
-
     // 處理 hover 事件
     const pills = document.querySelectorAll(".pill");
     pills.forEach((pill) => {
+        // 避免重複綁定事件
+        if (pill.dataset.tooltipBound) return;
+        pill.dataset.tooltipBound = 'true';
+
         let tooltipTextValue = null;
         if (pill.hasAttribute('data-explanation')) {
             tooltipTextValue = pill.getAttribute('data-explanation');
@@ -94,7 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 計算並顯示分數
     calculateCategoryScores();
-});
+}
+
+// 監聽 View Transitions 事件（支援客戶端導航）
+document.addEventListener('astro:page-load', initTooltips);
+// 備用：首次載入時也觸發
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTooltips);
+} else {
+    initTooltips();
+}
 
 // HEX to RGB 顏色轉換
 function hexToRgb(hex) {
@@ -205,19 +233,22 @@ function applyShadesToPills() {
     const pills = document.querySelectorAll('.pill');
 
     pills.forEach((pill) => {
+        // 避免重複處理
+        if (pill.dataset.shadeApplied) return;
+        
         const baseColor = getComputedStyle(pill).backgroundColor;
         const shadeClass = [...pill.classList].find((cls) => cls.startsWith('shade'));
         if (shadeClass) {
             const shadeLevel = parseInt(shadeClass.replace('shade', ''), 10);
             const adjustedColor = adjustColorToBlack(rgbToHex(baseColor), shadeLevel);
             pill.style.backgroundColor = `rgb(${adjustedColor.r}, ${adjustedColor.g}, ${adjustedColor.b})`;
+            pill.dataset.shadeApplied = 'true';
         }
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    applyShadesToPills();
-});
+// applyShadesToPills 已經在 initTooltips 中被間接處理，但確保也支援 View Transitions
+document.addEventListener('astro:page-load', applyShadesToPills);
 
 // 將 RGB 顏色轉為 HEX 的輔助函數
 function rgbToHex(rgb) {
@@ -340,8 +371,19 @@ function getCookie(name) {
     return "";
 }
 
-// Call the function when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    fetchLeetCodeStats();
-    updateVisitCount();
-});
+// Call the function when the page loads - 支援 View Transitions
+function initIndexPage() {
+    // 檢查是否在首頁，避免在其他頁面執行
+    const isIndexPage = window.location.pathname === '/tymultiverse/' || 
+                        window.location.pathname === '/tymultiverse' ||
+                        window.location.pathname === '/' ||
+                        window.location.pathname.endsWith('/index.html');
+    
+    if (isIndexPage) {
+        fetchLeetCodeStats();
+        updateVisitCount();
+    }
+}
+
+// 監聽 View Transitions 事件
+document.addEventListener('astro:page-load', initIndexPage);

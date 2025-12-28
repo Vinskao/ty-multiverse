@@ -62,3 +62,6 @@ async function testCorsFix() {
 window.testCorsFix = testCorsFix;
 
 console.log('🔧 CORS 測試函數已載入。運行 testCorsFix() 來測試修復。');
+
+
+

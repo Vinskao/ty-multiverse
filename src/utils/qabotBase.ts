@@ -143,3 +143,6 @@ export abstract class QABotBase {
   abstract initialize(): void;
   abstract bindEvents(): void;
 }
+
+
+
