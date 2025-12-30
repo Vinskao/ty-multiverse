@@ -335,7 +335,7 @@ async function fetchLeetCodeStats() {
                 <div style="text-align: center; padding: 2rem;">
                     <p style="color: var(--gray-300); margin-bottom: 0.5rem;">${errorMessage}</p>
                     <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent-regular); color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        🔄 Retry
+                        Retry
                     </button>
                 </div>
             `;
