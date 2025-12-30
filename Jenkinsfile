@@ -14,10 +14,10 @@ pipeline {
                     resources:
                       requests:
                         cpu: "25m"
-                        memory: "128Mi"
+                        memory: "512Mi"
                       limits:
                         cpu: "100m"
-                        memory: "512Mi"
+                        memory: "1024Mi"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
@@ -29,11 +29,11 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "50m"
+                        cpu: "10m"
                         memory: "256Mi"
                       limits:
-                        cpu: "500m"
-                        memory: "1Gi"
+                        cpu: "50m"
+                        memory: "512Mi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
@@ -52,13 +52,22 @@ pipeline {
                     resources:
                       requests:
                         cpu: "10m"
-                        memory: "64Mi"
+                        memory: "128Mi"
                       limits:
-                        cpu: "100m"
+                        cpu: "50m"
                         memory: "256Mi"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
+                  - name: jnlp
+                    image: jenkins/inbound-agent:3309.v27b_9314fd1a_4-1
+                    resources:
+                      requests:
+                        cpu: "50m"
+                        memory: "256Mi"
+                      limits:
+                        cpu: "100m"
+                        memory: "512Mi"
                   volumes:
                   - name: workspace-volume
                     emptyDir: {}

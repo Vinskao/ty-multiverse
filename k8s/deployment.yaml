@@ -31,6 +31,18 @@ spec:
       labels:
         app.kubernetes.io/name: ty-multiverse-frontend
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - jenkins
+              topologyKey: "kubernetes.io/hostname"
       containers:
       - name: ty-multiverse-frontend
         image: papakao/ty-multiverse-frontend:latest
