@@ -499,7 +499,7 @@ graph LR
 #### 2.1 Agent Configuration
 - **Node Container**: `node:18`
 - **Docker Container**: `docker:23-dind`
-- **Kubectl Container**: `bitnami/kubectl:1.30.7`
+- **Kubectl Container**: `bitnami/kubectl:latest`
 
 ## Article Sync API 測試文檔
 
