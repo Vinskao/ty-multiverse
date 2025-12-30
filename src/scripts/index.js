@@ -268,7 +268,11 @@ function rgbToHex(rgb) {
 async function fetchLeetCodeStats() {
     const username = 'Vinskao';
     try {
-        const response = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`);
+        // 使用 Maya Sawa 代理 API 来绕过 CORS 限制
+        // 生产环境：https://peoplesystem.tatdvsonorth.com/maya-sawa/proxy/leetcode-stats/{username}
+        // 本地开发：http://localhost:8000/maya-sawa/proxy/leetcode-stats/{username}
+        const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
+        const response = await fetch(`${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/${username}`);
         const data = await response.json();
         
         // Update the stats in the DOM with null checks
