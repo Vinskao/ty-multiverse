@@ -273,6 +273,13 @@ async function fetchLeetCodeStats() {
         // 本地开发：http://localhost:8000/maya-sawa/proxy/leetcode-stats/{username}
         const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
         const response = await fetch(`${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/${username}`);
+        
+        // 检查响应状态
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: { message: `HTTP ${response.status}` } }));
+            throw new Error(errorData.detail?.message || errorData.detail || `HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
         
         // Update the stats in the DOM with null checks
@@ -312,7 +319,26 @@ async function fetchLeetCodeStats() {
         console.error('Error fetching LeetCode stats:', error);
         const leetcodeStats = document.getElementById('leetcode-stats');
         if (leetcodeStats) {
-            leetcodeStats.innerHTML = '<p style="text-align: center; color: var(--gray-300);">Failed to load LeetCode stats</p>';
+            // 使用后端返回的友好错误信息，或使用默认消息
+            let errorMessage = error.message || 'Failed to load LeetCode stats';
+            
+            // 为常见错误提供更友好的消息
+            if (errorMessage.includes('temporarily unavailable')) {
+                errorMessage = '⏱️ ' + errorMessage;
+            } else if (errorMessage.includes('timed out')) {
+                errorMessage = '⏰ ' + errorMessage;
+            } else if (!errorMessage.includes('LeetCode')) {
+                errorMessage = 'Failed to load LeetCode stats: ' + errorMessage;
+            }
+            
+            leetcodeStats.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <p style="color: var(--gray-300); margin-bottom: 0.5rem;">${errorMessage}</p>
+                    <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent-regular); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🔄 Retry
+                    </button>
+                </div>
+            `;
         }
     }
 }
