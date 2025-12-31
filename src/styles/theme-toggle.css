@@ -83,7 +83,7 @@
 .theme-toggle .icon {
   position: absolute;
   inset: 0;
-  display: none; /* 默認隱藏圖標 */
+  display: flex; /* 始終顯示，通過 opacity 控制可見性 */
   align-items: center;
   justify-content: center;
   transition: opacity 0.3s ease, transform 0.3s ease; /* 添加透明度和變換過渡 */
@@ -91,9 +91,8 @@
   z-index: 1; /* 確保圖標在滑軌之上 */
 }
 
-/* 顯示活動狀態的圖標 */
+/* 顯示活動狀態的圖標 - 由 ThemeToggle.tsx 的內聯樣式控制 */
 .theme-toggle .icon.active {
-  display: flex; /* 顯示活動圖標 */
   opacity: 1; /* 完全不透明 */
 }
 
