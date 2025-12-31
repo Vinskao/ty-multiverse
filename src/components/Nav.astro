@@ -1,14 +1,15 @@
 ---
 import { Icon } from "./Icon";
-// import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from "./ThemeToggle";
+import { ThemeProvider } from "./ThemeProvider";
 import type { iconPaths } from "./IconPaths";
-import '../styles/nav.css';
+import "../styles/nav.css";
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
-const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
-const refreshToken = url.searchParams.get('refresh_token');
+const username = url.searchParams.get("username");
+const token = url.searchParams.get("token");
+const refreshToken = url.searchParams.get("refresh_token");
 
 // 檢查登入狀態
 const isLoggedIn = !!username;
@@ -20,68 +21,94 @@ const isAdmin = false; // 初始值，將在前端 JavaScript 中動態更新
 const currentPath = Astro.url.pathname;
 
 /** Main menu items */
-const textLinks: { label: string; href: string; isActive: boolean; adminOnly?: boolean }[] = [
-  { 
-    label: "Home", 
-    href: isLoggedIn ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}` : "/tymultiverse/", 
-    isActive: currentPath === "/tymultiverse/" || currentPath === "/tymultiverse/index.html"
+const textLinks: {
+  label: string;
+  href: string;
+  isActive: boolean;
+  adminOnly?: boolean;
+}[] = [
+  {
+    label: "Home",
+    href: isLoggedIn
+      ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}`
+      : "/tymultiverse/",
+    isActive:
+      currentPath === "/tymultiverse/" ||
+      currentPath === "/tymultiverse/index.html",
   },
-  { 
-    label: isLoggedIn ? "Logout" : "Login", 
-    href: isLoggedIn ? "#" : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
-    isActive: currentPath === "/tymultiverse/login"
+  {
+    label: isLoggedIn ? "Logout" : "Login",
+    href: isLoggedIn
+      ? "#"
+      : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    isActive: currentPath === "/tymultiverse/login",
   },
-  { 
-    label: "Work", 
-    href: isLoggedIn ? `/tymultiverse/work/?username=${username}&token=${token}` : "/tymultiverse/work/", 
-    isActive: currentPath.startsWith("/tymultiverse/work")
+  {
+    label: "Work",
+    href: isLoggedIn
+      ? `/tymultiverse/work/?username=${username}&token=${token}`
+      : "/tymultiverse/work/",
+    isActive: currentPath.startsWith("/tymultiverse/work"),
   },
-  { 
-    label: "About", 
-    href: isLoggedIn ? `/tymultiverse/about/?username=${username}&token=${token}` : "/tymultiverse/about/", 
-    isActive: currentPath.startsWith("/tymultiverse/about")
+  {
+    label: "About",
+    href: isLoggedIn
+      ? `/tymultiverse/about/?username=${username}&token=${token}`
+      : "/tymultiverse/about/",
+    isActive: currentPath.startsWith("/tymultiverse/about"),
   },
-  ...(isLoggedIn ? [
-    { 
-      label: "Control", 
-      href: `/tymultiverse/control/?username=${username}&token=${token}`,
-      isActive: currentPath.startsWith("/tymultiverse/control")
-    },
-    // Wildland 和 Palais 始終渲染（如果已登入），但由前端 JavaScript 控制顯示（基於 admin 權限）
-    { 
-      label: "Wildland", 
-      adminOnly: true, 
-      href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken || ''}`,
-      isActive: currentPath.startsWith("/tymultiverse/wildland")
-    },
-    { 
-      label: "Palais", 
-      adminOnly: true, 
-      href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken || ''}`,
-      isActive: currentPath.startsWith("/tymultiverse/palais")
-    }
-  ] : [])
+  ...(isLoggedIn
+    ? [
+        {
+          label: "Control",
+          href: `/tymultiverse/control/?username=${username}&token=${token}`,
+          isActive: currentPath.startsWith("/tymultiverse/control"),
+        },
+        // Wildland 和 Palais 始終渲染（如果已登入），但由前端 JavaScript 控制顯示（基於 admin 權限）
+        {
+          label: "Wildland",
+          adminOnly: true,
+          href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
+          isActive: currentPath.startsWith("/tymultiverse/wildland"),
+        },
+        {
+          label: "Palais",
+          adminOnly: true,
+          href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
+          isActive: currentPath.startsWith("/tymultiverse/palais"),
+        },
+      ]
+    : []),
 ];
 
-const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; isActive: boolean }[] = [
+const iconLinks: {
+  label: string;
+  href: string;
+  icon: keyof typeof iconPaths;
+  isActive: boolean;
+}[] = [
   {
     label: "Twitter",
     href: "https://twitter.com/wawiking",
     icon: "twitter-logo",
-    isActive: false
+    isActive: false,
   },
   {
     label: "GitHub",
     href: "https://github.com/Vinskao",
     icon: "github-logo",
-    isActive: false
-  }
+    isActive: false,
+  },
 ];
 ---
 
 <nav>
   <div class="menu-header">
-    <a href="/tymultiverse" class="site-title" onclick="localStorage.removeItem('lastVisitedPath');">
+    <a
+      href="/tymultiverse"
+      class="site-title"
+      onclick="localStorage.removeItem('lastVisitedPath');"
+    >
       <Icon
         icon="terminal-window"
         color="var(--accent-regular)"
@@ -103,13 +130,13 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     <ul class="nav-items">
       {
         textLinks.map(({ label, href, isActive, adminOnly }) => (
-          <li class:list={[{ 'admin-only': adminOnly }]}>
+          <li class:list={[{ "admin-only": adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
               class:list={[
                 "link",
                 {
-                  active: isActive
+                  active: isActive,
                 },
               ]}
               href={href}
@@ -139,13 +166,13 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     <ul class="nav-items">
       {
         textLinks.map(({ label, href, isActive, adminOnly }) => (
-          <li class:list={[{ 'admin-only': adminOnly }]}>
+          <li class:list={[{ "admin-only": adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
               class:list={[
                 "link",
                 {
-                  active: isActive
+                  active: isActive,
                 },
               ]}
               href={href}
@@ -170,10 +197,19 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     </div>
   </div>
 </nav>
+<!-- ThemeToggle 独立放置，不受菜单显示/隐藏影响 -->
+<ThemeProvider client:load>
+  <ThemeToggle />
+</ThemeProvider>
 
 <script>
-  import { storageService } from '../services/core/storageService';
-  import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
+  import { storageService } from "../services/core/storageService";
+  import {
+    verifyToken,
+    startTokenVerification,
+    stopTokenVerification,
+    logout,
+  } from "../services/api/auth";
 
   // 定義全局類型
   declare global {
@@ -187,8 +223,8 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 
   // 頁面訪問追蹤功能
   class PageTracker {
-    private static readonly STORAGE_KEY = 'lastVisitedTymultiverseUrl';
-    private static readonly REFERER_KEY = 'tymultiverseReferer';
+    private static readonly STORAGE_KEY = "lastVisitedTymultiverseUrl";
+    private static readonly REFERER_KEY = "tymultiverseReferer";
 
     constructor() {
       this.initializePageTracking();
@@ -205,12 +241,12 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
       this.checkAndRedirectFromStorage();
 
       // 監聽頁面卸載，保存最後訪問的 URL
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener("beforeunload", () => {
         this.saveCurrentUrl();
       });
 
       // 監聽頁面可見性變化
-      document.addEventListener('visibilitychange', () => {
+      document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           this.saveCurrentUrl();
         }
@@ -221,39 +257,39 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
       const currentUrl = window.location.href;
 
       // 只保存 /tymultiverse 開頭的 URL
-      if (currentUrl.includes('/tymultiverse')) {
+      if (currentUrl.includes("/tymultiverse")) {
         try {
           // 清理 URL，移除認證參數
           const urlObj = new URL(currentUrl);
-          urlObj.searchParams.delete('username');
-          urlObj.searchParams.delete('token');
-          urlObj.searchParams.delete('refresh_token');
-          urlObj.searchParams.delete('refreshToken');
-          urlObj.searchParams.delete('email');
-          urlObj.searchParams.delete('name');
-          urlObj.searchParams.delete('firstName');
-          urlObj.searchParams.delete('lastName');
+          urlObj.searchParams.delete("username");
+          urlObj.searchParams.delete("token");
+          urlObj.searchParams.delete("refresh_token");
+          urlObj.searchParams.delete("refreshToken");
+          urlObj.searchParams.delete("email");
+          urlObj.searchParams.delete("name");
+          urlObj.searchParams.delete("firstName");
+          urlObj.searchParams.delete("lastName");
           const cleanUrl = urlObj.pathname + urlObj.search;
           localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
-          console.log('📍 已保存當前 TY Multiverse 頁面:', cleanUrl);
+          console.log("📍 已保存當前 TY Multiverse 頁面:", cleanUrl);
         } catch (e) {
-          console.warn('保存 URL 失敗:', e);
+          console.warn("保存 URL 失敗:", e);
         }
       }
     }
 
     private trackLinkClicks(): void {
       // 使用事件委派監聽所有鏈接點擊
-      document.addEventListener('click', (event) => {
+      document.addEventListener("click", (event) => {
         const target = event.target as HTMLElement;
 
         // 找到最近的鏈接元素
-        const linkElement = target.closest('a') as HTMLAnchorElement;
+        const linkElement = target.closest("a") as HTMLAnchorElement;
         if (linkElement && linkElement.href) {
           const href = linkElement.href;
 
           // 如果是內部 TY Multiverse 鏈接，保存當前頁面
-          if (href.includes('/tymultiverse') && !href.includes('#')) {
+          if (href.includes("/tymultiverse") && !href.includes("#")) {
             // 延遲一點時間保存，因為頁面還沒跳轉
             setTimeout(() => {
               this.saveCurrentUrl();
@@ -268,7 +304,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
       // 避免兩個重定向邏輯衝突導致無限循環
       // BaseLayout 的重定向邏輯更完善，包含循環檢測和參數清理
       return;
-      
+
       // 以下代碼已禁用，僅保留作為參考
       /*
       const REDIRECT_FLAG = 'nav_redirecting';
@@ -359,23 +395,23 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     // 手動保存當前 URL（可以用於特殊情況）
     public static saveCurrentUrl(): void {
       const currentUrl = window.location.href;
-      if (currentUrl.includes('/tymultiverse')) {
+      if (currentUrl.includes("/tymultiverse")) {
         try {
           // 清理 URL，移除認證參數
           const urlObj = new URL(currentUrl);
-          urlObj.searchParams.delete('username');
-          urlObj.searchParams.delete('token');
-          urlObj.searchParams.delete('refresh_token');
-          urlObj.searchParams.delete('refreshToken');
-          urlObj.searchParams.delete('email');
-          urlObj.searchParams.delete('name');
-          urlObj.searchParams.delete('firstName');
-          urlObj.searchParams.delete('lastName');
+          urlObj.searchParams.delete("username");
+          urlObj.searchParams.delete("token");
+          urlObj.searchParams.delete("refresh_token");
+          urlObj.searchParams.delete("refreshToken");
+          urlObj.searchParams.delete("email");
+          urlObj.searchParams.delete("name");
+          urlObj.searchParams.delete("firstName");
+          urlObj.searchParams.delete("lastName");
           const cleanUrl = urlObj.pathname + urlObj.search;
           localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
-          console.log('📍 手動保存當前 TY Multiverse 頁面:', cleanUrl);
+          console.log("📍 手動保存當前 TY Multiverse 頁面:", cleanUrl);
         } catch (e) {
-          console.warn('保存 URL 失敗:', e);
+          console.warn("保存 URL 失敗:", e);
         }
       }
     }
@@ -389,7 +425,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
     public static clearSavedUrl(): void {
       localStorage.removeItem(PageTracker.STORAGE_KEY);
       localStorage.removeItem(PageTracker.REFERER_KEY);
-      console.log('🗑️ 已清除保存的頁面記錄');
+      console.log("🗑️ 已清除保存的頁面記錄");
     }
   }
 
@@ -410,24 +446,28 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
   window.pageTracker = {
     saveCurrentUrl: PageTracker.saveCurrentUrl,
     getSavedUrl: PageTracker.getSavedUrl,
-    clearSavedUrl: PageTracker.clearSavedUrl
+    clearSavedUrl: PageTracker.clearSavedUrl,
   };
 
   // 為 site-title 添加雙擊清除功能
-  const siteTitle = document.querySelector('.site-title') as HTMLAnchorElement;
+  const siteTitle = document.querySelector(".site-title") as HTMLAnchorElement;
   if (siteTitle) {
-    siteTitle.addEventListener('dblclick', (e) => {
+    siteTitle.addEventListener("dblclick", (e) => {
       e.preventDefault();
-      if (confirm('要清除保存的頁面記錄嗎？\n這將清除您上次訪問的頁面，下次從外部跳轉回來時不會自動跳轉。')) {
+      if (
+        confirm(
+          "要清除保存的頁面記錄嗎？\n這將清除您上次訪問的頁面，下次從外部跳轉回來時不會自動跳轉。",
+        )
+      ) {
         PageTracker.clearSavedUrl();
-        alert('✅ 已清除保存的頁面記錄');
+        alert("✅ 已清除保存的頁面記錄");
       }
     });
 
     // 添加提示信息
-    siteTitle.title = '雙擊清除保存的頁面記錄';
+    siteTitle.title = "雙擊清除保存的頁面記錄";
   }
-  
+
   class MenuButton extends HTMLElement {
     constructor() {
       super();
@@ -465,8 +505,8 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths; is
 </script>
 
 <script>
-  import { initNav } from '../scripts/NavScript';
-  
+  import { initNav } from "../scripts/NavScript";
+
   // 初始化 Nav 控制器
   initNav();
 </script>
