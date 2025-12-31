@@ -1,19 +1,20 @@
 /* 主題切換按鈕樣式 */
 .theme-toggle {
-  position: fixed;
-  bottom: 1rem;
-  right: 2rem;
-  z-index: 9999;
+  position: fixed !important; /* 使用 !important 确保定位不受其他样式影响 */
+  bottom: 1rem !important;
+  right: 2rem !important;
+  z-index: 10000 !important; /* 提高到10000，避免被nav (9999) 覆盖 */
   background-color: rgba(7, 137, 197, 0.378);
   border-radius: 999rem;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* 添加阴影以提高可见性 */
   padding: 0.5rem;
   width: 3rem;
   height: 3rem;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   animation: pulse 2s infinite;
+  pointer-events: auto; /* 确保点击事件正常 */
 }
 
 @keyframes pulse {
@@ -49,6 +50,7 @@
   .theme-toggle {
     bottom: 1rem;
     right: 1rem;
+    z-index: 10001; /* 在移动端进一步提高z-index */
   }
 }
 
@@ -57,6 +59,7 @@
   .theme-toggle {
     bottom: 1rem;
     right: 1rem;
+    z-index: 10001; /* 在极小屏幕上确保最高优先级 */
   }
 }
 
