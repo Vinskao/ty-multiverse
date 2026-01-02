@@ -1,6 +1,6 @@
 ---
-import { } from 'astro';
-import '../styles/qabotv2.css';
+import {} from "astro";
+import "../styles/qabotv2.css";
 ---
 
 <!-- v2 控制列：插入共用 qa-bot-container 中（header 下方即可） -->
@@ -15,9 +15,9 @@ import '../styles/qabotv2.css';
 </div>
 
 <script>
-  import { getApiBaseUrl } from '../scripts/qabotShared';
-  import { api } from '../utils/api';
-  import { QABotBase } from '../utils/qabotBase';
+  import { getApiBaseUrl } from "../scripts/qabotShared";
+  import { api } from "../utils/api";
+  import { QABotBase } from "../utils/qabotBase";
 
   class QABotV2 extends QABotBase {
     private inputEl: HTMLInputElement;
@@ -27,20 +27,29 @@ import '../styles/qabotv2.css';
     private apiBase: string;
 
     constructor() {
-      super('chatMessages'); // Initialize base class with messages container ID
+      super("chatMessages"); // Initialize base class with messages container ID
 
       // 將控制列移到 header 底下（若尚未在正確位置）
-      const container = document.getElementById('qaBotContainer') as HTMLElement;
-      const header = container?.querySelector('.chat-header') as HTMLElement | null;
-      const controls = document.getElementById('qaV2Controls') as HTMLElement;
-      if (container && header && controls && controls.parentElement !== container) {
+      const container = document.getElementById(
+        "qaBotContainer",
+      ) as HTMLElement;
+      const header = container?.querySelector(
+        ".chat-header",
+      ) as HTMLElement | null;
+      const controls = document.getElementById("qaV2Controls") as HTMLElement;
+      if (
+        container &&
+        header &&
+        controls &&
+        controls.parentElement !== container
+      ) {
         container.insertBefore(controls, container.children[1]);
       }
 
-      this.inputEl = document.getElementById('userInput') as HTMLInputElement;
-      this.sendBtn = document.getElementById('sendButton') as HTMLButtonElement;
-      this.modelSel = document.getElementById('v2Model') as HTMLSelectElement;
-      this.kbEl = document.getElementById('v2UseKb') as HTMLInputElement;
+      this.inputEl = document.getElementById("userInput") as HTMLInputElement;
+      this.sendBtn = document.getElementById("sendButton") as HTMLButtonElement;
+      this.modelSel = document.getElementById("v2Model") as HTMLSelectElement;
+      this.kbEl = document.getElementById("v2UseKb") as HTMLInputElement;
       this.apiBase = getApiBaseUrl();
 
       this.initialize();
@@ -52,46 +61,53 @@ import '../styles/qabotv2.css';
     }
 
     public bindEvents() {
-      this.sendBtn.addEventListener('click', () => this.ask());
-      this.inputEl.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+      this.sendBtn.addEventListener("click", () => this.ask());
+      this.inputEl.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          if ((window as any).qabotMode === 'v2') this.ask();
+          if ((window as any).qabotMode === "v2") this.ask();
         }
       });
     }
 
-    public show() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'flex'; }
-    public hide() { (document.getElementById('qaV2Controls') as HTMLElement).style.display = 'none'; }
+    public show() {
+      (document.getElementById("qaV2Controls") as HTMLElement).style.display =
+        "flex";
+    }
+    public hide() {
+      (document.getElementById("qaV2Controls") as HTMLElement).style.display =
+        "none";
+    }
 
     private async loadModels() {
       try {
         const data = await api.getAvailableModels();
-        
-        console.log('Models API response:', data);
-        
+
+        console.log("Models API response:", data);
+
         // 解析 API 回應格式 - 支援 {models: [...]} 和直接陣列兩種格式
         const models = data?.models || (Array.isArray(data) ? data : []);
         const activeModels = models.filter((m: any) => m.is_active === true);
-        
-        console.log('Active models:', activeModels);
-        
-        this.modelSel.innerHTML = '';
+
+        console.log("Active models:", activeModels);
+
+        this.modelSel.innerHTML = "";
         activeModels.forEach((m: any) => {
-          const opt = document.createElement('option');
+          const opt = document.createElement("option");
           opt.value = m.model_id || m.name; // 優先使用 model_id，否則使用 name
           opt.textContent = m.name;
           this.modelSel.appendChild(opt);
-          console.log('Added model option:', m.name, 'with value:', opt.value);
+          console.log("Added model option:", m.name, "with value:", opt.value);
         });
-        
+
         // 設定預設選項
         if (!this.modelSel.value && activeModels.length > 0) {
-          this.modelSel.value = activeModels[0].model_id || activeModels[0].name;
-          console.log('Set default model:', this.modelSel.value);
+          this.modelSel.value =
+            activeModels[0].model_id || activeModels[0].name;
+          console.log("Set default model:", this.modelSel.value);
         }
       } catch (e) {
-        console.error('Failed to load models:', e);
+        console.error("Failed to load models:", e);
         this.modelSel.innerHTML = '<option value="">無法載入模型</option>';
       }
     }
@@ -99,31 +115,33 @@ import '../styles/qabotv2.css';
     private async ask() {
       const q = this.inputEl.value.trim();
       if (!q) return;
-      this.inputEl.value = '';
-      
+      this.inputEl.value = "";
+
       // 顯示用戶消息
-      this.appendMessage(`<div class="message user-message"><div class="message-content"><p>${this.escapeHtml(q)}</p></div></div>`);
+      this.appendMessage(
+        `<div class="message user-message"><div class="message-content"><p>${this.escapeHtml(q)}</p></div></div>`,
+      );
 
       // 顯示等待UI
       this.showLoadingMessage();
-      
+
       try {
         const payload = {
           question: q,
           model_name: this.modelSel.value,
           sync: true, // 強制使用同步處理，避開後端隊列問題
-          use_knowledge_base: !!this.kbEl.checked
+          use_knowledge_base: !!this.kbEl.checked,
         };
 
         const data = await api.askWithModel(payload);
-        console.log('🤖 Ask API Response:', data);
+        console.log("🤖 Ask API Response:", data);
 
         // 嘗試獲取任務ID (支援多種命名格式)
         const taskId = data.task_id || data.request_id || data.requestId;
 
         // 檢查是否有 taskId
         if (taskId) {
-          console.log('Starting polling for task:', taskId);
+          console.log("Starting polling for task:", taskId);
           // 開始輪詢任務狀態
           this.startPollingForTask(taskId, q);
         } else if (data.ai_response || data.answer || data.text) {
@@ -131,8 +149,11 @@ import '../styles/qabotv2.css';
           this.hideLoadingMessage();
           this.displayAIResponse(data);
         } else {
-          console.error('Unexpected response format - missing task_id or content:', data);
-          throw new Error('未收到任務ID或有效回應 (Check console for details)');
+          console.error(
+            "Unexpected response format - missing task_id or content:",
+            data,
+          );
+          throw new Error("未收到任務ID或有效回應 (Check console for details)");
         }
       } catch (e) {
         // 隱藏等待UI
@@ -146,37 +167,39 @@ import '../styles/qabotv2.css';
         const data = await api.getTaskStatus(taskId);
 
         // 調試信息
-        console.log('Task status response:', data);
+        console.log("Task status response:", data);
 
         switch (data.status) {
-          case 'SUCCESS':
+          case "SUCCESS":
             // 任務完成
-            console.log('Task completed successfully:', data);
+            console.log("Task completed successfully:", data);
             this.hideLoadingMessage();
             this.displayAIResponse(data);
             this.stopPollingTask(taskId);
             break;
 
-          case 'FAILURE':
+          case "FAILURE":
             // 任務失敗
-            console.log('Task failed:', data);
+            console.log("Task failed:", data);
             this.hideLoadingMessage();
-            const errorMsg = data.error || '任務處理失敗';
+            const errorMsg = data.error || "任務處理失敗";
             this.showErrorMessage(errorMsg);
             this.stopPollingTask(taskId);
             break;
 
-          case 'PENDING':
-          case 'STARTED':
+          case "PENDING":
+          case "STARTED":
             // 任務仍在處理中，繼續輪詢
-            console.log('Task still processing:', data.status);
-            this.updateLoadingMessage(data.status === 'STARTED' ? '處理中...' : '等待中...');
+            console.log("Task still processing:", data.status);
+            this.updateLoadingMessage(
+              data.status === "STARTED" ? "處理中..." : "等待中...",
+            );
             // Continue polling (handled by base class)
             break;
 
           default:
             // 未知狀態
-            console.log('Unknown task status:', data.status);
+            console.log("Unknown task status:", data.status);
             this.hideLoadingMessage();
             this.showErrorMessage(`未知任務狀態: ${data.status}`);
             this.stopPollingTask(taskId);
@@ -184,93 +207,94 @@ import '../styles/qabotv2.css';
       });
     }
 
-
     private displayAIResponse(data: any) {
       try {
         // 建立主要的AI回應容器
-        const aiResponse = data.ai_response || data.text || data.answer || '';
+        const aiResponse = data.ai_response || data.text || data.answer || "";
         const modelInfo = data.ai_model || {};
         const knowledgeUsed = data.knowledge_used || false;
         const citations = data.knowledge_citations || [];
 
         // 分割AI回應以提取主要內容和知識庫內容
         const responseText = this.formatAIResponse(aiResponse);
-        
+
         // 建立完整的回應HTML
         let responseHTML = `
           <div class=\"message bot-message\">
             <div class=\"message-content-wrapper\">
               <div class=\"message-header\">
-                <span class="ai-name">${this.escapeHtml(modelInfo.name || 'AI')}</span>
-                ${knowledgeUsed ? '<span class=\"knowledge-badge\">🧠 知識庫</span>' : ''}
+                <span class="ai-name">${this.escapeHtml(modelInfo.name || "AI")}</span>
+                ${knowledgeUsed ? '<span class=\"knowledge-badge\">🧠 知識庫</span>' : ""}
               </div>
               <div class=\"message-content\">
                 ${responseText}
               </div>
-              ${citations.length > 0 ? this.buildCitationsHTML(citations) : ''}
+              ${citations.length > 0 ? this.buildCitationsHTML(citations) : ""}
             </div>
           </div>
         `;
-        
+
         this.appendMessage(responseHTML);
       } catch (e) {
-        console.error('Error displaying AI response:', e);
-        this.showErrorMessage('回應格式錯誤');
+        console.error("Error displaying AI response:", e);
+        this.showErrorMessage("回應格式錯誤");
       }
     }
 
     private formatAIResponse(response: string): string {
-      if (!response) return '<p>無回應內容</p>';
-      
+      if (!response) return "<p>無回應內容</p>";
+
       // 分割主要回應和知識庫內容
       const parts = response.split(/相關知識庫內容：|知識庫內容：/);
       const mainContent = parts[0].trim();
-      
+
       // 格式化主要內容
       const formattedContent = mainContent
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        .replace(/### (.+?)(\n|$)/g, '<h4>$1</h4>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/- (.+?)(\n|$)/g, '<li>$1</li>');
-      
+        .replace(/\n\n/g, "</p><p>")
+        .replace(/\n/g, "<br>")
+        .replace(/### (.+?)(\n|$)/g, "<h4>$1</h4>")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/- (.+?)(\n|$)/g, "<li>$1</li>");
+
       // 包裝在段落標籤中
-      const wrappedContent = formattedContent.includes('<li>') 
-        ? formattedContent.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>')
+      const wrappedContent = formattedContent.includes("<li>")
+        ? formattedContent.replace(/(<li>.*<\/li>)/g, "<ul>$1</ul>")
         : `<p>${formattedContent}</p>`;
-      
+
       return wrappedContent;
     }
 
     private buildCitationsHTML(citations: any[]): string {
-      if (!citations || citations.length === 0) return '';
-      
-      const citationsList = citations.map((citation, index) => {
-        const source = citation.source || '';
-        const filePath = citation.file_path || '';
-        const sourceUrl = citation.source_url || '';
-        const title = citation.title || filePath || source;
-        const content = citation.content || '';
-        
-        // 建立連結，如果有 source_url 就使用，否則建立相對連結
-        const linkUrl = sourceUrl || `/work/${filePath}`;
-        const linkText = filePath || source;
-        
-        return `
+      if (!citations || citations.length === 0) return "";
+
+      const citationsList = citations
+        .map((citation, index) => {
+          const source = citation.source || "";
+          const filePath = citation.file_path || "";
+          const sourceUrl = citation.source_url || "";
+          const title = citation.title || filePath || source;
+          const content = citation.content || "";
+
+          // 建立連結，如果有 source_url 就使用，否則建立相對連結
+          const linkUrl = sourceUrl || `/work/${filePath}`;
+          const linkText = filePath || source;
+
+          return `
           <div class=\"citation-item\">
             <span class=\"citation-number\">${index + 1}</span>
             <div class=\"citation-content\">
               <div class=\"citation-source\">
                 <span class="citation-id">${this.escapeHtml(source)}</span>
-                ${linkUrl ? `<a href="${linkUrl}" target="_blank" class="citation-link">📄 ${this.escapeHtml(linkText)}</a>` : ''}
+                ${linkUrl ? `<a href="${linkUrl}" target="_blank" class="citation-link">📄 ${this.escapeHtml(linkText)}</a>` : ""}
               </div>
-              ${content ? `<div class="citation-text">${this.escapeHtml(content)}</div>` : ''}
-              ${citation.relevance_score ? `<div class=\"citation-score\">相關度: ${(citation.relevance_score * 100).toFixed(1)}%</div>` : ''}
+              ${content ? `<div class="citation-text">${this.escapeHtml(content)}</div>` : ""}
+              ${citation.relevance_score ? `<div class=\"citation-score\">相關度: ${(citation.relevance_score * 100).toFixed(1)}%</div>` : ""}
             </div>
           </div>
         `;
-      }).join('');
-      
+        })
+        .join("");
+
       return `
         <div class=\"knowledge-citations\">
           <div class=\"citations-header\">
@@ -290,25 +314,14 @@ import '../styles/qabotv2.css';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const v2 = new QABotV2();
-    // 監聽全域模式切換
-    window.addEventListener('qabot:switch', (e: any) => {
-      const mode = e?.detail?.mode;
-      const v1 = document.getElementById('qaBotContainer');
-      if (mode === 'v2') {
-        if (v1 && !v1.classList.contains('show')) v1.classList.add('show');
-        v2.show();
-      } else if (mode === 'v1') {
-        v2.hide();
+  function initQABotV2() {
+    if ((window as any).qabotV2Instance) {
+      if (typeof (window as any).qabotV2Instance.cleanup === "function") {
+        (window as any).qabotV2Instance.cleanup();
       }
-    });
+    }
+    (window as any).qabotV2Instance = new QABotV2();
+  }
 
-    // 頁面卸載時清理輪詢
-    window.addEventListener('beforeunload', () => {
-      v2.cleanup();
-    });
-  });
+  document.addEventListener("astro:page-load", initQABotV2);
 </script>
-
-

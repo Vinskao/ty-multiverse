@@ -1,8 +1,6 @@
 ---
-import '../styles/global.css';
-import '../styles/theme-toggle.css';
-import { ThemeProvider } from '../components/ThemeProvider';
-import { ThemeToggle } from '../components/ThemeToggle';
+import "../styles/global.css";
+import "../styles/theme-toggle.css";
 
 interface Props {
 	title?: string | undefined;
@@ -10,8 +8,8 @@ interface Props {
 }
 
 const {
-	title = 'TY Multiverse',
-	description = 'The personal site of Tianyi Kao',
+	title = "TY Multiverse",
+	description = "The personal site of Tianyi Kao",
 } = Astro.props;
 ---
 
@@ -31,7 +29,3 @@ const {
 	href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,700;1,400&family=Rubik:wght@500;600&display=swap"
 	rel="stylesheet"
 />
-
-<ThemeProvider client:load>
-	<ThemeToggle client:visible />
-</ThemeProvider>

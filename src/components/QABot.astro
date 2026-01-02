@@ -1,54 +1,63 @@
 ---
 // QABot組件
-import '../styles/qabot.css';
+import "../styles/qabot.css";
 ---
-<!-- 已抽出共用 HTML 至 QAPlatform.astro -->
 
+<!-- 已抽出共用 HTML 至 QAPlatform.astro -->
 <script>
   // Global language manager
   // eslint-disable-next-line
-  const __LANG_LOADED = (() => { try { if (!(window as any).AppLang) { const s=document.createElement('script'); s.src='/tymultiverse/scripts/lang.js'; s.async=false; document.head.appendChild(s);} } catch(_){} })();
+  const __LANG_LOADED = (() => {
+    try {
+      if (!(window as any).AppLang) {
+        const s = document.createElement("script");
+        s.src = "/tymultiverse/scripts/lang.js";
+        s.async = false;
+        document.head.appendChild(s);
+      }
+    } catch (_) {}
+  })();
   // 將訊息配置直接打包，避免正式環境 404
   // @ts-ignore
-  import messages from '../storages/messages.json';
+  import messages from "../storages/messages.json";
   // @ts-ignore
-  import analystTemplates from '../storages/analyst.json';
+  import analystTemplates from "../storages/analyst.json";
   // @ts-ignore
-  import qabotConfig from '../storages/qabot.json';
+  import qabotConfig from "../storages/qabot.json";
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
-    
+
     // 狀態管理
     private state = {
-      userId: '',
+      userId: "",
       currentHistoryPage: 0,
       historyItemsPerPage: 5,
-      currentLanguage: 'chinese',
+      currentLanguage: "chinese",
       isFullscreen: false,
       isThinking: false,
       saucyMessageCount: 0,
       maxSaucyMessages: 3,
-      lastSaucyMessage: '',
+      lastSaucyMessage: "",
       hasShownInactivityMessage: false,
-      currentTheme: 'light',
+      currentTheme: "light",
       earliestTimestamp: null as number | null,
-      botName: 'Maya',
+      botName: "Maya",
       availableBots: [] as string[],
       currentBotIndex: 0,
       // 新增：頁面分析相關狀態
-      analysisType: 'summary',
+      analysisType: "summary",
       isAnalyzing: false,
-      hasShownLoginAlert: false
+      hasShownLoginAlert: false,
     };
-    
+
     // 定時器
     private timers = {
       inactivity: null as NodeJS.Timeout | null,
-      randomMessage: null as NodeJS.Timeout | null
+      randomMessage: null as NodeJS.Timeout | null,
     };
-    
-        // 消息配置
+
+    // 消息配置
     private messages: any = null;
 
     constructor() {
@@ -58,11 +67,11 @@ import '../styles/qabot.css';
       this.setupEventListeners();
       this.setupAvatarSelector(); // 新增頭貼選擇器
       this.setupNetworkListener(); // 新增網路狀態監聽
-      this.fetchBotNames();       // 從 API 取得可用 bot 名稱
+      this.fetchBotNames(); // 從 API 取得可用 bot 名稱
       // 新增：初始化頁面分析面板
       this.setupAnalysisPanel();
       this.loadMessages().then(() => {
-      this.loadChatHistory();
+        this.loadChatHistory();
         this.startTimers();
       });
     }
@@ -71,47 +80,52 @@ import '../styles/qabot.css';
     private initializeTheme() {
       // 檢測當前主題
       this.state.currentTheme = this.detectCurrentTheme();
-      
+
       // 監聽主題變化
       this.setupThemeListener();
     }
 
     // 檢測當前主題
     private detectCurrentTheme(): string {
-      const savedTheme = localStorage.getItem('theme');
+      const savedTheme = localStorage.getItem("theme");
       if (savedTheme) {
         return savedTheme;
       }
-      
+
       // 檢查系統偏好
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
       }
-      
+
       // 檢查 DOM 中的 theme-dark 類
-      if (document.documentElement.classList.contains('theme-dark')) {
-        return 'dark';
+      if (document.documentElement.classList.contains("theme-dark")) {
+        return "dark";
       }
-      
-      return 'light';
+
+      return "light";
     }
 
     // 設置主題監聽器
     private setupThemeListener() {
       // 監聽 localStorage 變化
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'theme') {
-          this.updateTheme(e.newValue || 'light');
+      window.addEventListener("storage", (e) => {
+        if (e.key === "theme") {
+          this.updateTheme(e.newValue || "light");
         }
       });
-      
+
       // 監聽 DOM 變化（當其他組件改變主題時）
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (
+            mutation.type === "attributes" &&
+            mutation.attributeName === "class"
+          ) {
             const target = mutation.target as HTMLElement;
             if (target === document.documentElement) {
-              const newTheme = target.classList.contains('theme-dark') ? 'dark' : 'light';
+              const newTheme = target.classList.contains("theme-dark")
+                ? "dark"
+                : "light";
               if (newTheme !== this.state.currentTheme) {
                 this.updateTheme(newTheme);
               }
@@ -119,16 +133,16 @@ import '../styles/qabot.css';
           }
         });
       });
-      
+
       observer.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ['class']
+        attributeFilter: ["class"],
       });
-      
+
       // 監聽系統主題變化
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', (e) => {
-        const newTheme = e.matches ? 'dark' : 'light';
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      mediaQuery.addEventListener("change", (e) => {
+        const newTheme = e.matches ? "dark" : "light";
         if (newTheme !== this.state.currentTheme) {
           this.updateTheme(newTheme);
         }
@@ -138,54 +152,59 @@ import '../styles/qabot.css';
     // 設置網路狀態監聽器
     private setupNetworkListener() {
       let wasOffline = !navigator.onLine;
-      
+
       // 監聽網路狀態變化
-      window.addEventListener('online', () => {
+      window.addEventListener("online", () => {
         if (wasOffline) {
-          console.log('網路已恢復，重新獲取AI專員列表');
+          console.log("網路已恢復，重新獲取AI專員列表");
           wasOffline = false;
           this.refreshBotList();
         }
       });
-      
-      window.addEventListener('offline', () => {
+
+      window.addEventListener("offline", () => {
         wasOffline = true;
-        console.log('網路已斷線');
+        console.log("網路已斷線");
       });
     }
 
     // 重新整理AI專員列表
     private async refreshBotList() {
       try {
-        console.log('開始重新獲取AI專員列表...');
-        
+        console.log("開始重新獲取AI專員列表...");
+
         // 顯示loading狀態
         this.showBotListLoading();
-        
+
         await this.fetchBotNames();
-        
+
         // 隱藏loading狀態
         this.hideBotListLoading();
-        
+
         // 如果當前選擇的AI不在新列表中，自動切換到第一個可用的AI
-        if (this.state.availableBots.length > 0 && !this.state.availableBots.includes(this.state.botName)) {
-          console.log(`當前AI ${this.state.botName} 不在新列表中，切換到 ${this.state.availableBots[0]}`);
+        if (
+          this.state.availableBots.length > 0 &&
+          !this.state.availableBots.includes(this.state.botName)
+        ) {
+          console.log(
+            `當前AI ${this.state.botName} 不在新列表中，切換到 ${this.state.availableBots[0]}`,
+          );
           this.state.currentBotIndex = 0;
           this.state.botName = this.state.availableBots[0];
           this.updateAvatarAndName();
-          
+
           // 顯示切換提示
           this.addBotSwitchMessage();
-          
+
           // 延遲顯示新的歡迎消息
           setTimeout(() => {
             this.addWelcomeMessage();
           }, 1000);
         }
-        
-        console.log('AI專員列表更新完成');
+
+        console.log("AI專員列表更新完成");
       } catch (error) {
-        console.error('重新獲取AI專員列表失敗:', error);
+        console.error("重新獲取AI專員列表失敗:", error);
         this.hideBotListLoading();
       }
     }
@@ -200,21 +219,21 @@ import '../styles/qabot.css';
             <p>正在重新連線中...</p>
           </div>
         `;
-        this.elements.avatarSelector.style.display = 'block';
+        this.elements.avatarSelector.style.display = "block";
       }
     }
 
     // 隱藏AI專員列表載入中狀態
     private hideBotListLoading() {
       if (this.elements.avatarSelector) {
-        this.elements.avatarSelector.style.display = 'none';
+        this.elements.avatarSelector.style.display = "none";
       }
     }
 
     // 更新主題
     private updateTheme(newTheme: string) {
       this.state.currentTheme = newTheme;
-      
+
       // 這裡可以添加主題相關的邏輯
       // 例如更新按鈕樣式、重新渲染等
     }
@@ -222,31 +241,49 @@ import '../styles/qabot.css';
     // 初始化 DOM 元素
     private initializeElements() {
       const elementIds = [
-        'userInput', 'sendButton', 'chatMessages', 'inputStatus', 'qaBotToggle', 
-        'qaBotContainer', 'closeButton', 'historyButton', 'loadMoreButton', 
-        'loadMoreContainer', 'imageModal', 'modalImage', 'imageModalClose',
+        "userInput",
+        "sendButton",
+        "chatMessages",
+        "inputStatus",
+        "qaBotToggle",
+        "qaBotContainer",
+        "closeButton",
+        "historyButton",
+        "loadMoreButton",
+        "loadMoreContainer",
+        "imageModal",
+        "modalImage",
+        "imageModalClose",
         // 新增：頁面分析相關元素
-        'pageAnalysisButton', 'analysisPanel'
+        "pageAnalysisButton",
+        "analysisPanel",
       ];
-      
-      elementIds.forEach(id => {
+
+      elementIds.forEach((id) => {
         this.elements[id] = document.getElementById(id) as HTMLElement;
       });
 
       // 另外取得頭貼元素
-      this.elements.headerAvatar = document.querySelector('.header-avatar') as HTMLElement;
+      this.elements.headerAvatar = document.querySelector(
+        ".header-avatar",
+      ) as HTMLElement;
     }
 
     // 初始化狀態
     private initializeState() {
       this.state.userId = this.getOrCreateUserId();
       // Initialize language from global AppLang
-      this.state.currentLanguage = ((window as any).AppLang ? (window as any).AppLang.getQALang() : (localStorage.getItem('qabot_language') || 'chinese'));
+      this.state.currentLanguage = (window as any).AppLang
+        ? (window as any).AppLang.getQALang()
+        : localStorage.getItem("qabot_language") || "chinese";
       this.updateLanguageButton();
       this.updateInputPlaceholder();
 
       // Listen to global language changes
-      if ((window as any).AppLang && typeof (window as any).AppLang.onChange === 'function') {
+      if (
+        (window as any).AppLang &&
+        typeof (window as any).AppLang.onChange === "function"
+      ) {
         (window as any).AppLang.onChange(({ qaLang }) => {
           if (qaLang && qaLang !== this.state.currentLanguage) {
             this.state.currentLanguage = qaLang;
@@ -270,63 +307,69 @@ import '../styles/qabot.css';
     private hasValidMessages(name: string): boolean {
       const zh = this.messages?.chinese?.[name];
       const en = this.messages?.english?.[name];
-      return (zh?.welcome?.length > 0) || (en?.welcome?.length > 0);
+      return zh?.welcome?.length > 0 || en?.welcome?.length > 0;
     }
 
     private pruneAvailableBots() {
       if (!Array.isArray(this.state.availableBots)) return;
-            
+
       const beforeFilter = [...this.state.availableBots];
-      this.state.availableBots = this.state.availableBots.filter(n => {
+      this.state.availableBots = this.state.availableBots.filter((n) => {
         const hasMessages = this.hasValidMessages(n);
         return hasMessages;
       });
-            
+
       // 確保至少 Maya 存在
-      if (!this.state.availableBots.includes('Maya') && this.hasValidMessages('Maya')) {
-        this.state.availableBots.unshift('Maya');
+      if (
+        !this.state.availableBots.includes("Maya") &&
+        this.hasValidMessages("Maya")
+      ) {
+        this.state.availableBots.unshift("Maya");
       }
-      
+
       // 如果當前 bot 沒有句庫 → 換成清單第一個
-      if (!this.hasValidMessages(this.state.botName) && this.state.availableBots.length) {
+      if (
+        !this.hasValidMessages(this.state.botName) &&
+        this.state.availableBots.length
+      ) {
         this.state.botName = this.state.availableBots[0];
         this.state.currentBotIndex = 0;
         this.updateAvatarAndName();
       }
     }
- 
+
     // 取得所有可選 bot 名稱
     private async fetchBotNames() {
       try {
         // 使用統一的 peopleService
-        const { peopleService } = await import('../services/api/peopleService');
+        const { peopleService } = await import("../services/api/peopleService");
         const names = await peopleService.getAllPeopleNames();
 
         if (Array.isArray(names)) {
           // 確保 Maya 在列表內
-          if (!names.includes('Maya')) names.unshift('Maya');
+          if (!names.includes("Maya")) names.unshift("Maya");
           this.state.availableBots = names;
 
           // 初始化後先過濾無句庫的
           if (this.messages) this.pruneAvailableBots();
 
-          this.state.currentBotIndex = names.indexOf('Maya');
+          this.state.currentBotIndex = names.indexOf("Maya");
           return; // 成功後直接返回
         } else {
           // API 調用失敗，顯示 Sweet Alert 提示用戶先登入
           this.showLoginAlert();
-          console.warn('❌ API回應錯誤: 無效的數據格式');
+          console.warn("❌ API回應錯誤: 無效的數據格式");
         }
       } catch (err) {
         // 網路錯誤，顯示 Sweet Alert 提示用戶先登入
         this.showLoginAlert();
-        console.warn('❌ 網路錯誤:', err);
+        console.warn("❌ 網路錯誤:", err);
       }
-      
+
       // 所有情況都失敗後，確保至少有一個預設的AI可用
-      console.warn('使用預設AI');
+      console.warn("使用預設AI");
       if (this.state.availableBots.length === 0) {
-        this.state.availableBots = ['Maya'];
+        this.state.availableBots = ["Maya"];
         this.state.currentBotIndex = 0;
       }
       this.updateAvatarAndName();
@@ -338,13 +381,13 @@ import '../styles/qabot.css';
       if (this.state.hasShownLoginAlert) {
         return;
       }
-      
+
       this.state.hasShownLoginAlert = true;
-      
+
       // 使用 SweetAlert2 顯示美觀的提示
-      if (typeof (window as any).Swal !== 'undefined') {
+      if (typeof (window as any).Swal !== "undefined") {
         (window as any).Swal.fire({
-          title: '🔐 需要登入',
+          title: "🔐 需要登入",
           html: `
             <div style="text-align: center; padding: 20px;">
               <div style="font-size: 48px; margin-bottom: 20px;">👋</div>
@@ -356,22 +399,22 @@ import '../styles/qabot.css';
               </p>
             </div>
           `,
-          icon: 'info',
-          confirmButtonText: '知道了',
-          confirmButtonColor: '#3085d6',
+          icon: "info",
+          confirmButtonText: "知道了",
+          confirmButtonColor: "#3085d6",
           showCancelButton: true,
-          cancelButtonText: '稍後再說',
-          cancelButtonColor: '#6c757d',
+          cancelButtonText: "稍後再說",
+          cancelButtonColor: "#6c757d",
           customClass: {
-            popup: 'swal-login-popup',
-            title: 'swal-login-title',
-            htmlContainer: 'swal-login-content'
+            popup: "swal-login-popup",
+            title: "swal-login-title",
+            htmlContainer: "swal-login-content",
           },
-          background: '#fff',
-          backdrop: 'rgba(0,0,0,0.4)',
+          background: "#fff",
+          backdrop: "rgba(0,0,0,0.4)",
           allowOutsideClick: true,
           allowEscapeKey: true,
-          width: '400px'
+          width: "400px",
         });
       }
     }
@@ -380,7 +423,7 @@ import '../styles/qabot.css';
     private updateAvatarAndName() {
       const avatarUrl = this.getAvatarUrl(this.state.botName);
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
-      
+
       // 更新 header 頭像
       const avatarEl = this.elements.headerAvatar as HTMLImageElement;
       if (avatarEl) {
@@ -390,9 +433,11 @@ import '../styles/qabot.css';
           avatarEl.src = defaultAvatarUrl;
         };
       }
-      
+
       // 更新 toggle 按鈕頭像
-      const toggleImage = this.elements.qaBotToggle?.querySelector('.toggle-image') as HTMLImageElement;
+      const toggleImage = this.elements.qaBotToggle?.querySelector(
+        ".toggle-image",
+      ) as HTMLImageElement;
       if (toggleImage) {
         toggleImage.src = avatarUrl;
         toggleImage.alt = this.state.botName;
@@ -400,8 +445,10 @@ import '../styles/qabot.css';
           toggleImage.src = defaultAvatarUrl;
         };
       }
-      
-      const headerName = avatarEl?.parentElement?.querySelector('.header-text h3') as HTMLElement;
+
+      const headerName = avatarEl?.parentElement?.querySelector(
+        ".header-text h3",
+      ) as HTMLElement;
       if (headerName) headerName.textContent = this.state.botName;
     }
 
@@ -417,60 +464,67 @@ import '../styles/qabot.css';
       if (!avatarEl) return;
 
       // 創建浮動頭像選擇面板
-      const avatarSelector = document.createElement('div');
-      avatarSelector.className = 'avatar-selector';
-      avatarSelector.style.display = 'none';
+      const avatarSelector = document.createElement("div");
+      avatarSelector.className = "avatar-selector";
+      avatarSelector.style.display = "none";
       document.body.appendChild(avatarSelector);
 
       // 點擊頭像顯示選擇面板
-      avatarEl.addEventListener('click', (e) => {
+      avatarEl.addEventListener("click", (e) => {
         e.stopPropagation();
-        
+
         // 檢查是否在V2模式下
-        if ((window as any).qabotMode === 'v2') {
+        if ((window as any).qabotMode === "v2") {
           const config = qabotConfig.header_controls.v2.avatar;
           if (config && !config.enabled && config.restriction_message) {
             this.showV2RestrictionMessage(config.restriction_message);
           }
           return;
         }
-        
+
         this.showAvatarSelector(avatarSelector);
       });
 
       // 新增：header-text hover + click 切換到 V2
-      const headerText = document.querySelector('.chat-header .header-text') as HTMLElement;
+      const headerText = document.querySelector(
+        ".chat-header .header-text",
+      ) as HTMLElement;
       if (headerText) {
-        headerText.style.cursor = 'pointer';
-        headerText.title = '切換到 Maya v2';
-        headerText.addEventListener('mouseenter', () => {
-          headerText.style.opacity = '0.85';
-          headerText.style.textDecoration = 'underline';
+        headerText.style.cursor = "pointer";
+        headerText.title = "切換到 Maya v2";
+        headerText.addEventListener("mouseenter", () => {
+          headerText.style.opacity = "0.85";
+          headerText.style.textDecoration = "underline";
         });
-        headerText.addEventListener('mouseleave', () => {
-          headerText.style.opacity = '';
-          headerText.style.textDecoration = '';
+        headerText.addEventListener("mouseleave", () => {
+          headerText.style.opacity = "";
+          headerText.style.textDecoration = "";
         });
-        headerText.addEventListener('click', () => {
+        headerText.addEventListener("click", () => {
           const current = (window as any).qabotMode;
-          const next = current === 'v2' ? 'v1' : 'v2';
+          const next = current === "v2" ? "v1" : "v2";
           (window as any).qabotMode = next;
-          window.dispatchEvent(new CustomEvent('qabot:switch', { detail: { mode: next } }));
+          window.dispatchEvent(
+            new CustomEvent("qabot:switch", { detail: { mode: next } }),
+          );
         });
       }
 
       // 監聽全域模式切換，使用配置文件管理header controls狀態
-      window.addEventListener('qabot:switch', (e: any) => {
+      window.addEventListener("qabot:switch", (e: any) => {
         const mode = e?.detail?.mode;
-        if (mode === 'v1' || mode === 'v2') {
+        if (mode === "v1" || mode === "v2") {
           this.updateHeaderControlsByConfig(mode);
         }
       });
 
       // 點擊其他地方隱藏選擇面板
-      document.addEventListener('click', (e) => {
-        if (!avatarSelector.contains(e.target as Node) && !avatarEl.contains(e.target as Node)) {
-          avatarSelector.style.display = 'none';
+      document.addEventListener("click", (e) => {
+        if (
+          !avatarSelector.contains(e.target as Node) &&
+          !avatarEl.contains(e.target as Node)
+        ) {
+          avatarSelector.style.display = "none";
         }
       });
 
@@ -482,84 +536,89 @@ import '../styles/qabot.css';
     private setupAnalysisPanelEvents() {
       const panel = this.elements.analysisPanel as HTMLElement;
       if (!panel) {
-        console.warn('分析面板元素不存在');
+        console.warn("分析面板元素不存在");
         return;
       }
 
       // 綁定分析類型按鈕事件
-      const typeButtons = panel.querySelectorAll('.pa-type-btn');
-      
+      const typeButtons = panel.querySelectorAll(".pa-type-btn");
+
       typeButtons.forEach((btn, index) => {
-        btn.addEventListener('click', (e) => {
-          const type = (e.currentTarget as HTMLElement).getAttribute('data-type') || 'summary';
+        btn.addEventListener("click", (e) => {
+          const type =
+            (e.currentTarget as HTMLElement).getAttribute("data-type") ||
+            "summary";
           this.selectAnalysisType(type);
         });
       });
 
       // 綁定開始分析按鈕事件
-      const startBtn = panel.querySelector('#startPageAnalysis') as HTMLButtonElement;
+      const startBtn = panel.querySelector(
+        "#startPageAnalysis",
+      ) as HTMLButtonElement;
       if (startBtn) {
-        startBtn.addEventListener('click', () => {
+        startBtn.addEventListener("click", () => {
           this.analyzePage();
         });
       } else {
-        console.warn('未找到開始分析按鈕');
+        console.warn("未找到開始分析按鈕");
       }
     }
 
     // 顯示頭像選擇面板
     private showAvatarSelector(selector: HTMLElement) {
       // 清空現有內容
-      selector.innerHTML = '';
-      
+      selector.innerHTML = "";
+
       // 創建標題
-      const title = document.createElement('h4');
-      title.textContent = '在線專員';
-      title.className = 'avatar-selector-title';
+      const title = document.createElement("h4");
+      title.textContent = "在線專員";
+      title.className = "avatar-selector-title";
       selector.appendChild(title);
 
       // 創建頭像網格
-      const avatarGrid = document.createElement('div');
-      avatarGrid.className = 'avatar-grid';
+      const avatarGrid = document.createElement("div");
+      avatarGrid.className = "avatar-grid";
 
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
 
       // 過濾掉 default 角色和可能的無效角色
-      const validBots = this.state.availableBots.filter(botName => 
-        botName.toLowerCase() !== 'default' && 
-        botName.toLowerCase() !== 'unknown' &&
-        botName.trim() !== ''
+      const validBots = this.state.availableBots.filter(
+        (botName) =>
+          botName.toLowerCase() !== "default" &&
+          botName.toLowerCase() !== "unknown" &&
+          botName.trim() !== "",
       );
 
       validBots.forEach((botName, index) => {
-        const avatarItem = document.createElement('div');
-        avatarItem.className = 'avatar-item';
+        const avatarItem = document.createElement("div");
+        avatarItem.className = "avatar-item";
         if (botName === this.state.botName) {
-          avatarItem.classList.add('active');
+          avatarItem.classList.add("active");
         }
 
-        const avatarImg = document.createElement('img');
+        const avatarImg = document.createElement("img");
         avatarImg.src = this.getAvatarUrl(botName);
         avatarImg.alt = botName;
-        avatarImg.className = 'avatar-selector-img';
-        
+        avatarImg.className = "avatar-selector-img";
+
         // 如果圖片載入失敗，隱藏整個選項
         avatarImg.onerror = () => {
-          avatarItem.style.display = 'none';
+          avatarItem.style.display = "none";
         };
 
-        const avatarName = document.createElement('span');
+        const avatarName = document.createElement("span");
         avatarName.textContent = botName;
-        avatarName.className = 'avatar-name';
+        avatarName.className = "avatar-name";
 
         avatarItem.appendChild(avatarImg);
         avatarItem.appendChild(avatarName);
 
         // 點擊切換AI - 使用原始索引
-        avatarItem.addEventListener('click', () => {
+        avatarItem.addEventListener("click", () => {
           const originalIndex = this.state.availableBots.indexOf(botName);
           this.selectBot(originalIndex);
-          selector.style.display = 'none';
+          selector.style.display = "none";
         });
 
         avatarGrid.appendChild(avatarItem);
@@ -568,7 +627,7 @@ import '../styles/qabot.css';
       selector.appendChild(avatarGrid);
 
       // 顯示面板
-      selector.style.display = 'block';
+      selector.style.display = "block";
     }
 
     // 選擇指定的bot
@@ -577,35 +636,33 @@ import '../styles/qabot.css';
         this.state.currentBotIndex = index;
         this.state.botName = this.state.availableBots[index];
         this.updateAvatarAndName();
-        
+
         // 立即清除對話歷史，避免頭像和對話不匹配
-        this.elements.chatMessages.innerHTML = '';
+        this.elements.chatMessages.innerHTML = "";
         // 隱藏載入更多歷史按鈕
         if (this.elements.loadMoreContainer) {
-          this.elements.loadMoreContainer.style.display = 'none';
+          this.elements.loadMoreContainer.style.display = "none";
         }
-        
+
         // 重置狀態
-        this.state.lastSaucyMessage = '';
+        this.state.lastSaucyMessage = "";
         this.state.hasShownInactivityMessage = false;
         this.state.isThinking = false;
         this.state.saucyMessageCount = 0;
         this.state.earliestTimestamp = null;
-        
+
         // 顯示AI切換提示
         this.addBotSwitchMessage();
-        
+
         // 延遲顯示新的歡迎消息，讓用戶看到切換提示
         setTimeout(() => {
           this.addWelcomeMessage();
         }, 1000);
-        
+
         this.resetInactivityTimer();
         this.scrollToBottom();
       }
     }
-
-
 
     // 取得頭貼 URL
     private getAvatarUrl(name: string): string {
@@ -616,40 +673,50 @@ import '../styles/qabot.css';
     // 設置事件監聽器
     private setupEventListeners() {
       // 基本控制事件
-      this.elements.qaBotToggle.addEventListener('click', () => this.toggleChat());
+      this.elements.qaBotToggle.addEventListener("click", () =>
+        this.toggleChat(),
+      );
       // 監聽從外部切換 v1/v2
-      window.addEventListener('qabot:switch', (e: any) => {
+      window.addEventListener("qabot:switch", (e: any) => {
         const mode = e?.detail?.mode;
         const container = this.elements.qaBotContainer;
-        const headerNameEl = container?.querySelector('.header-text h3') as HTMLElement | null;
+        const headerNameEl = container?.querySelector(
+          ".header-text h3",
+        ) as HTMLElement | null;
         const inputEl = this.elements.userInput as HTMLInputElement;
-        if (mode === 'v2') {
+        if (mode === "v2") {
           // 確保 v1 視窗可見
-          if (container && !container.classList.contains('show')) {
-            container.classList.add('show');
+          if (container && !container.classList.contains("show")) {
+            container.classList.add("show");
           }
           // 顯示 Maya v2 名稱
-          if (headerNameEl) headerNameEl.textContent = 'Maya v2';
+          if (headerNameEl) headerNameEl.textContent = "Maya v2";
           // 調整輸入框提示
-          if (inputEl) inputEl.placeholder = '問 Maya v2...';
-        } else if (mode === 'v1') {
+          if (inputEl) inputEl.placeholder = "問 Maya v2...";
+        } else if (mode === "v1") {
           // 還原成目前 bot 名稱
           if (headerNameEl) headerNameEl.textContent = this.state.botName;
           // 還原輸入框提示
           this.updateInputPlaceholder();
           // 顯示 v1 面板
-          if (container && !container.classList.contains('show')) {
-            container.classList.add('show');
+          if (container && !container.classList.contains("show")) {
+            container.classList.add("show");
           }
         }
       });
-      this.elements.closeButton.addEventListener('click', () => this.hideChat());
-      this.elements.historyButton.addEventListener('click', () => this.loadChatHistory());
-      this.elements.loadMoreButton.addEventListener('click', () => this.loadMoreHistory());
+      this.elements.closeButton.addEventListener("click", () =>
+        this.hideChat(),
+      );
+      this.elements.historyButton.addEventListener("click", () =>
+        this.loadChatHistory(),
+      );
+      this.elements.loadMoreButton.addEventListener("click", () =>
+        this.loadMoreHistory(),
+      );
       // 新增：頁面分析按鈕事件
-      this.elements.pageAnalysisButton.addEventListener('click', () => {
+      this.elements.pageAnalysisButton.addEventListener("click", () => {
         // 檢查是否在V2模式下
-        if ((window as any).qabotMode === 'v2') {
+        if ((window as any).qabotMode === "v2") {
           const config = qabotConfig.header_controls.v2.page_analysis;
           if (config && !config.enabled && config.restriction_message) {
             this.showV2RestrictionMessage(config.restriction_message);
@@ -658,17 +725,21 @@ import '../styles/qabot.css';
         }
         this.toggleAnalysisPanel();
       });
-      
+
       // 新增：頁面分析面板事件（延遲綁定，確保面板已創建）
       setTimeout(() => {
         this.setupAnalysisPanelEvents();
       }, 100);
-      
+
       // 功能按鈕事件
-      (document.getElementById('fullscreenButton') as HTMLButtonElement).addEventListener('click', () => this.toggleFullscreen());
-      (document.getElementById('languageButton') as HTMLButtonElement).addEventListener('click', () => {
+      (
+        document.getElementById("fullscreenButton") as HTMLButtonElement
+      ).addEventListener("click", () => this.toggleFullscreen());
+      (
+        document.getElementById("languageButton") as HTMLButtonElement
+      ).addEventListener("click", () => {
         // 檢查是否在V2模式下
-        if ((window as any).qabotMode === 'v2') {
+        if ((window as any).qabotMode === "v2") {
           const config = qabotConfig.header_controls.v2.language;
           if (config && !config.enabled && config.restriction_message) {
             this.showV2RestrictionMessage(config.restriction_message);
@@ -677,133 +748,143 @@ import '../styles/qabot.css';
         }
         this.toggleLanguage();
       });
-      
+
       // 輸入相關事件
-      this.elements.userInput.addEventListener('input', () => {
+      this.elements.userInput.addEventListener("input", () => {
         this.updateSendButton();
         this.resetInactivityTimer();
       });
 
-      this.elements.userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+      this.elements.userInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          if ((window as any).qabotMode === 'v2') return; // 交由 v2 處理
+          if ((window as any).qabotMode === "v2") return; // 交由 v2 處理
           this.sendMessage();
         }
         this.resetInactivityTimer();
       });
 
-      this.elements.sendButton.addEventListener('click', () => {
-        if ((window as any).qabotMode === 'v2') return; // 交由 v2 處理
+      this.elements.sendButton.addEventListener("click", () => {
+        if ((window as any).qabotMode === "v2") return; // 交由 v2 處理
         this.sendMessage();
         this.resetInactivityTimer();
       });
 
       // 主題建議事件
-      document.addEventListener('click', (e) => {
+      document.addEventListener("click", (e) => {
         const target = e.target as HTMLElement;
-        if (target?.classList.contains('suggestion-btn')) {
-          const topic = target.getAttribute('data-topic');
+        if (target?.classList.contains("suggestion-btn")) {
+          const topic = target.getAttribute("data-topic");
           if (topic) {
             this.handleTopicSuggestion(topic);
           }
         }
       });
-      
+
       // 圖片模態框事件
-      this.elements.imageModalClose.addEventListener('click', (e) => {
+      this.elements.imageModalClose.addEventListener("click", (e) => {
         e.stopPropagation();
         this.hideImageModal();
       });
 
-      this.elements.imageModal.addEventListener('click', (e) => {
+      this.elements.imageModal.addEventListener("click", (e) => {
         if (e.target === this.elements.imageModal) this.hideImageModal();
       });
-      
+
       // 圖片點擊事件
-      this.elements.chatMessages.addEventListener('click', (e) => {
-        const img = (e.target as HTMLElement).closest('.answer-image') as HTMLImageElement;
+      this.elements.chatMessages.addEventListener("click", (e) => {
+        const img = (e.target as HTMLElement).closest(
+          ".answer-image",
+        ) as HTMLImageElement;
         if (img) {
-          const imageSrc = img.getAttribute('data-src') || img.src;
+          const imageSrc = img.getAttribute("data-src") || img.src;
           this.showImageModal(imageSrc);
         }
       });
-      
+
       // ESC 鍵關閉模態框
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && this.elements.imageModal.classList.contains('show')) {
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Escape" &&
+          this.elements.imageModal.classList.contains("show")
+        ) {
           this.hideImageModal();
         }
       });
 
       // 監聽全域模式切換事件
-      window.addEventListener('qabot:switch', (e: any) => {
+      window.addEventListener("qabot:switch", (e: any) => {
         const mode = e?.detail?.mode;
-        const headerText = document.querySelector('.header-text') as HTMLElement;
-        const input = document.getElementById('userInput') as HTMLInputElement;
-        
-        if (mode === 'v2') {
+        const headerText = document.querySelector(
+          ".header-text",
+        ) as HTMLElement;
+        const input = document.getElementById("userInput") as HTMLInputElement;
+
+        if (mode === "v2") {
           // 切換到 v2 模式
           if (headerText) {
-            headerText.setAttribute('data-tooltip', '切換至 v1 模式');
+            headerText.setAttribute("data-tooltip", "切換至 v1 模式");
           }
           if (input) {
-            input.placeholder = '問我任何問題... (v2)';
+            input.placeholder = "問我任何問題... (v2)";
           }
-        } else if (mode === 'v1') {
+        } else if (mode === "v1") {
           // 切換到 v1 模式
           if (headerText) {
-            headerText.setAttribute('data-tooltip', '切換至 v2 模式');
+            headerText.setAttribute("data-tooltip", "切換至 v2 模式");
           }
           if (input) {
-            input.placeholder = '問我任何問題...';
+            input.placeholder = "問我任何問題...";
           }
         }
       });
 
       // 初始化 tooltip
-      const headerText = document.querySelector('.header-text') as HTMLElement;
+      const headerText = document.querySelector(".header-text") as HTMLElement;
       if (headerText) {
-        headerText.setAttribute('data-tooltip', '切換至 v2 模式');
+        headerText.setAttribute("data-tooltip", "切換至 v2 模式");
       }
     }
 
     // 創建消息結構的通用方法
-    private createMessageStructure(type: 'bot' | 'user' | 'loading' = 'bot', content?: any) {
-      const messageDiv = document.createElement('div');
+    private createMessageStructure(
+      type: "bot" | "user" | "loading" = "bot",
+      content?: any,
+    ) {
+      const messageDiv = document.createElement("div");
       messageDiv.className = `message ${type}-message`;
-      
-      if (type === 'bot' || type === 'loading') {
-      // 添加頭像
-      const avatarDiv = document.createElement('div');
-      avatarDiv.className = 'message-avatar';
-      const avatarImg = document.createElement('img');
-      avatarImg.src = this.getAvatarUrl(this.state.botName);
-      avatarImg.alt = this.state.botName;
-      avatarImg.className = 'bot-avatar';
-      avatarImg.onerror = () => {
-        avatarImg.src = this.getDefaultAvatarUrl();
-      };
-      avatarDiv.appendChild(avatarImg);
-      messageDiv.appendChild(avatarDiv);
-      
-      // 添加內容包裝器
-      const contentWrapper = document.createElement('div');
-      contentWrapper.className = 'message-content-wrapper';
-      
-      // 添加消息頭部
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header';
-      const aiName = document.createElement('span');
-      aiName.className = 'ai-name';
-      aiName.textContent = this.state.botName;
-      headerDiv.appendChild(aiName);
-      contentWrapper.appendChild(headerDiv);
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      
-        if (type === 'loading') {
+
+      if (type === "bot" || type === "loading") {
+        // 添加頭像
+        const avatarDiv = document.createElement("div");
+        avatarDiv.className = "message-avatar";
+        const avatarImg = document.createElement("img");
+        avatarImg.src = this.getAvatarUrl(this.state.botName);
+        avatarImg.alt = this.state.botName;
+        avatarImg.className = "bot-avatar";
+        avatarImg.onerror = () => {
+          avatarImg.src = this.getDefaultAvatarUrl();
+        };
+        avatarDiv.appendChild(avatarImg);
+        messageDiv.appendChild(avatarDiv);
+
+        // 添加內容包裝器
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "message-content-wrapper";
+
+        // 添加消息頭部
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "message-header";
+        const aiName = document.createElement("span");
+        aiName.className = "ai-name";
+        aiName.textContent = this.state.botName;
+        headerDiv.appendChild(aiName);
+        contentWrapper.appendChild(headerDiv);
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
+
+        if (type === "loading") {
           contentDiv.innerHTML = `
             <div class="loading">
               <div class="spinner"></div>
@@ -812,45 +893,45 @@ import '../styles/qabot.css';
           `;
         } else if (content) {
           // 確保 content 是字符串類型
-          if (typeof content !== 'string') {
-            content = String(content || '');
+          if (typeof content !== "string") {
+            content = String(content || "");
           }
           contentDiv.innerHTML = content;
         }
-        
+
         contentWrapper.appendChild(contentDiv);
         messageDiv.appendChild(contentWrapper);
-      } else if (type === 'user' && content) {
+      } else if (type === "user" && content) {
         // 用戶消息
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'message-header';
-        const userId = document.createElement('span');
-        userId.className = 'user-id';
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "message-header";
+        const userId = document.createElement("span");
+        userId.className = "user-id";
         userId.textContent = `ID: ${this.state.userId.substring(0, 8)}...`;
         headerDiv.appendChild(userId);
         messageDiv.appendChild(headerDiv);
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "message-content";
         // 確保 content 是字符串類型
-        if (typeof content !== 'string') {
-          content = String(content || '');
+        if (typeof content !== "string") {
+          content = String(content || "");
         }
         contentDiv.innerHTML = `<p>${this.escapeHtml(content)}</p>`;
         messageDiv.appendChild(contentDiv);
       }
-      
+
       return messageDiv;
     }
 
     // 添加消息到聊天區域
-    private addMessage(content: any, type: 'bot' | 'user' | 'loading' = 'bot') {
+    private addMessage(content: any, type: "bot" | "user" | "loading" = "bot") {
       // 確保 content 是字符串類型
-      if (typeof content !== 'string') {
-        console.warn('addMessage: content is not a string:', content);
-        content = String(content || '');
+      if (typeof content !== "string") {
+        console.warn("addMessage: content is not a string:", content);
+        content = String(content || "");
       }
-      
+
       const messageDiv = this.createMessageStructure(type, content);
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
@@ -860,7 +941,7 @@ import '../styles/qabot.css';
     // 添加載入消息
     private addLoadingMessage() {
       this.state.isThinking = true;
-      const loadingDiv = this.createMessageStructure('loading');
+      const loadingDiv = this.createMessageStructure("loading");
       this.elements.chatMessages.appendChild(loadingDiv);
       this.scrollToBottom();
       return loadingDiv;
@@ -869,72 +950,98 @@ import '../styles/qabot.css';
     // 添加歡迎消息
     private addWelcomeMessage() {
       // 先顯示 loading 效果
-      const loadingDiv = this.createMessageStructure('loading');
+      const loadingDiv = this.createMessageStructure("loading");
       this.elements.chatMessages.appendChild(loadingDiv);
       this.scrollToBottom();
-      
+
       // 延遲 1.5 秒後顯示實際的歡迎消息
       setTimeout(() => {
         this.removeMessage(loadingDiv);
-        
+
         const langData = this.messages?.[this.state.currentLanguage];
-        const currentMessages = langData?.[this.state.botName] || langData?.['Maya'];
-        const randomWelcome = currentMessages.welcome[Math.floor(Math.random() * currentMessages.welcome.length)];
-        
-        const messageDiv = this.createMessageStructure('bot', `<p>${randomWelcome}</p>`);
-      
-      // 添加主題建議
-        const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
-      const topicSuggestions = document.createElement('div');
-      topicSuggestions.className = 'topic-suggestions';
-      
-      const suggestionsTitle = document.createElement('h4');
-        suggestionsTitle.textContent = this.state.currentLanguage === 'chinese' ? '💡 建議主題：' : '💡 Suggested Topics:';
-      topicSuggestions.appendChild(suggestionsTitle);
-      
-      const suggestionButtons = document.createElement('div');
-      suggestionButtons.className = 'suggestion-buttons';
-      
-        const topics = this.state.currentLanguage === 'chinese' ? [
-        { key: 'Java', text: '☕ Java 開發' },
-        { key: 'OOP及DI框架', text: '🏗️ OOP及DI框架' },
-        { key: '部署實踐', text: '🚀 部署實踐' },
-        { key: 'redis 及 mq 的差異', text: '🗄️ Redis 與 MQ 的差異' },
-        { key: '了解妳', text: this.state.botName === 'Wavo' ? '想多了解你' : '想多了解妳' }
-      ] : [
-        { key: 'Java', text: '☕ Java Development' },
-        { key: 'OOP及DI框架', text: '🏗️ OOP & DI Frameworks' },
-        { key: '部署實踐', text: '🚀 Deployment Practices' },
-        { key: 'redis 及 mq 的差異', text: '🗄️ Redis & MQ Differences' },
-        { key: '了解妳', text: 'Learn More About Maya' }
-      ];
-      
-      topics.forEach(topic => {
-        const button = document.createElement('button');
-        button.className = 'suggestion-btn';
-        button.setAttribute('data-topic', topic.key);
-        button.textContent = topic.text;
-        suggestionButtons.appendChild(button);
-      });
-      
-      topicSuggestions.appendChild(suggestionButtons);
-      contentDiv.appendChild(topicSuggestions);
-      
+        const currentMessages =
+          langData?.[this.state.botName] || langData?.["Maya"];
+        const randomWelcome =
+          currentMessages.welcome[
+            Math.floor(Math.random() * currentMessages.welcome.length)
+          ];
+
+        const messageDiv = this.createMessageStructure(
+          "bot",
+          `<p>${randomWelcome}</p>`,
+        );
+
+        // 添加主題建議
+        const contentDiv = messageDiv.querySelector(
+          ".message-content",
+        ) as HTMLDivElement;
+        const topicSuggestions = document.createElement("div");
+        topicSuggestions.className = "topic-suggestions";
+
+        const suggestionsTitle = document.createElement("h4");
+        suggestionsTitle.textContent =
+          this.state.currentLanguage === "chinese"
+            ? "💡 建議主題："
+            : "💡 Suggested Topics:";
+        topicSuggestions.appendChild(suggestionsTitle);
+
+        const suggestionButtons = document.createElement("div");
+        suggestionButtons.className = "suggestion-buttons";
+
+        const topics =
+          this.state.currentLanguage === "chinese"
+            ? [
+                { key: "Java", text: "☕ Java 開發" },
+                { key: "OOP及DI框架", text: "🏗️ OOP及DI框架" },
+                { key: "部署實踐", text: "🚀 部署實踐" },
+                { key: "redis 及 mq 的差異", text: "🗄️ Redis 與 MQ 的差異" },
+                {
+                  key: "了解妳",
+                  text:
+                    this.state.botName === "Wavo" ? "想多了解你" : "想多了解妳",
+                },
+              ]
+            : [
+                { key: "Java", text: "☕ Java Development" },
+                { key: "OOP及DI框架", text: "🏗️ OOP & DI Frameworks" },
+                { key: "部署實踐", text: "🚀 Deployment Practices" },
+                {
+                  key: "redis 及 mq 的差異",
+                  text: "🗄️ Redis & MQ Differences",
+                },
+                { key: "了解妳", text: "Learn More About Maya" },
+              ];
+
+        topics.forEach((topic) => {
+          const button = document.createElement("button");
+          button.className = "suggestion-btn";
+          button.setAttribute("data-topic", topic.key);
+          button.textContent = topic.text;
+          suggestionButtons.appendChild(button);
+        });
+
+        topicSuggestions.appendChild(suggestionButtons);
+        contentDiv.appendChild(topicSuggestions);
+
         this.elements.chatMessages.appendChild(messageDiv);
-      this.scrollToBottom();
+        this.scrollToBottom();
       }, 1500);
     }
 
     // 添加AI切換提示消息
     private addBotSwitchMessage() {
-      const switchMessage = this.state.currentLanguage === 'chinese' 
-        ? `🔄 已切換到 ${this.state.botName}`
-        : `🔄 Switched to ${this.state.botName}`;
-      
-      const messageDiv = this.createMessageStructure('bot', `<p class="bot-switch-message">${switchMessage}</p>`);
+      const switchMessage =
+        this.state.currentLanguage === "chinese"
+          ? `🔄 已切換到 ${this.state.botName}`
+          : `🔄 Switched to ${this.state.botName}`;
+
+      const messageDiv = this.createMessageStructure(
+        "bot",
+        `<p class="bot-switch-message">${switchMessage}</p>`,
+      );
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
-      
+
       // 3秒後自動移除切換提示
       setTimeout(() => {
         if (messageDiv.parentNode) {
@@ -946,18 +1053,18 @@ import '../styles/qabot.css';
     // 處理主題建議
     private handleTopicSuggestion(topic: string) {
       if (!this.messages) {
-        console.error('消息配置未載入');
+        console.error("消息配置未載入");
         return;
       }
-      
+
       const langData = this.messages?.[this.state.currentLanguage];
       const topicsData = langData?.topics;
       if (!topicsData) {
-        console.error('當前語言消息或topics不存在');
+        console.error("當前語言消息或topics不存在");
         return;
       }
       const suggestion = (topicsData as any)[topic];
-      
+
       if (suggestion) {
         (this.elements.userInput as HTMLInputElement).value = suggestion;
         this.updateSendButton();
@@ -974,41 +1081,68 @@ import '../styles/qabot.css';
     // 格式化答案
     private formatAnswer(answer: string): string {
       let formattedAnswer = answer;
-      
+
       // 處理特殊格式
-      formattedAnswer = formattedAnswer.replace(/「([^」]+)」/g, '<strong>「$1」</strong>');
-      formattedAnswer = formattedAnswer.replace(/(吉国\s*[小千秋][百秋])(?![^<]*\.png)/g, '<strong>$1</strong>');
-      formattedAnswer = formattedAnswer.replace(/(森築\s*空音)(?![^<]*\.png)/g, '<strong>$1</strong>');
-      formattedAnswer = formattedAnswer.replace(/(Sayuri|Chiaki|Sorane)(?![^<]*\.png)/g, '<strong>$1</strong>');
-      
+      formattedAnswer = formattedAnswer.replace(
+        /「([^」]+)」/g,
+        "<strong>「$1」</strong>",
+      );
+      formattedAnswer = formattedAnswer.replace(
+        /(吉国\s*[小千秋][百秋])(?![^<]*\.png)/g,
+        "<strong>$1</strong>",
+      );
+      formattedAnswer = formattedAnswer.replace(
+        /(森築\s*空音)(?![^<]*\.png)/g,
+        "<strong>$1</strong>",
+      );
+      formattedAnswer = formattedAnswer.replace(
+        /(Sayuri|Chiaki|Sorane)(?![^<]*\.png)/g,
+        "<strong>$1</strong>",
+      );
+
       // 處理圖片連結
-      formattedAnswer = formattedAnswer.replace(/圖片連結：\s*\n((?:- [^\n]+\n?)+)/gi, (match, imageList) => {
-        const imageUrls = imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) || [];
-        return `<div class="image-container-wrapper">${imageUrls.map(url => 
-          `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>`
-        ).join('')}</div>`;
-      });
-      
-      formattedAnswer = formattedAnswer.replace(/圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi, 
-        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onerror="this.style.display=\'none\'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>');
+      formattedAnswer = formattedAnswer.replace(
+        /圖片連結：\s*\n((?:- [^\n]+\n?)+)/gi,
+        (match, imageList) => {
+          const imageUrls =
+            imageList.match(/https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp)/gi) ||
+            [];
+          return `<div class="image-container-wrapper">${imageUrls
+            .map(
+              (url) =>
+                `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>`,
+            )
+            .join("")}</div>`;
+        },
+      );
+
+      formattedAnswer = formattedAnswer.replace(
+        /圖片連結：\s*(https?:\/\/[^\n]+\.(?:png|jpg|jpeg|gif|webp))/gi,
+        '<div class="image-container"><img src="$1" alt="圖片" class="answer-image" data-src="$1" onerror="this.style.display=\'none\'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>',
+      );
 
       // 將純圖片連結也轉成 <img>，隱藏原始網址
-      formattedAnswer = formattedAnswer.replace(/(?<!src=")https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?=[\s]|$)/gi, (url) => {
-        return `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>`;
-      });
-      
+      formattedAnswer = formattedAnswer.replace(
+        /(?<!src=")https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?=[\s]|$)/gi,
+        (url) => {
+          return `<div class="image-container"><img src="${url}" alt="圖片" class="answer-image" data-src="${url}" onerror="this.style.display='none'" loading="lazy" width="260" style="max-width:260px;height:auto;" /></div>`;
+        },
+      );
+
       // 處理換行
-      formattedAnswer = formattedAnswer.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      formattedAnswer = formattedAnswer
+        .replace(/\n\n/g, "</p><p>")
+        .replace(/\n/g, "<br>");
       return `<p>${formattedAnswer}</p>`;
     }
 
     // 添加機器人回應
     private addBotResponse(answer: any, sources: any[]) {
       this.state.isThinking = false;
-      
+
       // 處理 answer 可能是對象的情況
-      let answerText = '';
-      if (typeof answer === 'object' && answer !== null) {
+      let answerText = "";
+      if (typeof answer === "object" && answer !== null) {
         // 如果是對象，嘗試提取 text 字段
         if (answer.text) {
           answerText = answer.text;
@@ -1020,48 +1154,56 @@ import '../styles/qabot.css';
           // 如果沒有找到預期的字段，將整個對象轉換為字符串
           answerText = JSON.stringify(answer);
         }
-      } else if (typeof answer === 'string') {
+      } else if (typeof answer === "string") {
         answerText = answer;
       } else {
-        answerText = String(answer || '');
+        answerText = String(answer || "");
       }
-      
-      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answerText));
-      const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
-      
+
+      const messageDiv = this.createMessageStructure(
+        "bot",
+        this.formatAnswer(answerText),
+      );
+      const contentDiv = messageDiv.querySelector(
+        ".message-content",
+      ) as HTMLDivElement;
+
       // 添加來源列表（僅在存在有效來源時）
       if (sources && Array.isArray(sources) && sources.length > 0) {
-        const sourcesDiv = document.createElement('div');
-        sourcesDiv.className = 'sources-list';
+        const sourcesDiv = document.createElement("div");
+        sourcesDiv.className = "sources-list";
 
         let hasValidSource = false;
 
-        sources.forEach(source => {
+        sources.forEach((source) => {
           // 取得檔案路徑（可能欄位名稱不同）
-          const filePath = (source && (source.file_path || source.path || source.file)) as string | undefined;
+          const filePath = (source &&
+            (source.file_path || source.path || source.file)) as
+            | string
+            | undefined;
           if (!filePath) return; // 無效來源直接跳過
 
           // 第一次取得有效來源時，插入標題
           if (!hasValidSource) {
-            const sourcesTitle = document.createElement('h4');
-            sourcesTitle.textContent = '📚 參考文檔：';
+            const sourcesTitle = document.createElement("h4");
+            sourcesTitle.textContent = "📚 參考文檔：";
             sourcesDiv.appendChild(sourcesTitle);
             hasValidSource = true;
           }
 
-          const sourceItem = document.createElement('div');
-          sourceItem.className = 'source-item';
+          const sourceItem = document.createElement("div");
+          sourceItem.className = "source-item";
 
-          const link = document.createElement('a');
-          link.href = `/tymultiverse/work/${filePath.replace('.md', '')}`;
-          link.target = '_blank';
-          link.className = 'source-link';
+          const link = document.createElement("a");
+          link.href = `/tymultiverse/work/${filePath.replace(".md", "")}`;
+          link.target = "_blank";
+          link.className = "source-link";
           link.innerHTML = `📄 ${this.escapeHtml(filePath)}`;
 
           // 顯示相似度（若有）
-          if (source && typeof source.similarity === 'number') {
-            const similaritySpan = document.createElement('span');
-            similaritySpan.className = 'similarity';
+          if (source && typeof source.similarity === "number") {
+            const similaritySpan = document.createElement("span");
+            similaritySpan.className = "similarity";
             similaritySpan.textContent = `相關度: ${(source.similarity * 100).toFixed(1)}%`;
             sourceItem.appendChild(similaritySpan);
           }
@@ -1075,10 +1217,10 @@ import '../styles/qabot.css';
           contentDiv.appendChild(sourcesDiv);
         }
       }
-      
+
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
-      
+
       // AI回答完成後，重新開始催促計時
       this.resetInactivityTimer();
     }
@@ -1086,21 +1228,26 @@ import '../styles/qabot.css';
     // 添加錯誤消息
     private addErrorMessage(message: string) {
       this.state.isThinking = false;
-      const messageDiv = this.createMessageStructure('bot', `<p class="error-message">❌ ${this.escapeHtml(message)}</p>`);
+      const messageDiv = this.createMessageStructure(
+        "bot",
+        `<p class="error-message">❌ ${this.escapeHtml(message)}</p>`,
+      );
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
     }
 
     // 發送消息
     private async sendMessage() {
-      const userText = (this.elements.userInput as HTMLInputElement).value.trim();
+      const userText = (
+        this.elements.userInput as HTMLInputElement
+      ).value.trim();
       if (!userText) return;
 
-      (this.elements.userInput as HTMLInputElement).value = '';
+      (this.elements.userInput as HTMLInputElement).value = "";
       this.updateSendButton();
-      this.elements.inputStatus.textContent = '';
+      this.elements.inputStatus.textContent = "";
 
-      this.addMessage(userText, 'user');
+      this.addMessage(userText, "user");
       const loadingId = this.addLoadingMessage();
 
       try {
@@ -1117,48 +1264,54 @@ import '../styles/qabot.css';
           // console.log('提取的來源:', sources);
           this.addBotResponse(answer, sources);
         } else {
-          this.addErrorMessage('抱歉，無法獲取答案，請稍後再試。');
+          this.addErrorMessage("抱歉，無法獲取答案，請稍後再試。");
         }
       } catch (error) {
-        console.error('API調用錯誤:', error);
+        console.error("API調用錯誤:", error);
         this.removeMessage(loadingId);
-        this.addErrorMessage('網絡錯誤，請檢查連接後重試。');
+        this.addErrorMessage("網絡錯誤，請檢查連接後重試。");
       }
     }
 
     // 調用 QA API
     private async callQAAPI(payload: string | object) {
-      const apiBaseUrl = import.meta.env.DEV ? '' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
-      const apiPathPrefix = '/maya-sawa';
-      
+      const apiBaseUrl = import.meta.env.DEV
+        ? ""
+        : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
+      const apiPathPrefix = "/maya-sawa";
+
       // 如果是字符串，構建基本 payload
-      const finalPayload = typeof payload === 'string' ? {
-        text: payload,
-        user_id: this.state.userId,
-        language: this.state.currentLanguage,
-        name: this.state.botName
-      } : payload;
+      const finalPayload =
+        typeof payload === "string"
+          ? {
+              text: payload,
+              user_id: this.state.userId,
+              language: this.state.currentLanguage,
+              name: this.state.botName,
+            }
+          : payload;
 
       // 調試日誌：確認送出的請求內容
-      console.log('callQAAPI payload =>', finalPayload);
+      console.log("callQAAPI payload =>", finalPayload);
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       };
-      
+
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
       const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/query`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: JSON.stringify(finalPayload),
-        credentials: 'include'
+        credentials: "include",
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
 
@@ -1171,159 +1324,220 @@ import '../styles/qabot.css';
     // 載入聊天歷史
     private async loadChatHistory() {
       try {
-        const apiBaseUrl = import.meta.env.DEV ? '' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
-        const apiPathPrefix = '/maya-sawa';
-        
-        const token = localStorage.getItem('token');
+        const apiBaseUrl = import.meta.env.DEV
+          ? ""
+          : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
+        const apiPathPrefix = "/maya-sawa";
+
+        const token = localStorage.getItem("token");
         const headers: Record<string, string> = {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         };
-        
+
         if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
+          headers["Authorization"] = `Bearer ${token}`;
         }
-        
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
-          headers,
-          credentials: 'include'
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const response = await fetch(
+          `${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`,
+          {
+            headers,
+            credentials: "include",
+          },
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
         const result = await response.json();
-        
+
         // 清除現有對話
-        this.elements.chatMessages.innerHTML = '';
-        
+        this.elements.chatMessages.innerHTML = "";
+
         // 顯示歡迎消息
         this.addWelcomeMessage();
-        
+
         if (result.success && result.history && result.history.length > 0) {
           // 依照時間升序排列，確保顯示順序正確
           const sortedHistory = [...result.history].sort((a, b) => {
-            const aTime = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
-            const bTime = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+            const aTime = new Date(
+              a.created_at || a.timestamp || a.time || 0,
+            ).getTime();
+            const bTime = new Date(
+              b.created_at || b.timestamp || b.time || 0,
+            ).getTime();
             return aTime - bTime;
           });
-          
+
           // 只顯示最近10分鐘內的對話（與Redis TTL保持一致）
-          const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
-          const recentHistory = sortedHistory.filter(item => {
-            const itemTime = new Date(item.created_at || item.timestamp || item.time || 0).getTime();
+          const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+          const recentHistory = sortedHistory.filter((item) => {
+            const itemTime = new Date(
+              item.created_at || item.timestamp || item.time || 0,
+            ).getTime();
             return itemTime > tenMinutesAgo;
           });
-          
+
           if (recentHistory.length > 0) {
             const total = recentHistory.length;
             this.state.currentHistoryPage = 0; // 0 = latest page
-            const startIdx = Math.max(0, total - this.state.historyItemsPerPage);
+            const startIdx = Math.max(
+              0,
+              total - this.state.historyItemsPerPage,
+            );
             const historyToShow = recentHistory.slice(startIdx, total);
-            
-            historyToShow.forEach(item => {
-              this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || []);
+
+            historyToShow.forEach((item) => {
+              this.addHistoryMessage(
+                item.user_message,
+                item.ai_answer,
+                item.reference_data || [],
+              );
             });
 
             // 記錄目前最早的訊息時間
             if (historyToShow.length > 0) {
               const firstItem = historyToShow[0];
-              this.state.earliestTimestamp = new Date(firstItem.created_at || firstItem.timestamp || firstItem.time || 0).getTime();
+              this.state.earliestTimestamp = new Date(
+                firstItem.created_at ||
+                  firstItem.timestamp ||
+                  firstItem.time ||
+                  0,
+              ).getTime();
             } else {
               this.state.earliestTimestamp = null;
             }
           }
         }
       } catch (error) {
-        console.error('載入聊天歷史失敗:', error);
-        this.addErrorMessage('❌ 載入聊天歷史失敗，請稍後再試');
+        console.error("載入聊天歷史失敗:", error);
+        this.addErrorMessage("❌ 載入聊天歷史失敗，請稍後再試");
       }
     }
 
     // 載入更多歷史記錄
     private async loadMoreHistory() {
       try {
-        const apiBaseUrl = import.meta.env.DEV ? '' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
-        const apiPathPrefix = '/maya-sawa';
-        
-        const token = localStorage.getItem('token');
+        const apiBaseUrl = import.meta.env.DEV
+          ? ""
+          : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
+        const apiPathPrefix = "/maya-sawa";
+
+        const token = localStorage.getItem("token");
         const headers: Record<string, string> = {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         };
-        
+
         if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
+          headers["Authorization"] = `Bearer ${token}`;
         }
-        
-        const response = await fetch(`${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`, {
-          headers,
-          credentials: 'include'
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const response = await fetch(
+          `${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`,
+          {
+            headers,
+            credentials: "include",
+          },
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
         const result = await response.json();
-        
+
         if (result.success && result.history) {
           const sortedHistory = [...result.history].sort((a, b) => {
-            const aTime = new Date(a.created_at || a.timestamp || a.time || 0).getTime();
-            const bTime = new Date(b.created_at || b.timestamp || b.time || 0).getTime();
+            const aTime = new Date(
+              a.created_at || a.timestamp || a.time || 0,
+            ).getTime();
+            const bTime = new Date(
+              b.created_at || b.timestamp || b.time || 0,
+            ).getTime();
             return aTime - bTime;
           });
           const total = sortedHistory.length;
           // 只取早於目前 earliestTimestamp 的紀錄
-          const olderHistory = (this.state.earliestTimestamp !== null)
-            ? sortedHistory.filter(item => {
-                const ts = new Date(item.created_at || item.timestamp || item.time || 0).getTime();
-                return ts < (this.state.earliestTimestamp as number);
-              })
-            : sortedHistory;
+          const olderHistory =
+            this.state.earliestTimestamp !== null
+              ? sortedHistory.filter((item) => {
+                  const ts = new Date(
+                    item.created_at || item.timestamp || item.time || 0,
+                  ).getTime();
+                  return ts < (this.state.earliestTimestamp as number);
+                })
+              : sortedHistory;
 
           if (olderHistory.length === 0) {
-            this.elements.loadMoreContainer.style.display = 'none';
+            this.elements.loadMoreContainer.style.display = "none";
             return;
           }
 
-          const startIndex = Math.max(0, olderHistory.length - this.state.historyItemsPerPage);
+          const startIndex = Math.max(
+            0,
+            olderHistory.length - this.state.historyItemsPerPage,
+          );
           const endIndex = olderHistory.length;
           const historyToShow = olderHistory.slice(startIndex, endIndex);
-           
+
           // 調整插入順序，確保時間順
-          historyToShow.forEach(item => {
-            this.addHistoryMessage(item.user_message, item.ai_answer, item.reference_data || [], true);
+          historyToShow.forEach((item) => {
+            this.addHistoryMessage(
+              item.user_message,
+              item.ai_answer,
+              item.reference_data || [],
+              true,
+            );
           });
 
           // 更新 earliestTimestamp
           const firstOld = historyToShow[0];
-          this.state.earliestTimestamp = new Date(firstOld.created_at || firstOld.timestamp || firstOld.time || 0).getTime();
-           
+          this.state.earliestTimestamp = new Date(
+            firstOld.created_at || firstOld.timestamp || firstOld.time || 0,
+          ).getTime();
+
           // 當再也沒有更舊紀錄時，隱藏按鈕並清空標記
           if (startIndex === 0) {
-            this.elements.loadMoreContainer.style.display = 'none';
+            this.elements.loadMoreContainer.style.display = "none";
             this.state.earliestTimestamp = null;
           } else {
             this.state.currentHistoryPage++;
           }
         }
       } catch (error) {
-        console.error('載入更多歷史記錄失敗:', error);
-        this.addErrorMessage('❌ 載入更多記錄失敗，請稍後再試');
+        console.error("載入更多歷史記錄失敗:", error);
+        this.addErrorMessage("❌ 載入更多記錄失敗，請稍後再試");
       }
     }
 
     // 添加歷史消息
-    private addHistoryMessage(userMessage: any, aiAnswer: any, sources: any[], insertAtTop: boolean = false) {
+    private addHistoryMessage(
+      userMessage: any,
+      aiAnswer: any,
+      sources: any[],
+      insertAtTop: boolean = false,
+    ) {
       // 確保參數是字符串類型
-      if (typeof userMessage !== 'string') {
-        userMessage = String(userMessage || '');
+      if (typeof userMessage !== "string") {
+        userMessage = String(userMessage || "");
       }
-      if (typeof aiAnswer !== 'string') {
-        aiAnswer = String(aiAnswer || '');
+      if (typeof aiAnswer !== "string") {
+        aiAnswer = String(aiAnswer || "");
       }
-      
+
       if (insertAtTop) {
-        const userDiv = this.createMessageStructure('user', userMessage);
-        const botDiv = this.createMessageStructure('bot', this.formatAnswer(aiAnswer));
-        this.elements.chatMessages.insertBefore(botDiv, this.elements.chatMessages.firstChild);
-        this.elements.chatMessages.insertBefore(userDiv, this.elements.chatMessages.firstChild);
+        const userDiv = this.createMessageStructure("user", userMessage);
+        const botDiv = this.createMessageStructure(
+          "bot",
+          this.formatAnswer(aiAnswer),
+        );
+        this.elements.chatMessages.insertBefore(
+          botDiv,
+          this.elements.chatMessages.firstChild,
+        );
+        this.elements.chatMessages.insertBefore(
+          userDiv,
+          this.elements.chatMessages.firstChild,
+        );
       } else {
-        this.addMessage(userMessage, 'user');
+        this.addMessage(userMessage, "user");
         this.addBotResponse(aiAnswer, sources);
       }
     }
@@ -1331,33 +1545,39 @@ import '../styles/qabot.css';
     // 顯示催促消息
     private showSaucyMessage() {
       if (this.state.saucyMessageCount >= this.state.maxSaucyMessages) {
-        console.log('已達到最大催促次數，停止催促');
+        console.log("已達到最大催促次數，停止催促");
         return;
       }
-      
+
       this.state.saucyMessageCount++;
       console.log(`顯示第${this.state.saucyMessageCount}次催促消息`);
-      
+
       const langData = this.messages?.[this.state.currentLanguage];
-      const currentMessages = langData?.[this.state.botName] || langData?.['Maya'];
-      
+      const currentMessages =
+        langData?.[this.state.botName] || langData?.["Maya"];
+
       // 避免重複顯示相同的消息
-      let availableMessages = currentMessages.saucy.filter((msg: string) => msg !== this.state.lastSaucyMessage);
+      let availableMessages = currentMessages.saucy.filter(
+        (msg: string) => msg !== this.state.lastSaucyMessage,
+      );
       if (availableMessages.length === 0) {
         // 如果所有消息都用過了，重置並使用所有消息
         availableMessages = currentMessages.saucy;
-        this.state.lastSaucyMessage = '';
+        this.state.lastSaucyMessage = "";
       }
-      
-      const randomMessage = availableMessages[Math.floor(Math.random() * availableMessages.length)];
+
+      const randomMessage =
+        availableMessages[Math.floor(Math.random() * availableMessages.length)];
       this.state.lastSaucyMessage = randomMessage;
-      
-      const messageDiv = this.createMessageStructure('loading');
+
+      const messageDiv = this.createMessageStructure("loading");
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
-      
+
       setTimeout(() => {
-        const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
+        const contentDiv = messageDiv.querySelector(
+          ".message-content",
+        ) as HTMLDivElement;
         contentDiv.innerHTML = `<p>${randomMessage}</p>`;
         this.scrollToBottom();
       }, 1500);
@@ -1371,11 +1591,11 @@ import '../styles/qabot.css';
 
     // 重置不活躍計時器
     private resetInactivityTimer() {
-      console.log('重置催促計時器');
+      console.log("重置催促計時器");
       if (this.timers.inactivity) clearTimeout(this.timers.inactivity);
       this.state.hasShownInactivityMessage = false;
       this.state.saucyMessageCount = 0;
-      
+
       // 重新啟動定時器，使用遞增間隔
       this.startInactivityTimer();
     }
@@ -1383,44 +1603,54 @@ import '../styles/qabot.css';
     // 啟動不活躍計時器（使用遞增間隔）
     private startInactivityTimer() {
       const intervals = [10, 30, 60]; // 10分鐘, 30分鐘, 60分鐘
-      const currentInterval = intervals[this.state.saucyMessageCount] || intervals[intervals.length - 1];
-      
-      
-      this.timers.inactivity = setTimeout(() => {
-        if (!this.state.isThinking && this.state.saucyMessageCount < this.state.maxSaucyMessages) {
-          console.log(`觸發第${this.state.saucyMessageCount + 1}次催促`);
-          this.showSaucyMessage();
-          
-          // 如果還沒達到最大次數，設置下一次定時器
-          if (this.state.saucyMessageCount < this.state.maxSaucyMessages) {
-            this.startInactivityTimer();
+      const currentInterval =
+        intervals[this.state.saucyMessageCount] ||
+        intervals[intervals.length - 1];
+
+      this.timers.inactivity = setTimeout(
+        () => {
+          if (
+            !this.state.isThinking &&
+            this.state.saucyMessageCount < this.state.maxSaucyMessages
+          ) {
+            console.log(`觸發第${this.state.saucyMessageCount + 1}次催促`);
+            this.showSaucyMessage();
+
+            // 如果還沒達到最大次數，設置下一次定時器
+            if (this.state.saucyMessageCount < this.state.maxSaucyMessages) {
+              this.startInactivityTimer();
+            }
           }
-        }
-      }, currentInterval * 60 * 1000);
+        },
+        currentInterval * 60 * 1000,
+      );
     }
 
     // 切換語言
     private toggleLanguage() {
-      this.state.currentLanguage = this.state.currentLanguage === 'chinese' ? 'english' : 'chinese';
+      this.state.currentLanguage =
+        this.state.currentLanguage === "chinese" ? "english" : "chinese";
       // Persist via global and local for backward-compat
       if ((window as any).AppLang) {
-        (window as any).AppLang.set(this.state.currentLanguage === 'chinese' ? 'zh' : 'en');
+        (window as any).AppLang.set(
+          this.state.currentLanguage === "chinese" ? "zh" : "en",
+        );
       } else {
-        localStorage.setItem('qabot_language', this.state.currentLanguage);
+        localStorage.setItem("qabot_language", this.state.currentLanguage);
       }
       this.updateLanguageButton();
       this.updateInputPlaceholder();
-      
+
       // 更新分析面板語言
       this.updateAnalysisPanelLanguage();
-      
+
       this.reinitializeChat();
     }
 
     // 重新初始化聊天
     private reinitializeChat() {
-      this.elements.chatMessages.innerHTML = '';
-      this.state.lastSaucyMessage = '';
+      this.elements.chatMessages.innerHTML = "";
+      this.state.lastSaucyMessage = "";
       this.state.hasShownInactivityMessage = false;
       this.state.isThinking = false;
       this.state.saucyMessageCount = 0;
@@ -1432,84 +1662,97 @@ import '../styles/qabot.css';
     // 切換全屏
     private toggleFullscreen() {
       this.state.isFullscreen = !this.state.isFullscreen;
-      this.elements.qaBotContainer.classList.toggle('fullscreen', this.state.isFullscreen);
+      this.elements.qaBotContainer.classList.toggle(
+        "fullscreen",
+        this.state.isFullscreen,
+      );
       this.updateFullscreenButton();
     }
 
     // 切換聊天框
     private toggleChat() {
-      this.elements.qaBotContainer.classList.toggle('show');
-      if (this.elements.qaBotContainer.classList.contains('show')) {
+      this.elements.qaBotContainer.classList.toggle("show");
+      if (this.elements.qaBotContainer.classList.contains("show")) {
         (this.elements.userInput as HTMLInputElement).focus();
       }
     }
 
     // 隱藏聊天框
     private hideChat() {
-      this.elements.qaBotContainer.classList.remove('show');
+      this.elements.qaBotContainer.classList.remove("show");
     }
 
     // 顯示/隱藏圖片模態框
     private showImageModal(imageSrc: string) {
       (this.elements.modalImage as HTMLImageElement).src = imageSrc;
-      this.elements.imageModal.classList.add('show');
-      document.body.style.overflow = 'hidden';
+      this.elements.imageModal.classList.add("show");
+      document.body.style.overflow = "hidden";
     }
 
     private hideImageModal() {
-      this.elements.imageModal.classList.remove('show');
-      document.body.style.overflow = '';
+      this.elements.imageModal.classList.remove("show");
+      document.body.style.overflow = "";
     }
 
     // 工具方法
     private getOrCreateUserId(): string {
-      const storageKey = 'qabot_user_id';
+      const storageKey = "qabot_user_id";
       let userId = localStorage.getItem(storageKey);
-      
+
       if (!userId) {
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 15);
         userId = `user_${timestamp}_${random}`;
         localStorage.setItem(storageKey, userId);
       }
-      
+
       return userId;
     }
 
     private updateSendButton() {
-      const hasText = (this.elements.userInput as HTMLInputElement).value.trim().length > 0;
+      const hasText =
+        (this.elements.userInput as HTMLInputElement).value.trim().length > 0;
       (this.elements.sendButton as HTMLButtonElement).disabled = !hasText;
     }
 
     private updateLanguageButton() {
-      const languageButton = document.getElementById('languageButton') as HTMLButtonElement;
-      const languageText = languageButton.querySelector('.language-text') as HTMLSpanElement;
-      
-      if (this.state.currentLanguage === 'chinese') {
-        languageText.textContent = '中文';
-        languageButton.title = '切換到英文';
+      const languageButton = document.getElementById(
+        "languageButton",
+      ) as HTMLButtonElement;
+      const languageText = languageButton.querySelector(
+        ".language-text",
+      ) as HTMLSpanElement;
+
+      if (this.state.currentLanguage === "chinese") {
+        languageText.textContent = "中文";
+        languageButton.title = "切換到英文";
       } else {
-        languageText.textContent = 'English';
-        languageButton.title = 'Switch to Chinese';
+        languageText.textContent = "English";
+        languageButton.title = "Switch to Chinese";
       }
     }
-    
+
     private updateInputPlaceholder() {
-      (this.elements.userInput as HTMLInputElement).placeholder = this.state.currentLanguage === 'chinese' 
-        ? '請輸入您的問題...' 
-        : 'Please enter your question...';
+      (this.elements.userInput as HTMLInputElement).placeholder =
+        this.state.currentLanguage === "chinese"
+          ? "請輸入您的問題..."
+          : "Please enter your question...";
     }
 
     private updateFullscreenButton() {
-      const fullscreenButton = document.getElementById('fullscreenButton') as HTMLButtonElement;
-      const svg = fullscreenButton.querySelector('svg');
-      
+      const fullscreenButton = document.getElementById(
+        "fullscreenButton",
+      ) as HTMLButtonElement;
+      const svg = fullscreenButton.querySelector("svg");
+
       if (svg) {
-        svg.innerHTML = this.state.isFullscreen 
+        svg.innerHTML = this.state.isFullscreen
           ? '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>'
           : '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
-        
-        fullscreenButton.title = this.state.isFullscreen ? '退出全屏模式' : '切換全屏模式';
+
+        fullscreenButton.title = this.state.isFullscreen
+          ? "退出全屏模式"
+          : "切換全屏模式";
       }
     }
 
@@ -1520,20 +1763,21 @@ import '../styles/qabot.css';
     }
 
     private scrollToBottom() {
-      this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+      this.elements.chatMessages.scrollTop =
+        this.elements.chatMessages.scrollHeight;
     }
 
     private escapeHtml(text: string): string {
-      const div = document.createElement('div');
+      const div = document.createElement("div");
       div.textContent = text;
       return div.innerHTML;
     }
 
     // 顯示V2模式限制提示
     private showV2RestrictionMessage(featureName: string) {
-      if (typeof (window as any).Swal !== 'undefined') {
+      if (typeof (window as any).Swal !== "undefined") {
         (window as any).Swal.fire({
-          title: '⚠️ V2模式限制',
+          title: "⚠️ V2模式限制",
           html: `
             <div style="text-align: center; padding: 20px;">
               <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
@@ -1545,39 +1789,41 @@ import '../styles/qabot.css';
               </p>
             </div>
           `,
-          icon: 'info',
-          confirmButtonText: '知道了',
-          confirmButtonColor: '#3085d6',
+          icon: "info",
+          confirmButtonText: "知道了",
+          confirmButtonColor: "#3085d6",
           showCancelButton: true,
-          cancelButtonText: '切換到 v1',
-          cancelButtonColor: '#6c757d',
+          cancelButtonText: "切換到 v1",
+          cancelButtonColor: "#6c757d",
           customClass: {
-            popup: 'swal-v2-restriction-popup'
+            popup: "swal-v2-restriction-popup",
           },
-          background: '#fff',
-          backdrop: 'rgba(0,0,0,0.4)',
+          background: "#fff",
+          backdrop: "rgba(0,0,0,0.4)",
           allowOutsideClick: true,
           allowEscapeKey: true,
-          width: '400px'
+          width: "400px",
         }).then((result: any) => {
-          if (result.dismiss === 'cancel') {
+          if (result.dismiss === "cancel") {
             // 用戶選擇切換到v1
-            (window as any).qabotMode = 'v1';
-            window.dispatchEvent(new CustomEvent('qabot:switch', { detail: { mode: 'v1' } }));
+            (window as any).qabotMode = "v1";
+            window.dispatchEvent(
+              new CustomEvent("qabot:switch", { detail: { mode: "v1" } }),
+            );
           }
         });
       }
     }
 
     // 根據配置更新header controls狀態
-    private updateHeaderControlsByConfig(mode: 'v1' | 'v2') {
+    private updateHeaderControlsByConfig(mode: "v1" | "v2") {
       const config = qabotConfig.header_controls[mode];
       if (!config) return;
 
       // 更新各個控制項的狀態
       Object.entries(config).forEach(([key, controlConfig]: [string, any]) => {
         let element: HTMLElement | null = null;
-        
+
         // 根據配置獲取元素
         if (controlConfig.element_id) {
           element = document.getElementById(controlConfig.element_id);
@@ -1590,14 +1836,14 @@ import '../styles/qabot.css';
         // 更新元素狀態
         if (controlConfig.enabled) {
           // 啟用狀態
-          element.classList.remove('v2-disabled');
-          element.removeAttribute('disabled');
+          element.classList.remove("v2-disabled");
+          element.removeAttribute("disabled");
           if (element instanceof HTMLButtonElement) {
             element.disabled = false;
           }
         } else {
           // 禁用狀態
-          element.classList.add('v2-disabled');
+          element.classList.add("v2-disabled");
           if (element instanceof HTMLButtonElement) {
             element.disabled = true;
           }
@@ -1626,8 +1872,9 @@ import '../styles/qabot.css';
       if (!panel) return;
 
       const currentLang = this.state.currentLanguage;
-      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
-      
+      const templates =
+        analystTemplates[currentLang as keyof typeof analystTemplates];
+
       if (!templates) {
         console.warn(`未找到語言模板: ${currentLang}`);
         return;
@@ -1640,18 +1887,22 @@ import '../styles/qabot.css';
         <div class="pa-wrapper">
           <h4 class="pa-title">${ui.title}</h4>
           <div class="pa-grid">
-            ${analysisTypes.map(t => `
+            ${analysisTypes
+              .map(
+                (t) => `
               <button class="pa-type-btn" data-type="${t.value}">
                 <div>${t.label}</div>
                 <div class="pa-desc">${t.desc}</div>
-              </button>`).join('')}
+              </button>`,
+              )
+              .join("")}
           </div>
           <button id="startPageAnalysis" class="pa-start-btn">${ui.start_button}</button>
         </div>`;
 
       // 預設選擇 summary
-      this.selectAnalysisType('summary');
-      
+      this.selectAnalysisType("summary");
+
       // 重新綁定事件
       this.setupAnalysisPanelEvents();
     }
@@ -1659,13 +1910,14 @@ import '../styles/qabot.css';
     private toggleAnalysisPanel(forceShow?: boolean) {
       const panel = this.elements.analysisPanel as HTMLElement;
       if (!panel) {
-        console.warn('分析面板元素不存在');
+        console.warn("分析面板元素不存在");
         return;
       }
-      const show = forceShow !== undefined ? forceShow : panel.style.display === 'none';
+      const show =
+        forceShow !== undefined ? forceShow : panel.style.display === "none";
       console.log(`切換分析面板顯示: ${show}`);
-      panel.style.display = show ? 'block' : 'none';
-      
+      panel.style.display = show ? "block" : "none";
+
       // 如果顯示面板，重新綁定事件
       if (show) {
         setTimeout(() => {
@@ -1678,179 +1930,218 @@ import '../styles/qabot.css';
       this.state.analysisType = type;
       const panel = this.elements.analysisPanel as HTMLElement;
       if (!panel) return;
-      panel.querySelectorAll('.pa-type-btn').forEach(btn => {
-        (btn as HTMLElement).classList.toggle('active', (btn as HTMLElement).getAttribute('data-type') === type);
+      panel.querySelectorAll(".pa-type-btn").forEach((btn) => {
+        (btn as HTMLElement).classList.toggle(
+          "active",
+          (btn as HTMLElement).getAttribute("data-type") === type,
+        );
       });
     }
 
     // 安全地提取頁面內容
     private extractPageContentSafe(): { text: string; length: number } {
-      console.log('開始提取頁面內容...');
-      
+      console.log("開始提取頁面內容...");
+
       // 使用全局的頁面內容提取函數（如果可用）
-      if (typeof (window as any).extractPageContent === 'function') {
+      if (typeof (window as any).extractPageContent === "function") {
         try {
           const pageData = (window as any).extractPageContent();
           console.log(`使用全局提取函數，內容長度: ${pageData.length}`);
           console.log(`內容預覽: ${pageData.content.substring(0, 200)}...`);
-          
+
           // 限制長度避免 token 超限
           const maxLength = 3000;
-          const truncated = pageData.content.length > maxLength 
-            ? pageData.content.substring(0, maxLength) + '...' 
-            : pageData.content;
-          
+          const truncated =
+            pageData.content.length > maxLength
+              ? pageData.content.substring(0, maxLength) + "..."
+              : pageData.content;
+
           console.log(`最終文字長度: ${truncated.length}`);
           return { text: truncated, length: truncated.length };
         } catch (error) {
-          console.warn('全局提取函數失敗，使用備用方法:', error);
+          console.warn("全局提取函數失敗，使用備用方法:", error);
         }
       }
-      
+
       // 備用提取方法
-      console.log('使用備用內容提取方法...');
-      
+      console.log("使用備用內容提取方法...");
+
       // 嘗試多個內容選擇器，按優先級排序
       const contentSelectors = [
         '[data-page-type="content"]',
         '[data-page-type="main"]',
         '[data-page-type="article"]',
-        'main',
-        'article',
-        '.content',
-        '.main-content',
-        '#content',
-        '#main',
-        '.post-content',
-        '.entry-content'
+        "main",
+        "article",
+        ".content",
+        ".main-content",
+        "#content",
+        "#main",
+        ".post-content",
+        ".entry-content",
       ];
-      
+
       let contentElement: Element | null = null;
-      
+
       // 尋找最佳內容元素
       for (const selector of contentSelectors) {
         const element = document.querySelector(selector);
         if (element) {
-          const text = (element as HTMLElement).innerText || element.textContent || '';
-          if (text.trim().length > 100) { // 確保有足夠內容
+          const text =
+            (element as HTMLElement).innerText || element.textContent || "";
+          if (text.trim().length > 100) {
+            // 確保有足夠內容
             contentElement = element;
             console.log(`找到內容元素: ${selector}, 長度: ${text.length}`);
             break;
           }
         }
       }
-      
+
       // 如果沒有找到合適的內容元素，使用 body
       if (!contentElement) {
         contentElement = document.body;
-        console.log('使用 document.body 作為內容元素');
+        console.log("使用 document.body 作為內容元素");
       }
-      
+
       // 創建臨時容器
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = contentElement.innerHTML;
-      
+
       // 移除不需要的元素
       const elementsToRemove = [
-        'script', 'style', 'nav', 'footer', 'aside', 'header',
-        '[aria-hidden="true"]', '[style*="display: none"]', '[style*="display:none"]',
-        '.qa-bot-container', '.qa-bot-toggle', // 移除聊天機器人本身
-        '.sidebar', '.side-nav', '.navigation',
-        '.advertisement', '.ads', '.banner',
-        '.social-share', '.share-buttons',
-        '.comments', '.comment-section'
+        "script",
+        "style",
+        "nav",
+        "footer",
+        "aside",
+        "header",
+        '[aria-hidden="true"]',
+        '[style*="display: none"]',
+        '[style*="display:none"]',
+        ".qa-bot-container",
+        ".qa-bot-toggle", // 移除聊天機器人本身
+        ".sidebar",
+        ".side-nav",
+        ".navigation",
+        ".advertisement",
+        ".ads",
+        ".banner",
+        ".social-share",
+        ".share-buttons",
+        ".comments",
+        ".comment-section",
       ];
-      
-      elementsToRemove.forEach(selector => {
+
+      elementsToRemove.forEach((selector) => {
         const elements = tempDiv.querySelectorAll(selector);
-        elements.forEach(el => el.remove());
+        elements.forEach((el) => el.remove());
       });
-      
+
       // 提取純文字
-      let text = tempDiv.innerText || tempDiv.textContent || '';
-      text = text.replace(/\s+/g, ' ').trim();
-      
+      let text = tempDiv.innerText || tempDiv.textContent || "";
+      text = text.replace(/\s+/g, " ").trim();
+
       console.log(`提取的原始文字長度: ${text.length}`);
       console.log(`提取的文字預覽: ${text.substring(0, 200)}...`);
-      
+
       // 如果內容太少，嘗試從 body 提取更多內容
       if (text.length < 200 && contentElement !== document.body) {
-        console.log('內容太少，嘗試從 body 提取更多內容');
-        const bodyDiv = document.createElement('div');
+        console.log("內容太少，嘗試從 body 提取更多內容");
+        const bodyDiv = document.createElement("div");
         bodyDiv.innerHTML = document.body.innerHTML;
-        
+
         // 移除不需要的元素
-        elementsToRemove.forEach(selector => {
+        elementsToRemove.forEach((selector) => {
           const elements = bodyDiv.querySelectorAll(selector);
-          elements.forEach(el => el.remove());
+          elements.forEach((el) => el.remove());
         });
-        
-        const bodyText = bodyDiv.innerText || bodyDiv.textContent || '';
-        const cleanedBodyText = bodyText.replace(/\s+/g, ' ').trim();
-        
+
+        const bodyText = bodyDiv.innerText || bodyDiv.textContent || "";
+        const cleanedBodyText = bodyText.replace(/\s+/g, " ").trim();
+
         if (cleanedBodyText.length > text.length) {
           text = cleanedBodyText;
           console.log(`使用 body 內容，新長度: ${text.length}`);
         }
       }
-      
+
       // 限制長度避免 token 超限
       const maxLength = 3000;
-      const truncated = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-      
+      const truncated =
+        text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+
       console.log(`最終文字長度: ${truncated.length}`);
-      
+
       return { text: truncated, length: truncated.length };
     }
 
     // 檢測頁面語言
     private detectPageLanguage(): string {
-      console.log('開始檢測頁面語言...');
-      
+      console.log("開始檢測頁面語言...");
+
       // 檢查 HTML lang 屬性
       const htmlLang = document.documentElement.lang;
       console.log(`HTML lang 屬性: ${htmlLang}`);
-      
+
       // 檢查 meta 標籤
-      const metaLang = document.querySelector('meta[name="language"]') as HTMLMetaElement;
+      const metaLang = document.querySelector(
+        'meta[name="language"]',
+      ) as HTMLMetaElement;
       console.log(`Meta language: ${metaLang?.content}`);
-      
+
       // 優先使用 Unicode 檢測（更準確）
-      const text = document.body.innerText || '';
+      const text = document.body.innerText || "";
       const chineseCharCount = (text.match(/[\u4e00-\u9fff]/g) || []).length;
       const totalCharCount = text.length;
-      const chineseRatio = totalCharCount > 0 ? chineseCharCount / totalCharCount : 0;
-      
-      console.log(`總字符數: ${totalCharCount}, 中文字符數: ${chineseCharCount}, 中文比例: ${(chineseRatio * 100).toFixed(1)}%`);
-      
+      const chineseRatio =
+        totalCharCount > 0 ? chineseCharCount / totalCharCount : 0;
+
+      console.log(
+        `總字符數: ${totalCharCount}, 中文字符數: ${chineseCharCount}, 中文比例: ${(chineseRatio * 100).toFixed(1)}%`,
+      );
+
       // 如果中文比例超過 20%，就認為是中文頁面
       if (chineseRatio > 0.2) {
-        console.log('檢測到中文頁面');
-        return 'chinese';
+        console.log("檢測到中文頁面");
+        return "chinese";
       }
-      
+
       // 如果中文比例很低，檢查 HTML lang 屬性
-      if (htmlLang && (htmlLang.startsWith('zh') || htmlLang.startsWith('en'))) {
-        const detectedLang = htmlLang.startsWith('zh') ? 'chinese' : 'english';
+      if (
+        htmlLang &&
+        (htmlLang.startsWith("zh") || htmlLang.startsWith("en"))
+      ) {
+        const detectedLang = htmlLang.startsWith("zh") ? "chinese" : "english";
         console.log(`根據 HTML lang 屬性檢測為: ${detectedLang}`);
         return detectedLang;
       }
-      
+
       // 檢查 meta 標籤
       if (metaLang?.content) {
-        const detectedLang = metaLang.content.startsWith('zh') ? 'chinese' : 'english';
+        const detectedLang = metaLang.content.startsWith("zh")
+          ? "chinese"
+          : "english";
         console.log(`根據 Meta 標籤檢測為: ${detectedLang}`);
         return detectedLang;
       }
-      
-      console.log('預設為英文頁面');
-      return 'english';
+
+      console.log("預設為英文頁面");
+      return "english";
     }
 
     // 構建頁面分析請求參數
-    private buildPageAnalysisPayload({ text, length, type }: { text: string; length: number; type: string }) {
+    private buildPageAnalysisPayload({
+      text,
+      length,
+      type,
+    }: {
+      text: string;
+      length: number;
+      type: string;
+    }) {
       const detectedLanguage = this.detectPageLanguage();
-      
+
       return {
         text,
         analysis_type: `page_${type}`,
@@ -1858,27 +2149,29 @@ import '../styles/qabot.css';
         user_id: this.state.userId,
         language: detectedLanguage,
         name: this.state.botName,
-        frontend_source: 'astro_page_analyzer',
+        frontend_source: "astro_page_analyzer",
         page_url: window.location.href,
-        page_title: document.title
+        page_title: document.title,
       };
     }
 
     // 檢查快取
-    private getAnalysisCache(type: string): { answer: string; timestamp: number } | null {
+    private getAnalysisCache(
+      type: string,
+    ): { answer: string; timestamp: number } | null {
       const cacheKey = `page_analysis_${window.location.href}_${type}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (!cached) return null;
-      
+
       const data = JSON.parse(cached);
       const now = Date.now();
       const fiveMinutes = 5 * 60 * 1000;
-      
+
       // 檢查是否在 5 分鐘內
       if (now - data.timestamp < fiveMinutes) {
         return data;
       }
-      
+
       // 過期則清除
       sessionStorage.removeItem(cacheKey);
       return null;
@@ -1892,86 +2185,99 @@ import '../styles/qabot.css';
     }
 
     // 渲染分析結果卡片
-    private renderAnalysisCard(answer: string, analysisType: string, contentLength: number) {
+    private renderAnalysisCard(
+      answer: string,
+      analysisType: string,
+      contentLength: number,
+    ) {
       const currentLang = this.state.currentLanguage;
-      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+      const templates =
+        analystTemplates[currentLang as keyof typeof analystTemplates];
       const labels = templates?.labels || {
-        page_summary: '📄 頁面摘要',
-        page_key_points: '🔍 重點提取',
-        page_technical: '⚙️ 技術分析',
-        page_qa: '❓ 問題生成'
+        page_summary: "📄 頁面摘要",
+        page_key_points: "🔍 重點提取",
+        page_technical: "⚙️ 技術分析",
+        page_qa: "❓ 問題生成",
       };
       const metadata = templates?.metadata || {
-        content_length: '內容長度',
-        source: '來源',
-        reanalyze: '🔄 重新分析',
-        copy_result: '📋 複製結果'
+        content_length: "內容長度",
+        source: "來源",
+        reanalyze: "🔄 重新分析",
+        copy_result: "📋 複製結果",
       };
 
       const typeLabels: Record<string, string> = {
-        'page_summary': labels.page_summary,
-        'page_key_points': labels.page_key_points,
-        'page_technical': labels.page_technical,
-        'page_qa': labels.page_qa
+        page_summary: labels.page_summary,
+        page_key_points: labels.page_key_points,
+        page_technical: labels.page_technical,
+        page_qa: labels.page_qa,
       };
-      
-      const messageDiv = this.createMessageStructure('bot', this.formatAnswer(answer));
-      const contentDiv = messageDiv.querySelector('.message-content') as HTMLDivElement;
-      
+
+      const messageDiv = this.createMessageStructure(
+        "bot",
+        this.formatAnswer(answer),
+      );
+      const contentDiv = messageDiv.querySelector(
+        ".message-content",
+      ) as HTMLDivElement;
+
       // 添加分析卡片元數據
-      const metadataDiv = document.createElement('div');
-      metadataDiv.className = 'analysis-metadata';
+      const metadataDiv = document.createElement("div");
+      metadataDiv.className = "analysis-metadata";
       metadataDiv.innerHTML = `
         <div class="analysis-info">
-          <span class="analysis-type">${typeLabels[analysisType] || '頁面分析'}</span>
-          <span class="content-length">${metadata.content_length || '內容長度'}: ${contentLength} ${currentLang === 'english' ? 'chars' : '字'}</span>
-          <span class="page-url">${metadata.source || '來源'}: ${document.title}</span>
+          <span class="analysis-type">${typeLabels[analysisType] || "頁面分析"}</span>
+          <span class="content-length">${metadata.content_length || "內容長度"}: ${contentLength} ${currentLang === "english" ? "chars" : "字"}</span>
+          <span class="page-url">${metadata.source || "來源"}: ${document.title}</span>
         </div>
         <div class="analysis-actions">
           <button class="reanalyze-btn" onclick="this.closest('.message').dispatchEvent(new CustomEvent('reanalyze'))">
-            ${metadata.reanalyze || '🔄 重新分析'}
+            ${metadata.reanalyze || "🔄 重新分析"}
           </button>
           <button class="copy-btn" onclick="navigator.clipboard.writeText('${answer.replace(/'/g, "\\'")}')">
-            ${metadata.copy_result || '📋 複製結果'}
+            ${metadata.copy_result || "📋 複製結果"}
           </button>
         </div>
       `;
-      
+
       contentDiv.appendChild(metadataDiv);
       this.elements.chatMessages.appendChild(messageDiv);
-      
+
       // 監聽重新分析事件
-      messageDiv.addEventListener('reanalyze', () => {
+      messageDiv.addEventListener("reanalyze", () => {
         this.analyzePage(true); // 強制重新分析，忽略快取
       });
-      
+
       this.scrollToBottom();
     }
 
     // 更新分析按鈕狀態
     private updateAnalysisButtonState() {
-      const startBtn = document.querySelector('#startPageAnalysis') as HTMLButtonElement;
+      const startBtn = document.querySelector(
+        "#startPageAnalysis",
+      ) as HTMLButtonElement;
       if (!startBtn) return;
-      
+
       const currentLang = this.state.currentLanguage;
-      const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+      const templates =
+        analystTemplates[currentLang as keyof typeof analystTemplates];
       const ui = templates?.ui;
-      
+
       if (this.state.isAnalyzing) {
         startBtn.disabled = true;
-        startBtn.innerHTML = `<span class="spinner">⏳</span> ${ui?.analyzing || '分析中...'}`;
+        startBtn.innerHTML = `<span class="spinner">⏳</span> ${ui?.analyzing || "分析中..."}`;
       } else {
         startBtn.disabled = false;
-        startBtn.innerHTML = ui?.start_button || '📄 分析頁面';
+        startBtn.innerHTML = ui?.start_button || "📄 分析頁面";
       }
     }
 
     private async analyzePage(forceRefresh: boolean = false) {
       if (this.state.isAnalyzing) return;
-      
+
       this.state.isAnalyzing = true;
       this.updateAnalysisButtonState();
-      
+
       const loadingId = this.addLoadingMessage();
 
       try {
@@ -1980,7 +2286,11 @@ import '../styles/qabot.css';
           const cached = this.getAnalysisCache(this.state.analysisType);
           if (cached) {
             this.removeMessage(loadingId);
-            this.renderAnalysisCard(cached.answer, `page_${this.state.analysisType}`, 0);
+            this.renderAnalysisCard(
+              cached.answer,
+              `page_${this.state.analysisType}`,
+              0,
+            );
             this.state.isAnalyzing = false;
             this.updateAnalysisButtonState();
             this.toggleAnalysisPanel(false);
@@ -1990,47 +2300,57 @@ import '../styles/qabot.css';
 
         // 生成用戶提示消息
         const currentLang = this.state.currentLanguage;
-        const templates = analystTemplates[currentLang as keyof typeof analystTemplates];
+        const templates =
+          analystTemplates[currentLang as keyof typeof analystTemplates];
         const labels = templates?.labels || {
-          page_summary: '📄 頁面摘要',
-          page_key_points: '🔍 重點提取',
-          page_technical: '⚙️ 技術分析',
-          page_qa: '❓ 問題生成'
+          page_summary: "📄 頁面摘要",
+          page_key_points: "🔍 重點提取",
+          page_technical: "⚙️ 技術分析",
+          page_qa: "❓ 問題生成",
         };
 
         const typeLabels: Record<string, string> = {
           summary: labels.page_summary,
           key_points: labels.page_key_points,
           technical: labels.page_technical,
-          qa: labels.page_qa
+          qa: labels.page_qa,
         };
-        
-        const userPrompt = currentLang === 'english' 
-          ? `Please ${typeLabels[this.state.analysisType] || 'analyze the page'}`
-          : `請${typeLabels[this.state.analysisType] || '分析頁面'}`;
-        
-        this.addMessage(userPrompt, 'user');
-        
+
+        const userPrompt =
+          currentLang === "english"
+            ? `Please ${typeLabels[this.state.analysisType] || "analyze the page"}`
+            : `請${typeLabels[this.state.analysisType] || "分析頁面"}`;
+
+        this.addMessage(userPrompt, "user");
+
         // 提取頁面內容
         const { text, length } = this.extractPageContentSafe();
-        
+
         // 構建請求參數
-        const payload = this.buildPageAnalysisPayload({ text, length, type: this.state.analysisType });
-        
+        const payload = this.buildPageAnalysisPayload({
+          text,
+          length,
+          type: this.state.analysisType,
+        });
+
         // 調用 API
         const result = await this.callQAAPI(payload);
         this.removeMessage(loadingId);
 
         if (result.success) {
           const answer = result.text || result.answer || result;
-          
+
           // 儲存快取
           this.setAnalysisCache(this.state.analysisType, answer);
-          
+
           // 渲染結果
-          this.renderAnalysisCard(answer, `page_${this.state.analysisType}`, length);
+          this.renderAnalysisCard(
+            answer,
+            `page_${this.state.analysisType}`,
+            length,
+          );
         } else {
-          this.addErrorMessage(result.error || '分析失敗，請稍後再試。');
+          this.addErrorMessage(result.error || "分析失敗，請稍後再試。");
         }
       } catch (err) {
         this.removeMessage(loadingId);
@@ -2043,10 +2363,23 @@ import '../styles/qabot.css';
     }
   }
 
-  // 初始化QABot
-  document.addEventListener('DOMContentLoaded', () => {
-    new QABot();
-  });
+  // 初始化QABot - 支援 View Transitions
+  function initQABot() {
+    // 確保舊實例不會干擾
+    if ((window as any).qabotInstance) {
+      if (typeof (window as any).qabotInstance.cleanup === "function") {
+        (window as any).qabotInstance.cleanup();
+      }
+    }
+    (window as any).qabotInstance = new QABot();
+  }
+
+  document.addEventListener("astro:page-load", initQABot);
+
+  // 初次加載（如果尚未觸發 astro:page-load）
+  if (document.readyState === "complete") {
+    // initQABot(); // astro:page-load usually fires once even on first load
+  }
 </script>
 
 <!-- 引入 SweetAlert2 -->

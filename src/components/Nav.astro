@@ -1,7 +1,6 @@
 ---
 import { Icon } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
-import { ThemeProvider } from "./ThemeProvider";
 import type { iconPaths } from "./IconPaths";
 import "../styles/nav.css";
 
@@ -13,9 +12,6 @@ const refreshToken = url.searchParams.get("refresh_token");
 
 // 檢查登入狀態
 const isLoggedIn = !!username;
-
-// 檢查是否為管理員 - 將在前端動態驗證
-const isAdmin = false; // 初始值，將在前端 JavaScript 中動態更新
 
 // 獲取當前路徑
 const currentPath = Astro.url.pathname;
@@ -64,7 +60,6 @@ const textLinks: {
           href: `/tymultiverse/control/?username=${username}&token=${token}`,
           isActive: currentPath.startsWith("/tymultiverse/control"),
         },
-        // Wildland 和 Palais 始終渲染（如果已登入），但由前端 JavaScript 控制顯示（基於 admin 權限）
         {
           label: "Wildland",
           adminOnly: true,
@@ -197,301 +192,33 @@ const iconLinks: {
     </div>
   </div>
 </nav>
-<!-- ThemeToggle 独立放置，不受菜单显示/隐藏影响 -->
-<ThemeProvider client:load>
-  <ThemeToggle />
-</ThemeProvider>
+
+{
+  /* ThemeToggle 獨立放置，使用 consolidated ThemeToggle 元件（自帶 Provider） */
+}
+<ThemeToggle client:load />
 
 <script>
   import { storageService } from "../services/core/storageService";
-  import {
-    verifyToken,
-    startTokenVerification,
-    stopTokenVerification,
-    logout,
-  } from "../services/api/auth";
-
-  // 定義全局類型
-  declare global {
-    interface Window {
-      storageService: typeof storageService;
-    }
-  }
 
   // 將 storageService 掛載到 window 對象上
-  window.storageService = storageService;
-
-  // 頁面訪問追蹤功能
-  class PageTracker {
-    private static readonly STORAGE_KEY = "lastVisitedTymultiverseUrl";
-    private static readonly REFERER_KEY = "tymultiverseReferer";
-
-    constructor() {
-      this.initializePageTracking();
-    }
-
-    private initializePageTracking(): void {
-      // 記錄當前頁面
-      this.saveCurrentUrl();
-
-      // 監聽所有鏈接點擊
-      this.trackLinkClicks();
-
-      // 檢查是否需要從 localStorage 跳轉
-      this.checkAndRedirectFromStorage();
-
-      // 監聽頁面卸載，保存最後訪問的 URL
-      window.addEventListener("beforeunload", () => {
-        this.saveCurrentUrl();
-      });
-
-      // 監聽頁面可見性變化
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-          this.saveCurrentUrl();
-        }
-      });
-    }
-
-    private saveCurrentUrl(): void {
-      const currentUrl = window.location.href;
-
-      // 只保存 /tymultiverse 開頭的 URL
-      if (currentUrl.includes("/tymultiverse")) {
-        try {
-          // 清理 URL，移除認證參數
-          const urlObj = new URL(currentUrl);
-          urlObj.searchParams.delete("username");
-          urlObj.searchParams.delete("token");
-          urlObj.searchParams.delete("refresh_token");
-          urlObj.searchParams.delete("refreshToken");
-          urlObj.searchParams.delete("email");
-          urlObj.searchParams.delete("name");
-          urlObj.searchParams.delete("firstName");
-          urlObj.searchParams.delete("lastName");
-          const cleanUrl = urlObj.pathname + urlObj.search;
-          localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
-          console.log("📍 已保存當前 TY Multiverse 頁面:", cleanUrl);
-        } catch (e) {
-          console.warn("保存 URL 失敗:", e);
-        }
-      }
-    }
-
-    private trackLinkClicks(): void {
-      // 使用事件委派監聽所有鏈接點擊
-      document.addEventListener("click", (event) => {
-        const target = event.target as HTMLElement;
-
-        // 找到最近的鏈接元素
-        const linkElement = target.closest("a") as HTMLAnchorElement;
-        if (linkElement && linkElement.href) {
-          const href = linkElement.href;
-
-          // 如果是內部 TY Multiverse 鏈接，保存當前頁面
-          if (href.includes("/tymultiverse") && !href.includes("#")) {
-            // 延遲一點時間保存，因為頁面還沒跳轉
-            setTimeout(() => {
-              this.saveCurrentUrl();
-            }, 100);
-          }
-        }
-      });
-    }
-
-    private checkAndRedirectFromStorage(): void {
-      // 禁用 Nav 的重定向邏輯，因為 BaseLayout 已經處理了重定向
-      // 避免兩個重定向邏輯衝突導致無限循環
-      // BaseLayout 的重定向邏輯更完善，包含循環檢測和參數清理
-      return;
-
-      // 以下代碼已禁用，僅保留作為參考
-      /*
-      const REDIRECT_FLAG = 'nav_redirecting';
-      
-      // 檢查是否正在重定向中，防止無限循環
-      if (sessionStorage.getItem(REDIRECT_FLAG)) {
-        console.log('🛑 Nav: 檢測到重定向標誌，清除以避免循環');
-        sessionStorage.removeItem(REDIRECT_FLAG);
-        return;
-      }
-      
-      const currentUrl = window.location.href;
-      const savedUrl = localStorage.getItem(PageTracker.STORAGE_KEY);
-      const savedReferer = localStorage.getItem(PageTracker.REFERER_KEY);
-
-      // 保存當前 referer（如果有的話）
-      if (document.referrer) {
-        localStorage.setItem(PageTracker.REFERER_KEY, document.referrer);
-      }
-
-      // 檢查是否需要跳轉的條件：
-      // 1. 有保存的 URL
-      // 2. 當前 URL 是 TY Multiverse 的根頁面或首頁
-      // 3. Referer 不是 TY Multiverse 內部的頁面（表示從外部跳轉過來）
-      if (savedUrl && savedUrl !== currentUrl) {
-        // 清理保存的 URL，移除認證參數以避免循環
-        try {
-          const savedUrlObj = new URL(savedUrl);
-          savedUrlObj.searchParams.delete('username');
-          savedUrlObj.searchParams.delete('token');
-          savedUrlObj.searchParams.delete('refresh_token');
-          savedUrlObj.searchParams.delete('refreshToken');
-          savedUrlObj.searchParams.delete('email');
-          savedUrlObj.searchParams.delete('name');
-          savedUrlObj.searchParams.delete('firstName');
-          savedUrlObj.searchParams.delete('lastName');
-          const cleanedSavedUrl = savedUrlObj.pathname + savedUrlObj.search;
-          
-          const currentUrlObj = new URL(currentUrl);
-          currentUrlObj.searchParams.delete('username');
-          currentUrlObj.searchParams.delete('token');
-          currentUrlObj.searchParams.delete('refresh_token');
-          currentUrlObj.searchParams.delete('refreshToken');
-          currentUrlObj.searchParams.delete('email');
-          currentUrlObj.searchParams.delete('name');
-          currentUrlObj.searchParams.delete('firstName');
-          currentUrlObj.searchParams.delete('lastName');
-          const cleanedCurrentUrl = currentUrlObj.pathname + currentUrlObj.search;
-          
-          // 如果清理後的 URL 相同，不需要重定向
-          if (cleanedSavedUrl === cleanedCurrentUrl) {
-            return;
-          }
-          
-          const isHomePage = currentUrl === `${window.location.origin}/tymultiverse/` ||
-                            currentUrl === `${window.location.origin}/tymultiverse/index.html` ||
-                            currentUrl.endsWith('/tymultiverse');
-
-          const isFromExternal = savedReferer && !savedReferer.includes('/tymultiverse');
-
-          if (isHomePage && isFromExternal) {
-            console.log('🔄 從外部跳轉回來，跳轉到上次訪問的頁面:', cleanedSavedUrl);
-
-            // 設置重定向標誌，防止循環
-            sessionStorage.setItem(REDIRECT_FLAG, 'true');
-            
-            // 添加一個小的延遲，確保頁面完全加載
-            setTimeout(() => {
-              window.location.href = cleanedSavedUrl;
-            }, 500);
-
-            return;
-          }
-        } catch (e) {
-          console.warn('Nav: 解析保存的 URL 失敗:', e);
-          // 如果解析失敗，清除無效的 URL
-          localStorage.removeItem(PageTracker.STORAGE_KEY);
-        }
-      }
-
-      // 如果沒有跳轉條件，清除舊的 referer
-      if (savedReferer && savedReferer.includes('/tymultiverse')) {
-        localStorage.removeItem(PageTracker.REFERER_KEY);
-      }
-      */
-    }
-
-    // 手動保存當前 URL（可以用於特殊情況）
-    public static saveCurrentUrl(): void {
-      const currentUrl = window.location.href;
-      if (currentUrl.includes("/tymultiverse")) {
-        try {
-          // 清理 URL，移除認證參數
-          const urlObj = new URL(currentUrl);
-          urlObj.searchParams.delete("username");
-          urlObj.searchParams.delete("token");
-          urlObj.searchParams.delete("refresh_token");
-          urlObj.searchParams.delete("refreshToken");
-          urlObj.searchParams.delete("email");
-          urlObj.searchParams.delete("name");
-          urlObj.searchParams.delete("firstName");
-          urlObj.searchParams.delete("lastName");
-          const cleanUrl = urlObj.pathname + urlObj.search;
-          localStorage.setItem(PageTracker.STORAGE_KEY, cleanUrl);
-          console.log("📍 手動保存當前 TY Multiverse 頁面:", cleanUrl);
-        } catch (e) {
-          console.warn("保存 URL 失敗:", e);
-        }
-      }
-    }
-
-    // 獲取保存的 URL
-    public static getSavedUrl(): string | null {
-      return localStorage.getItem(PageTracker.STORAGE_KEY);
-    }
-
-    // 清除保存的 URL
-    public static clearSavedUrl(): void {
-      localStorage.removeItem(PageTracker.STORAGE_KEY);
-      localStorage.removeItem(PageTracker.REFERER_KEY);
-      console.log("🗑️ 已清除保存的頁面記錄");
-    }
-  }
-
-  // 初始化頁面追蹤器
-  const pageTracker = new PageTracker();
-
-  // 將 PageTracker 的靜態方法掛載到 window 對象上
-  declare global {
-    interface Window {
-      pageTracker: {
-        saveCurrentUrl: () => void;
-        getSavedUrl: () => string | null;
-        clearSavedUrl: () => void;
-      };
-    }
-  }
-
-  window.pageTracker = {
-    saveCurrentUrl: PageTracker.saveCurrentUrl,
-    getSavedUrl: PageTracker.getSavedUrl,
-    clearSavedUrl: PageTracker.clearSavedUrl,
-  };
-
-  // 為 site-title 添加雙擊清除功能
-  const siteTitle = document.querySelector(".site-title") as HTMLAnchorElement;
-  if (siteTitle) {
-    siteTitle.addEventListener("dblclick", (e) => {
-      e.preventDefault();
-      if (
-        confirm(
-          "要清除保存的頁面記錄嗎？\n這將清除您上次訪問的頁面，下次從外部跳轉回來時不會自動跳轉。",
-        )
-      ) {
-        PageTracker.clearSavedUrl();
-        alert("✅ 已清除保存的頁面記錄");
-      }
-    });
-
-    // 添加提示信息
-    siteTitle.title = "雙擊清除保存的頁面記錄";
-  }
+  (window as any).storageService = storageService;
 
   class MenuButton extends HTMLElement {
     constructor() {
       super();
-
-      // Inject menu toggle button when JS runs.
       this.appendChild(this.querySelector("template")!.content.cloneNode(true));
       const btn = this.querySelector("button")!;
-
-      // Hide menu (shown by default to support no-JS browsers).
       const menu = document.getElementById("menu-content")!;
       menu.hidden = true;
-      // Add "menu-content" class in JS to avoid covering content in non-JS browsers.
       menu.classList.add("menu-content");
 
-      /** Set whether the menu is currently expanded or collapsed. */
       const setExpanded = (expand: boolean) => {
         btn.setAttribute("aria-expanded", expand ? "true" : "false");
         menu.hidden = !expand;
       };
 
-      // Toggle menu visibility when the menu button is clicked.
       btn.addEventListener("click", () => setExpanded(menu.hidden));
-
-      // Hide menu button for large screens.
       const handleViewports = (e: MediaQueryList | MediaQueryListEvent) => {
         setExpanded(e.matches);
         btn.hidden = e.matches;
@@ -501,12 +228,72 @@ const iconLinks: {
       mediaQueries.addEventListener("change", handleViewports);
     }
   }
-  customElements.define("menu-button", MenuButton);
+
+  if (!customElements.get("menu-button")) {
+    customElements.define("menu-button", MenuButton);
+  }
 </script>
 
 <script>
   import { initNav } from "../scripts/NavScript";
 
-  // 初始化 Nav 控制器
+  // 支援 View Transitions 的初始化
   initNav();
+</script>
+
+<script>
+  // 備用的原生 JavaScript 主題切換功能 - 僅在 React 水合失敗時啟用
+  function initThemeToggleFallback() {
+    console.log("[ThemeToggle Fallback] Checking for React handlers...");
+
+    const themeToggleContainer = document.querySelector(".theme-toggle");
+    const themeToggleButton = themeToggleContainer?.querySelector("button");
+
+    if (!themeToggleButton) return;
+
+    // 檢查按鈕是否已經由 React 處理
+    const hasReactHandlers = Object.keys(themeToggleButton).some(
+      (key) => key.startsWith("__react") || key.startsWith("_react"),
+    );
+
+    if (hasReactHandlers) {
+      console.log(
+        "[ThemeToggle Fallback] React detected successfully, skipping fallback.",
+      );
+      return;
+    }
+
+    console.warn(
+      "[ThemeToggle Fallback] No React detected, installing native listener.",
+    );
+
+    themeToggleButton.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const html = document.documentElement;
+        const currentTheme = html.classList.contains("theme-dark")
+          ? "dark"
+          : "light";
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+        html.classList.remove("theme-light", "theme-dark");
+        html.classList.add(`theme-${newTheme}`);
+        localStorage.setItem("theme", newTheme);
+        themeToggleButton.setAttribute(
+          "aria-pressed",
+          newTheme === "dark" ? "true" : "false",
+        );
+        console.log("[ThemeToggle Fallback] Toggled to", newTheme);
+      },
+      true,
+    );
+  }
+
+  // 給 React 一點時間（1.5s）進行水合，如果還不行就啟動備案
+  setTimeout(initThemeToggleFallback, 1500);
+  document.addEventListener("astro:page-load", () =>
+    setTimeout(initThemeToggleFallback, 1500),
+  );
 </script>

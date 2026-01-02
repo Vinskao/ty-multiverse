@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-    // 應用主題到 document
+  // 應用主題到 document
   useEffect(() => {
     document.documentElement.classList.remove('theme-light', 'theme-dark');
     document.documentElement.classList.add(`theme-${theme}`);
@@ -57,7 +57,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // SSR 或是沒有 Provider 時的安全回退
+    return {
+      theme: 'light' as Theme,
+      toggleTheme: () => { }
+    };
   }
   return context;
 }

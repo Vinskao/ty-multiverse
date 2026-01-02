@@ -1,87 +1,97 @@
 // src/components/ThemeToggle.tsx
 import { useEffect, useState } from 'react';
 import { Icon } from './Icon';
+import { ThemeProvider, useTheme } from './ThemeProvider';
 
-export function ThemeToggle() {
-  // 初始化狀態，確保服務器和客戶端初始渲染一致
-  // 初始值設為 null 或 undefined，表示尚未確定
-  const [isDark, setIsDark] = useState<boolean | null>(null);
+function ThemeButton() {
+  const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 組件掛載後，再從 localStorage 和 prefers-color-scheme 確定主題
-    const initialTheme = (() => {
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-        return localStorage.getItem('theme') === 'dark';
+    console.log('[ThemeToggle] Component mounted, current theme:', theme);
+    setMounted(true);
+
+    // 同步初次掛載時的狀態
+    const isDark = document.documentElement.classList.contains('theme-dark');
+    console.log('[ThemeToggle] DOM has theme-dark:', isDark, 'State theme:', theme);
+
+    if (isDark && theme !== 'dark') {
+      try {
+        console.log('[ThemeToggle] Syncing to dark theme');
+        toggleTheme();
+      } catch (e) {
+        console.error('[ThemeToggle] Error syncing to dark:', e);
       }
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return true;
+    } else if (!isDark && theme === 'dark') {
+      try {
+        console.log('[ThemeToggle] Syncing to light theme');
+        toggleTheme();
+      } catch (e) {
+        console.error('[ThemeToggle] Error syncing to light:', e);
       }
-      return false; // 默認為 light
-    })();
-    setIsDark(initialTheme);
-    // 根據確定的主題更新 class
-    document.documentElement.classList.toggle('theme-dark', initialTheme);
+    }
+  }, []);
 
-    // 監聽系統主題變化
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      // 只有在用戶未手動設置主題時才跟隨系統
-      if (!localStorage.getItem('theme')) {
-        setIsDark(e.matches);
-        document.documentElement.classList.toggle('theme-dark', e.matches);
+  const isDark = theme === 'dark';
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log('[ThemeToggle] Button clicked! Current theme:', theme);
+
+    if (typeof toggleTheme === 'function') {
+      try {
+        toggleTheme();
+        console.log('[ThemeToggle] Theme toggled successfully');
+      } catch (error) {
+        console.error('[ThemeToggle] Error toggling theme:', error);
       }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []); // 空依賴數組，確保只在掛載時執行一次初始檢測
-
-  const toggleTheme = () => {
-    // 只有在 isDark 確定後才允許切換
-    if (isDark === null) return;
-
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    document.documentElement.classList.toggle('theme-dark', newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    } else {
+      console.error('[ThemeToggle] toggleTheme is not a function:', toggleTheme);
+    }
   };
 
-  // 在狀態未確定時，可以選擇渲染 null 或一個佔位符，
-  // 或者渲染一個默認狀態（例如 light），只要它與服務器渲染一致
-  if (isDark === null) {
-    // 選擇渲染一個與服務器端一致的默認狀態 (假設服務器默認 light)
-    // 或者返回 null 避免渲染不一致的內容
-    // return null; // 如果選擇不渲染直到狀態確定
-
-    // 渲染一個默認狀態（假設服務器默認渲染 light theme）
-    // 注意：這裡的 aria-pressed 和 className 需要與服務器渲染的默認值匹配
-    return (
-      <div className="theme-toggle">
-        <button onClick={toggleTheme} aria-pressed={false} disabled> 
-          <span className="sr-only">Dark theme</span>
-          <span className={`icon light active`}> 
-            <Icon icon="sun" />
-          </span>
-          <span className={`icon dark `}> 
-            <Icon icon="moon-stars" />
-          </span>
-        </button>
-      </div>
-    );
-  }
-
-  // 狀態確定後，正常渲染
   return (
-    <div className="theme-toggle">
-      <button onClick={toggleTheme} aria-pressed={isDark}>
+    <div className={`theme-toggle ${mounted ? 'hydrated' : ''}`}>
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-pressed={isDark}
+        title="Toggle theme"
+        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+      >
         <span className="sr-only">Dark theme</span>
-        <span className={`icon light ${isDark ? '' : 'active'}`}>
+        <span className="icon light">
           <Icon icon="sun" />
         </span>
-        <span className={`icon dark ${isDark ? 'active' : ''}`}>
+        <span className="icon dark">
           <Icon icon="moon-stars" />
         </span>
       </button>
+
+      <style>{`
+        .theme-toggle .icon {
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        /* CSS-driven visibility to prevent flash */
+        :root:not(.theme-dark) .theme-toggle .icon.light {
+          opacity: 1 !important;
+        }
+        :root.theme-dark .theme-toggle .icon.dark {
+          opacity: 1 !important;
+        }
+      `}</style>
     </div>
+  );
+}
+
+// 導出組件：合包 Provider 與 Button，確保在 Astro 中作為單一 Island 水合
+export function ThemeToggle() {
+  return (
+    <ThemeProvider>
+      <ThemeButton />
+    </ThemeProvider>
   );
 }
