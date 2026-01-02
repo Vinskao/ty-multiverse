@@ -8,28 +8,7 @@ function ThemeButton() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    console.log('[ThemeToggle] Component mounted, current theme:', theme);
     setMounted(true);
-
-    // 同步初次掛載時的狀態
-    const isDark = document.documentElement.classList.contains('theme-dark');
-    console.log('[ThemeToggle] DOM has theme-dark:', isDark, 'State theme:', theme);
-
-    if (isDark && theme !== 'dark') {
-      try {
-        console.log('[ThemeToggle] Syncing to dark theme');
-        toggleTheme();
-      } catch (e) {
-        console.error('[ThemeToggle] Error syncing to dark:', e);
-      }
-    } else if (!isDark && theme === 'dark') {
-      try {
-        console.log('[ThemeToggle] Syncing to light theme');
-        toggleTheme();
-      } catch (e) {
-        console.error('[ThemeToggle] Error syncing to light:', e);
-      }
-    }
   }, []);
 
   const isDark = theme === 'dark';

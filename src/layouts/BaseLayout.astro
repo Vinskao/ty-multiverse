@@ -31,11 +31,22 @@ const { title, description } = Astro.props;
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 		<title>TY Multiverse</title>
 		<script is:inline>
-			// 在頁面加載前設置主題
+			// 🎨 主題初始化 - 在任何渲染之前執行，避免主題閃爍 (FOUC)
 			(function() {
-				const theme = localStorage.getItem('theme') || 
-					(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-				document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+				// 1. 從 localStorage 或系統偏好取得主題
+				const savedTheme = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+				
+				// 2. 立即設置正確的主題類別，確保頁面渲染時就是正確的主題
+				const html = document.documentElement;
+				html.classList.remove('theme-light', 'theme-dark');
+				html.classList.add(`theme-${theme}`);
+				
+				// 3. 儲存主題設定（確保首次訪問時也能記住偏好）
+				if (!savedTheme) {
+					localStorage.setItem('theme', theme);
+				}
 			})();
 
 			// --- 最後訪問頁面記憶 & 還原 ---
