@@ -8,16 +8,27 @@
  * 記錄其他錯誤以便分析資料設計問題
  */
 
+import fs from 'fs';
+
 const BACKEND_URL = process.env.PUBLIC_BACKEND_URL || 'http://localhost:8080/tymb';
 const GATEWAY_URL = process.env.PUBLIC_GATEWAY_URL || 'http://localhost:8082/tymg';
 
-const testResults = [];
+interface TestResult {
+  name: string;
+  status: 'PASS' | 'FAIL' | 'ERROR';
+  httpStatus: number;
+  message: string;
+  url: string;
+  data?: any;
+}
+
+const testResults: TestResult[] = [];
 let totalTests = 0;
 let passedTests = 0;
 let failedTests = 0;
 
 // 顏色輸出
-const colors = {
+const colors: Record<string, string> = {
   reset: '\x1b[0m',
   green: '\x1b[32m',
   red: '\x1b[31m',
@@ -26,17 +37,27 @@ const colors = {
   cyan: '\x1b[36m',
 };
 
-function log(message, color = 'reset') {
+function log(message: string, color: string = 'reset') {
   console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
+interface TestConfig {
+  category: string;
+  name: string;
+  method: string;
+  url: string;
+  body?: any;
+  expectedStatus: number[];
+  shouldIgnore401: boolean;
+}
+
 // 測試單個端點
-async function testEndpoint(config) {
+async function testEndpoint(config: TestConfig) {
   totalTests++;
   const { name, method, url, body, expectedStatus, shouldIgnore401 } = config;
 
   try {
-    const options = {
+    const options: RequestInit = {
       method,
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +71,7 @@ async function testEndpoint(config) {
     const response = await fetch(url, options);
     const status = response.status;
     
-    let responseData = null;
+    let responseData: any = null;
     const contentType = response.headers.get('content-type');
     
     try {
@@ -86,7 +107,7 @@ async function testEndpoint(config) {
         name,
         status: 'PASS',
         httpStatus: status,
-        message: responseData?.message || 'Success',
+        message: (responseData as any)?.message || 'Success',
         url,
         data: responseData,
       });
@@ -97,14 +118,14 @@ async function testEndpoint(config) {
         name,
         status: 'FAIL',
         httpStatus: status,
-        message: responseData?.message || responseData || 'Unexpected status',
+        message: (responseData as any)?.message || responseData || 'Unexpected status',
         url,
         data: responseData,
       });
       log(`❌ FAIL: ${name} (Expected: ${expectedStatus}, Got: ${status})`, 'red');
       log(`   Response: ${JSON.stringify(responseData).substring(0, 200)}`, 'yellow');
     }
-  } catch (error) {
+  } catch (error: any) {
     failedTests++;
     testResults.push({
       name,
@@ -118,7 +139,7 @@ async function testEndpoint(config) {
 }
 
 // 測試配置
-const testConfigs = [
+const testConfigs: TestConfig[] = [
   // ========== Authentication APIs (Backend Direct) ==========
   {
     category: 'Authentication',
@@ -457,7 +478,6 @@ async function runTests() {
     results: testResults,
   };
 
-  const fs = require('fs');
   const reportPath = './api-test-report.json';
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   log(`\n📄 詳細報告已儲存至: ${reportPath}`, 'blue');
@@ -476,4 +496,3 @@ runTests().catch(error => {
   console.error(error);
   process.exit(1);
 });
-

@@ -1,6 +1,12 @@
+/// <reference lib="webworker" />
+export {};
+
+
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
 
-self.onmessage = async ({ data }) => {
+declare const JSZip: any;
+
+self.onmessage = async ({ data }: MessageEvent) => {
   const { files } = data;
   const zip = new JSZip();
   const totalFiles = files.length;

@@ -1,11 +1,53 @@
-const setupResumePreview = (aboutData, skillsData) => {
-  const btn = document.getElementById('export-pdf-btn');
+
+interface EducationItem {
+  institution: string;
+  period: string;
+  programs: string[];
+}
+
+interface ExperienceJob {
+  title: string;
+  company: string;
+  period: string;
+  projectExperience?: string[];
+  responsibilities?: string[];
+}
+
+export interface AboutData {
+  background: string;
+  education: EducationItem[];
+  experience: ExperienceJob[];
+}
+
+interface Skill {
+  name: string;
+  level: string;
+}
+
+interface SkillSubCategory {
+  name: string;
+  skills: Skill[];
+}
+
+interface SkillCategory {
+  name: string;
+  pillClass?: string;
+  skills: Skill[];
+  subcategories?: SkillSubCategory[];
+}
+
+export interface SkillsData {
+  categories: SkillCategory[];
+}
+
+const setupResumePreview = (aboutData: AboutData, skillsData: SkillsData) => {
+  const btn = document.getElementById('export-pdf-btn') as HTMLButtonElement | null;
   if (!btn) {
     console.error('Preview Resume button not found.');
     return;
   }
 
-  let printWindow = null;
+  let printWindow: Window | null = null;
 
   btn.addEventListener('click', async () => {
     console.log('Button clicked! Starting preview generation...');
@@ -47,7 +89,7 @@ const setupResumePreview = (aboutData, skillsData) => {
   });
 };
 
-const generateMobileContent = (aboutData, skillsData) => {
+const generateMobileContent = (aboutData: AboutData, skillsData: SkillsData) => {
   // Get language parameter from URL
   const urlParams = new URLSearchParams(window.location.search);
   const lang = urlParams.get('lang') || 'en';
@@ -136,7 +178,7 @@ const generateMobileContent = (aboutData, skillsData) => {
                         <h6>${subcategory.name}</h6>
                         <div class="skill-tags">
                             ${subcategory.skills.map((skill) => `
-                              <span class="pill ${category.pillClass} ${skill.level}">${skill.name}</span>
+                              <span class="pill ${category.pillClass || ''} ${skill.level}">${skill.name}</span>
                             `).join('')}
                         </div>
                       </div>
@@ -144,7 +186,7 @@ const generateMobileContent = (aboutData, skillsData) => {
                     ` : `
                       <div class="skill-tags">
                         ${category.skills.map((skill) => `
-                          <span class="pill ${category.pillClass} ${skill.level}">${skill.name}</span>
+                          <span class="pill ${category.pillClass || ''} ${skill.level}">${skill.name}</span>
                         `).join('')}
                       </div>
                     `}
@@ -160,7 +202,7 @@ const generateMobileContent = (aboutData, skillsData) => {
 `;
 };
 
-const generateDesktopContent = (aboutData, skillsData) => {
+const generateDesktopContent = (aboutData: AboutData, skillsData: SkillsData) => {
   // Get language parameter from URL
   const urlParams = new URLSearchParams(window.location.search);
   const lang = urlParams.get('lang') || 'en';
@@ -355,7 +397,7 @@ flowchart TD
                     `).join('')}
                   ` : `
                     <div class="skill-tags">
-                      ${category.skills.map((skill) => `<span class="pill ${category.pillClass} ${skill.level}">${skill.name}</span>`).join('')}
+                      ${category.skills.map((skill) => `<span class="pill ${category.pillClass || ''} ${skill.level}">${skill.name}</span>`).join('')}
                     </div>
                   `}
                 </div>
@@ -370,12 +412,12 @@ flowchart TD
   `;
 };
 
-const loadMermaid = (win) => {
+const loadMermaid = (win: Window) => {
   const mermaidScript = win.document.createElement('script');
   mermaidScript.src = 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js';
   mermaidScript.onload = () => {
     console.log('Mermaid script loaded in preview window.');
-    const mermaid = win.mermaid;
+    const mermaid = (win as any).mermaid; // You might want to define a type for mermaid if possible, or use 'any' safely here
     if (mermaid) {
       mermaid.initialize({ startOnLoad: true, theme: 'default' });
       mermaid.run();

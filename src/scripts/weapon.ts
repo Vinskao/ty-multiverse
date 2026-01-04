@@ -3,15 +3,40 @@
  * This file contains functions for calculating weapon damage based on character attributes
  */
 
+export interface Weapon {
+  baseDamage?: number;
+  bonusDamage?: number;
+  bonusAttributes?: string[];
+  stateAttributes?: string[];
+}
+
+export interface Character {
+  utilityPower?: number | string;
+  magicPower?: number | string;
+  attributes?: string;
+  name?: string;
+  nameOriginal?: string;
+  [key: string]: any; // Allow other properties
+}
+
+export interface DamageResult {
+  totalDamage?: number; // Only from calculateWeaponDamage return
+  baseDamageApplied?: number;
+  bonusDamageApplied?: number;
+  hasBonus: boolean;
+  stateAttributes: string[];
+  character?: Character; // Only from applyWeaponDamage return
+}
+
 /**
  * Calculate the total weapon damage for a character
- * @param {Object} character - The character object with attributes and powers
- * @param {Array} weapons - Array of weapon objects with damage properties
- * @returns {Object} - Object containing the calculated damage values
+ * @param character - The character object with attributes and powers
+ * @param weapons - Array of weapon objects with damage properties
+ * @returns - Object containing the calculated damage values
  */
-export function calculateWeaponDamage(character, weapons) {
+export function calculateWeaponDamage(character: Character, weapons: Weapon | Weapon[]): DamageResult {
   // 如果沒有武器，返回默認值
-  if (!weapons || weapons.length === 0) {
+  if (!weapons || (Array.isArray(weapons) && weapons.length === 0)) {
     return {
       totalDamage: 0,
       baseDamageApplied: 0,
@@ -28,7 +53,7 @@ export function calculateWeaponDamage(character, weapons) {
   let totalBaseDamage = 0;
   let totalBonusDamage = 0;
   let hasAnyBonus = false;
-  let allStateAttributes = [];
+  let allStateAttributes: string[] = [];
   
   // 獲取角色的戰力值
   const characterUtilityPower = parseInt(String(character.utilityPower || 0), 10);
@@ -57,7 +82,7 @@ export function calculateWeaponDamage(character, weapons) {
       weaponBaseDamage = baseDamage;
       
       // 檢查角色是否有加成屬性
-      if (bonusAttributes && bonusAttributes.includes(character.attributes)) {
+      if (bonusAttributes && character.attributes && bonusAttributes.includes(character.attributes)) {
         weaponBonusDamage = bonusDamage;
         weaponHasBonus = true;
       }
@@ -66,7 +91,7 @@ export function calculateWeaponDamage(character, weapons) {
       weaponBaseDamage = Math.floor(baseDamage / 10);
       
       // 檢查角色是否有加成屬性
-      if (bonusAttributes && bonusAttributes.includes(character.attributes)) {
+      if (bonusAttributes && character.attributes && bonusAttributes.includes(character.attributes)) {
         weaponBonusDamage = Math.floor(bonusDamage / 10);
         weaponHasBonus = true;
       }
@@ -105,14 +130,22 @@ export function calculateWeaponDamage(character, weapons) {
 // We still fall back to the local calculation if the API call fails for any reason.
 // ------------------------------
 
-export async function applyWeaponDamage(character, weapons) {
+export async function applyWeaponDamage(character: Character, weapons: Weapon | Weapon[]): Promise<DamageResult> {
   try {
     // 使用 damageService 取得總攻擊力（會自動調用 Gateway）
     const characterName = character?.name || character?.nameOriginal || "";
     if (!characterName) throw new Error("Character name is missing");
 
     // 動態導入 damageService
-    const DamageService = (await import('../services/api/damageService.js')).default;
+    // Assuming damageService is also converted or accessible. 
+    // If damageService is typescript, we import it. If it is JS, we allow JS import.
+    // We try to import without extension first, or use .js if using 'allowImportingTsExtensions' is false but allowJs is true.
+    // In Astro/Vite, usually we can import .ts without extension or with .ts (if configured). 
+    // Safest is to import from the module name.
+    
+    // However, dynamic import path must be relative.
+    const damageServiceModule = await import('../services/api/damageService');
+    const DamageService = damageServiceModule.default;
     const damageService = DamageService.getInstance();
     
     // 獲取傷害值（自動處理緩存、重試等）
@@ -137,7 +170,13 @@ export async function applyWeaponDamage(character, weapons) {
     const { totalDamage, hasBonus, stateAttributes } = calculateWeaponDamage(character, weapons);
 
     const updatedCharacter = { ...character };
-    updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + totalDamage;
+    // safely handle totalDamage possibly being undefined if calculateWeaponDamage returns partial type? 
+    // In my interface above, totalDamage is optional because applyWeaponDamage returns one without it.
+    // But calculateWeaponDamage (the function) returns one WITH it.
+    // I should refine the return type of calculateWeaponDamage to definitely include totalDamage.
+    
+    const damageVal = totalDamage || 0; 
+    updatedCharacter.utilityPower = parseInt(String(character.utilityPower || 0), 10) + damageVal;
 
     return {
       character: updatedCharacter,
@@ -146,5 +185,3 @@ export async function applyWeaponDamage(character, weapons) {
     };
   }
 }
-
-// 註：pollForDamageResult 已移除，現在由 damageService 統一處理

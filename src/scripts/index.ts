@@ -2,7 +2,7 @@
 // 使用 astro:page-load 來支援 View Transitions 的客戶端導航
 
 // 定義提示文字（全域常量）
-const shadeDescriptions = {
+const shadeDescriptions: Record<string, string> = {
     shade1: "Score 5 Strong",
     shade2: "Score 4 Sufficient",
     shade3: "Score 3 Understood",
@@ -11,7 +11,7 @@ const shadeDescriptions = {
 };
 
 // 分數映射（全域常量）
-const shadeScores = {
+const shadeScores: Record<string, number> = {
     shade1: 5,
     shade2: 4,
     shade3: 3,
@@ -20,9 +20,9 @@ const shadeScores = {
 };
 
 // 全域 tooltip 元素（只創建一次）
-let globalTooltip = null;
+let globalTooltip: HTMLElement | null = null;
 
-function getOrCreateTooltip() {
+function getOrCreateTooltip(): HTMLElement {
     if (globalTooltip && document.body.contains(globalTooltip)) {
         return globalTooltip;
     }
@@ -71,13 +71,13 @@ function initTooltips() {
     }
 
     // 處理 hover 事件
-    const pills = document.querySelectorAll(".pill");
+    const pills = document.querySelectorAll<HTMLElement>(".pill");
     pills.forEach((pill) => {
         // 避免重複綁定事件
         if (pill.dataset.tooltipBound) return;
         pill.dataset.tooltipBound = 'true';
 
-        let tooltipTextValue = null;
+        let tooltipTextValue: string | null = null;
         if (pill.hasAttribute('data-explanation')) {
             tooltipTextValue = pill.getAttribute('data-explanation');
         } else {
@@ -93,7 +93,8 @@ function initTooltips() {
             pill.addEventListener("mouseenter", (e) => {
                 tooltip.textContent = finalTooltipText;
                 tooltip.style.display = "block";
-                const rect = e.target.getBoundingClientRect();
+                const target = e.target as HTMLElement;
+                const rect = target.getBoundingClientRect();
                 tooltip.style.left = `${rect.left + window.scrollX}px`;
                 tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight - 5}px`;
             });
@@ -125,7 +126,7 @@ if (document.readyState === 'loading') {
 }
 
 // HEX to RGB 顏色轉換
-function hexToRgb(hex) {
+function hexToRgb(hex: string): { r: number, g: number, b: number } {
     const bigint = parseInt(hex.slice(1), 16);
     return {
         r: (bigint >> 16) & 255,
@@ -135,7 +136,7 @@ function hexToRgb(hex) {
 }
 
 // RGB to HSL 顏色轉換
-function rgbToHsl(r, g, b) {
+function rgbToHsl(r: number, g: number, b: number): { h: number, s: number, l: number } {
     r /= 255;
     g /= 255;
     b /= 255;
@@ -168,7 +169,7 @@ function rgbToHsl(r, g, b) {
 }
 
 // HSL to HEX 顏色轉換
-function hslToHex(h, s, l) {
+function hslToHex(h: number, s: number, l: number): string {
     s /= 100;
     l /= 100;
 
@@ -214,7 +215,7 @@ function hslToHex(h, s, l) {
 }
 
 // 調整顏色的函數 (從原色到黑色漸層)
-function adjustColorToBlack(hex, shadeLevel) {
+function adjustColorToBlack(hex: string, shadeLevel: number): { r: number, g: number, b: number } {
     const rgb = hexToRgb(hex);
     
     // 計算漸層比例 (shade1 = 0%, shade5 = 100%)
@@ -228,9 +229,23 @@ function adjustColorToBlack(hex, shadeLevel) {
     };
 }
 
+// 將 RGB 顏色轉為 HEX 的輔助函數
+function rgbToHex(rgb: string): string {
+    const match = rgb.match(/\d+/g);
+    if (!match) throw new Error('Invalid RGB color');
+    const [r, g, b] = match.map(Number);
+    return (
+        '#' +
+        ((1 << 24) + (r << 16) + (g << 8) + b)
+            .toString(16)
+            .slice(1)
+            .toUpperCase()
+    );
+}
+
 // 初始化 shade 與 pill 顏色
-function applyShadesToPills() {
-    const pills = document.querySelectorAll('.pill');
+const applyShadesToPills = () => {
+    const pills = document.querySelectorAll<HTMLElement>('.pill');
 
     pills.forEach((pill) => {
         // 避免重複處理
@@ -250,18 +265,11 @@ function applyShadesToPills() {
 // applyShadesToPills 已經在 initTooltips 中被間接處理，但確保也支援 View Transitions
 document.addEventListener('astro:page-load', applyShadesToPills);
 
-// 將 RGB 顏色轉為 HEX 的輔助函數
-function rgbToHex(rgb) {
-    const match = rgb.match(/\d+/g);
-    if (!match) throw new Error('Invalid RGB color');
-    const [r, g, b] = match.map(Number);
-    return (
-        '#' +
-        ((1 << 24) + (r << 16) + (g << 8) + b)
-            .toString(16)
-            .slice(1)
-            .toUpperCase()
-    );
+interface ErrorData {
+    detail?: {
+        message?: string;
+    };
+    message?: string;
 }
 
 // LeetCode API Integration
@@ -276,8 +284,9 @@ async function fetchLeetCodeStats() {
         
         // 检查响应状态
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ detail: { message: `HTTP ${response.status}` } }));
-            throw new Error(errorData.detail?.message || errorData.detail || `HTTP ${response.status}`);
+            const errorData: ErrorData | unknown = await response.json().catch(() => ({ detail: { message: `HTTP ${response.status}` } }));
+            const msg = (errorData as ErrorData).detail?.message || (errorData as any)?.detail || `HTTP ${response.status}`;
+            throw new Error(msg);
         }
         
         const data = await response.json();
@@ -305,7 +314,7 @@ async function fetchLeetCodeStats() {
         if (hardProgress) hardProgress.style.width = `${(data.hardSolved / 200) * 100}%`;
         
         // Add some animation
-        const cards = document.querySelectorAll('.leetcode-card');
+        const cards = document.querySelectorAll<HTMLElement>('.leetcode-card');
         cards.forEach((card, index) => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
@@ -315,7 +324,7 @@ async function fetchLeetCodeStats() {
                 card.style.transform = 'translateY(0)';
             }, index * 200);
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching LeetCode stats:', error);
         const leetcodeStats = document.getElementById('leetcode-stats');
         if (leetcodeStats) {
@@ -382,14 +391,14 @@ async function updateVisitCount() {
 }
 
 // Cookie helper functions
-function setCookie(name, value, minutes) {
+function setCookie(name: string, value: string, minutes: number) {
     const date = new Date();
     date.setTime(date.getTime() + (minutes * 60 * 1000));
     const expires = "expires=" + date.toUTCString();
     document.cookie = name + "=" + value + ";" + expires + ";path=/";
 }
 
-function getCookie(name) {
+function getCookie(name: string): string {
     const cookieName = name + "=";
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {

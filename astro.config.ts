@@ -12,7 +12,8 @@ export default defineConfig({
   base: '/tymultiverse',
   integrations: [react(), mdx(), sitemap()],
   // Enable view transitions for SPA-like navigation
-  viewTransitions: true,
+  // @ts-ignore
+  viewTransitions: true, // Note: viewTransitions is deprecated in newer Astro versions in favor of <ViewTransitions /> component or other config, but if it works in current version, keep it. The property might not be in the type definition if updated.
   markdown: {
     remarkPlugins: []
   },
@@ -71,7 +72,7 @@ export default defineConfig({
             if (assetInfo.name?.endsWith('.css')) {
               return '_astro/[name].[hash][extname]';
             }
-            return assetInfo.name;
+            return assetInfo.name || '';
           }
         }
       }

@@ -12,8 +12,26 @@
  *    - KEYCLOAK_PASSWORD: 密碼
  */
 
+// Declare Google Apps Script globals
+declare const PropertiesService: any;
+declare const Logger: any;
+declare const UrlFetchApp: any;
+declare const SpreadsheetApp: any;
+
+interface ApiConfig {
+    KEYCLOAK_URL: string;
+    KEYCLOAK_REALM: string;
+    KEYCLOAK_CLIENT_ID: string;
+    KEYCLOAK_USERNAME: string;
+    KEYCLOAK_PASSWORD: string;
+    GATEWAY_URL: string;
+    PEOPLE_DELETE_URL: string | null;
+    PEOPLE_UPDATE_URL: string | null;
+    PEOPLE_SHEET_NAME?: string;
+}
+
 // 配置常量
-const CONFIG = {
+const CONFIG: ApiConfig = {
   KEYCLOAK_URL: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_URL') || 'https://peoplesystem.tatdvsonorth.com',
   KEYCLOAK_REALM: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_REALM') || 'PeopleSystem',
   KEYCLOAK_CLIENT_ID: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_CLIENT_ID') || 'peoplesystem',
@@ -39,7 +57,7 @@ function initializeUrls() {
  *
  * @returns {string} JWT Access Token
  */
-function getKeycloakToken() {
+function getKeycloakToken(): string {
   const tokenEndpoint = `${CONFIG.KEYCLOAK_URL}/realms/${CONFIG.KEYCLOAK_REALM}/protocol/openid-connect/token`;
 
   const payload = {
@@ -86,6 +104,13 @@ function getKeycloakToken() {
   }
 }
 
+interface ApiResponse {
+    success: boolean;
+    statusCode?: number;
+    data?: any;
+    error?: string;
+}
+
 /**
  * 使用 Token 調用受保護的 API
  *
@@ -94,10 +119,10 @@ function getKeycloakToken() {
  * @param {Object} payload - 請求負載 (可選)
  * @returns {Object} API 響應
  */
-function callProtectedApi(url, method = 'GET', payload = null) {
+function callProtectedApi(url: string, method: string = 'GET', payload: any = null): ApiResponse {
   const accessToken = getKeycloakToken();
 
-  const options = {
+  const options: any = {
     'method': method,
     'headers': {
       'Authorization': `Bearer ${accessToken}`,
@@ -112,6 +137,7 @@ function callProtectedApi(url, method = 'GET', payload = null) {
 
   try {
     Logger.log(`🚀 調用 API: ${method} ${url}`);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const response = UrlFetchApp.fetch(url, options);
     const responseCode = response.getResponseCode();
     const responseText = response.getContentText();
@@ -133,7 +159,7 @@ function callProtectedApi(url, method = 'GET', payload = null) {
         error: responseText
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     Logger.log(`💥 API 調用異常: ${error}`);
     return {
       success: false,
@@ -147,9 +173,10 @@ function callProtectedApi(url, method = 'GET', payload = null) {
  *
  * @returns {Object} API 響應
  */
-function deleteAllPeople() {
+function deleteAllPeople(): ApiResponse {
   initializeUrls();
   Logger.log('🗑️ 開始刪除所有人員資料...');
+  if (!CONFIG.PEOPLE_DELETE_URL) throw new Error("PEOPLE_DELETE_URL not set");
   return callProtectedApi(CONFIG.PEOPLE_DELETE_URL, 'POST');
 }
 
@@ -159,10 +186,22 @@ function deleteAllPeople() {
  * @param {Object} personData - 人員資料
  * @returns {Object} API 響應
  */
-function updatePerson(personData) {
+function updatePerson(personData: any): ApiResponse {
   initializeUrls();
   Logger.log(`📝 更新人員資料: ${personData.name || 'Unknown'}`);
+  if (!CONFIG.PEOPLE_UPDATE_URL) throw new Error("PEOPLE_UPDATE_URL not set");
   return callProtectedApi(CONFIG.PEOPLE_UPDATE_URL, 'POST', personData);
+}
+
+/**
+ * 工具函數：解析布林值
+ */
+function parseBoolean(value: any): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    return value.trim().toLowerCase() === "true";
+  }
+  return false;
 }
 
 /**
@@ -177,9 +216,9 @@ function syncPeopleWithAuth() {
   const rows = data.slice(1);
 
   const payloads = rows
-    .filter(row => row.join("").trim() !== "")
-    .map(row => {
-      const obj = {};
+    .filter((row: any[]) => row.join("").trim() !== "")
+    .map((row: any[]) => {
+      const obj: any = {};
       row.forEach((cell, i) => {
         obj[headers[i]] = cell;
       });
@@ -242,7 +281,7 @@ function syncPeopleWithAuth() {
   Logger.log(`✅ 刪除完成，準備更新 ${payloads.length} 筆資料...`);
 
   // 更新資料
-  payloads.forEach((payload, i) => {
+  payloads.forEach((payload: any, i: number) => {
     const result = updatePerson(payload);
     if (result.success) {
       Logger.log(`✅ 第 ${i + 1} 筆成功: ${payload.name}`);
@@ -302,17 +341,6 @@ function setupScriptProperties() {
   Logger.log('   - KEYCLOAK_USERNAME 和 KEYCLOAK_PASSWORD 為您的實際憑證');
   Logger.log('   - GATEWAY_URL 為您的本地 IP 地址 (如果使用 localhost)');
   Logger.log('   - 確保防火牆允許端口 8082 的入站連接');
-}
-
-/**
- * 工具函數：解析布林值
- */
-function parseBoolean(value) {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") {
-    return value.trim().toLowerCase() === "true";
-  }
-  return false;
 }
 
 /**
