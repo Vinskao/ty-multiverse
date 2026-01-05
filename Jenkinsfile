@@ -29,11 +29,11 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "30m"
-                        memory: "256Mi"
+                        cpu: "100m"
+                        memory: "1024Mi"
                       limits:
-                        cpu: "75m"
-                        memory: "512Mi"
+                        cpu: "500m"
+                        memory: "2048Mi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
