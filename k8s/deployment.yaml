@@ -21,6 +21,7 @@ metadata:
     app.kubernetes.io/name: ty-multiverse-frontend
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   strategy:
     type: Recreate  # 先刪除舊 pod，再建立新 pod，確保同時只有一個 pod
   selector:
