@@ -42,6 +42,75 @@ npm install
 npx astro --version
 ```
 
+### FFmpeg Setup for Video Merge Feature
+
+The Video Merge feature requires FFmpeg to be installed locally for development. In production, FFmpeg runs in a dedicated Kubernetes service.
+
+#### Windows Installation
+
+**Method A: Using Chocolatey** (Recommended)
+```powershell
+# Run PowerShell as Administrator
+choco install ffmpeg
+
+# Verify installation
+ffmpeg -version
+```
+
+**Method B: Manual Installation**
+1. Download FFmpeg from: https://github.com/BtbN/FFmpeg-Builds/releases
+   - Choose: `ffmpeg-master-latest-win64-gpl.zip`
+2. Extract to `C:\ffmpeg`
+3. Add to System PATH:
+   - Open "System Properties" → "Environment Variables"
+   - Find "Path" in "System variables"
+   - Add `C:\ffmpeg\bin`
+4. Restart terminal and verify:
+   ```powershell
+   ffmpeg -version
+   ```
+
+#### macOS Installation
+
+```bash
+# Using Homebrew
+brew install ffmpeg
+
+# Verify installation
+ffmpeg -version
+```
+
+#### Linux Installation (Ubuntu/Debian)
+
+```bash
+sudo apt update
+sudo apt install ffmpeg
+
+# Verify installation
+ffmpeg -version
+```
+
+#### Video Service Setup
+
+After installing FFmpeg, start the video merge service:
+
+```bash
+# In the frontend project root directory
+npm install
+
+# Start video service
+npm run video-service
+
+# Or use nodemon for auto-reload during development
+npm run video-service:dev
+```
+
+The video service will run on `http://localhost:3000` and must be running alongside the frontend for the Video Merge feature to work in development mode.
+
+**Note**: 
+- Video service is integrated into the frontend project at `video-service/` directory
+- In production, the video service is deployed as a separate Kubernetes pod (see `k8s/ffmpeg.sh`)
+
 ### Development Commands
 ```bash
 # Start development server

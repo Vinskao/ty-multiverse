@@ -1,0 +1,111 @@
+---
+declare global {
+  interface Window {
+    TY_MULTIVERSE_CONFIG?: {
+      tymbUrl: string;
+      peopleImageUrl: string;
+    };
+  }
+}
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+const isLoggedIn = !!username && !!token;
+
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+
+const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
+const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://peoplesystem.tatdvsonorth.com';
+---
+
+<BaseLayout title="Video Merger | TY Multiverse" description="Combine character videos into a 1920x1080 transparent composite">
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+      <Hero
+        title="Video Merger"
+        tagline="選擇 4 支人物影片，合併為 1920x1080 並自動去背"
+        align="start"
+      />
+
+      <div class="system-container merge-actions">
+        <div class="hint">
+          請先從下方影片庫挑選 4 支影片；背景將自動偵測主色（黑 / 綠等）並轉為透明。
+        </div>
+        <div class="action-buttons">
+          <button id="merge-start-btn" class="module-button primary" type="button">開始合併</button>
+          <button id="merge-clear-btn" class="module-button ghost" type="button">清除選擇</button>
+        </div>
+      </div>
+
+      <section class="system-container">
+        <div class="section-header">
+          <h3>已選擇影片（4 個插槽，從左到右並排）</h3>
+          <p class="section-subtitle">建議挑選相同長度的影片以縮短處理時間</p>
+        </div>
+        <div id="selected-grid" class="selected-grid">
+          {[0,1,2,3].map((slot) => (
+            <div class="slot" data-slot={slot}>
+              <div class="slot-body">
+                <div class="slot-index">#{slot + 1}</div>
+                <div class="slot-title">尚未選擇</div>
+                <div class="slot-hint">點擊下方影片庫以填入此插槽</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="system-container">
+        <div class="section-header">
+          <div>
+            <h3>影片庫</h3>
+            <p class="section-subtitle">來源與 Dance 頁面相同，會自動掃描可用的 480x832 人物影片</p>
+          </div>
+          <button id="refresh-library-btn" class="module-button ghost small" type="button">
+            🔄 重新載入
+          </button>
+        </div>
+        <div id="video-library" class="video-library"></div>
+      </section>
+
+      <section class="system-container">
+        <div class="section-header">
+          <h3>處理狀態與預覽</h3>
+          <p class="section-subtitle">完成後可直接預覽或下載（WebM 透明背景）</p>
+        </div>
+
+        <div id="processing-status" class="processing-status">
+          <div class="status-text">等待選擇影片</div>
+          <div class="progress-bar">
+            <div class="progress" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="preview-panel">
+          <video id="merged-preview" class="merged-preview" controls playsinline muted></video>
+          <a id="download-link" class="module-button download-button" href="#" download="merged.webm" aria-disabled="true">下載合併影片</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</BaseLayout>
+
+<link rel="stylesheet" href="/src/styles/merge.css">
+<script async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
+<script define:vars={{ tymbUrl, peopleImageUrl }}>
+  window.TY_MULTIVERSE_CONFIG = {
+    tymbUrl: tymbUrl,
+    peopleImageUrl: peopleImageUrl
+  };
+</script>
+<script>
+  import '../../scripts/merge.ts';
+</script>

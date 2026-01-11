@@ -4,6 +4,10 @@
 
 TY-Multiverse 是一個多維度管理系統，用於管理 TY 的個人專案。
 
+本專案包含：
+- **Frontend (Astro)** - 主前端應用
+- **Video Service (Node.js)** - 影片合併服務（位於 `video-service/` 目錄）
+
 ## 架構圖
 
 ### 整體架構
@@ -779,3 +783,169 @@ sequenceDiagram
     MayaSawa-->>Astro: 返回回答
     Astro-->>User: 顯示回答
 ```
+
+## Video Merge Service
+
+### 概述
+
+Video Merge Service 是一個整合在前端專案中的 Node.js 服務，專門用於處理影片合併和去背功能。
+
+### 目錄結構
+
+```
+ty-multiverse-frontend/
+├── video-service/
+│   ├── src/
+│   │   ├── index.js          # Express 伺服器
+│   │   ├── routes/
+│   │   │   └── video.js      # 影片 API 路由
+│   │   ├── services/
+│   │   │   ├── ffmpeg.js     # FFmpeg 處理邏輯
+│   │   │   └── download.js   # 影片下載
+│   │   └── utils/
+│   │       └── color.js      # 背景色偵測
+│   ├── temp/                 # 暫存目錄
+│   ├── output/               # 輸出目錄
+│   ├── Dockerfile            # 容器化配置
+│   └── README.md
+├── k8s/
+│   └── ffmpeg.sh             # K8s 部署腳本
+└── package.json              # 包含 video service 依賴
+```
+
+### 本地開發
+
+#### 1. 安裝 FFmpeg
+
+詳細安裝指南請參考 `AGENTS.md` 中的 "FFmpeg Setup" 章節。
+
+**Windows:**
+```powershell
+choco install ffmpeg
+```
+
+**macOS:**
+```bash
+brew install ffmpeg
+```
+
+**Linux:**
+```bash
+sudo apt install ffmpeg
+```
+
+#### 2. 啟動服務
+
+```bash
+# 安裝依賴
+npm install
+
+# 啟動 video service
+npm run video-service
+
+# 或使用 nodemon 開發模式
+npm run video-service:dev
+```
+
+服務將在 `http://localhost:3000` 運行。
+
+#### 3. 測試 API
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# 測試影片合併
+curl -X POST http://localhost:3000/api/videos/merge \
+  -H "Content-Type: application/json" \
+  -d '{
+    "videoUrls": [
+      "http://peoplesystem.tatdvsonorth.com/images/people/Lily.mp4",
+      "http://peoplesystem.tatdvsonorth.com/images/people/Yuki1.mp4",
+      "http://peoplesystem.tatdvsonorth.com/images/people/Anna.mp4",
+      "http://peoplesystem.tatdvsonorth.com/images/people/Maria2.mp4"
+    ],
+    "outputFormat": "webm",
+    "removeBackground": true
+  }'
+```
+
+### API 端點
+
+| API 端點 | 方法 | 描述 | 參數 | 響應 |
+|---------|------|------|------|------|
+| `/health` | GET | 健康檢查 | 無 | `{ status: 'ok', service: 'video-merge-service' }` |
+| `/api/videos/merge` | POST | 合併 4 個影片 | `{ videoUrls: string[], outputFormat: string, removeBackground: boolean }` | `{ status: 'success', outputUrl: string, duration: number, fileSize: number }` |
+| `/api/videos/download/:filename` | GET | 下載合併後的影片 | URL 參數: filename | 影片檔案 |
+| `/api/videos/cleanup/:filename` | DELETE | 刪除已處理的影片 | URL 參數: filename | `{ status: 'success', message: string }` |
+
+### 功能特性
+
+- **影片合併**: 合併 4 個 480x832 影片為 1920x1080
+- **自動去背**: 偵測並移除背景色（黑色/綠色）
+- **透明背景**: 輸出支援透明度的 WebM 格式
+- **背景色偵測**: 使用 Canvas API 分析影片第一幀的主要顏色
+
+### 環境變數
+
+| 變數 | 預設值 | 說明 |
+|------|--------|------|
+| `PORT` | 3000 | 服務端口 |
+| `NODE_ENV` | development | 環境模式 |
+| `PUBLIC_VIDEO_SERVICE_URL` | http://localhost:3000 (dev)<br/>https://video.tatdvsonorth.com (prod) | Video Service URL |
+
+### 生產環境部署
+
+#### Docker 部署
+
+```bash
+# 建立 Docker image
+docker build -f video-service/Dockerfile -t your-registry/video-merge-service:latest .
+
+# 推送到 registry
+docker push your-registry/video-merge-service:latest
+```
+
+#### Kubernetes 部署
+
+```bash
+# 使用一鍵部署腳本
+cd k8s
+chmod +x ffmpeg.sh
+./ffmpeg.sh
+```
+
+部署腳本會自動：
+- 建立 `video-service` namespace
+- 部署 2 個 replica 的 video service
+- 配置 Ingress (video.tatdvsonorth.com)
+- 設定健康檢查和資源限制
+
+### 架構說明
+
+```mermaid
+graph LR
+    A[前端 Astro] -->|Dev| B[Video Service<br/>localhost:3000]
+    A -->|Prod| C[Video Service<br/>K8s Pod]
+    B --> D[本地 FFmpeg]
+    C --> E[Pod 內 FFmpeg]
+    
+    style A fill:#3b82f6
+    style B fill:#10b981
+    style C fill:#f59e0b
+    style D fill:#ef4444
+    style E fill:#ef4444
+```
+
+### 注意事項
+
+- Dev 環境需要本地安裝 FFmpeg
+- 處理時間約 10-30 秒/影片
+- 建議記憶體: 512MB - 2GB
+- 磁碟空間需求: 5-10GB（暫存 + 輸出）
+
+### 相關文件
+
+- [Video Service README](video-service/README.md) - 詳細文檔
+- [AGENTS.md](AGENTS.md) - FFmpeg 安裝指南
+- [k8s/ffmpeg.sh](k8s/ffmpeg.sh) - K8s 部署腳本
