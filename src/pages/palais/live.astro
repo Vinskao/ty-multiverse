@@ -1,0 +1,363 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+const isLoggedIn = !!username && !!token;
+
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+
+const isDev = import.meta.env.DEV;
+const backendUrl = isDev ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
+const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUrl}/maya-sawa/videos/merge-videos`;
+---
+
+<BaseLayout title="Live Synthesis | TY Multiverse" description="Video synthesis for live performance">
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+      <Hero
+        title="Live Synthesis"
+        tagline="Merge 4 videos into a single panoramic performance."
+        align="start"
+      />
+
+      <div class="synthesis-container">
+        <div class="glass-panel">
+          <div class="upload-grid">
+            {[0, 1, 2, 3].map((i) => (
+              <div class="upload-box" id={`box-${i}`}>
+                <input type="file" id={`file-${i}`} accept="video/mp4" hidden />
+                <label for={`file-${i}`} class="upload-label">
+                  <div class="icon">+</div>
+                  <span>Video {i + 1}</span>
+                </label>
+                <video id={`preview-${i}`} class="preview-video" hidden controls></video>
+                <button class="remove-btn" id={`remove-${i}`} hidden>Remove</button>
+              </div>
+            ))}
+          </div>
+
+          <div class="action-area">
+            <button id="merge-btn" class="merge-btn" disabled>
+              <span class="btn-text">Synthesize Performance</span>
+              <div class="loader" hidden></div>
+            </button>
+            <p id="status-msg" class="status-msg"></p>
+          </div>
+        </div>
+
+        <div id="result-area" class="result-area" hidden>
+          <h3>Final Performance</h3>
+          <div class="result-video-container">
+            <video id="result-video" controls class="result-video"></video>
+          </div>
+          <div class="result-actions">
+            <a id="download-link" class="download-btn" download="performance.mp4">Download Result</a>
+            <button id="reset-btn" class="reset-btn">Start New</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .synthesis-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .upload-box {
+    position: relative;
+    aspect-ratio: 16/9;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .upload-box:hover {
+    border-color: var(--accent-regular);
+    background: rgba(var(--accent-rgb), 0.1);
+  }
+
+  .upload-label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .upload-label .icon {
+    font-size: 2rem;
+    font-weight: 300;
+  }
+
+  .preview-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .action-area {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .merge-btn {
+    padding: 1rem 3rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(45deg, var(--accent-regular), var(--accent-light));
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .merge-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.6);
+  }
+
+  .merge-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #666;
+  }
+
+  .loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .status-msg {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+  }
+
+  .result-area {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-video-container {
+    width: 100%;
+    margin: 1.5rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+
+  .result-video {
+    width: 100%;
+    display: block;
+  }
+
+  .result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .download-btn, .reset-btn {
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .download-btn {
+    background: var(--accent-regular);
+    color: white;
+  }
+
+  .reset-btn {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .download-btn:hover { background: var(--accent-light); }
+  .reset-btn:hover { background: rgba(255,255,255,0.2); }
+</style>
+
+<script define:vars={{ mergeEndpoint }}>
+  const files = [null, null, null, null];
+  const mergeBtn = document.getElementById('merge-btn');
+  const statusMsg = document.getElementById('status-msg');
+  const loader = mergeBtn.querySelector('.loader');
+  const btnText = mergeBtn.querySelector('.btn-text');
+
+  // Initialize file inputs
+  for (let i = 0; i < 4; i++) {
+    const input = document.getElementById(`file-${i}`);
+    const preview = document.getElementById(`preview-${i}`);
+    const label = document.querySelector(`#box-${i} .upload-label`);
+    const removeBtn = document.getElementById(`remove-${i}`);
+    const box = document.getElementById(`box-${i}`);
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        files[i] = file;
+        const url = URL.createObjectURL(file);
+        preview.src = url;
+        preview.hidden = false;
+        label.hidden = true;
+        removeBtn.hidden = false;
+        box.style.borderColor = 'var(--accent-regular)';
+        checkReady();
+      }
+    });
+
+    removeBtn.addEventListener('click', () => {
+      files[i] = null;
+      input.value = '';
+      preview.src = '';
+      preview.hidden = true;
+      label.hidden = false;
+      removeBtn.hidden = true;
+      box.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      checkReady();
+    });
+  }
+
+  function checkReady() {
+    const allFilled = files.every(f => f !== null);
+    mergeBtn.disabled = !allFilled;
+  }
+
+  mergeBtn.addEventListener('click', async () => {
+    if (mergeBtn.disabled) return;
+
+    setLoading(true);
+    statusMsg.innerText = 'Processing video synthesis... This may take a few minutes.';
+    
+    const formData = new FormData();
+    formData.append('v1', files[0]);
+    formData.append('v2', files[1]);
+    formData.append('v3', files[2]);
+    formData.append('v4', files[3]);
+
+    try {
+      // Construction of API URL
+      const apiEndpoint = mergeEndpoint;
+      
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Synthesis failed');
+      }
+
+      const blob = await response.blob();
+      const resultUrl = URL.createObjectURL(blob);
+      
+      const resultVideo = document.getElementById('result-video');
+      const downloadLink = document.getElementById('download-link');
+      const resultArea = document.getElementById('result-area');
+      
+      resultVideo.src = resultUrl;
+      downloadLink.href = resultUrl;
+      resultArea.hidden = false;
+      
+      statusMsg.innerText = 'Synthesis complete!';
+      resultArea.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+      console.error(err);
+      statusMsg.innerText = `Error: ${err.message}`;
+      statusMsg.style.color = '#ff6b6b';
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function setLoading(loading) {
+    mergeBtn.disabled = loading;
+    loader.hidden = !loading;
+    btnText.innerText = loading ? 'Merging...' : 'Synthesize Performance';
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    location.reload();
+  });
+</script>
