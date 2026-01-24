@@ -36,7 +36,7 @@ function ThemeButton() {
       <button
         type="button"
         onClick={handleClick}
-        aria-pressed={isDark}
+        aria-pressed={mounted ? isDark : false}
         title="Toggle theme"
         style={{ cursor: 'pointer', pointerEvents: 'auto' }}
       >

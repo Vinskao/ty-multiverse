@@ -3,21 +3,30 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
 
 const url = new URL(Astro.request.url);
-const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
+const username = url.searchParams.get("username");
+const token = url.searchParams.get("token");
 
 const isLoggedIn = !!username && !!token;
 
 if (!isLoggedIn) {
-  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+  return Astro.redirect(
+    `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+  );
 }
 
 const isDev = import.meta.env.DEV;
-const backendUrl = isDev ? 'http://localhost:8000' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
-const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUrl}/maya-sawa/videos/merge-videos`;
+const backendUrl = isDev
+  ? "http://localhost:8000"
+  : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
+const mergeEndpoint = isDev
+  ? `${backendUrl}/videos/merge-videos`
+  : `${backendUrl}/maya-sawa/videos/merge-videos`;
 ---
 
-<BaseLayout title="Live Synthesis | TY Multiverse" description="Video synthesis for live performance">
+<BaseLayout
+  title="Live Synthesis | TY Multiverse"
+  description="Video synthesis for live performance"
+>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero
@@ -29,17 +38,57 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
       <div class="synthesis-container">
         <div class="glass-panel">
           <div class="upload-grid">
-            {[0, 1, 2, 3].map((i) => (
-              <div class="upload-box" id={`box-${i}`}>
-                <input type="file" id={`file-${i}`} accept="video/mp4" hidden />
-                <label for={`file-${i}`} class="upload-label">
-                  <div class="icon">+</div>
-                  <span>Video {i + 1}</span>
-                </label>
-                <video id={`preview-${i}`} class="preview-video" hidden controls></video>
-                <button class="remove-btn" id={`remove-${i}`} hidden>Remove</button>
-              </div>
-            ))}
+            {
+              [0, 1, 2, 3].map((i) => (
+                <div class="video-slot">
+                  <div class="upload-box" id={`box-${i}`}>
+                    <input
+                      type="file"
+                      id={`file-${i}`}
+                      accept="video/mp4"
+                      hidden
+                    />
+                    <label for={`file-${i}`} class="upload-label">
+                      <div class="icon">+</div>
+                      <span>Video {i + 1}</span>
+                    </label>
+                    <video
+                      id={`preview-${i}`}
+                      class="preview-video"
+                      hidden
+                      controls
+                    />
+                    <button class="remove-btn" id={`remove-${i}`} hidden>
+                      Remove
+                    </button>
+                  </div>
+                  <div class="slot-controls">
+                    <label class="control-label">Background:</label>
+                    <select id={`bg-removal-${i}`} class="bg-select">
+                      <option value="none">Original</option>
+                      <option value="green">Remove Green</option>
+                      <option value="black">Remove Black</option>
+                    </select>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+
+          <div class="mode-selection">
+            <span class="mode-label">Processing Mode:</span>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="os-mode" value="windows" checked />
+                <span class="radio-custom"></span>
+                <span>Windows (Standard)</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="os-mode" value="mac" />
+                <span class="radio-custom"></span>
+                <span>Mac (Fast - Metal)</span>
+              </label>
+            </div>
           </div>
 
           <div class="action-area">
@@ -57,7 +106,12 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
             <video id="result-video" controls class="result-video"></video>
           </div>
           <div class="result-actions">
-            <a id="download-link" class="download-btn" download="performance.mp4">Download Result</a>
+            <a id="download-mp4" class="download-btn" target="_blank"
+              >Download MP4</a
+            >
+            <a id="download-gif" class="download-btn gif-btn" target="_blank"
+              >Download GIF</a
+            >
             <button id="reset-btn" class="reset-btn">Start New</button>
           </div>
         </div>
@@ -103,7 +157,8 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     background: rgba(0, 0, 0, 0.2);
   }
 
-  .upload-box:hover {
+  .upload-box:hover,
+  .upload-box.drag-over {
     border-color: var(--accent-regular);
     background: rgba(var(--accent-rgb), 0.1);
   }
@@ -145,6 +200,72 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     z-index: 10;
   }
 
+  .mode-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+  }
+
+  .mode-label {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.2s;
+  }
+
+  .radio-label:hover {
+    color: white;
+  }
+
+  .radio-label input {
+    display: none;
+  }
+
+  .radio-custom {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .radio-label input:checked + .radio-custom {
+    border-color: var(--accent-regular);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
+  }
+
+  .radio-label input:checked + .radio-custom::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: var(--accent-regular);
+    border-radius: 50%;
+  }
+
   .action-area {
     text-align: center;
     display: flex;
@@ -159,7 +280,11 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     font-weight: 600;
     border-radius: 50px;
     border: none;
-    background: linear-gradient(45deg, var(--accent-regular), var(--accent-light));
+    background: linear-gradient(
+      45deg,
+      var(--accent-regular),
+      var(--accent-light)
+    );
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -190,7 +315,9 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .status-msg {
@@ -209,8 +336,14 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .result-video-container {
@@ -218,7 +351,7 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     margin: 1.5rem 0;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   }
 
   .result-video {
@@ -232,7 +365,8 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     gap: 1rem;
   }
 
-  .download-btn, .reset-btn {
+  .download-btn,
+  .reset-btn {
     padding: 0.75rem 2rem;
     border-radius: 8px;
     text-decoration: none;
@@ -244,24 +378,40 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
   .download-btn {
     background: var(--accent-regular);
     color: white;
+    border: none;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .gif-btn {
+    background: #4a4a4a;
+  }
+
+  .gif-btn:hover {
+    background: #666;
   }
 
   .reset-btn {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  .download-btn:hover { background: var(--accent-light); }
-  .reset-btn:hover { background: rgba(255,255,255,0.2); }
+  .download-btn:hover {
+    background: var(--accent-light);
+  }
+  .reset-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 </style>
 
 <script define:vars={{ mergeEndpoint }}>
   const files = [null, null, null, null];
-  const mergeBtn = document.getElementById('merge-btn');
-  const statusMsg = document.getElementById('status-msg');
-  const loader = mergeBtn.querySelector('.loader');
-  const btnText = mergeBtn.querySelector('.btn-text');
+  const mergeBtn = document.getElementById("merge-btn");
+  const statusMsg = document.getElementById("status-msg");
+  const loader = mergeBtn.querySelector(".loader");
+  const btnText = mergeBtn.querySelector(".btn-text");
 
   // Initialize file inputs
   for (let i = 0; i < 4; i++) {
@@ -271,81 +421,143 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
     const removeBtn = document.getElementById(`remove-${i}`);
     const box = document.getElementById(`box-${i}`);
 
-    input.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        files[i] = file;
-        const url = URL.createObjectURL(file);
-        preview.src = url;
-        preview.hidden = false;
-        label.hidden = true;
-        removeBtn.hidden = false;
-        box.style.borderColor = 'var(--accent-regular)';
-        checkReady();
+    // Drag and Drop handlers
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      box.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      box.addEventListener(
+        eventName,
+        () => box.classList.add("drag-over"),
+        false,
+      );
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      box.addEventListener(
+        eventName,
+        () => box.classList.remove("drag-over"),
+        false,
+      );
+    });
+
+    box.addEventListener("drop", (e) => {
+      const dt = e.dataTransfer;
+      const file = dt.files[0];
+
+      if (file && file.type === "video/mp4") {
+        handleFile(file, i);
       }
     });
 
-    removeBtn.addEventListener('click', () => {
+    input.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file, i);
+    });
+
+    function handleFile(file, index) {
+      files[index] = file;
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.hidden = false;
+      label.hidden = true;
+      removeBtn.hidden = false;
+      box.style.borderColor = "var(--accent-regular)";
+      checkReady();
+    }
+
+    removeBtn.addEventListener("click", () => {
       files[i] = null;
-      input.value = '';
-      preview.src = '';
+      input.value = "";
+      preview.src = "";
       preview.hidden = true;
       label.hidden = false;
       removeBtn.hidden = true;
-      box.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      box.style.borderColor = "rgba(255, 255, 255, 0.2)";
       checkReady();
     });
   }
 
   function checkReady() {
-    const allFilled = files.every(f => f !== null);
+    const allFilled = files.every((f) => f !== null);
     mergeBtn.disabled = !allFilled;
   }
 
-  mergeBtn.addEventListener('click', async () => {
+  mergeBtn.addEventListener("click", async () => {
     if (mergeBtn.disabled) return;
 
     setLoading(true);
-    statusMsg.innerText = 'Processing video synthesis... This may take a few minutes.';
-    
+    statusMsg.innerText =
+      "Processing video synthesis... This may take a few minutes.";
+
     const formData = new FormData();
-    formData.append('v1', files[0]);
-    formData.append('v2', files[1]);
-    formData.append('v3', files[2]);
-    formData.append('v4', files[3]);
+    formData.append("v1", files[0]);
+    formData.append("v2", files[1]);
+    formData.append("v3", files[2]);
+    formData.append("v4", files[3]);
+
+    // Add selected mode
+    const selectedMode = document.querySelector(
+      'input[name="os-mode"]:checked',
+    ).value;
+    formData.append("mode", selectedMode);
+
+    // Add per-video background removal options
+    for (let i = 0; i < 4; i++) {
+      const bgSelect = document.getElementById(`bg-removal-${i}`);
+      formData.append(`bg_removal_${i}`, bgSelect.value);
+    }
 
     try {
       // Construction of API URL
       const apiEndpoint = mergeEndpoint;
-      
+
       const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        body: formData
+        method: "POST",
+        body: formData,
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || 'Synthesis failed');
+        throw new Error(error.detail || "Synthesis failed");
       }
 
-      const blob = await response.blob();
-      const resultUrl = URL.createObjectURL(blob);
-      
-      const resultVideo = document.getElementById('result-video');
-      const downloadLink = document.getElementById('download-link');
-      const resultArea = document.getElementById('result-area');
-      
-      resultVideo.src = resultUrl;
-      downloadLink.href = resultUrl;
-      resultArea.hidden = false;
-      
-      statusMsg.innerText = 'Synthesis complete!';
-      resultArea.scrollIntoView({ behavior: 'smooth' });
+      const data = await response.json();
 
+      const resultVideo = document.getElementById("result-video");
+      const downloadMp4 = document.getElementById("download-mp4");
+      const downloadGif = document.getElementById("download-gif");
+      const resultArea = document.getElementById("result-area");
+
+      const backendOrigin = new URL(mergeEndpoint).origin;
+      const mp4FullUrl = backendOrigin + data.mp4_url;
+      const gifFullUrl = backendOrigin + data.gif_url;
+
+      resultVideo.src = mp4FullUrl;
+
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, "-");
+
+      downloadMp4.href = mp4FullUrl;
+      downloadMp4.download = `ty-multiverse-live-${timestamp}.mp4`;
+
+      downloadGif.href = gifFullUrl;
+      downloadGif.download = `ty-multiverse-live-${timestamp}.gif`;
+
+      resultArea.hidden = false;
+
+      statusMsg.innerText = "Synthesis complete!";
+      resultArea.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       console.error(err);
       statusMsg.innerText = `Error: ${err.message}`;
-      statusMsg.style.color = '#ff6b6b';
+      statusMsg.style.color = "#ff6b6b";
     } finally {
       setLoading(false);
     }
@@ -354,10 +566,10 @@ const mergeEndpoint = isDev ? `${backendUrl}/videos/merge-videos` : `${backendUr
   function setLoading(loading) {
     mergeBtn.disabled = loading;
     loader.hidden = !loading;
-    btnText.innerText = loading ? 'Merging...' : 'Synthesize Performance';
+    btnText.innerText = loading ? "Merging..." : "Synthesize Performance";
   }
 
-  document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById("reset-btn").addEventListener("click", () => {
     location.reload();
   });
 </script>
