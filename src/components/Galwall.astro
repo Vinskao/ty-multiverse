@@ -1,22 +1,28 @@
 ---
 import '../styles/galwall.css';
 ---
+<div class="galwall-action-bar">
+  <button id="galwall-refresh-btn" class="galwall-refresh-btn">
+    <span class="icon">🔄</span> 刷新牆面
+  </button>
+</div>
 <div id="galwallWrapper">
   <div id="containerFront"></div>
   <div id="containerBack"></div>
 </div>
 
 <script>
-  import { peopleService } from '../services/api/peopleService';
+  import CharacterService from '../services/api/characterService';
 
   let frontList: string[] = [];
   let backList: string[] = [];
   const baseImagePath = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/";
+  const characterService = CharacterService.getInstance();
 
   // 檢查圖片是否存在
   async function checkImageExists(imagePath) {
     try {
-      const response = await fetch(imagePath);
+      const response = await fetch(imagePath, { method: 'HEAD' });
       return response.ok;
     } catch (error) {
       return false;
@@ -26,12 +32,8 @@ import '../styles/galwall.css';
   // 獲取角色列表
   async function fetchCharacterNames() {
     try {
-      console.log('🔄 Galwall 使用 peopleService 獲取角色名稱列表...');
-      const names = await peopleService.getAllPeopleNames();
-      console.log('✅ Galwall 獲取角色名稱列表成功:', names);
-
-      // 確保是數組格式
-      return Array.isArray(names) ? names : [];
+      const characters = await characterService.getCharacters();
+      return characters.map(c => c.name);
     } catch (error) {
       console.error('❌ Galwall 獲取角色名稱列表失敗:', error);
       return [];
@@ -40,10 +42,12 @@ import '../styles/galwall.css';
 
   // 檢查三種圖片類型
   async function checkImageTypes(characterName) {
-    const normalPath = `${baseImagePath}${characterName}.png`;
-    const fightingPath = `${baseImagePath}${characterName}Fighting.png`;
-    const ruinedPath = `${baseImagePath}${characterName}Ruined.png`;
+    const timestamp = characterService.getMediaTimestamp();
+    const normalPath = `${baseImagePath}${characterName}.png?t=${timestamp}`;
+    const fightingPath = `${baseImagePath}${characterName}Fighting.png?t=${timestamp}`;
+    const ruinedPath = `${baseImagePath}${characterName}Ruined.png?t=${timestamp}`;
     
+    // 用帶有 timestamp 的 URL 去 check，確保 HEAD 也是最新的或是命中緩存
     const [normalExists, fightingExists, ruinedExists] = await Promise.all([
       checkImageExists(normalPath),
       checkImageExists(fightingPath),
@@ -58,18 +62,27 @@ import '../styles/galwall.css';
     };
   }
 
-  document.addEventListener("DOMContentLoaded", async function () {
-    console.log('🚀 Galwall 組件開始初始化...');
-    
-    // 獲取角色名稱列表
-    const characterNames = await fetchCharacterNames();
-    console.log('📋 獲取到的角色名稱數量:', characterNames.length);
+  async function initGalwall(isRefresh = false) {
+    console.log('🚀 Galwall 組件初始化...');
+    const containerFront = document.getElementById("containerFront");
+    const containerBack = document.getElementById("containerBack");
+    const refreshBtn = document.getElementById("galwall-refresh-btn") as HTMLButtonElement;
 
-    // 檢查每個角色的圖片
-    const imagePromises = characterNames.map(name => checkImageTypes(name));
-    const imageResults = await Promise.all(imagePromises);
+    if (!containerFront || !containerBack) return;
+
+    if (isRefresh) {
+      if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<span class="icon">⌛</span> 刷新中...';
+      }
+      containerFront.innerHTML = '<div style="color:white;padding:20px;">更新中...</div>';
+      containerBack.innerHTML = '';
+      await characterService.refreshCharacters();
+    }
+
+    const characterNames = await fetchCharacterNames();
+    const imageResults = await Promise.all(characterNames.map(name => checkImageTypes(name)));
     
-    // 收集所有有效的圖片路徑
     const validImages = imageResults.flatMap(result => {
       const paths: string[] = [];
       if (result.normalPath) paths.push(result.normalPath);
@@ -78,193 +91,92 @@ import '../styles/galwall.css';
       return paths;
     });
 
-    console.log('🖼️ 有效圖片數量:', validImages.length);
-    console.log('🖼️ 有效圖片路徑:', validImages.slice(0, 5)); // 只顯示前5個
-
-    // 分配圖片到 front 和 back 列表
     const totalImages = validImages.length;
     const frontCount = Math.ceil(totalImages / 3);
     
     frontList = validImages.slice(0, frontCount);
     backList = validImages.slice(frontCount);
 
-    console.log('📊 前排圖片數量:', frontList.length);
-    console.log('📊 後排圖片數量:', backList.length);
-
-    // 初始化動畫
-    const containerFront = document.getElementById("containerFront");
-    const containerBack = document.getElementById("containerBack");
-
-    if (!containerFront || !containerBack) {
-      console.error('❌ 找不到容器元素');
-      return;
-    }
-
-    console.log('✅ 找到容器元素，開始載入圖片...');
-
     function createAdDiv(imageURL, isFront) {
       const adDiv = document.createElement("div");
       adDiv.className = isFront ? "ad-front" : "ad-back";
-      
       const adImage = document.createElement("img");
       adImage.className = "ad-image";
       adImage.src = imageURL;
-      // 設置固定高度和寬度，保持比例
       adImage.style.height = "300px";
       adImage.style.width = "auto";
       adImage.style.objectFit = "contain";
-      // 保持預設渲染品質以維持透明度
-      adImage.style.imageRendering = "auto";
       adImage.style.background = "transparent";
       
-      // 圖片載入完成後進行品質優化
-      adImage.onload = function() {
-        console.log('✅ 圖片載入成功:', imageURL);
-        optimizeImageQuality(adImage);
-      };
-      
-      // 圖片載入失敗處理
-      adImage.onerror = function() {
-        console.error('❌ 圖片載入失敗:', imageURL);
-        // 可以設置一個預設圖片或隱藏元素
-        adImage.style.display = 'none';
-      };
-      
+      adImage.onerror = () => adImage.style.display = 'none';
       adDiv.appendChild(adImage);
       return adDiv;
     }
 
-    // 圖片品質優化函數 - 修正透明背景問題
-    function optimizeImageQuality(imgElement) {
-      try {
-        // 檢查原始圖片是否為 PNG（支持透明度）
-        const originalSrc = imgElement.src;
-        const isPNG = originalSrc.toLowerCase().includes('.png') || 
-                     originalSrc.includes('data:image/png') ||
-                     originalSrc.includes('image/png');
-        
-        // 對於 PNG 圖片，為了保持透明度，跳過 Canvas 優化
-        if (isPNG) {
-          return;
-        }
-        
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { alpha: true }); // 明確啟用 alpha 通道
-        
-        // 檢查 canvas context 是否成功獲取
-        if (!ctx) {
-          console.warn('無法獲取 canvas context');
-          return;
-        }
-        
-        // 設定較小的畫布尺寸來降低品質（降低20%）
-        const targetWidth = 240;  // 300 * 0.8
-        const targetHeight = 440; // 550 * 0.8
-        
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-        
-        // 確保 Canvas 背景完全透明
-        ctx.clearRect(0, 0, targetWidth, targetHeight);
-        
-        // 設定渲染品質，但保持透明度支持
-        ctx.imageSmoothingEnabled = true; // 改為 true 以更好處理透明度
-        ctx.imageSmoothingQuality = 'medium'; // 提升品質以保持透明度
-        ctx.globalCompositeOperation = 'source-over';
-        
-        // 繪製圖片到畫布
-        ctx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
-        
-        // 始終使用 PNG 格式以保持透明度
-        const optimizedDataURL = canvas.toDataURL('image/png');
-        
-        // 更新圖片來源
-        imgElement.src = optimizedDataURL;
-      } catch (error) {
-        console.warn('圖片品質優化失敗:', error);
-        // 如果優化失敗，保持原圖
-      }
-    }
-
     function loadAds(imageList, container, isFront) {
       container.innerHTML = "";
-      const numAds = imageList.length;
-      for (let i = 0; i < numAds; i++) {
-        const imageURL = imageList[i];
-        const adDiv = createAdDiv(imageURL, isFront);
-        container.appendChild(adDiv);
-      }
-    }
-
-    // 每 10 秒隨機重新排列圖片，並用 FLIP 動畫讓所有圖片平滑滑到新位置
-    function animateContainer(container) {
-      const SHUFFLE_INTERVAL = 40000; // 40 秒
-
-      const doShuffle = () => {
-        const items = Array.from(container.children) as HTMLElement[];
-        if (items.length <= 1) return;
-
-        // 1) 記錄初始位置（First）
-        const firstPositions = new Map<HTMLElement, number>();
-        items.forEach(el => {
-          firstPositions.set(el, el.getBoundingClientRect().left);
-        });
-
-        // 2) 打亂順序（DOM 重新排序）
-        const shuffled = [...items].sort(() => Math.random() - 0.5);
-        shuffled.forEach(el => container.appendChild(el));
-
-        // 3) 重新計算位置（Last）並設置 Invert → Play
-        shuffled.forEach(el => {
-          const lastLeft = el.getBoundingClientRect().left;
-          const firstLeft = firstPositions.get(el) || lastLeft;
-          const deltaX = firstLeft - lastLeft;
-
-          // 應用位移抵消當前位置 (Invert)
-          el.style.transform = `translateX(${deltaX}px)`;
-          el.style.transition = 'none';
-        });
-
-        // 4) 於下一禎啟動 transition，播放到新位置
-        requestAnimationFrame(() => {
-          shuffled.forEach(el => {
-            el.style.transition = 'transform 800ms ease';
-            el.style.transform = 'translateX(0)';
-
-            // 清理行內樣式
-            el.addEventListener(
-              'transitionend',
-              () => {
-                el.style.transition = '';
-                el.style.transform = '';
-              },
-              { once: true }
-            );
-          });
-        });
-      };
-
-      // 初始啟動
-      setInterval(doShuffle, SHUFFLE_INTERVAL);
+      imageList.forEach(url => {
+        container.appendChild(createAdDiv(url, isFront));
+      });
     }
 
     loadAds(frontList, containerFront, true);
     loadAds(backList, containerBack, false);
 
-    if (containerFront) {
-      containerFront.style.width = (300 * frontList.length) + "px";
+    containerFront.style.width = (300 * frontList.length) + "px";
+    containerBack.style.width = (300 * backList.length) + "px";
+
+    if (!(containerFront as any)._animationInit) {
+      animateContainer(containerFront);
+      (containerFront as any)._animationInit = true;
     }
-    
-    if (containerBack) {
-      containerBack.style.width = (300 * backList.length) + "px";
+    if (!(containerBack as any)._animationInit) {
+      animateContainer(containerBack);
+      (containerBack as any)._animationInit = true;
     }
 
-    if (containerFront) {
-      animateContainer(containerFront);
+    if (isRefresh && refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = '<span class="icon">🔄</span> 刷新牆面';
     }
-    
-    if (containerBack) {
-      animateContainer(containerBack);
+  }
+
+  function animateContainer(container) {
+    const SHUFFLE_INTERVAL = 40000;
+    const doShuffle = () => {
+      const items = Array.from(container.children) as HTMLElement[];
+      if (items.length <= 1) return;
+      const firstPositions = new Map<HTMLElement, number>();
+      items.forEach(el => firstPositions.set(el, el.getBoundingClientRect().left));
+      const shuffled = [...items].sort(() => Math.random() - 0.5);
+      shuffled.forEach(el => container.appendChild(el));
+      shuffled.forEach(el => {
+        const lastX = el.getBoundingClientRect().left;
+        const firstX = firstPositions.get(el) || lastX;
+        const deltaX = firstX - lastX;
+        el.style.transform = `translateX(${deltaX}px)`;
+        el.style.transition = 'none';
+      });
+      requestAnimationFrame(() => {
+        shuffled.forEach(el => {
+          el.style.transition = 'transform 800ms ease';
+          el.style.transform = 'translateX(0)';
+          el.addEventListener('transitionend', () => {
+            el.style.transition = '';
+            el.style.transform = '';
+          }, { once: true });
+        });
+      });
+    };
+    setInterval(doShuffle, SHUFFLE_INTERVAL);
+  }
+
+  document.addEventListener("DOMContentLoaded", async function () {
+    initGalwall();
+    const refreshBtn = document.getElementById("galwall-refresh-btn");
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => initGalwall(true));
     }
   });
+</script>
 </script> 

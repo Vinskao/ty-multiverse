@@ -84,11 +84,12 @@
   height: 312px;
   background: transparent;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 8px;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 10px;
   opacity: 1;
   box-sizing: border-box;
+  pointer-events: none; /* 確保不影響影片互動 */
 }
 
 .video-item:hover .video-overlay {
@@ -99,9 +100,13 @@
   color: white;
   font-size: 14px;
   font-weight: bold;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+  text-align: right;
   letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(2px);
 }
 
 @media (max-width: 768px) {

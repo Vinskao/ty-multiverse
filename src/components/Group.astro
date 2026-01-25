@@ -2,13 +2,90 @@
 
 ---
 
+<div class="action-bar">
+  <button id="refresh-data" class="refresh-btn">
+    <span class="icon">🔄</span> 刷新數據與圖片
+  </button>
+  <button id="download-all-png" class="download-btn">
+    <span class="icon">📦</span> 下載所有角色圖片 (ZIP)
+  </button>
+</div>
 <div id="group-container"></div>
 
 <style>
   #group-container {
-    margin: 5%;
+    margin: 2% 5% 5% 5%;
     padding: 0;
     max-width: 100%;
+  }
+
+  .action-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 5%;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin: 20px 5% 0 5%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    gap: 15px;
+  }
+
+  .refresh-btn,
+  .download-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .refresh-btn {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+  }
+
+  .download-btn {
+    background: linear-gradient(135deg, #46A3FF, #007FFF);
+    box-shadow: 0 4px 15px rgba(70, 163, 255, 0.3);
+  }
+
+  .refresh-btn:hover,
+  .download-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+
+  .refresh-btn:hover {
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+  }
+
+  .download-btn:hover {
+    box-shadow: 0 6px 20px rgba(70, 163, 255, 0.4);
+  }
+
+  .refresh-btn:active,
+  .download-btn:active {
+    transform: translateY(0);
+  }
+
+  .refresh-btn:disabled,
+  .download-btn:disabled {
+    background: #666;
+    cursor: wait;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .refresh-btn .icon,
+  .download-btn .icon {
+    font-size: 18px;
   }
 
   .army-container {
@@ -126,7 +203,11 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
 
     const img = document.createElement('img');
     img.style.cssText = 'width:200px;height:300px;display:block;object-fit:contain;margin:0 auto;padding:0;border:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;';
-    img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+    
+    // 使用全域共用的媒體時間戳
+    const timestamp = characterService.getMediaTimestamp();
+    img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png?t=${timestamp}`;
+    
     img.alt = character.nameOriginal;
     img.onerror = function() {
       this.src = `${PEOPLE_IMAGE_URL}/default.png`;
@@ -240,16 +321,48 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
     // });
   }
 
-  // 初始化頁面
-  document.addEventListener("DOMContentLoaded", async function () {
+  let currentFilteredData = [];
+
+  async function loadData(isRefresh = false) {
     try {
+      const container = document.getElementById('group-container');
+      if (!container) return;
+      
+      // 顯示加載中狀態
+      if (isRefresh) {
+        const refreshBtn = document.getElementById('refresh-data');
+        if (refreshBtn) refreshBtn.setAttribute('disabled', 'true');
+      }
+      
+      container.innerHTML = '<div style="text-align:center;padding:50px;color:white;font-size:20px;">載入數據中...</div>';
+
       // 使用共用的角色服務
       const characterService = (await import('../services/api/characterService')).default.getInstance();
-      const data = await characterService.getCharacters();
       
+      let data;
+      if (isRefresh) {
+        data = await characterService.refreshCharacters();
+      } else {
+        data = await characterService.getCharacters();
+      }
+      
+      // 過濾掉 test, person 和 Unknown Army
+      currentFilteredData = data.filter(char => {
+        const name = (char.name || '').toLowerCase();
+        const army = (char.armyName || '').toLowerCase();
+        
+        // 如果名稱包含 test 或 person，或軍隊名稱包含 test 或 person，則過濾掉
+        if (name.includes('test') || name.includes('person') || army.includes('test') || army.includes('person')) return false;
+        
+        // 如果沒有軍隊名稱或是 Unknown Army，則過濾掉
+        if (!char.armyName || army === 'unknown army') return false;
+        
+        return true;
+      });
+
       const armyGroups = {};
-      data.forEach(character => {
-        const army = character.armyName || 'Unknown Army';
+      currentFilteredData.forEach(character => {
+        const army = character.armyName;
         if (!armyGroups[army]) {
           armyGroups[army] = [];
         }
@@ -263,49 +376,129 @@ const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
         mainContainer.appendChild(createArmyContainer(army, characters));
       });
 
-      const container = document.getElementById('group-container');
-      if (container) {
-        container.appendChild(mainContainer);
+      container.innerHTML = '';
+      container.appendChild(mainContainer);
+      
+      if (isRefresh) {
+        const refreshBtn = document.getElementById('refresh-data');
+        if (refreshBtn) refreshBtn.removeAttribute('disabled');
       }
     } catch (error) {
       console.error('❌ Group 組件載入失敗:', error);
+      const container = document.getElementById('group-container');
+      if (container) {
+        container.innerHTML = '';
+        
+        const errorContainer = document.createElement('div');
+        errorContainer.style.cssText = `
+          padding: 20px;
+          margin: 20px 0;
+          background: linear-gradient(135deg, rgba(255, 87, 87, 0.1), rgba(255, 87, 87, 0.05));
+          border: 2px solid rgba(255, 87, 87, 0.3);
+          border-radius: 12px;
+          color: #ff5757;
+          font-family: 'Courier New', monospace;
+          font-size: 14px;
+          white-space: pre-wrap;
+          text-shadow: 0 0 5px rgba(255, 87, 87, 0.3);
+        `;
 
-      // 創建錯誤提示區域
-      const errorContainer = document.createElement('div');
-      errorContainer.style.cssText = `
-        padding: 20px;
-        margin: 20px 0;
-        background: linear-gradient(135deg, rgba(255, 87, 87, 0.1), rgba(255, 87, 87, 0.05));
-        border: 2px solid rgba(255, 87, 87, 0.3);
-        border-radius: 12px;
-        color: #ff5757;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        white-space: pre-wrap;
-        text-shadow: 0 0 5px rgba(255, 87, 87, 0.3);
-      `;
+        const errorTitle = document.createElement('div');
+        errorTitle.style.cssText = 'font-weight:bold;font-size:16px;margin-bottom:10px;color:#ff3333;';
+        errorTitle.textContent = '🚨 載入失敗 - Group 組件';
 
-      const errorTitle = document.createElement('div');
-      errorTitle.style.cssText = `
-        font-weight: bold;
-        font-size: 16px;
-        margin-bottom: 10px;
-        color: #ff3333;
-      `;
-      errorTitle.textContent = '🚨 載入失敗 - Group 組件';
+        const errorMessage = document.createElement('div');
+        errorMessage.textContent = `錯誤詳情:\n${error.message || error}\n\n請檢查:\n• 後端服務是否正常運行\n• 隊列系統是否已啟動\n• API 端點是否正確`;
 
-      const errorMessage = document.createElement('div');
-      errorMessage.textContent = `錯誤詳情:\n${error.message || error}\n\n請檢查:\n• 後端服務是否正常運行\n• 隊列系統是否已啟動\n• API 端點是否正確`;
+        errorContainer.appendChild(errorTitle);
+        errorContainer.appendChild(errorMessage);
+        container.appendChild(errorContainer);
+      }
+      alert(`Group 組件載入失敗:\n${error.message || error}`);
+      
+      const refreshBtn = document.getElementById('refresh-data');
+      if (refreshBtn) refreshBtn.removeAttribute('disabled');
+    }
+  }
 
-      errorContainer.appendChild(errorTitle);
-      errorContainer.appendChild(errorMessage);
+  // 初始化頁面
+  document.addEventListener("DOMContentLoaded", async function () {
+    // 首次載入
+    loadData();
 
-      // 插入到頁面頂部
-      const container = document.querySelector('#group-container') || document.body;
-      container.insertBefore(errorContainer, container.firstChild);
+    // 刷新按鈕邏輯
+    const refreshBtn = document.getElementById('refresh-data');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => loadData(true));
+    }
 
-      // 同時顯示 alert 提示用戶
-      alert(`Group 組件載入失敗:\n${error.message || error}\n\n請檢查後端服務狀態。`);
+    // 下載按鈕邏輯
+    const downloadBtn = document.getElementById('download-all-png');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', async () => {
+        try {
+          downloadBtn.setAttribute('disabled', 'true');
+          const originalText = downloadBtn.innerHTML;
+          downloadBtn.textContent = '準備中...';
+          
+          // 確保 JSZip 已載入
+          if (typeof (window as any).JSZip === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            await new Promise((resolve, reject) => {
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+
+          const JSZip = (window as any).JSZip;
+          const zip = new JSZip();
+          const imgFolder = zip.folder("characters");
+          
+          let completed = 0;
+          const total = currentFilteredData.length;
+          
+          downloadBtn.textContent = `下載中 (0/${total})...`;
+          
+          await Promise.all(currentFilteredData.map(async (char) => {
+            const imgName = char.name || 'default';
+            // 下載時也使用共用的最新媒體時間戳
+            const imgUrl = `${PEOPLE_IMAGE_URL}/${imgName}.png?t=${characterService.getMediaTimestamp()}`;
+            try {
+              const response = await fetch(imgUrl);
+              if (response.ok) {
+                const blob = await response.blob();
+                imgFolder.file(`${imgName}.png`, blob);
+              }
+              completed++;
+              downloadBtn.textContent = `下載中 (${completed}/${total})...`;
+            } catch (err) {
+              console.warn(`無法下載圖片: ${imgUrl}`, err);
+              completed++;
+            }
+          }));
+
+          downloadBtn.textContent = '壓縮中...';
+          const content = await zip.generateAsync({ type: "blob" });
+          
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          link.download = `palais_characters_${new Date().toISOString().split('T')[0]}.zip`;
+          link.click();
+          
+          downloadBtn.textContent = '下載成功！';
+          setTimeout(() => {
+            downloadBtn.removeAttribute('disabled');
+            downloadBtn.innerHTML = originalText;
+          }, 3000);
+        } catch (error) {
+          console.error('下載失敗:', error);
+          alert('下載失敗: ' + (error as any).message);
+          downloadBtn.removeAttribute('disabled');
+          downloadBtn.textContent = '下載失敗，請重試';
+        }
+      });
     }
   });
 </script>

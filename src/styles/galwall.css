@@ -1,3 +1,44 @@
+.galwall-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.galwall-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.galwall-refresh-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.galwall-refresh-btn:active {
+  transform: translateY(0);
+}
+
+.galwall-refresh-btn:disabled {
+  background: #666;
+  cursor: wait;
+  box-shadow: none;
+  transform: none;
+}
+
 #galwallWrapper {
   position: relative;
   overflow-x: auto;

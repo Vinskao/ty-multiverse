@@ -19,8 +19,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     try {
+      const { default: CharacterService } = await import('../services/api/characterService');
+      const timestamp = CharacterService.getInstance().getMediaTimestamp();
       const response = await fetch(url, { method: 'HEAD', cache: 'no-cache' });
-      return response.ok ? `${url}?t=${Date.now()}` : null;
+      return response.ok ? `${url}?t=${timestamp}` : null;
     } catch {
       return null;
     }
@@ -34,9 +36,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     try {
       updateLoadingStatus('loading', '正在獲取角色列表...');
 
-      // 使用 peopleService 獲取角色名稱列表（處理異步響應）
-      const { peopleService } = await import('../services/api/peopleService');
-      const characterNames = await peopleService.getAllPeopleNamesAndWait();
+      // 使用 CharacterService 獲取角色名稱列表（帶有緩存支持）
+      const { default: CharacterService } = await import('../services/api/characterService');
+      const characterService = CharacterService.getInstance();
+      const characters = await characterService.getCharacters();
+      const characterNames = characters.map(c => c.name);
       
       if (!Array.isArray(characterNames) || characterNames.length === 0) {
         throw new Error('角色列表為空或格式錯誤');
@@ -742,8 +746,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       btn.disabled = true;
 
       try {
-        await clearCacheAndReload();
-        updateLoadingStatus('complete', '✅ 緩存已清除，所有影片已重新載入');
+        const { default: CharacterService } = await import('../services/api/characterService');
+        await CharacterService.getInstance().refreshCharacters();
+        window.location.reload();
     } catch (error) {
         updateLoadingStatus('error', '❌ 清除緩存時發生錯誤');
       } finally {
@@ -797,6 +802,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       // 逐一下載（避免瀏覽器限制）
       for (let i = 0; i < videosToDownload.length; i++) {
         const video = videosToDownload[i];
+        const { default: CharacterService } = await import('../services/api/characterService');
+        const timestamp = CharacterService.getInstance().getMediaTimestamp();
         if (btn) {
           btn.textContent = `下載中... (${downloaded + 1}/${total})`;
         }

@@ -5,6 +5,7 @@ class CharacterService {
   private static instance: CharacterService;
   private cacheKey = 'character_list_cache';
   private cacheExpiryKey = 'character_list_cache_expiry';
+  private mediaTimestampKey = 'media_cache_timestamp';
   private cacheDuration = 5 * 60 * 1000; // 5分鐘緩存
 
   private constructor() {}
@@ -14,6 +15,24 @@ class CharacterService {
       CharacterService.instance = new CharacterService();
     }
     return CharacterService.instance;
+  }
+
+  // 獲取媒體版本時間戳（共用於圖片/影片緩存控制）
+  getMediaTimestamp(): string {
+    let timestamp = localStorage.getItem(this.mediaTimestampKey);
+    if (!timestamp) {
+      timestamp = Date.now().toString();
+      localStorage.setItem(this.mediaTimestampKey, timestamp);
+    }
+    return timestamp;
+  }
+
+  // 強制更新媒體版本時間戳
+  refreshMediaTimestamp(): string {
+    const newTimestamp = Date.now().toString();
+    localStorage.setItem(this.mediaTimestampKey, newTimestamp);
+    console.log('🔄 媒體快取時間戳已更新:', newTimestamp);
+    return newTimestamp;
   }
 
   // 獲取角色列表（帶緩存）- 直接返回 Person 對象
@@ -42,6 +61,7 @@ class CharacterService {
   async refreshCharacters(): Promise<Person[]> {
     console.log('🔄 強制刷新角色數據...');
     this.clearCache();
+    this.refreshMediaTimestamp(); // 同時刷新媒體時間戳
     return await this.getCharacters();
   }
 
