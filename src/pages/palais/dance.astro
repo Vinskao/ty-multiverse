@@ -39,8 +39,11 @@ const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://people
         <span>正在載入角色和影片資料...</span>
       </div>
       
-      <!-- 清除緩存按鈕 -->
+      <!-- 控制按鈕 -->
       <div class="cache-control-container">
+        <button id="download-all-btn" class="download-all-btn" type="button">
+          下載所有影片
+        </button>
         <button id="cache-clear-btn" class="cache-clear-btn" type="button">
           清除緩存
         </button>

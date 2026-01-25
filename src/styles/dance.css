@@ -226,8 +226,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 1rem;
   margin: 1rem 0 2rem 0;
   padding: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .cache-clear-btn {
@@ -274,6 +276,56 @@
   animation: spin 1s linear infinite;
 }
 
+/* ===== DOWNLOAD ALL BUTTON ===== */
+.download-all-btn {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(63, 81, 181, 0.9));
+  border: 2px solid rgba(33, 150, 243, 0.6);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-all-btn:hover {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 1), rgba(63, 81, 181, 1));
+  border-color: rgba(33, 150, 243, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+}
+
+.download-all-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.download-all-btn.processing {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.9), rgba(255, 193, 7, 0.9));
+  border-color: rgba(255, 152, 0, 0.6);
+  animation: pulse 1s infinite;
+}
+
+.download-all-btn::before {
+  content: "⬇️";
+  font-size: 1.2em;
+}
+
+.download-all-btn.processing::before {
+  content: "⏳";
+  animation: spin 1s linear infinite;
+}
+
+.download-all-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -294,7 +346,8 @@
     margin: 0.75rem 0 1.5rem 0;
   }
   
-  .cache-clear-btn {
+  .cache-clear-btn,
+  .download-all-btn {
     padding: 8px 16px;
     font-size: 0.85rem;
   }
@@ -305,7 +358,8 @@
     margin: 0.5rem 0 1rem 0;
   }
   
-  .cache-clear-btn {
+  .cache-clear-btn,
+  .download-all-btn {
     padding: 8px 12px;
     font-size: 0.8rem;
   }

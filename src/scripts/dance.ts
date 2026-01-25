@@ -713,6 +713,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     // 設置清除緩存按鈕
     setupCacheClearButton();
 
+    // 設置下載按鈕
+    setupDownloadButton();
+
     // 頁面事件
     window.addEventListener('beforeunload', () => videoResourceManager.saveCacheToStorage());
 
@@ -748,6 +751,136 @@ document.addEventListener("DOMContentLoaded", async function () {
         btn.textContent = '清除緩存並重新載入';
         btn.disabled = false;
       }
+    });
+  }
+
+  // 下載所有已載入的影片
+  async function downloadAllVideos() {
+    if (videoGroups.length === 0) {
+      alert('目前沒有已載入的影片');
+      return;
+    }
+
+    const btn = document.getElementById('download-all-btn') as HTMLButtonElement;
+    if (btn) {
+      btn.classList.add('processing');
+      btn.disabled = true;
+      btn.textContent = '準備下載中...';
+    }
+
+    try {
+      // 收集所有已載入的影片 URL
+      const videosToDownload: Array<{url: string, filename: string}> = [];
+      
+      videoGroups.forEach(group => {
+        group.videos.forEach(video => {
+          // 移除 URL 中的時間戳參數
+          const cleanUrl = video.src.split('?')[0];
+          // 清理文件名，移除不安全字符
+          const safeFilename = video.title.replace(/[<>:"/\\|?*]/g, '_').trim();
+          const filename = `${safeFilename}.mp4`;
+          videosToDownload.push({ url: cleanUrl, filename });
+        });
+      });
+
+      if (videosToDownload.length === 0) {
+        alert('沒有可下載的影片');
+        return;
+      }
+
+      const total = videosToDownload.length;
+      let downloaded = 0;
+      let failed = 0;
+
+      updateLoadingStatus('loading', `準備下載 ${total} 個影片...`);
+
+      // 逐一下載（避免瀏覽器限制）
+      for (let i = 0; i < videosToDownload.length; i++) {
+        const video = videosToDownload[i];
+        if (btn) {
+          btn.textContent = `下載中... (${downloaded + 1}/${total})`;
+        }
+        updateLoadingStatus('loading', `正在下載 ${video.filename} (${downloaded + 1}/${total})...`);
+
+        try {
+          await downloadVideo(video.url, video.filename);
+          downloaded++;
+          
+          // 添加小延遲避免瀏覽器限制
+          if (i < videosToDownload.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        } catch (error) {
+          console.error(`下載失敗 ${video.filename}:`, error);
+          failed++;
+        }
+      }
+
+      updateLoadingStatus('complete', `✅ 下載完成！成功: ${downloaded}, 失敗: ${failed}`);
+      
+      if (failed > 0) {
+        alert(`下載完成！\n成功: ${downloaded} 個\n失敗: ${failed} 個`);
+      }
+    } catch (error) {
+      console.error('下載過程發生錯誤:', error);
+      updateLoadingStatus('error', '❌ 下載過程發生錯誤');
+      alert('下載過程發生錯誤，請查看控制台');
+    } finally {
+      if (btn) {
+        btn.classList.remove('processing');
+        btn.disabled = false;
+        btn.textContent = '下載所有影片';
+      }
+    }
+  }
+
+  // 下載單個影片
+  async function downloadVideo(url: string, filename: string): Promise<void> {
+    try {
+      const response = await fetch(url, { 
+        method: 'GET',
+        cache: 'no-cache'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // 釋放 blob URL
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+    } catch (error) {
+      console.error(`下載 ${filename} 失敗:`, error);
+      throw error;
+    }
+  }
+
+  function setupDownloadButton() {
+    const btn = document.getElementById('download-all-btn') as HTMLButtonElement;
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+      const videoCount = videoGroups.reduce((sum, group) => sum + group.videos.length, 0);
+      
+      if (videoCount === 0) {
+        alert('目前沒有已載入的影片');
+        return;
+      }
+
+      if (!confirm(`確定要下載所有 ${videoCount} 個影片嗎？\n\n注意：下載可能需要一些時間，請保持頁面開啟。`)) {
+        return;
+      }
+
+      await downloadAllVideos();
     });
   }
 
