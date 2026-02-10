@@ -1,0 +1,76 @@
+---
+declare global {
+    interface Window {
+        TY_MULTIVERSE_CONFIG?: {
+            tymbUrl: string;
+            peopleImageUrl: string;
+        };
+    }
+}
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get("username");
+const token = url.searchParams.get("token");
+
+const isLoggedIn = !!username && !!token;
+
+if (!isLoggedIn) {
+    return Astro.redirect(
+        `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    );
+}
+
+const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
+const peopleImageUrl =
+    import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ||
+    "http://peoplesystem.tatdvsonorth.com";
+---
+
+<BaseLayout title="Party | TY Multiverse" description="Create your choir party">
+    <div class="stack gap-20">
+        <main class="wrapper stack gap-8">
+            <Hero title="Party" tagline="Arrange your choir." align="start" />
+
+            <div class="party-container">
+                <!-- Visualizer -->
+                <div id="choir-stage" class="choir-stage">
+                    <!-- Dynamic Content -->
+                </div>
+
+                <!-- Controls -->
+                <div class="controls-header">
+                    <div
+                        id="loading-spinner"
+                        style="display:none; color: var(--accent-regular);"
+                    >
+                        Loading characters...
+                    </div>
+                    <div id="selection-status" class="selection-status"></div>
+                </div>
+
+                <div id="party-controls" class="controls-section">
+                    <!-- Dynamic Checkboxes -->
+                </div>
+            </div>
+        </main>
+    </div>
+</BaseLayout>
+
+<script
+    async
+    src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+></script>
+<link rel="stylesheet" href="/src/styles/party.css" />
+<script define:vars={{ tymbUrl, peopleImageUrl }}>
+    window.TY_MULTIVERSE_CONFIG = {
+        tymbUrl: tymbUrl,
+        peopleImageUrl: peopleImageUrl,
+    };
+</script>
+
+<script>
+    import "../../scripts/party.ts";
+</script>

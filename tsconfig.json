@@ -5,9 +5,16 @@
       "node",
       "jquery"
     ],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "jsx": "preserve"
   },
-  "include": ["global.d.ts", "src/**/*"],
+  "include": [
+    "global.d.ts",
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
