@@ -34,25 +34,40 @@ const peopleImageUrl =
         <main class="wrapper stack gap-8">
             <Hero title="Party" tagline="Arrange your choir." align="start" />
 
-            <div class="party-container">
-                <!-- Visualizer -->
-                <div id="choir-stage" class="choir-stage">
-                    <!-- Dynamic Content -->
-                </div>
-
-                <!-- Controls -->
-                <div class="controls-header">
-                    <div
-                        id="loading-spinner"
-                        style="display:none; color: var(--accent-regular);"
-                    >
-                        Loading characters...
+            <div class="party-scroll-wrapper">
+                <div class="party-container">
+                    <!-- Visualizer -->
+                    <div class="stage-wrapper">
+                        <div id="choir-stage" class="choir-stage">
+                            <!-- Dynamic Content -->
+                        </div>
                     </div>
-                    <div id="selection-status" class="selection-status"></div>
-                </div>
 
-                <div id="party-controls" class="controls-section">
-                    <!-- Dynamic Checkboxes -->
+                    <!-- Controls -->
+                    <div class="controls-header">
+                        <div
+                            id="loading-spinner"
+                            style="display:none; color: var(--accent-regular);"
+                        >
+                            Loading characters...
+                        </div>
+                        <div
+                            class="header-actions"
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%;"
+                        >
+                            <div id="selection-status" class="selection-status">
+                            </div>
+                            <button
+                                id="download-btn"
+                                style="padding: 0.5rem 1rem; cursor: pointer;"
+                                >Download (No BG)</button
+                            >
+                        </div>
+                    </div>
+
+                    <div id="party-controls" class="controls-section">
+                        <!-- Dynamic Checkboxes -->
+                    </div>
                 </div>
             </div>
         </main>

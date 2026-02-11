@@ -1,47 +1,78 @@
+.party-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  /* Custom Scrollbar for Dark Mode */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-regular) rgba(255, 255, 255, 0.05);
+}
+
+.party-scroll-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.party-scroll-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.party-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--accent-regular);
+  border-radius: 4px;
+  border: 2px solid transparent;
+}
+
+/* Base container - override max-width for fixed layout */
 .party-container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  width: 100%;
-  max-width: 1200px;
+  width: 1400px;
+  /* Fixed width as requested */
+  max-width: none;
+  /* Disable RWD shrinking */
   margin: 0 auto;
   padding: 2rem;
 }
 
-.choir-stage {
+/* Wrapper for background */
+.stage-wrapper {
   position: relative;
-  width: 100%;
-  height: 600px; /* Adjust as needed */
+  width: fit-content;
+  min-width: 100%;
+  /* Ensure it fills container if content is small */
+  margin: 0 auto;
   background: radial-gradient(circle at bottom, #2a2a2a 0%, #1a1a1a 100%);
   border-radius: 1rem;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  perspective: 1000px;
+}
+
+.choir-stage {
+  position: relative;
+  width: fit-content;
+  height: auto;
+  min-height: 400px;
+  /* Minimum height for aesthetics */
+  /* Stack rows on top of each other using grid */
+  display: grid;
+  grid-template-areas: "stage";
+  place-items: end center;
+  padding: 2rem;
+  /* Add padding to avoid cutting off shadows */
 }
 
 .choir-row {
-  position: absolute;
-  bottom: 0;
+  grid-area: stage;
+  /* All rows occupy the same cell */
+  position: relative;
+  /* Changed from absolute */
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  width: 100%;
+  width: max-content;
   transition: all 0.5s ease;
-  pointer-events: none; /* Allow clicking through if needed, though they are images */
+  pointer-events: none;
 }
-
-/* Visualization of rows for debugging or styling */
-/* .choir-row::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.1);
-} */
 
 .choir-member {
   position: relative;
@@ -51,9 +82,9 @@
 
 .choir-member img {
   display: block;
-  height: 300px; /* Base height, will be scaled by row */
+  height: 300px;
   width: auto;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 }
 
 .controls-section {
@@ -79,6 +110,11 @@
   gap: 0.5rem;
 }
 
+/* Hidden state for unavailable options */
+.char-checkbox.hidden {
+  display: none;
+}
+
 .char-checkbox {
   display: flex;
   align-items: center;
@@ -96,18 +132,14 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.char-checkbox input:checked + span {
+.char-checkbox input:checked+span {
   color: var(--accent-light);
   font-weight: bold;
 }
 
-.char-checkbox input:checked ~ .checkmark {
-    background-color: var(--accent-light);
+.char-checkbox input:checked~.checkmark {
+  background-color: var(--accent-light);
 }
 
-/* Specific Row Styles (Base, can be overridden by JS) */
-.row-1 { bottom: 120px; z-index: 10; transform: scale(0.85); filter: brightness(0.7); }
-.row-2 { bottom: 90px; z-index: 20; transform: scale(0.88); filter: brightness(0.75); }
-.row-3 { bottom: 60px; z-index: 30; transform: scale(0.92); filter: brightness(0.8); }
-.row-4 { bottom: 30px; z-index: 40; transform: scale(0.96); filter: brightness(0.9); }
-.row-5 { bottom: 0px; z-index: 50; transform: scale(1.0); filter: brightness(1.0); }
+/* Row Styling helpers - Logic moved to TS for margins, kept strictly for reference or overrides */
+/* We remove fixed bottom/transform from CSS as it will be calculated inline for dynamic flow */

@@ -1,4 +1,5 @@
 import CharacterService from '../services/api/characterService';
+import html2canvas from 'html2canvas';
 
 const ROW_CONFIG = [
     { id: 1, max: 13, name: 'Back Row (Row 1)', bottom: 200, scale: 0.8 },
@@ -20,25 +21,13 @@ let selectedChars: { [rowId: number]: string[] } = {
 
 const characterService = CharacterService.getInstance();
 const baseImagePath = (window as any).TY_MULTIVERSE_CONFIG?.peopleImageUrl ? (window as any).TY_MULTIVERSE_CONFIG.peopleImageUrl + "/" : '/';
-// Helper to check image existence (similar to Galwall) - Simplified for bulk check
-// We will rely on loading the image and handling error, or pre-checking.
-// Galwall checks 3 types. Here we only need normal png.
+
 async function getValidCharacters() {
     try {
         const chars = await characterService.getCharacters();
         // We optimistically assume if they are in character list, they might have an image.
-        // Validating every single image via HEAD might be slow if many.
-        // However, user requirement says: "Have png name only show option".
-        // Use the checkImage logic from Galwall but simplified for one type.
         const names = chars.map(c => c.name);
-        const validNames: string[] = [];
 
-        // Batch check to avoid blocking too long? Or just check on demand?
-        // User request: "Combine options names (have png name show option)"
-        // It implies we should filter the list first.
-
-        // Let's do a concurrent check with a limit if needed, or just Promise.all
-        // Note: HEAD requests are fast.
         const timestamp = characterService.getMediaTimestamp();
 
         const checkPromises = names.map(async (name) => {
@@ -77,15 +66,13 @@ function renderControls() {
             const label = document.createElement('label');
             label.className = 'char-checkbox';
 
+            // To hide later: label needs to be identifiable or just queried via input inside
+            label.dataset.char = charName; // Helper for debugging if needed
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = charName;
             checkbox.dataset.row = row.id.toString();
-
-            // Check availability in OTHER rows? "Each row can separately select people" - implies same person can be in multiple rows? 
-            // "Each 0 represents a PNG... combine options names... press which names... combine which people PNGs"
-            // Usually in these apps, a character is unique per stage. But requirement says "Every row can separately select people".
-            // Implementation: Allow same person in multiple rows unless specified otherwise.
 
             checkbox.onchange = (e) => handleSelection(row.id, charName, (e.target as HTMLInputElement).checked);
 
@@ -100,6 +87,33 @@ function renderControls() {
         rowSection.appendChild(checkboxContainer);
         controlsContainer.appendChild(rowSection);
     });
+
+    // Initial update of states (should be none selected, but good practice)
+    updateCheckboxStates();
+}
+
+function updateCheckboxStates() {
+    // Collect all selected characters across all rows
+    const allSelectedSet = new Set<string>();
+    Object.values(selectedChars).forEach(list => {
+        list.forEach(char => allSelectedSet.add(char));
+    });
+
+    const checkboxes = document.querySelectorAll('.char-checkbox input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+
+    checkboxes.forEach(cb => {
+        const charName = cb.value;
+        const isChecked = cb.checked;
+        const parentLabel = cb.closest('.char-checkbox') as HTMLElement;
+
+        // If char is selected anywhere globally, but NOT by this specific checkbox (meaning selected in another row), hide it.
+        // If checked here, keep it visible so we can uncheck it.
+        if (allSelectedSet.has(charName) && !isChecked) {
+            parentLabel.style.display = 'none'; // Hide option
+        } else {
+            parentLabel.style.display = 'flex'; // Show option
+        }
+    });
 }
 
 function handleSelection(rowId: number, charName: string, isChecked: boolean) {
@@ -109,7 +123,6 @@ function handleSelection(rowId: number, charName: string, isChecked: boolean) {
     if (isChecked) {
         if (currentList.length >= rowMax) {
             // Prevent selection
-            // We need to uncheck the box visually
             const checkbox = document.querySelector(`input[data-row="${rowId}"][value="${charName}"]`) as HTMLInputElement;
             if (checkbox) checkbox.checked = false;
             alert(`Row ${rowId} is full! Max ${rowMax}.`);
@@ -127,6 +140,7 @@ function handleSelection(rowId: number, charName: string, isChecked: boolean) {
 
     updateVisualization();
     updateSelectionStatus();
+    updateCheckboxStates(); // Update visibility of options in other rows
 }
 
 function updateVisualization() {
@@ -134,60 +148,48 @@ function updateVisualization() {
     if (!stage) return;
     stage.innerHTML = '';
 
-    // Sort rows from back (1) to front (5) so DOM order handles basic z-index (later is on top)
-    // Actually, explicit z-index is safer.
-
     ROW_CONFIG.forEach(config => {
         const members = selectedChars[config.id];
         if (members.length === 0) return;
 
         const rowDiv = document.createElement('div');
         rowDiv.className = `choir-row row-${config.id}`;
-        // Apply vertical offset
-        rowDiv.style.bottom = `${config.bottom}px`;
+
+        // Dynamic Layout Logic:
+        // Instead of absolute bottom + scale transform, we use:
+        // 1. margin-bottom to offset naturally in the grid stack.
+        // 2. Explicit height on images to simulate scale (since transform doesn't affect flow size).
+
+        rowDiv.style.marginBottom = `${config.bottom}px`;
         rowDiv.style.zIndex = (config.id * 10).toString();
-        // Scale is handled in CSS class or we can force it here
-        rowDiv.style.transform = `scale(${config.scale})`;
 
-        // Calculate Overlap
-        // "Two images left-right interval total -10px (loose) ~ -70px (tight)"
-        // "Selected more people -> more squeezed -> max -70px"
-        // "Min 5 people one layer" -> Reqt says 'Selection min 5 people, must select one layer... max is all 0s'
-        // Wait, selection limit logic needs to be enforced on submit or just visual? 
-        // "Number selection min 5... max..." - This probably refers to the party limit valid for "Game/Start"? 
-        // Here we just visualize.
+        // Filter effects still applied via CSS class or here
+        // We can replicate the brightness here if we removed classes
+        const brightness = [0.7, 0.75, 0.8, 0.9, 1.0][config.id - 1]; // Map ID 1-5 to brightness
+        rowDiv.style.filter = `brightness(${brightness})`;
 
-        // Calculate gap
-        let gap = MIN_OVERLAP; // -10
+        let gap = MIN_OVERLAP; // -10 defined as base
+        // Scale gap by the row scale so it looks consistent
+        gap = gap * config.scale;
+
+        let maxOverlap = MAX_OVERLAP * config.scale;
+
         if (members.length > 1) {
-            // Linear interpolation? 
-            // If max items (e.g. 13), force -70. If low items (e.g. 2), force -10?
-            // "Selected more people -> more squeezed -> max -70px"
-            // Let's map [2, max] to [-10, -70]
             if (config.max > 2) {
-                const ratio = (members.length - 1) / (config.max - 1); // 0 to 1
-                // user said max -70px (tightest). So if full, -70.
-                gap = MIN_OVERLAP + ratio * (MAX_OVERLAP - MIN_OVERLAP);
+                const ratio = (members.length - 1) / (config.max - 1);
+                gap = (MIN_OVERLAP * config.scale) + ratio * ((MAX_OVERLAP * config.scale) - (MIN_OVERLAP * config.scale));
             }
         }
 
-        // Render Members
-        // "Middle image top layer, left/right slowly down one layer"
         const centerIndex = (members.length - 1) / 2;
 
         members.forEach((charName, index) => {
             const memberDiv = document.createElement('div');
             memberDiv.className = 'choir-member';
 
-            // Z-Index within row: Center highest.
-            // Distance from center
             const dist = Math.abs(index - centerIndex);
-            // Higher z-index for lower distance.
-            // unique Z: base + (max - dist)
             memberDiv.style.zIndex = Math.floor((members.length - dist)).toString();
 
-            // Margins
-            // We use margin-left for overlap, except the first one.
             if (index > 0) {
                 memberDiv.style.marginLeft = `${gap}px`;
             }
@@ -196,6 +198,13 @@ function updateVisualization() {
             const timestamp = characterService.getMediaTimestamp();
             img.src = `${baseImagePath}${charName}.png?t=${timestamp}`;
             img.alt = charName;
+            img.crossOrigin = "Anonymous";
+
+            // Explicitly set height to simulate scale
+            const baseHeight = 300;
+            const scaledHeight = baseHeight * config.scale;
+            img.style.height = `${scaledHeight}px`;
+            // Width auto handled by CSS
 
             memberDiv.appendChild(img);
             rowDiv.appendChild(memberDiv);
@@ -216,7 +225,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderControls();
     updateSelectionStatus();
+
+    // Bind download
+    const downloadBtn = document.getElementById('download-btn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', handleDownload);
+    }
 });
+
+async function handleDownload() {
+    const stage = document.getElementById('choir-stage');
+    if (!stage) return;
+
+    try {
+        const canvas = await html2canvas(stage as HTMLElement, {
+            backgroundColor: null, // Transparent
+            scale: 2, // Retain high quality
+            useCORS: true, // Crucial for external images
+            logging: false,
+        });
+
+        const link = document.createElement('a');
+        link.download = 'choir-party.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (err) {
+        console.error("Capture failed:", err);
+        alert("Failed to generate image. Please check console.");
+    }
+}
 
 function updateSelectionStatus() {
     const statusDiv = document.getElementById('selection-status');
@@ -231,12 +268,13 @@ function updateSelectionStatus() {
     let message = `Selected: ${total} / 55`;
     let color = 'white';
 
+    // Update color logic if needed, user didn't ask to change this specifically.
     if (total < MIN_SELECTION) {
-        message += ` (Minimum ${MIN_SELECTION} required)`;
-        color = '#ff6b6b'; // Reddish
+        message += ` (Minimum ${MIN_SELECTION})`;
+        color = '#ff6b6b';
     } else {
         message += ` (Ready)`;
-        color = '#51cf66'; // Greenish
+        color = '#51cf66';
     }
 
     statusDiv.style.color = color;
