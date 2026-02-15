@@ -1,20 +1,52 @@
 import CharacterService from '../services/api/characterService';
 import html2canvas from 'html2canvas';
 
-const ROW_CONFIG = [
-    { id: 1, max: 13, name: 'Back Row (Row 1)', bottom: 200, scale: 0.8 },
-    { id: 2, max: 12, name: 'Row 2', bottom: 150, scale: 0.85 },
-    { id: 3, max: 11, name: 'Row 3', bottom: 100, scale: 0.9 },
-    { id: 4, max: 10, name: 'Row 4', bottom: 50, scale: 0.95 },
-    { id: 5, max: 9, name: 'Front Row (Row 5)', bottom: 0, scale: 1.0 },
+// @ts-ignore
+import GIF from 'gif.js';
+
+// Physics Configuration for Realistic Layout
+const CAMERA_DIST_METERS = 35; // Further distance = cleaner telephoto look (less distortion)
+const ROW_SPACING_METERS = 1.2; // Distance between rows
+const ROW_RISER_HEIGHT_PX = 75; // Visual vertical rise per row
+
+const ROWS_DATA = [
+    { id: 1, max: 13, name: 'Back Row (Row 1)' },
+    { id: 2, max: 12, name: 'Row 2' },
+    { id: 3, max: 11, name: 'Row 3' },
+    { id: 4, max: 10, name: 'Row 4' },
+    { id: 5, max: 9, name: 'Front Row (Row 5)' },
 ];
+
+const ROW_CONFIG = ROWS_DATA.map(data => {
+    // Row 5 is index 0 (closest), Row 1 is index 4 (farthest)
+    const rowIndexFromFront = 5 - data.id; 
+    
+    // Perspective Scale Calculation: scale = D / (D + Z)
+    const dist = CAMERA_DIST_METERS + (rowIndexFromFront * ROW_SPACING_METERS);
+    const scale = CAMERA_DIST_METERS / dist;
+
+    // Vertical Offset Calculation
+    const bottom = rowIndexFromFront * ROW_RISER_HEIGHT_PX;
+
+    return {
+        ...data,
+        bottom,
+        scale: Number(scale.toFixed(3)) // Keep it clean
+    };
+});
 
 const MIN_OVERLAP = -10; // px
 const MAX_OVERLAP = -70; // px
 const MIN_SELECTION = 5;
 
+interface CharOption {
+    id: string;      // The unique identifier which also serves as the filename base (e.g. "Name" or "NameFighting")
+    name: string;    // Display name
+    army: string;    // Army name for grouping
+}
+
 // Global state
-let allCharacters: string[] = [];
+let allCharacters: CharOption[] = [];
 let selectedChars: { [rowId: number]: string[] } = {
     1: [], 2: [], 3: [], 4: [], 5: []
 };
@@ -22,27 +54,51 @@ let selectedChars: { [rowId: number]: string[] } = {
 const characterService = CharacterService.getInstance();
 const baseImagePath = (window as any).TY_MULTIVERSE_CONFIG?.peopleImageUrl ? (window as any).TY_MULTIVERSE_CONFIG.peopleImageUrl + "/" : '/';
 
-async function getValidCharacters() {
+async function getValidCharacters(): Promise<CharOption[]> {
     try {
         const chars = await characterService.getCharacters();
-        // We optimistically assume if they are in character list, they might have an image.
-        const names = chars.map(c => c.name);
-
         const timestamp = characterService.getMediaTimestamp();
 
-        const checkPromises = names.map(async (name) => {
-            const path = `${baseImagePath}${name}.png?t=${timestamp}`;
+        const checkPromises = chars.map(async (person) => {
+            const validOptions: CharOption[] = [];
+            
+            // Check standard image
+            const standardPath = `${baseImagePath}${person.name}.png?t=${timestamp}`;
             try {
-                const res = await fetch(path, { method: 'HEAD' });
-                if (res.ok) return name;
+                const res = await fetch(standardPath, { method: 'HEAD' });
+                if (res.ok) {
+                    validOptions.push({
+                        id: person.name,
+                        name: person.name,
+                        army: person.armyName || 'Others'
+                    });
+                }
             } catch (e) {
-                return null;
+                // Ignore missing or network error
             }
-            return null;
+
+            // Check fighting image
+            const fightingName = `${person.name}Fighting`;
+            const fightingPath = `${baseImagePath}${fightingName}.png?t=${timestamp}`;
+            try {
+                const res = await fetch(fightingPath, { method: 'HEAD' });
+                if (res.ok) {
+                    validOptions.push({
+                        id: fightingName,
+                        name: `${person.name} (Fighting)`,
+                        army: person.armyName || 'Others'
+                    });
+                }
+            } catch (e) {
+                // Ignore missing
+            }
+
+            return validOptions;
         });
 
         const results = await Promise.all(checkPromises);
-        return results.filter((n): n is string => n !== null);
+        // Flatten returns
+        return results.flat();
     } catch (e) {
         console.error("Failed to fetch characters", e);
         return [];
@@ -54,42 +110,93 @@ function renderControls() {
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
 
+    // Create all row sections but they will be toggled by the dropdown
     ROW_CONFIG.forEach(row => {
         const rowSection = document.createElement('div');
         rowSection.className = 'row-selector';
+        rowSection.dataset.rowId = row.id.toString();
+        // Hide by default unless it's the active one (Front Row 5)
+        rowSection.style.display = row.id === 5 ? 'block' : 'none';
+
         rowSection.innerHTML = `<h3>${row.name} (Max ${row.max})</h3>`;
 
-        const checkboxContainer = document.createElement('div');
-        checkboxContainer.className = 'character-checkboxes';
+        const rowContent = document.createElement('div');
+        rowContent.className = 'row-content'; // Wrapper for specific row content
 
-        allCharacters.forEach(charName => {
-            const label = document.createElement('label');
-            label.className = 'char-checkbox';
-
-            // To hide later: label needs to be identifiable or just queried via input inside
-            label.dataset.char = charName; // Helper for debugging if needed
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = charName;
-            checkbox.dataset.row = row.id.toString();
-
-            checkbox.onchange = (e) => handleSelection(row.id, charName, (e.target as HTMLInputElement).checked);
-
-            const span = document.createElement('span');
-            span.textContent = charName;
-
-            label.appendChild(checkbox);
-            label.appendChild(span);
-            checkboxContainer.appendChild(label);
+        // Group allCharacters by army
+        const grouped: { [key: string]: CharOption[] } = {};
+        allCharacters.forEach(char => {
+            const armyKey = char.army || 'Others';
+            if (!grouped[armyKey]) grouped[armyKey] = [];
+            grouped[armyKey].push(char);
         });
 
-        rowSection.appendChild(checkboxContainer);
+        // Sort army names
+        const sortedArmies = Object.keys(grouped).sort();
+
+        sortedArmies.forEach(armyName => {
+            const armyGroup = document.createElement('div');
+            armyGroup.className = 'army-group';
+            armyGroup.style.marginBottom = '1.5rem';
+            armyGroup.style.borderBottom = '1px solid #444';
+            armyGroup.style.paddingBottom = '0.5rem';
+            
+            const armyHeader = document.createElement('h4');
+            armyHeader.textContent = armyName;
+            armyHeader.style.margin = '0 0 0.5rem 0';
+            armyHeader.style.fontSize = '1em';
+            armyHeader.style.color = '#ccc';
+            armyHeader.style.fontWeight = 'bold';
+            armyGroup.appendChild(armyHeader);
+
+            const checkboxContainer = document.createElement('div');
+            // Re-use existing class for grid layout
+            checkboxContainer.className = 'character-checkboxes';
+
+            // Sort characters within army by name
+            grouped[armyName].sort((a, b) => a.name.localeCompare(b.name));
+
+            grouped[armyName].forEach(char => {
+                const label = document.createElement('label');
+                label.className = 'char-checkbox';
+                label.dataset.char = char.id;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = char.id;
+                checkbox.dataset.row = row.id.toString();
+
+                checkbox.onchange = (e) => handleSelection(row.id, char.id, (e.target as HTMLInputElement).checked);
+
+                const span = document.createElement('span');
+                span.textContent = char.name;
+
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                checkboxContainer.appendChild(label);
+            });
+
+            armyGroup.appendChild(checkboxContainer);
+            rowContent.appendChild(armyGroup);
+        });
+
+        rowSection.appendChild(rowContent);
         controlsContainer.appendChild(rowSection);
     });
 
-    // Initial update of states (should be none selected, but good practice)
+    // Initial update of states
     updateCheckboxStates();
+}
+
+function switchActiveRow(rowId: string) {
+    const rowSections = document.querySelectorAll('.row-selector') as NodeListOf<HTMLElement>;
+    rowSections.forEach(section => {
+        if (section.dataset.rowId === rowId) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
 }
 
 function updateCheckboxStates() {
@@ -163,10 +270,9 @@ function updateVisualization() {
         rowDiv.style.marginBottom = `${config.bottom}px`;
         rowDiv.style.zIndex = (config.id * 10).toString();
 
-        // Filter effects still applied via CSS class or here
-        // We can replicate the brightness here if we removed classes
-        const brightness = [0.7, 0.75, 0.8, 0.9, 1.0][config.id - 1]; // Map ID 1-5 to brightness
-        rowDiv.style.filter = `brightness(${brightness})`;
+        // Removed brightness filter as requested
+        // const brightness = [0.7, 0.75, 0.8, 0.9, 1.0][config.id - 1]; 
+        // rowDiv.style.filter = `brightness(${brightness})`;
 
         let gap = MIN_OVERLAP; // -10 defined as base
         // Scale gap by the row scale so it looks consistent
@@ -226,10 +332,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderControls();
     updateSelectionStatus();
 
+    // Bind row switcher
+    const rowSelect = document.getElementById('active-row-select') as HTMLSelectElement;
+    if (rowSelect) {
+        rowSelect.addEventListener('change', (e) => {
+            switchActiveRow((e.target as HTMLSelectElement).value);
+        });
+        // Ensure default is reflected
+        switchActiveRow(rowSelect.value);
+    }
+
     // Bind download
     const downloadBtn = document.getElementById('download-btn');
     if (downloadBtn) {
         downloadBtn.addEventListener('click', handleDownload);
+    }
+    
+    // Bind GIF download
+    const downloadGifBtn = document.getElementById('download-gif-btn');
+    console.log('Looking for download-gif-btn:', downloadGifBtn);
+    if (downloadGifBtn) {
+        console.log('Binding click event to GIF download button');
+        downloadGifBtn.addEventListener('click', handleDownloadGif);
+    } else {
+        console.error('download-gif-btn not found in DOM!');
     }
 });
 
@@ -241,7 +367,7 @@ async function handleDownload() {
         const canvas = await html2canvas(stage as HTMLElement, {
             backgroundColor: null, // Transparent
             scale: 2, // Retain high quality
-            useCORS: true, // Crucial for external images
+            useCORS: true, 
             logging: false,
         });
 
@@ -252,6 +378,70 @@ async function handleDownload() {
     } catch (err) {
         console.error("Capture failed:", err);
         alert("Failed to generate image. Please check console.");
+    }
+}
+
+async function handleDownloadGif() {
+    console.log("GIF Download Button Clicked");
+    const stage = document.getElementById('choir-stage');
+    if (!stage) {
+        console.error("Stage not found");
+        return;
+    }
+
+    const btn = document.querySelector('#download-gif-btn') as HTMLButtonElement;
+    if (!btn) {
+        console.error("Button not found");
+        return;
+    }
+
+    const originalText = btn.textContent;
+    btn.textContent = 'Generating GIF...';
+    btn.disabled = true;
+
+    try {
+        console.log("Starting html2canvas capture...");
+        // Capture the stage
+        const canvas = await html2canvas(stage as HTMLElement, {
+            backgroundColor: null, // Transparent
+            scale: 2, // Retain high quality
+            useCORS: true, 
+            logging: false,
+        });
+        console.log("Canvas captured", canvas.width, canvas.height);
+
+        console.log("Initializing GIF...");
+        const gif = new GIF({
+            workers: 2,
+            quality: 10,
+            width: canvas.width,
+            height: canvas.height,
+            workerScript: '/scripts/gif.worker.js', 
+            transparent: "0x000000" 
+        });
+
+        // Add a single frame (static image as GIF)
+        gif.addFrame(canvas, {delay: 200});
+
+        gif.on('finished', (blob: any) => {
+            console.log("GIF finished", blob.size);
+            const link = document.createElement('a');
+            link.download = 'choir-party.gif';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+
+        console.log("Rendering GIF...");
+        gif.render();
+
+    } catch (err: any) {
+        console.error("GIF Generation failed:", err);
+        alert("Failed to generate GIF: " + err.message);
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 }
 
@@ -280,3 +470,4 @@ function updateSelectionStatus() {
     statusDiv.style.color = color;
     statusDiv.textContent = message;
 }
+

@@ -92,6 +92,8 @@
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(var(--accent-light), 0.1);
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .row-selector {

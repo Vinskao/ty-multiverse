@@ -485,8 +485,8 @@ const mergeEndpoint = isDev
   }
 
   function checkReady() {
-    const allFilled = files.every((f) => f !== null);
-    mergeBtn.disabled = !allFilled;
+    const hasAny = files.some((f) => f !== null);
+    mergeBtn.disabled = !hasAny;
   }
 
   mergeBtn.addEventListener("click", async () => {
@@ -497,10 +497,10 @@ const mergeEndpoint = isDev
       "Processing video synthesis... This may take a few minutes.";
 
     const formData = new FormData();
-    formData.append("v1", files[0]);
-    formData.append("v2", files[1]);
-    formData.append("v3", files[2]);
-    formData.append("v4", files[3]);
+    if (files[0]) formData.append("v1", files[0]);
+    if (files[1]) formData.append("v2", files[1]);
+    if (files[2]) formData.append("v3", files[2]);
+    if (files[3]) formData.append("v4", files[3]);
 
     // Add selected mode
     const selectedMode = document.querySelector(

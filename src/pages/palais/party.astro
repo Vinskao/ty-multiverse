@@ -53,15 +53,28 @@ const peopleImageUrl =
                         </div>
                         <div
                             class="header-actions"
-                            style="display: flex; justify-content: space-between; align-items: center; width: 100%;"
+                            style="display: flex; gap: 1rem; align-items: center; width: 100%;"
                         >
-                            <div id="selection-status" class="selection-status">
+                            <div class="row-selector-container">
+                                <label for="active-row-select" style="font-size: 0.9rem; color: var(--gray-300);">Select Row:</label>
+                                <select id="active-row-select" style="padding: 0.5rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">
+                                    <option value="5">Front Row (Row 5)</option>
+                                    <option value="4">Row 4</option>
+                                    <option value="3">Row 3</option>
+                                    <option value="2">Row 2</option>
+                                    <option value="1">Back Row (Row 1)</option>
+                                </select>
+                            </div>
+                            <div id="selection-status" class="selection-status" style="flex-grow: 1;">
                             </div>
                             <button
                                 id="download-btn"
-                                style="padding: 0.5rem 1rem; cursor: pointer;"
-                                >Download (No BG)</button
-                            >
+                                style="padding: 0.5rem 1rem; cursor: pointer; margin-right: 0.5rem;"
+                                >Download (No BG)</button>
+                            <button
+                                id="download-gif-btn"
+                                style="padding: 0.5rem 1rem; cursor: pointer; background: #673ab7; color: white; border: none;"
+                                >Download GIF</button>
                         </div>
                     </div>
 
