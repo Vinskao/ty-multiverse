@@ -136,4 +136,32 @@
 /* Dark theme hover styles */
 .theme-dark .module-button:hover {
   background: rgba(255, 255, 255, 0.3);
-} 
+}
+
+/* Gang Video Styles */
+.gang-video-container {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  justify-content: flex-start;
+  margin-bottom: var(--gap-l);
+  padding-block-end: 1rem;
+  /* Space for scrollbar */
+  padding-inline: 40px;
+  /* Some padding on sides */
+  -webkit-overflow-scrolling: touch;
+}
+
+.gang-video {
+  flex-shrink: 0;
+  width: auto;
+  height: 450px;
+  border-radius: 8px;
+  background: black;
+  /* Placeholder while loading */
+}
+
+.gang-video:not(:first-child) {
+  margin-left: -60px;
+}

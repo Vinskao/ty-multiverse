@@ -25,6 +25,28 @@ if (!isLoggedIn) {
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Welcome to Lily Palais." align="start" />
+
+      <div class="gang-video-container">
+        {
+          [
+            "https://peoplesystem.tatdvsonorth.com/images/people/gangHagisun.mp4",
+            "https://peoplesystem.tatdvsonorth.com/images/people/gangHagishi.mp4",
+            "https://peoplesystem.tatdvsonorth.com/images/people/gangPhoenix.mp4",
+            "https://peoplesystem.tatdvsonorth.com/images/people/gangRegalos.mp4",
+          ].map((src) => (
+            <video
+              src={src}
+              autoplay
+              muted
+              loop
+              playsinline
+              class="gang-video"
+              onerror="this.style.display='none'"
+            />
+          ))
+        }
+      </div>
+
       <div class="system-container module-buttons">
         <a
           href={`/tymultiverse/palais/fight?username=${username}&token=${token}`}
@@ -36,7 +58,8 @@ if (!isLoggedIn) {
         >
         <a
           href={`/tymultiverse/palais/dance?username=${username}&token=${token}`}
-          class="module-button">Dance</a>
+          class="module-button">Dance</a
+        >
         <a
           href={`/tymultiverse/palais/party?username=${username}&token=${token}`}
           class="module-button">Party</a
@@ -50,6 +73,7 @@ if (!isLoggedIn) {
           class="module-button">Levels</a
         >
       </div>
+
       <div class="galwall-container">
         <Galwall />
       </div>
