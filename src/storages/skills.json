@@ -9,10 +9,12 @@
           "name": "Languages",
           "description": {
             "en": [
-              "Implemented factory design pattern for decoupling - https://github.com/Vinskao?tab=repositories"
+              "Implemented factory design pattern for decoupling - https://github.com/Vinskao?tab=repositories",
+              "Developed backend business logic and middleware control using Java. Created and modified files (e.g., HeaderConfigGSP.java) to set up Inserter Beans for dynamic injection of CTBC / GSP specific headers before forwarding requests to downstream systems."
             ],
             "zh": [
-              "使用不同設計模式進行解耦 - https://github.com/Vinskao/TY-Multiverse-Backend"
+              "使用不同設計模式進行解耦 - https://github.com/Vinskao/TY-Multiverse-Backend",
+              "實作後端商務邏輯與中介控制（Java），透過撰寫及修改 .java 檔案（如 HeaderConfigGSP.java），在系統中建立攔截元件（Inserter Beans），以便在 Request 送往系統後台前，動態插入 CTBC / GSP 指定的 Header 等中介層處理"
             ]
           },
           "skills": [
@@ -41,13 +43,13 @@
               "Developed CRUD APIs using Spring Boot framework with SSO server integration",
               "Architected a Knowledge-Management QA system using FastAPI and LangChain; ingested data via Laravel APIs, stored it in PostgreSQL, and converted it into vector embeddings for semantic retrieval",
               "Implemented real-time WebSocket backend with Java ExecutorService, ConcurrentHashMap, and async tasks to handle multi-threaded message queues. Used channel-based push to deliver system metrics and order info to frontend, ensuring non-blocking processing for different data sources.",
-              "Built gRPC microservices architecture with Protocol Buffers for efficient inter-service communication. Implemented both gRPC server and client stubs for PeopleService, enabling high-performance RPC calls between Gateway and Backend services."
+              "Managed configuration via XML, modifying files such as service_extn_gsp.xml to declare and map APIs, alter routing methods (e.g., GET to POST), and pair correct request parameters."
             ],
             "zh": [
               "使用 Spring Boot 框架開發 CRUD API，並整合 SSO 伺服器",
               "以 FastAPI 與 LangChain 架構知識管理問答系統；透過 Laravel API 注入資料，儲存於 PostgreSQL 並轉換為向量嵌入以進行語義檢索",
               "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理",
-              "建構 gRPC 微服務架構，使用 Protocol Buffers 實現高效能的服務間通訊。實作 PeopleService 的 gRPC 伺服器與客戶端 Stub，使 Gateway 與 Backend 服務間能夠進行高效能 RPC 調用。"
+              "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等"
             ]
           },
           "skills": [
@@ -144,26 +146,6 @@
               "level": "shade3"
             },
             {
-              "name": "gRPC",
-              "level": "shade3"
-            },
-            {
-              "name": "Protocol Buffers",
-              "level": "shade3"
-            },
-            {
-              "name": "gRPC Stub",
-              "level": "shade3"
-            },
-            {
-              "name": "gRPC Client",
-              "level": "shade3"
-            },
-            {
-              "name": "gRPC Server",
-              "level": "shade3"
-            },
-            {
               "name": "Microservices",
               "level": "shade2"
             },
@@ -173,6 +155,14 @@
             },
             {
               "name": "Spring Cloud Gateway",
+              "level": "shade3"
+            },
+            {
+              "name": "Web Crawler",
+              "level": "shade3"
+            },
+            {
+              "name": "XML Configuration",
               "level": "shade3"
             }
           ]
@@ -252,6 +242,10 @@
             {
               "name": "Chain of Responsibility",
               "level": "shade3"
+            },
+            {
+              "name": "RestTemplate",
+              "level": "shade3"
             }
           ]
         }
@@ -264,12 +258,18 @@
         "en": [
           "Built Astro website with React useState integration",
           "Developed Thymeleaf MVC and Handlebars CRUD APIs",
-          "Developed Vue.js 2 3 with Vuex integration"
+          "Developed Vue.js 2 3 with Vuex integration",
+          "Maintained Angular as the primary gateway frontend framework, modifying extensive .component.ts and .html files (e.g., refactoring showMessage UI behavior to alertDialog / errLabel, and refreshing component state data), and managing Angular Routing (app-routing.module.ts)",
+          "Developed visual styles using SCSS / CSS, updating site-wide shared component libraries (widget.scss) and Angular module-specific stylesheets (e.g., MaintainPrintingOfTransactionNotification.scss)",
+          "Implemented localization and i18n by modifying dictionary files such as package.js and package_zh.js, enabling multi-language translation mapping for the frontend application"
         ],
         "zh": [
           "建立整合 React useState 的 Astro 網站",
           "開發 Thymeleaf MVC 及 Handlebars CRUD API",
-          "開發 Vue.js 2/3 並整合 Vuex"
+          "開發 Vue.js 2/3 並整合 Vuex",
+          "使用 Angular 作為 gateway (或前台介面) 的最主要框架，異動了大量的 .component.ts 與 .html 檔案（如修改 showMessage 為 alertDialog / errLabel 的 UI 互動行為，及元件狀態資料刷新邏輯），並管理 Angular Routing 路由 (app-routing.module.ts)",
+          "以 SCSS / CSS 進行網頁視覺樣式開發，修改全站共用元件庫的 UI_Workspace/src/css/widget.scss 以及各個 Angular 模組專屬的 .scss（如 MaintainPrintingOfTransactionNotification.scss）",
+          "開發多國語系在地化 (Localization / i18n)，異動 package.js、package_zh.js 檔案管理前端多國語系字首對照表，讓應用程式能呈現包含中文的對應顯示資源"
         ]
       },
       "skills": [
@@ -363,6 +363,18 @@
         },
         {
           "name": "D3",
+          "level": "shade3"
+        },
+        {
+          "name": "Angular",
+          "level": "shade3"
+        },
+        {
+          "name": "SCSS / CSS",
+          "level": "shade2"
+        },
+        {
+          "name": "i18n / Localization",
           "level": "shade3"
         }
       ]
@@ -762,6 +774,10 @@
             {
               "name": "Egress",
               "level": "shade5"
+            },
+            {
+              "name": "cert-manager",
+              "level": "shade3"
             }
           ]
         }
@@ -1055,6 +1071,14 @@
             {
               "name": "Colab",
               "level": "shade4"
+            },
+            {
+              "name": "Ollama",
+              "level": "shade3"
+            },
+            {
+              "name": "Open WebUI",
+              "level": "shade3"
             }
           ]
         }
