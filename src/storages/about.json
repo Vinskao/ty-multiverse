@@ -5,6 +5,21 @@
   },
   "experience": [
     {
+      "title": "Software Engineer",
+      "company": "Tata Consultancy Services",
+      "period": "2025/12~Present",
+      "projectExperience": {
+        "en": [
+          "2026/03 ~ Present - LC Query: Ongoing. No deliverables to report yet.",
+          "2025/12 ~ 2026/03 - Printing Confirmation: Led full-stack feature delivery across 6 dimensions on the Angular + Java gateway system for a banking client. (I) Feature Construction: Built 5 Angular components from scratch with View/Logic/Style separation. (II) Decoupling: Extracted shared TextArea logic into a reusable strategy. (III) Error Handling: Standardized error feedback chain using Chain of Responsibility + Facade patterns. (IV) API Mapping: Configured 8 API routes via XML/JSON, added 3 Java Header Inserter Beans for gateway routing. (V) Style Synchronization: Aligned to official UI baseline Design Tokens. (VI) i18n: Externalized all display strings — Responsibilities: built 5 Angular components from scratch with View/Logic/Style separation, extracted shared UI logic into a reusable strategy, standardized error feedback chain, configured Java gateway routing via XML/JSON and Header Inserter Beans — Data Module: PrintConfirmGate (structure: Angular Components/Services/Java Beans, logic: UI Component Decoupling & Error Handling Chain, interface: Angular UI + REST API via Java Gateway)"
+        ],
+        "zh": [
+          "2026/03 ~ Present - LC Query：進行中，尚無可報告的交付成果。",
+          "2025/12 ~ 2026/03 - 列印確認書功能：在銀行客戶的 Angular + Java gateway 系統上，主導橫跨六個面向的全端功能交付。(一) 功能層建構：從零搭建 5 個 Angular 元件，實作 View/Logic/Style 三層分離。(二) 解耦：將 TextArea 處理行為抽離為共用策略。(三) 錯誤處理標準化：以責任鏈與 Facade 模式建立統一的錯誤回饋鏈路。(四) API 路由對應：配置 8 條 API 路由並新增 3 個 Java Header Inserter Bean。(五) 樣式同步：對齊官方 UI 基準版本的 Design Token。(六) 多國語系維護：所有 UI 顯示字串外部化。；主要負責：從零搭建 Angular 元件並實作三層分離；抽離共用邏輯策略以降低耦合；以責任鏈模式統一前端錯誤回饋鏈路；配置 Java Gateway 路由與 Header Inserter Beans；資料模組：PrintConfirmGate（資料結構：Angular Components/Services/Java Beans；操作邏輯：元件解耦與錯誤回饋加上路由分派；存取介面：Angular UI + REST API）"
+        ]
+      }
+    },
+    {
       "title": "Open Source Backend Engineer",
       "company": "Mercuries Life Insurance",
       "period": "2024/3~2025/11",
@@ -26,34 +41,19 @@
       }
     },
     {
-      "title": "Software Engineer",
-      "company": "Tata Consultancy Services",
-      "period": "2025/12~Present",
-      "projectExperience": {
-        "en": [
-          "2025/12 ~ 2026/03 - Printing Confirmation: Led full-stack feature delivery across 7 dimensions on the Angular + Java gateway system for a banking client. (I) Feature Construction: Built 5 Angular components from scratch with View/Logic/Style separation, integrated into core frontend and app routing modules — 6,373 lines .ts / 1,413 lines .html / 60 lines .scss. (II) Decoupling: Removed 1,373 lines of mock data across 5 components and extracted shared TextArea logic into a reusable strategy, reducing coupling — refactored into 57 lines across 6 benefiting components. (III) Error Handling: Standardized error feedback chain using Chain of Responsibility + Facade patterns — unified showMessage calls into errLabel / alertDialog, extracted backend response messages for dialog display, covering 5 components across 3 fix commits. (IV) Identity Normalization: Unified user identifier from loginId to userId across 3 components; hardened resetFieldsToLatest() to always fetch fresh data from backend, eliminating stale state. (V) API Mapping: Configured 8 API routes via XML/JSON, added 3 Java Header Inserter Beans (CAI/SIO/FI) for gateway routing, adjusted GET/POST methods. (VI) Style Synchronization: Aligned to official UI baseline Design Tokens — SCSS changes across app.scss and widget.scss (+644/-305 lines). (VII) i18n: Externalized all display strings — added 307 entries to translation mapping, synced 2,130 lines in language bundle. Total: 27 commits over 45 days (2026-01-09 ~ 2026-02-23).",
-          "2026/03 ~ Present - LC Query: Ongoing. No deliverables to report yet."
-        ],
-        "zh": [
-          "2025/12 ~ 2026/03 - 列印確認書功能：在銀行客戶的 Angular + Java gateway 系統上，主導橫跨七個面向的全端功能交付。(一) 功能層建構：從零搭建 5 個 Angular 元件，實作 View/Logic/Style 三層分離，統一掛載至核心前端與 app 路由模組——.ts 6,373 行、.html 1,413 行、.scss 60 行。(二) 解耦：跨 5 個元件移除 1,373 行假資料，並將重複的 TextArea 處理行為抽離為共用策略，降低耦合——重構後邏輯壓縮為 57 行，6 個元件受益。(三) 錯誤處理標準化：以責任鏈 + Facade 模式建立統一的錯誤回饋鏈路——將 showMessage 統一為 errLabel / alertDialog，擷取後端回應訊息顯示於 Dialog，覆蓋 5 個元件，共 3 次 Fix Commit。(四) 識別欄位正規化：將 loginId 統一為 userId，影響 3 個元件；強化 resetFieldsToLatest() 確保每次重置皆從後端取得最新資料，消除 Stale State。(五) API 路由對應：以 XML/JSON 配置 8 條 API 路由，新增 3 個 Java Header Inserter Bean（CAI/SIO/FI）以正確路由至後端系統，並調整 GET/POST 方法。(六) 樣式同步：對齊官方 UI 基準版本的 Design Token——app.scss 與 widget.scss 共異動 +644/-305 行。(七) 多國語系維護：將所有 UI 顯示字串外部化——語系對照表新增 307 條中文字串，同步更新 2,130 行。總計：45 天內完成 27 個 Commit（2026-01-09 ～ 2026-02-23）。",
-          "2026/03 ~ Present - LC Query：進行中，尚無可報告的交付成果。"
-        ]
-      }
-    },
-    {
       "title": "Freelancer",
       "company": "Self-Employed (Client Sources Confidential)",
       "period": "2023/3~2024/1",
       "projectExperience": {
         "en": [
-          "2023/03 ~ 2023/05 - Restaurant Booking & CMS Platform (Vue 3 + Spring Boot): Built booking + CMS with Vue 3 frontend and Spring Boot API — Responsibilities: designed JWT/RBAC, shipped core CMS (employee/customer/branch/coupon/menu/order/reservation), delivered BI dashboards and Dockerized deployment — Data Module: RestaurantCMS (structure: Request → Router → Controller → Service → Repository → Database with POJO entities, logic: JWT/RBAC & order/reservation workflows & analytics, interface: REST API + JWT + SQL Server)",
+          "2023/10 ~ 2024/01 - Customer Portal Q&A Assistant System (FastAPI + LangChain): Personality-based RAG chatbot with hybrid retrieval — Responsibilities: built RAG pipeline on pg_trgm/pgvector (GIN/IVFFlat), integrated multi-LLM fallback & no-knowledge handling, designed prompts and evaluation — Data Module: RAGCore (structure: ArticleEmbedding/TrigramIndex/ChatHistory, logic: hybrid retrieval & prompt assembly & fallback, interface: FastAPI + LLM adapters)",
           "2023/05 ~ 2023/09 - SmartSync Crawler — Online Retailer Product Information Plugin (PHP + WordPress): Automated product crawler plugin with secure admin controls — Responsibilities: design WordPress plugin/admin UI, implement XPath URL collection & product extraction, deliver styled descriptions and CSV export (UTF-8 BOM/normalized) with robust timeouts — Data Module: SmartSync (structure: URL Collection/Data Extraction/Content Processing/CSV Export, logic: XPath parsing & DOM manipulation & filtering & UTF-8 encoding, interface: WordPress HTTP API + CSV + admin dashboard)",
-          "2023/10 ~ 2024/01 - Customer Portal Q&A Assistant System (FastAPI + LangChain): Personality-based RAG chatbot with hybrid retrieval — Responsibilities: built RAG pipeline on pg_trgm/pgvector (GIN/IVFFlat), integrated multi-LLM fallback & no-knowledge handling, designed prompts and evaluation — Data Module: RAGCore (structure: ArticleEmbedding/TrigramIndex/ChatHistory, logic: hybrid retrieval & prompt assembly & fallback, interface: FastAPI + LLM adapters)"
+          "2023/03 ~ 2023/05 - Restaurant Booking & CMS Platform (Vue 3 + Spring Boot): Built booking + CMS with Vue 3 frontend and Spring Boot API — Responsibilities: designed JWT/RBAC, shipped core CMS (employee/customer/branch/coupon/menu/order/reservation), delivered BI dashboards and Dockerized deployment — Data Module: RestaurantCMS (structure: Request → Router → Controller → Service → Repository → Database with POJO entities, logic: JWT/RBAC & order/reservation workflows & analytics, interface: REST API + JWT + SQL Server)"
         ],
         "zh": [
-          "2023/03 ~ 2023/05 - 餐廳訂位與管理平台（Vue 3 + Spring Boot）：建置訂位 + CMS 系統，含 Vue 3 前端與 Spring Boot API — 主要負責：設計 JWT/RBAC、開發核心 CMS 模組（員工／客戶／分店／優惠券／菜單／訂單／預約管理）、實作 BI 儀表板與 Docker 部署 — 資料模組：餐廳管理系統（資料結構：Request → Router → Controller → Service → Repository → Database 配合 POJO 實體；操作邏輯：JWT/RBAC、訂單/預約工作流程、商業分析；存取介面：REST API + JWT + SQL Server）",
+          "2023/10 ~ 2024/01 - 客戶專區附加的問答輔助系統（FastAPI + LangChain）：個性化 RAG 聊天機器人，具混合檢索 — 主要負責：建置 pg_trgm/pgvector RAG 流程（GIN/IVFFlat）、整合多 LLM 回退與無知識處理、設計 Prompt 與評估 — 資料模組：RAGCore（資料結構：ArticleEmbedding/TrigramIndex/ChatHistory；操作邏輯：混合檢索、Prompt 組裝與回退；存取介面：FastAPI + LLM adapters）",
           "2023/05 ~ 2023/09 - SmartSync Crawler — 線上零售商產品資訊爬蟲插件（PHP + WordPress）：自動化產品爬蟲插件，具安全管理介面 — 主要負責：設計 WordPress 插件/管理介面、實作 XPath URL 收集與產品提取、開發樣式化描述與 CSV 匯出（UTF-8 BOM/正規化）並強化超時處理 — 資料模組：SmartSync（資料結構：URL 收集／數據提取／內容處理／CSV 輸出；操作邏輯：XPath 解析、DOM 操作、內容過濾、UTF-8 編碼；存取介面：WordPress HTTP API + CSV + 管理介面）",
-          "2023/10 ~ 2024/01 - 客戶專區附加的問答輔助系統（FastAPI + LangChain）：個性化 RAG 聊天機器人，具混合檢索 — 主要負責：建置 pg_trgm/pgvector RAG 流程（GIN/IVFFlat）、整合多 LLM 回退與無知識處理、設計 Prompt 與評估 — 資料模組：RAGCore（資料結構：ArticleEmbedding/TrigramIndex/ChatHistory；操作邏輯：混合檢索、Prompt 組裝與回退；存取介面：FastAPI + LLM adapters）"
+          "2023/03 ~ 2023/05 - 餐廳訂位與管理平台（Vue 3 + Spring Boot）：建置訂位 + CMS 系統，含 Vue 3 前端與 Spring Boot API — 主要負責：設計 JWT/RBAC、開發核心 CMS 模組（員工／客戶／分店／優惠券／菜單／訂單／預約管理）、實作 BI 儀表板與 Docker 部署 — 資料模組：餐廳管理系統（資料結構：Request → Router → Controller → Service → Repository → Database 配合 POJO 實體；操作邏輯：JWT/RBAC、訂單/預約工作流程、商業分析；存取介面：REST API + JWT + SQL Server）"
         ]
       }
     },
@@ -63,16 +63,16 @@
       "period": "2022/9~2023/1",
       "projectExperience": {
         "en": [
-          "2022/09 ~ 2022/10 - Built automated reporting workflows; integrated SinoPac Shioaji trading API for market data ingestion and strategy prototyping, designing real-time market analysis data processing pipelines; utilized pandas, numpy and scipy for futures price and implied volatility data analysis, implementing automated backtesting frameworks and quantitative trading strategies (Red K strategy, volatility-based dynamic rebalancing strategy)",
-          "2022/10 ~ 2022/11 - Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis, utilized scikit-learn, statsmodels and scipy for data analysis and statistical modeling, structuring complex market data into actionable insights through systematic data flow analysis",
+          "2022/12 ~ 2023/01 - Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis, optimizing data flow architecture for multi-source financial data integration",
           "2022/11 ~ 2022/12 - Analyzed macroeconomic indicators including container shipping trends, US retail sales, TWD currency flows, foreign exchange dynamics, and EPFR fund flows for cross-asset allocation strategies, mapping market behavior patterns to investment decision frameworks",
-          "2022/12 ~ 2023/01 - Maintained and enhanced data infrastructure across 10+ databases for comprehensive market analysis, optimizing data flow architecture for multi-source financial data integration"
+          "2022/10 ~ 2022/11 - Delivered daily market intelligence reports covering emerging markets (Mexico, India, Brazil) with real-time analysis, utilized scikit-learn, statsmodels and scipy for data analysis and statistical modeling, structuring complex market data into actionable insights through systematic data flow analysis",
+          "2022/09 ~ 2022/10 - Built automated reporting workflows; integrated SinoPac Shioaji trading API for market data ingestion and strategy prototyping, designing real-time market analysis data processing pipelines; utilized pandas, numpy and scipy for futures price and implied volatility data analysis, implementing automated backtesting frameworks and quantitative trading strategies (Red K strategy, volatility-based dynamic rebalancing strategy)"
         ],
         "zh": [
-          "2022/09 ~ 2022/10 - 建置自動化報表工作流程；整合永豐金 Shioaji API 進行市場數據攝取與策略原型開發，設計即時市場分析的數據處理管道；運用 pandas、numpy 與 scipy 進行期貨價格與隱含波動率數據分析，實作自動化回測框架與量化交易策略（紅K策略、基於隱含波動率動態切換的再平衡策略）",
-          "2022/10 ~ 2022/11 - 每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析，運用 scikit-learn、statsmodels 與 scipy 進行數據分析與統計建模，透過系統化數據流程分析將複雜市場數據結構化為可執行洞察",
+          "2022/12 ~ 2023/01 - 維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析，優化多源金融數據整合的數據流程架構",
           "2022/11 ~ 2022/12 - 分析宏觀經濟指標，包括貨櫃航運趨勢、美國零售銷售、台幣資金流向、外匯動態與 EPFR 基金流向，以制定跨資產配置策略，將市場行為模式對應至投資決策框架",
-          "2022/12 ~ 2023/01 - 維護並強化橫跨 10+ 個資料庫的數據基礎設施，以支援全面的市場分析，優化多源金融數據整合的數據流程架構"
+          "2022/10 ~ 2022/11 - 每日提供涵蓋新興市場（墨西哥、印度、巴西）的市場情報報告，並進行即時分析，運用 scikit-learn、statsmodels 與 scipy 進行數據分析與統計建模，透過系統化數據流程分析將複雜市場數據結構化為可執行洞察",
+          "2022/09 ~ 2022/10 - 建置自動化報表工作流程；整合永豐金 Shioaji API 進行市場數據攝取與策略原型開發，設計即時市場分析的數據處理管道；運用 pandas、numpy 與 scipy 進行期貨價格與隱含波動率數據分析，實作自動化回測框架與量化交易策略（紅K策略、基於隱含波動率動態切換的再平衡策略）"
         ]
       }
     },
@@ -82,18 +82,18 @@
       "period": "2021/8~2022/5",
       "projectExperience": {
         "en": [
-          "2021/08 ~ 2021/09 - Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews, translating complex business requirements into structured data flows",
-          "2021/10 ~ 2021/11 - Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies, analyzing user journey flows and payment processing logic",
-          "2021/12 ~ 2022/01 - Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting, mapping product features to user behavior patterns",
+          "2022/04 ~ 2022/05 - Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations, analyzing integration requirements and data exchange protocols",
           "2022/02 ~ 2022/03 - Managed 31 operational procedures for the digital payment department ensuring compliance and efficiency, designing workflow logic and data validation processes; implemented open-source RPA solutions using Python with Selenium for process automation and workflow optimization",
-          "2022/04 ~ 2022/05 - Created cross-industry alliance strategies with 3 proposals approved through internal review processes, resulting in 2 successful implementations, analyzing integration requirements and data exchange protocols"
+          "2021/12 ~ 2022/01 - Conducted comprehensive research on emerging fintech trends including BNPL, cryptocurrency, and online microloan product design with weekly reporting, mapping product features to user behavior patterns",
+          "2021/10 ~ 2021/11 - Developed 20+ business plan drafts and successfully proposed 2 digital payment projects in collaboration with major telecommunications companies, analyzing user journey flows and payment processing logic",
+          "2021/08 ~ 2021/09 - Built Power BI dashboards for executive and product (Bankee) KPIs; designed data models and visuals to support business reviews, translating complex business requirements into structured data flows"
         ],
         "zh": [
-          "2021/08 ~ 2021/09 - 使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視，將複雜業務需求轉化為結構化數據流程",
-          "2021/10 ~ 2021/11 - 撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案，分析用戶旅程流程與支付處理邏輯",
-          "2021/12 ~ 2022/01 - 進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告，將產品功能對應至用戶行為模式",
+          "2022/04 ~ 2022/05 - 提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地，分析整合需求與數據交換協議",
           "2022/02 ~ 2022/03 - 管理數位支付部門 31 項作業流程，確保合規與效率，設計工作流程邏輯與數據驗證程序；導入開源 RPA 解決方案，使用 Python 搭配 Selenium 進行流程自動化與工作流程優化",
-          "2022/04 ~ 2022/05 - 提出跨產業聯盟策略，3 項提案通過內部審查，其中 2 項成功落地，分析整合需求與數據交換協議"
+          "2021/12 ~ 2022/01 - 進行 BNPL、加密貨幣與線上小額信貸產品設計等新興金融科技趨勢研究，並每週提交報告，將產品功能對應至用戶行為模式",
+          "2021/10 ~ 2021/11 - 撰寫 20+ 份商業計畫書，並與大型電信公司合作成功提出 2 個數位支付專案，分析用戶旅程流程與支付處理邏輯",
+          "2021/08 ~ 2021/09 - 使用 Power BI 建置視覺化儀表板，設計資料模型與圖表以支援主管與產品 KPI 檢視，將複雜業務需求轉化為結構化數據流程"
         ]
       }
     },
@@ -103,20 +103,20 @@
       "period": "2019/9~2020/3",
       "projectExperience": {
         "en": [
-          "2019/09 ~ 2019/10 - Automated reconciliation workflow using Excel VBA to accelerate audit working papers, designing logical data validation processes for financial data integrity",
-          "2019/10 ~ 2019/11 - Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements, analyzing financial data flows and transaction processing logic",
-          "2019/11 ~ 2019/12 - Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds, mapping complex financial product structures to audit testing frameworks",
-          "2019/12 ~ 2020/01 - Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies, developing systematic approaches to financial data analysis and anomaly detection",
+          "2020/02 ~ 2020/03 - Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements, structuring financial reporting data flows for compliance and analysis purposes",
           "2020/01 ~ 2020/02 - Developed sensitivity analyses for interest rate and foreign currency exposures, along with Top 10 Suppliers/Customers concentration analysis, creating data-driven risk assessment models",
-          "2020/02 ~ 2020/03 - Audited and analyzed 20+ Balance Sheets/Income Statements and 3+ Cash Flow Statements, structuring financial reporting data flows for compliance and analysis purposes"
+          "2019/12 ~ 2020/01 - Performed 40+ substantive analytical procedures to validate account variations and identify potential discrepancies, developing systematic approaches to financial data analysis and anomaly detection",
+          "2019/11 ~ 2019/12 - Coordinated audit procedures across 8 specialized teams for financial services clients including equity funds and bond funds, mapping complex financial product structures to audit testing frameworks",
+          "2019/10 ~ 2019/11 - Conducted comprehensive financial statement audits covering Current Assets, Fixed Assets, Liabilities, and Equity for 20+ client engagements, analyzing financial data flows and transaction processing logic",
+          "2019/09 ~ 2019/10 - Automated reconciliation workflow using Excel VBA to accelerate audit working papers, designing logical data validation processes for financial data integrity"
         ],
         "zh": [
-          "2019/09 ~ 2019/10 - 使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業，設計財務數據完整性的邏輯驗證程序",
-          "2019/10 ~ 2019/11 - 為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益，分析財務數據流程與交易處理邏輯",
-          "2019/11 ~ 2019/12 - 協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序，將複雜金融產品結構對應至稽核測試框架",
-          "2019/12 ~ 2020/01 - 執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異，開發財務數據分析與異常檢測的系統化方法",
+          "2020/02 ~ 2020/03 - 稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表，為合規與分析目的結構化財務報告數據流程",
           "2020/01 ~ 2020/02 - 編制利率與外幣曝險敏感度分析，及前十大供應商／客戶集中度分析，建立數據驅動的風險評估模型",
-          "2020/02 ~ 2020/03 - 稽核並分析 20+ 份資產負債表／損益表及 3+ 份現金流量表，為合規與分析目的結構化財務報告數據流程"
+          "2019/12 ~ 2020/01 - 執行 40+ 次實質性分析程序，以驗證科目變動並識別潛在差異，開發財務數據分析與異常檢測的系統化方法",
+          "2019/11 ~ 2019/12 - 協調 8 個專業團隊執行金融服務客戶（含股票與債券基金）的稽核程序，將複雜金融產品結構對應至稽核測試框架",
+          "2019/10 ~ 2019/11 - 為 20+ 客戶專案執行財務報表稽核，範圍涵蓋流動資產、固定資產、負債及權益，分析財務數據流程與交易處理邏輯",
+          "2019/09 ~ 2019/10 - 使用 Excel VBA 自動化鉤稽流程，加速稽核底稿作業，設計財務數據完整性的邏輯驗證程序"
         ]
       }
     }
