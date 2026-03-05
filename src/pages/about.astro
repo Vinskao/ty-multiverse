@@ -5,13 +5,13 @@ import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
 import Briefing from "../components/Briefing.astro";
-import '../styles/about.css';
+import "../styles/about.css";
 
 // Import the JSON data
-import aboutData from '../storages/about.json';
-import skillsData from '../storages/skills.json';
+import aboutData from "../storages/about.json";
+import skillsData from "../storages/skills.json";
 
-type LangKey = 'en' | 'zh';
+type LangKey = "en" | "zh";
 type LangText = { en: string[]; zh: string[] };
 interface ExperienceItem {
   title: string;
@@ -21,7 +21,7 @@ interface ExperienceItem {
   responsibilities?: LangText;
 }
 
-const lang = (Astro.url.searchParams.get('lang') ?? 'en') as LangKey;
+const lang = (Astro.url.searchParams.get("lang") ?? "en") as LangKey;
 const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
 // Function to highlight dates in project descriptions
@@ -35,19 +35,22 @@ function normalizeForDedup(s: string): string {
   return s
     .trim()
     .toLowerCase()
-    .replace(/[\s\u3000]+/g, ' ')
-    .replace(/[、，,；;：:。.!！？?（）()\[\]{}\-–—\u00A0]+/g, '');
+    .replace(/[\s\u3000]+/g, " ")
+    .replace(/[、，,；;：:。.!！？?（）()\[\]{}\-–—\u00A0]+/g, "");
 }
 
-function parseProject(project: string, lang: LangKey): {
+function parseProject(
+  project: string,
+  lang: LangKey,
+): {
   head: string;
   bullets: string[];
   dataModuleName?: string;
   dataModuleDetails: string[];
 } {
-  const isZh = lang === 'zh';
-  const respMarker = isZh ? '；主要負責：' : ' — Responsibilities:';
-  const dmMarker = isZh ? '；資料模組：' : ' — Data Module:';
+  const isZh = lang === "zh";
+  const respMarker = isZh ? "；主要負責：" : " — Responsibilities:";
+  const dmMarker = isZh ? "；資料模組：" : " — Data Module:";
 
   const respIdx = project.indexOf(respMarker);
   if (respIdx === -1) {
@@ -65,9 +68,7 @@ function parseProject(project: string, lang: LangKey): {
     dataModule = rest.substring(dmIdx + dmMarker.length).trim();
   }
 
-  const rawBullets = (isZh
-    ? respPart.split(/；+/)
-    : respPart.split(/\s*,\s*/))
+  const rawBullets = (isZh ? respPart.split(/；+/) : respPart.split(/\s*,\s*/))
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
   const seen = new Set<string>();
@@ -82,8 +83,14 @@ function parseProject(project: string, lang: LangKey): {
   let dataModuleDetails: string[] = [];
   if (dataModule) {
     // Extract name and details inside parentheses (both half/full width)
-    const openIdx = dataModule.indexOf('(') !== -1 ? dataModule.indexOf('(') : dataModule.indexOf('（');
-    const closeIdx = dataModule.lastIndexOf(')') !== -1 ? dataModule.lastIndexOf(')') : dataModule.lastIndexOf('）');
+    const openIdx =
+      dataModule.indexOf("(") !== -1
+        ? dataModule.indexOf("(")
+        : dataModule.indexOf("（");
+    const closeIdx =
+      dataModule.lastIndexOf(")") !== -1
+        ? dataModule.lastIndexOf(")")
+        : dataModule.lastIndexOf("）");
     if (openIdx !== -1 && closeIdx !== -1 && closeIdx > openIdx) {
       dataModuleName = dataModule.substring(0, openIdx).trim();
       const inner = dataModule.substring(openIdx + 1, closeIdx).trim();
@@ -104,113 +111,129 @@ function parseProject(project: string, lang: LangKey): {
 
   return { head, bullets, dataModuleName, dataModuleDetails };
 }
-
 ---
 
 <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
-    <div class="stack gap-20">
-      <main class="wrapper about">
-        <div class="lang-toggle" style="text-align:right;margin-bottom:1rem;">
-          <a id="langEnLink" href="?lang=en" class={lang === 'en' ? 'active' : ''}>EN</a> |
-          <a id="langZhLink" href="?lang=zh" class={lang === 'zh' ? 'active' : ''}>中文</a>
-        </div>
-        <div class="hero-section">
-          <Hero
-            title="About"
-            tagline="KTY's Journey"
-          >
-
-          </Hero>
-          <div class="work-photo-wrapper" style="position:relative; width:100%;">
-            <!-- Mask overlay with slogan -->
-            <div class="work-photo-overlay" aria-hidden="true">
-              <div class="mask-text">To Make a Difference.</div>
-            </div>
-            <img
-              width="1553"
-              height="873"
-              src="/tymultiverse/assets/zen-landscape.svg"
-              alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
-              class="work-photo"
-            />
+  <div class="stack gap-20">
+    <main class="wrapper about">
+      <div class="lang-toggle" style="text-align:right;margin-bottom:1rem;">
+        <a id="langEnLink" href="?lang=en" class={lang === "en" ? "active" : ""}
+          >EN</a
+        > |
+        <a id="langZhLink" href="?lang=zh" class={lang === "zh" ? "active" : ""}
+          >中文</a
+        >
+      </div>
+      <div class="hero-section">
+        <Hero title="About" tagline="KTY's Journey" />
+        <div class="work-photo-wrapper" style="position:relative; width:100%;">
+          <!-- Mask overlay with slogan -->
+          <div class="work-photo-overlay" aria-hidden="true">
+            <div class="mask-text">To Make a Difference.</div>
           </div>
+          <img
+            width="1553"
+            height="873"
+            src="/tymultiverse/assets/zen-landscape.svg"
+            alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
+            class="work-photo"
+          />
         </div>
+      </div>
 
-        <section>
-          <h2 class="section-title">Background</h2>
-          <div class="content background-content">
-            <div class="name-section">
-              <h1 class="majestic-name">{lang === 'zh' ? '高天逸' : 'KAO TIAN YI'}</h1>
-              <p class="email">tianyikao@gmail.com</p>
-            </div>
-            <p set:html={aboutData.background[lang].replace(/\n/g, '<br>')}>
-            </p>
+      <section>
+        <h2 class="section-title">Background</h2>
+        <div class="content background-content">
+          <div class="name-section">
+            <h1 class="majestic-name">
+              {lang === "zh" ? "高天逸" : "KAO TIAN YI"}
+            </h1>
+            <p class="email">tianyikao@gmail.com</p>
           </div>
-        </section>
+          <p set:html={aboutData.background[lang].replace(/\n/g, "<br>")} />
+        </div>
+      </section>
 
-        <!-- Briefing Section -->
-        <Briefing />
+      <!-- Briefing Section -->
+      <Briefing />
 
-        <section>
-          <h2 class="section-title">Project Experience</h2>
-          <div class="content">
-            {experienceData.map((job) => (
-              job.projectExperience && job.projectExperience[lang] && job.projectExperience[lang].length > 0 && (
-                <div class="experience-item">
-                  <div class="job-header">
-                    <h3>{job.title}</h3>
-                    <div class="job-meta">
-                      <span class="company">{job.company}</span>
-                      <span class="period"><span class="date-highlight">{job.period}</span></span>
+      <section>
+        <h2 class="section-title">Project Experience</h2>
+        <div class="content">
+          {
+            experienceData.map(
+              (job) =>
+                job.projectExperience &&
+                job.projectExperience[lang] &&
+                job.projectExperience[lang].length > 0 && (
+                  <div class="experience-item">
+                    <div class="job-header">
+                      <h3>{job.title}</h3>
+                      <div class="job-meta">
+                        <span class="company">{job.company}</span>
+                        <span class="period">
+                          <span class="date-highlight">{job.period}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="project-experience">
+                      <ul>
+                        {job.projectExperience[lang].map((project) => {
+                          const parsed = parseProject(project, lang);
+                          // highlight dates only in the head text
+                          const dateHighlightedHead = highlightDates(
+                            parsed.head,
+                          );
+                          return (
+                            <li>
+                              <span set:html={dateHighlightedHead} />
+                              {(parsed.bullets.length > 0 ||
+                                parsed.dataModuleName ||
+                                parsed.dataModuleDetails.length > 0) && (
+                                <ul class="sub-bullets">
+                                  {parsed.bullets.map((b) => (
+                                    <li>{b}</li>
+                                  ))}
+                                  {parsed.dataModuleName && (
+                                    <li>
+                                      {parsed.dataModuleName}
+                                      {parsed.dataModuleDetails.length > 0 && (
+                                        <ul class="sub-bullets">
+                                          {parsed.dataModuleDetails.map((d) => (
+                                            <li>{d}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </li>
+                                  )}
+                                </ul>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </div>
                   </div>
-                  <div class="project-experience">
-                    <ul>
-                      {job.projectExperience[lang].map((project) => {
-                        const parsed = parseProject(project, lang);
-                        // highlight dates only in the head text
-                        const dateHighlightedHead = highlightDates(parsed.head);
-                        return (
-                          <li>
-                            <span set:html={dateHighlightedHead}></span>
-                            {(parsed.bullets.length > 0 || parsed.dataModuleName || parsed.dataModuleDetails.length > 0) && (
-                              <ul class="sub-bullets">
-                                {parsed.bullets.map((b) => (
-                                  <li>{b}</li>
-                                ))}
-                                {parsed.dataModuleName && (
-                                  <li>
-                                    {parsed.dataModuleName}
-                                    {parsed.dataModuleDetails.length > 0 && (
-                                      <ul class="sub-bullets">
-                                        {parsed.dataModuleDetails.map((d) => (
-                                          <li>{d}</li>
-                                        ))}
-                                      </ul>
-                                    )}
-                                  </li>
-                                )}
-                              </ul>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-              )
-            ))}
-          </div>
-        </section>
-        
-        <section>
-          <h2 class="section-title">Education</h2>
-          <div class="content education-container">
-            {aboutData.education.map((item) => (
-              <div class="education-item" id={item.institution === "iSpan" ? "iSpan" : ""}>
+                ),
+            )
+          }
+        </div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Education</h2>
+        <div class="content education-container">
+          {
+            aboutData.education.map((item) => (
+              <div
+                class="education-item"
+                id={item.institution === "iSpan" ? "iSpan" : ""}
+              >
                 <div class="education-header">
                   <h3>{item.institution}</h3>
-                  <span class="education-period"><span class="date-highlight">{item.period}</span></span>
+                  <span class="education-period">
+                    <span class="date-highlight">{item.period}</span>
+                  </span>
                 </div>
                 <ul>
                   {item.programs.map((program) => (
@@ -218,111 +241,371 @@ function parseProject(project: string, lang: LangKey): {
                   ))}
                 </ul>
               </div>
-            ))}
-          </div>
-        </section>
+            ))
+          }
+        </div>
+      </section>
 
-        <section>
-          <h2 class="section-title">Tech Experience</h2>
-          <div class="content">
-            {experienceData
-              .filter((job) => !["Macro Associate", "Fintech PM, MA Program", "Auditor"].includes(job.title))
+      <section>
+        <h2 class="section-title">Tech Experience</h2>
+        <div class="content">
+          {
+            experienceData
+              .filter(
+                (job) =>
+                  ![
+                    "Macro Associate",
+                    "Fintech PM, MA Program",
+                    "Auditor",
+                  ].includes(job.title),
+              )
               .map((job) => (
-              <div class="experience-item">
-                <div class="job-header">
-                  <h3>{job.title}</h3>
-                  <div class="job-meta">
-                    <span class="company">{job.company}</span>
-                    <span class="period">{job.period}</span>
+                <div class="experience-item">
+                  <div class="job-header">
+                    <h3>{job.title}</h3>
+                    <div class="job-meta">
+                      <span class="company">{job.company}</span>
+                      <span class="period">{job.period}</span>
+                    </div>
                   </div>
-                </div>
-                
-                {job.responsibilities && (job.responsibilities as any)[lang] && (job.responsibilities as any)[lang].length > 0 && (
-                  <div class="responsibilities">
-                    <ul>
-                      {(job.responsibilities as any)[lang].map((responsibility: string) => (
-                        <li>{responsibility}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {job.title === "Freelancer" && (
-                  <div class="skills-section">
-                    {skillsData.categories
-                      .filter((category) => ['Backend Development', 'AI', 'Tools'].includes(category.name))
-                      .map((category) => (
-                      <div class="skill-category">
-                        <h5>{category.name}</h5>
-                        {category.subcategories ? (
-                          category.subcategories
-                            .filter((subcategory) => {
-                              // Only show relevant subcategories for Freelancer
-                              if (category.name === "Backend Development") {
-                                return ["Languages", "Frameworks & Libraries"].includes(subcategory.name);
-                              }
-                              if (category.name === "AI") {
-                                return subcategory.name === "Frameworks & APIs";
-                              }
-                              if (category.name === "Tools") {
-                                return subcategory.name === "Others";
-                              }
-                              return false;
-                            })
-                            .map((subcategory) => (
-                            <div class="skill-subcategory">
-                              <h6>{subcategory.name}</h6>
+
+                  {job.responsibilities &&
+                    (job.responsibilities as any)[lang] &&
+                    (job.responsibilities as any)[lang].length > 0 && (
+                      <div class="responsibilities">
+                        <ul>
+                          {(job.responsibilities as any)[lang].map(
+                            (responsibility: string) => (
+                              <li>{responsibility}</li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  {job.title === "Software Engineer" &&
+                    job.company === "Tata Consultancy Services" && (
+                      <div class="skills-section">
+                        {/* Frontend skills used at TCS */}
+                        {skillsData.categories
+                          .filter(
+                            (category) =>
+                              category.name === "Frontend Development",
+                          )
+                          .map((category) => (
+                            <div class="skill-category">
+                              <h5>{category.name}</h5>
                               <div class="skill-tags">
-                                {(
-                                  // Only show PHP and Laravel for Backend Development
-                                  category.name === "Backend Development" && subcategory.name === "Languages"
-                                    ? subcategory.skills.filter((s) => s.name === 'PHP 12')
-                                    : category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
-                                      ? subcategory.skills.filter((s) => ['Laravel', 'FastAPI'].includes(s.name))
-                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
-                                        ? subcategory.skills.filter((s) => ['LangChain','OpenAI API','ChatOpenAI','LLMChain','PromptTemplate','LangChain RAG'].includes(s.name))
-                                      : category.name === "Tools" && subcategory.name === "Others"
-                                        ? subcategory.skills.filter((s) => s.name === 'WordPress')
-                                        : []
-                                ).map((skill) => {
+                                {[
+                                  "Angular.js",
+                                  "TypeScript",
+                                  "SCSS / CSS",
+                                  "i18n / Localization",
+                                  "Registry Pattern",
+                                  "Singleton Pattern",
+                                  "Single Source of Truth",
+                                ].map((name) => {
+                                  const skill = (category.skills as any[]).find(
+                                    (s: any) => s.name === name,
+                                  );
+                                  if (!skill) return null;
                                   const gradeMap = {
-                                    'shade1': 'S',
-                                    'shade2': 'A', 
-                                    'shade3': 'B',
-                                    'shade4': 'C',
-                                    'shade5': 'D'
+                                    shade1: "S",
+                                    shade2: "A",
+                                    shade3: "B",
+                                    shade4: "C",
+                                    shade5: "D",
                                   };
                                   return (
-                                    <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
-                                          data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                    <span
+                                      class={`pill ${category.pillClass} ${skill.level}`}
+                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                    >
                                       {skill.name}
                                     </span>
                                   );
                                 })}
                               </div>
-                              {(subcategory as any).description && (subcategory as any).description[lang] && (subcategory as any).description[lang].length > 0 && (
-                                <ul class="skill-subdescription">
-                                  {(
-                                    // Show relevant descriptions for Freelancer
-                                    category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
-                                      ? (subcategory as any).description[lang].filter((desc: string) => /Laravel|FastAPI/i.test(desc))
-                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
-                                        ? (subcategory as any).description[lang].filter((desc: string) => /LangChain/i.test(desc))
-                                        : []
-                                  ).map((desc: string) => (
-                                    <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
-                                    </li>
+                            </div>
+                          ))}
+                        {/* Backend/API skills used at TCS */}
+                        {skillsData.categories
+                          .filter(
+                            (category) =>
+                              category.name === "Backend Development",
+                          )
+                          .map((category) => (
+                            <div class="skill-category">
+                              <h5>{category.name}</h5>
+                              {category.subcategories &&
+                                category.subcategories
+                                  .filter((sub) =>
+                                    [
+                                      "Languages",
+                                      "Frameworks & Libraries",
+                                      "API Development & Testing",
+                                    ].includes(sub.name),
+                                  )
+                                  .map((subcategory) => (
+                                    <div class="skill-subcategory">
+                                      <h6>{subcategory.name}</h6>
+                                      <div class="skill-tags">
+                                        {(() => {
+                                          const allowedBySubcat = {
+                                            Languages: ["Java 8 11 17 21"],
+                                            "Frameworks & Libraries": [
+                                              "XML Configuration",
+                                              "API Gateway",
+                                            ],
+                                            "API Development & Testing": [
+                                              "RESTful API",
+                                              "Chain of Responsibility",
+                                              "Adapter Pattern",
+                                              "Facade Pattern",
+                                              "Externalized Configuration",
+                                            ],
+                                          };
+                                          return subcategory.skills
+                                            .filter((s) =>
+                                              (
+                                                allowedBySubcat[
+                                                  subcategory.name
+                                                ] || []
+                                              ).includes(s.name),
+                                            )
+                                            .map((skill) => {
+                                              const gradeMap = {
+                                                shade1: "S",
+                                                shade2: "A",
+                                                shade3: "B",
+                                                shade4: "C",
+                                                shade5: "D",
+                                              };
+                                              return (
+                                                <span
+                                                  class={`pill ${category.pillClass} ${skill.level}`}
+                                                  data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                                >
+                                                  {skill.name}
+                                                </span>
+                                              );
+                                            });
+                                        })()}
+                                      </div>
+                                      {(subcategory as any).descriptions &&
+                                        (subcategory as any).descriptions[
+                                          job.company
+                                        ] &&
+                                        (subcategory as any).descriptions[
+                                          job.company
+                                        ][lang] &&
+                                        (subcategory as any).descriptions[
+                                          job.company
+                                        ][lang].length > 0 && (
+                                          <ul class="skill-subdescription">
+                                            {(subcategory as any).descriptions[
+                                              job.company
+                                            ][lang].map((desc: string) => (
+                                              <li
+                                                set:html={desc.replace(
+                                                  /(https?:\/\/[^\s]+)/g,
+                                                  '<a href="$1" target="_blank">$1</a>',
+                                                )}
+                                              />
+                                            ))}
+                                          </ul>
+                                        )}
+                                    </div>
                                   ))}
-                                </ul>
-                              )}
-                              {/* Maya Sawa V1 Architecture Diagrams for AI Frameworks & APIs */}
-                              {category.name === "AI" && subcategory.name === "Frameworks & APIs" && (
-                                <>
-                                  <br />
-                                  <a href="https://github.com/Vinskao/maya-sawa" target="_blank">Maya Sawa V1</a>
-                                  <div class="mermaid-diagram margin-top">
-                                    <pre class="mermaid">
-                                      {`graph TD
+                            </div>
+                          ))}
+                        {/* Architecture Diagram: Angular + Java Gateway System */}
+                        <div class="mermaid-diagram margin-top">
+                          <pre class="mermaid">
+                            {`flowchart LR
+    subgraph "Frontend (Angular.js)"
+        A["Angular Components\\n(View / Logic / Style)"]
+        AR["Angular Routing Module"]
+        REG["Global Config Registry\\n(Registry + Singleton Pattern)"]
+        A --> AR
+        A --> REG
+    end
+
+    subgraph "Gateway Layer (Java)"
+        GW["Java Gateway"]
+        INS["Header Inserter Beans\\n(Java Interceptors)"]
+        ADP["Adapter / Facade\\n(XML + JSON Schema Mapping)"]
+        EXT["Externalized Config\\n(Multi-env Config Matrix)"]
+        GW --> INS
+        GW --> ADP
+        GW --> EXT
+    end
+
+    subgraph "Backend Systems"
+        BE["Legacy Backend Services"]
+    end
+
+    AR -->|"REST API Calls"| GW
+    REG -->|"Centralized Route Lookups"| GW
+    INS -->|"Injects Headers"| BE
+    ADP -->|"Transforms Payloads"| BE
+
+    classDef fe fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
+    classDef gw fill:#fff3e0,stroke:#ff9800,color:#0b1a33
+    classDef be fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    class A,AR,REG fe
+    class GW,INS,ADP,EXT gw
+    class BE be`}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                  {job.title === "Freelancer" && (
+                    <div class="skills-section">
+                      {skillsData.categories
+                        .filter((category) =>
+                          ["Backend Development", "AI", "Tools"].includes(
+                            category.name,
+                          ),
+                        )
+                        .map((category) => (
+                          <div class="skill-category">
+                            <h5>{category.name}</h5>
+                            {category.subcategories ? (
+                              category.subcategories
+                                .filter((subcategory) => {
+                                  // Only show relevant subcategories for Freelancer
+                                  if (category.name === "Backend Development") {
+                                    return [
+                                      "Languages",
+                                      "Frameworks & Libraries",
+                                    ].includes(subcategory.name);
+                                  }
+                                  if (category.name === "AI") {
+                                    return (
+                                      subcategory.name === "Frameworks & APIs"
+                                    );
+                                  }
+                                  if (category.name === "Tools") {
+                                    return subcategory.name === "Others";
+                                  }
+                                  return false;
+                                })
+                                .map((subcategory) => (
+                                  <div class="skill-subcategory">
+                                    <h6>{subcategory.name}</h6>
+                                    <div class="skill-tags">
+                                      {
+                                        // Only show PHP and Laravel for Backend Development
+                                        (category.name ===
+                                          "Backend Development" &&
+                                        subcategory.name === "Languages"
+                                          ? subcategory.skills.filter(
+                                              (s) => s.name === "PHP 12",
+                                            )
+                                          : category.name ===
+                                                "Backend Development" &&
+                                              subcategory.name ===
+                                                "Frameworks & Libraries"
+                                            ? subcategory.skills.filter((s) =>
+                                                ["Laravel", "FastAPI"].includes(
+                                                  s.name,
+                                                ),
+                                              )
+                                            : category.name === "AI" &&
+                                                subcategory.name ===
+                                                  "Frameworks & APIs"
+                                              ? subcategory.skills.filter((s) =>
+                                                  [
+                                                    "LangChain",
+                                                    "OpenAI API",
+                                                    "ChatOpenAI",
+                                                    "LLMChain",
+                                                    "PromptTemplate",
+                                                    "LangChain RAG",
+                                                  ].includes(s.name),
+                                                )
+                                              : category.name === "Tools" &&
+                                                  subcategory.name === "Others"
+                                                ? subcategory.skills.filter(
+                                                    (s) =>
+                                                      s.name === "WordPress",
+                                                  )
+                                                : []
+                                        ).map((skill) => {
+                                          const gradeMap = {
+                                            shade1: "S",
+                                            shade2: "A",
+                                            shade3: "B",
+                                            shade4: "C",
+                                            shade5: "D",
+                                          };
+                                          return (
+                                            <span
+                                              class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ""}`}
+                                              data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                            >
+                                              {skill.name}
+                                            </span>
+                                          );
+                                        })
+                                      }
+                                    </div>
+                                    {(subcategory as any).description &&
+                                      (subcategory as any).description[lang] &&
+                                      (subcategory as any).description[lang]
+                                        .length > 0 && (
+                                        <ul class="skill-subdescription">
+                                          {
+                                            // Show relevant descriptions for Freelancer
+                                            (category.name ===
+                                              "Backend Development" &&
+                                            subcategory.name ===
+                                              "Frameworks & Libraries"
+                                              ? (
+                                                  subcategory as any
+                                                ).description[lang].filter(
+                                                  (desc: string) =>
+                                                    /Laravel|FastAPI/i.test(
+                                                      desc,
+                                                    ),
+                                                )
+                                              : category.name === "AI" &&
+                                                  subcategory.name ===
+                                                    "Frameworks & APIs"
+                                                ? (
+                                                    subcategory as any
+                                                  ).description[lang].filter(
+                                                    (desc: string) =>
+                                                      /LangChain/i.test(desc),
+                                                  )
+                                                : []
+                                            ).map((desc: string) => (
+                                              <li
+                                                set:html={desc.replace(
+                                                  /(https?:\/\/[^\s]+)/g,
+                                                  '<a href="$1" target="_blank">$1</a>',
+                                                )}
+                                              />
+                                            ))
+                                          }
+                                        </ul>
+                                      )}
+                                    {/* Maya Sawa V1 Architecture Diagrams for AI Frameworks & APIs */}
+                                    {category.name === "AI" &&
+                                      subcategory.name ===
+                                        "Frameworks & APIs" && (
+                                        <>
+                                          <br />
+                                          <a
+                                            href="https://github.com/Vinskao/maya-sawa"
+                                            target="_blank"
+                                          >
+                                            Maya Sawa V1
+                                          </a>
+                                          <div class="mermaid-diagram margin-top">
+                                            <pre class="mermaid">
+                                              {`graph TD
     A["User Request</br>(/qa/query)"] --> B{FastAPI Router};
     B --> C["qa_chain.get_answer(query)"];
     C --> D{"Detect names in query"};
@@ -348,11 +631,11 @@ function parseProject(project: string, lang: LangKey): {
     N --> O["Save chat history"];
     O --> P["Return AI answer"];
     P --> B;`}
-                                    </pre>
-                                  </div>
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`flowchart TD
+                                            </pre>
+                                          </div>
+                                          <div class="mermaid-diagram">
+                                            <pre class="mermaid">
+                                              {`flowchart TD
     subgraph "API Layer"
         APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
     end
@@ -415,99 +698,147 @@ function parseProject(project: string, lang: LangKey): {
     ConfigManager --> PostgresDB
     ConnectionPoolManager --> PostgresDB
     Scheduler --> ArticleAPI`}
-                                    </pre>
+                                            </pre>
+                                          </div>
+                                        </>
+                                      )}
                                   </div>
-                                </>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div class="skill-tags">
-                            {category.skills.map((skill) => {
-                              const gradeMap = {
-                                'shade1': 'S',
-                                'shade2': 'A', 
-                                'shade3': 'B',
-                                'shade4': 'C',
-                                'shade5': 'D'
-                              };
-                              return (
-                                <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
-                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
-                                  {skill.name}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {(category as any).description && (category as any).description[lang] && (category as any).description[lang].length > 0 && (
-                          <ul class="skill-description">
-                            {(category as any).description[lang].map((desc: string, index: number) => (
-                              <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {job.title === "Open Source Backend Engineer" && (
-                  <div class="skills-section">
-                    {skillsData.categories.map((category) => (
-                      <div class="skill-category">
-                        <h5>{category.name}</h5>
-                        {category.subcategories ? (
-                          category.subcategories.map((subcategory) => (
-                            <div class="skill-subcategory">
-                              <h6>{subcategory.name}</h6>
+                                ))
+                            ) : (
                               <div class="skill-tags">
-                                {(
-                                  category.name === "Backend Development" && subcategory.name === "Languages"
-                                    ? subcategory.skills.filter((s) => s.name !== 'PHP 12')
-                                    : category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
-                                      ? subcategory.skills.filter((s) => !['Laravel', 'FastAPI'].includes(s.name))
-                                      : category.name === "AI" && subcategory.name === "Frameworks & APIs"
-                                        ? subcategory.skills.filter((s) => !['LangChain','OpenAI API','ChatOpenAI','LLMChain','PromptTemplate','LangChain RAG'].includes(s.name))
-                                        : category.name === "Tools" && subcategory.name === "Others"
-                                          ? subcategory.skills.filter((s) => s.name !== 'WordPress')
-                                          : subcategory.skills
-                                ).map((skill) => {
+                                {category.skills.map((skill) => {
                                   const gradeMap = {
-                                    'shade1': 'S',
-                                    'shade2': 'A', 
-                                    'shade3': 'B',
-                                    'shade4': 'C',
-                                    'shade5': 'D'
+                                    shade1: "S",
+                                    shade2: "A",
+                                    shade3: "B",
+                                    shade4: "C",
+                                    shade5: "D",
                                   };
                                   return (
-                                    <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
-                                          data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
+                                    <span
+                                      class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ""}`}
+                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                    >
                                       {skill.name}
                                     </span>
                                   );
                                 })}
                               </div>
-                              {(subcategory as any).description && (subcategory as any).description[lang] && (subcategory as any).description[lang].length > 0 && (
-                                <ul class="skill-subdescription">
-                                  {(
-                                    // Filter out PHP/Laravel/FastAPI descriptions for Open Source Backend Engineer
-                                    category.name === "Backend Development" && subcategory.name === "Frameworks & Libraries"
-                                      ? (subcategory as any).description[lang].filter((desc: string) => !/Laravel|FastAPI|LangChain/i.test(desc))
-                                      : (subcategory as any).description[lang]
-                                  ).map((desc: string) => (
-                                    <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
-                                    </li>
-                                  ))}
+                            )}
+                            {(category as any).description &&
+                              (category as any).description[lang] &&
+                              (category as any).description[lang].length >
+                                0 && (
+                                <ul class="skill-description">
+                                  {(category as any).description[lang].map(
+                                    (desc: string, index: number) => (
+                                      <li
+                                        set:html={desc.replace(
+                                          /(https?:\/\/[^\s]+)/g,
+                                          '<a href="$1" target="_blank">$1</a>',
+                                        )}
+                                      />
+                                    ),
+                                  )}
                                 </ul>
                               )}
-                              {subcategory.name === "Frameworks & Libraries" && (
-                                <>
-                                  {/* --- Updated Backend Architecture Diagrams --- */}
-                                  <div class="mermaid-diagram margin-top">
-                                    <pre class="mermaid">
-                                      {`classDiagram
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  {job.title === "Open Source Backend Engineer" && (
+                    <div class="skills-section">
+                      {skillsData.categories.map((category) => (
+                        <div class="skill-category">
+                          <h5>{category.name}</h5>
+                          {category.subcategories ? (
+                            category.subcategories.map((subcategory) => (
+                              <div class="skill-subcategory">
+                                <h6>{subcategory.name}</h6>
+                                <div class="skill-tags">
+                                  {(category.name === "Backend Development" &&
+                                  subcategory.name === "Languages"
+                                    ? subcategory.skills.filter(
+                                        (s) => s.name !== "PHP 12",
+                                      )
+                                    : category.name === "Backend Development" &&
+                                        subcategory.name ===
+                                          "Frameworks & Libraries"
+                                      ? subcategory.skills.filter(
+                                          (s) =>
+                                            !["Laravel", "FastAPI"].includes(
+                                              s.name,
+                                            ),
+                                        )
+                                      : category.name === "AI" &&
+                                          subcategory.name ===
+                                            "Frameworks & APIs"
+                                        ? subcategory.skills.filter(
+                                            (s) =>
+                                              ![
+                                                "LangChain",
+                                                "OpenAI API",
+                                                "ChatOpenAI",
+                                                "LLMChain",
+                                                "PromptTemplate",
+                                                "LangChain RAG",
+                                              ].includes(s.name),
+                                          )
+                                        : category.name === "Tools" &&
+                                            subcategory.name === "Others"
+                                          ? subcategory.skills.filter(
+                                              (s) => s.name !== "WordPress",
+                                            )
+                                          : subcategory.skills
+                                  ).map((skill) => {
+                                    const gradeMap = {
+                                      shade1: "S",
+                                      shade2: "A",
+                                      shade3: "B",
+                                      shade4: "C",
+                                      shade5: "D",
+                                    };
+                                    return (
+                                      <span
+                                        class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ""}`}
+                                        data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                      >
+                                        {skill.name}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                {(subcategory as any).descriptions &&
+                                  (subcategory as any).descriptions[
+                                    job.company
+                                  ] &&
+                                  (subcategory as any).descriptions[
+                                    job.company
+                                  ][lang] &&
+                                  (subcategory as any).descriptions[
+                                    job.company
+                                  ][lang].length > 0 && (
+                                    <ul class="skill-subdescription">
+                                      {(subcategory as any).descriptions[
+                                        job.company
+                                      ][lang].map((desc: string) => (
+                                        <li
+                                          set:html={desc.replace(
+                                            /(https?:\/\/[^\s]+)/g,
+                                            '<a href="$1" target="_blank">$1</a>',
+                                          )}
+                                        />
+                                      ))}
+                                    </ul>
+                                  )}
+                                {subcategory.name ===
+                                  "Frameworks & Libraries" && (
+                                  <>
+                                    {/* --- Updated Backend Architecture Diagrams --- */}
+                                    <div class="mermaid-diagram margin-top">
+                                      <pre class="mermaid">
+                                        {`classDiagram
                                           %% Application Layer
                                           class TYMBackendApplication {
                                               +@EnableWebSocket
@@ -610,13 +941,12 @@ function parseProject(project: string, lang: LangKey): {
                                           
                                           PrimaryDataSourceConfig --> Database
                                           PeopleDataSourceConfig --> Database`}
-                                    </pre>
-                                  </div>
+                                      </pre>
+                                    </div>
 
-
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
+                                    <div class="mermaid-diagram">
+                                      <pre class="mermaid">
+                                        {`classDiagram
                                           class SecurityConfig {
                                               +@EnableWebSecurity
                                               +@EnableMethodSecurity
@@ -662,12 +992,12 @@ function parseProject(project: string, lang: LangKey): {
                                           SecurityConfig --> Authorization
                                           SecurityConfig --> SessionManagement
                                           SecurityConfig --> KeycloakController`}
-                                    </pre>
-                                  </div>
+                                      </pre>
+                                    </div>
 
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`classDiagram
+                                    <div class="mermaid-diagram">
+                                      <pre class="mermaid">
+                                        {`classDiagram
                                           class GlobalExceptionHandler {
                                               +Chain of Responsibility
                                               +Error Response Builder
@@ -697,15 +1027,15 @@ function parseProject(project: string, lang: LangKey): {
                                           GlobalExceptionHandler --> DataIntegrityApiExceptionHandler
                                           GlobalExceptionHandler --> ValidationApiExceptionHandler
                                           GlobalExceptionHandler --> DefaultApiExceptionHandler`}
-                                    </pre>
-                                  </div>
-                                </>
-                              )}
+                                      </pre>
+                                    </div>
+                                  </>
+                                )}
 
-                              {subcategory.name === "Platforms" && (
-                                <div class="mermaid-diagram">
-                                  <pre class="mermaid">
-                                    flowchart LR
+                                {subcategory.name === "Platforms" && (
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`flowchart LR
                                       user["User"] -->|SSH 22| bastion["Bastion (Public Subnet)"]
 
                                       subgraph OCI VCN
@@ -756,14 +1086,14 @@ function parseProject(project: string, lang: LangKey): {
                                       class bastion host;
                                       class pubLB,intLB,cp control;
                                       class operator,workers compute;
-                                      class pubRT,privRT net;
-                                  </pre>
-                                </div>
-                              )}
-                              {subcategory.name === "NoSQL" && (
-                                <div class="mermaid-diagram">
-                                  <pre class="mermaid">
-                                    graph LR
+                                      class pubRT,privRT net;`}
+                                    </pre>
+                                  </div>
+                                )}
+                                {subcategory.name === "NoSQL" && (
+                                  <div class="mermaid-diagram">
+                                    <pre class="mermaid">
+                                      {`graph LR
     A[Backend<br/>Spring Boot<br/>REST Endpoints] --> B[RabbitMQ<br/>Message Queue]
     B --> C[Consumer<br/>Spring Boot<br/>JDBC Processing]
     C --> D[PostgreSQL<br/>Database]
@@ -777,18 +1107,23 @@ function parseProject(project: string, lang: LangKey): {
     class A producer
     class B mq
     class C consumer
-    class D database
-                                  </pre>
-                                </div>
-                              )}
-                              {subcategory.name === "Frameworks & APIs" && (
-                                <>
-                                  {/* --- AI Frameworks & APIs Architecture Diagrams --- */}
-                                  <br />
-                                  <a href="https://github.com/Vinskao/maya-sawa-v2" target="_blank">Maya Sawa V2</a>
-                                  <div class="mermaid-diagram">
-                                    <pre class="mermaid">
-                                      {`graph TD
+    class D database`}
+                                    </pre>
+                                  </div>
+                                )}
+                                {subcategory.name === "Frameworks & APIs" && (
+                                  <>
+                                    {/* --- AI Frameworks & APIs Architecture Diagrams --- */}
+                                    <br />
+                                    <a
+                                      href="https://github.com/Vinskao/maya-sawa-v2"
+                                      target="_blank"
+                                    >
+                                      Maya Sawa V2
+                                    </a>
+                                    <div class="mermaid-diagram">
+                                      <pre class="mermaid">
+                                        {`graph TD
   %% User and Entry
   U["User"] --> Q["ask-with-model API<br/>question"]
   Q --> P["Full-text Retrieval Pipeline"]
@@ -839,12 +1174,12 @@ function parseProject(project: string, lang: LangKey): {
   classDef idx fill:#fff3e0,stroke:#fb8c00,stroke-width:1px
   classDef ext fill:#ede7f6,stroke:#5e35b1,stroke-width:1px
   classDef tbl fill:#f1f8e9,stroke:#43a047,stroke-width:1px`}
-                                    </pre>
-                                  </div>
+                                      </pre>
+                                    </div>
 
-                                                                     <div class="mermaid-diagram">
-                                     <pre class="mermaid">
-                                       {`graph TB
+                                    <div class="mermaid-diagram">
+                                      <pre class="mermaid">
+                                        {`graph TB
     subgraph "Frontend Layer"
         A[User Interface] --> B[API Client]
     end
@@ -958,12 +1293,12 @@ function parseProject(project: string, lang: LangKey): {
     class LLM,TOOLS,MEMORY,RAG capability
     class D1,D2,D3 data
     class E1,E2,E3,E4 external`}
-                                     </pre>
-                                   </div>
+                                      </pre>
+                                    </div>
 
-                                   <div class="mermaid-diagram">
-                                     <pre class="mermaid">
-                                       {`sequenceDiagram
+                                    <div class="mermaid-diagram">
+                                      <pre class="mermaid">
+                                        {`sequenceDiagram
     participant U as User
     participant F as Frontend
     participant A as API
@@ -989,57 +1324,67 @@ function parseProject(project: string, lang: LangKey): {
             F-->>U: Show Processing
         end
     end`}
-                                     </pre>
-                                   </div>
-                                </>
-                              )}
+                                      </pre>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <div class="skill-tags">
+                              {category.skills.map((skill) => {
+                                const gradeMap = {
+                                  shade1: "S",
+                                  shade2: "A",
+                                  shade3: "B",
+                                  shade4: "C",
+                                  shade5: "D",
+                                };
+                                return (
+                                  <span
+                                    class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ""}`}
+                                    data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}
+                                  >
+                                    {skill.name}
+                                  </span>
+                                );
+                              })}
                             </div>
-                          ))
-                        ) : (
-                          <div class="skill-tags">
-                            {category.skills.map((skill) => {
-                              const gradeMap = {
-                                'shade1': 'S',
-                                'shade2': 'A', 
-                                'shade3': 'B',
-                                'shade4': 'C',
-                                'shade5': 'D'
-                              };
-                              return (
-                                <span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`} 
-                                      data-tooltip={`Level: ${gradeMap[skill.level] || skill.level}`}>
-                                  {skill.name}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {(category as any).description && (category as any).description[lang] && (category as any).description[lang].length > 0 && (
-                          <ul class="skill-description">
-                            {(category as any).description[lang].map((desc: string, index: number) => (
-                              <li set:html={desc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')}>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        
-                        {category.name === "CI/CD" && (
-                          <div class="mermaid-diagram">
-                            <pre class="mermaid">
-                              graph LR
+                          )}
+                          {(category as any).description &&
+                            (category as any).description[lang] &&
+                            (category as any).description[lang].length > 0 && (
+                              <ul class="skill-description">
+                                {(category as any).description[lang].map(
+                                  (desc: string, index: number) => (
+                                    <li
+                                      set:html={desc.replace(
+                                        /(https?:\/\/[^\s]+)/g,
+                                        '<a href="$1" target="_blank">$1</a>',
+                                      )}
+                                    />
+                                  ),
+                                )}
+                              </ul>
+                            )}
+
+                          {category.name === "CI/CD" && (
+                            <div class="mermaid-diagram">
+                              <pre class="mermaid">
+                                {`graph LR
                                   A[GitHub Repository] --> B[Clone and Setup]
                                   B --> C[Build with Node.js]
                                   C --> D[Build Docker Image with BuildKit]
                                   D --> E[Push to Docker Hub]
-                                  E --> F[Deploy to Kubernetes]
-                            </pre>
-                          </div>
-                        )}
-                        
-                        {category.name === "Security & Authentication" && (
-                          <div class="mermaid-diagram">
-                            <pre class="mermaid">
-                              sequenceDiagram
+                                  E --> F[Deploy to Kubernetes]`}
+                              </pre>
+                            </div>
+                          )}
+
+                          {category.name === "Security & Authentication" && (
+                            <div class="mermaid-diagram">
+                              <pre class="mermaid">
+                                {`sequenceDiagram
                                   participant User as User
                                   participant App as Application
                                   participant Auth as Authorization Server
@@ -1052,23 +1397,24 @@ function parseProject(project: string, lang: LangKey): {
                                   App->>Auth: 5. Exchange Code for Token
                                   Auth->>App: 6. Return Access Token
                                   App->>API: 7. Access Resources with Token
-                                  API->>App: 8. Return Protected Resources
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
+                                  API->>App: 8. Return Protected Resources`}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+          }
+        </div>
+      </section>
+    </main>
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         // Initialize from global AppLang if available
         try {
           // Wait for AppLang to be available (since it's loaded asynchronously)
@@ -1079,222 +1425,251 @@ function parseProject(project: string, lang: LangKey): {
             }
 
             const current = (window as any).AppLang.get();
-            const urlParam = new URLSearchParams(window.location.search).get('lang');
-            const normalizedUrl = urlParam && urlParam.toLowerCase().startsWith('zh') ? 'zh' : (urlParam ? 'en' : null);
+            const urlParam = new URLSearchParams(window.location.search).get(
+              "lang",
+            );
+            const normalizedUrl =
+              urlParam && urlParam.toLowerCase().startsWith("zh")
+                ? "zh"
+                : urlParam
+                  ? "en"
+                  : null;
 
             // If URL param exists but differs from global state, update global to match URL
             if (normalizedUrl && normalizedUrl !== current) {
               (window as any).AppLang.set(normalizedUrl);
             } else if (!urlParam) {
               // No URL param → add it to match global state
-              const target = current === 'zh' ? '?lang=zh' : '?lang=en';
-              window.history.replaceState({}, '', target);
+              const target = current === "zh" ? "?lang=zh" : "?lang=en";
+              window.history.replaceState({}, "", target);
             }
 
             // Update toggle active state
-            document.getElementById('langEnLink')?.classList.toggle('active', current === 'en');
-            document.getElementById('langZhLink')?.classList.toggle('active', current === 'zh');
+            document
+              .getElementById("langEnLink")
+              ?.classList.toggle("active", current === "en");
+            document
+              .getElementById("langZhLink")
+              ?.classList.toggle("active", current === "zh");
           };
 
           initLanguage();
 
           // Click handlers to set global language, keep UI same
-          const en = document.getElementById('langEnLink');
-          const zh = document.getElementById('langZhLink');
-          en && en.addEventListener('click', (e) => {
-            e.preventDefault();
-            (window as any).AppLang && (window as any).AppLang.set('en');
-            const url = new URL(window.location.href);
-            url.searchParams.set('lang', 'en');
-            window.location.href = url.toString();
-          });
-          zh && zh.addEventListener('click', (e) => {
-            e.preventDefault();
-            (window as any).AppLang && (window as any).AppLang.set('zh');
-            const url = new URL(window.location.href);
-            url.searchParams.set('lang', 'zh');
-            window.location.href = url.toString();
-          });
+          const en = document.getElementById("langEnLink");
+          const zh = document.getElementById("langZhLink");
+          en &&
+            en.addEventListener("click", (e) => {
+              e.preventDefault();
+              (window as any).AppLang && (window as any).AppLang.set("en");
+              const url = new URL(window.location.href);
+              url.searchParams.set("lang", "en");
+              window.location.href = url.toString();
+            });
+          zh &&
+            zh.addEventListener("click", (e) => {
+              e.preventDefault();
+              (window as any).AppLang && (window as any).AppLang.set("zh");
+              const url = new URL(window.location.href);
+              url.searchParams.set("lang", "zh");
+              window.location.href = url.toString();
+            });
 
           // React to language changes from other pages/components
-          (window as any).AppLang && (window as any).AppLang.onChange(({ code }) => {
-            const url = new URL(window.location.href);
-            url.searchParams.set('lang', code);
-            // Use replaceState to avoid adding to history stack and prevent loops
-            window.history.replaceState({}, '', url.toString());
+          (window as any).AppLang &&
+            (window as any).AppLang.onChange(({ code }) => {
+              const url = new URL(window.location.href);
+              url.searchParams.set("lang", code);
+              // Use replaceState to avoid adding to history stack and prevent loops
+              window.history.replaceState({}, "", url.toString());
 
-            // Update toggle active state without causing re-render
-            document.getElementById('langEnLink')?.classList.toggle('active', code === 'en');
-            document.getElementById('langZhLink')?.classList.toggle('active', code === 'zh');
-          });
+              // Update toggle active state without causing re-render
+              document
+                .getElementById("langEnLink")
+                ?.classList.toggle("active", code === "en");
+              document
+                .getElementById("langZhLink")
+                ?.classList.toggle("active", code === "zh");
+            });
         } catch (_) {}
       });
     </script>
 
-      <ResumePreview />
-      <ContactCTA />
-    </div>
-    
-    <!-- Mermaid.js for on-page diagrams -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const mermaidLib = window['mermaid'];
-        if (mermaidLib) {
-          // 根據當前主題設定 Mermaid 主題
-          const isDarkMode = document.documentElement.classList.contains('theme-dark');
-          mermaidLib.initialize({
-            startOnLoad: true,
-            theme: isDarkMode ? 'dark' : 'default',
-            themeVariables: isDarkMode ? {
-              background: '#2a2a2a',
-              primaryColor: '#00d4ff',
-              primaryTextColor: '#ffffff',
-              primaryBorderColor: '#ffffff',
-              lineColor: '#ffffff',
-              secondaryColor: '#ff6b6b',
-              tertiaryColor: '#4ecdc4',
-              textColor: '#ffffff',
-              mainBkg: '#333333',
-              secondBkg: '#444444',
-              border1: '#ffffff',
-              border2: '#ffffff',
-              // Sequence diagram specific
-              actorBkg: '#333333',
-              actorTextColor: '#ffffff',
-              actorLineColor: '#ffffff',
-              signalColor: '#ffffff',
-              signalTextColor: '#ffffff',
-              // Class diagram specific
-              classText: '#ffffff',
-              // Flowchart specific
-              edgeLabelBackground: '#333333',
-              clusterBkg: '#333333',
-              clusterBorder: '#ffffff',
-              defaultLinkColor: '#ffffff',
-              titleColor: '#ffffff',
-              nodeTextColor: '#ffffff'
-            } : {
-              background: '#ffffff',
-              primaryColor: '#1f5bff',
-              primaryTextColor: '#000000',
-              primaryBorderColor: '#000000',
-              lineColor: '#000000',
-              secondaryColor: '#ff3b30',
-              tertiaryColor: '#00b894',
-              textColor: '#000000',
-              mainBkg: '#f7f9fc',
-              secondBkg: '#eef3fb',
-              border1: '#000000',
-              border2: '#000000',
-              // Sequence diagram specific
-              actorBkg: '#f7f9fc',
-              actorTextColor: '#000000',
-              actorLineColor: '#000000',
-              signalColor: '#000000',
-              signalTextColor: '#000000',
-              // Class diagram specific
-              classText: '#000000',
-              // Flowchart specific
-              edgeLabelBackground: '#ffffff',
-              clusterBkg: '#f7f9fc',
-              clusterBorder: '#000000',
-              defaultLinkColor: '#000000',
-              titleColor: '#000000',
-              nodeTextColor: '#000000'
-            }
-          });
-          
-          // Force re-render all diagrams after theme change
-          setTimeout(() => {
-            mermaidLib.init();
-          }, 100);
-        }
+    <ResumePreview />
+    <ContactCTA />
+  </div>
 
-        // 監聽主題變化，重新初始化 Mermaid
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-              const isDarkMode = document.documentElement.classList.contains('theme-dark');
-              if (mermaidLib) {
-                mermaidLib.initialize({
-                  startOnLoad: true,
-                  theme: isDarkMode ? 'dark' : 'default',
-                  themeVariables: isDarkMode ? {
-                    background: '#2a2a2a',
-                    primaryColor: '#00d4ff',
-                    primaryTextColor: '#ffffff',
-                    primaryBorderColor: '#ffffff',
-                    lineColor: '#ffffff',
-                    secondaryColor: '#ff6b6b',
-                    tertiaryColor: '#4ecdc4',
-                    textColor: '#ffffff',
-                    mainBkg: '#333333',
-                    secondBkg: '#444444',
-                    border1: '#ffffff',
-                    border2: '#ffffff',
-                    // Sequence diagram specific
-                    actorBkg: '#333333',
-                    actorTextColor: '#ffffff',
-                    actorLineColor: '#ffffff',
-                    signalColor: '#ffffff',
-                    signalTextColor: '#ffffff',
-                    // Class diagram specific
-                    classText: '#ffffff',
-                    // Flowchart specific
-                    edgeLabelBackground: '#333333',
-                    clusterBkg: '#333333',
-                    clusterBorder: '#ffffff',
-                    defaultLinkColor: '#ffffff',
-                    titleColor: '#ffffff',
-                    nodeTextColor: '#ffffff'
-                  } : {
-                    background: '#ffffff',
-                    primaryColor: '#1f5bff',
-                    primaryTextColor: '#000000',
-                    primaryBorderColor: '#000000',
-                    lineColor: '#000000',
-                    secondaryColor: '#ff3b30',
-                    tertiaryColor: '#00b894',
-                    textColor: '#000000',
-                    mainBkg: '#f7f9fc',
-                    secondBkg: '#eef3fb',
-                    border1: '#000000',
-                    border2: '#000000',
-                    // Sequence diagram specific
-                    actorBkg: '#f7f9fc',
-                    actorTextColor: '#000000',
-                    actorLineColor: '#000000',
-                    signalColor: '#000000',
-                    signalTextColor: '#000000',
-                    // Class diagram specific
-                    classText: '#000000',
-                    // Flowchart specific
-                    edgeLabelBackground: '#ffffff',
-                    clusterBkg: '#f7f9fc',
-                    clusterBorder: '#000000',
-                    defaultLinkColor: '#000000',
-                    titleColor: '#000000',
-                    nodeTextColor: '#000000'
-                  }
-                });
-                // 重新渲染所有圖表
-                setTimeout(() => {
-                  mermaidLib.init();
-                }, 100);
+  <!-- Mermaid.js for on-page diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"
+  ></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const mermaidLib = window["mermaid"];
+      if (mermaidLib) {
+        // 根據當前主題設定 Mermaid 主題
+        const isDarkMode =
+          document.documentElement.classList.contains("theme-dark");
+        mermaidLib.initialize({
+          startOnLoad: true,
+          theme: isDarkMode ? "dark" : "default",
+          themeVariables: isDarkMode
+            ? {
+                background: "#2a2a2a",
+                primaryColor: "#00d4ff",
+                primaryTextColor: "#ffffff",
+                primaryBorderColor: "#ffffff",
+                lineColor: "#ffffff",
+                secondaryColor: "#ff6b6b",
+                tertiaryColor: "#4ecdc4",
+                textColor: "#ffffff",
+                mainBkg: "#333333",
+                secondBkg: "#444444",
+                border1: "#ffffff",
+                border2: "#ffffff",
+                // Sequence diagram specific
+                actorBkg: "#333333",
+                actorTextColor: "#ffffff",
+                actorLineColor: "#ffffff",
+                signalColor: "#ffffff",
+                signalTextColor: "#ffffff",
+                // Class diagram specific
+                classText: "#ffffff",
+                // Flowchart specific
+                edgeLabelBackground: "#333333",
+                clusterBkg: "#333333",
+                clusterBorder: "#ffffff",
+                defaultLinkColor: "#ffffff",
+                titleColor: "#ffffff",
+                nodeTextColor: "#ffffff",
               }
+            : {
+                background: "#ffffff",
+                primaryColor: "#1f5bff",
+                primaryTextColor: "#000000",
+                primaryBorderColor: "#000000",
+                lineColor: "#000000",
+                secondaryColor: "#ff3b30",
+                tertiaryColor: "#00b894",
+                textColor: "#000000",
+                mainBkg: "#f7f9fc",
+                secondBkg: "#eef3fb",
+                border1: "#000000",
+                border2: "#000000",
+                // Sequence diagram specific
+                actorBkg: "#f7f9fc",
+                actorTextColor: "#000000",
+                actorLineColor: "#000000",
+                signalColor: "#000000",
+                signalTextColor: "#000000",
+                // Class diagram specific
+                classText: "#000000",
+                // Flowchart specific
+                edgeLabelBackground: "#ffffff",
+                clusterBkg: "#f7f9fc",
+                clusterBorder: "#000000",
+                defaultLinkColor: "#000000",
+                titleColor: "#000000",
+                nodeTextColor: "#000000",
+              },
+        });
+
+        // Force re-render all diagrams after theme change
+        setTimeout(() => {
+          mermaidLib.init();
+        }, 100);
+      }
+
+      // 監聽主題變化，重新初始化 Mermaid
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === "attributes" &&
+            mutation.attributeName === "class"
+          ) {
+            const isDarkMode =
+              document.documentElement.classList.contains("theme-dark");
+            if (mermaidLib) {
+              mermaidLib.initialize({
+                startOnLoad: true,
+                theme: isDarkMode ? "dark" : "default",
+                themeVariables: isDarkMode
+                  ? {
+                      background: "#2a2a2a",
+                      primaryColor: "#00d4ff",
+                      primaryTextColor: "#ffffff",
+                      primaryBorderColor: "#ffffff",
+                      lineColor: "#ffffff",
+                      secondaryColor: "#ff6b6b",
+                      tertiaryColor: "#4ecdc4",
+                      textColor: "#ffffff",
+                      mainBkg: "#333333",
+                      secondBkg: "#444444",
+                      border1: "#ffffff",
+                      border2: "#ffffff",
+                      // Sequence diagram specific
+                      actorBkg: "#333333",
+                      actorTextColor: "#ffffff",
+                      actorLineColor: "#ffffff",
+                      signalColor: "#ffffff",
+                      signalTextColor: "#ffffff",
+                      // Class diagram specific
+                      classText: "#ffffff",
+                      // Flowchart specific
+                      edgeLabelBackground: "#333333",
+                      clusterBkg: "#333333",
+                      clusterBorder: "#ffffff",
+                      defaultLinkColor: "#ffffff",
+                      titleColor: "#ffffff",
+                      nodeTextColor: "#ffffff",
+                    }
+                  : {
+                      background: "#ffffff",
+                      primaryColor: "#1f5bff",
+                      primaryTextColor: "#000000",
+                      primaryBorderColor: "#000000",
+                      lineColor: "#000000",
+                      secondaryColor: "#ff3b30",
+                      tertiaryColor: "#00b894",
+                      textColor: "#000000",
+                      mainBkg: "#f7f9fc",
+                      secondBkg: "#eef3fb",
+                      border1: "#000000",
+                      border2: "#000000",
+                      // Sequence diagram specific
+                      actorBkg: "#f7f9fc",
+                      actorTextColor: "#000000",
+                      actorLineColor: "#000000",
+                      signalColor: "#000000",
+                      signalTextColor: "#000000",
+                      // Class diagram specific
+                      classText: "#000000",
+                      // Flowchart specific
+                      edgeLabelBackground: "#ffffff",
+                      clusterBkg: "#f7f9fc",
+                      clusterBorder: "#000000",
+                      defaultLinkColor: "#000000",
+                      titleColor: "#000000",
+                      nodeTextColor: "#000000",
+                    },
+              });
+              // 重新渲染所有圖表
+              setTimeout(() => {
+                mermaidLib.init();
+              }, 100);
             }
-          });
+          }
         });
-
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['class']
-        });
-
-        // Work photo hover to show briefing
-        // Overlay handled purely by CSS hover on wrapper to avoid flicker
       });
-    </script>
 
-    <!-- Styles for export button live in ResumePreview component -->
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+
+      // Work photo hover to show briefing
+      // Overlay handled purely by CSS hover on wrapper to avoid flicker
+    });
+  </script>
+
+  <!-- Styles for export button live in ResumePreview component -->
+</BaseLayout>
