@@ -29,11 +29,11 @@ ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 COPY package.json package-lock.json ./
 
 FROM base AS prod-deps
-RUN npm ci --omit=dev --prefer-offline --no-audit && \
+RUN npm ci --omit=dev --prefer-offline --no-audit --legacy-peer-deps && \
     npm cache clean --force
 
 FROM base AS build-deps
-RUN npm ci --prefer-offline --no-audit && \
+RUN npm ci --prefer-offline --no-audit --legacy-peer-deps && \
     npm cache clean --force
 
 FROM build-deps AS build
