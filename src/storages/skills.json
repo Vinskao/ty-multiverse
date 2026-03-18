@@ -436,6 +436,102 @@
       ]
     },
     {
+      "name": "Mobile & App Development",
+      "pillClass": "pill11",
+      "description": {
+        "en": [
+          "Developed high-performance media playback application using Flutter and Dart.",
+          "Implemented complex Boomerang effects and memory pooling for video controllers.",
+          "Engineered unified caching systems for cross-platform media management.",
+          "Automated asset discovery with persistent probing and background task management."
+        ],
+        "zh": [
+          "使用 Flutter 與 Dart 開發高性能媒體播放應用程式。",
+          "實作複雜的 Boomerang (正序+倒序) 特效與視訊控制器資源池管理。",
+          "設計跨平台媒體管理的統一快取系統。",
+          "透過持久化探測與背景任務管理自動化資產發現流程。"
+        ]
+      },
+      "subcategories": [
+        {
+          "name": "Mobile Frameworks",
+          "skills": [
+            {
+              "name": "Flutter 3.x",
+              "level": "shade1"
+            },
+            {
+              "name": "Dart 3.x",
+              "level": "shade1"
+            },
+            {
+              "name": "MVVM Architecture",
+              "level": "shade2"
+            },
+            {
+              "name": "Dio / Networking",
+              "level": "shade2"
+            },
+            {
+              "name": "Provider / State",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {
+            "Tata Consultancy Services": {
+              "zh": [
+                "開發跨平台行動應用程式",
+                "使用 Flutter 3.x 與 Dart 3.x 建構應用並實作核心業務邏輯與視訊自動探測功能 (VideoProber)",
+                "優化視訊播放體驗，實作「Boomerang (正序+倒序)」特效，透過程式碼控制達成無縫轉導視覺效果"
+              ],
+              "en": [
+                "Developed cross-platform mobile application",
+                "Built application using Flutter 3.x and Dart 3.x, implementing core business logic and automatic video discovery (VideoProber).",
+                "Optimized video experience by implementing 'Boomerang (Forward+Reverse)' playback effect through code-driven seek control."
+              ]
+            }
+          }
+        },
+        {
+          "name": "Performance & Architecture",
+          "skills": [
+            {
+              "name": "AssetCacheManager",
+              "level": "shade2"
+            },
+            {
+              "name": "Controller Pool",
+              "level": "shade3"
+            },
+            {
+              "name": "VideoProber",
+              "level": "shade3"
+            },
+            {
+              "name": "shared_preferences",
+              "level": "shade2"
+            },
+            {
+              "name": "flutter_cache_manager",
+              "level": "shade2"
+            }
+          ],
+          "descriptions": {
+            "Tata Consultancy Services": {
+              "zh": [
+                "建立統一快取管理系統 (AssetCacheManager)，整合圖片與影片的本地快取機制，提升離線存取效率",
+                "實作 VideoPlayerController 資源池管理模式進行記憶體優化，效解決多影片併發播放時的硬體解碼資源競用與 OSStatus -12847 報錯問題"
+              ],
+              "en": [
+                "Engineered unified caching system (AssetCacheManager) to manage persistent local cache for both images and videos.",
+                "Implemented VideoPlayerController pooling and memory management to resolve hardware decoder contention and 'OSStatus -12847' playback errors in high-concurrency scenarios."
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Database",
       "pillClass": "pill4",
       "description": {},

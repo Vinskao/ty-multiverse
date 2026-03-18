@@ -51,6 +51,7 @@ const categoryColors: { [key: string]: string } = {
   'Tools': '#6e1431',
   'Security & Authentication': '#146e66',
   'AI': '#306998',
+  'Mobile & App Development': '#00bcd4',
 };
 
 // Generate unique ID for clipPath

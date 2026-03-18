@@ -119,7 +119,7 @@ const generateMobileContent = (aboutData: AboutData, skillsData: SkillsData) => 
         .skill-subcategory h6 { color: #333; border-bottom: 1px solid rgba(81, 70, 149, 0.2); padding-bottom: 0.1rem; }
         .skill-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; margin: 5px 0; }
         .skill-tags .pill { display: inline-block; margin: 2px 4px 2px 0; padding: 3px 8px; border-radius: 15px; color: #fff; font-size: 12px; }
-        .pill1 { background-color: #b06c13; } .pill2 { background-color: #b7a414; } .pill3 { background-color: #306998; } .pill4 { background-color: #47a248; } .pill5 { background-color: #2496ed; } .pill6 { background-color: #0052cc; } .pill7 { background-color: #671f74; } .pill8 { background-color: #6e1431; } .pill9 { background-color: #146e66; } .pill10 { background-color: #2b5797; }
+        .pill1 { background-color: #b06c13; } .pill2 { background-color: #b7a414; } .pill3 { background-color: #306998; } .pill4 { background-color: #47a248; } .pill5 { background-color: #2496ed; } .pill6 { background-color: #0052cc; } .pill7 { background-color: #671f74; } .pill8 { background-color: #6e1431; } .pill9 { background-color: #146e66; } .pill10 { background-color: #2b5797; } .pill11 { background-color: #00bcd4; }
         .shade1 { opacity: 1.0; } .shade2 { opacity: 0.8; } .shade3 { opacity: 0.6; } .shade4 { opacity: 0.4; } .shade5 { opacity: 0.2; }
         .skill-description, .skill-subdescription { font-size: 0.9rem; color: #666; font-style: italic; margin-top: 0.4rem; }
         .skill-description ul, .skill-subdescription ul { list-style-type: none; padding-left: 0; }
@@ -239,7 +239,7 @@ const generateDesktopContent = (aboutData: AboutData, skillsData: SkillsData) =>
         .skill-subcategory h6 { color: #333; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; padding-bottom: 0.15rem; border-bottom: 1px solid rgba(81, 70, 149, 0.2); }
         .skill-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; }
         .skill-tags .pill { display: inline-block; margin: 2px 4px 2px 0; padding: 3px 8px; border-radius: 15px; color: #fff; font-size: 12px; }
-        .pill1 { background-color: #b06c13; } .pill2 { background-color: #b7a414; } .pill3 { background-color: #306998; } .pill4 { background-color: #47a248; } .pill5 { background-color: #2496ed; } .pill6 { background-color: #0052cc; } .pill7 { background-color: #671f74; } .pill8 { background-color: #6e1431; } .pill9 { background-color: #146e66; } .pill10 { background-color: #2b5797; }
+        .pill1 { background-color: #b06c13; } .pill2 { background-color: #b7a414; } .pill3 { background-color: #306998; } .pill4 { background-color: #47a248; } .pill5 { background-color: #2496ed; } .pill6 { background-color: #0052cc; } .pill7 { background-color: #671f74; } .pill8 { background-color: #6e1431; } .pill9 { background-color: #146e66; } .pill10 { background-color: #2b5797; } .pill11 { background-color: #00bcd4; }
         .shade1 { opacity: 1.0; } .shade2 { opacity: 0.8; } .shade3 { opacity: 0.6; } .shade4 { opacity: 0.4; } .shade5 { opacity: 0.2; }
         .mermaid-diagram { margin-top: 0.6rem; padding: 0.4rem; background: #f5f5f5; border-radius: 8px; border: 1px solid rgba(81, 70, 149, 0.2); overflow-x: auto; }
         .mermaid-diagram .mermaid { display: flex; justify-content: center; align-items: center; min-height: 80px; }

@@ -536,6 +536,8 @@ max-width: none;
 .pill8 { background-color: #6e1431; width: auto; max-width: none; }
 .pill9 { background-color: #146e66; width: auto; max-width: none; }
 .pill10 { background-color: #2b5797; width: auto; max-width: none; }
+.pill11 { background-color: #00bcd4; width: auto; max-width: none; }
+
 
 /* Shade levels for skill proficiency */
 .shade1 { opacity: 1.0; width: auto; max-width: none; }
