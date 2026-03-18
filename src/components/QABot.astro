@@ -317,22 +317,24 @@ import "../styles/qabot.css";
       const beforeFilter = [...this.state.availableBots];
       this.state.availableBots = this.state.availableBots.filter((n) => {
         const hasMessages = this.hasValidMessages(n);
-        return hasMessages;
+        const hasThumbnail = thumbnailService.isThumbnailAvailable(n);
+        return hasMessages && hasThumbnail;
       });
 
-      // 確保至少 Maya 存在
+      // 確保至少 Maya 存在（如果她有句庫且有頭像的話）
       if (
         !this.state.availableBots.includes("Maya") &&
-        this.hasValidMessages("Maya")
+        this.hasValidMessages("Maya") &&
+        thumbnailService.isThumbnailAvailable("Maya")
       ) {
         this.state.availableBots.unshift("Maya");
       }
 
-      // 如果當前 bot 沒有句庫 → 換成清單第一個
-      if (
-        !this.hasValidMessages(this.state.botName) &&
-        this.state.availableBots.length
-      ) {
+      // 如果當前 bot 沒有句庫或沒有頭像 → 換成清單第一個
+      const isCurrentValid = this.hasValidMessages(this.state.botName) && 
+                            thumbnailService.isThumbnailAvailable(this.state.botName);
+      
+      if (!isCurrentValid && this.state.availableBots.length) {
         this.state.botName = this.state.availableBots[0];
         this.state.currentBotIndex = 0;
         this.updateAvatarAndNameAsync();
@@ -350,6 +352,13 @@ import "../styles/qabot.css";
           // 確保 Maya 在列表內
           if (!names.includes("Maya")) names.unshift("Maya");
           this.state.availableBots = names;
+
+          // 開始預處理頭像（壓縮並緩存到瀏覽器）
+          const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+          thumbnailService.preLoadThumbnails(names, baseUrl).then(() => {
+            // 預處理完成後再次過濾，確保無效頭像的人不會出現
+            if (this.messages) this.pruneAvailableBots();
+          });
 
           // 初始化後先過濾無句庫的
           if (this.messages) this.pruneAvailableBots();
@@ -625,7 +634,8 @@ import "../styles/qabot.css";
         (botName) =>
           botName.toLowerCase() !== "default" &&
           botName.toLowerCase() !== "unknown" &&
-          botName.trim() !== "",
+          botName.trim() !== "" &&
+          thumbnailService.isThumbnailAvailable(botName),
       );
 
       validBots.forEach((botName, index) => {
