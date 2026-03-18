@@ -24,6 +24,7 @@ import "../styles/qabot.css";
   import analystTemplates from "../storages/analyst.json";
   // @ts-ignore
   import qabotConfig from "../storages/qabot.json";
+  import { thumbnailService } from "../services/thumbnailService";
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -334,7 +335,7 @@ import "../styles/qabot.css";
       ) {
         this.state.botName = this.state.availableBots[0];
         this.state.currentBotIndex = 0;
-        this.updateAvatarAndName();
+        this.updateAvatarAndNameAsync();
       }
     }
 
@@ -372,7 +373,7 @@ import "../styles/qabot.css";
         this.state.availableBots = ["Maya"];
         this.state.currentBotIndex = 0;
       }
-      this.updateAvatarAndName();
+      this.updateAvatarAndNameAsync();
     }
 
     // 顯示登入提示
@@ -422,6 +423,43 @@ import "../styles/qabot.css";
     // 依目前 botName 更新 UI
     private updateAvatarAndName() {
       const avatarUrl = this.getAvatarUrl(this.state.botName);
+      const defaultAvatarUrl = this.getDefaultAvatarUrl();
+
+      // 更新 header 頭像
+      const avatarEl = this.elements.headerAvatar as HTMLImageElement;
+      if (avatarEl) {
+        avatarEl.src = avatarUrl;
+        avatarEl.alt = this.state.botName;
+        avatarEl.onerror = () => {
+          avatarEl.src = defaultAvatarUrl;
+        };
+      }
+
+      // 更新 toggle 按鈕頭像
+      const toggleImage = this.elements.qaBotToggle?.querySelector(
+        ".toggle-image",
+      ) as HTMLImageElement;
+      if (toggleImage) {
+        toggleImage.src = avatarUrl;
+        toggleImage.alt = this.state.botName;
+        toggleImage.onerror = () => {
+          toggleImage.src = defaultAvatarUrl;
+        };
+      }
+
+      const headerName = avatarEl?.parentElement?.querySelector(
+        ".header-text h3",
+      ) as HTMLElement;
+      if (headerName) headerName.textContent = this.state.botName;
+    }
+
+    // 依目前 botName 更新 UI (非同步版本)
+    private async updateAvatarAndNameAsync() {
+      const originalUrl = this.getAvatarUrl(this.state.botName);
+      const avatarUrl = await thumbnailService.getThumbnail(
+        this.state.botName,
+        originalUrl,
+      );
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
 
       // 更新 header 頭像
@@ -598,9 +636,19 @@ import "../styles/qabot.css";
         }
 
         const avatarImg = document.createElement("img");
-        avatarImg.src = this.getAvatarUrl(botName);
+        const originalUrl = this.getAvatarUrl(botName);
         avatarImg.alt = botName;
         avatarImg.className = "avatar-selector-img";
+
+        // 使用 thumbnail service
+        thumbnailService
+          .getThumbnail(botName, originalUrl)
+          .then((thumbUrl) => {
+            avatarImg.src = thumbUrl;
+          })
+          .catch(() => {
+            avatarImg.src = originalUrl;
+          });
 
         // 如果圖片載入失敗，隱藏整個選項
         avatarImg.onerror = () => {
@@ -635,7 +683,7 @@ import "../styles/qabot.css";
       if (index >= 0 && index < this.state.availableBots.length) {
         this.state.currentBotIndex = index;
         this.state.botName = this.state.availableBots[index];
-        this.updateAvatarAndName();
+        this.updateAvatarAndNameAsync();
 
         // 立即清除對話歷史，避免頭像和對話不匹配
         this.elements.chatMessages.innerHTML = "";
@@ -666,8 +714,8 @@ import "../styles/qabot.css";
 
     // 取得頭貼 URL
     private getAvatarUrl(name: string): string {
-      // 使用環境變數取得 PNG 圖片 URL
-      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}Head.png`;
+      // 使用位址 `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`
+      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
     }
 
     // 設置事件監聽器
@@ -859,9 +907,20 @@ import "../styles/qabot.css";
         const avatarDiv = document.createElement("div");
         avatarDiv.className = "message-avatar";
         const avatarImg = document.createElement("img");
-        avatarImg.src = this.getAvatarUrl(this.state.botName);
+        const originalUrl = this.getAvatarUrl(this.state.botName);
         avatarImg.alt = this.state.botName;
         avatarImg.className = "bot-avatar";
+
+        // 使用 thumbnail service
+        thumbnailService
+          .getThumbnail(this.state.botName, originalUrl)
+          .then((thumbUrl) => {
+            avatarImg.src = thumbUrl;
+          })
+          .catch(() => {
+            avatarImg.src = originalUrl;
+          });
+
         avatarImg.onerror = () => {
           avatarImg.src = this.getDefaultAvatarUrl();
         };
