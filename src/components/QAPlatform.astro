@@ -5,17 +5,17 @@ import '../styles/qaplatform.css';
 
 <!-- 浮動聊天按鈕（共用） -->
 <div class="qa-bot-toggle" id="qaBotToggle">
-	<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="Sawa Maya" class="toggle-image" />
-	<span class="toggle-text">真夜</span>
+	<img src="" alt="" class="toggle-image" />
+	<span class="toggle-text"></span>
 </div>
 
 <!-- 聊天對話框（共用） -->
 <div class="qa-bot-container" id="qaBotContainer">
 	<div class="chat-header">
 		<div class="header-content">
-			<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="佐和 真夜" class="header-avatar" />
+			<img src="" alt="" class="header-avatar" />
 			<div class="header-text">
-				<h3>佐和 真夜</h3>
+				<h3></h3>
 				<p>TY的智慧庫</p>
 			</div>
 		</div>
@@ -49,11 +49,11 @@ import '../styles/qaplatform.css';
 	<div class="chat-messages" id="chatMessages">
 		<div class="message bot-message">
 			<div class="message-avatar">
-				<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
+				<img src="" alt="" class="bot-avatar" id="welcomeMsgAvatar" />
 			</div>
 			<div class="message-content-wrapper">
 				<div class="message-header">
-					<span class="ai-name">真夜</span>
+					<span class="ai-name" id="welcomeMsgName"></span>
 				</div>
 				<div class="message-content">
 					<p>你有事？<br>問前想清楚，機會不是誰都有。</p>
@@ -103,11 +103,11 @@ import '../styles/qaplatform.css';
 <div class="loading-message" id="loadingMessage" style="display: none;">
 	<div class="message bot-message">
 		<div class="message-avatar">
-			<img src={`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/MayaHead.png`} alt="真夜" class="bot-avatar" />
+			<img src="" alt="" class="bot-avatar" id="loadingMsgAvatar" />
 		</div>
 		<div class="message-content-wrapper">
 			<div class="message-header">
-				<span class="ai-name">真夜</span>
+				<span class="ai-name" id="loadingMsgName"></span>
 			</div>
 			<div class="message-content">
 				<div class="loading">

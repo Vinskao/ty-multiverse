@@ -456,10 +456,36 @@ import "../styles/qabot.css";
         };
       }
 
+      // 更新 toggle 按鈕文字
+      const toggleText = this.elements.qaBotToggle?.querySelector(
+        ".toggle-text",
+      ) as HTMLElement;
+      if (toggleText) toggleText.textContent = this.state.botName;
+
       const headerName = avatarEl?.parentElement?.querySelector(
         ".header-text h3",
       ) as HTMLElement;
       if (headerName) headerName.textContent = this.state.botName;
+
+      // 更新歡迎訊息頭像與名稱
+      const welcomeAvatar = document.getElementById("welcomeMsgAvatar") as HTMLImageElement;
+      if (welcomeAvatar) {
+        welcomeAvatar.src = avatarUrl;
+        welcomeAvatar.alt = this.state.botName;
+        welcomeAvatar.onerror = () => { welcomeAvatar.src = defaultAvatarUrl; };
+      }
+      const welcomeName = document.getElementById("welcomeMsgName") as HTMLElement;
+      if (welcomeName) welcomeName.textContent = this.state.botName;
+
+      // 更新 loading 訊息頭像與名稱
+      const loadingAvatar = document.getElementById("loadingMsgAvatar") as HTMLImageElement;
+      if (loadingAvatar) {
+        loadingAvatar.src = avatarUrl;
+        loadingAvatar.alt = this.state.botName;
+        loadingAvatar.onerror = () => { loadingAvatar.src = defaultAvatarUrl; };
+      }
+      const loadingName = document.getElementById("loadingMsgName") as HTMLElement;
+      if (loadingName) loadingName.textContent = this.state.botName;
     }
 
     // 依目前 botName 更新 UI (非同步版本)
@@ -493,10 +519,36 @@ import "../styles/qabot.css";
         };
       }
 
+      // 更新 toggle 按鈕文字
+      const toggleText = this.elements.qaBotToggle?.querySelector(
+        ".toggle-text",
+      ) as HTMLElement;
+      if (toggleText) toggleText.textContent = this.state.botName;
+
       const headerName = avatarEl?.parentElement?.querySelector(
         ".header-text h3",
       ) as HTMLElement;
       if (headerName) headerName.textContent = this.state.botName;
+
+      // 更新歡迎訊息頭像與名稱
+      const welcomeAvatar = document.getElementById("welcomeMsgAvatar") as HTMLImageElement;
+      if (welcomeAvatar) {
+        welcomeAvatar.src = avatarUrl;
+        welcomeAvatar.alt = this.state.botName;
+        welcomeAvatar.onerror = () => { welcomeAvatar.src = defaultAvatarUrl; };
+      }
+      const welcomeName = document.getElementById("welcomeMsgName") as HTMLElement;
+      if (welcomeName) welcomeName.textContent = this.state.botName;
+
+      // 更新 loading 訊息頭像與名稱
+      const loadingAvatar = document.getElementById("loadingMsgAvatar") as HTMLImageElement;
+      if (loadingAvatar) {
+        loadingAvatar.src = avatarUrl;
+        loadingAvatar.alt = this.state.botName;
+        loadingAvatar.onerror = () => { loadingAvatar.src = defaultAvatarUrl; };
+      }
+      const loadingName = document.getElementById("loadingMsgName") as HTMLElement;
+      if (loadingName) loadingName.textContent = this.state.botName;
     }
 
     // 取得預設頭貼 URL
