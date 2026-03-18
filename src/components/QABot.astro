@@ -68,6 +68,8 @@ import "../styles/qabot.css";
       this.setupEventListeners();
       this.setupAvatarSelector(); // 新增頭貼選擇器
       this.setupNetworkListener(); // 新增網路狀態監聽
+      // 立即以預設 botName（Maya）填入 UI，不等 API
+      this.updateAvatarAndNameAsync();
       this.fetchBotNames(); // 從 API 取得可用 bot 名稱
       // 新增：初始化頁面分析面板
       this.setupAnalysisPanel();
