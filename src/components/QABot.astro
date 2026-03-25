@@ -355,11 +355,10 @@ import "../styles/qabot.css";
           if (!names.includes("Maya")) names.unshift("Maya");
           this.state.availableBots = names;
 
-          // 開始預處理頭像（壓縮並緩存到瀏覽器）
+          // 開始預處理頭像（progressive: 每載入一個就動態更新 selector）
           const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-          thumbnailService.preLoadThumbnails(names, baseUrl).then(() => {
-            // 預處理完成後再次過濾，確保無效頭像的人不會出現
-            if (this.messages) this.pruneAvailableBots();
+          thumbnailService.preLoadThumbnailsProgressive(names, baseUrl, (name) => {
+            this.onThumbnailLoaded(name);
           });
 
           // 初始化後先過濾無句庫的
@@ -385,6 +384,60 @@ import "../styles/qabot.css";
         this.state.currentBotIndex = 0;
       }
       this.updateAvatarAndNameAsync();
+    }
+
+    // 當某個頭像完成載入時呼叫：動態加入開著的 selector
+    private onThumbnailLoaded(name: string) {
+      if (this.messages) this.pruneAvailableBots();
+
+      const selector = this.elements.avatarSelector;
+      if (!selector || selector.style.display === 'none') return;
+
+      // 已經有這個 item 就略過
+      const existing = selector.querySelector(`[data-bot-name="${CSS.escape(name)}"]`);
+      if (existing) return;
+
+      // 不顯示 default / unknown
+      if (
+        name.toLowerCase() === 'default' ||
+        name.toLowerCase() === 'unknown' ||
+        name.trim() === ''
+      ) return;
+
+      const avatarGrid = selector.querySelector('.avatar-grid');
+      if (!avatarGrid) return;
+
+      const avatarItem = document.createElement('div');
+      avatarItem.className = 'avatar-item';
+      avatarItem.dataset.botName = name;
+      if (name === this.state.botName) avatarItem.classList.add('active');
+
+      const avatarImg = document.createElement('img');
+      avatarImg.alt = name;
+      avatarImg.className = 'avatar-selector-img';
+
+      const originalUrl = this.getAvatarUrl(name);
+      thumbnailService
+        .getThumbnail(name, originalUrl)
+        .then((thumbUrl) => { avatarImg.src = thumbUrl; })
+        .catch(() => { avatarImg.src = originalUrl; });
+
+      avatarImg.onerror = () => { avatarItem.style.display = 'none'; };
+
+      const avatarName = document.createElement('span');
+      avatarName.textContent = name;
+      avatarName.className = 'avatar-name';
+
+      avatarItem.appendChild(avatarImg);
+      avatarItem.appendChild(avatarName);
+
+      avatarItem.addEventListener('click', () => {
+        const originalIndex = this.state.availableBots.indexOf(name);
+        this.selectBot(originalIndex);
+        selector.style.display = 'none';
+      });
+
+      avatarGrid.appendChild(avatarItem);
     }
 
     // 顯示登入提示
@@ -683,18 +736,18 @@ import "../styles/qabot.css";
 
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
 
-      // 過濾掉 default 角色和可能的無效角色
+      // 過濾掉 default / unknown，其餘全部顯示（不等 thumbnail 預先 loaded）
       const validBots = this.state.availableBots.filter(
         (botName) =>
           botName.toLowerCase() !== "default" &&
           botName.toLowerCase() !== "unknown" &&
-          botName.trim() !== "" &&
-          thumbnailService.isThumbnailAvailable(botName),
+          botName.trim() !== "",
       );
 
-      validBots.forEach((botName, index) => {
+      validBots.forEach((botName) => {
         const avatarItem = document.createElement("div");
         avatarItem.className = "avatar-item";
+        avatarItem.dataset.botName = botName;
         if (botName === this.state.botName) {
           avatarItem.classList.add("active");
         }
@@ -704,7 +757,7 @@ import "../styles/qabot.css";
         avatarImg.alt = botName;
         avatarImg.className = "avatar-selector-img";
 
-        // 使用 thumbnail service
+        // 已 cache 的立即顯示，未 cache 的等 getThumbnail resolve
         thumbnailService
           .getThumbnail(botName, originalUrl)
           .then((thumbUrl) => {

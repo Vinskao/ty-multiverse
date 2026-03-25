@@ -321,6 +321,17 @@ import "../styles/qabotv2.css";
       }
     }
     (window as any).qabotV2Instance = new QABotV2();
+
+    // 監聽模式切換，同步顯示/隱藏 model selector
+    window.addEventListener("qabot:switch", (e: any) => {
+      const instance = (window as any).qabotV2Instance as QABotV2;
+      if (!instance) return;
+      if (e?.detail?.mode === "v2") {
+        instance.show();
+      } else {
+        instance.hide();
+      }
+    });
   }
 
   document.addEventListener("astro:page-load", initQABotV2);
