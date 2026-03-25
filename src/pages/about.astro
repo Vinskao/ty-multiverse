@@ -304,9 +304,10 @@ function parseProject(
                                   "Singleton Pattern",
                                   "Single Source of Truth",
                                 ].map((name) => {
-                                  const skill = (category.skills as any[]).find(
-                                    (s: any) => s.name === name,
-                                  );
+                                  const skill = ((category as any).subcategories
+                                    ? (category as any).subcategories.flatMap((sub: any) => sub.skills)
+                                    : (category as any).skills || []
+                                  ).find((s: any) => s.name === name);
                                   if (!skill) return null;
                                   const gradeMap = {
                                     shade1: "S",
@@ -340,9 +341,8 @@ function parseProject(
                                 category.subcategories
                                   .filter((sub) =>
                                     [
-                                      "Languages",
-                                      "Frameworks & Libraries",
-                                      "API Development & Testing",
+                                      "Java",
+                                      "General",
                                     ].includes(sub.name),
                                   )
                                   .map((subcategory) => (
@@ -351,12 +351,10 @@ function parseProject(
                                       <div class="skill-tags">
                                         {(() => {
                                           const allowedBySubcat = {
-                                            Languages: ["Java 8 11 17 21"],
-                                            "Frameworks & Libraries": [
+                                            Java: ["Java 8 11 17 21"],
+                                            General: [
                                               "XML Configuration",
                                               "API Gateway",
-                                            ],
-                                            "API Development & Testing": [
                                               "RESTful API",
                                               "Chain of Responsibility",
                                               "Adapter Pattern",
@@ -477,8 +475,8 @@ function parseProject(
                                   // Only show relevant subcategories for Freelancer
                                   if (category.name === "Backend Development") {
                                     return [
-                                      "Languages",
-                                      "Frameworks & Libraries",
+                                      "PHP",
+                                      "Python",
                                     ].includes(subcategory.name);
                                   }
                                   if (category.name === "AI") {
@@ -499,18 +497,15 @@ function parseProject(
                                         // Only show PHP and Laravel for Backend Development
                                         (category.name ===
                                           "Backend Development" &&
-                                        subcategory.name === "Languages"
+                                        subcategory.name === "PHP"
                                           ? subcategory.skills.filter(
-                                              (s) => s.name === "PHP 12",
+                                              (s) => ["PHP 12", "Laravel"].includes(s.name),
                                             )
                                           : category.name ===
                                                 "Backend Development" &&
-                                              subcategory.name ===
-                                                "Frameworks & Libraries"
+                                              subcategory.name === "Python"
                                             ? subcategory.skills.filter((s) =>
-                                                ["Laravel", "FastAPI"].includes(
-                                                  s.name,
-                                                ),
+                                                s.name === "FastAPI",
                                               )
                                             : category.name === "AI" &&
                                                 subcategory.name ===
@@ -758,18 +753,12 @@ function parseProject(
                                 <h6>{subcategory.name}</h6>
                                 <div class="skill-tags">
                                   {(category.name === "Backend Development" &&
-                                  subcategory.name === "Languages"
-                                    ? subcategory.skills.filter(
-                                        (s) => s.name !== "PHP 12",
-                                      )
+                                  subcategory.name === "PHP"
+                                    ? []
                                     : category.name === "Backend Development" &&
-                                        subcategory.name ===
-                                          "Frameworks & Libraries"
+                                        subcategory.name === "Python"
                                       ? subcategory.skills.filter(
-                                          (s) =>
-                                            !["Laravel", "FastAPI"].includes(
-                                              s.name,
-                                            ),
+                                          (s) => s.name !== "FastAPI",
                                         )
                                       : category.name === "AI" &&
                                           subcategory.name ===
@@ -832,8 +821,7 @@ function parseProject(
                                       ))}
                                     </ul>
                                   )}
-                                {subcategory.name ===
-                                  "Frameworks & Libraries" && (
+                                {subcategory.name === "Java" && (
                                   <>
                                     {/* --- Updated Backend Architecture Diagrams --- */}
                                     <div class="mermaid-diagram margin-top">
@@ -1500,10 +1488,17 @@ function parseProject(
   </div>
 
   <!-- Mermaid.js for on-page diagrams -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"
-  ></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    async function loadMermaid() {
+      if (!window["mermaid"]) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js";
+          s.onload = () => resolve();
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
       const mermaidLib = window["mermaid"];
       if (mermaidLib) {
         // 根據當前主題設定 Mermaid 主題
@@ -1668,7 +1663,9 @@ function parseProject(
 
       // Work photo hover to show briefing
       // Overlay handled purely by CSS hover on wrapper to avoid flicker
-    });
+    }
+
+    document.addEventListener("astro:page-load", loadMermaid);
   </script>
 
   <!-- Styles for export button live in ResumePreview component -->

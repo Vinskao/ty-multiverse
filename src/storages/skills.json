@@ -6,49 +6,12 @@
       "description": {},
       "subcategories": [
         {
-          "name": "Languages",
+          "name": "Java",
           "skills": [
             {
               "name": "Java 8 11 17 21",
               "level": "shade1"
             },
-            {
-              "name": "Python 3",
-              "level": "shade3"
-            },
-            {
-              "name": "Node.js",
-              "level": "shade3"
-            },
-            {
-              "name": "PHP 12",
-              "level": "shade3"
-            }
-          ],
-          "descriptions": {
-            "Mercuries Life Insurance": {
-              "zh": [
-                "使用不同設計模式進行解耦 - https://github.com/Vinskao/TY-Multiverse-Backend",
-                "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理"
-              ],
-              "en": [
-                "Implemented factory design pattern for decoupling - https://github.com/Vinskao/TY-Multiverse-Backend",
-                "Implemented real-time WebSocket backend handling multi-threaded message queues using Java ExecutorService, ConcurrentHashMap, and async tasks. Delivered system metrics and order info to frontend via channel push, ensuring non-blocking processing across data sources."
-              ]
-            },
-            "Tata Consultancy Services": {
-              "zh": [
-                "實作後端商務邏輯與中介控制（Java），透過撰寫及修改 .java 檔案（如 HeaderConfigGSP.java），在系統中建立攔截元件（Inserter Beans），以便在 Request 送往系統後台前，動態插入指定的 Header 等中介層處理"
-              ],
-              "en": [
-                "Developed backend business logic and middleware control using Java. Created and modified Java files to set up Inserter Beans for dynamic injection of specified headers before forwarding requests to downstream systems."
-              ]
-            }
-          }
-        },
-        {
-          "name": "Frameworks & Libraries",
-          "skills": [
             {
               "name": "Spring Framework 6",
               "level": "shade3"
@@ -106,6 +69,83 @@
               "level": "shade5"
             },
             {
+              "name": "JPA",
+              "level": "shade1"
+            },
+            {
+              "name": "Mybatis 3",
+              "level": "shade1"
+            },
+            {
+              "name": "JDBCTemplate",
+              "level": "shade1"
+            },
+            {
+              "name": "HikariCP",
+              "level": "shade2"
+            },
+            {
+              "name": "JUnit 5",
+              "level": "shade2"
+            },
+            {
+              "name": "Mokito",
+              "level": "shade3"
+            },
+            {
+              "name": "Servlet 5",
+              "level": "shade3"
+            },
+            {
+              "name": "Maven",
+              "level": "shade2"
+            },
+            {
+              "name": "RestTemplate",
+              "level": "shade3"
+            },
+            {
+              "name": "@RabbitListener",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {
+            "Mercuries Life Insurance": {
+              "zh": [
+                "使用不同設計模式進行解耦 - https://github.com/Vinskao/TY-Multiverse-Backend",
+                "使用 Java ExecutorService、ConcurrentHashMap 與非同步任務實作即時 WebSocket 後端，處理多執行緒訊息佇列。透過頻道推送方式將系統指標與訂單資訊傳送至前端，確保不同資料源非阻塞處理",
+                "使用 Spring Boot 框架開發 CRUD API，並整合 SSO 伺服器",
+                "使用 JPA、MyBatis 與 JDBCTemplate 在 Spring Boot 與傳統 JBoss 應用中實作資料存取層。設計實體映射與 SQL 查詢以支援 CRUD 與批次操作",
+                "使用 Spring MVC 設計並實作訂單處理與帳戶管理之 RESTful API。以 JUnit 5 與 Mockito 實作單元與整合測試，驗證控制器、服務及資料層互動。應用 Servlet 5 Filter 處理 CORS 與驗證，並以 Maven 管理建置流程"
+              ],
+              "en": [
+                "Implemented factory design pattern for decoupling - https://github.com/Vinskao/TY-Multiverse-Backend",
+                "Implemented real-time WebSocket backend handling multi-threaded message queues using Java ExecutorService, ConcurrentHashMap, and async tasks. Delivered system metrics and order info to frontend via channel push, ensuring non-blocking processing across data sources.",
+                "Developed CRUD APIs using Spring Boot framework and integrated with SSO server.",
+                "Used JPA, MyBatis, and JDBCTemplate to implement data access layer across Spring Boot and legacy JBoss applications. Designed entity mappings and SQL queries for CRUD and batch operations.",
+                "Designed and implemented RESTful APIs for order processing and account management using Spring MVC. Implemented unit and integration tests with JUnit 5 and Mockito. Applied Servlet 5 Filters for CORS and validation, using Maven for build management."
+              ]
+            },
+            "Tata Consultancy Services": {
+              "zh": [
+                "實作後端商務邏輯與中介控制（Java），透過撰寫及修改 .java 檔案（如 HeaderConfigGSP.java），在系統中建立攔截元件（Inserter Beans），以便在 Request 送往系統後台前，動態插入指定的 Header 等中介層處理",
+                "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等"
+              ],
+              "en": [
+                "Developed backend business logic and middleware control using Java. Created and modified Java files to set up Inserter Beans for dynamic injection of specified headers before forwarding requests to downstream systems.",
+                "Configured routing and services (XML config), modifying files like service_extn_gsp.xml to declare and bind API call methods (e.g. GET to POST) and map request parameters correctly."
+              ]
+            }
+          }
+        },
+        {
+          "name": "Python",
+          "skills": [
+            {
+              "name": "Python 3",
+              "level": "shade3"
+            },
+            {
               "name": "Django Rest",
               "level": "shade4"
             },
@@ -122,7 +162,26 @@
               "level": "shade3"
             },
             {
-              "name": "Laravel",
+              "name": "Poetry",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {
+            "Freelancer": {
+              "zh": [
+                "以 FastAPI 與 LangChain 架構知識管理問答系統；透過 Laravel API 注入資料，儲存於 PostgreSQL 並轉換為向量嵌入以進行語義檢索"
+              ],
+              "en": [
+                "Architected knowledge management Q&A system using FastAPI and LangChain; injected data via Laravel API, storing in PostgreSQL and converting to vector embeddings for semantic search."
+              ]
+            }
+          }
+        },
+        {
+          "name": "Node.js",
+          "skills": [
+            {
+              "name": "Node.js",
               "level": "shade3"
             },
             {
@@ -138,8 +197,45 @@
               "level": "shade4"
             },
             {
-              "name": "@RabbitListener",
+              "name": "Mongoose.js",
+              "level": "shade4"
+            }
+          ],
+          "descriptions": {
+            "Mercuries Life Insurance": {
+              "zh": [
+                "使用 Mongoose.js 為 MongoDB 儀表板定義 Schema 與查詢"
+              ],
+              "en": [
+                "Used Mongoose.js for schema definition and queries in MongoDB-powered dashboards."
+              ]
+            }
+          }
+        },
+        {
+          "name": "PHP",
+          "skills": [
+            {
+              "name": "PHP 12",
               "level": "shade3"
+            },
+            {
+              "name": "Laravel",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {}
+        },
+        {
+          "name": "General",
+          "skills": [
+            {
+              "name": "RESTful API",
+              "level": "shade1"
+            },
+            {
+              "name": "Swagger",
+              "level": "shade1"
             },
             {
               "name": "Microservices",
@@ -160,107 +256,9 @@
             {
               "name": "XML Configuration",
               "level": "shade3"
-            }
-          ],
-          "descriptions": {
-            "Mercuries Life Insurance": {
-              "zh": [
-                "使用 Spring Boot 框架開發 CRUD API，並整合 SSO 伺服器"
-              ],
-              "en": [
-                "Developed CRUD APIs using Spring Boot framework and integrated with SSO server."
-              ]
-            },
-            "Freelancer": {
-              "zh": [
-                "以 FastAPI 與 LangChain 架構知識管理問答系統；透過 Laravel API 注入資料，儲存於 PostgreSQL 並轉換為向量嵌入以進行語義檢索"
-              ],
-              "en": [
-                "Architected knowledge management Q&A system using FastAPI and LangChain; injected data via Laravel API, storing in PostgreSQL and converting to vector embeddings for semantic search."
-              ]
-            },
-            "Tata Consultancy Services": {
-              "zh": [
-                "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等"
-              ],
-              "en": [
-                "Configured routing and services (XML config), modifying files like service_extn_gsp.xml to declare and bind API call methods (e.g. GET to POST) and map request parameters correctly."
-              ]
-            }
-          }
-        },
-        {
-          "name": "Data Access",
-          "skills": [
-            {
-              "name": "JPA",
-              "level": "shade1"
-            },
-            {
-              "name": "Mybatis 3",
-              "level": "shade1"
-            },
-            {
-              "name": "JDBCTemplate",
-              "level": "shade1"
-            },
-            {
-              "name": "Mongoose.js",
-              "level": "shade4"
-            },
-            {
-              "name": "HikariCP",
-              "level": "shade2"
-            }
-          ],
-          "descriptions": {
-            "Mercuries Life Insurance": {
-              "en": [
-                "Used JPA, MyBatis, and JDBCTemplate to implement data access layer across Spring Boot and legacy JBoss applications. Designed entity mappings and SQL queries for CRUD and batch operations. Used Mongoose.js for schema definition and queries in MongoDB-powered dashboards."
-              ],
-              "zh": [
-                "使用 JPA、MyBatis 與 JDBCTemplate 在 Spring Boot 與傳統 JBoss 應用中實作資料存取層。設計實體映射與 SQL 查詢以支援 CRUD 與批次操作。於 MongoDB 儀表板中使用 Mongoose.js 定義 Schema 與查詢"
-              ]
-            }
-          }
-        },
-        {
-          "name": "API Development & Testing",
-          "skills": [
-            {
-              "name": "Swagger",
-              "level": "shade1"
-            },
-            {
-              "name": "RESTful API",
-              "level": "shade1"
-            },
-            {
-              "name": "JUnit 5",
-              "level": "shade2"
-            },
-            {
-              "name": "Mokito",
-              "level": "shade3"
-            },
-            {
-              "name": "Servlet 5",
-              "level": "shade3"
-            },
-            {
-              "name": "Maven",
-              "level": "shade2"
-            },
-            {
-              "name": "Poetry",
-              "level": "shade3"
             },
             {
               "name": "Chain of Responsibility",
-              "level": "shade3"
-            },
-            {
-              "name": "RestTemplate",
               "level": "shade3"
             },
             {
@@ -277,14 +275,6 @@
             }
           ],
           "descriptions": {
-            "Mercuries Life Insurance": {
-              "zh": [
-                "使用 Spring MVC、FastAPI 與 Laravel 設計並實作訂單處理與帳戶管理之 RESTful API。利用 Swagger 撰寫 API 文件。以 JUnit 5 與 Mockito 實作單元與整合測試，驗證控制器、服務及資料層互動。應用 Servlet 5 Filter 處理 CORS 與驗證，並以 Maven／Poetry 管理建置流程"
-              ],
-              "en": [
-                "Designed and implemented RESTful APIs for order processing and account management using Spring MVC, FastAPI, and Laravel. Documented APIs using Swagger. Implemented unit and integration tests with JUnit 5 and Mockito to verify controller, service, and data layer interactions. Applied Servlet 5 Filters for CORS and validation, using Maven/Poetry for build management."
-              ]
-            },
             "Tata Consultancy Services": {
               "zh": [
                 "實作 Gateway 介面整合，應用轉接器 (Adapter) 與外觀 (Facade) 模式封裝底層複雜的既有系統介面，抹平前後端規格差異。維護外部化配置 (Externalized Config) 參數表，落實配置與程式碼分離原則確保環境遷移靈活性"
@@ -320,118 +310,142 @@
           "將前端 API 路由提煉至全域配置中心，應用 Registry 與 Singleton 模式建立 Single Source of Truth，移除硬編碼路徑並落實高內聚低耦合的架構設計"
         ]
       },
-      "skills": [
+      "subcategories": [
         {
-          "name": "JavaScript",
-          "level": "shade1"
+          "name": "Vue",
+          "skills": [
+            {
+              "name": "Vue.js 2 3",
+              "level": "shade2"
+            }
+          ],
+          "descriptions": {}
         },
         {
-          "name": "TypeScript",
-          "level": "shade2"
+          "name": "React",
+          "skills": [
+            {
+              "name": "React.js",
+              "level": "shade3"
+            },
+            {
+              "name": "React Hooks",
+              "level": "shade3"
+            },
+            {
+              "name": "React Context",
+              "level": "shade4"
+            }
+          ],
+          "descriptions": {}
         },
         {
-          "name": "Vue.js 2 3",
-          "level": "shade2"
+          "name": "Angular",
+          "skills": [
+            {
+              "name": "Angular.js",
+              "level": "shade1"
+            }
+          ],
+          "descriptions": {}
         },
         {
-          "name": "React.js",
-          "level": "shade3"
-        },
-        {
-          "name": "Angular.js",
-          "level": "shade1"
-        },
-        {
-          "name": "React Hooks",
-          "level": "shade3"
-        },
-        {
-          "name": "React Context",
-          "level": "shade4"
-        },
-        {
-          "name": "jQuery",
-          "level": "shade1"
-        },
-        {
-          "name": "AJAX",
-          "level": "shade1"
-        },
-        {
-          "name": "Axios",
-          "level": "shade3"
-        },
-        {
-          "name": "Bootstrap",
-          "level": "shade2"
-        },
-        {
-          "name": "SweetAlert2",
-          "level": "shade4"
-        },
-        {
-          "name": "HTML2Canvas",
-          "level": "shade4"
-        },
-        {
-          "name": "JSPDF",
-          "level": "shade4"
-        },
-        {
-          "name": "Jest",
-          "level": "shade5"
-        },
-        {
-          "name": "Astro.js",
-          "level": "shade2"
-        },
-        {
-          "name": "MDX",
-          "level": "shade3"
-        },
-        {
-          "name": "Handlebars",
-          "level": "shade2"
-        },
-        {
-          "name": "Thymeleaf",
-          "level": "shade2"
-        },
-        {
-          "name": "CKEditor 5",
-          "level": "shade2"
-        },
-        {
-          "name": "Webpack",
-          "level": "shade2"
-        },
-        {
-          "name": "Bundle",
-          "level": "shade3"
-        },
-        {
-          "name": "D3",
-          "level": "shade3"
-        },
-        {
-          "name": "SCSS / CSS",
-          "level": "shade2"
-        },
-        {
-          "name": "i18n / Localization",
-          "level": "shade3"
-        },
-        {
-          "name": "Registry Pattern",
-          "level": "shade3"
-        },
-        {
-          "name": "Singleton Pattern",
-          "level": "shade3"
-        },
-        {
-          "name": "Single Source of Truth",
-          "level": "shade3"
+          "name": "General",
+          "skills": [
+            {
+              "name": "JavaScript",
+              "level": "shade1"
+            },
+            {
+              "name": "TypeScript",
+              "level": "shade2"
+            },
+            {
+              "name": "jQuery",
+              "level": "shade1"
+            },
+            {
+              "name": "AJAX",
+              "level": "shade1"
+            },
+            {
+              "name": "Axios",
+              "level": "shade3"
+            },
+            {
+              "name": "Bootstrap",
+              "level": "shade2"
+            },
+            {
+              "name": "SweetAlert2",
+              "level": "shade4"
+            },
+            {
+              "name": "HTML2Canvas",
+              "level": "shade4"
+            },
+            {
+              "name": "JSPDF",
+              "level": "shade4"
+            },
+            {
+              "name": "Jest",
+              "level": "shade5"
+            },
+            {
+              "name": "Astro.js",
+              "level": "shade2"
+            },
+            {
+              "name": "MDX",
+              "level": "shade3"
+            },
+            {
+              "name": "Handlebars",
+              "level": "shade2"
+            },
+            {
+              "name": "Thymeleaf",
+              "level": "shade2"
+            },
+            {
+              "name": "CKEditor 5",
+              "level": "shade2"
+            },
+            {
+              "name": "Webpack",
+              "level": "shade2"
+            },
+            {
+              "name": "Bundle",
+              "level": "shade3"
+            },
+            {
+              "name": "D3",
+              "level": "shade3"
+            },
+            {
+              "name": "SCSS / CSS",
+              "level": "shade2"
+            },
+            {
+              "name": "i18n / Localization",
+              "level": "shade3"
+            },
+            {
+              "name": "Registry Pattern",
+              "level": "shade3"
+            },
+            {
+              "name": "Singleton Pattern",
+              "level": "shade3"
+            },
+            {
+              "name": "Single Source of Truth",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {}
         }
       ]
     },
@@ -1112,44 +1126,90 @@
           "使用 CDI 將 EntityManager 注入 DAO 層"
         ]
       },
-      "skills": [
+      "subcategories": [
         {
-          "name": "Keycloak 18 26",
-          "level": "shade1"
+          "name": "Identity Provider / SSO",
+          "skills": [
+            {
+              "name": "Keycloak 18 26",
+              "level": "shade1"
+            },
+            {
+              "name": "Keycloak SPI",
+              "level": "shade2"
+            },
+            {
+              "name": "RedHat SSO 7",
+              "level": "shade1"
+            }
+          ],
+          "descriptions": {
+            "Mercuries Life Insurance": {
+              "zh": [
+                "建置 Keycloak SSO 伺服器，並實作授權碼 OIDC 流程以連接 Public 與 Confidential Client - https://github.com/Vinskao/keycloak-client-demo"
+              ],
+              "en": [
+                "Built Keycloak SSO server and implemented authorization code OIDC method to connect public and confidential clients - https://github.com/Vinskao/keycloak-client-demo"
+              ]
+            },
+            "Tata Consultancy Services": {
+              "zh": [
+                "在 K8S 上將 Keycloak 18 升級至 26，並將資料持久化至 PostgreSQL",
+                "將 Keycloak SPI 從 Quarkus 2 升級至 Quarkus 3，並以 Informix Stored Procedure 實作 Keycloak 使用者密碼驗證流程"
+              ],
+              "en": [
+                "Updated Keycloak 18 to 26 on K8S, persisted data to PostgreSQL",
+                "Updated Keycloak SPI to Quarkus 3 from Quarkus 2, and implemented Keycloak username-password authentication flow using Informix stored procedure"
+              ]
+            }
+          }
         },
         {
-          "name": "Keycloak SPI",
-          "level": "shade2"
+          "name": "Protocols & Flows",
+          "skills": [
+            {
+              "name": "OAuth2",
+              "level": "shade2"
+            },
+            {
+              "name": "Authorization Code Flow",
+              "level": "shade2"
+            },
+            {
+              "name": "JWT",
+              "level": "shade2",
+              "specialClass": "jwt"
+            }
+          ],
+          "descriptions": {}
         },
         {
-          "name": "RedHat SSO 7",
-          "level": "shade1"
-        },
-        {
-          "name": "Authorization Code Flow",
-          "level": "shade2"
-        },
-        {
-          "name": "JWT",
-          "level": "shade2",
-          "specialClass": "jwt"
-        },
-        {
-          "name": "Spring Security",
-          "level": "shade3",
-          "specialClass": "spring-security"
-        },
-        {
-          "name": "Digital Signature",
-          "level": "shade3"
-        },
-        {
-          "name": "OAuth2",
-          "level": "shade2"
-        },
-        {
-          "name": "Java Keystore",
-          "level": "shade1"
+          "name": "Framework & Keys",
+          "skills": [
+            {
+              "name": "Spring Security",
+              "level": "shade3",
+              "specialClass": "spring-security"
+            },
+            {
+              "name": "Digital Signature",
+              "level": "shade3"
+            },
+            {
+              "name": "Java Keystore",
+              "level": "shade1"
+            }
+          ],
+          "descriptions": {
+            "Tata Consultancy Services": {
+              "zh": [
+                "使用 CDI 將 EntityManager 注入 DAO 層"
+              ],
+              "en": [
+                "Implemented CDI to inject entity manager to DAO layer"
+              ]
+            }
+          }
         }
       ]
     },

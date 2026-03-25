@@ -453,6 +453,25 @@
 	width: 100%;
 }
 
+.categories .subcategory-group {
+	width: 100%;
+	margin-top: 0.6rem;
+}
+
+.categories .subcategory-label {
+	display: block;
+	font-size: 0.65rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--gray-400);
+	margin-bottom: 0.4rem;
+	padding-bottom: 0.2rem;
+	border-bottom: 1px solid var(--gray-800);
+	width: 100%;
+	text-align: left;
+}
+
 .categories .pill {
 	margin: 0;
 	flex: 0 0 calc(33.333% - 0.5rem);

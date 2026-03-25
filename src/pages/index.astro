@@ -198,21 +198,31 @@ const skillsCategories = skillsData.categories;
 			<div class="hero-content categories-section">
 				<div class="categories">
 					{skillsCategories.map((category) => {
-						// Flatten skills from subcategories if they exist, otherwise use direct skills
-						const allSkills = category.subcategories 
-							? category.subcategories.flatMap(sub => sub.skills)
-							: category.skills || [];
-						
 						return (
 							<div class="category">
 								<h5>{category.name}</h5>
-								<div class="pills-container">
-									{allSkills.map((skill) => (
-										<span class={`pill ${category.pillClass} ${skill.level} ${(skill as any).specialClass || ''}`}>
-											{skill.name}
-										</span>
-									))}
-								</div>
+								{(category as any).subcategories ? (
+									(category as any).subcategories.map((sub: any) => (
+										<div class="subcategory-group">
+											<span class="subcategory-label">{sub.name}</span>
+											<div class="pills-container">
+												{sub.skills.map((skill: any) => (
+													<span class={`pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
+														{skill.name}
+													</span>
+												))}
+											</div>
+										</div>
+									))
+								) : (
+									<div class="pills-container">
+										{((category as any).skills || []).map((skill: any) => (
+											<span class={`pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
+												{skill.name}
+											</span>
+										))}
+									</div>
+								)}
 							</div>
 						);
 					})}
