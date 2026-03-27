@@ -1,9 +1,9 @@
 ---
-// 從環境變數獲取 API 基礎 URL - 現在使用 Gateway
-if (!import.meta.env.PUBLIC_TYMG_URL) {
-  throw new Error('PUBLIC_TYMG_URL 環境變量未設置');
+// 從環境變數獲取 API 基礎 URL - 優先使用 Gateway，fallback 到 Backend
+const hostUrl = import.meta.env.PUBLIC_TYMG_URL || import.meta.env.PUBLIC_TYMB_URL || '';
+if (!hostUrl) {
+  console.error('WARNING: Neither PUBLIC_TYMG_URL nor PUBLIC_TYMB_URL is set');
 }
-const hostUrl = import.meta.env.PUBLIC_TYMG_URL;
 
 // 獲取 URL 參數來檢查登入狀態
 const url = new URL(Astro.request.url);

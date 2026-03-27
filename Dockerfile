@@ -13,6 +13,7 @@ ARG PUBLIC_PEOPLE_IMAGE_URL
 ARG PUBLIC_CLIENT_ID
 ARG PUBLIC_REALM
 ARG PUBLIC_API_BASE_URL
+ARG PUBLIC_TYMG_URL
 
 # Set environment variables
 ENV PUBLIC_DECKOFCARDS_URL=${PUBLIC_DECKOFCARDS_URL}
@@ -23,6 +24,7 @@ ENV PUBLIC_PEOPLE_IMAGE_URL=${PUBLIC_PEOPLE_IMAGE_URL}
 ENV PUBLIC_CLIENT_ID=${PUBLIC_CLIENT_ID}
 ENV PUBLIC_REALM=${PUBLIC_REALM}
 ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
+ENV PUBLIC_TYMG_URL=${PUBLIC_TYMG_URL}
 
 # By copying only the package.json and package-lock.json here, we ensure that the following `-deps` steps are independent of the source code.
 # Therefore, the `-deps` steps will be skipped if only the source code changes.

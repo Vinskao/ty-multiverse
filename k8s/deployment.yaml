@@ -55,7 +55,7 @@ spec:
             cpu: "30m"
             memory: "256Mi"
           limits:
-            cpu: "75m"
+            cpu: "200m"
             memory: "512Mi"
         lifecycle:
           postStart:
@@ -140,6 +140,9 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
     cert-manager.io/cluster-issuer: letsencrypt-production
     cert-manager.io/certificate-name: peoplesystem-tls
 spec:
