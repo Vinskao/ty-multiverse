@@ -1092,6 +1092,18 @@
             {
               "name": "GitHub Submodule",
               "level": "shade3"
+            },
+            {
+              "name": "Claude Code",
+              "level": "shade1"
+            },
+            {
+              "name": "Claude Agent SDK",
+              "level": "shade2"
+            },
+            {
+              "name": "MCP",
+              "level": "shade2"
             }
           ],
           "descriptions": {

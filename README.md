@@ -6,6 +6,7 @@
 
 ## Table of Contents
 
+- [Implementation](#implementation)
 - [Background](#background)
 - [Install](#install)
 - [Usage](#usage)
@@ -13,6 +14,61 @@
 - [Design Patterns](#design-patterns)
 - [Deployment](#deployment)
 - [Other](#other)
+
+## Implementation
+
+### 核心技術與架構設計
+
+#### 技術棧
+- **前端框架**：Astro + React，利用靜態生成與動態交互優勢
+- **後端服務**：多服務架構（Django API、FastAPI、Spring Boot、Laravel）
+- **數據層**：PostgreSQL、MongoDB、Redis 分層存儲
+- **即時通訊**：WebSocket + RabbitMQ 事件驅動
+
+#### 權限驗證機制
+三層權限驗證系統確保靈活性與安全性：
+- **管理員層**：`manage-users` 角色，訪問管理面板
+- **用戶層**：標準 JWT token 驗證
+- **訪客層**：基本 token 檢查或公開訪問
+
+#### 動態內容與路由
+- Markdown 文件通過文件系統自動映射為動態路由
+- 依據 slug 自動生成頁面，支援多語言（中/英）
+- Astro 靜態生成 + 部分動態路由並存架構
+
+#### 系統核心設計模式
+
+##### Producer–Consumer 架構
+系統廣泛採用生產者-消費者模式，實現高併發與解耦：
+
+1. **非同步計數系統**
+   - Producer：前端事件經 REST API 推送至 Redis 佇列
+   - Consumer：批次拉取事件，聚合後更新 MongoDB
+   - 優勢：降低 DB 壓力，保證一致性
+
+2. **AI 問答系統（三階段管道）**
+   - **Stage 1**：查詢預處理與檢索
+   - **Stage 2**：向量 Embedding（pgvector/pg_trgm）
+   - **Stage 3**：LLM 生成答案
+   - Producer 送入查詢，Consumer 並發處理，支援多 LLM 回退
+
+3. **即時通知與廣播**
+   - Producer：事件經 API 推送至 RabbitMQ
+   - Consumer：分派給已訂閱客户端，經 WebSocket 推送
+   - 實現：實時互動、狀態同步、離線消息隊列
+
+#### 多層快取策略
+結合客户端與服務器緩存提升效能：
+- **Client 層**：localStorage 持久化，減少重複請求
+- **Server 層**：Redis 高速快取，支援分布式失效
+- **Cache Key 設計**：語言、用戶、查詢條件組合鍵
+
+#### 部署與可靠性
+- **容器化**：Docker 鏡像支援多架構（x86/ARM64）
+- **CI/CD**：Jenkins 自動化測試、構建、部署
+- **編排**：Kubernetes 支援自動擴展與負載均衡
+
+---
 
 ## Background
 

@@ -135,6 +135,32 @@ function parseProject(
 
   return { head, bullets, dataModuleName, dataModuleDetails };
 }
+
+function formatForResume(job: ExperienceItem, l: LangKey): string {
+  if (!job.projectExperience?.[l]?.length) return "";
+  const isZh = l === "zh";
+  const lines: string[] = [
+    `${job.title}  |  ${job.company}  |  ${job.period}`,
+    "",
+  ];
+  for (const project of job.projectExperience[l]) {
+    const p = parseProject(project, l);
+    lines.push(`• ${p.head}`);
+    if (p.bullets.length > 0) {
+      const label = isZh ? "主要負責" : "Responsibilities";
+      lines.push(`  ${label}: ${p.bullets.join(isZh ? "、" : " / ")}`);
+    }
+    if (p.dataModuleName) {
+      const label = isZh ? "資料模組" : "Data Module";
+      const details = p.dataModuleDetails.length
+        ? ` (${p.dataModuleDetails.join(isZh ? "；" : " / ")})`
+        : "";
+      lines.push(`  ${label}: ${p.dataModuleName}${details}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n").trimEnd();
+}
 ---
 
 <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
@@ -203,15 +229,21 @@ function parseProject(
                 job.projectExperience &&
                 job.projectExperience[lang] &&
                 job.projectExperience[lang].length > 0 && (
-                  <details class="experience-item">
+                  <details class="experience-item" data-copy={formatForResume(job, lang)}>
                     <summary class="job-header">
-                      <h3>{job.title}</h3>
-                      <div class="job-meta">
-                        <span class="company">{job.company}</span>
-                        <span class="period">
-                          <span class="date-highlight">{job.period}</span>
-                        </span>
+                      <div class="job-header-main">
+                        <h3>{job.title}</h3>
+                        <div class="job-meta">
+                          <span class="company">{job.company}</span>
+                          <span class="period">
+                            <span class="date-highlight">{job.period}</span>
+                          </span>
+                        </div>
                       </div>
+                      <button class="copy-resume-btn" title={lang === "zh" ? "複製到履歷" : "Copy for resume"} aria-label="copy">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span class="copy-label">{lang === "zh" ? "複製" : "Copy"}</span>
+                      </button>
                     </summary>
                     <div class="project-experience">
                       <ul>
@@ -1505,6 +1537,29 @@ function parseProject(
                 ?.classList.toggle("active", code === "zh");
             });
         } catch (_) {}
+      });
+    </script>
+
+    <script>
+      document.querySelectorAll<HTMLButtonElement>(".copy-resume-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const text = (btn.closest("details") as HTMLElement)?.dataset.copy ?? "";
+          navigator.clipboard.writeText(text).then(() => {
+            const label = btn.querySelector<HTMLElement>(".copy-label");
+            const svg = btn.querySelector("svg");
+            const original = label?.textContent ?? "";
+            if (label) label.textContent = "✓";
+            if (svg) svg.style.display = "none";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              if (label) label.textContent = original;
+              if (svg) svg.style.display = "";
+              btn.classList.remove("copied");
+            }, 1800);
+          });
+        });
       });
     </script>
 
