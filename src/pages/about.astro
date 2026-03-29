@@ -24,6 +24,30 @@ interface ExperienceItem {
 const lang = (Astro.url.searchParams.get("lang") ?? "en") as LangKey;
 const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
+// Calculate experience years
+const softwareTitles = ["Software Engineer", "Open Source Backend Engineer", "Freelancer"];
+
+function parsePeriodDate(s: string): Date {
+  if (s.trim().toLowerCase() === "present") return new Date();
+  const parts = s.trim().split("/");
+  return new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+}
+
+function monthsBetween(start: Date, end: Date): number {
+  return Math.max(0, (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth());
+}
+
+let swMonths = 0;
+let totalMonths = 0;
+for (const job of experienceData) {
+  const [startStr, endStr] = job.period.split("~");
+  const months = monthsBetween(parsePeriodDate(startStr), parsePeriodDate(endStr));
+  totalMonths += months;
+  if (softwareTitles.includes(job.title)) swMonths += months;
+}
+const swYears = (swMonths / 12).toFixed(1);
+const totalYears = (totalMonths / 12).toFixed(1);
+
 // Function to highlight dates in project descriptions
 function highlightDates(text: string): string {
   const dateRegex = /(\d{4}\/\d{1,2}(?:\s*~\s*(?:\d{4}\/\d{1,2}|Present))?)/g;
@@ -126,6 +150,14 @@ function parseProject(
       </div>
       <div class="hero-section">
         <Hero title="About" tagline="KTY's Journey" />
+        <div class="exp-badges">
+          <span class="exp-badge">
+            {lang === "zh" ? "軟體年資" : "Software Exp."}<strong>{swYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+          <span class="exp-badge">
+            {lang === "zh" ? "總年資" : "Total Exp."}<strong>{totalYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+        </div>
         <div class="work-photo-wrapper" style="position:relative; width:100%;">
           <!-- Mask overlay with slogan -->
           <div class="work-photo-overlay" aria-hidden="true">
@@ -142,7 +174,7 @@ function parseProject(
       </div>
 
       <section>
-        <h2 class="section-title">Background</h2>
+        <h2 class="section-title">{lang === "zh" ? "背景" : "Background"}</h2>
         <div class="content background-content">
           <div class="name-section">
             <h1 class="majestic-name">
@@ -153,12 +185,17 @@ function parseProject(
           <p set:html={aboutData.background[lang].replace(/\n/g, "<br>")} />
         </div>
       </section>
-
+      <section>
+        <h2 class="section-title">{lang === "zh" ? "專長" : "Expertise"}</h2>
+        <div class="content expertise-content">
+          <p>{aboutData.expertise[lang]}</p>
+        </div>
+      </section>
       <!-- Briefing Section -->
       <Briefing />
 
       <section>
-        <h2 class="section-title">Project Experience</h2>
+        <h2 class="section-title">{lang === "zh" ? "專案經歷" : "Project Experience"}</h2>
         <div class="content">
           {
             experienceData.map(
@@ -166,8 +203,8 @@ function parseProject(
                 job.projectExperience &&
                 job.projectExperience[lang] &&
                 job.projectExperience[lang].length > 0 && (
-                  <div class="experience-item">
-                    <div class="job-header">
+                  <details class="experience-item">
+                    <summary class="job-header">
                       <h3>{job.title}</h3>
                       <div class="job-meta">
                         <span class="company">{job.company}</span>
@@ -175,7 +212,7 @@ function parseProject(
                           <span class="date-highlight">{job.period}</span>
                         </span>
                       </div>
-                    </div>
+                    </summary>
                     <div class="project-experience">
                       <ul>
                         {job.projectExperience[lang].map((project) => {
@@ -213,7 +250,7 @@ function parseProject(
                         })}
                       </ul>
                     </div>
-                  </div>
+                  </details>
                 ),
             )
           }
@@ -221,7 +258,7 @@ function parseProject(
       </section>
 
       <section>
-        <h2 class="section-title">Education</h2>
+        <h2 class="section-title">{lang === "zh" ? "教育" : "Education"}</h2>
         <div class="content education-container">
           {
             aboutData.education.map((item) => (
@@ -247,7 +284,7 @@ function parseProject(
       </section>
 
       <section>
-        <h2 class="section-title">Tech Experience</h2>
+        <h2 class="section-title">{lang === "zh" ? "技術經驗" : "Tech Experience"}</h2>
         <div class="content">
           {
             experienceData
@@ -260,14 +297,14 @@ function parseProject(
                   ].includes(job.title),
               )
               .map((job) => (
-                <div class="experience-item">
-                  <div class="job-header">
+                <details class="experience-item">
+                  <summary class="job-header">
                     <h3>{job.title}</h3>
                     <div class="job-meta">
                       <span class="company">{job.company}</span>
                       <span class="period">{job.period}</span>
                     </div>
-                  </div>
+                  </summary>
 
                   {job.responsibilities &&
                     (job.responsibilities as any)[lang] &&
@@ -546,44 +583,21 @@ function parseProject(
                                         })
                                       }
                                     </div>
-                                    {(subcategory as any).description &&
-                                      (subcategory as any).description[lang] &&
-                                      (subcategory as any).description[lang]
-                                        .length > 0 && (
+                                    {(subcategory as any).descriptions &&
+                                      (subcategory as any).descriptions[job.title] &&
+                                      (subcategory as any).descriptions[job.title][lang] &&
+                                      (subcategory as any).descriptions[job.title][lang].length > 0 && (
                                         <ul class="skill-subdescription">
-                                          {
-                                            // Show relevant descriptions for Freelancer
-                                            (category.name ===
-                                              "Backend Development" &&
-                                            subcategory.name ===
-                                              "Frameworks & Libraries"
-                                              ? (
-                                                  subcategory as any
-                                                ).description[lang].filter(
-                                                  (desc: string) =>
-                                                    /Laravel|FastAPI/i.test(
-                                                      desc,
-                                                    ),
-                                                )
-                                              : category.name === "AI" &&
-                                                  subcategory.name ===
-                                                    "Frameworks & APIs"
-                                                ? (
-                                                    subcategory as any
-                                                  ).description[lang].filter(
-                                                    (desc: string) =>
-                                                      /LangChain/i.test(desc),
-                                                  )
-                                                : []
-                                            ).map((desc: string) => (
+                                          {(subcategory as any).descriptions[job.title][lang].map(
+                                            (desc: string) => (
                                               <li
                                                 set:html={desc.replace(
                                                   /(https?:\/\/[^\s]+)/g,
                                                   '<a href="$1" target="_blank">$1</a>',
                                                 )}
                                               />
-                                            ))
-                                          }
+                                            ),
+                                          )}
                                         </ul>
                                       )}
                                     {/* Maya Sawa V1 Architecture Diagrams for AI Frameworks & APIs */}
@@ -1393,11 +1407,22 @@ function parseProject(
                       ))}
                     </div>
                   )}
-                </div>
+                </details>
               ))
           }
         </div>
       </section>
+
+      <section>
+        <h2 class="section-title">{lang === "zh" ? "人格特質" : "Personality"}</h2>
+        <div class="content personality-content">
+          {aboutData.personality[lang].split("\n\n").map((para) => (
+            <p set:html={para.replace(/\n/g, "<br>")} />
+          ))}
+        </div>
+      </section>
+
+
     </main>
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>

@@ -53,9 +53,9 @@
           "2023/03 ~ 2023/05 - Restaurant Booking & CMS Platform (Vue 3 + Spring Boot): Built booking + CMS with Vue 3 frontend and Spring Boot API — Responsibilities: designed JWT/RBAC, shipped core CMS (employee/customer/branch/coupon/menu/order/reservation), delivered BI dashboards and Dockerized deployment — Data Module: RestaurantCMS (structure: Request → Router → Controller → Service → Repository → Database with POJO entities, logic: JWT/RBAC & order/reservation workflows & analytics, interface: REST API + JWT + SQL Server)"
         ],
         "zh": [
-          "2023/10 ~ 2024/01 - 客戶專區附加的問答輔助系統（FastAPI + LangChain）：個性化 RAG 聊天機器人，具混合檢索 — 主要負責：建置 pg_trgm/pgvector RAG 流程（GIN/IVFFlat）、整合多 LLM 回退與無知識處理、設計 Prompt 與評估 — 資料模組：RAGCore（資料結構：ArticleEmbedding/TrigramIndex/ChatHistory；操作邏輯：混合檢索、Prompt 組裝與回退；存取介面：FastAPI + LLM adapters）",
-          "2023/05 ~ 2023/09 - SmartSync Crawler — 線上零售商產品資訊爬蟲插件（PHP + WordPress）：自動化產品爬蟲插件，具安全管理介面 — 主要負責：設計 WordPress 插件/管理介面、實作 XPath URL 收集與產品提取、開發樣式化描述與 CSV 匯出（UTF-8 BOM/正規化）並強化超時處理 — 資料模組：SmartSync（資料結構：URL 收集／數據提取／內容處理／CSV 輸出；操作邏輯：XPath 解析、DOM 操作、內容過濾、UTF-8 編碼；存取介面：WordPress HTTP API + CSV + 管理介面）",
-          "2023/03 ~ 2023/05 - 餐廳訂位與管理平台（Vue 3 + Spring Boot）：建置訂位 + CMS 系統，含 Vue 3 前端與 Spring Boot API — 主要負責：設計 JWT/RBAC、開發核心 CMS 模組（員工／客戶／分店／優惠券／菜單／訂單／預約管理）、實作 BI 儀表板與 Docker 部署 — 資料模組：餐廳管理系統（資料結構：Request → Router → Controller → Service → Repository → Database 配合 POJO 實體；操作邏輯：JWT/RBAC、訂單/預約工作流程、商業分析；存取介面：REST API + JWT + SQL Server）"
+          "2023/10 ~ 2024/01 - 客戶專區附加的問答輔助系統（FastAPI + LangChain）：個性化 RAG 聊天機器人，具混合檢索；主要負責：建置 pg_trgm/pgvector RAG 流程（GIN/IVFFlat）、整合多 LLM 回退與無知識處理、設計 Prompt 與評估；資料模組：RAGCore（資料結構：ArticleEmbedding/TrigramIndex/ChatHistory；操作邏輯：混合檢索、Prompt 組裝與回退；存取介面：FastAPI + LLM adapters）",
+          "2023/05 ~ 2023/09 - SmartSync Crawler — 線上零售商產品資訊爬蟲插件（PHP + WordPress）：自動化產品爬蟲插件，具安全管理介面；主要負責：設計 WordPress 插件/管理介面、實作 XPath URL 收集與產品提取、開發樣式化描述與 CSV 匯出（UTF-8 BOM/正規化）並強化超時處理；資料模組：SmartSync（資料結構：URL 收集／數據提取／內容處理／CSV 輸出；操作邏輯：XPath 解析、DOM 操作、內容過濾、UTF-8 編碼；存取介面：WordPress HTTP API + CSV + 管理介面）",
+          "2023/03 ~ 2023/05 - 餐廳訂位與管理平台（Vue 3 + Spring Boot）：建置訂位 + CMS 系統，含 Vue 3 前端與 Spring Boot API；主要負責：設計 JWT/RBAC、開發核心 CMS 模組（員工／客戶／分店／優惠券／菜單／訂單／預約管理）、實作 BI 儀表板與 Docker 部署；資料模組：餐廳管理系統（資料結構：Request → Router → Controller → Service → Repository → Database 配合 POJO 實體；操作邏輯：JWT/RBAC、訂單/預約工作流程、商業分析；存取介面：REST API + JWT + SQL Server）"
         ]
       }
     },
@@ -167,5 +167,13 @@
         "Global Exchange Program"
       ]
     }
-  ]
+  ],
+  "personality": {
+    "en": "Results-driven and pragmatic, KTY approaches every problem through the lens of feasibility, efficiency, and deliverability — prioritizing actionable output over theoretical exploration.\n\nRationally analytical at the core, he relies on logic and structured thinking to navigate complex or high-pressure situations. His decision-making consistently returns to the fundamentals: what is the nature of this problem, and what do the rules and logic dictate? This stable, affect-neutral approach consistently improves problem-solving quality.\n\nStrong systems thinker who naturally decomposes complexity into manageable modules, analyzing systems through architecture, data flow, and component relationships. He habitually evaluates trade-offs via A/B comparison and proactively identifies bottlenecks — in performance, concurrency, or resource usage — to drive continuous optimization.\n\nIn short: a logic- and data-driven engineering mindset that pairs execution speed with optimization discipline, capable of rapidly pinpointing root causes and shipping grounded solutions even under shifting requirements.",
+    "zh": "具備強烈的結果導向思維，習慣從「是否可行、是否有效率、是否能落地」的角度切入問題，重視實際產出與執行成效。在面對需求或技術挑戰時，優先考量解決方案的可實作性與執行效率，能快速做出判斷並推進落地，而非僅停留於理論層面。\n\n個性偏理性分析，處理問題時以邏輯與結構化思考為核心。即使在壓力或複雜情境下，仍會回歸「問題本質為何」、「規則與邏輯是什麼」來進行判斷，具備穩定且一致的決策模式，能有效降低情緒干擾，提升問題解決品質。\n\n同時具備良好的系統性思維，擅長將複雜問題拆解為可管理的模組，並從系統架構、流程與元件關係進行分析。習慣透過不同方案比較（A/B）來評估優劣，並主動找出系統瓶頸（如效能、併發、資源使用）進行優化，使整體系統在穩定性與效率上持續提升。\n\n整體而言，屬於以邏輯與數據驅動的工程型人格，兼具執行力與優化能力，能在變動需求中快速定位問題並提出可落地的解決方案，同時持續進行系統性改善。"
+  },
+  "expertise": {
+    "en": "Core backend expertise in Spring Boot layered architecture, PostgreSQL/Redis performance tuning, and RabbitMQ async processing. Proficient in enterprise security with Keycloak/JWT/OAuth2, and DevOps workflows spanning Jenkins, Docker, and Kubernetes on OCI. Hands-on experience building AI retrieval systems with LangChain RAG and pgvector hybrid search. Additional frontend exposure in Angular and Flutter.",
+    "zh": "後端核心：Spring Boot 多層架構、PostgreSQL/Redis 效能優化、RabbitMQ 非同步處理；安全：Keycloak/JWT/OAuth2；DevOps：Jenkins/Docker/K8s/OCI；AI：LangChain RAG 與 pgvector 混合檢索；兼具 Angular、Flutter 前端整合經驗。"
+  }
 }

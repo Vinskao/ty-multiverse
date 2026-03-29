@@ -56,6 +56,32 @@ text-align: left;
   gap: 2rem;
 }
 
+.exp-badges {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.exp-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem;
+  background: rgba(81, 70, 149, 0.1);
+  border: 1px solid rgba(81, 70, 149, 0.35);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  color: var(--gray-300, #aaa);
+  letter-spacing: 0.01em;
+}
+
+.exp-badge strong {
+  color: #514695;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
 .hero img {
 width: 100%;
 height: auto;
@@ -199,6 +225,37 @@ color: #3a2f6b;
   line-height: 1;
 }
 
+/* Personality & Expertise sections */
+.personality-content,
+.expertise-content {
+  overflow: visible;
+  overflow-x: unset;
+}
+
+.personality-content p {
+  margin: 0 0 1.4rem 0;
+  padding: 0;
+  line-height: 1.9;
+  font-size: 1.05rem;
+  color: var(--gray-200, #ccc);
+  text-indent: 0;
+}
+
+.personality-content p:last-child {
+  margin-bottom: 0;
+}
+
+.expertise-content p {
+  margin: 0;
+  padding: 1.2rem 1.5rem;
+  line-height: 1.9;
+  font-size: 1.05rem;
+  color: var(--gray-200, #ccc);
+  background: rgba(81, 70, 149, 0.08);
+  border-left: 3px solid #514695;
+  border-radius: 0 8px 8px 0;
+}
+
 .education-container {
 /* max-height: 33vh; */
 /* overflow-y: auto; */
@@ -284,6 +341,45 @@ border-left: 4px solid #514695;
 .experience-item:hover {
 transform: translateX(5px);
 box-shadow: 0 4px 15px rgba(81, 70, 149, 0.1);
+}
+
+/* Collapsible experience items */
+details.experience-item > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.experience-item > summary::-webkit-details-marker {
+  display: none;
+}
+details.experience-item > summary::marker {
+  display: none;
+}
+details.experience-item > summary.job-header {
+  margin-bottom: 0;
+}
+details.experience-item[open] > summary.job-header {
+  margin-bottom: 1.5rem;
+}
+details.experience-item > summary.job-header {
+  position: relative;
+  padding-right: 2rem;
+}
+details.experience-item > summary.job-header::after {
+  content: '';
+  position: absolute;
+  right: 0.25rem;
+  top: 0.6rem;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #514695;
+  border-bottom: 2px solid #514695;
+  transform: rotate(-45deg);
+  transition: transform 0.25s ease, top 0.25s ease;
+  border-radius: 1px;
+}
+details.experience-item[open] > summary.job-header::after {
+  transform: rotate(45deg);
+  top: 0.45rem;
 }
 
 .job-header {
