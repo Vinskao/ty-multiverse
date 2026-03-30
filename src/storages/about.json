@@ -173,7 +173,7 @@
     "zh": "具備強烈的結果導向思維，習慣從「是否可行、是否有效率、是否能落地」的角度切入問題，重視實際產出與執行成效。在面對需求或技術挑戰時，優先考量解決方案的可實作性與執行效率，能快速做出判斷並推進落地，而非僅停留於理論層面。\n\n個性偏理性分析，處理問題時以邏輯與結構化思考為核心。即使在壓力或複雜情境下，仍會回歸「問題本質為何」、「規則與邏輯是什麼」來進行判斷，具備穩定且一致的決策模式，能有效降低情緒干擾，提升問題解決品質。\n\n同時具備良好的系統性思維，擅長將複雜問題拆解為可管理的模組，並從系統架構、流程與元件關係進行分析。習慣透過不同方案比較（A/B）來評估優劣，並主動找出系統瓶頸（如效能、併發、資源使用）進行優化，使整體系統在穩定性與效率上持續提升。\n\n整體而言，屬於以邏輯與數據驅動的工程型人格，兼具執行力與優化能力，能在變動需求中快速定位問題並提出可落地的解決方案，同時持續進行系統性改善。"
   },
   "expertise": {
-    "en": "Core backend expertise in Spring Boot layered architecture, PostgreSQL/Redis performance tuning, and RabbitMQ async processing. Proficient in enterprise security with Keycloak/JWT/OAuth2, and DevOps workflows spanning Jenkins, Docker, and Kubernetes on OCI. Hands-on experience building AI retrieval systems with LangChain RAG and pgvector hybrid search. Additional frontend exposure in Angular and Flutter.",
-    "zh": "後端核心：Spring Boot 多層架構、PostgreSQL/Redis 效能優化、RabbitMQ 非同步處理；安全：Keycloak/JWT/OAuth2；DevOps：Jenkins/Docker/K8s/OCI；AI：LangChain RAG 與 pgvector 混合檢索；兼具 Angular、Flutter 前端整合經驗。"
+    "en": "Core backend expertise in Spring Boot layered architecture, PostgreSQL/Redis performance tuning, and RabbitMQ async processing. Proficient in enterprise security with Keycloak/JWT/OAuth2, and DevOps workflows spanning Jenkins, Docker, and Kubernetes on OCI/OpenShift. Hands-on experience building AI retrieval systems with LangChain RAG and pgvector hybrid search. Additional frontend exposure in Angular and Flutter.",
+    "zh": "後端核心：Spring Boot 多層架構、PostgreSQL/Redis 效能優化、RabbitMQ 非同步處理；安全：Keycloak/JWT/OAuth2；DevOps：Jenkins/Docker/K8s/OCI/OpenShift；AI：LangChain RAG 與 pgvector 混合檢索；兼具 Angular、Flutter 前端整合經驗。"
   }
 }
