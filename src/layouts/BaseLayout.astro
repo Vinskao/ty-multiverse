@@ -9,7 +9,7 @@ import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
 import QABot from '../components/QABot.astro';
 import QABotV2 from '../components/QABotV2.astro';
-import { ViewTransitions } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 
 
 
@@ -80,7 +80,7 @@ const { title, description } = Astro.props;
 			})();
 		</script>
 		<MainHead title={title} description={description} />
-		<ViewTransitions />
+		<ClientRouter />
 	</head>
 	<body>
 		<div class="stack backgrounds">

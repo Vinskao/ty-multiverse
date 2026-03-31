@@ -404,6 +404,8 @@
 
 .message-avatar {
   flex-shrink: 0;
+  width: 36px;
+  height: 36px;
 }
 
 .bot-avatar {
@@ -1399,7 +1401,7 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   border: 2px solid #DAA520;
   transition: all 0.3s ease;
   image-rendering: -webkit-optimize-contrast;
@@ -1531,6 +1533,48 @@
     font-size: 0.65rem;
   }
 }
+
+/* ─── 頭像遮罩 ─────────────────────────────────────────── */
+.avatar-img-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  font-size: 0;
+  aspect-ratio: 1;
+  margin-bottom: 8px;
+}
+
+/* avatar-item 已是 block，只需確保 relative */
+.avatar-item {
+  position: relative;
+}
+
+/* 遮罩偽元素：預設隱藏，avatars-locked 時顯示 */
+body.avatars-locked .avatar-img-wrap::after,
+body.avatars-locked .message-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* message-avatar 需要 relative */
+.message-avatar {
+  position: relative;
+}
+
+/* 鎖定時阻止圖片被拖拉/選取 */
+body.avatars-locked .avatar-img-wrap img,
+body.avatars-locked .message-avatar img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* ─── 頭像遮罩 end ───────────────────────────────────────── */
 
 /* 頁面分析功能樣式 */
 .page-analysis-button {

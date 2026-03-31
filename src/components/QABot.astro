@@ -68,6 +68,7 @@ import "../styles/qabot.css";
       this.setupEventListeners();
       this.setupAvatarSelector(); // 新增頭貼選擇器
       this.setupNetworkListener(); // 新增網路狀態監聽
+      this.setupAvatarMasks(); // 頭像遮罩（需登入才顯示）
       // 立即以預設 botName（Maya）填入 UI，不等 API
       this.updateAvatarAndNameAsync();
       this.fetchBotNames(); // 從 API 取得可用 bot 名稱
@@ -169,6 +170,35 @@ import "../styles/qabot.css";
         wasOffline = true;
         console.log("網路已斷線");
       });
+    }
+
+    // 頭像遮罩：未登入時遮蓋所有AI專員頭像，登入後解除
+    private setupAvatarMasks() {
+      this.updateAvatarMasks();
+
+      // 監聽 storage 變化（同頁 token 異動）
+      window.addEventListener("storage", (e) => {
+        if (e.key === "token") this.updateAvatarMasks();
+      });
+
+      // 防右鍵下載：bubble 階段攔截所有頭像圖片
+      document.addEventListener("contextmenu", (e) => {
+        if (document.body.classList.contains("avatars-locked")) {
+          const target = e.target as HTMLElement;
+          if (
+            target.matches(
+              ".header-avatar, .toggle-image, .bot-avatar, .avatar-selector-img",
+            )
+          ) {
+            e.preventDefault();
+          }
+        }
+      });
+    }
+
+    private updateAvatarMasks() {
+      const isLoggedIn = !!localStorage.getItem("token");
+      document.body.classList.toggle("avatars-locked", !isLoggedIn);
     }
 
     // 重新整理AI專員列表
@@ -424,11 +454,15 @@ import "../styles/qabot.css";
 
       avatarImg.onerror = () => { avatarItem.style.display = 'none'; };
 
+      const avatarImgWrap = document.createElement('div');
+      avatarImgWrap.className = 'avatar-img-wrap';
+      avatarImgWrap.appendChild(avatarImg);
+
       const avatarName = document.createElement('span');
       avatarName.textContent = name;
       avatarName.className = 'avatar-name';
 
-      avatarItem.appendChild(avatarImg);
+      avatarItem.appendChild(avatarImgWrap);
       avatarItem.appendChild(avatarName);
 
       avatarItem.addEventListener('click', () => {
@@ -772,11 +806,15 @@ import "../styles/qabot.css";
           avatarItem.style.display = "none";
         };
 
+        const avatarImgWrap = document.createElement("div");
+        avatarImgWrap.className = "avatar-img-wrap";
+        avatarImgWrap.appendChild(avatarImg);
+
         const avatarName = document.createElement("span");
         avatarName.textContent = botName;
         avatarName.className = "avatar-name";
 
-        avatarItem.appendChild(avatarImg);
+        avatarItem.appendChild(avatarImgWrap);
         avatarItem.appendChild(avatarName);
 
         // 點擊切換AI - 使用原始索引
