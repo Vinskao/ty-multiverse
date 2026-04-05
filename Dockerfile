@@ -1,7 +1,7 @@
 # Define platform as a build argument
 ARG PLATFORM=linux/arm64
 
-FROM --platform=${PLATFORM} node:20-alpine AS base
+FROM --platform=${PLATFORM} node:22-alpine AS base
 WORKDIR /app
 
 # Add build arguments for environment variables

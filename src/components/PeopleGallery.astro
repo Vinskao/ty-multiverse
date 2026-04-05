@@ -16,16 +16,12 @@ import '../styles/people-gallery.css';
 <script>
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
 
-  // Track original URLs for lightbox (thumbnails are downscaled)
-  const originalUrls = new Map<string, string>();
-
   async function loadGallery() {
     const loading = document.getElementById('pg-loading');
     const grid = document.getElementById('pg-grid') as HTMLElement;
     if (!loading || !grid) return;
 
     grid.innerHTML = '';
-    originalUrls.clear();
     grid.style.display = 'none';
     loading.style.display = '';
     loading.textContent = 'Loading people...';
@@ -39,8 +35,6 @@ import '../styles/people-gallery.css';
       return;
     }
 
-    const { thumbnailService } = await import('../services/thumbnailService');
-
     loading.style.display = 'none';
     grid.style.display = '';
 
@@ -50,10 +44,12 @@ import '../styles/people-gallery.css';
       card.style.display = 'none';
 
       const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
-      originalUrls.set(name, originalUrl);
 
       const img = document.createElement('img');
       img.alt = name;
+      img.onload = () => { card.style.display = ''; };
+      img.onerror = () => { card.remove(); };
+      img.src = originalUrl;
 
       const label = document.createElement('div');
       label.className = 'pg-name';
@@ -62,23 +58,7 @@ import '../styles/people-gallery.css';
       card.appendChild(img);
       card.appendChild(label);
       grid.appendChild(card);
-      card.addEventListener('click', () => openLightbox(originalUrls.get(name)!, name));
-
-      // Use thumbnail (cached in localStorage) for grid display
-      img.onerror = () => { card.remove(); };
-      thumbnailService.getThumbnail(name, originalUrl)
-        .then(dataUrl => {
-          // thumbnailService returns original URL as fallback on failure — treat as missing
-          if (!dataUrl.startsWith('data:')) {
-            // It's a fallback URL, verify with onerror on load
-            img.src = dataUrl;
-          } else {
-            img.onerror = null;
-            img.src = dataUrl;
-            card.style.display = '';
-          }
-        })
-        .catch(() => { card.remove(); });
+      card.addEventListener('click', () => openLightbox(originalUrl, name));
     }
   }
 
