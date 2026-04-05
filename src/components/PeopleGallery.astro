@@ -1,0 +1,103 @@
+---
+import '../styles/people-gallery.css';
+---
+
+<div id="pg-loading">Loading people...</div>
+<div class="pg-grid" id="pg-grid" style="display:none"></div>
+
+<div id="pg-lightbox">
+  <button id="pg-lightbox-close">&times;</button>
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <img id="pg-lightbox-img" src="" alt="" />
+    <div id="pg-lightbox-name"></div>
+  </div>
+</div>
+
+<script>
+  const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+
+  // Track original URLs for lightbox (thumbnails are downscaled)
+  const originalUrls = new Map<string, string>();
+
+  async function loadGallery() {
+    const loading = document.getElementById('pg-loading');
+    const grid = document.getElementById('pg-grid') as HTMLElement;
+    if (!loading || !grid) return;
+
+    grid.innerHTML = '';
+    originalUrls.clear();
+    grid.style.display = 'none';
+    loading.style.display = '';
+    loading.textContent = 'Loading people...';
+
+    let names: string[];
+    try {
+      const { peopleService } = await import('../services/api/peopleService');
+      names = await peopleService.getAllPeopleNames();
+    } catch {
+      loading.textContent = 'Failed to load people.';
+      return;
+    }
+
+    const { thumbnailService } = await import('../services/thumbnailService');
+
+    loading.style.display = 'none';
+    grid.style.display = '';
+
+    for (const name of names) {
+      const card = document.createElement('div');
+      card.className = 'pg-card';
+      card.style.display = 'none';
+
+      const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
+      originalUrls.set(name, originalUrl);
+
+      const img = document.createElement('img');
+      img.alt = name;
+
+      const label = document.createElement('div');
+      label.className = 'pg-name';
+      label.textContent = name;
+
+      card.appendChild(img);
+      card.appendChild(label);
+      grid.appendChild(card);
+      card.addEventListener('click', () => openLightbox(originalUrls.get(name)!, name));
+
+      // Use thumbnail (cached in localStorage) for grid display
+      img.onerror = () => { card.remove(); };
+      thumbnailService.getThumbnail(name, originalUrl)
+        .then(dataUrl => {
+          // thumbnailService returns original URL as fallback on failure — treat as missing
+          if (!dataUrl.startsWith('data:')) {
+            // It's a fallback URL, verify with onerror on load
+            img.src = dataUrl;
+          } else {
+            img.onerror = null;
+            img.src = dataUrl;
+            card.style.display = '';
+          }
+        })
+        .catch(() => { card.remove(); });
+    }
+  }
+
+  function openLightbox(src: string, name: string) {
+    (document.getElementById('pg-lightbox-img') as HTMLImageElement).src = src;
+    document.getElementById('pg-lightbox-name')!.textContent = name;
+    document.getElementById('pg-lightbox')!.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('pg-lightbox')!.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('pg-lightbox-close')?.addEventListener('click', closeLightbox);
+  document.getElementById('pg-lightbox')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('pg-lightbox')) closeLightbox();
+  });
+
+  document.addEventListener('astro:page-load', loadGallery);
+</script>

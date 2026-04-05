@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
-import Gallery from  "../components/Gallery.html";
+import PeopleGallery from "../components/PeopleGallery.astro";
 
 // 檢查登入狀態
 const url = new URL(Astro.request.url);
@@ -37,7 +37,7 @@ const token = url.searchParams.get('token');
             tagline="Designed by Tianyi in Taipei."
             align="start"
           />
-          <Gallery />
+          <PeopleGallery />
         </main>
       </div>
     </BaseLayout>

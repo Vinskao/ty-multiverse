@@ -1,0 +1,81 @@
+#pg-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray-400);
+}
+
+.pg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.pg-card {
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.pg-card:hover {
+  transform: scale(1.04);
+}
+
+.pg-card img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.pg-name {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#pg-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+#pg-lightbox.show {
+  display: flex;
+}
+
+#pg-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+#pg-lightbox-close:hover {
+  opacity: 0.8;
+}
+
+#pg-lightbox img {
+  max-height: 80vh;
+  max-width: 90vw;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+#pg-lightbox-name {
+  color: white;
+  margin-top: 12px;
+  font-size: 1.1rem;
+}
