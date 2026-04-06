@@ -241,9 +241,16 @@ const token = url.searchParams.get('token');
     charactersGrid.className = 'box-container';
     charactersGrid.style.margin = '0 auto';
 
-    characters.forEach(character => {
-      charactersGrid.appendChild(createCharacterCard(character, timestamp));
-    });
+    // 根據第一張卡片寬度設定左側 padding，避免最左邊的圖被容器邊緣切到
+    if (characters.length > 0) {
+      const firstCard = createCharacterCard(characters[0], timestamp);
+      const cardWidth = parseInt(firstCard.style.width) || 200;
+      charactersGrid.style.paddingLeft = (cardWidth / 2) + 'px';
+      charactersGrid.appendChild(firstCard);
+      characters.slice(1).forEach(character => {
+        charactersGrid.appendChild(createCharacterCard(character, timestamp));
+      });
+    }
 
     armyContainer.appendChild(armyTitle);
     armyContainer.appendChild(charactersGrid);
