@@ -4,8 +4,10 @@
 
 class ThumbnailService {
   private cache: Map<string, string> = new Map();
+  private rectCache: Map<string, string> = new Map();
   private failedThumbnails: Set<string> = new Set();
   private storageKeyPrefix = 'qabot_thumb_';
+  private rectStorageKeyPrefix = 'group_thumb_v2_'; // v2 = PNG contain format
   private MAX_THUMB_SIZE = 120; // 壓縮後的直徑
 
   constructor() {
@@ -17,16 +19,28 @@ class ThumbnailService {
 
   private loadFromStorage() {
     try {
+      const oldRectPrefix = 'group_thumb_'; // v1 legacy (JPEG, to be purged)
+      const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith(this.storageKeyPrefix)) {
+        if (!key) continue;
+        // Purge old v1 JPEG rect cache
+        if (key.startsWith(oldRectPrefix) && !key.startsWith(this.rectStorageKeyPrefix)) {
+          keysToRemove.push(key);
+          continue;
+        }
+        if (key.startsWith(this.storageKeyPrefix)) {
           const name = key.replace(this.storageKeyPrefix, '');
           const dataUrl = localStorage.getItem(key);
-          if (dataUrl) {
-            this.cache.set(name, dataUrl);
-          }
+          if (dataUrl) this.cache.set(name, dataUrl);
+        }
+        if (key.startsWith(this.rectStorageKeyPrefix)) {
+          const name = key.replace(this.rectStorageKeyPrefix, '');
+          const dataUrl = localStorage.getItem(key);
+          if (dataUrl) this.rectCache.set(name, dataUrl);
         }
       }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
     } catch (e) {
       console.warn('Failed to load thumbnails from localStorage', e);
     }
@@ -157,14 +171,71 @@ class ThumbnailService {
     });
   }
 
+  /**
+   * Get compressed rectangular image for a name and URL (for Group page cards).
+   * Uses Canvas to scale down to targetW x targetH and exports as JPEG.
+   */
+  async getCompressedRect(name: string, url: string, targetW: number, targetH: number): Promise<string> {
+    const cacheKey = `${name}_${targetW}x${targetH}`;
+    if (this.rectCache.has(cacheKey)) {
+      return this.rectCache.get(cacheKey)!;
+    }
+    try {
+      const dataUrl = await this.createRectThumbnail(url, targetW, targetH);
+      this.rectCache.set(cacheKey, dataUrl);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem(`${this.rectStorageKeyPrefix}${cacheKey}`, dataUrl);
+        }
+      } catch (e) {
+        // localStorage full — skip caching
+      }
+      return dataUrl;
+    } catch {
+      return url; // fallback to original
+    }
+  }
+
+  private createRectThumbnail(url: string, targetW: number, targetH: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (typeof document === 'undefined') {
+        reject(new Error('Document not available'));
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        // Contain scaling: fit within targetW x targetH without cropping
+        const scale = Math.min(targetW / img.width, targetH / img.height);
+        const dw = Math.round(img.width * scale);
+        const dh = Math.round(img.height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = dw;
+        canvas.height = dh;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('No canvas context')); return; }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        // Transparent background — use PNG to preserve alpha
+        ctx.clearRect(0, 0, dw, dh);
+        ctx.drawImage(img, 0, 0, dw, dh);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error(`Failed to load ${url}`));
+      img.src = url;
+    });
+  }
+
   clearCache() {
     this.cache.clear();
+    this.rectCache.clear();
     this.failedThumbnails.clear();
     if (typeof window !== 'undefined' && window.localStorage) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith(this.storageKeyPrefix)) {
+        if (key?.startsWith(this.storageKeyPrefix) || key?.startsWith(this.rectStorageKeyPrefix)) {
           keysToRemove.push(key);
         }
       }
