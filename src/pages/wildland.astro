@@ -189,7 +189,7 @@ const token = url.searchParams.get('token');
     characterContainer.style.cssText = 'display:none;width:200px;text-align:center;margin-left:-100px;position:relative;z-index:1;vertical-align:bottom;cursor:pointer;';
 
     const img = document.createElement('img');
-    img.style.cssText = 'width:200px;height:auto;display:block;margin:0 auto;padding:0;border:none;z-index:2;';
+    img.style.cssText = 'width:auto;height:300px;display:block;margin:0 auto;padding:0;border:none;z-index:2;object-fit:contain;';
     img.alt = character.nameOriginal;
 
     const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(character.name || 'default')}.png?t=${timestamp}`;
