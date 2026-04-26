@@ -5,7 +5,7 @@ interface Props {
 	project: CollectionEntry<'work'>;
 }
 
-const { data, slug } = Astro.props.project;
+const { data, id } = Astro.props.project;
 const level = data.level || 'basic';
 const isAdvance = level === 'advance';
 const category = data.category;
@@ -44,7 +44,7 @@ const categoryConfig = {
 const categoryInfo = category ? categoryConfig[category] || { icon: '📚', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' } : null;
 ---
 
-<a class="card" href={`/tymultiverse/work/${slug}`}>
+<a class="card" href={`/tymultiverse/work/${id}`}>
 	<div class="header-container">
 		{categoryInfo && (
 			<span

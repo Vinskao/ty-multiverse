@@ -20,6 +20,124 @@ TY Multiverse Frontend is a modern web application built with Astro framework, p
 - **Build Tool**: Vite (via Astro)
 - **Deployment**: Static generation with SSR support
 
+### Frontend Routing Architecture
+
+#### Dynamic Routes & Content Collections
+
+**Project Structure:**
+```
+src/pages/
+├── work.astro                    # Work index page - displays list of work items
+├── work/
+│   └── [...slug].astro           # Dynamic route handler for individual work pages
+```
+
+**Content Collection:**
+```
+src/content/
+└── work/                         # Content collection for work items
+    ├── project-1.md
+    ├── project-2.md
+    └── ...
+```
+
+**Key Implementation Details:**
+
+1. **Dynamic Route File** `src/pages/work/[...slug].astro`:
+   - Uses Astro's content collection API with `getStaticPaths()`
+   - Generates static pages for each work item during build
+   - Route parameter: `entry.id` (derived from markdown filename without extension)
+   ```typescript
+   export async function getStaticPaths() {
+     const work = await getCollection('work');
+     return work.map((entry) => ({
+       params: { slug: entry.id },    // ⚠️ Route param is 'slug', but data uses 'id'
+       props: { entry },
+     }));
+   }
+   ```
+
+2. **Content Collection Entry Structure** (`CollectionEntry<'work'>`):
+   - **`id`**: The unique identifier derived from filename (e.g., "javascript-basics")
+   - **`data`**: Frontmatter content (title, description, tags, publishDate, etc.)
+   - **`render()`**: Function to convert markdown to HTML
+   - ⚠️ **Note**: Astro v5 Content Collections use `id`, NOT `slug` property
+
+3. **Link Generation** `src/components/PortfolioPreview.astro`:
+   - **Line 8**: Destructure from `CollectionEntry`
+   ```typescript
+   const { data, id } = Astro.props.project;  // ✅ Use 'id' property
+   ```
+   - **Line 47**: Generate work page URL
+   ```typescript
+   <a class="card" href={`/tymultiverse/work/${id}`}>  // ✅ Use 'id' in href
+   ```
+
+#### URL Routing Flow
+
+```
+User navigates: /tymultiverse/work/
+                    ↓
+          work.astro renders list of work items
+                    ↓
+          PortfolioPreview.astro generates links
+                    ↓
+          Link href: /tymultiverse/work/{id}
+                    ↓
+          Browser navigates to: /tymultiverse/work/javascript-basics
+                    ↓
+          Astro router matches [...slug].astro
+                    ↓
+          getStaticPaths() provides pre-rendered entry data
+                    ↓
+          Individual work page renders with entry.data
+```
+
+#### Common Issues & Fixes
+
+**Issue**: All work page links show `/tymultiverse/work/undefined`
+
+**Root Cause**: Using `slug` property instead of `id` from `CollectionEntry`
+- Astro v5 Content Collections removed the `slug` property
+- Changed to use `id` instead (filename without extension)
+
+**Fix**:
+1. Change line 8 in `PortfolioPreview.astro`:
+   - Before: `const { data, slug } = Astro.props.project;`
+   - After: `const { data, id } = Astro.props.project;`
+2. Change line 47 in `PortfolioPreview.astro`:
+   - Before: `href={`/tymultiverse/work/${slug}`}`
+   - After: `href={`/tymultiverse/work/${id}`}`
+
+**Testing**:
+```bash
+# Start dev server
+npm run dev
+
+# Visit work page
+# http://localhost:4321/tymultiverse/work/
+
+# Verify links show correct URLs (not undefined)
+# Click on any card to navigate to individual work page
+```
+
+#### Base Path Configuration
+
+- **Configuration File**: `astro.config.ts` (Line 12)
+- **Base Path**: `/tymultiverse`
+- **Impact**: All routes are prefixed with `/tymultiverse`
+  ```typescript
+  export default defineConfig({
+    base: '/tymultiverse',
+  });
+  ```
+
+#### Related Files
+- Route handler: [src/pages/work/[...slug].astro](src/pages/work/[...slug].astro)
+- Work index: [src/pages/work.astro](src/pages/work.astro)
+- Card component: [src/components/PortfolioPreview.astro](src/components/PortfolioPreview.astro)
+- Content config: [src/content.config.ts](src/content.config.ts)
+
 ### Key Features
 - **People Management**: Interactive character management interface
 - **Weapons System**: Damage calculation and weapon management
