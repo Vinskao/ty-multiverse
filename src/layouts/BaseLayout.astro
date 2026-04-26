@@ -30,6 +30,7 @@ const { title, description } = Astro.props;
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 		<title>TY Multiverse</title>
+		<script is:inline src="/tymultiverse/scripts/lang.js"></script>
 		<script is:inline>
 			// 🎨 主題初始化 - 在任何渲染之前執行，避免主題閃爍 (FOUC)
 			(function() {
@@ -152,6 +153,18 @@ const { title, description } = Astro.props;
 					timestamp: new Date().toISOString()
 				};
 			};
+
+			// 🚀 View Transitions 修復：在 DOM Swap 後立即恢復主題類別
+			// 這確保了 React 水合 (Hydration) 時能讀取到正確的 classList
+			document.addEventListener('astro:after-swap', () => {
+				const savedTheme = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+				document.documentElement.classList.remove('theme-light', 'theme-dark');
+				document.documentElement.classList.add(`theme-${theme}`);
+				if (!savedTheme) localStorage.setItem('theme', theme);
+				console.log('[Theme] astro:after-swap applied theme:', theme);
+			});
 		</script>
 
 		<style>

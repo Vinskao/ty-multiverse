@@ -33,14 +33,17 @@ const links = [
 				title="TY's Blog"
 				tagline="Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding."
 				align="start"
-			/>
+			>
+				<div slot="title" data-i18n="work.title">TY's Blog</div>
+				<div slot="tagline" data-i18n="work.tagline">Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding.</div>
+			</Hero>
 
 
 			<CKEditor />
 			<div class="article-count" style="text-align: center;">
-				<p class="article-count-text" style="margin: 0 auto;">📚 Total {projects.length} articles</p>
+				<p class="article-count-text" style="margin: 0 auto;" data-i18n="work.articleCount" data-i18n-count={projects.length}>📚 Total {projects.length} articles</p>
 				<div class="sync-section" style="margin-top: 1rem; text-align: center;">
-					<button id="sync-articles-btn" class="sync-btn" style="
+					<button id="sync-articles-btn" class="sync-btn" data-i18n="work.syncBtn" style="
 						background: #007acc;
 						color: white;
 						border: none;
@@ -80,19 +83,32 @@ const links = [
 
 	<script>
 		import { syncService } from '../services/api/syncService';
+		import i18nData from '../storages/i18n.json';
 
 		document.addEventListener('DOMContentLoaded', () => {
 			const syncBtn = document.getElementById('sync-articles-btn') as HTMLButtonElement;
 			const syncStatus = document.getElementById('sync-status');
 
+			const getI18n = (key: string) => {
+				const lang = (window as any).AppLang ? (window as any).AppLang.get() : (localStorage.getItem('site_language') || 'en');
+				const keys = key.split('.');
+				let translation: any = i18nData;
+				for (const k of keys) {
+					translation = translation[k];
+				}
+				return translation[lang] || translation['en'] || key;
+			};
+
 			if (syncBtn && syncStatus) {
 				syncBtn.addEventListener('click', async () => {
 					try {
+						const lang = (window as any).AppLang ? (window as any).AppLang.get() : 'en';
+						
 						// 禁用按鈕並顯示載入狀態
 						syncBtn.disabled = true;
 						syncBtn.style.background = '#666';
-						syncBtn.textContent = '🔄 Syncing...';
-						syncStatus.textContent = 'Preparing to sync articles...';
+						syncBtn.textContent = lang === 'zh' ? '🔄 同步中...' : '🔄 Syncing...';
+						syncStatus.textContent = getI18n('work.syncPreparing');
 						syncStatus.style.color = '#666';
 
 						// 執行同步
@@ -101,32 +117,36 @@ const links = [
 						if (result.success) {
 							const vectorInfo =
 								typeof result.vectorizedCount === 'number'
-									? `, embeddings: ${result.vectorizedCount}`
+									? (lang === 'zh' ? `, 向量化: ${result.vectorizedCount}` : `, embeddings: ${result.vectorizedCount}`)
 									: '';
 							const purgeInfo =
 								typeof result.purgedCount === 'number'
-									? `, purged: ${result.purgedCount}`
+									? (lang === 'zh' ? `, 清理: ${result.purgedCount}` : `, purged: ${result.purgedCount}`)
 									: '';
-							syncStatus.textContent = `✅ ${result.message} (${result.articleCount} articles${vectorInfo}${purgeInfo})`;
+							
+							const msg = lang === 'zh' ? '同步成功' : result.message;
+							const articleText = lang === 'zh' ? '篇文章' : 'articles';
+							
+							syncStatus.textContent = `✅ ${msg} (${result.articleCount} ${articleText}${vectorInfo}${purgeInfo})`;
 							syncStatus.style.color = '#28a745';
 							syncBtn.style.background = '#28a745';
-							syncBtn.textContent = '✅ Synced!';
+							syncBtn.textContent = getI18n('work.synced');
 						} else {
 							throw new Error(result.message);
 						}
 
 					} catch (error) {
 						console.error('Sync failed:', error);
-						syncStatus.textContent = `❌ Sync failed: ${error.message}`;
+						syncStatus.textContent = `❌ ${getI18n('work.retry')}: ${error.message}`;
 						syncStatus.style.color = '#dc3545';
 						syncBtn.style.background = '#dc3545';
-						syncBtn.textContent = '❌ Retry';
+						syncBtn.textContent = getI18n('work.retry');
 					} finally {
 						syncBtn.disabled = false;
 						// 3秒後恢復原始狀態
 						setTimeout(() => {
 							syncBtn.style.background = '#007acc';
-							syncBtn.textContent = '🔄 Sync Articles to DB';
+							syncBtn.textContent = getI18n('work.syncBtn');
 							syncStatus.textContent = '';
 						}, 3000);
 					}

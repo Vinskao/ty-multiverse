@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "home": { "en": "Home", "zh": "首頁" },
+    "login": { "en": "Login", "zh": "登入" },
+    "logout": { "en": "Logout", "zh": "登出" },
+    "work": { "en": "Work", "zh": "部落格" },
+    "about": { "en": "About", "zh": "關於我" },
+    "control": { "en": "Control", "zh": "主控室" },
+    "wildland": { "en": "Wildland", "zh": "荒野" },
+    "palais": { "en": "Palais", "zh": "皇宮" }
+  },
+  "home": {
+    "heroTitle": { "en": "TY's Outerspace", "zh": "TY 的宇宙" },
+    "heroTagline": { "en": "The Future is Now", "zh": "未來就是現在" },
+    "visitorCounterPrefix": { "en": "Sequence #", "zh": "序列 #" },
+    "visitorCounterSuffix": { "en": ": Identity Synchronized", "zh": "：身份已同步" },
+    "githubTitle": { "en": "Github Contributions", "zh": "Github 貢獻度" },
+    "leetcodeTitle": { "en": "LeetCode Stats", "zh": "LeetCode 統計" },
+    "leetcodeLabels": {
+      "solved": { "en": "Total Solved", "zh": "總計解題" },
+      "easy": { "en": "Easy", "zh": "簡單" },
+      "medium": { "en": "Medium", "zh": "中等" },
+      "hard": { "en": "Hard", "zh": "困難" }
+    },
+    "patternsTitle": { "en": "Patterns Learned", "zh": "已學習模式" },
+    "skillsTitle": {
+      "backend": { "en": "BackEnd", "zh": "後端開發" },
+      "frontend": { "en": "FrontEnd", "zh": "前端開發" },
+      "infra": { "en": "Infra", "zh": "基礎設施" }
+    },
+    "loginAlert": { "en": "Please Login First", "zh": "請先登入" },
+    "loading": { "en": "Loading...", "zh": "載入中..." },
+    "retry": { "en": "Retry", "zh": "重試" },
+    "collectionsTitle": { "en": "Collections", "zh": "收藏集" },
+    "recentNotes": { "en": "Recent Notes", "zh": "近期筆記" },
+    "viewAll": { "en": "View All", "zh": "查看全部" }
+  },
+  "work": {
+    "title": { "en": "TY's Blog", "zh": "TY 的部落格" },
+    "tagline": {
+      "en": "Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding.",
+      "zh": "雖然每篇文章都集中在單一主題，但通常包含多種關鍵知識點。透過識別並連結不同文章中的相同知識點，你可以建立更全面的理解。"
+    },
+    "articleCount": { "en": "📚 Total {count} articles", "zh": "📚 總計 {count} 篇文章" },
+    "syncBtn": { "en": "🔄 Sync Articles to DB", "zh": "🔄 同步文章至資料庫" },
+    "syncPreparing": { "en": "Preparing to sync articles...", "zh": "正在準備同步文章..." },
+    "synced": { "en": "✅ Synced!", "zh": "✅ 已同步！" },
+    "retry": { "en": "❌ Retry", "zh": "❌ 重試" },
+    "advance": { "en": "🚀 Advance", "zh": "🚀 進階" },
+    "basic": { "en": "📘 Basic", "zh": "📘 基礎" }
+  }
+}

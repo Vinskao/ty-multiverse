@@ -99,8 +99,10 @@ const skillsCategories = skillsData.categories;
 	{showLoginAlert && 
 		<script is:inline>
 			document.addEventListener('DOMContentLoaded', function() {
+				const lang = (window.AppLang ? window.AppLang.get() : (localStorage.getItem('site_language') || 'en'));
+				const title = lang === 'zh' ? '請先登入' : 'Please Login First';
 				window.Swal.fire({
-					title: '請先登入',
+					title: title,
 					icon: 'info',
 					timer: 1000,
 					showConfirmButton: false
@@ -115,10 +117,10 @@ const skillsCategories = skillsData.categories;
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
 					<div class="hero-header">
-						<h1>TY's Outerspace</h1>
-						<p>The Future is Now</p>
+						<h1 data-i18n="home.heroTitle">TY's Outerspace</h1>
+						<p data-i18n="home.heroTagline">The Future is Now</p>
 						<div class="visitor-counter-box">
-						<p class="visit-counter">Sequence #<span id="visit-count">...</span>: Identity Synchronized</p>
+						<p class="visit-counter"><span data-i18n="home.visitorCounterPrefix">Sequence #</span><span id="visit-count">...</span><span data-i18n="home.visitorCounterSuffix">: Identity Synchronized</span></p>
 						</div>
 					</div>
 					<div class="hero-content">
@@ -136,7 +138,7 @@ const skillsCategories = skillsData.categories;
 							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
 						</div>
 						<div class="github-graph">
-							<h5>Github Contributions</h5>
+							<h5 data-i18n="home.githubTitle">Github Contributions</h5>
 							<div>
 								<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
 							</div>
@@ -147,32 +149,32 @@ const skillsCategories = skillsData.categories;
 						</div>
 
 						<div class="leetcode-graph">
-							<h5>LeetCode Stats</h5>
+							<h5 data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
 							<div id="leetcode-stats" class="leetcode-container">
 								<div class="leetcode-card">
-									<h6>Total Solved</h6>
-									<p id="total-solved">Loading...</p>
+									<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
+									<p id="total-solved" data-i18n="home.loading">Loading...</p>
 									<div class="progress-bar">
 										<div id="total-progress"></div>
 									</div>
 								</div>
 								<div class="leetcode-card">
-									<h6>Easy</h6>
-									<p id="easy-solved">Loading...</p>
+									<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
+									<p id="easy-solved" data-i18n="home.loading">Loading...</p>
 									<div class="progress-bar">
 										<div id="easy-progress"></div>
 									</div>
 								</div>
 								<div class="leetcode-card">
-									<h6>Medium</h6>
-									<p id="medium-solved">Loading...</p>
+									<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
+									<p id="medium-solved" data-i18n="home.loading">Loading...</p>
 									<div class="progress-bar">
 										<div id="medium-progress"></div>
 									</div>
 								</div>
 								<div class="leetcode-card">
-									<h6>Hard</h6>
-									<p id="hard-solved">Loading...</p>
+									<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
+									<p id="hard-solved" data-i18n="home.loading">Loading...</p>
 									<div class="progress-bar">
 										<div id="hard-progress"></div>
 									</div>
@@ -181,7 +183,7 @@ const skillsCategories = skillsData.categories;
 						</div>
 
                         <div class="algorithms-section">
-                            <h5>Patterns Learned</h5>
+                            <h5 data-i18n="home.patternsTitle">Patterns Learned</h5>
                             <div class="algorithms-list">
                                 {algorithmsUsed.map((algo) => (
                                     <span class="pill algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
@@ -236,8 +238,8 @@ const skillsCategories = skillsData.categories;
 		<main class="wrapper stack gap-20 lg:gap-48">
 			<section class="section with-background with-cta">
 				<header class="section-header stack gap-2 lg:gap-4">
-					<h5>Collections</h5>
-					<p>Recent Notes</p>
+					<h5 data-i18n="home.collectionsTitle">Collections</h5>
+					<p data-i18n="home.recentNotes">Recent Notes</p>
 				</header>
 
 				<div class="gallery">
@@ -254,7 +256,7 @@ const skillsCategories = skillsData.categories;
 
 				<div class="cta">
 					<CallToAction href="/tymultiverse/work/">
-						View All
+						<span data-i18n="home.viewAll">View All</span>
 						<Icon icon="arrow-right" size="1.2em" />
 					</CallToAction>
 				</div>

@@ -309,7 +309,7 @@ import "../styles/qabot.css";
       this.state.currentLanguage = (window as any).AppLang
         ? (window as any).AppLang.getQALang()
         : localStorage.getItem("qabot_language") || "chinese";
-      this.updateLanguageButton();
+
       this.updateInputPlaceholder();
 
       // Listen to global language changes
@@ -321,7 +321,7 @@ import "../styles/qabot.css";
           if (qaLang && qaLang !== this.state.currentLanguage) {
             this.state.currentLanguage = qaLang;
             this.reinitializeChat();
-            this.updateLanguageButton();
+
             this.updateInputPlaceholder();
           }
         });
@@ -938,19 +938,6 @@ import "../styles/qabot.css";
       (
         document.getElementById("fullscreenButton") as HTMLButtonElement
       ).addEventListener("click", () => this.toggleFullscreen());
-      (
-        document.getElementById("languageButton") as HTMLButtonElement
-      ).addEventListener("click", () => {
-        // 檢查是否在V2模式下
-        if ((window as any).qabotMode === "v2") {
-          const config = qabotConfig.header_controls.v2.language;
-          if (config && !config.enabled && config.restriction_message) {
-            this.showV2RestrictionMessage(config.restriction_message);
-          }
-          return;
-        }
-        this.toggleLanguage();
-      });
 
       // 輸入相關事件
       this.elements.userInput.addEventListener("input", () => {
@@ -1852,7 +1839,7 @@ import "../styles/qabot.css";
       } else {
         localStorage.setItem("qabot_language", this.state.currentLanguage);
       }
-      this.updateLanguageButton();
+
       this.updateInputPlaceholder();
 
       // 更新分析面板語言
@@ -1929,22 +1916,7 @@ import "../styles/qabot.css";
       (this.elements.sendButton as HTMLButtonElement).disabled = !hasText;
     }
 
-    private updateLanguageButton() {
-      const languageButton = document.getElementById(
-        "languageButton",
-      ) as HTMLButtonElement;
-      const languageText = languageButton.querySelector(
-        ".language-text",
-      ) as HTMLSpanElement;
 
-      if (this.state.currentLanguage === "chinese") {
-        languageText.textContent = "中文";
-        languageButton.title = "切換到英文";
-      } else {
-        languageText.textContent = "English";
-        languageButton.title = "Switch to Chinese";
-      }
-    }
 
     private updateInputPlaceholder() {
       (this.elements.userInput as HTMLInputElement).placeholder =

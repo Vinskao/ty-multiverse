@@ -21,10 +21,12 @@ const textLinks: {
   label: string;
   href: string;
   isActive: boolean;
+  i18nKey: string;
   adminOnly?: boolean;
 }[] = [
   {
     label: "Home",
+    i18nKey: "nav.home",
     href: isLoggedIn
       ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}`
       : "/tymultiverse/",
@@ -34,6 +36,7 @@ const textLinks: {
   },
   {
     label: isLoggedIn ? "Logout" : "Login",
+    i18nKey: isLoggedIn ? "nav.logout" : "nav.login",
     href: isLoggedIn
       ? "#"
       : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
@@ -41,6 +44,7 @@ const textLinks: {
   },
   {
     label: "Work",
+    i18nKey: "nav.work",
     href: isLoggedIn
       ? `/tymultiverse/work/?username=${username}&token=${token}`
       : "/tymultiverse/work/",
@@ -48,6 +52,7 @@ const textLinks: {
   },
   {
     label: "About",
+    i18nKey: "nav.about",
     href: isLoggedIn
       ? `/tymultiverse/about/?username=${username}&token=${token}`
       : "/tymultiverse/about/",
@@ -57,17 +62,20 @@ const textLinks: {
     ? [
         {
           label: "Control",
+          i18nKey: "nav.control",
           href: `/tymultiverse/control/?username=${username}&token=${token}`,
           isActive: currentPath.startsWith("/tymultiverse/control"),
         },
         {
           label: "Wildland",
+          i18nKey: "nav.wildland",
           adminOnly: true,
           href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
           isActive: currentPath.startsWith("/tymultiverse/wildland"),
         },
         {
           label: "Palais",
+          i18nKey: "nav.palais",
           adminOnly: true,
           href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
           isActive: currentPath.startsWith("/tymultiverse/palais"),
@@ -124,7 +132,7 @@ const iconLinks: {
   <noscript>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href, isActive, adminOnly }) => (
+        textLinks.map(({ label, href, isActive, i18nKey, adminOnly }) => (
           <li class:list={[{ "admin-only": adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
@@ -135,6 +143,7 @@ const iconLinks: {
                 },
               ]}
               href={href}
+              data-i18n={i18nKey}
             >
               {label}
             </a>
@@ -155,12 +164,16 @@ const iconLinks: {
           ))
         }
       </div>
+      <div class="nav-controls-footer">
+        <button id="langToggleBtn-noscript" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
+        <ThemeToggle client:load />
+      </div>
     </div>
   </noscript>
   <div id="menu-content" hidden>
     <ul class="nav-items">
       {
-        textLinks.map(({ label, href, isActive, adminOnly }) => (
+        textLinks.map(({ label, href, isActive, i18nKey, adminOnly }) => (
           <li class:list={[{ "admin-only": adminOnly }]}>
             <a
               aria-current={isActive ? "page" : "false"}
@@ -171,6 +184,7 @@ const iconLinks: {
                 },
               ]}
               href={href}
+              data-i18n={i18nKey}
             >
               {label}
             </a>
@@ -189,14 +203,118 @@ const iconLinks: {
           ))
         }
       </div>
+      <div class="nav-controls-footer">
+        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
+        <ThemeToggle client:load />
+      </div>
     </div>
   </div>
 </nav>
 
-{
-  /* ThemeToggle 獨立放置，使用 consolidated ThemeToggle 元件（自帶 Provider） */
-}
-<ThemeToggle client:load />
+<script>
+  import i18nData from "../storages/i18n.json";
+
+  let _langCleanup: (() => void) | null = null;
+
+  /** 語言切換按鈕邏輯 **/
+  function initLangToggle() {
+    const btn = document.getElementById("langToggleBtn");
+    if (!btn) return;
+
+    const translatePage = (code: string) => {
+      // 翻譯帶有 data-i18n 屬性的元素
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        if (!key) return;
+        
+        const keys = key.split(".");
+        let translation: any = i18nData;
+        
+        // 依照 key 路徑尋找翻譯，例如 "nav.home"
+        for (const k of keys) {
+          if (translation && translation[k]) {
+            translation = translation[k];
+          } else {
+            translation = null;
+            break;
+          }
+        }
+        
+        // 再依照語言代碼取得最終文字
+        if (translation && translation[code]) {
+          let text = translation[code];
+          const count = el.getAttribute("data-i18n-count");
+          if (count !== null) {
+            text = text.replace("{count}", count);
+          }
+          el.textContent = text;
+        }
+      });
+    };
+
+    const updateBtn = (lang: string) => {
+      btn.textContent = lang === "zh" ? "中文" : "EN";
+    };
+
+    // Always-working click handler — no dependency on AppLang being ready at init time
+    btn.addEventListener("click", () => {
+      const AppLang = (window as any).AppLang;
+      if (AppLang) {
+        const next = AppLang.get() === "en" ? "zh" : "en";
+        console.log('[LangToggle] click via AppLang → toggling to:', next);
+        AppLang.set(next);
+      } else {
+        // Fallback: toggle via localStorage directly if AppLang script hasn't initialized
+        const STORAGE_KEY = 'site_language';
+        const current = localStorage.getItem(STORAGE_KEY) || 'en';
+        const next = current === "en" ? "zh" : "en";
+        localStorage.setItem(STORAGE_KEY, next);
+        updateBtn(next);
+        translatePage(next);
+        console.warn('[LangToggle] AppLang not ready — used localStorage fallback, toggled to:', next);
+      }
+    });
+
+    const setupHandlers = () => {
+      const AppLang = (window as any).AppLang;
+      if (!AppLang) return false;
+      
+      const current = AppLang.get();
+      updateBtn(current);
+      translatePage(current);
+      
+      if (_langCleanup) { _langCleanup(); _langCleanup = null; }
+      _langCleanup = AppLang.onChange(({ code }: { code: string }) => {
+        updateBtn(code);
+        translatePage(code);
+        console.log('[LangToggle] onChange fired, lang:', code);
+      });
+      
+      console.log('[LangToggle] handlers set up, lang:', current);
+      return true;
+    };
+
+    if (!setupHandlers()) {
+      // Fallback init if AppLang is not ready yet
+      const current = localStorage.getItem('site_language') || 'en';
+      updateBtn(current);
+      translatePage(current);
+      
+      console.warn('[LangToggle] AppLang not ready at init, scheduling retry...');
+      setTimeout(() => {
+        if (setupHandlers()) {
+          console.log('[LangToggle] retry succeeded');
+        } else {
+          console.error('[LangToggle] AppLang still not available after retry');
+        }
+      }, 500);
+    }
+  }
+
+  // 支援 View Transitions
+  initLangToggle();
+  document.addEventListener("astro:page-load", initLangToggle);
+</script>
 
 <script>
   import { storageService } from "../services/core/storageService";
