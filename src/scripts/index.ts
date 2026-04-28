@@ -360,12 +360,8 @@ async function updateVisitCount() {
         
         if (!sessionCookie) {
             // If no session cookie exists, increment the counter
-            await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/push/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'value=1'
+            await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/increment/`, {
+                method: 'POST'
             });
             
             // Set a session cookie that expires in 30 minutes

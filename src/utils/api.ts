@@ -14,7 +14,7 @@ export const API_CONFIG = {
     // Maya Sawa Voyeur API (訪客統計)
     voyeurCount: '/maya-sawa/voyeur/count/',
     voyeurIncrement: '/maya-sawa/voyeur/increment/',
-    voyeurPush: '/maya-sawa/voyeur/push/',
+    voyeurPush: '/maya-sawa/voyeur/increment/',
     // Maya V2 API (遠端 API)
     availableModels: '/maya-v2/available-models/',
     askWithModel: '/maya-v2/ask-with-model/',
