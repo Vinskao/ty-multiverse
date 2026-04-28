@@ -6,10 +6,10 @@
   // 檢查角色圖片是否存在
   async function checkCharacterImageExists(characterName: string): Promise<boolean> {
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`, {
-        method: 'HEAD',
-      });
-      return response.ok;
+      const { imageCacheService } = await import('../services/imageCacheService');
+      const url = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`;
+      const cachedUrl = await imageCacheService.getImageObjectUrl(url);
+      return !!cachedUrl;
     } catch (error) {
       console.error(`檢查角色圖片失敗 ${characterName}:`, error);
       return false;
@@ -206,10 +206,10 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
   // 檢查角色圖片是否存在（客戶端版本）
   async function checkCharacterImageExistsClient(characterName: string): Promise<boolean> {
     try {
-      const response = await fetch(`${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`, {
-        method: 'HEAD',
-      });
-      return response.ok;
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const url = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${characterName}.png`;
+      const cachedUrl = await imageCacheService.getImageObjectUrl(url);
+      return !!cachedUrl;
     } catch (error) {
       console.error(`檢查角色圖片失敗 ${characterName}:`, error);
       return false;
@@ -291,6 +291,25 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     // 獲取角色名稱列表（異步）
     await fetchCharacterNames();
+
+    const { imageCacheService } = await import('../services/imageCacheService.js');
+    
+    // 預加載默認圖片和疊加圖片
+    config.defaultImage = await imageCacheService.getImageObjectUrl(config.defaultImage) ?? config.defaultImage;
+    
+    const overlayIds = ['leftOverlay1', 'leftOverlay2', 'leftOverlay3', 'rightOverlay1', 'rightOverlay2', 'rightOverlay3'];
+    for (const id of overlayIds) {
+      const img = document.getElementById(id) as HTMLImageElement;
+      if (img) {
+        const cachedUrl = await imageCacheService.getImageObjectUrl(img.src);
+        if (cachedUrl) img.src = cachedUrl;
+      }
+    }
+    
+    const lImg = document.getElementById('leftImage') as HTMLImageElement;
+    if (lImg) lImg.src = config.defaultImage;
+    const rImg = document.getElementById('rightImage') as HTMLImageElement;
+    if (rImg) rImg.src = config.defaultImage;
 
     // 創建按鈕
     createButtons("leftButtons", "left");
@@ -451,10 +470,14 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
       // 直接選擇新角色，設置為main fighter
       clearAllEffects();
-      fighters[side].main.image = imagePath;
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      const finalImagePath = cachedUrl ?? imagePath;
+      
+      fighters[side].main.image = finalImagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
-      if (mainImage) mainImage.src = imagePath;
+      if (mainImage) mainImage.src = finalImagePath;
 
       updateButtonStates();
       fetchFighterInfo(side, imagePath, 'main');
@@ -475,33 +498,41 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     clearAllEffects();
 
-    // 確定fighter類型：根據選擇順序決定是main/left/right
+    // 檢查選擇的順序來確定fighter類型
     let fighterType: 'main' | 'left' | 'right' = 'main';
 
-    // 檢查選擇的順序來確定fighter類型
     if (!fighters[side].main.image) {
-      // 第一個選擇，設置為main
       fighterType = 'main';
-      fighters[side].main.image = imagePath;
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      const finalImagePath = cachedUrl ?? imagePath;
+      
+      fighters[side].main.image = finalImagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
-      if (mainImage) mainImage.src = imagePath;
-    } else if (!fighters[side].left?.image) {
-      // 第二個選擇，設置為left
+      if (mainImage) mainImage.src = finalImagePath;
+    } else if (!fighters[side].left) {
       fighterType = 'left';
-      fighters[side].left = { image: imagePath, totalPower: 0, name: selectedName };
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      const finalImagePath = cachedUrl ?? imagePath;
+      
+      fighters[side].left = { image: finalImagePath, totalPower: 0, name: selectedName };
       const leftImage = document.querySelector(`.${side}-side-container.left-side .side-image`) as HTMLImageElement;
       if (leftImage) {
-        leftImage.src = imagePath;
+        leftImage.src = finalImagePath;
         leftImage.style.display = 'block';
       }
-    } else if (!fighters[side].right?.image) {
-      // 第三個選擇，設置為right
+    } else if (!fighters[side].right) {
       fighterType = 'right';
-      fighters[side].right = { image: imagePath, totalPower: 0, name: selectedName };
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      const finalImagePath = cachedUrl ?? imagePath;
+      
+      fighters[side].right = { image: finalImagePath, totalPower: 0, name: selectedName };
       const rightImage = document.querySelector(`.${side}-side-container.right-side .side-image`) as HTMLImageElement;
       if (rightImage) {
-        rightImage.src = imagePath;
+        rightImage.src = finalImagePath;
         rightImage.style.display = 'block';
       }
     } else {
@@ -510,10 +541,14 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       // 先移除舊的main武器
       fetchAndDisplayWeaponInfo(side, null, 'main');
 
-      fighters[side].main.image = imagePath;
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      const finalImagePath = cachedUrl ?? imagePath;
+
+      fighters[side].main.image = finalImagePath;
       fighters[side].main.name = selectedName;
       const mainImage = document.getElementById(`${side}Image`) as HTMLImageElement;
-      if (mainImage) mainImage.src = imagePath;
+      if (mainImage) mainImage.src = finalImagePath;
     }
 
     updateButtonStates();
@@ -860,11 +895,12 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       const originalName = originalImagePath.split("/").pop()?.split(".")[0];
       if (!originalName) return originalImagePath;
 
+      const { imageCacheService } = await import('../services/imageCacheService.js');
       const fightingImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${originalName}Fighting.png`;
-      const response = await fetch(fightingImagePath);
+      const cachedUrl = await imageCacheService.getImageObjectUrl(fightingImagePath);
       
-      if (response.ok) {
-        return fightingImagePath;
+      if (cachedUrl) {
+        return cachedUrl;
       }
     } catch (error) {
       console.error(`Error loading fighting image for ${side}:`, error);
@@ -887,11 +923,12 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       if (!baseName) return currentImagePath;
 
+      const { imageCacheService } = await import('../services/imageCacheService.js');
       const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
-      const response = await fetch(ruinedImagePath);
+      const cachedUrl = await imageCacheService.getImageObjectUrl(ruinedImagePath);
       
-      if (response.ok) {
-        return ruinedImagePath;
+      if (cachedUrl) {
+        return cachedUrl;
       }
     } catch (error) {
       console.error(`Error loading ruined image for ${side}:`, error);
@@ -908,11 +945,12 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
       
       if (!baseName) return currentImagePath;
 
+      const { imageCacheService } = await import('../services/imageCacheService.js');
       const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
-      const response = await fetch(ruinedImagePath);
+      const cachedUrl = await imageCacheService.getImageObjectUrl(ruinedImagePath);
       
-      if (response.ok) {
-        return ruinedImagePath;
+      if (cachedUrl) {
+        return cachedUrl;
       }
     } catch (error) {
       console.error(`Error loading partner ruined image for ${side}:`, error);
@@ -1199,17 +1237,13 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         const baseName = imageName.replace("Fighting", "");
         
         if (baseName) {
+          const { imageCacheService } = await import('../services/imageCacheService.js');
           const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
-          try {
-            const response = await fetch(ruinedImagePath);
-            if (response.ok && ruinedImagePath !== currentSrc) {
-              loserLeftImage.src = ruinedImagePath;
-              loserLeftImage.classList.add('ruined-effect');
-              // 移除持續的戰敗效果
-              // loserLeftImage.style.filter = 'brightness(80%) saturate(80%)';
-            }
-          } catch (error) {
-            console.error(`Error loading partner ruined image for ${loserSide} left:`, error);
+          const cachedUrl = await imageCacheService.getImageObjectUrl(ruinedImagePath);
+          
+          if (cachedUrl && cachedUrl !== currentSrc) {
+            loserLeftImage.src = cachedUrl;
+            loserLeftImage.classList.add('ruined-effect');
           }
         }
       }
@@ -1222,17 +1256,13 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
         const baseName = imageName.replace("Fighting", "");
         
         if (baseName) {
+          const { imageCacheService } = await import('../services/imageCacheService.js');
           const ruinedImagePath = `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${baseName}Ruined.png`;
-          try {
-            const response = await fetch(ruinedImagePath);
-            if (response.ok && ruinedImagePath !== currentSrc) {
-              loserRightImage.src = ruinedImagePath;
-              loserRightImage.classList.add('ruined-effect');
-              // 移除持續的戰敗效果
-              // loserRightImage.style.filter = 'brightness(80%) saturate(80%)';
-            }
-          } catch (error) {
-            console.error(`Error loading partner ruined image for ${loserSide} right:`, error);
+          const cachedUrl = await imageCacheService.getImageObjectUrl(ruinedImagePath);
+          
+          if (cachedUrl && cachedUrl !== currentSrc) {
+            loserRightImage.src = cachedUrl;
+            loserRightImage.classList.add('ruined-effect');
           }
         }
       }

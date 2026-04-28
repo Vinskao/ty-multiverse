@@ -261,37 +261,28 @@ import '../styles/levellist.css';
   const imageCache = new Map();
   
   async function checkImageExists(imagePath) {
-    // 檢查緩存
-    if (imageCache.has(imagePath)) {
-      return imageCache.get(imagePath);
-    }
-    
     try {
-      const response = await fetch(imagePath, { 
-        method: 'HEAD', // 只檢查頭部，不下載圖片
-        cache: 'no-cache' // 避免瀏覽器緩存
-      });
-      const exists = response.ok;
-      imageCache.set(imagePath, exists);
-      return exists;
+      const { imageCacheService } = await import('../services/imageCacheService.js');
+      const cachedUrl = await imageCacheService.getImageObjectUrl(imagePath);
+      return !!cachedUrl;
     } catch {
-      imageCache.set(imagePath, false);
       return false;
     }
   }
 
   // 創建角色卡片
-  function createCharacterCard(character, levelColor) {
+  async function createCharacterCard(character, levelColor) {
     const characterContainer = document.createElement('div');
     // 使用 CSS 類別，不需要內聯樣式
     characterContainer.className = 'character-card';
 
+    const { imageCacheService } = await import('../services/imageCacheService.js');
+    const url = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+    const cachedUrl = await imageCacheService.getImageObjectUrl(url);
+
     const img = document.createElement('img');
-    img.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}.png`;
+    img.src = cachedUrl ?? `${PEOPLE_IMAGE_URL}/default.png`;
     img.alt = character.nameOriginal;
-    img.onerror = function() {
-      this.src = `${PEOPLE_IMAGE_URL}/default.png`;
-    };
 
     // 圖片加載完成後設置容器寬度
     img.onload = function() {
@@ -318,7 +309,9 @@ import '../styles/levellist.css';
       
       if (hasFightingImage) {
         const fightingImg = document.createElement('img');
-        fightingImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
+        const fUrl = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`;
+        const cfUrl = await imageCacheService.getImageObjectUrl(fUrl);
+        fightingImg.src = cfUrl ?? `${PEOPLE_IMAGE_URL}/default.png`;
         fightingImg.alt = `${character.nameOriginal} Fighting`;
         fightingImg.style.opacity = '0';
         
@@ -343,7 +336,9 @@ import '../styles/levellist.css';
       
       if (hasRuinedImage) {
         const ruinedImg = document.createElement('img');
-        ruinedImg.src = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`;
+        const rUrl = `${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`;
+        const crUrl = await imageCacheService.getImageObjectUrl(rUrl);
+        ruinedImg.src = crUrl ?? `${PEOPLE_IMAGE_URL}/default.png`;
         ruinedImg.alt = `${character.nameOriginal} Ruined`;
         ruinedImg.style.opacity = '0';
         
@@ -458,7 +453,7 @@ import '../styles/levellist.css';
   }
 
   // 創建等級容器
-  function createLevelContainer(level, characters) {
+  async function createLevelContainer(level, characters) {
     const levelContainer = document.createElement('div');
     levelContainer.className = 'level-container';
     levelContainer.style.marginTop = '50px';
@@ -485,9 +480,9 @@ import '../styles/levellist.css';
     charactersGrid.className = 'box-container';
     charactersGrid.style.margin = '0 auto';
 
-    characters.forEach(character => {
-      charactersGrid.appendChild(createCharacterCard(character, level.color));
-    });
+    for (const character of characters) {
+      charactersGrid.appendChild(await createCharacterCard(character, level.color));
+    }
 
     levelContainer.appendChild(levelTitle);
     levelContainer.appendChild(levelBadge);
@@ -1887,11 +1882,11 @@ import '../styles/levellist.css';
       mainContainer.className = 'level-groups';
 
       // 從低到高顯示等級，跳過沒有角色的等級
-      POWER_LEVELS.reverse().forEach(level => {
+      for (const level of POWER_LEVELS.reverse()) {
         const characters = levelGroups[level.name];
-        if (characters.length === 0) return;
-        mainContainer.appendChild(createLevelContainer(level, characters));
-      });
+        if (characters.length === 0) continue;
+        mainContainer.appendChild(await createLevelContainer(level, characters));
+      }
 
       const container = document.getElementById('level-container');
       if (container) {

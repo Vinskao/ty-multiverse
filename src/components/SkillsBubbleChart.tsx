@@ -69,15 +69,37 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
     const updateDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        const size = Math.min(width, 600);
-        setDimensions({ width: size, height: size });
+        if (width > 0) {
+          const size = Math.min(width, 600);
+          setDimensions({ width: size, height: size });
+        }
       }
     };
 
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    
+    // Use ResizeObserver for more reliable sizing
+    const ro = new ResizeObserver(() => updateDimensions());
+    if (containerRef.current) {
+      ro.observe(containerRef.current);
+    }
+    
+    return () => ro.disconnect();
   }, []);
+
+  // Add astro:page-load listener to handle View Transitions navigation
+  useEffect(() => {
+    const handlePageLoad = () => {
+      // Re-render because Astro may have morphed the DOM (empty SVG after swap)
+      if (selectedCategory) {
+        renderTreemap();
+      } else {
+        renderBubbleChart();
+      }
+    };
+    document.addEventListener('astro:page-load', handlePageLoad);
+    return () => document.removeEventListener('astro:page-load', handlePageLoad);
+  }, [selectedCategory, renderBubbleChart, renderTreemap]);
 
   // Handle back button
   const handleBack = useCallback(() => {
@@ -88,8 +110,9 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
   const renderBubbleChart = useCallback(() => {
     if (!svgRef.current || data.length === 0) return;
 
-    const { width, height } = dimensions;
-    const margin = 2;
+    try {
+      const { width, height } = dimensions;
+      const margin = 2;
 
     // Clear previous content
     d3.select(svgRef.current).selectAll('*').remove();
@@ -265,17 +288,21 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
       setSelectedCategory(d.data.name);
     });
 
+    } catch (err) {
+      console.error('[BubbleChart] D3 render error:', err);
+    }
   }, [data, dimensions]);
 
   // Render Treemap (detail view)
   const renderTreemap = useCallback(() => {
     if (!svgRef.current || !selectedCategory) return;
 
-    const { width, height } = dimensions;
-    
-    // Find the selected category data
-    const category = categoriesData.find(c => c.name === selectedCategory);
-    if (!category) return;
+    try {
+      const { width, height } = dimensions;
+      
+      // Find the selected category data
+      const category = categoriesData.find(c => c.name === selectedCategory);
+      if (!category) return;
 
     // Clear previous content
     d3.select(svgRef.current).selectAll('*').remove();
@@ -576,6 +603,9 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
       }
     });
 
+    } catch (err) {
+      console.error('[Treemap] D3 render error:', err);
+    }
   }, [selectedCategory, categoriesData, dimensions]);
 
   // Main effect to render chart

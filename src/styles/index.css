@@ -633,6 +633,32 @@
 	animation: borderPulse 2s infinite;
 }
 
+.reset-btn {
+	margin-top: 1rem;
+	padding: 0.5rem 1rem;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 0.5rem;
+	color: var(--gray-300);
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.reset-btn:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.2);
+	border-color: rgba(255, 255, 255, 0.4);
+	color: var(--gray-100);
+}
+
+.reset-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 @keyframes borderPulse {
 	0% {
 		border-color: #2b7cd8;

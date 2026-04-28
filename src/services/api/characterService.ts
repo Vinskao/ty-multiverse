@@ -132,17 +132,14 @@ class CharacterService {
     }
     
     const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+    const { imageCacheService } = await import('../imageCacheService');
     
     // 檢查每個角色是否有對應的圖片
     const validCharacters = await Promise.all(
       characters.map(async char => {
         const imagePath = `${PEOPLE_IMAGE_URL}/${char.name}.png`;
-        try {
-          const response = await fetch(imagePath, { method: 'HEAD' });
-          return response.ok ? char : null;
-        } catch {
-          return null;
-        }
+        const objUrl = await imageCacheService.getImageObjectUrl(imagePath);
+        return objUrl ? char : null;
       })
     );
     

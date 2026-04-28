@@ -19,15 +19,7 @@ import '../styles/galwall.css';
   const baseImagePath = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL + "/";
   const characterService = CharacterService.getInstance();
 
-  // 檢查圖片是否存在
-  async function checkImageExists(imagePath) {
-    try {
-      const response = await fetch(imagePath, { method: 'HEAD' });
-      return response.ok;
-    } catch (error) {
-      return false;
-    }
-  }
+  import { imageCacheService } from '../services/imageCacheService';
 
   // 獲取角色列表
   async function fetchCharacterNames() {
@@ -42,23 +34,22 @@ import '../styles/galwall.css';
 
   // 檢查三種圖片類型
   async function checkImageTypes(characterName) {
-    const timestamp = characterService.getMediaTimestamp();
-    const normalPath = `${baseImagePath}${characterName}.png?t=${timestamp}`;
-    const fightingPath = `${baseImagePath}${characterName}Fighting.png?t=${timestamp}`;
-    const ruinedPath = `${baseImagePath}${characterName}Ruined.png?t=${timestamp}`;
+    // Note: imageCacheService handles normalization (stripping ?t=)
+    const normalUrl = `${baseImagePath}${characterName}.png`;
+    const fightingUrl = `${baseImagePath}${characterName}Fighting.png`;
+    const ruinedUrl = `${baseImagePath}${characterName}Ruined.png`;
     
-    // 用帶有 timestamp 的 URL 去 check，確保 HEAD 也是最新的或是命中緩存
-    const [normalExists, fightingExists, ruinedExists] = await Promise.all([
-      checkImageExists(normalPath),
-      checkImageExists(fightingPath),
-      checkImageExists(ruinedPath)
+    const [normalObjUrl, fightingObjUrl, ruinedObjUrl] = await Promise.all([
+      imageCacheService.getImageObjectUrl(normalUrl),
+      imageCacheService.getImageObjectUrl(fightingUrl),
+      imageCacheService.getImageObjectUrl(ruinedUrl)
     ]);
     
     return {
       name: characterName,
-      normalPath: normalExists ? normalPath : null,
-      fightingPath: fightingExists ? fightingPath : null,
-      ruinedPath: ruinedExists ? ruinedPath : null
+      normalPath: normalObjUrl,
+      fightingPath: fightingObjUrl,
+      ruinedPath: ruinedObjUrl
     };
   }
 
@@ -179,4 +170,3 @@ import '../styles/galwall.css';
     }
   });
 </script>
-</script> 

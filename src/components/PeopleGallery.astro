@@ -38,18 +38,20 @@ import '../styles/people-gallery.css';
     loading.style.display = 'none';
     grid.style.display = '';
 
+    const { imageCacheService } = await import('../services/imageCacheService');
+
     for (const name of names) {
+      const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
+      const cachedUrl = await imageCacheService.getImageObjectUrl(originalUrl);
+      
+      if (!cachedUrl) continue;
+
       const card = document.createElement('div');
       card.className = 'pg-card';
-      card.style.display = 'none';
-
-      const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
 
       const img = document.createElement('img');
       img.alt = name;
-      img.onload = () => { card.style.display = ''; };
-      img.onerror = () => { card.remove(); };
-      img.src = originalUrl;
+      img.src = cachedUrl;
 
       const label = document.createElement('div');
       label.className = 'pg-name';
@@ -58,7 +60,7 @@ import '../styles/people-gallery.css';
       card.appendChild(img);
       card.appendChild(label);
       grid.appendChild(card);
-      card.addEventListener('click', () => openLightbox(originalUrl, name));
+      card.addEventListener('click', () => openLightbox(cachedUrl, name));
     }
   }
 

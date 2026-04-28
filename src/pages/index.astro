@@ -122,6 +122,9 @@ const skillsCategories = skillsData.categories;
 						<div class="visitor-counter-box">
 						<p class="visit-counter"><span data-i18n="home.visitorCounterPrefix">Sequence #</span><span id="visit-count">...</span><span data-i18n="home.visitorCounterSuffix">: Identity Synchronized</span></p>
 						</div>
+						<button id="reset-website-btn" class="reset-btn" data-i18n="home.resetWebsite">
+							Reset Website
+						</button>
 					</div>
 					<div class="hero-content">
 						<!-- D3 Bubble Chart showing skill categories and scores -->
@@ -287,6 +290,73 @@ const skillsCategories = skillsData.categories;
 		<ContactCTA />
 	</div>
 </BaseLayout>
+
+<script>
+	document.getElementById('reset-website-btn')?.addEventListener('click', async () => {
+		const btn = document.getElementById('reset-website-btn') as HTMLButtonElement;
+		if (!btn) return;
+		
+		const originalText = btn.textContent;
+		btn.disabled = true;
+		btn.textContent = 'Resetting...';
+		
+		try {
+			const { imageCacheService } = await import('../services/imageCacheService');
+			const { thumbnailService } = await import('../services/thumbnailService');
+			const { peopleService } = await import('../services/api/peopleService');
+			const CharacterService = (await import('../services/api/characterService')).default;
+			
+			// Clear all caches
+			await imageCacheService.clearCache();
+			await thumbnailService.clearCache();
+			CharacterService.getInstance().clearCache();
+			CharacterService.getInstance().refreshMediaTimestamp();
+			
+			// Re-prefetch all images
+			const names = await peopleService.getAllPeopleNames();
+			const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+			await imageCacheService.preloadImages(names, baseUrl);
+			
+			btn.textContent = 'Done!';
+			// Refresh page after a short delay to see changes
+			setTimeout(() => {
+				window.location.reload();
+			}, 1000);
+		} catch (error) {
+			console.error('Reset failed:', error);
+			btn.textContent = 'Error!';
+			setTimeout(() => {
+				btn.disabled = false;
+				btn.textContent = originalText;
+			}, 2000);
+		}
+	});
+</script>
+
+<style>
+	.reset-btn {
+		margin-top: 1rem;
+		padding: 0.5rem 1rem;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 0.5rem;
+		color: var(--gray-300);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.reset-btn:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.4);
+		color: var(--gray-100);
+	}
+
+	.reset-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+</style>
 
 <script src="../scripts/index.js"></script>
 

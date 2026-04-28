@@ -57,40 +57,32 @@ const baseImagePath = (window as any).TY_MULTIVERSE_CONFIG?.peopleImageUrl ? (wi
 async function getValidCharacters(): Promise<CharOption[]> {
     try {
         const chars = await characterService.getCharacters();
-        const timestamp = characterService.getMediaTimestamp();
+        const { imageCacheService } = await import('../services/imageCacheService');
 
         const checkPromises = chars.map(async (person) => {
             const validOptions: CharOption[] = [];
             
             // Check standard image
-            const standardPath = `${baseImagePath}${person.name}.png?t=${timestamp}`;
-            try {
-                const res = await fetch(standardPath, { method: 'HEAD' });
-                if (res.ok) {
-                    validOptions.push({
-                        id: person.name,
-                        name: person.name,
-                        army: person.armyName || 'Others'
-                    });
-                }
-            } catch (e) {
-                // Ignore missing or network error
+            const standardPath = `${baseImagePath}${person.name}.png`;
+            const standardObjUrl = await imageCacheService.getImageObjectUrl(standardPath);
+            if (standardObjUrl) {
+                validOptions.push({
+                    id: person.name,
+                    name: person.name,
+                    army: person.armyName || 'Others'
+                });
             }
 
             // Check fighting image
             const fightingName = `${person.name}Fighting`;
-            const fightingPath = `${baseImagePath}${fightingName}.png?t=${timestamp}`;
-            try {
-                const res = await fetch(fightingPath, { method: 'HEAD' });
-                if (res.ok) {
-                    validOptions.push({
-                        id: fightingName,
-                        name: `${person.name} (Fighting)`,
-                        army: person.armyName || 'Others'
-                    });
-                }
-            } catch (e) {
-                // Ignore missing
+            const fightingPath = `${baseImagePath}${fightingName}.png`;
+            const fightingObjUrl = await imageCacheService.getImageObjectUrl(fightingPath);
+            if (fightingObjUrl) {
+                validOptions.push({
+                    id: fightingName,
+                    name: `${person.name} (Fighting)`,
+                    army: person.armyName || 'Others'
+                });
             }
 
             return validOptions;
@@ -301,8 +293,12 @@ function updateVisualization() {
             }
 
             const img = document.createElement('img');
-            const timestamp = characterService.getMediaTimestamp();
-            img.src = `${baseImagePath}${charName}.png?t=${timestamp}`;
+            // Use imageCacheService to get the object URL
+            import('../services/imageCacheService').then(({ imageCacheService }) => {
+                imageCacheService.getImageObjectUrl(`${baseImagePath}${charName}.png`).then(url => {
+                    if (url) img.src = url;
+                });
+            });
             img.alt = charName;
             img.crossOrigin = "Anonymous";
 

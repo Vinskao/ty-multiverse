@@ -227,7 +227,7 @@ class ThumbnailService {
     });
   }
 
-  clearCache() {
+  async clearCache() {
     this.cache.clear();
     this.rectCache.clear();
     this.failedThumbnails.clear();
@@ -240,6 +240,14 @@ class ThumbnailService {
         }
       }
       keysToRemove.forEach(k => localStorage.removeItem(k));
+    }
+    
+    // Also clear image cache service
+    try {
+      const { imageCacheService } = await import('./imageCacheService');
+      await imageCacheService.clearCache();
+    } catch (e) {
+      console.error('Failed to clear imageCacheService:', e);
     }
   }
 }
