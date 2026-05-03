@@ -57,12 +57,35 @@ const categoryColors: { [key: string]: string } = {
 // Generate unique ID for clipPath
 let clipIdCounter = 0;
 const generateClipId = () => `clip-${++clipIdCounter}-${Date.now()}`;
+const hasRenderableDimensions = ({ width, height }: { width: number; height: number }) =>
+  Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
+const getFallbackBubbleNodes = (data: SkillData[], dimensions: { width: number; height: number }) => {
+  if (!hasRenderableDimensions(dimensions) || data.length === 0) return [];
+
+  const { width, height } = dimensions;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+  const orbitRadius = Math.max(0, Math.min(width, height) * 0.31);
+
+  return data.map((item, index) => {
+    const angle = (index / data.length) * Math.PI * 2 - Math.PI / 2;
+    const isPrimary = index === 0;
+    const radius = Math.max(24, Math.sqrt(item.value / maxValue) * 72);
+    const x = isPrimary ? centerX : centerX + Math.cos(angle) * orbitRadius;
+    const y = isPrimary ? centerY : centerY + Math.sin(angle) * orbitRadius;
+    const shortName = item.name.split(/\s+/).slice(0, 2).join(' ');
+
+    return { ...item, x, y, radius, shortName };
+  });
+};
 
 export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubbleChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const fallbackBubbleNodes = selectedCategory ? [] : getFallbackBubbleNodes(data, dimensions);
 
   // Responsive sizing
   useEffect(() => {
@@ -71,7 +94,11 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
         const width = containerRef.current.clientWidth;
         if (width > 0) {
           const size = Math.min(width, 600);
-          setDimensions({ width: size, height: size });
+          setDimensions((current) => (
+            current.width === size && current.height === size
+              ? current
+              : { width: size, height: size }
+          ));
         }
       }
     };
@@ -87,20 +114,6 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
     return () => ro.disconnect();
   }, []);
 
-  // Add astro:page-load listener to handle View Transitions navigation
-  useEffect(() => {
-    const handlePageLoad = () => {
-      // Re-render because Astro may have morphed the DOM (empty SVG after swap)
-      if (selectedCategory) {
-        renderTreemap();
-      } else {
-        renderBubbleChart();
-      }
-    };
-    document.addEventListener('astro:page-load', handlePageLoad);
-    return () => document.removeEventListener('astro:page-load', handlePageLoad);
-  }, [selectedCategory, renderBubbleChart, renderTreemap]);
-
   // Handle back button
   const handleBack = useCallback(() => {
     setSelectedCategory(null);
@@ -112,6 +125,7 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
 
     try {
       const { width, height } = dimensions;
+      if (!hasRenderableDimensions(dimensions)) return;
       const margin = 2;
 
     // Clear previous content
@@ -299,6 +313,7 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
 
     try {
       const { width, height } = dimensions;
+      if (!hasRenderableDimensions(dimensions)) return;
       
       // Find the selected category data
       const category = categoriesData.find(c => c.name === selectedCategory);
@@ -608,6 +623,22 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
     }
   }, [selectedCategory, categoriesData, dimensions]);
 
+  // Add astro:page-load listener to handle View Transitions navigation
+  useEffect(() => {
+    const handlePageLoad = () => {
+      // Re-render because Astro may have morphed the DOM (empty SVG after swap)
+      requestAnimationFrame(() => {
+        if (selectedCategory) {
+          renderTreemap();
+        } else {
+          renderBubbleChart();
+        }
+      });
+    };
+    document.addEventListener('astro:page-load', handlePageLoad);
+    return () => document.removeEventListener('astro:page-load', handlePageLoad);
+  }, [selectedCategory, renderBubbleChart, renderTreemap]);
+
   // Main effect to render chart
   useEffect(() => {
     if (selectedCategory) {
@@ -633,7 +664,33 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
         )}
       </div>
       
-      <svg ref={svgRef}></svg>
+      <svg
+        ref={svgRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+        role="img"
+        aria-label={selectedCategory ? `${selectedCategory} skills detail` : 'Skills overview bubble chart'}
+      >
+        {!selectedCategory && fallbackBubbleNodes.map((node) => (
+          <g key={node.id} transform={`translate(${node.x},${node.y})`} className="fallback-bubble-node">
+            <circle
+              r={node.radius}
+              fill={categoryColors[node.category] || '#666'}
+              fillOpacity="0.75"
+              stroke="rgba(255,255,255,0.3)"
+            />
+            <text textAnchor="middle" fill="#fff" fontFamily="sans-serif" fontWeight="600">
+              <tspan x="0" y="-0.25em" fontSize={Math.max(8, Math.min(14, node.radius / 3))}>
+                {node.shortName}
+              </tspan>
+              <tspan x="0" y="1em" fontSize={Math.max(7, Math.min(12, node.radius / 4))} fillOpacity="0.9">
+                {node.value}
+              </tspan>
+            </text>
+          </g>
+        ))}
+      </svg>
       
       {!selectedCategory && (
         <div className="bubble-chart-legend">
@@ -658,6 +715,7 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
           flex-direction: column;
           align-items: center;
           width: 100%;
+          min-height: 320px;
           padding: 1rem;
           background: var(--gradient-subtle);
           border-radius: 1rem;
@@ -710,6 +768,9 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
         }
         
         .skills-bubble-chart-container svg {
+          display: block;
+          width: min(100%, 600px);
+          aspect-ratio: 1 / 1;
           max-width: 100%;
           height: auto;
           overflow: visible;

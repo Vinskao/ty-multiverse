@@ -159,12 +159,14 @@ const iconLinks: {
           iconLinks.map(({ href, icon, label }) => (
             <a href={href} class="social">
               <span class="sr-only">{label}</span>
+              
               <Icon icon={icon} />
             </a>
           ))
         }
       </div>
       <div class="nav-controls-footer">
+        <button class="reset-website-btn lang-toggle-btn" data-i18n="home.resetWebsite">Reset Website</button>
         <button id="langToggleBtn-noscript" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
         <ThemeToggle client:load />
       </div>
@@ -204,6 +206,7 @@ const iconLinks: {
         }
       </div>
       <div class="nav-controls-footer">
+        <button class="reset-website-btn lang-toggle-btn" data-i18n="home.resetWebsite">Reset Website</button>
         <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
         <ThemeToggle client:load />
       </div>
@@ -415,3 +418,63 @@ const iconLinks: {
     setTimeout(initThemeToggleFallback, 1500),
   );
 </script>
+
+<script>
+  function initResetBtn() {
+    document.querySelectorAll('.reset-website-btn').forEach((btn) => {
+      // Remove existing listener to avoid duplicates if view transitions are used
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode?.replaceChild(newBtn, btn);
+      
+      newBtn.addEventListener('click', async (e) => {
+        const targetBtn = e.target as HTMLButtonElement;
+        if (!targetBtn) return;
+        
+        const originalText = targetBtn.textContent;
+        targetBtn.disabled = true;
+        targetBtn.textContent = 'Resetting...';
+        
+        try {
+          const { imageCacheService } = await import('../services/imageCacheService');
+          const { thumbnailService } = await import('../services/thumbnailService');
+          const { peopleService } = await import('../services/api/peopleService');
+          const CharacterService = (await import('../services/api/characterService')).default;
+          
+          // Clear all caches
+          await imageCacheService.clearCache();
+          await thumbnailService.clearCache();
+          CharacterService.getInstance().clearCache();
+          CharacterService.getInstance().refreshMediaTimestamp();
+          
+          // Re-prefetch all images
+          const names = await peopleService.getAllPeopleNames();
+          const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+          await imageCacheService.preloadImages(names, baseUrl);
+          
+          targetBtn.textContent = 'Done!';
+          // Refresh page after a short delay to see changes
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (error) {
+          console.error('Reset failed:', error);
+          targetBtn.textContent = 'Error!';
+          setTimeout(() => {
+            targetBtn.disabled = false;
+            targetBtn.textContent = originalText;
+          }, 2000);
+        }
+      });
+    });
+  }
+
+  initResetBtn();
+  document.addEventListener("astro:page-load", initResetBtn);
+</script>
+
+<style>
+  .reset-website-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
