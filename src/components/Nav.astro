@@ -371,6 +371,7 @@ const iconLinks: {
     const themeToggleButton = themeToggleContainer?.querySelector("button");
 
     if (!themeToggleButton) return;
+    if (themeToggleButton.dataset.fallbackBound === "true") return;
 
     // 檢查按鈕是否已經由 React 處理
     const hasReactHandlers = Object.keys(themeToggleButton).some(
@@ -387,6 +388,7 @@ const iconLinks: {
     console.warn(
       "[ThemeToggle Fallback] No React detected, installing native listener.",
     );
+    themeToggleButton.dataset.fallbackBound = "true";
 
     themeToggleButton.addEventListener(
       "click",

@@ -2,6 +2,15 @@
 // Learn about using Astro layouts:
 // https://docs.astro.build/en/core-concepts/layouts/
 
+// CSS Imports via ?url — Astro v5 SSR does not collect CSS from sub-components,
+// so all component CSS must be explicitly linked here in the root layout.
+import globalCssUrl from '../styles/global.css?url';
+import themeToggleCssUrl from '../styles/theme-toggle.css?url';
+import navCssUrl from '../styles/nav.css?url';
+import qabotCssUrl from '../styles/qabot.css?url';
+import qaplatformCssUrl from '../styles/qaplatform.css?url';
+import qabotv2CssUrl from '../styles/qabotv2.css?url';
+
 // Component Imports
 import MainHead from '../components/MainHead.astro';
 import Nav from '../components/Nav.astro';
@@ -80,6 +89,13 @@ const { title, description } = Astro.props;
 				}
 			})();
 		</script>
+		<link rel="stylesheet" href={globalCssUrl} />
+		<link rel="stylesheet" href={themeToggleCssUrl} />
+		<link rel="stylesheet" href={navCssUrl} />
+		<link rel="stylesheet" href={qabotCssUrl} />
+		<link rel="stylesheet" href={qaplatformCssUrl} />
+		<link rel="stylesheet" href={qabotv2CssUrl} />
+		<slot name="head" />
 		<MainHead title={title} description={description} />
 		<ClientRouter />
 	</head>

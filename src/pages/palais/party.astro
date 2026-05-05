@@ -10,6 +10,7 @@ declare global {
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
+import partyCssUrl from "../../styles/party.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get("username");
@@ -30,6 +31,9 @@ const peopleImageUrl =
 ---
 
 <BaseLayout title="Party | TY Multiverse" description="Create your choir party">
+    <Fragment slot="head">
+        <link rel="stylesheet" href={partyCssUrl} />
+    </Fragment>
     <div class="stack gap-20">
         <main class="wrapper stack gap-8">
             <Hero title="Party" tagline="Arrange your choir." align="start" />
@@ -91,7 +95,6 @@ const peopleImageUrl =
     async
     src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
 ></script>
-<link rel="stylesheet" href="/src/styles/party.css" />
 <script define:vars={{ tymbUrl, peopleImageUrl }}>
     window.TY_MULTIVERSE_CONFIG = {
         tymbUrl: tymbUrl,

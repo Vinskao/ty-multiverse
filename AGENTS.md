@@ -60,3 +60,63 @@
 2. Apply `data-i18n` attributes to HTML elements.
 3. If the component is dynamic (like the Work page sync button), use the `getI18n` helper pattern to update text via script.
 4. Verify persistence across page navigations.
+
+---
+
+## 5. Astro CSS Loading / Astro CSS 載入規則
+
+### SSR CSS Rule / SSR 樣式規則
+- **Current project context**: `astro.config.ts` uses `output: 'server'`, `base: '/tymultiverse'`, and `ClientRouter` view transitions.
+- **Observed behavior in this repo**: under Astro v5 SSR dev mode, CSS imported only inside sub-components or page scripts may not be collected into the server-rendered `<head>` on hard reload.
+- **Symptom**: HTML renders, but the page looks unstyled or partially styled. Navbar/global styles may appear only after HMR, while page-specific styles are missing.
+
+### Required Pattern / 必要做法
+- **Global shared CSS**: link it directly in `src/layouts/BaseLayout.astro` using `?url`.
+  - Current shared set:
+    - `global.css`
+    - `theme-toggle.css`
+    - `nav.css`
+    - `qabot.css`
+    - `qaplatform.css`
+    - `qabotv2.css`
+- **Page-specific CSS**: do **not** rely only on `import '../styles/foo.css';`
+  - Instead use:
+  ```astro
+  ---
+  import pageCssUrl from "../styles/page.css?url";
+  ---
+  <BaseLayout>
+    <Fragment slot="head">
+      <link rel="stylesheet" href={pageCssUrl} />
+    </Fragment>
+  </BaseLayout>
+  ```
+- **Layout support**: `BaseLayout.astro` provides `<slot name="head" />` inside `<head>` for page-level stylesheet injection.
+
+### Do Not Use / 避免做法
+- Do not use raw dev-only paths like:
+  - `href="/src/styles/dance.css"`
+  - `href="/src/styles/party.css"`
+- Do not assume CSS imported in `MainHead.astro`, `Nav.astro`, `Fight.astro`, `Levellist.astro`, `Galwall.astro`, or other sub-components will always be present in SSR HTML.
+
+### Debug Checklist / 排查清單
+1. Inspect actual server HTML, not just the browser DOM after HMR.
+2. Check whether `<head>` contains the expected `<link rel="stylesheet">` tags.
+3. If a page is unstyled, identify:
+   - shared CSS missing from `BaseLayout`
+   - page CSS missing from the page `head` slot
+   - component CSS that should be promoted to page-level or shared-level linking
+4. Verify with hard reload (`Ctrl+Shift+R`) and `npm run build`.
+
+### Pages Already Following This Pattern / 已套用此模式的頁面
+- `src/pages/index.astro`
+- `src/pages/about.astro`
+- `src/pages/palais.astro`
+- `src/pages/control.astro`
+- `src/pages/people-management.astro`
+- `src/pages/wildland.astro`
+- `src/pages/palais/fight.astro`
+- `src/pages/palais/levels.astro`
+- `src/pages/palais/group.astro`
+- `src/pages/palais/dance.astro`
+- `src/pages/palais/party.astro`

@@ -498,12 +498,15 @@ line-height: 1.6;
 margin-top: 1.5rem;
 width: auto;
 max-width: none;
+min-width: 0;
+overflow-wrap: anywhere;
 }
 
 .skill-category {
 margin-bottom: 1rem;
 width: auto;
 max-width: none;
+min-width: 0;
 }
 
 .skill-category h5 {
@@ -521,6 +524,8 @@ color: var(--gray-300);
 font-style: italic;
 line-height: 1.4;
 margin-top: 0.5rem;
+overflow-wrap: anywhere;
+word-break: break-word;
 }
 
 .skill-description span {
@@ -547,6 +552,7 @@ margin-bottom: 0.8rem;
 width: auto;
 max-width: none;
 display: block;
+min-width: 0;
 }
 
 .skill-subcategory h6 {
@@ -564,6 +570,8 @@ color: var(--gray-400);
 font-style: italic;
 line-height: 1.4;
 margin-top: 0.5rem;
+overflow-wrap: anywhere;
+word-break: break-word;
 }
 
 .skill-subdescription span {
@@ -592,6 +600,7 @@ gap: 0.3rem;
 width: auto;
 max-width: none;
 align-items: flex-start;
+min-width: 0;
 }
 
 /* Pill styles for skills */
@@ -606,9 +615,13 @@ transition: all 0.3s ease;
 position: relative;
 cursor: pointer;
 width: auto !important;
-max-width: none !important;
+max-width: 100% !important;
 flex: none !important;
 align-self: flex-start;
+white-space: normal;
+overflow-wrap: anywhere;
+word-break: break-word;
+box-sizing: border-box;
 }
 
 .skill-tags .pill:hover {
@@ -616,9 +629,10 @@ transform: scale(1.2);
 font-size: 16px;
 font-weight: bold;
 white-space: normal;
-overflow: visible;
+overflow-wrap: anywhere;
+word-break: break-word;
 width: auto !important;
-max-width: none !important;
+max-width: 100% !important;
 flex: none !important;
 align-self: flex-start;
 }

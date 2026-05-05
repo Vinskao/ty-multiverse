@@ -303,7 +303,7 @@ import '../styles/levellist.css';
     Promise.all([
       checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Fighting.png`),
       checkImageExists(`${PEOPLE_IMAGE_URL}/${character.name || 'default'}Ruined.png`)
-    ]).then(([hasFightingImage, hasRuinedImage]) => {
+    ]).then(async ([hasFightingImage, hasRuinedImage]) => {
       const images = [img];
       let currentImageIndex = 0;
       

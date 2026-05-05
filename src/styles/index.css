@@ -428,6 +428,8 @@
 	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 	gap: 1rem;
 	padding: 1rem;
+	box-sizing: border-box;
+	min-width: 0;
 }
 
 .categories .category {
@@ -437,6 +439,10 @@
 	background: var(--gradient-subtle);
 	border-radius: 1rem;
 	padding: 1rem;
+	min-width: 0;
+	max-width: 100%;
+	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .categories .category h5 {
@@ -451,11 +457,13 @@
 	justify-content: center;
 	gap: 0.5rem;
 	width: 100%;
+	min-width: 0;
 }
 
 .categories .subcategory-group {
 	width: 100%;
 	margin-top: 0.6rem;
+	min-width: 0;
 }
 
 .categories .subcategory-label {
@@ -476,10 +484,12 @@
 	margin: 0;
 	flex: 0 0 calc(33.333% - 0.5rem);
 	min-width: 100px;
+	max-width: 100%;
 	text-align: center;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	box-sizing: border-box;
 }
 
 .pill {
@@ -499,7 +509,8 @@
 	font-size: 16px;
 	font-weight: bold;
 	white-space: normal;
-	overflow: visible;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 /* 特別處理 JWT 和 Spring Security 的樣式 */

@@ -107,6 +107,46 @@
             {
               "name": "@RabbitListener",
               "level": "shade3"
+            },
+            {
+              "name": "FilterChainProxy",
+              "level": "shade3"
+            },
+            {
+              "name": "OncePerRequestFilter",
+              "level": "shade3"
+            },
+            {
+              "name": "SecurityContextPersistenceFilter",
+              "level": "shade3"
+            },
+            {
+              "name": "SessionRepositoryFilter",
+              "level": "shade3"
+            },
+            {
+              "name": "SecurityContextHolder",
+              "level": "shade3"
+            },
+            {
+              "name": "Authentication Principal",
+              "level": "shade3"
+            },
+            {
+              "name": "AnonymousAuthenticationToken",
+              "level": "shade3"
+            },
+            {
+              "name": "Session Creation Policy",
+              "level": "shade3"
+            },
+            {
+              "name": "CSRF Flow",
+              "level": "shade3"
+            },
+            {
+              "name": "CORS Preflight Debugging",
+              "level": "shade3"
             }
           ],
           "descriptions": {
@@ -129,11 +169,17 @@
             "Tata Consultancy Services": {
               "zh": [
                 "實作後端商務邏輯與中介控制（Java），透過撰寫及修改 .java 檔案（如 HeaderConfigGSP.java），在系統中建立攔截元件（Inserter Beans），以便在 Request 送往系統後台前，動態插入指定的 Header 等中介層處理",
-                "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等"
+                "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等",
+                "深入排查 Spring Security 認證鏈，涵蓋 FilterChainProxy 執行順序、自定義 Filter 的 addFilterBefore/addFilterAfter 插入位置、OncePerRequestFilter 行為、SecurityContextPersistenceFilter、SessionRepositoryFilter，以及 SecurityContextHolder THREADLOCAL strategy。",
+                "分析 session-based authentication 行為，追蹤 HttpSession 與 SecurityContext 綁定、Authentication object 結構、AnonymousAuthenticationToken fallback、Session creation policy（IF_REQUIRED/STATELESS）、JSESSIONID cookie 傳遞、SameSite/Secure flag、CSRF generate/validate flow，以及被 Security filter 擋下的 CORS preflight。",
+                "拆解認證失敗情境，區分未登入、session 過期、filter 擋掉、跨域 cookie 未帶入，以及 401/403 行為判斷。"
               ],
               "en": [
                 "Developed backend business logic and middleware control using Java. Created and modified Java files to set up Inserter Beans for dynamic injection of specified headers before forwarding requests to downstream systems.",
-                "Configured routing and services (XML config), modifying files like service_extn_gsp.xml to declare and bind API call methods (e.g. GET to POST) and map request parameters correctly."
+                "Configured routing and services (XML config), modifying files like service_extn_gsp.xml to declare and bind API call methods (e.g. GET to POST) and map request parameters correctly.",
+                "Deepened Spring Security troubleshooting across the authentication filter chain, including FilterChainProxy ordering, custom filter placement with addFilterBefore/addFilterAfter, OncePerRequestFilter behavior, SecurityContextPersistenceFilter, SessionRepositoryFilter, and SecurityContextHolder THREADLOCAL strategy.",
+                "Analyzed session-based authentication behavior by tracing HttpSession/SecurityContext binding, Authentication object structure, AnonymousAuthenticationToken fallback, session creation policy (IF_REQUIRED/STATELESS), JSESSIONID cookie delivery, SameSite/Secure flags, CSRF generate/validate flow, and CORS preflight requests blocked by security filters.",
+                "Diagnosed authentication failure modes by separating unauthenticated requests, expired sessions, filter-level rejections, missing cross-domain cookies, and 401/403 authorization outcomes."
               ]
             }
           }
@@ -272,15 +318,59 @@
             {
               "name": "Externalized Configuration",
               "level": "shade3"
+            },
+            {
+              "name": "Request Lifecycle Debugging",
+              "level": "shade3"
+            },
+            {
+              "name": "Global Exception Handler",
+              "level": "shade3"
+            },
+            {
+              "name": "DTO Validation",
+              "level": "shade3"
+            },
+            {
+              "name": "Account Domain Modeling",
+              "level": "shade3"
+            },
+            {
+              "name": "Conditional Validation",
+              "level": "shade3"
+            },
+            {
+              "name": "Financial Reconciliation Flow",
+              "level": "shade3"
+            },
+            {
+              "name": "System Code Table",
+              "level": "shade3"
+            },
+            {
+              "name": "Code Table Cache",
+              "level": "shade3"
+            },
+            {
+              "name": "Multi-language Code Mapping",
+              "level": "shade3"
             }
           ],
           "descriptions": {
             "Tata Consultancy Services": {
               "zh": [
-                "實作 Gateway 介面整合，應用轉接器 (Adapter) 與外觀 (Facade) 模式封裝底層複雜的既有系統介面，抹平前後端規格差異。維護外部化配置 (Externalized Config) 參數表，落實配置與程式碼分離原則確保環境遷移靈活性"
+                "實作 Gateway 介面整合，應用轉接器 (Adapter) 與外觀 (Facade) 模式封裝底層複雜的既有系統介面，抹平前後端規格差異。維護外部化配置 (Externalized Config) 參數表，落實配置與程式碼分離原則確保環境遷移靈活性",
+                "實作並排查 BGL/Internal Account 金融帳戶流程，拆分 Account DTO/Entity/VO 責任，並以 AccountUsage 驅動欄位狀態、conditional UI、後端驗證、欄位互斥與相依性驗證。",
+                "處理 TWCT 相關帳戶驗證，包含 ID Type/ID Number alphanumeric constraint、Customer Group mapping、mirror account data consistency、ReconRequired 對 downstream 行為的控制，以及 ReconDirection Debit/Credit flow 判斷。",
+                "維護系統碼表與多語系 dropdown mapping，涵蓋 code_id/code_name/seq schema、code range 分段、同一 code 多語系 row mapping、frontend dropdown 到 backend enum mapping、code value/display name 分離、cache strategy，以及 max(code_id)+1 手動產號的 concurrency risk。",
+                "追蹤 API 行為從 browser request、frontend interceptor、backend filter 到 controller，檢查 Cookie/Authorization/Content-Type header、session domain/path/SameSite 問題、GET/POST CSRF 差異、JSON DTO binding failure、@ControllerAdvice 與 unified error response contract。"
               ],
               "en": [
-                "Implemented Gateway interface integration, applying Adapter and Facade patterns to encapsulate complex legacy system interfaces and smooth frontend/backend spec differences. Maintained Externalized Config parameter tables, ensuring config/code separation and environment migration flexibility."
+                "Implemented Gateway interface integration, applying Adapter and Facade patterns to encapsulate complex legacy system interfaces and smooth frontend/backend spec differences. Maintained Externalized Config parameter tables, ensuring config/code separation and environment migration flexibility.",
+                "Implemented and debugged financial account flows for BGL/Internal Account modules, separating Account DTO/Entity/VO responsibilities and applying AccountUsage-driven field status, conditional UI behavior, backend validation, mutually exclusive fields, and dependent-field validation.",
+                "Handled TWCT-related account validation, including ID Type/ID Number alphanumeric constraints, customer group mapping, mirror-account data consistency, ReconRequired downstream behavior, and ReconDirection debit/credit flow checks.",
+                "Maintained system code and multilingual dropdown mapping with code_id/code_name/seq structure, code range governance, language-row mapping, frontend dropdown to backend enum translation, display-name/value separation, cache strategy, and concurrency risk awareness around max(code_id)+1 manual numbering.",
+                "Traced API behavior from browser request through frontend interceptor, backend filter, and controller, checking Cookie/Authorization/Content-Type headers, session domain/path/SameSite issues, GET/POST CSRF differences, JSON DTO binding failures, @ControllerAdvice handling, and unified error response contracts."
               ]
             }
           }
@@ -345,9 +435,56 @@
             {
               "name": "Angular.js",
               "level": "shade1"
+            },
+            {
+              "name": "Reactive Forms",
+              "level": "shade3"
+            },
+            {
+              "name": "FormGroup",
+              "level": "shade3"
+            },
+            {
+              "name": "FormControl",
+              "level": "shade3"
+            },
+            {
+              "name": "FormArray",
+              "level": "shade3"
+            },
+            {
+              "name": "valueChanges",
+              "level": "shade3"
+            },
+            {
+              "name": "statusChanges",
+              "level": "shade3"
+            },
+            {
+              "name": "Dynamic Validators",
+              "level": "shade3"
+            },
+            {
+              "name": "Async Validator",
+              "level": "shade3"
+            },
+            {
+              "name": "OnPush Change Detection",
+              "level": "shade3"
             }
           ],
-          "descriptions": {}
+          "descriptions": {
+            "Tata Consultancy Services": {
+              "en": [
+                "Built and debugged Angular reactive forms with FormGroup/FormControl/FormArray, setValue vs patchValue behavior, valueChanges/statusChanges subscriptions, touched/dirty state control, disabled vs readonly value handling, custom validators, async API validators, and dynamic setValidators/clearValidators/updateValueAndValidity timing.",
+                "Resolved dropdown and form-state issues caused by missing valueChanges subscriptions, OnPush change detection not being triggered, incorrect formControlName binding, and mismatches between weak frontend validation and strong backend validation."
+              ],
+              "zh": [
+                "建置並排查 Angular reactive forms，涵蓋 FormGroup/FormControl/FormArray、setValue vs patchValue、valueChanges/statusChanges subscription、touched/dirty 狀態控制、disabled vs readonly 對 form value 的影響、自訂 validator、async API validator，以及 dynamic setValidators/clearValidators/updateValueAndValidity timing。",
+                "解決 dropdown 與表單狀態問題，包含未 subscribe valueChanges、OnPush 未觸發 detectChanges、formControlName 綁定錯誤，以及前端弱驗證與後端強驗證不一致造成的衝突。"
+              ]
+            }
+          }
         },
         {
           "name": "General",
@@ -1210,15 +1347,33 @@
             {
               "name": "Java Keystore",
               "level": "shade1"
+            },
+            {
+              "name": "Spring Security Filter Chain",
+              "level": "shade3"
+            },
+            {
+              "name": "Session Security",
+              "level": "shade3"
+            },
+            {
+              "name": "CSRF Protection",
+              "level": "shade3"
+            },
+            {
+              "name": "CORS Security",
+              "level": "shade3"
             }
           ],
           "descriptions": {
             "Tata Consultancy Services": {
               "zh": [
-                "使用 CDI 將 EntityManager 注入 DAO 層"
+                "使用 CDI 將 EntityManager 注入 DAO 層",
+                "實際處理 Spring Security session authentication 細節，包含 filter chain 執行順序、session persistence、cookie flags、CSRF validation、CORS preflight handling，以及企業 gateway 情境下的 401/403 診斷。"
               ],
               "en": [
-                "Implemented CDI to inject entity manager to DAO layer"
+                "Implemented CDI to inject entity manager to DAO layer",
+                "Worked hands-on with Spring Security session authentication details, including filter chain execution order, session persistence, cookie flags, CSRF validation, CORS preflight handling, and 401/403 diagnosis in enterprise gateway scenarios."
               ]
             }
           }
@@ -1317,11 +1472,47 @@
               "level": "shade4"
             },
             {
+              "name": "Codex",
+              "level": "shade3"
+            },
+            {
+              "name": "Gemini Code Assist",
+              "level": "shade3"
+            },
+            {
               "name": "Ollama",
               "level": "shade3"
             },
             {
               "name": "Open WebUI",
+              "level": "shade3"
+            },
+            {
+              "name": "Continue",
+              "level": "shade3"
+            },
+            {
+              "name": "OpenAI-compatible API",
+              "level": "shade3"
+            },
+            {
+              "name": "baseURL Override",
+              "level": "shade3"
+            },
+            {
+              "name": "Model Routing",
+              "level": "shade3"
+            },
+            {
+              "name": "Streaming Response",
+              "level": "shade3"
+            },
+            {
+              "name": "Repo Context Indexing",
+              "level": "shade3"
+            },
+            {
+              "name": "Prompt Completion Flow",
               "level": "shade3"
             }
           ],
@@ -1332,6 +1523,16 @@
               ],
               "zh": [
                 "在 Windows 透過 NVIDIA Container Toolkit 與 WSL2 部署本地 GPU 推論環境，並使用 Colab 進行 LLM 原型與快速實驗。調校提示詞行為並比較本地與遠端環境延遲基準"
+              ]
+            },
+            "Tata Consultancy Services": {
+              "en": [
+                "Configured AI agent toolchains through Continue config schema, model/provider definitions, OpenAI-compatible baseURL overrides, API key injection through env/config, streaming and non-streaming response modes, model routing by task type, prompt-to-completion flow, and CLI vs VSCode extension behavior.",
+                "Explored repository context indexing with embedding/search workflows to improve codebase-aware assistance and task-specific model selection."
+              ],
+              "zh": [
+                "設定 AI Agent 工具鏈，涵蓋 Continue config schema、models/providers 定義、OpenAI-compatible baseURL override、API key 以 env/config 注入、streaming/non-streaming response、依任務進行 model routing、prompt-to-completion flow，以及 CLI 與 VSCode extension 行為差異。",
+                "探索 repo context indexing，透過 embedding/search workflow 提升 codebase-aware assistance 與任務導向 model selection。"
               ]
             }
           }

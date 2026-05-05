@@ -2,7 +2,8 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
 import Levellist from "../../components/Levellist.astro";
-import "../../styles/palais.css";
+import palaisCssUrl from "../../styles/palais.css?url";
+import levellistCssUrl from "../../styles/levellist.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -14,6 +15,10 @@ if (!isLoggedIn) {
 }
 ---
 <BaseLayout title="Palais Levels | Wavo Yuropha" description="Level list within Palais">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={palaisCssUrl} />
+    <link rel="stylesheet" href={levellistCssUrl} />
+  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Level List" align="start" />

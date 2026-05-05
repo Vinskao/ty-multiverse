@@ -5,7 +5,8 @@ import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
 import Briefing from "../components/Briefing.astro";
-import "../styles/about.css";
+import aboutCssUrl from "../styles/about.css?url";
+import briefingCssUrl from "../styles/briefing.css?url";
 
 // Import the JSON data
 import aboutData from "../storages/about.json";
@@ -164,6 +165,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 ---
 
 <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={aboutCssUrl} />
+    <link rel="stylesheet" href={briefingCssUrl} />
+  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper about">
 
