@@ -5,26 +5,13 @@
 // CSS Imports via ?url — Astro v5 SSR does not collect CSS from sub-components,
 // so all component CSS must be explicitly linked here in the root layout.
 import baseLayoutCssUrl from '../styles/base-layout.css?url';
-import aboutCssUrl from '../styles/about.css?url';
-import briefingCssUrl from '../styles/briefing.css?url';
 import callToActionCssUrl from '../styles/call-to-action.css?url';
 import contactCtaCssUrl from '../styles/contact-cta.css?url';
-import controlCssUrl from '../styles/control.css?url';
-import danceCssUrl from '../styles/dance.css?url';
-import fightCssUrl from '../styles/fight.css?url';
 import footerCssUrl from '../styles/footer.css?url';
-import galwallCssUrl from '../styles/galwall.css?url';
 import globalCssUrl from '../styles/global.css?url';
-import groupCssUrl from '../styles/group.css?url';
 import gridCssUrl from '../styles/grid.css?url';
 import heroCssUrl from '../styles/hero.css?url';
-import indexCssUrl from '../styles/index.css?url';
-import levellistCssUrl from '../styles/levellist.css?url';
 import navCssUrl from '../styles/nav.css?url';
-import palaisCssUrl from '../styles/palais.css?url';
-import partyCssUrl from '../styles/party.css?url';
-import peopleGalleryCssUrl from '../styles/people-gallery.css?url';
-import peopleManagementCssUrl from '../styles/people-management.css?url';
 import pillCssUrl from '../styles/pill.css?url';
 import portfolioPreviewCssUrl from '../styles/portfolio-preview.css?url';
 import qabotCssUrl from '../styles/qabot.css?url';
@@ -122,19 +109,6 @@ const { title, description } = Astro.props;
 		<link rel="stylesheet" href={contactCtaCssUrl} />
 		<link rel="stylesheet" href={pillCssUrl} />
 		<link rel="stylesheet" href={callToActionCssUrl} />
-		<link rel="stylesheet" href={indexCssUrl} />
-		<link rel="stylesheet" href={aboutCssUrl} />
-		<link rel="stylesheet" href={briefingCssUrl} />
-		<link rel="stylesheet" href={controlCssUrl} />
-		<link rel="stylesheet" href={danceCssUrl} />
-		<link rel="stylesheet" href={fightCssUrl} />
-		<link rel="stylesheet" href={galwallCssUrl} />
-		<link rel="stylesheet" href={groupCssUrl} />
-		<link rel="stylesheet" href={levellistCssUrl} />
-		<link rel="stylesheet" href={palaisCssUrl} />
-		<link rel="stylesheet" href={partyCssUrl} />
-		<link rel="stylesheet" href={peopleGalleryCssUrl} />
-		<link rel="stylesheet" href={peopleManagementCssUrl} />
 		<link rel="stylesheet" href={qabotCssUrl} />
 		<link rel="stylesheet" href={qaplatformCssUrl} />
 		<link rel="stylesheet" href={qabotv2CssUrl} />

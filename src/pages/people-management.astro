@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import peopleManagementCssUrl from "../styles/people-management.css?url";
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
@@ -24,6 +25,9 @@ if (!isLoggedIn) {
 </head>
 <body>
   <BaseLayout title="角色管理系統" description="管理角色和武器的系統">
+    <Fragment slot="head">
+      <link rel="stylesheet" href={peopleManagementCssUrl} />
+    </Fragment>
     <div class="container">
       <div id="people-management-root"></div>
     </div>

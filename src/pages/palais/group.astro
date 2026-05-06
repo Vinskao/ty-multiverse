@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
+import palaisCssUrl from "../../styles/palais.css?url";
+import peopleGalleryCssUrl from "../../styles/people-gallery.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -12,6 +14,10 @@ if (!isLoggedIn) {
 }
 ---
 <BaseLayout title="Palais 模組2 | Wavo Yuropha" description="Group module within Palais">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={palaisCssUrl} />
+    <link rel="stylesheet" href={peopleGalleryCssUrl} />
+  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Group Module" align="start" />

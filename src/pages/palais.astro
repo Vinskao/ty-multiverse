@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.astro";
+import palaisCssUrl from "../styles/palais.css?url";
+import galwallCssUrl from "../styles/galwall.css?url";
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
@@ -20,6 +22,10 @@ if (!isLoggedIn) {
 ---
 
 <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={palaisCssUrl} />
+    <link rel="stylesheet" href={galwallCssUrl} />
+  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Welcome to Lily Palais." align="start" />

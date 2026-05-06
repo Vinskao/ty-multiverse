@@ -281,8 +281,6 @@
 		flex-wrap: wrap;
 		position: relative;
 		z-index: 2;
-		width: calc(100% + 2rem);
-		margin-left: -1rem;
 	}
 
 	.hero img {
@@ -351,8 +349,8 @@
 		url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
 		var(--hero-bg) center center / var(--bg-gradient-size) no-repeat,
 		var(--gray-999);
-	background-blend-mode: overlay, normal, normal, normal;
-	mix-blend-mode: var(--bg-blend-mode);
+	background-blend-mode: overlay, var(--bg-blend-mode), normal;
+	mix-blend-mode: normal;
 	z-index: -1;
 }
 
@@ -508,6 +506,8 @@
 	transition: all 0.3s ease;
 	width: auto;
 	max-width: none;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
+	font-weight: 600;
 }
 
 .skill-pill:hover {
@@ -529,6 +529,31 @@
 .skill-pill.spring-security:hover {
 	font-size: 18px;
 	line-height: 1.4;
+}
+
+.skill-pill.shade1 {
+	opacity: 1;
+	filter: saturate(1.12) brightness(1.04);
+}
+
+.skill-pill.shade2 {
+	opacity: 0.92;
+	filter: saturate(1.05) brightness(0.98);
+}
+
+.skill-pill.shade3 {
+	opacity: 0.82;
+	filter: saturate(0.95) brightness(0.92);
+}
+
+.skill-pill.shade4 {
+	opacity: 0.72;
+	filter: saturate(0.88) brightness(0.86);
+}
+
+.skill-pill.shade5 {
+	opacity: 0.6;
+	filter: saturate(0.82) brightness(0.8);
 }
 
 :root {

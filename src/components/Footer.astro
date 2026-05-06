@@ -1,6 +1,17 @@
 ---
 import { Icon } from './Icon';
+import { execSync } from 'node:child_process';
 const currentYear = new Date().getFullYear();
+let revision = 'unknown';
+
+try {
+	revision = execSync('git rev-parse --short HEAD', {
+		cwd: new URL('../..', import.meta.url),
+		encoding: 'utf-8',
+	}).trim();
+} catch (error) {
+	console.warn('Failed to resolve git revision for footer:', error);
+}
 ---
 
 <footer>
@@ -20,4 +31,5 @@ const currentYear = new Date().getFullYear();
 			<span>GitHub</span>
 		</a>
 	</div>
+	<div class="version">revision {revision}</div>
 </footer>

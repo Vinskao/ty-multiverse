@@ -65,21 +65,41 @@ text-align: left;
 
 .exp-badge {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 1.1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.7rem 1.1rem;
   background: rgba(81, 70, 149, 0.1);
   border: 1px solid rgba(81, 70, 149, 0.35);
-  border-radius: 999px;
+  border-radius: 1rem;
   font-size: 0.9rem;
   color: var(--gray-300, #aaa);
   letter-spacing: 0.01em;
+  min-width: 15rem;
+}
+
+.exp-badge-label {
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--gray-400, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .exp-badge strong {
   color: #514695;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 640px) {
+  .exp-badge {
+    min-width: min(100%, 18rem);
+  }
+
+  .exp-badge-label {
+    font-size: 0.74rem;
+  }
 }
 
 .hero img {

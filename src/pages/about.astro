@@ -5,6 +5,8 @@ import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import ResumePreview from "../components/ResumePreview.astro";
 import Briefing from "../components/Briefing.astro";
+import aboutCssUrl from "../styles/about.css?url";
+import briefingCssUrl from "../styles/briefing.css?url";
 
 // Import the JSON data
 import aboutData from "../storages/about.json";
@@ -25,6 +27,7 @@ const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
 // Calculate experience years
 const softwareTitles = ["Software Engineer", "Open Source Backend Engineer", "Freelancer"];
+const projectManagementTitles = ["Fintech PM, MA Program"];
 
 function parsePeriodDate(s: string): Date {
   if (s.trim().toLowerCase() === "present") return new Date();
@@ -37,14 +40,17 @@ function monthsBetween(start: Date, end: Date): number {
 }
 
 let swMonths = 0;
+let pmMonths = 0;
 let totalMonths = 0;
 for (const job of experienceData) {
   const [startStr, endStr] = job.period.split("~");
   const months = monthsBetween(parsePeriodDate(startStr), parsePeriodDate(endStr));
   totalMonths += months;
   if (softwareTitles.includes(job.title)) swMonths += months;
+  if (projectManagementTitles.includes(job.title)) pmMonths += months;
 }
 const swYears = (swMonths / 12).toFixed(1);
+const pmYears = (pmMonths / 12).toFixed(1);
 const totalYears = (totalMonths / 12).toFixed(1);
 
 // Function to highlight dates in project descriptions
@@ -163,6 +169,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 ---
 
 <BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
+  <Fragment slot="head">
+    <link rel="stylesheet" href={aboutCssUrl} />
+    <link rel="stylesheet" href={briefingCssUrl} />
+  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper about">
 
@@ -170,10 +180,22 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
         <Hero title="About" tagline="KTY's Journey" />
         <div class="exp-badges">
           <span class="exp-badge">
-            {lang === "zh" ? "軟體年資" : "Software Exp."}<strong>{swYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+            <span class="exp-badge-label">
+              {lang === "zh" ? "開發經驗" : "Software Development Experience"}
+            </span>
+            <strong>{swYears}{lang === "zh" ? " 年" : " yrs"}</strong>
           </span>
           <span class="exp-badge">
-            {lang === "zh" ? "總年資" : "Total Exp."}<strong>{totalYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+            <span class="exp-badge-label">
+              {lang === "zh" ? "專案管理經驗" : "Project Management Experience"}
+            </span>
+            <strong>{pmYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+          <span class="exp-badge">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "總工作經驗" : "Total Professional Experience"}
+            </span>
+            <strong>{totalYears}{lang === "zh" ? " 年" : " yrs"}</strong>
           </span>
         </div>
         <div class="work-photo-wrapper" style="position:relative; width:100%;">
