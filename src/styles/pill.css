@@ -1,0 +1,46 @@
+.pill {
+	display: inline-flex;
+	padding: 0.5rem 1rem;
+	gap: 0.5rem;
+	color: var(--accent-text-over);
+	border: 1px solid var(--accent-regular);
+	background-color: var(--accent-regular);
+	border-radius: 999rem;
+	font-size: var(--text-md);
+	line-height: 1.35;
+	white-space: nowrap;
+	width: auto;
+	max-width: none;
+}
+
+.pill.gold {
+	background-color: #ffd700;
+	border-color: #ffd700;
+	color: #000;
+	font-weight: 600;
+	box-shadow:
+		0 0 10px rgba(255, 215, 0, 0.5),
+		0 0 20px rgba(255, 215, 0, 0.3),
+		0 0 30px rgba(255, 215, 0, 0.2),
+		0 2px 8px rgba(255, 215, 0, 0.4);
+	text-shadow: 0 1px 2px rgba(255, 215, 0, 0.5);
+	animation: goldGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes goldGlow {
+	0% {
+		box-shadow:
+			0 0 10px rgba(255, 215, 0, 0.5),
+			0 0 20px rgba(255, 215, 0, 0.3),
+			0 0 30px rgba(255, 215, 0, 0.2),
+			0 2px 8px rgba(255, 215, 0, 0.4);
+	}
+
+	100% {
+		box-shadow:
+			0 0 15px rgba(255, 215, 0, 0.7),
+			0 0 25px rgba(255, 215, 0, 0.5),
+			0 0 35px rgba(255, 215, 0, 0.3),
+			0 2px 8px rgba(255, 215, 0, 0.4);
+	}
+}

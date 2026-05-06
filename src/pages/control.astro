@@ -2,7 +2,6 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Clutches from "../components/Clutches.html";
-import controlCssUrl from "../styles/control.css?url";
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
@@ -27,9 +26,6 @@ if (!isLoggedIn) {
     <BaseLayout
       title="Control | Wavo Yuropha"
     >
-      <Fragment slot="head">
-        <link rel="stylesheet" href={controlCssUrl} />
-      </Fragment>
       <div class="stack gap-20">
         <main class="wrapper stack gap-8">
           <Hero title="Control" align="start" />

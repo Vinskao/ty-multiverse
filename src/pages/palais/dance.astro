@@ -10,7 +10,6 @@ declare global {
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
-import danceCssUrl from "../../styles/dance.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -27,9 +26,6 @@ const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://people
 ---
 
 <BaseLayout title="Dance | TY Multiverse" description="Dance video collection">
-  <Fragment slot="head">
-    <link rel="stylesheet" href={danceCssUrl} />
-  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero

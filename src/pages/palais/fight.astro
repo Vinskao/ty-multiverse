@@ -2,8 +2,6 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
 import FightComponent from "../../components/Fight.astro";
-import palaisCssUrl from "../../styles/palais.css?url";
-import fightCssUrl from "../../styles/fight.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -15,10 +13,6 @@ if (!isLoggedIn) {
 }
 ---
 <BaseLayout title="Palais 模組1 | Wavo Yuropha" description="Fight module within Palais">
-  <Fragment slot="head">
-    <link rel="stylesheet" href={palaisCssUrl} />
-    <link rel="stylesheet" href={fightCssUrl} />
-  </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Fight Module" align="start" />

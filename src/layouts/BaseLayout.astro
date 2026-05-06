@@ -4,12 +4,34 @@
 
 // CSS Imports via ?url — Astro v5 SSR does not collect CSS from sub-components,
 // so all component CSS must be explicitly linked here in the root layout.
+import baseLayoutCssUrl from '../styles/base-layout.css?url';
+import aboutCssUrl from '../styles/about.css?url';
+import briefingCssUrl from '../styles/briefing.css?url';
+import callToActionCssUrl from '../styles/call-to-action.css?url';
+import contactCtaCssUrl from '../styles/contact-cta.css?url';
+import controlCssUrl from '../styles/control.css?url';
+import danceCssUrl from '../styles/dance.css?url';
+import fightCssUrl from '../styles/fight.css?url';
+import footerCssUrl from '../styles/footer.css?url';
+import galwallCssUrl from '../styles/galwall.css?url';
 import globalCssUrl from '../styles/global.css?url';
-import themeToggleCssUrl from '../styles/theme-toggle.css?url';
+import groupCssUrl from '../styles/group.css?url';
+import gridCssUrl from '../styles/grid.css?url';
+import heroCssUrl from '../styles/hero.css?url';
+import indexCssUrl from '../styles/index.css?url';
+import levellistCssUrl from '../styles/levellist.css?url';
 import navCssUrl from '../styles/nav.css?url';
+import palaisCssUrl from '../styles/palais.css?url';
+import partyCssUrl from '../styles/party.css?url';
+import peopleGalleryCssUrl from '../styles/people-gallery.css?url';
+import peopleManagementCssUrl from '../styles/people-management.css?url';
+import pillCssUrl from '../styles/pill.css?url';
+import portfolioPreviewCssUrl from '../styles/portfolio-preview.css?url';
 import qabotCssUrl from '../styles/qabot.css?url';
 import qaplatformCssUrl from '../styles/qaplatform.css?url';
 import qabotv2CssUrl from '../styles/qabotv2.css?url';
+import tableAjaxCssUrl from '../styles/table-ajax.css?url';
+import themeToggleCssUrl from '../styles/theme-toggle.css?url';
 
 // Component Imports
 import MainHead from '../components/MainHead.astro';
@@ -89,12 +111,34 @@ const { title, description } = Astro.props;
 				}
 			})();
 		</script>
+		<link rel="stylesheet" href={baseLayoutCssUrl} />
 		<link rel="stylesheet" href={globalCssUrl} />
 		<link rel="stylesheet" href={themeToggleCssUrl} />
 		<link rel="stylesheet" href={navCssUrl} />
+		<link rel="stylesheet" href={footerCssUrl} />
+		<link rel="stylesheet" href={heroCssUrl} />
+		<link rel="stylesheet" href={gridCssUrl} />
+		<link rel="stylesheet" href={portfolioPreviewCssUrl} />
+		<link rel="stylesheet" href={contactCtaCssUrl} />
+		<link rel="stylesheet" href={pillCssUrl} />
+		<link rel="stylesheet" href={callToActionCssUrl} />
+		<link rel="stylesheet" href={indexCssUrl} />
+		<link rel="stylesheet" href={aboutCssUrl} />
+		<link rel="stylesheet" href={briefingCssUrl} />
+		<link rel="stylesheet" href={controlCssUrl} />
+		<link rel="stylesheet" href={danceCssUrl} />
+		<link rel="stylesheet" href={fightCssUrl} />
+		<link rel="stylesheet" href={galwallCssUrl} />
+		<link rel="stylesheet" href={groupCssUrl} />
+		<link rel="stylesheet" href={levellistCssUrl} />
+		<link rel="stylesheet" href={palaisCssUrl} />
+		<link rel="stylesheet" href={partyCssUrl} />
+		<link rel="stylesheet" href={peopleGalleryCssUrl} />
+		<link rel="stylesheet" href={peopleManagementCssUrl} />
 		<link rel="stylesheet" href={qabotCssUrl} />
 		<link rel="stylesheet" href={qaplatformCssUrl} />
 		<link rel="stylesheet" href={qabotv2CssUrl} />
+		<link rel="stylesheet" href={tableAjaxCssUrl} />
 		<slot name="head" />
 		<MainHead title={title} description={description} />
 		<ClientRouter />
@@ -182,90 +226,6 @@ const { title, description } = Astro.props;
 				console.log('[Theme] astro:after-swap applied theme:', theme);
 			});
 		</script>
-
-		<style>
-			:root {
-				--_placeholder-bg: linear-gradient(transparent, transparent);
-				--bg-image-main: url('/tymultiverse/assets/backgrounds/bg-main-light-800w.jpg');
-				--bg-image-main-curves: url('/tymultiverse/assets/backgrounds/bg-main-light.svg');
-				--bg-image-subtle-1: var(--_placeholder-bg);
-				--bg-image-subtle-2: var(--_placeholder-bg);
-				--bg-image-footer: var(--_placeholder-bg);
-				--bg-svg-blend-mode: overlay;
-				--bg-blend-mode: darken;
-				--bg-image-aspect-ratio: 2.25;
-				--bg-scale: 1.68;
-				--bg-aspect-ratio: calc(var(--bg-image-aspect-ratio) / var(--bg-scale));
-				--bg-gradient-size: calc(var(--bg-scale) * 100%);
-			}
-
-			:root.theme-dark {
-				--bg-image-main: url('/tymultiverse/assets/backgrounds/bg-main-dark-800w.jpg');
-				--bg-image-main-curves: url('/tymultiverse/assets/backgrounds/bg-main-dark.svg');
-				--bg-svg-blend-mode: darken;
-				--bg-blend-mode: lighten;
-			}
-
-			/* These backgrounds are displayed below the fold, so we lazy load them
-			   once the `.loaded` class has been set.  */
-			:root.loaded {
-				--bg-image-subtle-1: url('/tymultiverse/assets/backgrounds/bg-subtle-1-light-800w.jpg');
-				--bg-image-subtle-2: url('/tymultiverse/assets/backgrounds/bg-subtle-2-light-800w.jpg');
-				--bg-image-footer: url('/tymultiverse/assets/backgrounds/bg-footer-light-800w.jpg');
-			}
-			:root.loaded.theme-dark {
-				--bg-image-subtle-1: url('/tymultiverse/assets/backgrounds/bg-subtle-1-dark-800w.jpg');
-				--bg-image-subtle-2: url('/tymultiverse/assets/backgrounds/bg-subtle-2-dark-800w.jpg');
-				--bg-image-footer: url('/tymultiverse/assets/backgrounds/bg-footer-dark-800w.jpg');
-			}
-
-			@media (min-width: 50em) {
-				:root {
-					--bg-scale: 1;
-					--bg-image-main: url('/tymultiverse/assets/backgrounds/bg-main-light-1440w.jpg');
-				}
-				:root.theme-dark {
-					--bg-image-main: url('/tymultiverse/assets/backgrounds/bg-main-dark-1440w.jpg');
-				}
-
-				:root.loaded {
-					--bg-image-subtle-1: url('/tymultiverse/assets/backgrounds/bg-subtle-1-light-1440w.jpg');
-					--bg-image-subtle-2: url('/tymultiverse/assets/backgrounds/bg-subtle-2-light-1440w.jpg');
-					--bg-image-footer: url('/tymultiverse/assets/backgrounds/bg-footer-light-1440w.jpg');
-				}
-				:root.loaded.theme-dark {
-					--bg-image-subtle-1: url('/tymultiverse/assets/backgrounds/bg-subtle-1-dark-1440w.jpg');
-					--bg-image-subtle-2: url('/tymultiverse/assets/backgrounds/bg-subtle-2-dark-1440w.jpg');
-					--bg-image-footer: url('/tymultiverse/assets/backgrounds/bg-footer-dark-1440w.jpg');
-				}
-			}
-
-			.backgrounds {
-				min-height: 100%;
-				isolation: isolate;
-				background:
-					/*noise*/
-					url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
-					/*footer*/ var(--bg-image-footer) bottom center/var(--bg-gradient-size) no-repeat,
-					/*header1*/ var(--bg-image-main-curves) top center/var(--bg-gradient-size) no-repeat,
-					/*header2*/ var(--bg-image-main) top center/var(--bg-gradient-size) no-repeat,
-					/*base*/ var(--gray-999);
-				background-blend-mode: /*noise*/
-					overlay,
-					/*footer*/ var(--bg-blend-mode),
-					/*header1*/ var(--bg-svg-blend-mode),
-					/*header2*/ normal,
-					/*base*/ normal;
-			}
-			@media (forced-colors: active) {
-				/* Deactivate custom backgrounds for high contrast users. */
-				.backgrounds {
-					background: none;
-					background-blend-mode: none;
-					--bg-gradient-size: none;
-				}
-			}
-		</style>
 	</body>
 	
 </html>

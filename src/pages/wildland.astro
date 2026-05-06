@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
-import peopleGalleryCssUrl from '../styles/people-gallery.css?url';
 
 // 檢查登入狀態
 const url = new URL(Astro.request.url);
@@ -120,9 +119,6 @@ const token = url.searchParams.get('token');
       title="Wildland | Wavo Yuropha"
       description="Learn about TY's most recent projects"
     >
-      <Fragment slot="head">
-        <link rel="stylesheet" href={peopleGalleryCssUrl} />
-      </Fragment>
       <div class="stack gap-20">
         <main class="wrapper stack gap-8">
           <Hero

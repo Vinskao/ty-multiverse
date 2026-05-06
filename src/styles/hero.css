@@ -1,0 +1,38 @@
+.hero {
+	font-size: var(--text-lg);
+	text-align: center;
+}
+
+.hero .tagline {
+	color: var(--gray-50);
+}
+
+.hero .title,
+.hero .tagline {
+	max-width: 37ch;
+	margin-inline: auto;
+}
+
+.hero .title {
+	font-size: var(--text-3xl);
+	color: var(--gray-0);
+}
+
+@media (min-width: 50em) {
+	.hero {
+		font-size: var(--text-xl);
+	}
+
+	.hero.start {
+		text-align: start;
+	}
+
+	.hero.start .title,
+	.hero.start .tagline {
+		margin-inline: unset;
+	}
+
+	.hero .title {
+		font-size: var(--text-5xl);
+	}
+}
