@@ -1473,52 +1473,58 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Initialize from global AppLang if available
+      import { navigate } from "astro:transitions/client";
+
+      let cleanupAboutLangSync: (() => void) | null = null;
+
+      function normalizeLang(code?: string | null) {
+        return code && code.toLowerCase().startsWith("zh") ? "zh" : "en";
+      }
+
+      function syncAboutLanguage() {
         try {
-          // Wait for AppLang to be available (since it's loaded asynchronously)
-          const initLanguage = () => {
-            if (!(window as any).AppLang) {
-              setTimeout(initLanguage, 50);
-              return;
-            }
-
-            const current = (window as any).AppLang.get();
-            const urlParam = new URLSearchParams(window.location.search).get("lang");
-            
-            const normalizedUrl =
-              urlParam && urlParam.toLowerCase().startsWith("zh")
-                ? "zh"
-                : urlParam
-                  ? "en"
-                  : null;
-
-            // Sync global state with URL param if they differ
-            if (normalizedUrl && normalizedUrl !== current) {
-              (window as any).AppLang.set(normalizedUrl);
-            } else if (!urlParam) {
-              // Add URL param to match current global state if missing
-              const target = current === "zh" ? "?lang=zh" : "?lang=en";
-              window.history.replaceState({}, "", target);
-            }
-          };
-
-          initLanguage();
-
-          // React to language changes from Navbar/Global
-          if ((window as any).AppLang) {
-            (window as any).AppLang.onChange(({ code }: { code: string }) => {
-              const url = new URL(window.location.href);
-              const currentLang = url.searchParams.get("lang") || "en";
-              
-              if (currentLang !== code) {
-                url.searchParams.set("lang", code);
-                window.location.href = url.toString(); // Full reload for SSR
-              }
-            });
+          const appLang = (window as any).AppLang;
+          if (!appLang) {
+            setTimeout(syncAboutLanguage, 50);
+            return;
           }
+
+          const url = new URL(window.location.href);
+          const urlLang = normalizeLang(url.searchParams.get("lang"));
+          const appLangCode = normalizeLang(appLang.get());
+
+          if (url.searchParams.has("lang")) {
+            if (appLangCode !== urlLang) {
+              appLang.set(urlLang);
+            }
+          } else {
+            url.searchParams.set("lang", appLangCode);
+            window.history.replaceState({}, "", url.toString());
+          }
+
+          if (cleanupAboutLangSync) {
+            cleanupAboutLangSync();
+            cleanupAboutLangSync = null;
+          }
+
+          cleanupAboutLangSync = appLang.onChange(({ code }: { code: string }) => {
+            const nextLang = normalizeLang(code);
+            const nextUrl = new URL(window.location.href);
+            const currentLang = normalizeLang(nextUrl.searchParams.get("lang"));
+
+            if (currentLang !== nextLang) {
+              if (typeof (window as any).__saveLanguageSwitchScroll === "function") {
+                (window as any).__saveLanguageSwitchScroll();
+              }
+              nextUrl.searchParams.set("lang", nextLang);
+              navigate(nextUrl.toString());
+            }
+          });
         } catch (_) {}
-      });
+      }
+
+      syncAboutLanguage();
+      document.addEventListener("astro:page-load", syncAboutLanguage);
     </script>
 
     <script>

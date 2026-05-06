@@ -97,6 +97,81 @@ const { title, description } = Astro.props;
 					console.warn('lastVisitedPath 儲存失敗', e);
 				}
 			})();
+
+			// --- 語系切換時的滾動位置保留 ---
+			(function() {
+				const SCROLL_KEY = 'langSwitchScrollRestore';
+
+				function saveScrollPosition() {
+					try {
+						if ('scrollRestoration' in window.history) {
+							window.history.scrollRestoration = 'manual';
+						}
+						sessionStorage.setItem(
+							SCROLL_KEY,
+							JSON.stringify({
+								pathname: window.location.pathname,
+								href: window.location.href,
+								x: window.scrollX || 0,
+								y: window.scrollY || 0,
+								timestamp: Date.now(),
+							}),
+						);
+					} catch (e) {
+						console.warn('scroll restore save failed', e);
+					}
+				}
+
+				function restoreScrollPosition() {
+					try {
+						const raw = sessionStorage.getItem(SCROLL_KEY);
+						if (!raw) return false;
+
+						const saved = JSON.parse(raw);
+						const isFresh = Date.now() - Number(saved.timestamp || 0) < 15000;
+						const samePath = saved.pathname === window.location.pathname;
+
+						if (!isFresh || !samePath) {
+							sessionStorage.removeItem(SCROLL_KEY);
+							if ('scrollRestoration' in window.history) {
+								window.history.scrollRestoration = 'auto';
+							}
+							return false;
+						}
+
+						const x = Number(saved.x || 0);
+						const y = Number(saved.y || 0);
+						const restore = () => window.scrollTo(x, y);
+
+						requestAnimationFrame(() => {
+							restore();
+							setTimeout(restore, 60);
+							setTimeout(restore, 180);
+							setTimeout(restore, 360);
+							setTimeout(() => {
+								restore();
+								sessionStorage.removeItem(SCROLL_KEY);
+								if ('scrollRestoration' in window.history) {
+									window.history.scrollRestoration = 'auto';
+								}
+							}, 800);
+						});
+
+						return true;
+					} catch (e) {
+						console.warn('scroll restore failed', e);
+						sessionStorage.removeItem(SCROLL_KEY);
+						if ('scrollRestoration' in window.history) {
+							window.history.scrollRestoration = 'auto';
+						}
+						return false;
+					}
+				}
+
+				window.addEventListener('site:language-change', saveScrollPosition);
+				window.__saveLanguageSwitchScroll = saveScrollPosition;
+				window.__restoreLanguageSwitchScroll = restoreScrollPosition;
+			})();
 		</script>
 		<link rel="stylesheet" href={baseLayoutCssUrl} />
 		<link rel="stylesheet" href={globalCssUrl} />
@@ -140,12 +215,22 @@ const { title, description } = Astro.props;
 			function addLoadedClass() {
 				document.documentElement.classList.add('loaded');
 			}
+
+			function restoreLanguageSwitchScroll() {
+				if (typeof (window as any).__restoreLanguageSwitchScroll === 'function') {
+					(window as any).__restoreLanguageSwitchScroll();
+				}
+			}
 			addEventListener('load', addLoadedClass);
+			addEventListener('load', restoreLanguageSwitchScroll);
 			// View Transitions 導航後也觸發
 			document.addEventListener('astro:page-load', addLoadedClass);
+			document.addEventListener('astro:after-swap', restoreLanguageSwitchScroll);
+			document.addEventListener('astro:page-load', restoreLanguageSwitchScroll);
 			// 如果頁面已經載入完成，立即添加
 			if (document.readyState === 'complete') {
 				addLoadedClass();
+				restoreLanguageSwitchScroll();
 			}
 			
 			// 頁面內容提取輔助函數

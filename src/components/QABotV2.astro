@@ -79,35 +79,59 @@ import {} from "astro";
     }
 
     private async loadModels() {
+      const cacheKey = "qabot_v2_models_cache_v1";
+      const cacheTtlMs = 5 * 60 * 1000;
+
+      const applyModels = (models: any[]) => {
+        const activeModels = models.filter((m: any) => m.is_active === true);
+
+        this.modelSel.innerHTML = "";
+        activeModels.forEach((m: any) => {
+          const opt = document.createElement("option");
+          opt.value = m.model_id || m.name;
+          opt.textContent = m.name;
+          this.modelSel.appendChild(opt);
+        });
+
+        if (!this.modelSel.value && activeModels.length > 0) {
+          this.modelSel.value = activeModels[0].model_id || activeModels[0].name;
+        }
+      };
+
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const cached = JSON.parse(raw);
+          const models = cached?.data?.models || (Array.isArray(cached?.data) ? cached.data : []);
+          if (Array.isArray(models) && Date.now() - Number(cached.timestamp || 0) < cacheTtlMs) {
+            applyModels(models);
+            return;
+          }
+        }
+      } catch (_) {}
+
       try {
         const data = await api.getAvailableModels();
 
         console.log("Models API response:", data);
 
-        // 解析 API 回應格式 - 支援 {models: [...]} 和直接陣列兩種格式
         const models = data?.models || (Array.isArray(data) ? data : []);
-        const activeModels = models.filter((m: any) => m.is_active === true);
 
-        console.log("Active models:", activeModels);
+        try {
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data,
+            }),
+          );
+        } catch (_) {}
 
-        this.modelSel.innerHTML = "";
-        activeModels.forEach((m: any) => {
-          const opt = document.createElement("option");
-          opt.value = m.model_id || m.name; // 優先使用 model_id，否則使用 name
-          opt.textContent = m.name;
-          this.modelSel.appendChild(opt);
-          console.log("Added model option:", m.name, "with value:", opt.value);
-        });
-
-        // 設定預設選項
-        if (!this.modelSel.value && activeModels.length > 0) {
-          this.modelSel.value =
-            activeModels[0].model_id || activeModels[0].name;
-          console.log("Set default model:", this.modelSel.value);
-        }
+        console.log("Active models:", models.filter((m: any) => m.is_active === true));
+        applyModels(models);
       } catch (e) {
         console.error("Failed to load models:", e);
-        this.modelSel.innerHTML = '<option value="">無法載入模型</option>';
+        this.modelSel.innerHTML = '<option value="">?????????</option>';
       }
     }
 
@@ -314,23 +338,35 @@ import {} from "astro";
   }
 
   function initQABotV2() {
-    if ((window as any).qabotV2Instance) {
-      if (typeof (window as any).qabotV2Instance.cleanup === "function") {
-        (window as any).qabotV2Instance.cleanup();
-      }
+    const existingInstance = (window as any).qabotV2Instance;
+    const controls = document.getElementById("qaV2Controls");
+    const modelSelect = document.getElementById("v2Model");
+    const sameDom =
+      !!existingInstance &&
+      existingInstance.modelSel === modelSelect &&
+      controls !== null;
+
+    if (sameDom) {
+      return;
+    }
+
+    if (existingInstance && typeof existingInstance.cleanup === "function") {
+      existingInstance.cleanup();
     }
     (window as any).qabotV2Instance = new QABotV2();
 
-    // 監聽模式切換，同步顯示/隱藏 model selector
-    window.addEventListener("qabot:switch", (e: any) => {
-      const instance = (window as any).qabotV2Instance as QABotV2;
-      if (!instance) return;
-      if (e?.detail?.mode === "v2") {
-        instance.show();
-      } else {
-        instance.hide();
-      }
-    });
+    if (!(window as any).__qabotV2SwitchBound) {
+      (window as any).__qabotV2SwitchBound = true;
+      window.addEventListener("qabot:switch", (e: any) => {
+        const instance = (window as any).qabotV2Instance as QABotV2;
+        if (!instance) return;
+        if (e?.detail?.mode === "v2") {
+          instance.show();
+        } else {
+          instance.hide();
+        }
+      });
+    }
   }
 
   document.addEventListener("astro:page-load", initQABotV2);

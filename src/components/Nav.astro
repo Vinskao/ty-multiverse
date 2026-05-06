@@ -1,18 +1,18 @@
----
+﻿---
 import { Icon } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
 import type { iconPaths } from "./IconPaths";
 
-// 獲取 URL 參數
+// 鐛插彇 URL 鍙冩暩
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get("username");
 const token = url.searchParams.get("token");
 const refreshToken = url.searchParams.get("refresh_token");
 
-// 檢查登入狀態
+// 妾㈡煡鐧诲叆鐙€鎱?
 const isLoggedIn = !!username;
 
-// 獲取當前路徑
+// 鐛插彇鐣跺墠璺緫
 const currentPath = Astro.url.pathname;
 
 /** Main menu items */
@@ -218,13 +218,15 @@ const iconLinks: {
 
   let _langCleanup: (() => void) | null = null;
 
-  /** 語言切換按鈕邏輯 **/
+  /** 瑾炶█鍒囨彌鎸夐垥閭忚集 **/
   function initLangToggle() {
-    const btn = document.getElementById("langToggleBtn");
-    if (!btn) return;
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>("#langToggleBtn, #langToggleBtn-noscript"),
+    );
+    if (buttons.length === 0) return;
 
     const translatePage = (code: string) => {
-      // 翻譯帶有 data-i18n 屬性的元素
+      // 缈昏甯舵湁 data-i18n 灞€х殑鍏冪礌
       document.querySelectorAll("[data-i18n]").forEach((el) => {
         const key = el.getAttribute("data-i18n");
         if (!key) return;
@@ -232,7 +234,7 @@ const iconLinks: {
         const keys = key.split(".");
         let translation: any = i18nData;
         
-        // 依照 key 路徑尋找翻譯，例如 "nav.home"
+        // 渚濈収 key 璺緫灏嬫壘缈昏锛屼緥濡?"nav.home"
         for (const k of keys) {
           if (translation && translation[k]) {
             translation = translation[k];
@@ -242,7 +244,7 @@ const iconLinks: {
           }
         }
         
-        // 再依照語言代碼取得最終文字
+        // 鍐嶄緷鐓ц獮瑷€浠ｇ⒓鍙栧緱鏈€绲傛枃瀛?
         if (translation && translation[code]) {
           let text = translation[code];
           const count = el.getAttribute("data-i18n-count");
@@ -255,26 +257,32 @@ const iconLinks: {
     };
 
     const updateBtn = (lang: string) => {
-      btn.textContent = lang === "zh" ? "中文" : "EN";
+      buttons.forEach((button) => {
+        button.textContent = lang === "zh" ? "\u4E2D\u6587" : "EN";
+      });
     };
 
-    // Always-working click handler — no dependency on AppLang being ready at init time
-    btn.addEventListener("click", () => {
-      const AppLang = (window as any).AppLang;
-      if (AppLang) {
-        const next = AppLang.get() === "en" ? "zh" : "en";
-        console.log('[LangToggle] click via AppLang → toggling to:', next);
-        AppLang.set(next);
-      } else {
-        // Fallback: toggle via localStorage directly if AppLang script hasn't initialized
-        const STORAGE_KEY = 'site_language';
-        const current = localStorage.getItem(STORAGE_KEY) || 'en';
-        const next = current === "en" ? "zh" : "en";
-        localStorage.setItem(STORAGE_KEY, next);
-        updateBtn(next);
-        translatePage(next);
-        console.warn('[LangToggle] AppLang not ready — used localStorage fallback, toggled to:', next);
-      }
+    buttons.forEach((btn) => {
+      if (btn.dataset.langToggleBound === "true") return;
+      btn.dataset.langToggleBound = "true";
+
+      // Always-working click handler - no dependency on AppLang being ready at init time
+      btn.addEventListener("click", () => {
+        const AppLang = (window as any).AppLang;
+        if (AppLang) {
+          const next = AppLang.get() === "en" ? "zh" : "en";
+          console.log("[LangToggle] click via AppLang -> toggling to:", next);
+          AppLang.set(next);
+        } else {
+          const STORAGE_KEY = "site_language";
+          const current = localStorage.getItem(STORAGE_KEY) || "en";
+          const next = current === "en" ? "zh" : "en";
+          localStorage.setItem(STORAGE_KEY, next);
+          updateBtn(next);
+          translatePage(next);
+          console.warn("[LangToggle] AppLang not ready -> fallback toggled to:", next);
+        }
+      });
     });
 
     const setupHandlers = () => {
@@ -313,7 +321,7 @@ const iconLinks: {
     }
   }
 
-  // 支援 View Transitions
+  // 鏀彺 View Transitions
   initLangToggle();
   document.addEventListener("astro:page-load", initLangToggle);
 </script>
@@ -321,7 +329,7 @@ const iconLinks: {
 <script>
   import { storageService } from "../services/core/storageService";
 
-  // 將 storageService 掛載到 window 對象上
+  // 灏?storageService 鎺涜級鍒?window 灏嶈薄涓?
   (window as any).storageService = storageService;
 
   class MenuButton extends HTMLElement {
@@ -357,12 +365,12 @@ const iconLinks: {
 <script>
   import { initNav } from "../scripts/NavScript";
 
-  // 支援 View Transitions 的初始化
+  // 鏀彺 View Transitions 鐨勫垵濮嬪寲
   initNav();
 </script>
 
 <script>
-  // 備用的原生 JavaScript 主題切換功能 - 僅在 React 水合失敗時啟用
+  // 鍌欑敤鐨勫師鐢?JavaScript 涓婚鍒囨彌鍔熻兘 - 鍍呭湪 React 姘村悎澶辨晽鏅傚暉鐢?
   function initThemeToggleFallback() {
     console.log("[ThemeToggle Fallback] Checking for React handlers...");
 
@@ -372,7 +380,7 @@ const iconLinks: {
     if (!themeToggleButton) return;
     if (themeToggleButton.dataset.fallbackBound === "true") return;
 
-    // 檢查按鈕是否已經由 React 處理
+    // 妾㈡煡鎸夐垥鏄惁宸茬稉鐢?React 铏曠悊
     const hasReactHandlers = Object.keys(themeToggleButton).some(
       (key) => key.startsWith("__react") || key.startsWith("_react"),
     );
@@ -413,7 +421,7 @@ const iconLinks: {
     );
   }
 
-  // 給 React 一點時間（1.5s）進行水合，如果還不行就啟動備案
+  // 绲?React 涓€榛炴檪闁擄紙1.5s锛夐€茶姘村悎锛屽鏋滈倓涓嶈灏卞暉鍕曞倷妗?
   setTimeout(initThemeToggleFallback, 1500);
   document.addEventListener("astro:page-load", () =>
     setTimeout(initThemeToggleFallback, 1500),
@@ -479,3 +487,4 @@ const iconLinks: {
     cursor: not-allowed;
   }
 </style>
+

@@ -9,6 +9,8 @@ export class NavController {
   private username: string | null = null;
   private token: string | null = null;
   private refreshToken: string | null = null;
+  private lastValidatedAccessKey: string | null = null;
+  private accessValidationPromise: Promise<void> | null = null;
 
   constructor() {
     this.initialize();
@@ -29,8 +31,25 @@ export class NavController {
     // 支援 Astro View Transitions: 在頁面切換後重新執行
     document.addEventListener('astro:page-load', () => {
       this.getUrlParams();
+      this.updateNavLinks();
       this.validateAccess();
     });
+  }
+
+  private getAccessValidationKey(): string {
+    return [
+      this.username || '',
+      this.token || '',
+      this.refreshToken || '',
+    ].join('|');
+  }
+
+  private canReuseValidatedAccess(): boolean {
+    if (!this.isLoggedIn || !this.token) {
+      return false;
+    }
+
+    return this.lastValidatedAccessKey === this.getAccessValidationKey();
   }
 
   private getUrlParams() {

@@ -43,11 +43,36 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}): Pro
 export const api = {
   // 獲取可用模型
   async getAvailableModels() {
+    const cacheKey = 'maya_available_models_cache_v1';
+    const cacheTtlMs = 5 * 60 * 1000;
+
+    try {
+      const raw = sessionStorage.getItem(cacheKey);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (Date.now() - Number(cached.timestamp || 0) < cacheTtlMs) {
+          return cached.data;
+        }
+      }
+    } catch (_) {}
+
     const response = await apiFetch(API_CONFIG.endpoints.availableModels);
     if (!response.ok) {
       throw new Error(`Failed to fetch models: ${response.status}`);
     }
-    return response.json();
+    const data = await response.json();
+
+    try {
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          timestamp: Date.now(),
+          data,
+        }),
+      );
+    } catch (_) {}
+
+    return data;
   },
 
   // 發送問題給 AI 模型
