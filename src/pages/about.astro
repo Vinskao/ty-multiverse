@@ -7,6 +7,7 @@ import ResumePreview from "../components/ResumePreview.astro";
 import Briefing from "../components/Briefing.astro";
 import aboutCssUrl from "../styles/about.css?url";
 import briefingCssUrl from "../styles/briefing.css?url";
+import { getMermaidConfig } from "../scripts/mermaid-theme";
 
 // Import the JSON data
 import aboutData from "../storages/about.json";
@@ -1528,34 +1529,39 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     </script>
 
     <script>
-      document.querySelectorAll<HTMLButtonElement>(".copy-resume-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          const text = (btn.closest("details") as HTMLElement)?.dataset.copy ?? "";
-          navigator.clipboard.writeText(text).then(() => {
-            const label = btn.querySelector<HTMLElement>(".copy-label");
-            const svg = btn.querySelector("svg");
-            const original = label?.textContent ?? "";
-            if (label) label.textContent = "✓";
-            if (svg) svg.style.display = "none";
-            btn.classList.add("copied");
-            setTimeout(() => {
-              if (label) label.textContent = original;
-              if (svg) svg.style.display = "";
-              btn.classList.remove("copied");
-            }, 1800);
-          });
+      document.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement | null;
+        const btn = target?.closest(".copy-resume-btn") as HTMLButtonElement | null;
+        if (!btn) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const text = (btn.closest("details") as HTMLElement)?.dataset.copy ?? "";
+        navigator.clipboard.writeText(text).then(() => {
+          const label = btn.querySelector<HTMLElement>(".copy-label");
+          const svg = btn.querySelector("svg");
+          const original = label?.textContent ?? "";
+          if (label) label.textContent = "✓";
+          if (svg) svg.style.display = "none";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            if (label) label.textContent = original;
+            if (svg) svg.style.display = "";
+            btn.classList.remove("copied");
+          }, 1800);
         });
       });
     </script>
 
-    <ResumePreview />
+    <ResumePreview lang={lang} />
     <ContactCTA />
   </div>
 
   <!-- Mermaid.js for on-page diagrams -->
   <script>
+    import { getMermaidConfig } from '../scripts/mermaid-theme';
+
+    let themeObserver: MutationObserver | null = null;
+
     async function loadMermaid() {
       if (!window["mermaid"]) {
         await new Promise<void>((resolve, reject) => {
@@ -1566,173 +1572,50 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
           document.head.appendChild(s);
         });
       }
-      const mermaidLib = window["mermaid"];
+      const mermaidLib = window["mermaid"] as any;
       if (mermaidLib) {
         // 根據當前主題設定 Mermaid 主題
         const isDarkMode =
           document.documentElement.classList.contains("theme-dark");
-        mermaidLib.initialize({
-          startOnLoad: true,
-          theme: isDarkMode ? "dark" : "default",
-          themeVariables: isDarkMode
-            ? {
-                background: "#2a2a2a",
-                primaryColor: "#00d4ff",
-                primaryTextColor: "#ffffff",
-                primaryBorderColor: "#ffffff",
-                lineColor: "#ffffff",
-                secondaryColor: "#ff6b6b",
-                tertiaryColor: "#4ecdc4",
-                textColor: "#ffffff",
-                mainBkg: "#333333",
-                secondBkg: "#444444",
-                border1: "#ffffff",
-                border2: "#ffffff",
-                // Sequence diagram specific
-                actorBkg: "#333333",
-                actorTextColor: "#ffffff",
-                actorLineColor: "#ffffff",
-                signalColor: "#ffffff",
-                signalTextColor: "#ffffff",
-                // Class diagram specific
-                classText: "#ffffff",
-                // Flowchart specific
-                edgeLabelBackground: "#333333",
-                clusterBkg: "#333333",
-                clusterBorder: "#ffffff",
-                defaultLinkColor: "#ffffff",
-                titleColor: "#ffffff",
-                nodeTextColor: "#ffffff",
-              }
-            : {
-                background: "#ffffff",
-                primaryColor: "#1f5bff",
-                primaryTextColor: "#000000",
-                primaryBorderColor: "#000000",
-                lineColor: "#000000",
-                secondaryColor: "#ff3b30",
-                tertiaryColor: "#00b894",
-                textColor: "#000000",
-                mainBkg: "#f7f9fc",
-                secondBkg: "#eef3fb",
-                border1: "#000000",
-                border2: "#000000",
-                // Sequence diagram specific
-                actorBkg: "#f7f9fc",
-                actorTextColor: "#000000",
-                actorLineColor: "#000000",
-                signalColor: "#000000",
-                signalTextColor: "#000000",
-                // Class diagram specific
-                classText: "#000000",
-                // Flowchart specific
-                edgeLabelBackground: "#ffffff",
-                clusterBkg: "#f7f9fc",
-                clusterBorder: "#000000",
-                defaultLinkColor: "#000000",
-                titleColor: "#000000",
-                nodeTextColor: "#000000",
-              },
-        });
+        const mermaidCfg = getMermaidConfig(isDarkMode);
+        mermaidLib.initialize({ startOnLoad: true, ...mermaidCfg });
 
         // Force re-render all diagrams after theme change
         setTimeout(() => {
           mermaidLib.init();
         }, 100);
+
+        // 監聽主題變化，重新初始化 Mermaid (guard against duplicates)
+        if (!themeObserver) {
+          themeObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (
+                mutation.type === "attributes" &&
+                mutation.attributeName === "class"
+              ) {
+                const isDark =
+                  document.documentElement.classList.contains("theme-dark");
+                mermaidLib.initialize({ startOnLoad: true, ...getMermaidConfig(isDark) });
+                // 重新渲染所有圖表
+                setTimeout(() => {
+                  mermaidLib.init();
+                }, 100);
+              }
+            });
+          });
+
+          themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+          });
+        }
       }
-
-      // 監聽主題變化，重新初始化 Mermaid
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (
-            mutation.type === "attributes" &&
-            mutation.attributeName === "class"
-          ) {
-            const isDarkMode =
-              document.documentElement.classList.contains("theme-dark");
-            if (mermaidLib) {
-              mermaidLib.initialize({
-                startOnLoad: true,
-                theme: isDarkMode ? "dark" : "default",
-                themeVariables: isDarkMode
-                  ? {
-                      background: "#2a2a2a",
-                      primaryColor: "#00d4ff",
-                      primaryTextColor: "#ffffff",
-                      primaryBorderColor: "#ffffff",
-                      lineColor: "#ffffff",
-                      secondaryColor: "#ff6b6b",
-                      tertiaryColor: "#4ecdc4",
-                      textColor: "#ffffff",
-                      mainBkg: "#333333",
-                      secondBkg: "#444444",
-                      border1: "#ffffff",
-                      border2: "#ffffff",
-                      // Sequence diagram specific
-                      actorBkg: "#333333",
-                      actorTextColor: "#ffffff",
-                      actorLineColor: "#ffffff",
-                      signalColor: "#ffffff",
-                      signalTextColor: "#ffffff",
-                      // Class diagram specific
-                      classText: "#ffffff",
-                      // Flowchart specific
-                      edgeLabelBackground: "#333333",
-                      clusterBkg: "#333333",
-                      clusterBorder: "#ffffff",
-                      defaultLinkColor: "#ffffff",
-                      titleColor: "#ffffff",
-                      nodeTextColor: "#ffffff",
-                    }
-                  : {
-                      background: "#ffffff",
-                      primaryColor: "#1f5bff",
-                      primaryTextColor: "#000000",
-                      primaryBorderColor: "#000000",
-                      lineColor: "#000000",
-                      secondaryColor: "#ff3b30",
-                      tertiaryColor: "#00b894",
-                      textColor: "#000000",
-                      mainBkg: "#f7f9fc",
-                      secondBkg: "#eef3fb",
-                      border1: "#000000",
-                      border2: "#000000",
-                      // Sequence diagram specific
-                      actorBkg: "#f7f9fc",
-                      actorTextColor: "#000000",
-                      actorLineColor: "#000000",
-                      signalColor: "#000000",
-                      signalTextColor: "#000000",
-                      // Class diagram specific
-                      classText: "#000000",
-                      // Flowchart specific
-                      edgeLabelBackground: "#ffffff",
-                      clusterBkg: "#f7f9fc",
-                      clusterBorder: "#000000",
-                      defaultLinkColor: "#000000",
-                      titleColor: "#000000",
-                      nodeTextColor: "#000000",
-                    },
-              });
-              // 重新渲染所有圖表
-              setTimeout(() => {
-                mermaidLib.init();
-              }, 100);
-            }
-          }
-        });
-      });
-
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-
-      // Work photo hover to show briefing
-      // Overlay handled purely by CSS hover on wrapper to avoid flicker
     }
 
-    document.addEventListener("astro:page-load", loadMermaid);
+    // Call immediately for initial page load
+    loadMermaid();
+    // Re-run on every Astro view transition
+    document.addEventListener('astro:page-load', loadMermaid);
   </script>
 
   <!-- Styles for export button live in ResumePreview component -->

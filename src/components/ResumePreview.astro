@@ -1,4 +1,12 @@
 ---
+import { getMermaidConfig } from '../scripts/mermaid-theme';
+import diagramMapData from '../storages/diagram-map.json';
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'en' } = Astro.props;
 ---
 
 <div class="pdf-export-section">
@@ -6,10 +14,13 @@
   <button id="preview-briefing-btn" class="export-btn outline">Project Briefing</button>
 </div>
 
-<script type="module">
-  const btn = document.getElementById('preview-pdf-btn');
-  const briefingBtn = document.getElementById('preview-briefing-btn');
+<!-- Inline Architecture Diagrams block (populated at runtime by cloning Tech Experience diagrams) -->
+<section class="briefing-inline">
+  <h2 class="section-title">{lang === "zh" ? "架構圖總覽" : "Architecture Diagrams"}</h2>
+  <div class="briefing-inline-content"></div>
+</section>
 
+<script>
   function openPreview(mode) {
     // mode: 'resume' | 'tech'
     try {
@@ -17,6 +28,9 @@
       const urlParams = new URLSearchParams(window.location.search);
       const langParam = urlParams.get('lang');
       const currentLang = (langParam && langParam.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
+
+      // Detect current theme
+      const isDark = document.documentElement.classList.contains('theme-dark');
 
       const aboutSection = document.querySelector('.about');
       if (!aboutSection) throw new Error('About section not found');
@@ -40,27 +54,23 @@
       clone.querySelectorAll('.title, .tagline').forEach(el => el.remove());
       // Remove Career Briefing section in preview
       clone.querySelectorAll('.briefing-section').forEach(el => el.remove());
+      // Remove the inline diagrams block (they'll be in Tech Experience)
+      clone.querySelectorAll('.briefing-inline').forEach(el => el.remove());
+      if (mode === 'tech') {
+        clone.querySelectorAll('.hero-section').forEach(el => el.remove());
+      }
 
       // Filter sections based on mode
       const sectionNodes = Array.from(clone.querySelectorAll('section'));
       const getHeadingText = (sec) => (sec.querySelector('h2')?.textContent || '').trim();
 
-      if (mode === 'resume') {
-        const allowed = new Set(['Background', 'Project Experience', 'Education']);
-        sectionNodes.forEach(sec => {
-          const h = getHeadingText(sec);
-          if (!allowed.has(h)) {
-            sec.remove();
-          }
-        });
-      } else if (mode === 'tech') {
-        sectionNodes.forEach(sec => {
-          const h = getHeadingText(sec);
-          if (h !== 'Tech Experience') {
-            sec.remove();
-          }
-        });
-      }
+      const techTitles = new Set(['Tech Experience', '技術經驗']);
+      const resumeTitles = new Set(['Background', '背景', 'Project Experience', '專案經歷', 'Education', '教育']);
+      sectionNodes.forEach(sec => {
+        const h = getHeadingText(sec);
+        const allowed = mode === 'tech' ? techTitles : resumeTitles;
+        if (!allowed.has(h)) sec.remove();
+      });
 
       // Smart page break logic - only break if section has substantial content
       const allSecs = Array.from(clone.querySelectorAll('section'));
@@ -79,13 +89,42 @@
         }
       });
 
+      // Force-open details elements so Mermaid can render inside them
+      clone.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
+
       // Build HTML for the new window
       const displayTitle = mode === 'tech' ? 'Project Briefing' : 'Resume Preview';
       const langSuffix = currentLang === 'zh' ? '-zh' : '-en';
       const baseFilename = mode === 'tech' ? 'project-tyk' : 'resume-tyk';
       const filename = baseFilename + langSuffix;
+
+      // Build theme-aware mermaid config as JSON string to embed in preview HTML
+      const previewMermaidConfig = JSON.stringify({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        themeVariables: isDark ? {
+          background: '#2a2a2a', primaryColor: '#00d4ff', primaryTextColor: '#ffffff',
+          primaryBorderColor: '#ffffff', lineColor: '#ffffff', secondaryColor: '#ff6b6b',
+          tertiaryColor: '#4ecdc4', textColor: '#ffffff', mainBkg: '#333333',
+          secondBkg: '#444444', border1: '#ffffff', border2: '#ffffff',
+          actorBkg: '#333333', actorTextColor: '#ffffff', actorLineColor: '#ffffff',
+          signalColor: '#ffffff', signalTextColor: '#ffffff', classText: '#ffffff',
+          edgeLabelBackground: '#333333', clusterBkg: '#333333', clusterBorder: '#ffffff',
+          defaultLinkColor: '#ffffff', titleColor: '#ffffff', nodeTextColor: '#ffffff',
+        } : {
+          background: '#ffffff', primaryColor: '#1f5bff', primaryTextColor: '#000000',
+          primaryBorderColor: '#000000', lineColor: '#000000', secondaryColor: '#ff3b30',
+          tertiaryColor: '#00b894', textColor: '#000000', mainBkg: '#f7f9fc',
+          secondBkg: '#eef3fb', border1: '#000000', border2: '#000000',
+          actorBkg: '#f7f9fc', actorTextColor: '#000000', actorLineColor: '#000000',
+          signalColor: '#000000', signalTextColor: '#000000', classText: '#000000',
+          edgeLabelBackground: '#ffffff', clusterBkg: '#f7f9fc', clusterBorder: '#000000',
+          defaultLinkColor: '#000000', titleColor: '#000000', nodeTextColor: '#000000',
+        },
+      });
+
       const docHTML = `<!DOCTYPE html>
-        <html>
+        <html class="${isDark ? 'theme-dark' : ''}">
           <head>
             <meta charset="utf-8" />
             <title>${filename}</title>
@@ -136,11 +175,14 @@
           </head>
           <body>${clone.outerHTML}
             <script>
-              window.addEventListener('load', () => {
-                if (window.mermaid) {
-                  window.mermaid.initialize({ startOnLoad: true, theme: 'default' });
+              (function waitForMermaid(){
+                if (window.mermaid && typeof window.mermaid.run === 'function') {
+                  window.mermaid.initialize(${previewMermaidConfig});
+                  window.mermaid.run({ querySelector: '.mermaid' });
+                } else {
+                  setTimeout(waitForMermaid, 50);
                 }
-              });
+              })();
             <\/script>
           </body>
         </html>`;
@@ -159,17 +201,120 @@
     }
   }
 
-  btn?.addEventListener('click', () => {
-    btn.disabled = true;
-    openPreview('resume');
-    btn.disabled = false;
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('#preview-pdf-btn, #preview-briefing-btn');
+    if (!target) return;
+    target.disabled = true;
+    openPreview(target.id === 'preview-briefing-btn' ? 'tech' : 'resume');
+    target.disabled = false;
   });
+</script>
 
-  briefingBtn?.addEventListener('click', () => {
-    briefingBtn.disabled = true;
-    openPreview('tech');
-    briefingBtn.disabled = false;
+<!-- Save original Mermaid source BEFORE mermaid.js processes and overwrites pre content -->
+<script is:inline data-astro-rerun>
+  // This runs synchronously (before the deferred loadMermaid() bundle fires),
+  // so pre.textContent is still the raw diagram code at this point.
+  document.querySelectorAll('pre.mermaid:not([data-original])').forEach(function(pre) {
+    var text = pre.textContent.trim();
+    // Only save if it looks like diagram code (not already-rendered CSS)
+    if (text && !text.startsWith('#mermaid') && !text.startsWith('<')) {
+      pre.dataset.original = text;
+    }
   });
+</script>
+
+<!-- Inject diagram-map into window so the inline script can access it without imports -->
+<script>
+  import diagramMapJson from '../storages/diagram-map.json';
+  (window as any).__diagramMap = diagramMapJson;
+</script>
+
+<!-- Populate the inline Architecture Diagrams block after mermaid has rendered -->
+<script is:inline data-astro-rerun>
+  function fillInlineBriefing() {
+    var target = document.querySelector('.briefing-inline-content');
+    if (!target) return;
+    var techHeading = Array.prototype.find.call(
+      document.querySelectorAll('section .section-title'),
+      function(h) {
+        var t = h.textContent.trim();
+        return t === 'Tech Experience' || t === '技術經驗';
+      }
+    );
+    if (!techHeading) return;
+
+    // Detect current language from URL
+    var urlLang = new URLSearchParams(window.location.search).get('lang');
+    var lang = (urlLang && urlLang.toLowerCase().startsWith('zh')) ? 'zh' : 'en';
+
+    // Diagram metadata map (from window, injected by bundled script)
+    var diagramMap = (window.__diagramMap || []);
+
+    target.innerHTML = '';
+    var idx = 0;
+    techHeading.closest('section')
+      .querySelectorAll('.mermaid-diagram').forEach(function(d) {
+        var origPre = d.querySelector('pre.mermaid');
+        var src = origPre && origPre.dataset && origPre.dataset.original;
+        if (!src) return; // skip if original wasn't saved
+
+        var meta = diagramMap[idx] || null;
+        idx++;
+
+        // --- Title card ---
+        if (meta) {
+          var header = document.createElement('div');
+          header.className = 'diagram-card-header';
+
+          var badge = document.createElement('div');
+          badge.className = 'diagram-badge';
+
+          var role = document.createElement('span');
+          role.className = 'diagram-role';
+          role.textContent = (meta.role && meta.role[lang]) || meta.role || '';
+
+          var sep = document.createTextNode(' @ ');
+
+          var company = document.createElement('span');
+          company.className = 'diagram-company';
+          company.textContent = meta.company || '';
+
+          var period = document.createElement('span');
+          period.className = 'diagram-period';
+          period.textContent = meta.period || '';
+
+          badge.appendChild(role);
+          badge.appendChild(sep);
+          badge.appendChild(company);
+          badge.appendChild(period);
+
+          var topic = document.createElement('h3');
+          topic.className = 'diagram-topic';
+          topic.textContent = (meta.topic && meta.topic[lang]) || '';
+
+          header.appendChild(badge);
+          header.appendChild(topic);
+          target.appendChild(header);
+        }
+
+        // --- Diagram wrapper ---
+        var wrapper = document.createElement('div');
+        wrapper.className = 'mermaid-diagram';
+        var newPre = document.createElement('pre');
+        newPre.className = 'mermaid';
+        newPre.textContent = src;
+        wrapper.appendChild(newPre);
+        target.appendChild(wrapper);
+      });
+
+    // Ask mermaid to render the freshly-created pre elements
+    if (window.mermaid && window.mermaid.run) {
+      window.mermaid.run({ querySelector: '.briefing-inline-content .mermaid' });
+    }
+  }
+  document.addEventListener('astro:page-load', fillInlineBriefing);
+  // Also run with a delay to catch mermaid.init() completing after initial load
+  setTimeout(fillInlineBriefing, 500);
 </script>
 
 <style>
@@ -223,4 +368,106 @@
     color: #fff;
     transform: translateY(-2px) scale(1.03);
   }
-</style> 
+
+  /* Inline architecture diagrams section */
+  /* Override about.css @media rule: section { display: contents } */
+  .briefing-inline {
+    display: block;
+    padding: 0 2rem 2rem;
+    max-width: 960px;
+    margin: 0 auto 3rem;
+  }
+
+  .briefing-inline .section-title {
+    margin-bottom: 1.5rem;
+  }
+
+  /* These selectors need :global() because the elements are created by JS
+     and therefore don't receive Astro's scoped data-astro-cid attribute. */
+  :global(.briefing-inline-content .mermaid-diagram) {
+    margin-bottom: 2.5rem;
+    padding: 1.25rem;
+    border-radius: 0 0 12px 12px;
+    background: var(--color-surface, #f7f9fc);
+    border: 1px solid var(--color-border, #e0e4f0);
+    border-top: none;
+    overflow-x: auto;
+  }
+
+  :global(.briefing-inline-content > .mermaid-diagram:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Diagram title card */
+  :global(.diagram-card-header) {
+    margin-top: 2.5rem;
+    padding: 1rem 1.25rem 0.85rem;
+    border-radius: 12px 12px 0 0;
+    border: 1px solid var(--color-border, #e0e4f0);
+    border-bottom: 2px solid #667eea;
+    background: rgba(102, 126, 234, 0.06);
+  }
+
+  :global(.theme-dark .diagram-card-header) {
+    background: rgba(0, 212, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    border-bottom-color: #00d4ff;
+  }
+
+  :global(.diagram-badge) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+
+  :global(.diagram-role) {
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.14);
+    padding: 2px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  :global(.theme-dark .diagram-role) {
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.14);
+  }
+
+  :global(.diagram-company) {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.75;
+  }
+
+  :global(.diagram-period) {
+    margin-left: auto;
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: #999;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  :global(.theme-dark .diagram-period) {
+    color: #aaa;
+  }
+
+  :global(.diagram-topic) {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #1a1a2e;
+  }
+
+  :global(.theme-dark .diagram-topic) {
+    color: #e8e8f0;
+  }
+</style>

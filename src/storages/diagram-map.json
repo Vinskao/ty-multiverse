@@ -1,0 +1,132 @@
+[
+  {
+    "index": 0,
+    "role": { "en": "Software Engineer", "zh": "軟體工程師" },
+    "company": "Tata Consultancy Services",
+    "period": "2025/12~Present",
+    "topic": {
+      "en": "Angular.js + Java Gateway — Frontend/Backend Integration Architecture",
+      "zh": "Angular.js 前端 + Java Gateway — 前後端整合架構"
+    }
+  },
+  {
+    "index": 1,
+    "role": { "en": "Freelancer", "zh": "自由接案" },
+    "company": "Self-Employed",
+    "period": "2023/3~2024/1",
+    "topic": {
+      "en": "Maya Sawa V1 — RAG Q&A Request Flow",
+      "zh": "Maya Sawa V1 — RAG 問答請求流程"
+    }
+  },
+  {
+    "index": 2,
+    "role": { "en": "Freelancer", "zh": "自由接案" },
+    "company": "Self-Employed",
+    "period": "2023/3~2024/1",
+    "topic": {
+      "en": "Maya Sawa V1 — FastAPI Module Architecture",
+      "zh": "Maya Sawa V1 — FastAPI 模組分層架構"
+    }
+  },
+  {
+    "index": 3,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "TYM Backend — Spring Boot Application Layer & Data Source Config",
+      "zh": "TYM 後端 — Spring Boot 應用層與資料源設定架構"
+    }
+  },
+  {
+    "index": 4,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "TYM Backend — Security, JWT & OAuth2 Configuration",
+      "zh": "TYM 後端 — 安全性、JWT 與 OAuth2 設定架構"
+    }
+  },
+  {
+    "index": 5,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "TYM Backend — Global Exception Handling Chain of Responsibility",
+      "zh": "TYM 後端 — 全域例外處理責任鏈設計模式"
+    }
+  },
+  {
+    "index": 6,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "OCI VCN Infrastructure — Kubernetes Networking & Bastion Setup",
+      "zh": "OCI VCN 基礎設施 — Kubernetes 網路與 Bastion 架構"
+    }
+  },
+  {
+    "index": 7,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "Async Message Queue — RabbitMQ + Spring Boot + PostgreSQL Pipeline",
+      "zh": "非同步訊息佇列 — RabbitMQ + Spring Boot + PostgreSQL 管線"
+    }
+  },
+  {
+    "index": 8,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "Maya Sawa V2 — Hybrid Retrieval Pipeline (pgvector + pg_trgm)",
+      "zh": "Maya Sawa V2 — 混合檢索 Pipeline（pgvector + pg_trgm）"
+    }
+  },
+  {
+    "index": 9,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "Maya Sawa V2 — Multi-Agent System & Full Architecture Overview",
+      "zh": "Maya Sawa V2 — Multi-Agent 系統與完整架構總覽"
+    }
+  },
+  {
+    "index": 10,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "Maya Sawa V2 — Celery Async Task Processing Sequence",
+      "zh": "Maya Sawa V2 — Celery 非同步任務處理序列圖"
+    }
+  },
+  {
+    "index": 11,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "CI/CD Pipeline — GitHub Actions → Docker → Kubernetes Deploy",
+      "zh": "CI/CD 流程 — GitHub Actions → Docker → Kubernetes 部署"
+    }
+  },
+  {
+    "index": 12,
+    "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
+    "company": "Mercuries Life Insurance",
+    "period": "2024/3~2025/11",
+    "topic": {
+      "en": "OAuth2 / Keycloak — Authentication & Authorization Sequence",
+      "zh": "OAuth2 / Keycloak — 認證與授權序列流程"
+    }
+  }
+]
