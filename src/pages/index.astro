@@ -129,7 +129,7 @@ const skillsCategories = skillsData.categories;
 							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
 						</div>
 						<div class="github-graph">
-							<h5 data-i18n="home.githubTitle">Github Contributions</h5>
+							<h5 class="section-title" data-i18n="home.githubTitle">Github Contributions</h5>
 							<div>
 								<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
 							</div>
@@ -140,7 +140,7 @@ const skillsCategories = skillsData.categories;
 						</div>
 
 						<div class="leetcode-graph">
-							<h5 data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
+							<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
 							<div id="leetcode-stats" class="leetcode-container">
 								<div class="leetcode-card">
 									<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
@@ -174,7 +174,7 @@ const skillsCategories = skillsData.categories;
 						</div>
 
                         <div class="algorithms-section">
-                            <h5 data-i18n="home.patternsTitle">Patterns Learned</h5>
+                            <h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
                             <div class="algorithms-list">
                                 {algorithmsUsed.map((algo) => (
                                     <span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
@@ -193,7 +193,7 @@ const skillsCategories = skillsData.categories;
 					{skillsCategories.map((category) => {
 						return (
 							<div class="category">
-								<h5>{category.name}</h5>
+								<h5 class="section-title">{category.name}</h5>
 								{(category as any).subcategories ? (
 									(category as any).subcategories.map((sub: any) => (
 										<div class="subcategory-group">
@@ -229,7 +229,7 @@ const skillsCategories = skillsData.categories;
 		<main class="wrapper stack gap-20 lg:gap-48">
 			<section class="section with-background with-cta">
 				<header class="section-header stack gap-2 lg:gap-4">
-					<h5 data-i18n="home.collectionsTitle">Collections</h5>
+					<h5 class="section-title" data-i18n="home.collectionsTitle">Collections</h5>
 					<p data-i18n="home.recentNotes">Recent Notes</p>
 				</header>
 

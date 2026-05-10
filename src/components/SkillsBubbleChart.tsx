@@ -59,33 +59,12 @@ let clipIdCounter = 0;
 const generateClipId = () => `clip-${++clipIdCounter}-${Date.now()}`;
 const hasRenderableDimensions = ({ width, height }: { width: number; height: number }) =>
   Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
-const getFallbackBubbleNodes = (data: SkillData[], dimensions: { width: number; height: number }) => {
-  if (!hasRenderableDimensions(dimensions) || data.length === 0) return [];
-
-  const { width, height } = dimensions;
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const maxValue = Math.max(...data.map((item) => item.value), 1);
-  const orbitRadius = Math.max(0, Math.min(width, height) * 0.31);
-
-  return data.map((item, index) => {
-    const angle = (index / data.length) * Math.PI * 2 - Math.PI / 2;
-    const isPrimary = index === 0;
-    const radius = Math.max(24, Math.sqrt(item.value / maxValue) * 72);
-    const x = isPrimary ? centerX : centerX + Math.cos(angle) * orbitRadius;
-    const y = isPrimary ? centerY : centerY + Math.sin(angle) * orbitRadius;
-    const shortName = item.name.split(/\s+/).slice(0, 2).join(' ');
-
-    return { ...item, x, y, radius, shortName };
-  });
-};
 
 export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubbleChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 600 });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const fallbackBubbleNodes = selectedCategory ? [] : getFallbackBubbleNodes(data, dimensions);
 
   // Responsive sizing
   useEffect(() => {
@@ -671,26 +650,7 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
         viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
         role="img"
         aria-label={selectedCategory ? `${selectedCategory} skills detail` : 'Skills overview bubble chart'}
-      >
-        {!selectedCategory && fallbackBubbleNodes.map((node) => (
-          <g key={node.id} transform={`translate(${node.x},${node.y})`} className="fallback-bubble-node">
-            <circle
-              r={node.radius}
-              fill={categoryColors[node.category] || '#666'}
-              fillOpacity="0.75"
-              stroke="rgba(255,255,255,0.3)"
-            />
-            <text textAnchor="middle" fill="#fff" fontFamily="sans-serif" fontWeight="600">
-              <tspan x="0" y="-0.25em" fontSize={Math.max(8, Math.min(14, node.radius / 3))}>
-                {node.shortName}
-              </tspan>
-              <tspan x="0" y="1em" fontSize={Math.max(7, Math.min(12, node.radius / 4))} fillOpacity="0.9">
-                {node.value}
-              </tspan>
-            </text>
-          </g>
-        ))}
-      </svg>
+      />
       
       {!selectedCategory && (
         <div className="bubble-chart-legend">

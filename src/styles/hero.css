@@ -16,6 +16,10 @@
 .hero .title {
 	font-size: var(--text-3xl);
 	color: var(--gray-0);
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	text-align: center;
 }
 
 @media (min-width: 50em) {

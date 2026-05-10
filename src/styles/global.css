@@ -218,6 +218,21 @@ h5 {
   padding-inline: 1.5rem;
 }
 
+.section-title {
+  font-size: var(--text-xl);
+  color: var(--gray-0);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.section-title.is-inline {
+  text-align: inherit;
+  margin: 0;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -559,4 +574,3 @@ pre .language-label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-

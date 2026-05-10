@@ -202,15 +202,8 @@ transform: translateY(-3px);
 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.section-title {
+.about .section-title {
 grid-column-start: 1;
-font-size: var(--text-xl);
-color: var(--gray-0);
-font-weight: 700;
-letter-spacing: 0.5px;
-text-transform: uppercase;
-text-align: center;
-margin: 0 auto;
 }
 
 .content {

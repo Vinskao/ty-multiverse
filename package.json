@@ -56,8 +56,11 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/cors": "^2.8.14",
+    "@types/d3": "^7.4.3",
     "@types/jquery": "^3.5.29",
     "@types/node": "^20.7.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "jsdom": "^27.0.1",
     "nodemon": "^3.0.2",
     "vitest": "^4.0.1"
