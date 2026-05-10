@@ -42,6 +42,32 @@
 - **`is:inline`**: Runs on every navigation. Use for critical initialization such as `lang.js`
 - **Module scripts**: Run once per session. Use `astro:page-load` to re-initialize UI logic
 
+### Astro Island Hydration Trap / Astro Island Hydration 陷阱
+- **Never place client islands inside `<noscript>`**
+  - Do not put components like `<ThemeToggle client:load />` inside fallback-only `<noscript>` markup
+  - In this repo, Astro may emit the island hydration runtime into that same `<noscript>` block
+  - Browsers do not execute scripts in `<noscript>` during normal JS-enabled rendering, so island hydration can fail globally
+- **Real failure seen in this project**
+  - `SkillsBubbleChart.tsx` server-rendered the title and empty `<svg>`, but React never hydrated
+  - Because hydration never started, D3 `useEffect()` did not run, so no bubbles or treemap content appeared
+  - The bug looked like a D3 rendering problem, but the root cause was upstream Astro runtime placement in `Nav.astro`
+- **Concrete repo example**
+  - Problematic pattern was previously in `src/components/Nav.astro`
+  - `ThemeToggle client:load` inside the noscript footer caused Astro hydration runtime code such as `Astro.load` and `customElements.define('astro-island', ...)` to land inside `<noscript>`
+  - Fix: keep noscript content static-only, and render interactive client islands only in the normal DOM path
+- **Symptoms to watch for**
+  - SSR HTML is visible, but interactive island behavior never starts
+  - `customElements.get('astro-island')` returns `undefined`
+  - `typeof self.Astro` returns `undefined`
+  - Island elements keep their `ssr` attribute after load
+  - D3 or React components show shell markup only, with no client-rendered nodes
+- **Debug checklist**
+  1. Inspect raw page HTML, not only the post-hydration browser DOM
+  2. Check whether Astro runtime snippets were emitted inside a `<noscript>` block
+  3. Confirm whether the island root still has `ssr` after load
+  4. If a D3 component looks empty, verify hydration before changing D3 logic
+  5. Re-test with `npm run build` and a real browser load after the fix
+
 ---
 
 ## 3. UI Layout & Components / 版面與元件

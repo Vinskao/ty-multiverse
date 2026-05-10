@@ -6,9 +6,9 @@
   <div class="panel-header">
     <h3>🔧 系統監控面板</h3>
     <div class="panel-controls">
-      <button id="refresh-btn" class="btn btn-primary">刷新</button>
-      <button id="export-btn" class="btn btn-secondary">導出診斷</button>
-      <button id="clear-btn" class="btn btn-danger">清除統計</button>
+      <button id="refresh-btn" class="btn">刷新</button>
+      <button id="export-btn" class="btn is-accent">導出診斷</button>
+      <button id="clear-btn" class="btn is-warning">清除統計</button>
     </div>
   </div>
 
@@ -84,32 +84,8 @@
     gap: 10px;
   }
 
-  .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  .panel-controls .btn {
     font-size: 12px;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: #007bff;
-    color: white;
-  }
-
-  .btn-secondary {
-    background: #6c757d;
-    color: white;
-  }
-
-  .btn-danger {
-    background: #dc3545;
-    color: white;
-  }
-
-  .btn:hover {
-    opacity: 0.8;
   }
 
   .section {

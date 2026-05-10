@@ -1024,3 +1024,46 @@ graph LR
 - [AGENTS.md](AGENTS.md) - FFmpeg 安裝指南
 - [k8s/ffmpeg.sh](k8s/ffmpeg.sh) - K8s 部署腳本
 
+
+## Current Frontend Runtime Architecture
+
+```mermaid
+graph TD
+    A[Astro Pages<br/>src/pages/*.astro<br/>File-based routing] --> B[BaseLayout.astro<br/>Global app shell<br/>CSS manifest + head + transitions]
+    B --> C[Static Astro Components<br/>Nav.astro / Footer.astro / QAPlatform.astro]
+    B --> D[Page Content Slot<br/>Page-specific Astro sections]
+
+    C --> E[ThemeToggle.tsx<br/>React island in Nav]
+    D --> F[Client Islands<br/>client:load React components]
+    F --> G[SkillsBubbleChart.tsx<br/>React + D3]
+    F --> H[PeopleManagement.tsx<br/>Interactive React UI]
+
+    E --> I[Astro Hydration Runtime<br/>Astro.load + astro-island]
+    G --> I
+    H --> I
+    I --> J[React hydration success<br/>useEffect + event binding]
+    J --> K[D3 render into SVG<br/>bubble chart / treemap]
+
+    C --> L[astro:page-load re-init<br/>Nav / QABot / module scripts]
+    E --> M[Shared icon resources<br/>Icon.tsx + IconPaths.ts]
+    G --> M
+    H --> M
+
+    style A fill:#6366f1,stroke:#4338ca,stroke-width:3px,color:#ffffff
+    style B fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#ffffff
+    style C fill:#7c3aed,stroke:#6d28d9,stroke-width:3px,color:#ffffff
+    style D fill:#4f46e5,stroke:#3730a3,stroke-width:3px,color:#ffffff
+    style E fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#ffffff
+    style F fill:#06b6d4,stroke:#0891b2,stroke-width:3px,color:#ffffff
+    style G fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+    style H fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+    style I fill:#f59e0b,stroke:#d97706,stroke-width:3px,color:#ffffff
+    style J fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
+    style K fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
+    style L fill:#14b8a6,stroke:#0f766e,stroke-width:2px,color:#ffffff
+    style M fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff
+```
+
+1. Astro pages render through `BaseLayout.astro`, which owns the global shell, stylesheet links, and transitions setup.
+2. Interactive features run as Astro client islands, so hydration must succeed before React effects or D3 rendering can start.
+3. Module scripts such as Nav/QABot logic are re-initialized on `astro:page-load` under the current view-transitions architecture.

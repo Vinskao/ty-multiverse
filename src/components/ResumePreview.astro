@@ -10,8 +10,8 @@ const { lang = 'en' } = Astro.props;
 ---
 
 <div class="pdf-export-section">
-  <button id="preview-pdf-btn" class="export-btn">Preview Resume</button>
-  <button id="preview-briefing-btn" class="export-btn outline">Project Briefing</button>
+  <button id="preview-pdf-btn" class="btn is-primary">Preview Resume</button>
+  <button id="preview-briefing-btn" class="btn is-accent is-outline">Project Briefing</button>
 </div>
 
 <!-- Inline Architecture Diagrams block (populated at runtime by cloning Tech Experience diagrams) -->
@@ -324,49 +324,6 @@ const { lang = 'en' } = Astro.props;
     gap: 12px;
     margin: 3rem 0;
     padding: 2rem;
-  }
-
-  .export-btn {
-    padding: 12px 28px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(102, 118, 234, 0.35);
-    transition: all 0.3s ease;
-    letter-spacing: 0.5px;
-  }
-
-  .export-btn:hover:not(:disabled) {
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 8px 20px rgba(102, 118, 234, 0.45);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  }
-
-  .export-btn:active:not(:disabled) {
-    transform: translateY(1px) scale(0.98);
-  }
-
-  .export-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .export-btn.outline {
-    background: transparent;
-    color: #514695;
-    border: 2px solid #514695;
-    box-shadow: none;
-  }
-
-  .export-btn.outline:hover:not(:disabled) {
-    background: #514695;
-    color: #fff;
-    transform: translateY(-2px) scale(1.03);
   }
 
   /* Inline architecture diagrams section */

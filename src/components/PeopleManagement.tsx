@@ -104,7 +104,7 @@ export default function PeopleManagement() {
       <div className="error-container">
         <h3>錯誤</h3>
         <p>{error}</p>
-        <button onClick={clearError}>清除錯誤</button>
+        <button onClick={clearError} className="btn is-warning">清除錯誤</button>
       </div>
     );
   }
@@ -154,7 +154,7 @@ export default function PeopleManagement() {
               onChange={(e) => setNewPerson({ ...newPerson, attributes: e.target.value })}
             />
           </div>
-          <button type="submit">新增角色</button>
+          <button type="submit" className="btn is-success">新增角色</button>
         </form>
       </div>
 
@@ -197,7 +197,7 @@ export default function PeopleManagement() {
               required
             />
           </div>
-          <button type="submit">保存武器</button>
+          <button type="submit" className="btn is-success">保存武器</button>
         </form>
       </div>
 
@@ -205,8 +205,8 @@ export default function PeopleManagement() {
       <div className="section">
         <h3>批量操作</h3>
         <div className="button-group">
-          <button onClick={handleInsertMultiplePeople}>批量插入示例角色</button>
-          <button onClick={handleDeleteAllPeople} className="danger">刪除所有角色</button>
+          <button onClick={handleInsertMultiplePeople} className="btn is-success">批量插入示例角色</button>
+          <button onClick={handleDeleteAllPeople} className="btn is-warning">刪除所有角色</button>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export default function PeopleManagement() {
             ))}
           </select>
         </div>
-        <button onClick={handleCalculateDamage} disabled={!selectedPerson}>
+        <button onClick={handleCalculateDamage} className="btn" disabled={!selectedPerson}>
           計算傷害
         </button>
         {damageResult && (
@@ -244,7 +244,7 @@ export default function PeopleManagement() {
       {/* 角色列表 */}
       <div className="section">
         <h3>角色列表 ({people.length})</h3>
-        <button onClick={refreshPeople}>刷新</button>
+        <button onClick={refreshPeople} className="btn">刷新</button>
         <div className="people-list">
           {people.map((person) => (
             <div key={person.name} className="person-card">
@@ -260,7 +260,7 @@ export default function PeopleManagement() {
       {/* 武器列表 */}
       <div className="section">
         <h3>武器列表 ({weapons.length})</h3>
-        <button onClick={refreshWeapons}>刷新</button>
+        <button onClick={refreshWeapons} className="btn">刷新</button>
         <div className="weapons-list">
           {weapons.map((weapon) => (
             <div key={weapon.name} className="weapon-card">

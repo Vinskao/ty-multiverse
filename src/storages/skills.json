@@ -534,6 +534,22 @@
               "level": "shade2"
             },
             {
+              "name": "File-based Routing",
+              "level": "shade3"
+            },
+            {
+              "name": "Astro Islands",
+              "level": "shade3"
+            },
+            {
+              "name": "Client-side Hydration",
+              "level": "shade3"
+            },
+            {
+              "name": "Astro View Transitions",
+              "level": "shade3"
+            },
+            {
               "name": "MDX",
               "level": "shade3"
             },

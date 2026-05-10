@@ -1,17 +1,8 @@
 .call-to-action {
 	position: relative;
-	display: flex;
-	place-content: center;
 	text-align: center;
-	padding: 0.56em 2em;
-	gap: 0.8em;
-	color: var(--accent-text-over);
-	text-decoration: none;
 	line-height: 1.1;
-	border-radius: 999rem;
 	overflow: hidden;
-	background: var(--gradient-accent-orange);
-	box-shadow: var(--shadow-md);
 	white-space: nowrap;
 }
 
@@ -37,7 +28,6 @@
 
 @media (min-width: 50em) {
 	.call-to-action {
-		padding: 1.125rem 2.5rem;
 		font-size: var(--text-xl);
 	}
 }

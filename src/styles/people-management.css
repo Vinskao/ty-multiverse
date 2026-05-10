@@ -66,33 +66,8 @@
   resize: vertical;
 }
 
-button {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
+.people-management .btn {
   font-size: 14px;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background: #2980b9;
-}
-
-button:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-button.danger {
-  background: #e74c3c;
-}
-
-button.danger:hover {
-  background: #c0392b;
 }
 
 .button-group {
@@ -196,7 +171,7 @@ button.danger:hover {
     flex-direction: column;
   }
   
-  .button-group button {
+  .button-group .btn {
     width: 100%;
   }
 }

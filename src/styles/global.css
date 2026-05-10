@@ -233,6 +233,81 @@ h5 {
   margin: 0;
 }
 
+/* Architecture-diagram inspired button palette */
+.btn {
+  --btn-bg-current: var(--btn-bg-default);
+  --btn-br-current: var(--btn-br-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.6em 1.4em;
+  border-radius: 0.5rem;
+  border: 1.5px solid var(--btn-br-current);
+  background: var(--btn-bg-current);
+  color: #0b1a33;
+  font-family: var(--font-brand);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.btn:hover {
+  background: var(--btn-br-current);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn.is-primary {
+  --btn-bg-current: var(--btn-bg-primary);
+  --btn-br-current: var(--btn-br-primary);
+}
+
+.btn.is-warning {
+  --btn-bg-current: var(--btn-bg-warning);
+  --btn-br-current: var(--btn-br-warning);
+}
+
+.btn.is-success {
+  --btn-bg-current: var(--btn-bg-success);
+  --btn-br-current: var(--btn-br-success);
+}
+
+.btn.is-accent {
+  --btn-bg-current: var(--btn-bg-accent);
+  --btn-br-current: var(--btn-br-accent);
+}
+
+.btn.is-outline {
+  background: transparent;
+}
+
+.btn.is-icon {
+  padding: 0.55em;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -283,6 +358,40 @@ h5 {
 }
 .gap-48 {
   gap: 12rem;
+}
+
+:root {
+  --btn-bg-default: #eef3fb;
+  --btn-br-default: #1f5bff;
+  --btn-bg-primary: #e8f4fd;
+  --btn-br-primary: #2196f3;
+  --btn-bg-warning: #fff3e0;
+  --btn-br-warning: #ff9800;
+  --btn-bg-success: #e8f5e9;
+  --btn-br-success: #43a047;
+  --btn-bg-accent: #ede7f6;
+  --btn-br-accent: #5e35b1;
+}
+
+:root.theme-dark {
+  --btn-bg-default: #1f5bff;
+  --btn-br-default: #eef3fb;
+  --btn-bg-primary: #2196f3;
+  --btn-br-primary: #e8f4fd;
+  --btn-bg-warning: #ff9800;
+  --btn-br-warning: #fff3e0;
+  --btn-bg-success: #43a047;
+  --btn-br-success: #e8f5e9;
+  --btn-bg-accent: #5e35b1;
+  --btn-br-accent: #ede7f6;
+}
+
+:root.theme-dark .btn {
+  color: #ffffff;
+}
+
+:root.theme-dark .btn:hover {
+  color: #0b1a33;
 }
 
 @media (min-width: 50em) {

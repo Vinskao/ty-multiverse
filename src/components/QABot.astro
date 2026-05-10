@@ -2120,7 +2120,7 @@
               )
               .join("")}
           </div>
-          <button id="startPageAnalysis" class="pa-start-btn">${ui.start_button}</button>
+          <button id="startPageAnalysis" class="pa-start-btn btn is-primary">${ui.start_button}</button>
         </div>`;
 
       // 預設選擇 summary
@@ -2454,10 +2454,10 @@
           <span class="page-url">${metadata.source || "來源"}: ${document.title}</span>
         </div>
         <div class="analysis-actions">
-          <button class="reanalyze-btn" onclick="this.closest('.message').dispatchEvent(new CustomEvent('reanalyze'))">
+          <button class="reanalyze-btn btn is-primary" onclick="this.closest('.message').dispatchEvent(new CustomEvent('reanalyze'))">
             ${metadata.reanalyze || "🔄 重新分析"}
           </button>
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('${answer.replace(/'/g, "\\'")}')">
+          <button class="copy-btn btn is-warning" onclick="navigator.clipboard.writeText('${answer.replace(/'/g, "\\'")}')">
             ${metadata.copy_result || "📋 複製結果"}
           </button>
         </div>

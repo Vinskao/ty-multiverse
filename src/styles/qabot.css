@@ -907,38 +907,19 @@
 .send-button {
   width: 44px;
   height: 44px;
-  border: 2px solid #DAA520;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #8B4513;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(218, 165, 32, 0.3);
+  padding: 0;
 }
 
 .send-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #FFA500, #FFD700);
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(218, 165, 32, 0.4);
 }
 
 .send-button:disabled {
-  background: linear-gradient(135deg, #D3D3D3, #C0C0C0);
-  border-color: #A9A9A9;
-  color: #696969;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-:root.theme-dark .send-button {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-:root.theme-dark .send-button:hover:not(:disabled) {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  transform: none;
 }
 
 .input-status {
@@ -1244,7 +1225,7 @@
 }
 
 /* Base style – applied to EVERY button that lives inside the chat window */
-.qa-bot-container button,
+.qa-bot-container button:not(.btn),
 .qa-bot-container .suggestion-btn,
 .qa-bot-container .load-more-button {
   font-family: "Segoe UI", "Helvetica Neue", "PingFang TC", "微軟正黑體", sans-serif;
@@ -1262,7 +1243,7 @@
 }
 
 /* Hover / focus */
-.qa-bot-container button:hover:not(:disabled),
+.qa-bot-container button:not(.btn):hover:not(:disabled),
 .qa-bot-container .suggestion-btn:hover,
 .qa-bot-container .load-more-button:hover {
   background: var(--qabot-btn-bg-hover);
@@ -1270,13 +1251,13 @@
   box-shadow: var(--qabot-btn-shadow-hover);
 }
 
-.qa-bot-container button:focus-visible {
+.qa-bot-container button:not(.btn):focus-visible {
   outline: 2px solid #ffc53d;
   outline-offset: 2px;
 }
 
 /* Active / pressed */
-.qa-bot-container button:active:not(:disabled),
+.qa-bot-container button:not(.btn):active:not(:disabled),
 .qa-bot-container .suggestion-btn:active,
 .qa-bot-container .load-more-button:active {
   transform: translateY(0);
@@ -1299,7 +1280,6 @@
 .qa-bot-container .close-button,
 .qa-bot-container .send-button {
   border-radius: 50%;
-  padding: 6px; /* ensure consistent clickable area */
 }
 
 /* Suggestion button specific tweaks for nicer pill look */
@@ -1689,36 +1669,18 @@ body.avatars-locked .message-avatar img {
 }
 
 .pa-start-btn {
-  background: linear-gradient(135deg, #4CAF50, #45a049);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
   width: 100%;
 }
 
 .pa-start-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #45a049, #4CAF50);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
 .pa-start-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}
-
-:root.theme-dark .pa-start-btn {
-  background: linear-gradient(135deg, #2E7D32, #1B5E20);
-}
-
-:root.theme-dark .pa-start-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1B5E20, #2E7D32);
 }
 
 /* 分析結果元數據 */
@@ -1785,45 +1747,13 @@ body.avatars-locked .message-avatar img {
 
 .reanalyze-btn,
 .copy-btn {
-  background: #FF9800;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s ease;
   flex: 1;
 }
 
 .reanalyze-btn:hover,
 .copy-btn:hover {
-  background: #F57C00;
   transform: translateY(-1px);
-}
-
-.copy-btn {
-  background: #2196F3;
-}
-
-.copy-btn:hover {
-  background: #1976D2;
-}
-
-:root.theme-dark .reanalyze-btn {
-  background: #E65100;
-}
-
-:root.theme-dark .reanalyze-btn:hover {
-  background: #BF360C;
-}
-
-:root.theme-dark .copy-btn {
-  background: #1565C0;
-}
-
-:root.theme-dark .copy-btn:hover {
-  background: #0D47A1;
 }
 
 /* 響應式設計 */

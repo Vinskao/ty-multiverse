@@ -638,7 +638,6 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            Back
           </button>
         )}
       </div>
@@ -704,27 +703,70 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
           right: 0;
           top: 50%;
           transform: translateY(-50%);
+          isolation: isolate;
+          overflow: hidden;
           display: flex;
           align-items: center;
-          gap: 0.3rem;
-          padding: 0.4rem 0.8rem;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 0.5rem;
-          color: var(--gray-300);
-          font-size: 0.85rem;
+          justify-content: center;
+          width: 2.9rem;
+          height: 2.9rem;
+          padding: 0;
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
+            var(--btn-bg-primary);
+          border: 1px solid transparent;
+          border-radius: 999px;
+          color: #fff;
+          text-decoration: none;
+          box-shadow: 0 12px 28px rgba(176, 108, 19, 0.28);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition:
+            background 0.18s ease,
+            color 0.18s ease,
+            transform 0.18s ease,
+            box-shadow 0.18s ease,
+            border-color 0.18s ease;
+        }
+
+        .back-button::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+          transition: background-color var(--theme-transition);
+          mix-blend-mode: overlay;
         }
         
         .back-button:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.4);
-          color: var(--gray-100);
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08)),
+            var(--btn-br-primary);
+          color: #ffffff;
+          transform: translateY(calc(-50% - 1px));
+          box-shadow: 0 16px 32px rgba(176, 108, 19, 0.35);
+        }
+
+        .back-button:hover::after,
+        .back-button:focus-visible::after {
+          background-color: hsla(var(--gray-999-basis), 0.3);
+        }
+
+        .back-button:active {
+          transform: translateY(-50%);
+          box-shadow: 0 10px 18px rgba(176, 108, 19, 0.24);
+        }
+
+        .back-button:focus-visible {
+          outline: 2px solid rgba(255, 255, 255, 0.45);
+          outline-offset: 3px;
         }
         
         .back-button svg {
+          width: 1rem;
+          height: 1rem;
           flex-shrink: 0;
+          stroke-width: 2.2;
         }
         
         .skills-bubble-chart-container svg {
@@ -782,6 +824,14 @@ export default function SkillsBubbleChart({ data, categoriesData }: SkillsBubble
           .back-button {
             position: static;
             transform: none;
+          }
+
+          .back-button:hover {
+            transform: translateY(-1px);
+          }
+
+          .back-button:active {
+            transform: translateY(0);
           }
           
           .bubble-chart-legend {

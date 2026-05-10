@@ -367,22 +367,15 @@ box-shadow: 0 4px 15px rgba(81, 70, 149, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.75rem;
-  background: transparent;
-  border: 1px solid rgba(81, 70, 149, 0.4);
-  border-radius: 6px;
-  color: #514695;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
   white-space: nowrap;
   margin-left: auto;
   align-self: flex-start;
 }
 
 .copy-resume-btn:hover {
-  background: rgba(81, 70, 149, 0.12);
-  border-color: #514695;
+  transform: translateY(-1px);
 }
 
 .copy-resume-btn.copied {

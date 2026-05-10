@@ -6,7 +6,108 @@ import { Icon } from "./Icon";
 <aside class="contact-cta">
 	<h2 class="section-title">To Make a Difference</h2>
 	<CallToAction href="mailto:tianyikao@gmail.com">
-		Email Me
-		<Icon icon="paper-plane-tilt" size="1.2em" />
+		<span class="cta-content-default">
+			Email Me
+			<Icon icon="paper-plane-tilt" size="1.2em" />
+		</span>
+		<span class="cta-content-success" style="display: none;">
+			tianyikao@gmail.com
+			<Icon icon="check" size="1.2em" />
+		</span>
 	</CallToAction>
 </aside>
+
+<style>
+	/* Scoped button enhancements */
+	.contact-cta :global(.call-to-action) {
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		min-width: 170px; /* prevent layout shift on text change */
+		overflow: hidden;
+	}
+
+	.contact-cta :global(.call-to-action.is-copied) {
+		background: var(--btn-bg-success) !important;
+		border-color: var(--btn-br-success) !important;
+		color: #43a047 !important; /* success green */
+		box-shadow: 0 0 12px rgba(67, 160, 71, 0.2);
+		transform: scale(1.03);
+	}
+
+	:root.theme-dark .contact-cta :global(.call-to-action.is-copied) {
+		color: #ffffff !important;
+		box-shadow: 0 0 12px rgba(232, 245, 233, 0.1);
+	}
+
+	.cta-content-default,
+	.cta-content-success {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5em;
+		width: 100%;
+	}
+
+	.cta-content-success {
+		animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+</style>
+
+<script>
+	function setupEmailBtn() {
+		const btn = document.querySelector('.contact-cta .call-to-action') as HTMLAnchorElement | null;
+		if (!btn) return;
+
+		const defaultContent = btn.querySelector('.cta-content-default') as HTMLElement | null;
+		const successContent = btn.querySelector('.cta-content-success') as HTMLElement | null;
+
+		if (!defaultContent || !successContent) return;
+
+		let timeoutId: number | null = null;
+
+		// Clean up previous event listeners if needed (since astro:page-load might run multiple times,
+		// but using a fresh node references during page swap is safe)
+		const handleClick = async (e: MouseEvent) => {
+			e.preventDefault();
+			const email = 'tianyikao@gmail.com';
+
+			try {
+				await navigator.clipboard.writeText(email);
+			} catch (err) {
+				console.error('Failed to copy text: ', err);
+			}
+
+			// Show copied state
+			btn.classList.add('is-copied');
+			defaultContent.style.display = 'none';
+			successContent.style.display = 'inline-flex';
+
+			// Clear previous timeout if user clicks rapidly
+			if (timeoutId) {
+				window.clearTimeout(timeoutId);
+			}
+
+			// Restore original state after 3 seconds
+			timeoutId = window.setTimeout(() => {
+				btn.classList.remove('is-copied');
+				successContent.style.display = 'none';
+				defaultContent.style.display = 'inline-flex';
+			}, 3000);
+		};
+
+		btn.addEventListener('click', handleClick);
+	}
+
+	// Hook into Astro's page transition lifecycle
+	document.addEventListener('astro:page-load', setupEmailBtn);
+</script>
