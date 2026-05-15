@@ -195,3 +195,34 @@
 ### Migration Note / 遷移備註
 - Earlier fixes used page-level `<Fragment slot="head">` links as an intermediate workaround
 - The current preferred solution is broader: keep stylesheet registration centralized in `BaseLayout.astro`, and remove redundant external CSS imports from pages/components when touching related files
+
+---
+
+## 6. Mac Disk Space Maintenance / 磁碟空間維護
+
+### Home Directory Git Repo (`~/.git`) — 已刪除
+- `/Users/vinskao` 本身是一個意外的 git repo（14 commits, 無 remote），追蹤 3325 個 `001-project/EC/` 檔案
+- **2026-05-15 完全清理**：
+  1. 刪除 37 個 `tmp_pack_*` 暫存檔案（釋放約 215 GB）
+  2. 刪除整個 `~/.git` 目錄（釋放額外 35 GB）
+  3. **總計釋放約 250 GB**
+- **指令參考**（如果再遇到）：
+  ```bash
+  # 確認情況
+  du -sh ~/.git/
+  git -C ~/ log --oneline | wc -l
+  
+  # 清理暫存檔
+  rm ~/.git/objects/pack/tmp_pack_*
+  
+  # 完全刪除
+  rm /path/to/gc.log 2>/dev/null
+  rmdir ~/.git
+  ```
+
+### 其他可定期清理的目標
+| 路徑 | 說明 |
+|---|---|
+| `EC/BFF_Extention/logs/` | log 檔，可視需要清除 |
+| `EC/UI_Workspace_lite_v20260407/node_modules/` | 可 `npm install` 重裝 |
+| `EC/UI_Workspace_lite_v20260407/dist/` | build 產出，可重 build |
