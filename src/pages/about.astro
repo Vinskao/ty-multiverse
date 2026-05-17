@@ -1181,20 +1181,54 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                   <div class="mermaid-diagram">
                                     <pre class="mermaid">
                                       {`graph LR
-    A[Backend<br/>Spring Boot<br/>REST Endpoints] --> B[RabbitMQ<br/>Message Queue]
-    B --> C[Consumer<br/>Spring Boot<br/>JDBC Processing]
-    C --> D[PostgreSQL<br/>Database]
-    
+    A[Backend<br/>Spring Boot<br/>AsyncMessageService] --> B[RabbitMQ<br/>Queues & Exchanges]
+
+    subgraph K8s["Kubernetes Runtime"]
+      K1[Kubelet<br/>Probe Manager]
+      K2[startupProbe<br/>/actuator/health]
+      K3[readinessProbe<br/>/actuator/health/readiness]
+      K4[livenessProbe<br/>/actuator/health/liveness]
+      C[Consumer Pod<br/>Spring Boot WebFlux<br/>Reactive RabbitMQ + R2DBC]
+    end
+
+    subgraph Biz["Business Queue Consumers"]
+      Q1[weapon-save]
+      Q2[weapon-delete-all]
+      Q3[people-insert-multiple]
+      Q4[people-delete-all]
+      Q5[async-result]
+    end
+
+    C --> D[PostgreSQL<br/>R2DBC]
+
+    K1 --> K2
+    K1 --> K3
+    K1 --> K4
+    K2 --> C
+    K3 --> C
+    K4 --> C
+
+    B --> C
+    C --> Q1
+    C --> Q2
+    C --> Q3
+    C --> Q4
+    C --> Q5
+
     %% Vivid, high-contrast class colors for light theme
     classDef producer fill:#bbdefb,stroke:#1e88e5,color:#0b1a33
     classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
     classDef consumer fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
     classDef database fill:#ffcdd2,stroke:#c62828,color:#0b1a33
-    
+    classDef k8s fill:#e3f2fd,stroke:#1565c0,color:#0b1a33
+    classDef queue fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+
     class A producer
     class B mq
     class C consumer
-    class D database`}
+    class D database
+    class K1,K2,K3,K4 k8s
+    class Q1,Q2,Q3,Q4,Q5 queue`}
                                     </pre>
                                   </div>
                                 )}
