@@ -147,6 +147,14 @@
             {
               "name": "CORS Preflight Debugging",
               "level": "shade3"
+            },
+            {
+              "name": "Pagination Aggregator",
+              "level": "shade3"
+            },
+            {
+              "name": "Custom Request Transformer",
+              "level": "shade3"
             }
           ],
           "descriptions": {
@@ -172,14 +180,22 @@
                 "進行路由與服務設定（XML 配置），異動了諸如 service_extn_gsp.xml 的配置檔，用來宣告、綁定 API 的呼叫 Method (例如從 get 換成 post) 及配對正確的請求參數等",
                 "深入排查 Spring Security 認證鏈，涵蓋 FilterChainProxy 執行順序、自定義 Filter 的 addFilterBefore/addFilterAfter 插入位置、OncePerRequestFilter 行為、SecurityContextPersistenceFilter、SessionRepositoryFilter，以及 SecurityContextHolder THREADLOCAL strategy。",
                 "分析 session-based authentication 行為，追蹤 HttpSession 與 SecurityContext 綁定、Authentication object 結構、AnonymousAuthenticationToken fallback、Session creation policy（IF_REQUIRED/STATELESS）、JSESSIONID cookie 傳遞、SameSite/Secure flag、CSRF generate/validate flow，以及被 Security filter 擋下的 CORS preflight。",
-                "拆解認證失敗情境，區分未登入、session 過期、filter 擋掉、跨域 cookie 未帶入，以及 401/403 行為判斷。"
+                "拆解認證失敗情境，區分未登入、session 過期、filter 擋掉、跨域 cookie 未帶入，以及 401/403 行為判斷。",
+                "重構多個銀行業務模組的中介標頭注入元件，為 entity、user-id 與 branch-no 標頭實作三層優先順序回退策略：優先採用呼叫方傳入的覆蓋值，其次回退至 auth 系統，最後使用硬編碼環境預設值。",
+                "建立專用標頭注入 Bean 以整合外部第三方系統，透過 Spring @Value 綁定屬性注入授權 Token，並設定標準化標頭，包含分頁控制欄位。",
+                "實作自訂請求轉換器，以 Java 程式碼取代宣告式 JSON 欄位映射執行轉換邏輯；支援多信封請求結構偵測，並對欄位 key 進行別名映射以符合下游服務規格。",
+                "設計分頁 Aggregator 透明化自動分頁取得後端碼表 API 所有資料並合併為單一回應；透過在 XML 化 Aggregator 配置中明確補充元件宣告，解決 Spring bean 解析問題。"
               ],
               "en": [
                 "Developed backend business logic and middleware control using Java. Created and modified Java files to set up Inserter Beans for dynamic injection of specified headers before forwarding requests to downstream systems.",
                 "Configured routing and services (XML config), modifying files like service_extn_gsp.xml to declare and bind API call methods (e.g. GET to POST) and map request parameters correctly.",
                 "Deepened Spring Security troubleshooting across the authentication filter chain, including FilterChainProxy ordering, custom filter placement with addFilterBefore/addFilterAfter, OncePerRequestFilter behavior, SecurityContextPersistenceFilter, SessionRepositoryFilter, and SecurityContextHolder THREADLOCAL strategy.",
                 "Analyzed session-based authentication behavior by tracing HttpSession/SecurityContext binding, Authentication object structure, AnonymousAuthenticationToken fallback, session creation policy (IF_REQUIRED/STATELESS), JSESSIONID cookie delivery, SameSite/Secure flags, CSRF generate/validate flow, and CORS preflight requests blocked by security filters.",
-                "Diagnosed authentication failure modes by separating unauthenticated requests, expired sessions, filter-level rejections, missing cross-domain cookies, and 401/403 authorization outcomes."
+                "Diagnosed authentication failure modes by separating unauthenticated requests, expired sessions, filter-level rejections, missing cross-domain cookies, and 401/403 authorization outcomes.",
+                "Refactored middleware header inserter components across multiple banking modules to implement a three-tier fallback strategy for injecting entity, user-id, and branch-no headers: prefer caller-supplied header overrides, fall back to the auth system, then fall back to hardcoded environment defaults.",
+                "Created a dedicated header inserter bean for external third-party system integration, injecting authorization tokens from Spring @Value-bound properties and setting standardized headers including pagination controls.",
+                "Implemented a custom request transformer replacing declarative JSON field mapping with Java-driven transformation logic; handles multi-envelope request structure detection and performs field key aliasing for downstream service compatibility.",
+                "Designed a pagination aggregator to transparently auto-paginate a backend code list API and collapse all pages into a single merged response; resolved Spring bean resolution issue by explicitly registering aggregator components in XML-based aggregator configuration."
               ]
             }
           }
@@ -477,11 +493,15 @@
             "Tata Consultancy Services": {
               "en": [
                 "Built and debugged Angular reactive forms with FormGroup/FormControl/FormArray, setValue vs patchValue behavior, valueChanges/statusChanges subscriptions, touched/dirty state control, disabled vs readonly value handling, custom validators, async API validators, and dynamic setValidators/clearValidators/updateValueAndValidity timing.",
-                "Resolved dropdown and form-state issues caused by missing valueChanges subscriptions, OnPush change detection not being triggered, incorrect formControlName binding, and mismatches between weak frontend validation and strong backend validation."
+                "Resolved dropdown and form-state issues caused by missing valueChanges subscriptions, OnPush change detection not being triggered, incorrect formControlName binding, and mismatches between weak frontend validation and strong backend validation.",
+                "Built 14 Angular screen components covering the full internal account lifecycle: Create, Query, View, Modify, Account Search, product and account attribute changes (product/code/branch), Add Transaction Conditions, and 4 customer memo flows (Search/Create/Maintain/Delete). Declared all components in the TW extension module and wired all routes in the Angular routing module.",
+                "Added 600+ i18n label keys to English and Traditional Chinese dictionary files for all internal account screens; corrected customer memo groupbox section labels from generic placeholder names to semantically accurate values."
               ],
               "zh": [
                 "建置並排查 Angular reactive forms，涵蓋 FormGroup/FormControl/FormArray、setValue vs patchValue、valueChanges/statusChanges subscription、touched/dirty 狀態控制、disabled vs readonly 對 form value 的影響、自訂 validator、async API validator，以及 dynamic setValidators/clearValidators/updateValueAndValidity timing。",
-                "解決 dropdown 與表單狀態問題，包含未 subscribe valueChanges、OnPush 未觸發 detectChanges、formControlName 綁定錯誤，以及前端弱驗證與後端強驗證不一致造成的衝突。"
+                "解決 dropdown 與表單狀態問題，包含未 subscribe valueChanges、OnPush 未觸發 detectChanges、formControlName 綁定錯誤，以及前端弱驗證與後端強驗證不一致造成的衝突。",
+                "建置 14 個涵蓋帳戶完整生命週期的 Angular 元件：設立、查詢、查看、維護、帳號搜尋、產品與帳戶屬性變更（產品/代碼/分行）、交易條件新增，以及客戶備註查詢/建立/維護/刪除四個流程；在 TW Extension 模組完成元件宣告並配置 Angular 路由。",
+                "在英文與繁體中文字典檔中新增 600+ 筆 i18n 標籤鍵值，涵蓋所有帳戶管理畫面；並將客戶備註群組框區段標籤從泛用佔位名稱修正為語意正確的顯示值。"
               ]
             }
           }
