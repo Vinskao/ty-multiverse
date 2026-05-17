@@ -53,7 +53,7 @@ const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://people
         </button>
       </div>
       
-      <div id="videos-grid" class="videos-grid">
+      <div id="videos-grid" class="videos-grid" data-palais-media-zoom>
         <!-- 影片內容將動態載入 -->
       </div>
     </main>
@@ -71,4 +71,5 @@ const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://people
 
 <script>
   import '../../scripts/dance.ts';
+  import '../../scripts/palaisMediaZoom';
 </script>

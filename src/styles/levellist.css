@@ -1,4 +1,5 @@
 #level-container {
+  --palais-media-scale: 1;
   margin: 5%;
   padding: 0;
   max-width: 100%;
@@ -49,7 +50,7 @@
 /* 角色卡片統一樣式 */
 .character-card {
   display: inline-block;
-  height: 300px;
+  height: calc(300px * var(--palais-media-scale));
   width: auto; /* 讓寬度根據圖片比例自動調整 */
   text-align: center;
   position: relative;
@@ -62,7 +63,7 @@
 
 /* 角色卡片內的圖片統一樣式 */
 .character-card img {
-  height: 300px !important;
+  height: calc(300px * var(--palais-media-scale)) !important;
   width: auto !important;
   max-width: none !important; /* 移除最大寬度限制 */
   display: block !important;
@@ -381,13 +382,13 @@ html.theme-dark {
 
   /* 手機版角色卡片樣式 */
   .character-card {
-    height: 250px;
+    height: calc(250px * var(--palais-media-scale));
     width: auto; /* 讓寬度根據圖片比例自動調整 */
     margin: 0 5px;
   }
 
   .character-card img {
-    height: 250px !important;
+    height: calc(250px * var(--palais-media-scale)) !important;
   }
 
 
@@ -402,13 +403,13 @@ html.theme-dark {
 @media (max-width: 480px) {
   /* 小螢幕角色卡片樣式 */
   .character-card {
-    height: 200px;
+    height: calc(200px * var(--palais-media-scale));
     width: auto; /* 讓寬度根據圖片比例自動調整 */
     margin: 0 3px;
   }
 
   .character-card img {
-    height: 200px !important;
+    height: calc(200px * var(--palais-media-scale)) !important;
   }
 
 

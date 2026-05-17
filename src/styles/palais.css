@@ -140,6 +140,7 @@
 
 /* Gang Video Styles */
 .gang-video-container {
+  --palais-media-scale: 1;
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -156,7 +157,7 @@
 .gang-video {
   flex-shrink: 0;
   width: auto;
-  height: 450px;
+  height: calc(450px * var(--palais-media-scale));
   border-radius: 8px;
   background: black;
   /* Placeholder while loading */

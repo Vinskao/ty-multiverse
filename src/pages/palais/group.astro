@@ -33,7 +33,7 @@ if (!isLoggedIn) {
             <span class="icon">🖼️</span> 下載所有角色圖片（含邊框）(ZIP)
           </button>
         </div>
-        <div id="group-container"></div>
+        <div id="group-container" data-palais-media-zoom></div>
       </div>
     </main>
   </div>
@@ -52,6 +52,7 @@ if (!isLoggedIn) {
 
 <style>
   #group-container {
+    --palais-media-scale: 1;
     margin: 2% 5% 5% 5%;
     padding: 0;
     max-width: 100%;
@@ -140,9 +141,20 @@ if (!isLoggedIn) {
     color: #fff;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
+
+  #group-container .box-container > div {
+    width: calc(200px * var(--palais-media-scale)) !important;
+    margin-left: calc(-100px * var(--palais-media-scale)) !important;
+  }
+
+  #group-container .box-container > div > img {
+    height: calc(300px * var(--palais-media-scale)) !important;
+  }
 </style>
 
 <script>
+  import "../../scripts/palaisMediaZoom";
+
   if (!import.meta.env.PUBLIC_TYMB_URL) {
     throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
   }

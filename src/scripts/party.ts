@@ -305,7 +305,7 @@ function updateVisualization() {
             // Explicitly set height to simulate scale
             const baseHeight = 300;
             const scaledHeight = baseHeight * config.scale;
-            img.style.height = `${scaledHeight}px`;
+            img.style.height = `calc(${scaledHeight}px * var(--palais-media-scale, 1))`;
             // Width auto handled by CSS
 
             memberDiv.appendChild(img);

@@ -37,7 +37,7 @@ const mergeEndpoint = isDev
 
       <div class="synthesis-container">
         <div class="glass-panel">
-          <div class="upload-grid">
+          <div class="upload-grid" data-palais-media-zoom>
             {
               [0, 1, 2, 3].map((i) => (
                 <div class="video-slot">
@@ -102,7 +102,7 @@ const mergeEndpoint = isDev
 
         <div id="result-area" class="result-area" hidden>
           <h3>Final Performance</h3>
-          <div class="result-video-container">
+          <div class="result-video-container" data-palais-media-zoom>
             <video id="result-video" controls class="result-video"></video>
           </div>
           <div class="result-actions">
@@ -137,9 +137,10 @@ const mergeEndpoint = isDev
   }
 
   .upload-grid {
+    --palais-media-scale: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(calc(200px * var(--palais-media-scale)), 1fr));
+    gap: calc(1.5rem * var(--palais-media-scale));
     margin-bottom: 2rem;
   }
 
@@ -347,6 +348,7 @@ const mergeEndpoint = isDev
   }
 
   .result-video-container {
+    --palais-media-scale: 1;
     width: 100%;
     margin: 1.5rem 0;
     border-radius: 12px;
@@ -355,7 +357,8 @@ const mergeEndpoint = isDev
   }
 
   .result-video {
-    width: 100%;
+    width: calc(100% * var(--palais-media-scale));
+    max-width: none;
     display: block;
   }
 
@@ -405,6 +408,10 @@ const mergeEndpoint = isDev
     background: rgba(255, 255, 255, 0.2);
   }
 </style>
+
+<script>
+  import "../../scripts/palaisMediaZoom";
+</script>
 
 <script define:vars={{ mergeEndpoint }}>
   const files = [null, null, null, null];
