@@ -1,6 +1,7 @@
 // QA 服務
 import { apiService } from './apiService';
 import { config } from '../core/config';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 export interface QARequest {
   text: string;
@@ -34,7 +35,8 @@ class QAService {
       url: `${this.baseUrl}/maya-sawa/qa/query`,
       method: 'POST',
       body: request,
-      auth: true
+      auth: true,
+      serviceKey: SERVICE_KEYS.MAYA_SAWA
     });
 
     return response.data;

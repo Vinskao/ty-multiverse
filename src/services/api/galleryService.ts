@@ -5,6 +5,7 @@
 import { apiService } from './apiService';
 import type { ApiResponse } from './apiService';
 import { config } from '../core/config';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 // 類型定義
 export interface GalleryImage {
@@ -40,7 +41,7 @@ class GalleryService {
    * 保存圖片
    */
   async saveImage(request: GallerySaveRequest): Promise<GalleryImage> {
-    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', '/gallery/save', 'POST', request);
+    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', '/gallery/save', 'POST', request, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -48,7 +49,7 @@ class GalleryService {
    * 獲取所有圖片
    */
   async getAllImages(): Promise<GalleryImage[]> {
-    const response = await apiService.makeRequest<GalleryImage[]>(config.api?.baseUrl || '', '/gallery/getAll', 'POST');
+    const response = await apiService.makeRequest<GalleryImage[]>(config.api?.baseUrl || '', '/gallery/getAll', 'POST', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -56,7 +57,7 @@ class GalleryService {
    * 根據ID獲取圖片
    */
   async getImageById(id: number): Promise<GalleryImage> {
-    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', `/gallery/getById?id=${id}`);
+    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', `/gallery/getById?id=${id}`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -64,7 +65,7 @@ class GalleryService {
    * 更新圖片
    */
   async updateImage(request: GalleryUpdateRequest): Promise<GalleryImage> {
-    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', '/gallery/update', 'POST', request);
+    const response = await apiService.makeRequest<GalleryImage>(config.api?.baseUrl || '', '/gallery/update', 'POST', request, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -72,7 +73,7 @@ class GalleryService {
    * 刪除圖片
    */
   async deleteImage(request: GalleryDeleteRequest): Promise<void> {
-    await this.makeRequest('/gallery/delete', 'POST', request);
+    await apiService.makeRequest(config.api?.baseUrl || '', '/gallery/delete', 'POST', request, { serviceKey: SERVICE_KEYS.BACKEND });
   }
 }
 

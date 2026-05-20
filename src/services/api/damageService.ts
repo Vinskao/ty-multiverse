@@ -1,5 +1,6 @@
 // 傷害計算服務
 import { safeJsonParse } from '../../common/utils';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 export interface DamageResponse {
   requestId: string;
@@ -61,7 +62,8 @@ class DamageService {
         auth: true,
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        serviceKey: SERVICE_KEYS.BACKEND
       });
 
       const data = response.data;

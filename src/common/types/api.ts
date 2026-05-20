@@ -47,5 +47,7 @@ export interface ApiRequestOptions {
   auth?: boolean;
   /** Per-request timeout (ms) – falls back to global config */
   timeout?: number;
+  /** If set, a 503 response will automatically block this service key via serviceAvailabilityManager */
+  serviceKey?: string;
 }
 

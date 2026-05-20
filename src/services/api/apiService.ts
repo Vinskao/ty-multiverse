@@ -3,6 +3,7 @@
  */
 
 import { storageService } from '../core/storageService';
+import { serviceAvailabilityManager } from '../core/serviceAvailabilityManager';
 import { config } from '../core/config';
 import type { 
   ApiRequestOptions, 
@@ -90,6 +91,10 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
         }
     }
 
+    if (res.status === 503 && options.serviceKey) {
+      serviceAvailabilityManager.block(options.serviceKey);
+    }
+
     if (!res.ok) {
       // Throw a typed error so callers can handle based on status
       // 確保 responseData 是字符串格式
@@ -141,10 +146,10 @@ async function makeRequest<T = any>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: any,
-  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number }
+  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number; serviceKey?: string }
 ): Promise<ApiResponse<T>> {
-  const { auth = true, headers = {}, timeout } = options || {};
-  
+  const { auth = true, headers = {}, timeout, serviceKey } = options || {};
+
   return apiRequest({
     url: `${baseUrl}${endpoint}`,
     method,
@@ -154,7 +159,8 @@ async function makeRequest<T = any>(
       'Content-Type': CONTENT_TYPE.JSON,
       ...headers
     },
-    timeout
+    timeout,
+    serviceKey
   });
 }
 
@@ -166,7 +172,7 @@ async function makeRequestData<T = any>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: any,
-  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number }
+  options?: { auth?: boolean; headers?: Record<string, string>; timeout?: number; serviceKey?: string }
 ): Promise<T> {
   const response = await makeRequest<T>(baseUrl, endpoint, method, body, options);
   return response.data;

@@ -5,6 +5,7 @@
 import { apiService } from './apiService';
 import type { ApiResponse, BackendApiResponse } from './apiService';
 import { config } from '../core/config';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 // 類型定義
 export interface Weapon {
@@ -37,7 +38,7 @@ class WeaponService {
    * 獲取所有武器
    */
   async getAllWeapons(): Promise<Weapon[]> {
-    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', '/weapons');
+    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', '/weapons', 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -45,7 +46,7 @@ class WeaponService {
    * 根據名稱獲取武器
    */
   async getWeaponByName(name: string): Promise<Weapon> {
-    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', `/weapons/${encodeURIComponent(name)}`);
+    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', `/weapons/${encodeURIComponent(name)}`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -53,7 +54,7 @@ class WeaponService {
    * 根據所有者獲取武器
    */
   async getWeaponsByOwner(ownerName: string): Promise<Weapon[]> {
-    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', `/weapons/owner/${encodeURIComponent(ownerName)}`);
+    const response = await apiService.makeRequest<Weapon[]>(config.api?.baseUrl || '', `/weapons/owner/${encodeURIComponent(ownerName)}`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -61,7 +62,7 @@ class WeaponService {
    * 保存武器
    */
   async saveWeapon(weapon: WeaponSaveRequest): Promise<Weapon> {
-    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', '/weapons', 'POST', weapon);
+    const response = await apiService.makeRequest<Weapon>(config.api?.baseUrl || '', '/weapons', 'POST', weapon, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 }

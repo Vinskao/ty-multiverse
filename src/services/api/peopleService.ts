@@ -5,6 +5,7 @@
 import { apiService, ApiError } from './apiService';
 import type { ApiResponse, BackendApiResponse } from './apiService';
 import { config } from '../core/config';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 // 類型定義
 export interface Person {
@@ -167,7 +168,7 @@ class PeopleService {
       
       if (isGateway) {
         // 通過 Gateway：使用 /people/names，Gateway 會自動等待異步結果
-        const response = await apiService.makeRequest<string[]>(this.baseUrl, '/people/names', 'GET');
+        const response = await apiService.makeRequest<string[]>(this.baseUrl, '/people/names', 'GET', undefined, { serviceKey: SERVICE_KEYS.GATEWAY });
         
         // Gateway 的 AsyncPeopleProxyController 會直接返回數據（不是 202）
         if (Array.isArray(response.data)) {
@@ -182,7 +183,7 @@ class PeopleService {
         throw new Error('Gateway 返回的數據格式錯誤');
       } else {
         // 直接訪問 Backend：需要手動處理異步響應
-        const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/names', 'GET');
+        const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/names', 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
         
         // 檢查是否是異步響應（202）
         if (response.backendResponse?.code === 202 && response.backendResponse?.requestId) {
@@ -219,7 +220,7 @@ class PeopleService {
    * 插入單個角色
    */
   async insertPerson(person: Person): Promise<ProducerResponse> {
-    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert', 'POST', person);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert', 'POST', person, { serviceKey: SERVICE_KEYS.BACKEND });
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -234,7 +235,7 @@ class PeopleService {
    * 更新角色
    */
   async updatePerson(person: Person): Promise<ProducerResponse> {
-    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/update', 'POST', person);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/update', 'POST', person, { serviceKey: SERVICE_KEYS.BACKEND });
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -249,7 +250,7 @@ class PeopleService {
    * 批量插入角色
    */
   async insertMultiplePeople(people: Person[]): Promise<ProducerResponse> {
-    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert-multiple', 'POST', people);
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/insert-multiple', 'POST', people, { serviceKey: SERVICE_KEYS.BACKEND });
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -264,7 +265,7 @@ class PeopleService {
    * 獲取所有角色
    */
   async getAllPeople(): Promise<ProducerResponse> {
-    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/get-all', 'POST');
+    const response = await apiService.makeRequest<BackendApiResponse<any>>(this.baseUrl, '/people/get-all', 'POST', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     const backendResponse = response.data;
     
     // Map BackendApiResponse (202) to ProducerResponse format
@@ -360,7 +361,7 @@ class PeopleService {
    * 查詢請求狀態（使用異步結果端點）
    */
   async getRequestStatus(requestId: string): Promise<RequestStatus> {
-    const response = await apiService.makeRequest<ResultResponse<any>>(this.baseUrl, `/api/async/result/${requestId}`, 'GET');
+    const response = await apiService.makeRequest<ResultResponse<any>>(this.baseUrl, `/api/async/result/${requestId}`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     const result = response.data;
     return {
       requestId,
@@ -375,7 +376,7 @@ class PeopleService {
    * 檢查請求是否存在
    */
   async checkRequestExists(requestId: string): Promise<{ requestId: string; exists: boolean }> {
-    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}/exists`);
+    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}/exists`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return {
       requestId,
       exists: response.data.exists
@@ -386,7 +387,7 @@ class PeopleService {
    * 移除請求狀態
    */
   async removeRequestStatus(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}`, 'DELETE');
+    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/api/async/result/${requestId}`, 'DELETE', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -404,7 +405,7 @@ class PeopleService {
    * 檢查結果是否存在
    */
   async checkResultExists(requestId: string): Promise<{ requestId: string; exists: boolean; message: string }> {
-    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}/exists`);
+    const response = await apiService.makeRequest<{ requestId: string; exists: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}/exists`, 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -412,7 +413,7 @@ class PeopleService {
    * 清理結果
    */
   async cleanupResult(requestId: string): Promise<{ requestId: string; removed: boolean; message: string }> {
-    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}`, 'DELETE');
+    const response = await apiService.makeRequest<{ requestId: string; removed: boolean; message: string }>(this.baseUrl, `/async/result/${requestId}`, 'DELETE', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -422,7 +423,7 @@ class PeopleService {
    * 插入角色並等待結果
    */
   async insertPersonAndWait(person: Person): Promise<Person> {
-    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/insert', 'POST', person);
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/insert', 'POST', person, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -430,7 +431,7 @@ class PeopleService {
    * 獲取所有角色並等待結果
    */
   async getAllPeopleAndWait(): Promise<Person[]> {
-    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/get-all', 'POST');
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/get-all', 'POST', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -438,7 +439,7 @@ class PeopleService {
    * 根據名稱查詢角色並等待結果
    */
   async getPersonByNameAndWait(name: string): Promise<Person> {
-    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/get-by-name', 'POST', { name });
+    const response = await apiService.makeRequest<Person>(this.baseUrl, '/people/get-by-name', 'POST', { name }, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -446,7 +447,7 @@ class PeopleService {
    * 獲取所有武器並等待結果
    */
   async getAllWeaponsAndWait(): Promise<Weapon[]> {
-    const response = await apiService.makeRequest<Weapon[]>(this.baseUrl, '/people/weapons', 'GET');
+    const response = await apiService.makeRequest<Weapon[]>(this.baseUrl, '/people/weapons', 'GET', undefined, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 
@@ -474,7 +475,7 @@ class PeopleService {
    * 批量操作：插入多個角色並等待結果
    */
   async insertMultiplePeopleAndWait(people: Person[]): Promise<Person[]> {
-    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/insert-multiple', 'POST', people);
+    const response = await apiService.makeRequest<Person[]>(this.baseUrl, '/people/insert-multiple', 'POST', people, { serviceKey: SERVICE_KEYS.BACKEND });
     return response.data;
   }
 

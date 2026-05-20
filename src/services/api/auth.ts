@@ -1,5 +1,7 @@
 import { storageService } from '../core/storageService';
 import { config } from '../core/config';
+import { serviceAvailabilityManager } from '../core/serviceAvailabilityManager';
+import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
 
 // 為了兼容性，添加環境變量訪問
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
@@ -51,6 +53,11 @@ abstract class BaseAPI {
       });
 
       clearTimeout(timeoutId);
+
+      if (response.status === 503) {
+        const key = url.includes('maya-sawa') ? SERVICE_KEYS.MAYA_SAWA : SERVICE_KEYS.GATEWAY;
+        serviceAvailabilityManager.block(key);
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -319,6 +326,10 @@ export class AuthService {
         headers: config.api.headers
       });
 
+      if (response.status === 503) {
+        serviceAvailabilityManager.block(SERVICE_KEYS.GATEWAY);
+      }
+
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.status}`);
       }
@@ -568,6 +579,10 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
       credentials: 'include',
       mode: 'cors'
     });
+
+    if (response.status === 503) {
+      serviceAvailabilityManager.block(SERVICE_KEYS.GATEWAY);
+    }
 
     // 處理錯誤響應（400, 401 等）
     if (!response.ok) {

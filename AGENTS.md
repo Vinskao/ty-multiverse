@@ -226,3 +226,56 @@
 | `EC/BFF_Extention/logs/` | log 檔，可視需要清除 |
 | `EC/UI_Workspace_lite_v20260407/node_modules/` | 可 `npm install` 重裝 |
 | `EC/UI_Workspace_lite_v20260407/dist/` | build 產出，可重 build |
+
+---
+
+## 7. 503 Service Availability Flag / 服務不可用標記
+
+### 用途
+當任何 API 回傳 503 時，自動隱藏對應 UI 區塊，並每 24 小時 ping 一次嘗試自動恢復。Flag 持久化至 localStorage，頁面重整後仍有效。
+
+### 模組位置
+- Manager: `src/services/core/serviceAvailabilityManager.ts`
+- Keys 常數: `src/common/constants/serviceKeys.ts`
+
+### 服務 Key 對應
+
+| Key | 使用服務 | Health Endpoint |
+|-----|---------|-----------------|
+| `backend` | damageService, galleryService, peopleService, weaponService | `{BACKEND_URL}/actuator/health` |
+| `gateway` | auth.ts（admin/user/keycloak） | `{GATEWAY_URL}/tymg/actuator/health` |
+| `maya-sawa` | auth.ts（voyeur）, qaService | `{MAYA_SAWA_URL}/health` |
+| `leetcode-stats` | index.ts `fetchLeetCodeStats()` | `{API_BASE_URL}/maya-sawa/proxy/leetcode-stats/Vinskao` |
+
+### 接入新服務（三步驟）
+
+1. **透過 `apiService`（推薦）**：在 `apiRequest()`/`makeRequest()` 的 options 中加入 `serviceKey: SERVICE_KEYS.XXX`，503 會自動被攔截
+2. **UI 層**：呼叫 `serviceAvailabilityManager.onChange(key, visible => { element.style.display = visible ? '' : 'none'; })`，並保存回傳的 cleanup 函式
+3. **頁面載入**：呼叫 `serviceAvailabilityManager.checkRecovery(key)` 嘗試自動恢復（24h 節流）
+
+```typescript
+// 範例：接入新服務
+import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
+import { SERVICE_KEYS } from '../common/constants/serviceKeys';
+
+// Step 1（service 層）
+await apiService.request({ url, serviceKey: SERVICE_KEYS.BACKEND });
+
+// Step 2 & 3（UI 層）
+serviceAvailabilityManager.register(SERVICE_KEYS.BACKEND, `${backendUrl}/actuator/health`);
+const el = document.querySelector('.my-section') as HTMLElement;
+let cleanup: (() => void) | null = null;
+if (serviceAvailabilityManager.isBlocked(SERVICE_KEYS.BACKEND)) {
+  el.style.display = 'none';
+  serviceAvailabilityManager.checkRecovery(SERVICE_KEYS.BACKEND);
+}
+if (cleanup) cleanup();
+cleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.BACKEND, v => { el.style.display = v ? '' : 'none'; });
+```
+
+### 注意事項
+- `syncService.ts` 呼叫 local Astro API route，不接入 503 管理
+- `characterService.ts` 委派給 `peopleService`，無需重複登記
+- Recovery 節流：同一 key 24h 內只 ping 一次
+- localStorage key 格式：`svc_block_{serviceKey}`
+- `onChange()` 回傳 cleanup 函式，View Transitions 環境下必須在重新初始化前呼叫清除，防止監聽器累積（參考 `§1 i18n` 的 `_langCleanup` 模式）

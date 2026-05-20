@@ -1,5 +1,10 @@
 // 加上tooltip
 // 使用 astro:page-load 來支援 View Transitions 的客戶端導航
+import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
+import { SERVICE_KEYS } from '../common/constants/serviceKeys';
+import { config } from '../services/core/config';
+
+let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 
 // 定義提示文字（全域常量）
 const shadeDescriptions: Record<string, string> = {
@@ -282,14 +287,21 @@ async function fetchLeetCodeStats() {
         const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
         const response = await fetch(`${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/${username}`);
         
+        // 503：標記服務不可用並靜默隱藏（不顯示錯誤）
+        if (response.status === 503) {
+            serviceAvailabilityManager.block(SERVICE_KEYS.LEETCODE);
+            return;
+        }
+
         // 检查响应状态
         if (!response.ok) {
             const errorData: ErrorData | unknown = await response.json().catch(() => ({ detail: { message: `HTTP ${response.status}` } }));
             const msg = (errorData as ErrorData).detail?.message || (errorData as any)?.detail || `HTTP ${response.status}`;
             throw new Error(msg);
         }
-        
+
         const data = await response.json();
+        serviceAvailabilityManager.unblock(SERVICE_KEYS.LEETCODE);
         
         // Update the stats in the DOM with null checks
         const totalSolved = document.getElementById('total-solved');
@@ -409,15 +421,39 @@ function getCookie(name: string): string {
 // Call the function when the page loads - 支援 View Transitions
 function initIndexPage() {
     // 檢查是否在首頁，避免在其他頁面執行
-    const isIndexPage = window.location.pathname === '/tymultiverse/' || 
+    const isIndexPage = window.location.pathname === '/tymultiverse/' ||
                         window.location.pathname === '/tymultiverse' ||
                         window.location.pathname === '/' ||
                         window.location.pathname.endsWith('/index.html');
-    
-    if (isIndexPage) {
-        fetchLeetCodeStats();
-        updateVisitCount();
+
+    if (!isIndexPage) return;
+
+    // 登記各服務的健康檢查端點（idempotent）
+    const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
+    serviceAvailabilityManager.register(SERVICE_KEYS.LEETCODE,  `${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/Vinskao`);
+    serviceAvailabilityManager.register(SERVICE_KEYS.BACKEND,   `${config.api.backendUrl || apiBaseUrl + '/tymb'}/actuator/health`);
+    serviceAvailabilityManager.register(SERVICE_KEYS.GATEWAY,   `${config.api.gatewayUrl || apiBaseUrl + '/tymg'}/tymg/actuator/health`);
+    serviceAvailabilityManager.register(SERVICE_KEYS.MAYA_SAWA, `${config.api.mayaSawaUrl || apiBaseUrl + '/maya-sawa'}/health`);
+
+    // LeetCode 區塊：依 flag 決定顯示/隱藏
+    const leetcodeSection = document.querySelector('.leetcode-graph') as HTMLElement | null;
+    const setLeetcodeVisible = (v: boolean) => { if (leetcodeSection) leetcodeSection.style.display = v ? '' : 'none'; };
+
+    const leetcodeBlocked = serviceAvailabilityManager.isBlocked(SERVICE_KEYS.LEETCODE);
+    if (leetcodeBlocked) {
+        setLeetcodeVisible(false);
+        serviceAvailabilityManager.checkRecovery(SERVICE_KEYS.LEETCODE);
     }
+
+    // 清除上一次的監聽，避免 View Transitions 重複累積
+    if (_leetcodeAvailabilityCleanup) _leetcodeAvailabilityCleanup();
+    _leetcodeAvailabilityCleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.LEETCODE, setLeetcodeVisible);
+
+    // 已被標記 blocked 時跳過 fetch，由 checkRecovery 負責嘗試恢復
+    if (!leetcodeBlocked) {
+        fetchLeetCodeStats();
+    }
+    updateVisitCount();
 }
 
 // 監聽 View Transitions 事件
