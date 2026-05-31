@@ -1,0 +1,12 @@
+---
+interface Props {
+  chart: string;
+  className?: string;
+}
+
+const { chart, className = "" } = Astro.props;
+---
+
+<div class:list={["mermaid-diagram", className]}>
+  <pre class="mermaid">{chart}</pre>
+</div>

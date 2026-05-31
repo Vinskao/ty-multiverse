@@ -1,0 +1,51 @@
+<script>
+  import { getMermaidConfig } from "../scripts/mermaid-theme";
+
+  let themeObserver: MutationObserver | null = null;
+
+  async function loadMermaid() {
+    if (!window["mermaid"]) {
+      await new Promise<void>((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js";
+        s.onload = () => resolve();
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    const mermaidLib = window["mermaid"] as any;
+    if (!mermaidLib) return;
+
+    const isDarkMode = document.documentElement.classList.contains("theme-dark");
+    const mermaidCfg = getMermaidConfig(isDarkMode);
+    mermaidLib.initialize({ ...mermaidCfg, startOnLoad: true });
+
+    setTimeout(() => {
+      mermaidLib.init();
+    }, 100);
+
+    if (!themeObserver) {
+      themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type !== "attributes" || mutation.attributeName !== "class") return;
+
+          const isDark = document.documentElement.classList.contains("theme-dark");
+          mermaidLib.initialize({ ...getMermaidConfig(isDark), startOnLoad: true });
+
+          setTimeout(() => {
+            mermaidLib.init();
+          }, 100);
+        });
+      });
+
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+  }
+
+  loadMermaid();
+  document.addEventListener("astro:page-load", loadMermaid);
+</script>

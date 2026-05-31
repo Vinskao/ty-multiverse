@@ -1,0 +1,692 @@
+---
+import MermaidDiagram from "./MermaidDiagram.astro";
+
+type DiagramId =
+  | "astroArchitecture"
+  | "angularGateway"
+  | "mayaSawaV1Flow"
+  | "mayaSawaV1System"
+  | "backendArchitecture"
+  | "securityArchitecture"
+  | "exceptionArchitecture"
+  | "ociNetwork"
+  | "rabbitMqKubernetes"
+  | "retrievalPipeline"
+  | "agentWorkflow"
+  | "asyncQaSequence"
+  | "cicdPipeline"
+  | "authSequence";
+
+interface Props {
+  id: DiagramId;
+  className?: string;
+}
+
+const diagrams: Record<DiagramId, string> = {
+  astroArchitecture: `graph TD
+    A["Astro Pages<br/>src/pages/*.astro<br/>File-based routing"] --> B["BaseLayout.astro<br/>Global app shell<br/>CSS manifest + head + transitions"]
+    B --> C["Static Astro Components<br/>Nav.astro / Footer.astro / QAPlatform.astro"]
+    B --> D["Page Content Slot<br/>Page-specific Astro sections"]
+
+    C --> E["ThemeToggle.tsx<br/>React island in Nav"]
+    D --> F["Client Islands<br/>client:load React components"]
+    F --> G["SkillsBubbleChart.tsx<br/>React + D3"]
+    F --> H["PeopleManagement.tsx<br/>Interactive React UI"]
+
+    E --> I["Astro Hydration Runtime<br/>Astro.load + astro-island"]
+    G --> I
+    H --> I
+    I --> J["React hydration success<br/>useEffect + event binding"]
+    J --> K["D3 render into SVG<br/>bubble chart / treemap"]
+
+    C --> L["astro:page-load re-init<br/>Nav / QABot / module scripts"]
+    E --> M["Shared icon resources<br/>Icon.tsx + IconPaths.ts"]
+    G --> M
+    H --> M
+
+    style A fill:#6366f1,stroke:#4338ca,stroke-width:3px,color:#ffffff
+    style B fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#ffffff
+    style C fill:#7c3aed,stroke:#6d28d9,stroke-width:3px,color:#ffffff
+    style D fill:#4f46e5,stroke:#3730a3,stroke-width:3px,color:#ffffff
+    style E fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#ffffff
+    style F fill:#06b6d4,stroke:#0891b2,stroke-width:3px,color:#ffffff
+    style G fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+    style H fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
+    style I fill:#f59e0b,stroke:#d97706,stroke-width:3px,color:#ffffff
+    style J fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
+    style K fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
+    style L fill:#14b8a6,stroke:#0f766e,stroke-width:2px,color:#ffffff
+    style M fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff`,
+
+  angularGateway: `flowchart LR
+    subgraph "Frontend (Angular.js)"
+        A["Angular Components\\n(View / Logic / Style)"]
+        AR["Angular Routing Module"]
+        REG["Global Config Registry\\n(Registry + Singleton Pattern)"]
+        A --> AR
+        A --> REG
+    end
+
+    subgraph "Gateway Layer (Java)"
+        GW["Java Gateway"]
+        INS["Header Inserter Beans\\n(Java Interceptors)"]
+        ADP["Adapter / Facade\\n(XML + JSON Schema Mapping)"]
+        EXT["Externalized Config\\n(Multi-env Config Matrix)"]
+        GW --> INS
+        GW --> ADP
+        GW --> EXT
+    end
+
+    subgraph "Backend Systems"
+        BE["Legacy Backend Services"]
+    end
+
+    AR -->|"REST API Calls"| GW
+    REG -->|"Centralized Route Lookups"| GW
+    INS -->|"Injects Headers"| BE
+    ADP -->|"Transforms Payloads"| BE
+
+    classDef fe fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
+    classDef gw fill:#fff3e0,stroke:#ff9800,color:#0b1a33
+    classDef be fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    class A,AR,REG fe
+    class GW,INS,ADP,EXT gw
+    class BE be`,
+
+  mayaSawaV1Flow: `graph TD
+    A["User Request</br>(/qa/query)"] --> B{FastAPI Router};
+    B --> C["qa_chain.get_answer(query)"];
+    C --> D{"Detect names in query"};
+    
+    %% Name Detection Branch
+    D -- "Names found" --> E["Fetch character profiles</br>from DB"];
+    E --> F{"Profile found?"};
+    F -- "Yes" --> G["Create prompt with</br>character profile"];
+    F -- "No" --> H["Respond 'not found'"];
+    
+    %% No Names Branch
+    D -- "No names found" --> I{"Semantic search for people"};
+    I -- "People found" --> J["Generate answer from</br>search results"];
+    I -- "No one found" --> K["Similarity search</br>in Vector Store"];
+    K --> L["Create prompt with</br>document context"];
+    
+    %% Unified Processing
+    G --> M["Invoke LLM"];
+    J --> M;
+    L --> M;
+    H --> N["Return final answer"];
+    M --> N;
+    N --> O["Save chat history"];
+    O --> P["Return AI answer"];
+    P --> B;`,
+
+  mayaSawaV1System: `flowchart TD
+    subgraph "API Layer"
+        APIRouter["FastAPI Router<br/>(maya_sawa/api/qa.py)"]
+    end
+
+    subgraph "Q&A Layer"
+        QAChain["QAChain"]
+        PageAnalyzer["PageAnalyzer"]
+    end
+
+    subgraph "Support Layer"
+        NameDetector["NameDetector"]
+        ProfileManager["ProfileManager"]
+        PeopleWeaponManager["PeopleWeaponManager"]
+        PersonalityPromptBuilder["PersonalityPromptBuilder"]
+        NameAdapter["NameAdapter"]
+        VectorStore["PostgresVectorStore"]
+        ChatHistoryManager["ChatHistoryManager"]
+        ConfigManager["ConfigManager"]
+        ConnectionPoolManager["ConnectionPoolManager"]
+        Scheduler["ArticleSyncScheduler"]
+    end
+
+    subgraph "External Services"
+        OpenAIAPI["OpenAI API<br/>Chat & Embeddings"]
+        PeopleAPI["People System API<br/>/tymb/people/*"]
+        ArticleAPI["Public Article API<br/>/paprika/articles"]
+        PostgresDB["PostgreSQL"]
+        RedisDB["Redis"]
+    end
+
+    Client["Client / Frontend"] --> APIRouter
+    APIRouter --> QAChain
+    APIRouter --> PageAnalyzer
+    APIRouter --> VectorStore
+    APIRouter --> ChatHistoryManager
+    APIRouter --> Scheduler
+
+    ChatHistoryManager --> RedisDB
+
+    QAChain --> NameDetector
+    QAChain --> ProfileManager
+    QAChain --> PeopleWeaponManager
+    QAChain --> PersonalityPromptBuilder
+    QAChain --> NameAdapter
+    QAChain --> VectorStore
+
+    PageAnalyzer --> QAChain
+
+    NameDetector --> OpenAIAPI
+    QAChain --> OpenAIAPI
+
+    ProfileManager --> PeopleAPI
+    PeopleWeaponManager --> PeopleAPI
+
+    VectorStore --> PostgresDB
+    VectorStore --> ArticleAPI
+
+    PeopleWeaponManager --> PostgresDB
+
+    ConfigManager --> PostgresDB
+    ConnectionPoolManager --> PostgresDB
+    Scheduler --> ArticleAPI`,
+
+  backendArchitecture: `classDiagram
+                                          %% Application Layer
+                                          class TYMBackendApplication {
+                                              +@EnableWebSocket
+                                              +@EnableRetry
+                                              +@EnableAsync
+                                              +@EnableScheduling
+                                              +@EnableCaching
+                                              +@EnableRedisHttpSession
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
+                                          }
+                                          
+                                          %% Security Layer
+                                          class SecurityConfig {
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
+                                              +JWT Authentication
+                                              +OAuth2 Resource Server
+                                              +CORS Configuration
+                                          }
+                                          
+                                          class KeycloakController {
+                                              +OAuth2 Redirect
+                                              +Token Exchange
+                                              +User Info
+                                              +Token Introspect
+                                          }
+                                          
+                                          class Auth {
+                                              +User Management
+                                              +Admin Operations
+                                              +Token Validation
+                                          }
+                                          
+                                          %% Configuration Layer
+                                          class RedisConfig {
+                                              +@EnableCaching
+                                              +RedisConnectionFactory
+                                              +RedisTemplate
+                                              +TTL Management
+                                              +damage-calculations
+                                              +tymb:sessions
+                                              +Distributed Lock
+                                              +Lua Scripts
+                                          }
+                                          
+                                          class PrimaryDataSourceConfig {
+                                              +PrimaryHikariCP
+                                              +HikariCP Connection Pool
+                                              +Connection Management
+                                              +Connection Timeout
+                                              +Leak Detection
+                                          }
+                                          
+                                          class PeopleDataSourceConfig {
+                                              +PeopleHikariCP
+                                              +HikariCP Connection Pool
+                                              +Connection Management
+                                              +Connection Timeout
+                                              +Leak Detection
+                                          }
+                                          
+                                          class SessionConfig {
+                                              +@EnableRedisHttpSession
+                                              +Redis Session Store
+                                              +Session Timeout
+                                              +Session Fixation
+                                              +Session Security
+                                              +Concurrent Session Control
+                                          }
+                                          
+                                          %% Infrastructure Layer
+                                          class Database {
+                                              +PostgreSQL Primary
+                                              +PostgreSQL People
+                                              +Indexed Queries
+                                              +Batch Operations
+                                          }
+                                          
+                                          class Redis {
+                                              +Cache Storage
+                                              +Session Store
+                                              +Distributed Lock
+                                              +Concurrency Control
+                                          }
+                                          
+                                          %% Layer Relationships
+                                          TYMBackendApplication --> SecurityConfig
+                                          TYMBackendApplication --> RedisConfig
+                                          TYMBackendApplication --> PrimaryDataSourceConfig
+                                          TYMBackendApplication --> PeopleDataSourceConfig
+                                          TYMBackendApplication --> SessionConfig
+                                          
+                                          SecurityConfig --> KeycloakController
+                                          SecurityConfig --> Auth
+                                          SecurityConfig --> SessionConfig
+                                          
+                                          SessionConfig --> RedisConfig
+                                          RedisConfig --> Redis
+                                          
+                                          PrimaryDataSourceConfig --> Database
+                                          PeopleDataSourceConfig --> Database`,
+
+  securityArchitecture: `classDiagram
+                                          class SecurityConfig {
+                                              +@EnableWebSecurity
+                                              +@EnableMethodSecurity
+                                              +JWT Authentication
+                                              +OAuth2 Resource Server
+                                              +CORS Configuration
+                                              +Stateless Keycloak Endpoints
+                                          }
+                                          
+                                          class JWTValidation {
+                                              +OAuth2ResourceServer
+                                              +JwtDecoder
+                                              +CustomJwtGrantedAuthoritiesConverter
+                                              +Bearer Token Resolver
+                                          }
+                                          
+                                          class Authorization {
+                                              +ROLE_GUEST
+                                              +ROLE_MANAGE_USERS
+                                              +ROLE_ADMIN
+                                              +ROLE_USER
+                                              +permitAll() for /people/names
+                                              +authenticated() for protected endpoints
+                                          }
+                                          
+                                          class SessionManagement {
+                                              +Redis Session Storage
+                                              +Session Timeout
+                                              +Session Fixation
+                                              +@EnableRedisHttpSession
+                                              +tymb:sessions namespace
+                                          }
+                                          
+                                          class KeycloakController {
+                                              +OAuth2 Redirect
+                                              +Token Exchange
+                                              +User Info
+                                              +Token Introspect
+                                              +Dynamic redirectUri
+                                          }
+                                          
+                                          SecurityConfig --> JWTValidation
+                                          SecurityConfig --> Authorization
+                                          SecurityConfig --> SessionManagement
+                                          SecurityConfig --> KeycloakController`,
+
+  exceptionArchitecture: `classDiagram
+                                          class GlobalExceptionHandler {
+                                              +Chain of Responsibility
+                                              +Error Response Builder
+                                          }
+                                          
+                                          class BusinessApiExceptionHandler {
+                                              +@Order(0)
+                                              +BusinessException
+                                          }
+                                          
+                                          class DataIntegrityApiExceptionHandler {
+                                              +@Order(1)
+                                              +DataIntegrityViolationException
+                                          }
+                                          
+                                          class ValidationApiExceptionHandler {
+                                              +@Order(2)
+                                              +MethodArgumentNotValidException
+                                          }
+                                          
+                                          class DefaultApiExceptionHandler {
+                                              +@Order(Integer.MAX_VALUE)
+                                              +Generic Exception
+                                          }
+                                          
+                                          GlobalExceptionHandler --> BusinessApiExceptionHandler
+                                          GlobalExceptionHandler --> DataIntegrityApiExceptionHandler
+                                          GlobalExceptionHandler --> ValidationApiExceptionHandler
+                                          GlobalExceptionHandler --> DefaultApiExceptionHandler`,
+
+  ociNetwork: `flowchart LR
+                                      user["User"] -->|SSH 22| bastion["Bastion (Public Subnet)"]
+
+                                      subgraph OCI VCN
+                                        direction LR
+
+                                        subgraph Public["Public Subnets"]
+                                          bastion
+                                          pubLB["Public LB Subnet (OCI LB - Reserved IP)"]
+                                        end
+
+                                        subgraph Private["Private Subnets"]
+                                          operator["Operator VM"]
+                                          cp["OKE Control Plane (Private Endpoint)"]
+                                          workers["Worker Nodes (NodePool size=2, A1.Flex 1c/8GB/50GB)"]
+                                          intLB["Internal LB Subnet"]
+                                        end
+
+                                        subgraph Gateways["Network Gateways"]
+                                          ig["Internet Gateway"]:::net
+                                          nat["NAT Gateway"]:::net
+                                          sg["Service Gateway"]:::net
+                                        end
+
+                                        pubRT["Public Route Table"]:::net --> ig
+                                        privRT["Private Route Table"]:::net --> nat
+                                        privRT --> sg
+
+                                        bastion -.-> pubRT
+                                        pubLB -.-> pubRT
+
+                                        operator -.-> privRT
+                                        workers -.-> privRT
+                                        intLB -.-> privRT
+                                      end
+
+                                      bastion -->|SSH Proxy| operator
+                                      operator -->|kubectl 6443| cp
+                                      pubLB --> workers
+                                      intLB --> workers
+
+                                      %% Improve contrast with vivid class definitions
+                                      classDef host fill:#eef3fb,stroke:#1f5bff,color:#0b1a33;
+                                      classDef control fill:#ede7f6,stroke:#5e35b1,color:#0b1a33;
+                                      classDef compute fill:#e8f5e9,stroke:#43a047,color:#0b1a33;
+                                      classDef net fill:#fff3e0,stroke:#fb8c00,color:#0b1a33;
+
+                                      %% Assign classes for better differentiation
+                                      class bastion host;
+                                      class pubLB,intLB,cp control;
+                                      class operator,workers compute;
+                                      class pubRT,privRT net;`,
+
+  rabbitMqKubernetes: `graph LR
+    A[Backend<br/>Spring Boot<br/>AsyncMessageService] --> B[RabbitMQ<br/>Queues & Exchanges]
+
+    subgraph K8s["Kubernetes Runtime"]
+      K1[Kubelet<br/>Probe Manager]
+      K2[startupProbe<br/>/actuator/health]
+      K3[readinessProbe<br/>/actuator/health/readiness]
+      K4[livenessProbe<br/>/actuator/health/liveness]
+      C[Consumer Pod<br/>Spring Boot WebFlux<br/>Reactive RabbitMQ + R2DBC]
+    end
+
+    subgraph Biz["Business Queue Consumers"]
+      Q1[weapon-save]
+      Q2[weapon-delete-all]
+      Q3[people-insert-multiple]
+      Q4[people-delete-all]
+      Q5[async-result]
+    end
+
+    C --> D[PostgreSQL<br/>R2DBC]
+
+    K1 --> K2
+    K1 --> K3
+    K1 --> K4
+    K2 --> C
+    K3 --> C
+    K4 --> C
+
+    B --> C
+    C --> Q1
+    C --> Q2
+    C --> Q3
+    C --> Q4
+    C --> Q5
+
+    %% Vivid, high-contrast class colors for light theme
+    classDef producer fill:#bbdefb,stroke:#1e88e5,color:#0b1a33
+    classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
+    classDef consumer fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
+    classDef database fill:#ffcdd2,stroke:#c62828,color:#0b1a33
+    classDef k8s fill:#e3f2fd,stroke:#1565c0,color:#0b1a33
+    classDef queue fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+
+    class A producer
+    class B mq
+    class C consumer
+    class D database
+    class K1,K2,K3,K4 k8s
+    class Q1,Q2,Q3,Q4,Q5 queue`,
+
+  retrievalPipeline: `graph TD
+  %% User and Entry
+  U["User"] --> Q["ask-with-model API<br/>question"]
+  Q --> P["Full-text Retrieval Pipeline"]
+
+  %% Retrieval Process
+  subgraph "Pipeline"
+    P --> N["Normalize/Lowercase<br/>trim punctuation"]
+    N --> E{"Compute Embedding?"}
+    E -- Yes --> EM["OpenAI Embeddings<br/>(text-embedding-3-small) → qvec"]
+    E -- No --> SKIP["Skip vector branch"]
+
+    %% PostgreSQL Retrieval (Trigram & Vector)
+    subgraph "PostgreSQL"
+      direction LR
+      PG1["Trigram Search<br/>content % :query<br/>similarity(content, :query) as text_sim"]:::trgm
+      PG2["Vector Search<br/>1 - (embedding <=> :qvec) as vec_sim"]:::vec
+      IDX1["GIN Index<br/>idx_articles_content_trgm<br/>(content gin_trgm_ops)"]:::idx
+      IDX2["IVFFlat Index<br/>idx_articles_embedding_ivfcos<br/>(embedding vector_cosine_ops)"]:::idx
+      EXT1["EXTENSION pg_trgm<br/>set_limit(:min_sim)"]:::ext
+      EXT2["EXTENSION pgvector"]:::ext
+    end
+
+    EM --> PG2
+    SKIP -.-> PG1
+    N --> PG1
+    PG1 --> MRG["Merge & Rank<br/>score = 0.6*text_sim + 0.4*vec_sim"]
+    PG2 --> MRG
+    MRG --> TOPK["Top-K Articles"]
+  end
+
+  %% Post-processing and Response
+  TOPK --> CTX["Build Context from Articles<br/>(title + snippet)"]
+  CTX --> AI["LLM Call (OpenAI/Gemini/Qwen/Mock)"]
+  AI --> RESP["Answer + Citations/No Knowledge Notice"]
+  RESP --> RDS["Redis ChatHistory<br/>chat:session:{sid}"]
+  RESP --> OUT["API Response"]
+
+  %% Database Table and Indexes
+  subgraph "articles schema"
+    TBL["articles<br/>- id BIGSERIAL PK<br/>- file_path VARCHAR(500) UNIQUE<br/>- content TEXT NOT NULL<br/>- file_date TIMESTAMP NOT NULL<br/>- embedding vector"]:::tbl
+  end
+  TBL -. indexed by .-> IDX1
+  TBL -. indexed by .-> IDX2
+
+  %% Styles
+  classDef trgm fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px
+  classDef vec fill:#fce4ec,stroke:#d81b60,stroke-width:1px
+  classDef idx fill:#fff3e0,stroke:#fb8c00,stroke-width:1px
+  classDef ext fill:#ede7f6,stroke:#5e35b1,stroke-width:1px
+  classDef tbl fill:#f1f8e9,stroke:#43a047,stroke-width:1px`,
+
+  agentWorkflow: `graph TB
+    subgraph "Frontend Layer"
+        A[User Interface] --> B[API Client]
+    end
+
+    subgraph "API Layer"
+        B --> A1[ask-with-model<br/>Async Processing]
+        B --> A2[task-status<br/>Task Status Query]
+        B --> A3[available-models<br/>Available Models List]
+        B --> A4[add-model<br/>Add Model]
+        B --> A5[chat-history<br/>Chat History]
+        B --> A6[legacy-chat-history<br/>Legacy Chat History]
+        B --> A7[healthz<br/>Health Check]
+    end
+
+    subgraph "Processing Layer"
+        P1[Async Processing<br/>Celery Task]
+        P2[Task Status Management<br/>Redis/Celery]
+    end
+
+    subgraph "Agent Service Layer"
+        AS[MayaAgentService<br/>Unified Service Entry]
+    end
+
+    subgraph "Workflow Layer"
+        WF[MayaAgentWorkflow<br/>Graphical Workflow]
+        N1[Intent Classification Node<br/>FilterChain]
+        N2[Knowledge Retrieval Node<br/>KMSourceManager]
+        N3[Tool Selection Node<br/>Smart Tool Selection]
+        N4[Tool Execution Node<br/>PDF/OCR/Calculation/Search]
+        N5[AI Response Generation Node<br/>LLM Call]
+        N6[Result Saving Node<br/>Data Persistence]
+        N7[Error Handling Node<br/>Exception Handling]
+    end
+
+    subgraph "Capability Support Layer"
+        LLM[LLM Capability<br/>OpenAI/Gemini/Qwen]
+        TOOLS[Tool Capability<br/>PDF/OCR/Calculation/Search]
+        MEMORY[Memory Capability<br/>Redis/Vector Memory]
+        RAG[RAG Capability<br/>pgvector/Hybrid Retrieval]
+    end
+
+    subgraph "Data Layer"
+        D1[(PostgreSQL<br/>Conversations/Articles)]
+        D2[(Redis<br/>Cache/Memory/Celery)]
+        D3[(RabbitMQ<br/>Celery Broker)]
+    end
+
+    subgraph "External Systems"
+        E1[Paprika API<br/>Knowledge Base Content]
+        E2[OpenAI API<br/>GPT-4o/GPT-4.1]
+        E3[Google Gemini API<br/>Gemini Pro/Flash]
+        E4[Qwen API<br/>Qwen Turbo/Plus]
+    end
+
+    %% API to Processing Layer
+    A1 --> P1
+    A2 --> P2
+
+    %% Processing Layer to Agent Service Layer
+    P1 --> AS
+
+    %% Agent Service Layer to Workflow Layer
+    AS --> WF
+
+    %% Workflow Node Connections
+    WF --> N1
+    WF --> N2
+    WF --> N3
+    WF --> N4
+    WF --> N5
+    WF --> N6
+    WF --> N7
+
+    %% Workflow Nodes to Capability Layer
+    N1 --> LLM
+    N2 --> RAG
+    N3 --> TOOLS
+    N4 --> TOOLS
+    N5 --> LLM
+    N6 --> MEMORY
+
+    %% Capability Layer to Data Layer
+    LLM --> D1
+    TOOLS --> D1
+    MEMORY --> D2
+    RAG --> D1
+
+    %% Celery Tasks to Data Layer
+    P1 --> D3
+    P2 --> D2
+
+    %% External System Connections
+    LLM --> E2
+    LLM --> E3
+    LLM --> E4
+    RAG --> E1
+
+    %% Style Definitions
+    classDef api fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000000
+    classDef process fill:#fff8e1,stroke:#ffa000,stroke-width:3px,color:#000000
+    classDef agent fill:#e3f2fd,stroke:#2196f3,stroke-width:3px,color:#000000
+    classDef workflow fill:#fff3e0,stroke:#ff9800,stroke-width:3px,color:#000000
+    classDef capability fill:#fce4ec,stroke:#e91e63,stroke-width:3px,color:#000000
+    classDef data fill:#f1f8e9,stroke:#43a047,stroke-width:3px,color:#000000
+    classDef external fill:#f3e5f5,stroke:#9c27b0,stroke-width:3px,color:#000000
+
+    class A1,A2,A3,A4,A5,A6,A7 api
+    class P1,P2 process
+    class AS agent
+    class WF,N1,N2,N3,N4,N5,N6,N7 workflow
+    class LLM,TOOLS,MEMORY,RAG capability
+    class D1,D2,D3 data
+    class E1,E2,E3,E4 external`,
+
+  asyncQaSequence: `sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as API
+    participant C as Celery Worker
+    participant DB as Database
+
+    U->>F: Send Question
+    F->>A: POST /maya-v2/ask-with-model/
+    A->>DB: Create Task Record
+    A->>C: Send Processing Task
+    A-->>F: Return task_id
+    F-->>U: Show Processing
+
+    loop Poll Status
+        F->>A: GET /maya-v2/task-status/{task_id}
+        A->>C: Query Task Status
+        C-->>A: Return Status
+
+        alt Task Complete
+            A-->>F: Return AI Response
+            F-->>U: Display Result
+        else Processing
+            F-->>U: Show Processing
+        end
+    end`,
+
+  cicdPipeline: `graph LR
+                                  A[GitHub Repository] --> B[Clone and Setup]
+                                  B --> C[Build with Node.js]
+                                  C --> D[Build Docker Image with BuildKit]
+                                  D --> E[Push to Docker Hub]
+                                  E --> F[Deploy to Kubernetes]`,
+
+  authSequence: `sequenceDiagram
+                                  participant User as User
+                                  participant App as Application
+                                  participant Auth as Authorization Server
+                                  participant API as Resource Server
+                                  
+                                  User->>App: 1. Access Application
+                                  App->>Auth: 2. Redirect to Authorization Page
+                                  User->>Auth: 3. Login and Authorize
+                                  Auth->>App: 4. Return Authorization Code
+                                  App->>Auth: 5. Exchange Code for Token
+                                  Auth->>App: 6. Return Access Token
+                                  App->>API: 7. Access Resources with Token
+                                  API->>App: 8. Return Protected Resources`,
+};
+
+const { id, className = "" } = Astro.props;
+---
+
+<MermaidDiagram chart={diagrams[id]} className={className} />
