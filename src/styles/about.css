@@ -170,6 +170,123 @@ filter: grayscale(0%);
 /* Keep image visible; only show mask over it */
 .work-photo-wrapper:hover .work-photo { opacity: 1; visibility: visible; }
 
+.git-commit-ingest {
+  width: 100%;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  background: rgba(18, 24, 34, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  color: var(--gray-100, #f3f4f6);
+}
+
+.git-commit-ingest[hidden] {
+  display: none;
+}
+
+.git-commit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.git-commit-toolbar h2 {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 1.05rem;
+}
+
+.git-commit-toolbar p {
+  margin: 0.25rem 0 0;
+  color: #a7b0bf;
+  line-height: 1.35;
+  font-size: 0.9rem;
+}
+
+.git-copy-command,
+.git-submit {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #eef2ff;
+  color: #1f2937;
+  min-height: 2.35rem;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.git-copy-command {
+  width: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.git-copy-command.copied {
+  background: #bbf7d0;
+}
+
+.git-command {
+  margin: 0;
+  padding: 0.85rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(2, 6, 23, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 7px;
+  color: #dbeafe;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.git-commit-ingest textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 13rem;
+  padding: 0.85rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  line-height: 1.5;
+}
+
+.git-commit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.git-commit-actions label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.git-submit {
+  padding: 0 1rem;
+  font-weight: 700;
+}
+
+.git-submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.git-commit-result {
+  min-height: 1.5rem;
+  color: #bfdbfe;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 /* RWD for overlay */
 @media (min-width: 1024px) {
   .work-photo-overlay { padding: 1rem; }

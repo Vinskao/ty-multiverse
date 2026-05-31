@@ -1577,20 +1577,14 @@
           : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
         const apiPathPrefix = "/maya-sawa";
 
-        const token = localStorage.getItem("token");
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
-
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
 
         const response = await fetch(
           `${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`,
           {
             headers,
-            credentials: "include",
           },
         );
         const result = await parseJsonOrThrow(response);
@@ -1667,20 +1661,14 @@
           : import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8000";
         const apiPathPrefix = "/maya-sawa";
 
-        const token = localStorage.getItem("token");
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
-
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
 
         const response = await fetch(
           `${apiBaseUrl}${apiPathPrefix}/qa/chat-history/${this.state.userId}`,
           {
             headers,
-            credentials: "include",
           },
         );
         const result = await parseJsonOrThrow(response);

@@ -25,7 +25,7 @@ export default defineConfig({
       proxy: {
         // 原有的本地後端代理
         '/maya-sawa': {
-          target: 'http://localhost:8000',
+          target: 'http://127.0.0.1:8000',
           changeOrigin: true,
           secure: false,
           configure: (proxy, options) => {
@@ -42,7 +42,7 @@ export default defineConfig({
         },
         // 新增：代理遠端 API
         '/maya-v2': {
-          target: 'http://localhost:8000',
+          target: 'http://127.0.0.1:8000',
           changeOrigin: true,
           secure: false, // 如果是自簽證書可設為 false
           rewrite: (path) => path, // 保持路徑不變

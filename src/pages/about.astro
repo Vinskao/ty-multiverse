@@ -53,6 +53,7 @@ for (const job of experienceData) {
 const swYears = (swMonths / 12).toFixed(1);
 const pmYears = (pmMonths / 12).toFixed(1);
 const totalYears = (totalMonths / 12).toFixed(1);
+const gitCommitCommand = `"REPO: $(git remote get-url origin)"; git log -n 50 --stat --date=iso-strict --pretty=format:"===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---"`;
 
 // Function to highlight dates in project descriptions
 function highlightDates(text: string): string {
@@ -211,6 +212,27 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
             alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
             class="work-photo"
           />
+          <div class="git-commit-ingest" data-admin-git-commit hidden>
+            <div class="git-commit-toolbar">
+              <div>
+                <h2>Git Commit Ingest</h2>
+                <p>Paste raw git log output and store searchable commit knowledge.</p>
+              </div>
+              <button type="button" class="git-copy-command" data-copy-git-command title="Copy command" aria-label="Copy command">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <pre class="git-command" data-git-command>{gitCommitCommand}</pre>
+            <textarea data-git-commit-text rows="10" placeholder="Paste agent output here"></textarea>
+            <div class="git-commit-actions">
+              <label>
+                <input type="checkbox" data-git-embedding checked />
+                Generate embeddings
+              </label>
+              <button type="button" class="git-submit" data-submit-git-commits>Ingest</button>
+            </div>
+            <div class="git-commit-result" data-git-commit-result aria-live="polite"></div>
+          </div>
         </div>
       </div>
 
@@ -393,7 +415,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                     : (category as any).skills || []
                                   ).find((s: any) => s.name === name);
                                   if (!skill) return null;
-                                  const gradeMap = {
+                                  const gradeMap: Record<string, string> = {
                                     shade1: "S",
                                     shade2: "A",
                                     shade3: "B",
@@ -801,7 +823,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                             ) : (
                               <div class="skill-tags">
                                 {category.skills.map((skill) => {
-                                  const gradeMap = {
+                                  const gradeMap: Record<string, string> = {
                                     shade1: "S",
                                     shade2: "A",
                                     shade3: "B",
@@ -1622,6 +1644,77 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
           }, 1800);
         });
       });
+    </script>
+
+    <script>
+      const gitCommand = `"REPO: $(git remote get-url origin)"; git log -n 50 --stat --date=iso-strict --pretty=format:"===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---"`;
+
+      function initGitCommitIngest() {
+        const panel = document.querySelector<HTMLElement>("[data-admin-git-commit]");
+        const image = document.querySelector<HTMLElement>(".work-photo");
+        const overlay = document.querySelector<HTMLElement>(".work-photo-overlay");
+        const commandEl = document.querySelector<HTMLElement>("[data-git-command]");
+        const copyBtn = document.querySelector<HTMLButtonElement>("[data-copy-git-command]");
+        const submitBtn = document.querySelector<HTMLButtonElement>("[data-submit-git-commits]");
+        const textarea = document.querySelector<HTMLTextAreaElement>("[data-git-commit-text]");
+        const result = document.querySelector<HTMLElement>("[data-git-commit-result]");
+        const embedding = document.querySelector<HTMLInputElement>("[data-git-embedding]");
+
+        if (!panel || !image || !commandEl || !copyBtn || !submitBtn || !textarea || !result || !embedding) return;
+
+        const isAdmin = localStorage.getItem("isAdmin") === "true";
+        panel.hidden = !isAdmin;
+        image.style.display = isAdmin ? "none" : "";
+        if (overlay) overlay.style.display = isAdmin ? "none" : "";
+        commandEl.textContent = gitCommand;
+
+        copyBtn.onclick = async () => {
+          await navigator.clipboard.writeText(gitCommand);
+          copyBtn.classList.add("copied");
+          setTimeout(() => copyBtn.classList.remove("copied"), 1200);
+        };
+
+        submitBtn.onclick = async () => {
+          const token = localStorage.getItem("token");
+          const text = textarea.value.trim();
+          if (!token) {
+            result.textContent = "Missing token. Please log in again.";
+            return;
+          }
+          if (!text) {
+            result.textContent = "Paste git output before ingesting.";
+            return;
+          }
+
+          submitBtn.disabled = true;
+          result.textContent = "Ingesting...";
+          try {
+            const response = await fetch("/maya-sawa/git-commits/ingest", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                text,
+                generate_embedding: embedding.checked,
+              }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.detail || "Ingest failed");
+            }
+            result.textContent = `Created ${data.created}, duplicate ${data.skipped_duplicate}, trivial ${data.skipped_trivial}, embedding failed ${data.embedding_failed}.`;
+          } catch (error) {
+            result.textContent = error instanceof Error ? error.message : "Ingest failed";
+          } finally {
+            submitBtn.disabled = false;
+          }
+        };
+      }
+
+      initGitCommitIngest();
+      document.addEventListener("astro:page-load", initGitCommitIngest);
     </script>
 
     <ResumePreview lang={lang} />
