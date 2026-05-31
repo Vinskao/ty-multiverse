@@ -25,7 +25,7 @@ export default defineConfig({
       proxy: {
         // 原有的本地後端代理
         '/maya-sawa': {
-          target: 'https://peoplesystem.tatdvsonorth.com',
+          target: 'http://localhost:8000',
           changeOrigin: true,
           secure: false,
           configure: (proxy, options) => {
