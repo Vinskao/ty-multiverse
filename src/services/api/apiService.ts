@@ -17,6 +17,7 @@ import {
 } from '../../common/utils';
 import { isObject, isString } from '../../common/helpers';
 import { CONTENT_TYPE, DEFAULT_API_TIMEOUT } from '../../common/constants';
+import { getErrorMessage } from '../core/apiError';
 
 // Re-export types for backward compatibility
 export type { ApiRequestOptions, BackendApiResponse, ApiResponse };
@@ -84,9 +85,10 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
         } else {
           // For error responses, throw an error with the backend message
           // 確保 message 是字符串
-        const errorMessage = isString(backendResponse.message)
-            ? backendResponse.message 
-            : (backendResponse.error || `Backend error (code: ${backendResponse.code})`);
+        const errorMessage = getErrorMessage(
+          backendResponse,
+          `Backend error (code: ${backendResponse.code})`
+        );
           throw new ApiError(backendResponse.code, errorMessage);
         }
     }
@@ -98,21 +100,7 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
     if (!res.ok) {
       // Throw a typed error so callers can handle based on status
       // 確保 responseData 是字符串格式
-      let errorMessage: string;
-      if (isString(responseData)) {
-        errorMessage = responseData;
-      } else if (isObject(responseData)) {
-        // 嘗試提取錯誤消息
-        if (isString(responseData.message)) {
-          errorMessage = responseData.message;
-        } else if (isString(responseData.error)) {
-          errorMessage = responseData.error;
-        } else {
-          errorMessage = safeJsonStringify(responseData, `HTTP ${res.status} Error`);
-        }
-      } else {
-        errorMessage = `HTTP ${res.status} Error`;
-      }
+      const errorMessage = getErrorMessage(responseData, `HTTP ${res.status} Error`);
       throw new ApiError(res.status, errorMessage);
     }
 
@@ -127,7 +115,7 @@ async function apiRequest<T = any>(options: ApiRequestOptions): Promise<ApiRespo
       throw err;
     }
     // Network / timeout / abort errors – wrap so callers have uniform interface
-    throw new ApiError(0, (err as Error)?.message ?? 'Network error');
+    throw new ApiError(0, getErrorMessage(err, 'Network error'));
   }
 }
 

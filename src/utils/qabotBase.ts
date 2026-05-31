@@ -1,5 +1,6 @@
 // Base class for QA Bot components with shared functionality
 import { getOrCreateUserId, escapeHtml } from '../scripts/qabotShared';
+import { getErrorMessage } from '../services/core/apiError';
 
 export interface MessageData {
   type: 'user' | 'bot';
@@ -109,7 +110,7 @@ export abstract class QABotBase {
       } catch (error) {
         console.error('Polling error:', error);
         this.stopPollingTask(taskId);
-        this.showErrorMessage(`輪詢任務失敗: ${error}`);
+        this.showErrorMessage(`輪詢任務失敗: ${getErrorMessage(error)}`);
       }
     };
 
@@ -143,7 +144,6 @@ export abstract class QABotBase {
   abstract initialize(): void;
   abstract bindEvents(): void;
 }
-
 
 
 

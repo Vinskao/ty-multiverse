@@ -1,3 +1,5 @@
+import { parseJsonOrThrow } from "../services/core/apiError";
+
 // API 配置和工具函數
 const isDev = import.meta.env.DEV;
 
@@ -57,10 +59,7 @@ export const api = {
     } catch (_) {}
 
     const response = await apiFetch(API_CONFIG.endpoints.availableModels);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.status}`);
-    }
-    const data = await response.json();
+    const data = await parseJsonOrThrow(response);
 
     try {
       sessionStorage.setItem(
@@ -87,19 +86,12 @@ export const api = {
       body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to send question: ${response.status}`);
-    }
-
-    return response.json();
+    return parseJsonOrThrow(response);
   },
 
   // 檢查任務狀態
   async getTaskStatus(taskId: string) {
     const response = await apiFetch(API_CONFIG.endpoints.taskStatus(taskId));
-    if (!response.ok) {
-      throw new Error(`Failed to get task status: ${response.status}`);
-    }
-    return response.json();
+    return parseJsonOrThrow(response);
   },
 };

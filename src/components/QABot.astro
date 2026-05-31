@@ -23,6 +23,8 @@
   import analystTemplates from "../storages/analyst.json";
   // @ts-ignore
   import qabotConfig from "../storages/qabot.json";
+  import { getErrorMessage, parseJsonOrThrow } from "../services/core/apiError";
+  import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
   import { thumbnailService } from "../services/thumbnailService";
   class QABot {
     // DOM 元素
@@ -1466,9 +1468,10 @@
     // 添加錯誤消息
     private addErrorMessage(message: string) {
       this.state.isThinking = false;
+      const displayMessage = message.replace(/^❌\s*/, "");
       const messageDiv = this.createMessageStructure(
         "bot",
-        `<p class="error-message">❌ ${this.escapeHtml(message)}</p>`,
+        `<p class="error-message">❌ ${this.escapeHtml(displayMessage)}</p>`,
       );
       this.elements.chatMessages.appendChild(messageDiv);
       this.scrollToBottom();
@@ -1489,6 +1492,7 @@
       const loadingId = this.addLoadingMessage();
 
       try {
+        this.enforceQaRateLimit();
         const response = await this.callQAAPI(userText);
         this.removeMessage(loadingId);
 
@@ -1507,7 +1511,16 @@
       } catch (error) {
         console.error("API調用錯誤:", error);
         this.removeMessage(loadingId);
-        this.addErrorMessage("網絡錯誤，請檢查連接後重試。");
+        this.addErrorMessage(
+          getErrorMessage(error, "網絡錯誤，請檢查連接後重試。"),
+        );
+      }
+    }
+
+    private enforceQaRateLimit() {
+      const limitResult = checkQaRateLimit();
+      if (!limitResult.allowed) {
+        throw new Error(formatQaRateLimitMessage(limitResult));
       }
     }
 
@@ -1548,10 +1561,7 @@
         credentials: "include",
       });
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-
-      const result = await response.json();
+      const result = await parseJsonOrThrow(response);
 
       // 調試日誌：查看 API 回傳
       // console.log('callQAAPI response =>', result);
@@ -1583,10 +1593,7 @@
             credentials: "include",
           },
         );
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-
-        const result = await response.json();
+        const result = await parseJsonOrThrow(response);
 
         // 清除現有對話
         this.elements.chatMessages.innerHTML = "";
@@ -1648,7 +1655,7 @@
         }
       } catch (error) {
         console.error("載入聊天歷史失敗:", error);
-        this.addErrorMessage("❌ 載入聊天歷史失敗，請稍後再試");
+        this.addErrorMessage(`載入聊天歷史失敗：${getErrorMessage(error)}`);
       }
     }
 
@@ -1676,10 +1683,7 @@
             credentials: "include",
           },
         );
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-
-        const result = await response.json();
+        const result = await parseJsonOrThrow(response);
 
         if (result.success && result.history) {
           const sortedHistory = [...result.history].sort((a, b) => {
@@ -1741,7 +1745,7 @@
         }
       } catch (error) {
         console.error("載入更多歷史記錄失敗:", error);
-        this.addErrorMessage("❌ 載入更多記錄失敗，請稍後再試");
+        this.addErrorMessage(`載入更多記錄失敗：${getErrorMessage(error)}`);
       }
     }
 
@@ -2557,6 +2561,7 @@
         });
 
         // 調用 API
+        this.enforceQaRateLimit();
         const result = await this.callQAAPI(payload);
         this.removeMessage(loadingId);
 
@@ -2577,7 +2582,7 @@
         }
       } catch (err) {
         this.removeMessage(loadingId);
-        this.addErrorMessage(`分析失敗：${(err as Error).message}`);
+        this.addErrorMessage(`分析失敗：${getErrorMessage(err)}`);
       } finally {
         this.state.isAnalyzing = false;
         this.updateAnalysisButtonState();

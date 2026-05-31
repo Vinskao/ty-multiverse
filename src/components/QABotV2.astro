@@ -15,6 +15,8 @@ import {} from "astro";
 
 <script>
   import { getApiBaseUrl } from "../scripts/qabotShared";
+  import { getErrorMessage } from "../services/core/apiError";
+  import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
   import { api } from "../utils/api";
   import { QABotBase } from "../utils/qabotBase";
 
@@ -149,6 +151,11 @@ import {} from "astro";
       this.showLoadingMessage();
 
       try {
+        const limitResult = checkQaRateLimit();
+        if (!limitResult.allowed) {
+          throw new Error(formatQaRateLimitMessage(limitResult));
+        }
+
         const payload = {
           question: q,
           model_name: this.modelSel.value,
@@ -181,7 +188,7 @@ import {} from "astro";
       } catch (e) {
         // 隱藏等待UI
         this.hideLoadingMessage();
-        this.showErrorMessage((e as Error).message);
+        this.showErrorMessage(getErrorMessage(e));
       }
     }
 
