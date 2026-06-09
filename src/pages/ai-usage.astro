@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import AiTokenUsageDashboard from "../components/AiTokenUsageDashboard";
+
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+const token = url.searchParams.get('token');
+
+const isLoggedIn = !!username && !!token;
+
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+---
+
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<html>
+  <head></head>
+  <body>
+    <BaseLayout title="AI Token Usage | Wavo Yuropha">
+      <div class="stack gap-20">
+        <main class="wrapper stack gap-8">
+          <Hero title="AI Token Usage" align="start" />
+          <AiTokenUsageDashboard client:load />
+        </main>
+      </div>
+    </BaseLayout>
+  </body>
+</html>
