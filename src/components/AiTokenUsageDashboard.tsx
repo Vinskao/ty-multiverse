@@ -3,9 +3,15 @@ import * as d3 from 'd3';
 import { aiUsageService, type AiTokenUsageSummary, type AiUsageSummaryResponse } from '../services/api/aiUsageService';
 
 const PROVIDER_COLORS: Record<string, string> = {
-  openai: '#10a37f',
+  codex: '#10a37f',
+  claude: '#d97757',
   gemini: '#4285f4',
-  qwen: '#ff6a00',
+};
+
+const PROVIDER_LABELS: Record<string, string> = {
+  codex: 'Codex',
+  claude: 'Claude',
+  gemini: 'Gemini',
 };
 
 function getProviderColor(provider: string): string {
@@ -22,17 +28,134 @@ function formatCost(n: number): string {
   return `$${(n ?? 0).toFixed(4)}`;
 }
 
+const styles = {
+  wrapper: {
+    fontFamily: 'var(--font-body)',
+    color: 'var(--gray-0)',
+  } as React.CSSProperties,
+
+  topBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap' as const,
+    gap: '1rem',
+    marginBottom: '1.25rem',
+  },
+
+  title: {
+    fontSize: 'var(--text-md)',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--accent-light)',
+    margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+
+  kpiRow: {
+    display: 'flex',
+    gap: '0.75rem',
+    flexWrap: 'wrap' as const,
+  },
+
+  kpiCard: {
+    background: 'linear-gradient(135deg, rgba(37,81,135,0.18) 0%, rgba(97,246,234,0.06) 100%)',
+    border: '1px solid rgba(97,246,234,0.18)',
+    borderRadius: '10px',
+    padding: '0.85rem 1.25rem',
+    minWidth: '130px',
+    flex: '1',
+  } as React.CSSProperties,
+
+  kpiLabel: {
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--accent-light)',
+    marginBottom: '0.3rem',
+    opacity: 0.85,
+  },
+
+  kpiValue: {
+    fontSize: '1.6rem',
+    fontWeight: 700,
+    lineHeight: 1,
+    color: 'var(--gray-0)',
+  },
+
+  panel: {
+    background: 'rgba(20,25,37,0.6)',
+    border: '1px solid rgba(97,246,234,0.10)',
+    borderRadius: '10px',
+    padding: '1rem 1.25rem',
+  } as React.CSSProperties,
+
+  panelLabel: {
+    fontSize: '0.72rem',
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--accent-light)',
+    marginBottom: '0.75rem',
+    opacity: 0.7,
+  },
+
+  legendDot: (color: string) => ({
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: color,
+    display: 'inline-block',
+    flexShrink: 0,
+  } as React.CSSProperties),
+
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+    fontSize: '0.82rem',
+  },
+
+  th: {
+    padding: '6px 10px',
+    textAlign: 'left' as const,
+    fontWeight: 600,
+    fontSize: '0.7rem',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--accent-light)',
+    opacity: 0.75,
+    borderBottom: '1px solid rgba(97,246,234,0.12)',
+  },
+
+  td: {
+    padding: '7px 10px',
+    borderBottom: '1px solid rgba(255,255,255,0.04)',
+    color: 'var(--gray-0)',
+  },
+
+  providerBadge: (color: string) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '2px 8px',
+    borderRadius: '20px',
+    fontSize: '0.72rem',
+    fontWeight: 600,
+    background: `${color}22`,
+    border: `1px solid ${color}55`,
+    color: color,
+  } as React.CSSProperties),
+};
+
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{
-      border: '1px solid var(--gray-800, #333)',
-      borderRadius: '8px',
-      padding: '1.5rem',
-      flex: '1',
-      minWidth: '160px',
-    }}>
-      <div style={{ fontSize: '0.8rem', color: 'var(--gray-400, #999)', marginBottom: '0.5rem' }}>{label}</div>
-      <div style={{ fontSize: '1.8rem', fontWeight: 700 }}>{value}</div>
+    <div style={styles.kpiCard}>
+      <div style={styles.kpiLabel}>{label}</div>
+      <div style={styles.kpiValue}>{value}</div>
     </div>
   );
 }
@@ -42,13 +165,12 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
   el.selectAll('*').remove();
 
   const width = svg.clientWidth || 600;
-  const height = 200;
-  const margin = { top: 16, right: 16, bottom: 32, left: 56 };
+  const height = 180;
+  const margin = { top: 12, right: 16, bottom: 28, left: 52 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
 
   const grouped = d3.group(data, (d) => d.aiProvider);
-
   const allDates = [...new Set(data.map((d) => d.period))].sort();
   const xScale = d3.scalePoint<string>().domain(allDates).range([0, innerW]).padding(0.1);
   const yMax = d3.max(data, (d) => d.totalTokens) ?? 1;
@@ -56,12 +178,36 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
 
   const g = el.attr('height', height).append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-  g.append('g').attr('transform', `translate(0,${innerH})`).call(
-    d3.axisBottom(xScale).tickValues(allDates.filter((_, i) => i % Math.ceil(allDates.length / 6) === 0))
-  ).selectAll('text').attr('font-size', 10);
+  // Grid lines
+  g.append('g')
+    .attr('class', 'grid')
+    .call(
+      d3.axisLeft(yScale).ticks(4)
+        .tickSize(-innerW)
+        .tickFormat(() => '')
+    )
+    .call((g) => g.select('.domain').remove())
+    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(97,246,234,0.07)'));
 
-  g.append('g').call(d3.axisLeft(yScale).ticks(4).tickFormat((v) => formatTokens(Number(v))))
-    .selectAll('text').attr('font-size', 10);
+  g.append('g')
+    .attr('transform', `translate(0,${innerH})`)
+    .call(
+      d3.axisBottom(xScale)
+        .tickValues(allDates.filter((_, i) => i % Math.ceil(allDates.length / 6) === 0))
+    )
+    .call((g) => g.select('.domain').attr('stroke', 'rgba(255,255,255,0.1)'))
+    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(255,255,255,0.1)'))
+    .selectAll('text')
+    .attr('font-size', 9)
+    .attr('fill', 'rgba(255,255,255,0.45)');
+
+  g.append('g')
+    .call(d3.axisLeft(yScale).ticks(4).tickFormat((v) => formatTokens(Number(v))))
+    .call((g) => g.select('.domain').remove())
+    .call((g) => g.selectAll('.tick line').remove())
+    .selectAll('text')
+    .attr('font-size', 9)
+    .attr('fill', 'rgba(255,255,255,0.45)');
 
   const lineGen = d3.line<AiTokenUsageSummary>()
     .x((d) => xScale(d.period) ?? 0)
@@ -70,12 +216,38 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
 
   for (const [provider, rows] of grouped) {
     const sorted = [...rows].sort((a, b) => a.period.localeCompare(b.period));
+    const color = getProviderColor(provider);
+
+    // Area fill
+    const areaGen = d3.area<AiTokenUsageSummary>()
+      .x((d) => xScale(d.period) ?? 0)
+      .y0(innerH)
+      .y1((d) => yScale(d.totalTokens))
+      .curve(d3.curveMonotoneX);
+
+    g.append('path')
+      .datum(sorted)
+      .attr('fill', `${color}18`)
+      .attr('d', areaGen);
+
     g.append('path')
       .datum(sorted)
       .attr('fill', 'none')
-      .attr('stroke', getProviderColor(provider))
+      .attr('stroke', color)
       .attr('stroke-width', 2)
       .attr('d', lineGen);
+
+    // Dots
+    g.selectAll(`.dot-${provider}`)
+      .data(sorted)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => xScale(d.period) ?? 0)
+      .attr('cy', (d) => yScale(d.totalTokens))
+      .attr('r', 3)
+      .attr('fill', color)
+      .attr('stroke', '#141925')
+      .attr('stroke-width', 1.5);
   }
 }
 
@@ -86,13 +258,20 @@ export default function AiTokenUsageDashboard() {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      aiUsageService.getSummary(),
-      aiUsageService.getDailySummary(30),
-    ])
-      .then(([s, d]) => { setSummary(s); setDaily(d); })
-      .catch((e) => console.error('AI usage fetch error', e))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    async function loadUsage() {
+      try {
+        const s = await aiUsageService.getSummary();
+        const d = await aiUsageService.getDailySummary(30);
+        if (!cancelled) { setSummary(s); setDaily(d); }
+      } catch (e) {
+        console.error('AI usage fetch error', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    loadUsage();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -116,67 +295,82 @@ export default function AiTokenUsageDashboard() {
   );
 
   if (loading) {
-    return <div style={{ padding: '2rem', color: 'var(--gray-400, #999)' }}>載入中…</div>;
+    return (
+      <div style={{ padding: '1.5rem', color: 'var(--accent-light)', opacity: 0.6, fontSize: '0.85rem', letterSpacing: '0.06em' }}>
+        載入中…
+      </div>
+    );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <KpiCard label="今日 Tokens" value={formatTokens(todayTokens)} />
-        <KpiCard label="本月 Tokens" value={formatTokens(monthTokens)} />
-        <KpiCard label="本月估算費用" value={formatCost(monthCost)} />
-      </div>
-
-      <div style={{ border: '1px solid var(--gray-800, #333)', borderRadius: '8px', padding: '1rem' }}>
-        <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', color: 'var(--gray-400, #999)' }}>近 30 天每日 Token 用量</div>
-        {daily.length === 0
-          ? <div style={{ color: 'var(--gray-400, #999)', fontSize: '0.9rem' }}>尚無資料</div>
-          : <svg ref={svgRef} style={{ width: '100%', display: 'block' }} />
-        }
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-          {Object.entries(PROVIDER_COLORS).map(([p, c]) => (
-            <span key={p} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: c, display: 'inline-block' }} />
-              {p}
-            </span>
-          ))}
+    <div style={styles.wrapper}>
+      {/* Top bar: title + KPIs */}
+      <div style={styles.topBar}>
+        <h2 style={styles.title}>
+          <span style={{ fontSize: '1.1em' }}>⚡</span>
+          AI Token Usage
+        </h2>
+        <div style={styles.kpiRow}>
+          <KpiCard label="Today" value={formatTokens(todayTokens)} />
+          <KpiCard label="This Month" value={formatTokens(monthTokens)} />
+          <KpiCard label="Est. Cost" value={formatCost(monthCost)} />
         </div>
       </div>
 
-      <div style={{ border: '1px solid var(--gray-800, #333)', borderRadius: '8px', padding: '1rem', overflowX: 'auto' }}>
-        <div style={{ fontSize: '0.85rem', marginBottom: '0.75rem', color: 'var(--gray-400, #999)' }}>近 30 天按 Provider / Model 統計</div>
-        {byProvider.size === 0
-          ? <div style={{ color: 'var(--gray-400, #999)', fontSize: '0.9rem' }}>尚無資料</div>
-          : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--gray-800, #333)' }}>
-                  {['Provider', 'Model', 'Calls', 'Tokens', '估算費用 (USD)'].map((h) => (
-                    <th key={h} style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[...byProvider.entries()].flatMap(([provider, models]) =>
-                  [...models.entries()].map(([model, stats]) => (
-                    <tr key={`${provider}-${model}`} style={{ borderBottom: '1px solid var(--gray-900, #222)' }}>
-                      <td style={{ padding: '6px 8px' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: getProviderColor(provider), display: 'inline-block' }} />
-                          {provider}
-                        </span>
-                      </td>
-                      <td style={{ padding: '6px 8px' }}>{model}</td>
-                      <td style={{ padding: '6px 8px' }}>{stats.calls.toLocaleString()}</td>
-                      <td style={{ padding: '6px 8px' }}>{formatTokens(stats.totalTokens)}</td>
-                      <td style={{ padding: '6px 8px' }}>{formatCost(stats.totalCost)}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )
-        }
+      {/* Chart + breakdown row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem', alignItems: 'start' }}>
+        {/* Line chart */}
+        <div style={styles.panel}>
+          <div style={styles.panelLabel}>Daily Token Usage — Last 30 Days</div>
+          {daily.length === 0
+            ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
+            : <svg ref={svgRef} style={{ width: '100%', display: 'block' }} />
+          }
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            {Object.entries(PROVIDER_COLORS).map(([p, c]) => (
+              <span key={p} style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '5px', opacity: 0.8 }}>
+                <span style={styles.legendDot(c)} />
+                {PROVIDER_LABELS[p] ?? p}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Provider breakdown table */}
+        <div style={{ ...styles.panel, minWidth: '280px', overflowX: 'auto' }}>
+          <div style={styles.panelLabel}>Provider / Model</div>
+          {byProvider.size === 0
+            ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
+            : (
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost'].map((h) => (
+                      <th key={h} style={styles.th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...byProvider.entries()].flatMap(([provider, models]) =>
+                    [...models.entries()].map(([model, stats]) => (
+                      <tr key={`${provider}-${model}`}>
+                        <td style={styles.td}>
+                          <span style={styles.providerBadge(getProviderColor(provider))}>
+                            {PROVIDER_LABELS[provider.toLowerCase()] ?? provider}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.7 }}>{model}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const, color: 'var(--accent-light)' }}>{formatTokens(stats.totalTokens)}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const, opacity: 0.7 }}>{formatCost(stats.totalCost)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )
+          }
+        </div>
       </div>
     </div>
   );

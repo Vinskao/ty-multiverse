@@ -11,7 +11,7 @@
   },
   "home": {
     "heroTitle": { "en": "TY's Outerspace", "zh": "TY 的宇宙" },
-    "heroTagline": { "en": "The Future is Now", "zh": "未來就是現在" },
+    "heroTagline": { "en": "The Future is Now", "zh": "Java Backend Engineer | Enterprise Systems | Security Integration | AI/RAG Applications" },
     "visitorCounterPrefix": { "en": "Sequence #", "zh": "序列 #" },
     "visitorCounterSuffix": { "en": ": Identity Synchronized", "zh": "：身份已同步" },
     "githubTitle": { "en": "Github Contributions", "zh": "Github 貢獻度" },

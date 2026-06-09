@@ -240,10 +240,24 @@
 	margin: 2rem auto;
 }
 
+.ai-usage-home-section {
+	width: 100%;
+	max-width: 1200px;
+	margin: 2rem auto 0;
+	padding: 0 1rem;
+	display: grid;
+	gap: 1.25rem;
+	box-sizing: border-box;
+}
+
 @media (min-width: 50em) {
 	.categories-section {
 		border-radius: 1.5rem;
 		padding: 3rem;
+	}
+
+	.ai-usage-home-section {
+		margin-top: 3rem;
 	}
 }
 

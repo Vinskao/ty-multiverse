@@ -14,6 +14,7 @@ import { Icon } from '../components/Icon';
 import Pill from '../components/Pill.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
 import SkillsBubbleChart from '../components/SkillsBubbleChart';
+import AiTokenUsageDashboard from '../components/AiTokenUsageDashboard';
 
 // Page section components
 import ContactCTA from '../components/ContactCTA.astro';
@@ -102,14 +103,14 @@ const skillsCategories = skillsData.categories;
 		</script>
 	}
 	<div class="stack gap-20 lg:gap-48">
-		
+
 		<div class="wrapper stack gap-20 lg:gap-50">
-			
+
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
 					<div class="hero-header">
 						<h1 data-i18n="home.heroTitle">TY's Outerspace</h1>
-						<p data-i18n="home.heroTagline">The Future is Now</p>
+						<p data-i18n="home.heroTagline">Java Backend Engineer | Enterprise Systems | Security Integration | AI/RAG Applications</p>
 						<div class="visitor-counter-box">
 						<p class="visit-counter"><span data-i18n="home.visitorCounterPrefix">Sequence #</span><span id="visit-count">...</span><span data-i18n="home.visitorCounterSuffix">: Identity Synchronized</span></p>
 						</div>
@@ -121,12 +122,16 @@ const skillsCategories = skillsData.categories;
 				</div>
 
 				<div class="hero-side">
+
 					<div class="video-container">
 						<div class="roles">
 							<Pill class="gold"><Icon icon="code" size="1.33em" /> Backend</Pill>
 							<Pill class="gold"><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
 							<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
 							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
+						</div>
+						<div class="ai-usage-home-section">
+							<AiTokenUsageDashboard client:load />
 						</div>
 						<div class="github-graph">
 							<h5 class="section-title" data-i18n="home.githubTitle">Github Contributions</h5>

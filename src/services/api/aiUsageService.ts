@@ -19,26 +19,28 @@ export interface AiUsageSummaryResponse {
 }
 
 class AiUsageService {
+  private readonly baseUrl = config.api?.backendUrl || config.api?.baseUrl || '';
+
   async getSummary(): Promise<AiUsageSummaryResponse> {
     const response = await apiService.makeRequest<AiUsageSummaryResponse>(
-      config.api?.baseUrl || '', '/ai-usage/summary', 'GET', undefined,
-      { serviceKey: SERVICE_KEYS.BACKEND }
+      this.baseUrl, '/ai-usage/summary', 'GET', undefined,
+      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }
 
   async getDailySummary(days = 30): Promise<AiTokenUsageSummary[]> {
     const response = await apiService.makeRequest<AiTokenUsageSummary[]>(
-      config.api?.baseUrl || '', `/ai-usage/daily?days=${days}`, 'GET', undefined,
-      { serviceKey: SERVICE_KEYS.BACKEND }
+      this.baseUrl, `/ai-usage/daily?days=${days}`, 'GET', undefined,
+      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }
 
   async getMonthlySummary(months = 12): Promise<AiTokenUsageSummary[]> {
     const response = await apiService.makeRequest<AiTokenUsageSummary[]>(
-      config.api?.baseUrl || '', `/ai-usage/monthly?months=${months}`, 'GET', undefined,
-      { serviceKey: SERVICE_KEYS.BACKEND }
+      this.baseUrl, `/ai-usage/monthly?months=${months}`, 'GET', undefined,
+      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }

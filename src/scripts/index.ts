@@ -284,8 +284,7 @@ async function fetchLeetCodeStats() {
         // 使用 Maya Sawa 代理 API 来绕过 CORS 限制
         // 生产环境：https://peoplesystem.tatdvsonorth.com/maya-sawa/proxy/leetcode-stats/{username}
         // 本地开发：http://localhost:8000/maya-sawa/proxy/leetcode-stats/{username}
-        const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
-        const response = await fetch(`${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/${username}`);
+        const response = await fetch(`/maya-sawa/proxy/leetcode-stats/${username}`);
         
         // 503：標記服務不可用並靜默隱藏（不顯示錯誤）
         if (response.status === 503) {
@@ -430,7 +429,7 @@ function initIndexPage() {
 
     // 登記各服務的健康檢查端點（idempotent）
     const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
-    serviceAvailabilityManager.register(SERVICE_KEYS.LEETCODE,  `${apiBaseUrl}/maya-sawa/proxy/leetcode-stats/Vinskao`);
+    serviceAvailabilityManager.register(SERVICE_KEYS.LEETCODE,  `/maya-sawa/proxy/leetcode-stats/Vinskao`);
     serviceAvailabilityManager.register(SERVICE_KEYS.BACKEND,   `${config.api.backendUrl || apiBaseUrl + '/tymb'}/actuator/health`);
     serviceAvailabilityManager.register(SERVICE_KEYS.GATEWAY,   `${config.api.gatewayUrl || apiBaseUrl + '/tymg'}/tymg/actuator/health`);
     serviceAvailabilityManager.register(SERVICE_KEYS.MAYA_SAWA, `${config.api.mayaSawaUrl || apiBaseUrl + '/maya-sawa'}/health`);
@@ -439,20 +438,14 @@ function initIndexPage() {
     const leetcodeSection = document.querySelector('.leetcode-graph') as HTMLElement | null;
     const setLeetcodeVisible = (v: boolean) => { if (leetcodeSection) leetcodeSection.style.display = v ? '' : 'none'; };
 
-    const leetcodeBlocked = serviceAvailabilityManager.isBlocked(SERVICE_KEYS.LEETCODE);
-    if (leetcodeBlocked) {
-        setLeetcodeVisible(false);
-        serviceAvailabilityManager.checkRecovery(SERVICE_KEYS.LEETCODE);
-    }
+    setLeetcodeVisible(true);
 
     // 清除上一次的監聽，避免 View Transitions 重複累積
     if (_leetcodeAvailabilityCleanup) _leetcodeAvailabilityCleanup();
     _leetcodeAvailabilityCleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.LEETCODE, setLeetcodeVisible);
 
-    // 已被標記 blocked 時跳過 fetch，由 checkRecovery 負責嘗試恢復
-    if (!leetcodeBlocked) {
-        fetchLeetCodeStats();
-    }
+    // Always retry on page load so stale local availability state cannot keep this section hidden.
+    fetchLeetCodeStats();
     updateVisitCount();
 }
 
