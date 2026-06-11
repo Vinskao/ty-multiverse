@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { aiUsageService, type AiTokenUsageSummary, type AiUsageSummaryResponse } from '../services/api/aiUsageService';
+import {
+  aiUsageService,
+  type AiTokenUsageOverview,
+  type AiTokenUsageSummary,
+} from '../services/api/aiUsageService';
 
 const PROVIDER_COLORS: Record<string, string> = {
-  codex: '#10a37f',
-  claude: '#d97757',
-  gemini: '#4285f4',
+  codex: '#00D084',    // OpenAI - 亮綠
+  'claude-code': '#FF6B35',    // Claude - 亮橙紅
+  'codex': '#00D084',
+  'claude': '#FF6B35',
+  gemini: '#4F46E5',   // Gemini - 飽和藍
 };
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -28,6 +34,11 @@ function formatCost(n: number): string {
   return `$${(n ?? 0).toFixed(4)}`;
 }
 
+function formatGrowth(value: number | null | undefined): string {
+  if (value == null) return 'N/A';
+  return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+}
+
 const styles = {
   wrapper: {
     fontFamily: 'var(--font-body)',
@@ -48,7 +59,7 @@ const styles = {
     fontWeight: 700,
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
-    color: 'var(--accent-light)',
+    color: '#61F6EA',
     margin: 0,
     display: 'flex',
     alignItems: 'center',
@@ -62,12 +73,13 @@ const styles = {
   },
 
   kpiCard: {
-    background: 'linear-gradient(135deg, rgba(37,81,135,0.18) 0%, rgba(97,246,234,0.06) 100%)',
-    border: '1px solid rgba(97,246,234,0.18)',
-    borderRadius: '10px',
-    padding: '0.85rem 1.25rem',
-    minWidth: '130px',
+    background: 'linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(79,70,229,0.12) 100%)',
+    border: '2px solid rgba(79,70,229,0.6)',
+    borderRadius: '12px',
+    padding: '1rem 1.5rem',
+    minWidth: '140px',
     flex: '1',
+    boxShadow: '0 4px 16px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
   kpiLabel: {
@@ -75,23 +87,25 @@ const styles = {
     fontWeight: 600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    color: 'var(--accent-light)',
-    marginBottom: '0.3rem',
-    opacity: 0.85,
+    color: '#61F6EA',
+    marginBottom: '0.5rem',
+    opacity: 1,
   },
 
   kpiValue: {
-    fontSize: '1.6rem',
+    fontSize: '1.8rem',
     fontWeight: 700,
     lineHeight: 1,
-    color: 'var(--gray-0)',
+    color: '#FFFFFF',
+    letterSpacing: '-0.02em',
   },
 
   panel: {
-    background: 'rgba(20,25,37,0.6)',
-    border: '1px solid rgba(97,246,234,0.10)',
-    borderRadius: '10px',
-    padding: '1rem 1.25rem',
+    background: 'rgba(20,25,37,0.85)',
+    border: '1.5px solid rgba(79,70,229,0.5)',
+    borderRadius: '12px',
+    padding: '1.25rem 1.5rem',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
   panelLabel: {
@@ -99,9 +113,9 @@ const styles = {
     fontWeight: 600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    color: 'var(--accent-light)',
+    color: '#61F6EA',
     marginBottom: '0.75rem',
-    opacity: 0.7,
+    opacity: 1,
   },
 
   legendDot: (color: string) => ({
@@ -126,27 +140,28 @@ const styles = {
     fontSize: '0.7rem',
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
-    color: 'var(--accent-light)',
-    opacity: 0.75,
-    borderBottom: '1px solid rgba(97,246,234,0.12)',
+    color: '#61F6EA',
+    opacity: 1,
+    borderBottom: '2px solid rgba(79,70,229,0.5)',
   },
 
   td: {
     padding: '7px 10px',
     borderBottom: '1px solid rgba(255,255,255,0.04)',
-    color: 'var(--gray-0)',
+    color: '#E0E0E0',
+    fontSize: '0.9rem',
   },
 
   providerBadge: (color: string) => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '2px 8px',
+    padding: '4px 10px',
     borderRadius: '20px',
     fontSize: '0.72rem',
     fontWeight: 600,
-    background: `${color}22`,
-    border: `1px solid ${color}55`,
+    background: `${color}20`,
+    border: `1.5px solid ${color}`,
     color: color,
   } as React.CSSProperties),
 };
@@ -187,7 +202,7 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
         .tickFormat(() => '')
     )
     .call((g) => g.select('.domain').remove())
-    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(97,246,234,0.07)'));
+    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(79,70,229,0.15)'));
 
   g.append('g')
     .attr('transform', `translate(0,${innerH})`)
@@ -252,7 +267,7 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
 }
 
 export default function AiTokenUsageDashboard() {
-  const [summary, setSummary] = useState<AiUsageSummaryResponse | null>(null);
+  const [overview, setOverview] = useState<AiTokenUsageOverview | null>(null);
   const [daily, setDaily] = useState<AiTokenUsageSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -261,9 +276,14 @@ export default function AiTokenUsageDashboard() {
     let cancelled = false;
     async function loadUsage() {
       try {
-        const s = await aiUsageService.getSummary();
-        const d = await aiUsageService.getDailySummary(30);
-        if (!cancelled) { setSummary(s); setDaily(d); }
+        const [o, d] = await Promise.all([
+          aiUsageService.getOverview(),
+          aiUsageService.getDailySummary(30),
+        ]);
+        if (!cancelled) {
+          setOverview(o);
+          setDaily(d);
+        }
       } catch (e) {
         console.error('AI usage fetch error', e);
       } finally {
@@ -274,14 +294,27 @@ export default function AiTokenUsageDashboard() {
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (!svgRef.current || daily.length === 0) return;
-    drawLineChart(svgRef.current, daily);
-  }, [daily]);
+  const chartDaily = Array.from(
+    d3.rollup(
+      daily,
+      (rows) => ({
+        ...rows[0],
+        modelName: 'all',
+        totalInputTokens: d3.sum(rows, (r) => r.totalInputTokens),
+        totalOutputTokens: d3.sum(rows, (r) => r.totalOutputTokens),
+        totalTokens: d3.sum(rows, (r) => r.totalTokens),
+        totalEstimatedCostUsd: d3.sum(rows, (r) => r.totalEstimatedCostUsd),
+        callCount: d3.sum(rows, (r) => r.callCount),
+      }),
+      (r) => r.period,
+      (r) => r.aiProvider,
+    ).values()
+  ).flatMap((providers) => Array.from(providers.values()));
 
-  const todayTokens = summary?.today.reduce((acc, r) => acc + (r.totalTokens ?? 0), 0) ?? 0;
-  const monthTokens = summary?.thisMonth.reduce((acc, r) => acc + (r.totalTokens ?? 0), 0) ?? 0;
-  const monthCost = summary?.thisMonth.reduce((acc, r) => acc + (r.totalEstimatedCostUsd ?? 0), 0) ?? 0;
+  useEffect(() => {
+    if (!svgRef.current || chartDaily.length === 0) return;
+    drawLineChart(svgRef.current, chartDaily);
+  }, [daily]);
 
   const byProvider = d3.rollup(
     daily,
@@ -307,15 +340,26 @@ export default function AiTokenUsageDashboard() {
       {/* Top bar: title + KPIs */}
       <div style={styles.topBar}>
         <h2 style={styles.title}>
-          <span style={{ fontSize: '1.1em' }}>⚡</span>
+          <span style={{ fontSize: '1.1em' }}></span>
           AI Token Usage
         </h2>
         <div style={styles.kpiRow}>
-          <KpiCard label="Today" value={formatTokens(todayTokens)} />
-          <KpiCard label="This Month" value={formatTokens(monthTokens)} />
-          <KpiCard label="Est. Cost" value={formatCost(monthCost)} />
+          <KpiCard label="本月用量" value={formatTokens(overview?.thisMonth ?? 0)} />
+          <KpiCard label="上月用量" value={formatTokens(overview?.lastMonth ?? 0)} />
+          <KpiCard label="本年用量" value={formatTokens(overview?.thisYear ?? 0)} />
+          <KpiCard label="可觀測總用量" value={formatTokens(overview?.observableTotal ?? 0)} />
+          <KpiCard label="日均" value={formatTokens(overview?.dailyAverage ?? 0)} />
+          <KpiCard label="月均" value={formatTokens(overview?.monthlyAverage ?? 0)} />
+          <KpiCard label="年均" value={formatTokens(overview?.yearlyAverage ?? 0)} />
+          <KpiCard label="MoM" value={formatGrowth(overview?.momPercent)} />
+          <KpiCard label="YoY" value={formatGrowth(overview?.yoyPercent)} />
         </div>
       </div>
+      {overview?.dataSince && (
+        <div style={{ fontSize: '0.7rem', opacity: 0.55, margin: '-0.75rem 0 1rem' }}>
+          統計起始：{overview.dataSince} · 時區：{overview.timezone}
+        </div>
+      )}
 
       {/* Chart + breakdown row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem', alignItems: 'start' }}>
@@ -361,8 +405,8 @@ export default function AiTokenUsageDashboard() {
                         </td>
                         <td style={{ ...styles.td, maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.7 }}>{model}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const, color: 'var(--accent-light)' }}>{formatTokens(stats.totalTokens)}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const, opacity: 0.7 }}>{formatCost(stats.totalCost)}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
                       </tr>
                     ))
                   )}

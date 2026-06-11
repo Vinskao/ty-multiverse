@@ -18,6 +18,20 @@ export interface AiUsageSummaryResponse {
   thisMonth: AiTokenUsageSummary[];
 }
 
+export interface AiTokenUsageOverview {
+  thisMonth: number;
+  lastMonth: number;
+  thisYear: number;
+  observableTotal: number;
+  dailyAverage: number;
+  monthlyAverage: number;
+  yearlyAverage: number;
+  momPercent: number | null;
+  yoyPercent: number | null;
+  dataSince: string | null;
+  timezone: string;
+}
+
 class AiUsageService {
   private readonly baseUrl = config.api?.backendUrl || config.api?.baseUrl || '';
 
@@ -40,6 +54,17 @@ class AiUsageService {
   async getMonthlySummary(months = 12): Promise<AiTokenUsageSummary[]> {
     const response = await apiService.makeRequest<AiTokenUsageSummary[]>(
       this.baseUrl, `/ai-usage/monthly?months=${months}`, 'GET', undefined,
+      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
+    );
+    return response.data;
+  }
+
+  async getOverview(timezone = 'Asia/Taipei'): Promise<AiTokenUsageOverview> {
+    const response = await apiService.makeRequest<AiTokenUsageOverview>(
+      this.baseUrl,
+      `/ai-usage/overview?timezone=${encodeURIComponent(timezone)}`,
+      'GET',
+      undefined,
       { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
