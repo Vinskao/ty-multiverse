@@ -33,6 +33,12 @@ function formatCost(n: number): string {
   return `$${(n ?? 0).toFixed(4)}`;
 }
 
+function formatTokenEfficiency(inputTokens: number, outputTokens: number, cacheCreationTokens: number): string {
+  const effectiveTokens = inputTokens + outputTokens + cacheCreationTokens;
+  if (effectiveTokens <= 0) return 'N/A';
+  return `${((outputTokens / effectiveTokens) * 100).toFixed(1)}%`;
+}
+
 function formatGrowth(value: number | null | undefined): string {
   if (value == null) return 'N/A';
   return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
@@ -497,6 +503,8 @@ export default function AiTokenUsageDashboard() {
         modelName: 'all',
         totalInputTokens: d3.sum(rows, (r) => r.totalInputTokens),
         totalOutputTokens: d3.sum(rows, (r) => r.totalOutputTokens),
+        totalCacheCreationInputTokens: d3.sum(rows, (r) => r.totalCacheCreationInputTokens ?? 0),
+        totalCacheReadInputTokens: d3.sum(rows, (r) => r.totalCacheReadInputTokens ?? 0),
         totalTokens: d3.sum(rows, (r) => r.totalTokens),
         totalEstimatedCostUsd: d3.sum(rows, (r) => r.totalEstimatedCostUsd),
         callCount: d3.sum(rows, (r) => r.callCount),
@@ -546,6 +554,10 @@ export default function AiTokenUsageDashboard() {
   const byProvider = d3.rollup(
     weeklyTrendDaily,
     (rows) => ({
+      totalInputTokens: d3.sum(rows, (r) => r.totalInputTokens),
+      totalOutputTokens: d3.sum(rows, (r) => r.totalOutputTokens),
+      totalCacheCreationInputTokens: d3.sum(rows, (r) => r.totalCacheCreationInputTokens ?? 0),
+      totalCacheReadInputTokens: d3.sum(rows, (r) => r.totalCacheReadInputTokens ?? 0),
       totalTokens: d3.sum(rows, (r) => r.totalTokens),
       totalCost: d3.sum(rows, (r) => r.totalEstimatedCostUsd),
       calls: d3.sum(rows, (r) => r.callCount),
@@ -644,7 +656,7 @@ export default function AiTokenUsageDashboard() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost'].map((h) => (
+                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost', 'Token Eff.'].map((h) => (
                       <th key={h} style={styles.th}>{h}</th>
                     ))}
                   </tr>
@@ -662,6 +674,13 @@ export default function AiTokenUsageDashboard() {
                         <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
+                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#C4B5FD', fontWeight: 600 }}>
+                          {formatTokenEfficiency(
+                            stats.totalInputTokens,
+                            stats.totalOutputTokens,
+                            stats.totalCacheCreationInputTokens,
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}

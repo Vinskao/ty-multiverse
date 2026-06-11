@@ -8,6 +8,8 @@ export interface AiTokenUsageSummary {
   modelName: string;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCacheCreationInputTokens: number;
+  totalCacheReadInputTokens: number;
   totalTokens: number;
   totalEstimatedCostUsd: number;
   callCount: number;
