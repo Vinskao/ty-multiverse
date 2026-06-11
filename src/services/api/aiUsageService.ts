@@ -26,6 +26,7 @@ export interface AiTokenUsageOverview {
   dailyAverage: number;
   monthlyAverage: number;
   yearlyAverage: number;
+  wowPercent: number | null;
   momPercent: number | null;
   yoyPercent: number | null;
   dataSince: string | null;
