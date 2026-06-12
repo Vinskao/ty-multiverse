@@ -6,6 +6,7 @@ import { config } from '../services/core/config';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
+let _portfolioTimer: number | null = null;
 
 // 定義提示文字（全域常量）
 const shadeDescriptions: Record<string, string> = {
@@ -391,9 +392,11 @@ interface MarketUsage {
 
 interface PortfolioPosition {
     code: string;
+    name?: string;
     productType: string;
     direction: string;
     quantity: number;
+    ydQuantity: number;
     averagePrice: number;
     lastPrice: number;
     pnl: number;
@@ -409,6 +412,9 @@ interface Portfolio {
     balanceDate: string;
     totalAssetsEstimated: number | null;
     totalPositionExposure: number;
+    totalPnl: number;
+    positionCount: number;
+    cashPercentage: number;
     positions: PortfolioPosition[];
     fetchedAt: string;
     source: string;
@@ -420,10 +426,62 @@ const QFF_QUOTE_CACHE_KEY = 'market:qff-quote';
 const MARKET_USAGE_CACHE_KEY = 'market:usage';
 const PORTFOLIO_CACHE_KEY = 'market:portfolio';
 
+// Usage refreshes server-side every ~10 min; treat data older than this as stale.
+const MARKET_USAGE_STALE_MS = 30 * 60 * 1000;
+
+/**
+ * Returns true only when `fetchedAt` is missing/invalid or older than maxAgeMs.
+ * Used so a reachable-but-unauthorised (HTTP 401) request that falls back to a
+ * recent cached snapshot is NOT mislabelled "Offline" — only genuinely old or
+ * absent data is. */
+function isDataStale(fetchedAt: string | undefined, maxAgeMs: number): boolean {
+    if (!fetchedAt) return true;
+    const ts = new Date(fetchedAt).getTime();
+    if (!Number.isFinite(ts)) return true;
+    return Date.now() - ts > maxAgeMs;
+}
+const LEGACY_STOCK_NAMES: Record<string, string> = {
+    '1785': '光洋科',
+    '2313': '華通',
+    '2327': '國巨*',
+    '2344': '華邦電',
+    '2368': '金像電',
+    '2375': '凱美',
+    '2408': '南亞科',
+    '2472': '立隆電',
+    '2478': '大毅',
+    '2492': '華新科',
+    '3008': '大立光',
+    '3026': '禾伸堂',
+    '3044': '健鼎',
+    '3081': '聯亞',
+    '3357': '臺慶科',
+    '6173': '信昌電',
+    '6213': '聯茂',
+    '6274': '台燿',
+    '6285': '啟碁',
+    '6531': '愛普*',
+};
+
 function readCachedMarketData<T>(key: string): T | null {
     try {
         const raw = window.localStorage.getItem(key);
-        return raw ? JSON.parse(raw) as T : null;
+        if (!raw) return null;
+        const value = JSON.parse(raw) as T;
+        if (key === PORTFOLIO_CACHE_KEY) {
+            const portfolio = value as Portfolio;
+            let migrated = false;
+            portfolio.positions?.forEach((position) => {
+                if (!position.name && LEGACY_STOCK_NAMES[position.code]) {
+                    position.name = LEGACY_STOCK_NAMES[position.code];
+                    migrated = true;
+                }
+            });
+            if (migrated) {
+                window.localStorage.setItem(key, JSON.stringify(portfolio));
+            }
+        }
+        return value;
     } catch (error) {
         console.warn(`Failed to read cached market data for ${key}:`, error);
         return null;
@@ -436,6 +494,12 @@ function writeCachedMarketData<T>(key: string, value: T) {
     } catch (error) {
         console.warn(`Failed to cache market data for ${key}:`, error);
     }
+}
+
+function marketAuthHeaders(): HeadersInit {
+    const token = window.localStorage.getItem('token')
+        || window.localStorage.getItem('accessToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 function renderTxfQuote(quote: TxfQuote, offline = false) {
@@ -510,7 +574,7 @@ function renderMarketUsage(usage: MarketUsage, offline = false) {
     setText('market-usage-remaining', `${usage.remainingMb.toFixed(1)} MB`);
     setText('market-usage-connections', usage.connections.toString());
     setText('market-usage-updated', new Date(usage.fetchedAt).toLocaleTimeString());
-    setText('market-usage-source', usage.source);
+    // source intentionally hidden
     setText('market-usage-status', offline ? 'Offline' : '10m');
 
     const progress = document.getElementById('market-usage-progress-bar');
@@ -522,12 +586,11 @@ function renderMarketUsage(usage: MarketUsage, offline = false) {
 
 function renderPortfolio(portfolio: Portfolio, offline = false) {
     const section = document.getElementById('portfolio-section');
-    const positionsContainer = document.getElementById('portfolio-positions');
-    if (!section || !positionsContainer) return;
+    if (!section) return;
 
     const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     section.classList.toggle('is-offline', offline);
-    document.getElementById('portfolio-status')!.textContent = offline ? 'Offline' : '10m';
+    document.getElementById('portfolio-status')!.textContent = offline ? 'Offline' : '1h';
     document.getElementById('portfolio-cash')!.textContent = portfolio.cashBalance === null
         ? 'Unavailable'
         : currency(portfolio.cashBalance);
@@ -535,28 +598,73 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
         ? currency(portfolio.totalPositionExposure)
         : currency(portfolio.totalAssetsEstimated);
     document.getElementById('portfolio-updated')!.textContent = `${new Date(portfolio.fetchedAt).toLocaleString()} · ${portfolio.valuationNote}`;
+    const totalPnl = portfolio.totalPnl ?? portfolio.positions.reduce((sum, position) => sum + position.pnl, 0);
+    document.getElementById('portfolio-pnl')!.textContent = currency(totalPnl);
+    document.getElementById('portfolio-pnl')!.className = totalPnl >= 0 ? 'up' : 'down';
+    renderPortfolioAllocation(portfolio);
+}
 
-    if (portfolio.positions.length === 0) {
-        const unavailable = portfolio.accountErrors && Object.keys(portfolio.accountErrors).length > 0;
-        positionsContainer.innerHTML = `<p class="market-updated">${unavailable ? 'Position account unavailable' : 'No open positions'}</p>`;
-        return;
-    }
+function renderPortfolioAllocation(portfolio: Portfolio) {
+    const chart = document.getElementById('portfolio-allocation-chart');
+    const svg = document.getElementById('portfolio-donut-svg');
+    const tooltip = document.getElementById('portfolio-tooltip');
+    const count = document.getElementById('portfolio-position-count');
+    if (!chart || !svg || !tooltip || !count) return;
 
-    positionsContainer.innerHTML = portfolio.positions.map((position) => `
-        <article class="portfolio-position">
-            <div>
-                <strong>${position.code}</strong>
-                <span>${position.productType} · ${position.direction} · ${position.quantity}</span>
-            </div>
-            <div class="portfolio-position-value">
-                <strong>${position.assetPercentage.toFixed(2)}%</strong>
-                <span>${currency(position.marketValue)}</span>
-            </div>
-            <div class="portfolio-position-pnl ${position.pnl >= 0 ? 'up' : 'down'}">
-                P/L ${position.pnl >= 0 ? '+' : ''}${currency(position.pnl)}
-            </div>
-        </article>
-    `).join('');
+    const palette = ['#61f6ea', '#d8a43b', '#ef5350', '#7dd3fc', '#a3e635', '#fb923c', '#c084fc', '#f472b6', '#818cf8', '#2dd4bf'];
+    const total = portfolio.totalAssetsEstimated || portfolio.totalPositionExposure;
+    const slices = [
+        ...(portfolio.cashBalance && portfolio.cashBalance > 0
+            ? [{ code: 'Cash', value: portfolio.cashBalance, position: null }]
+            : []),
+        ...portfolio.positions.map((position) => ({
+            code: position.code,
+            value: position.marketValue,
+            position,
+        })),
+    ].filter((slice) => slice.value > 0).sort((a, b) => b.value - a.value);
+
+    count.textContent = String(portfolio.positionCount ?? portfolio.positions.length);
+    chart.setAttribute('aria-label', `${portfolio.positionCount ?? portfolio.positions.length} stock positions`);
+    svg.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
+    let cursor = 0;
+    const circumference = 2 * Math.PI * 46;
+    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+    const showTooltip = (slice: typeof slices[number], percentage: number) => {
+        const position = slice.position;
+        tooltip.innerHTML = position
+            ? `<strong>${position.name || position.code}</strong>
+               <small>${position.code} · ${percentage.toFixed(2)}%</small>
+               <span>${position.quantity} shares · YD ${position.ydQuantity ?? 0}</span>
+               <span>Cost ${position.averagePrice.toLocaleString()} · Last ${position.lastPrice.toLocaleString()}</span>
+               <span>Value ${currency(position.marketValue)}</span>
+               <b class="${position.pnl >= 0 ? 'up' : 'down'}">P/L ${position.pnl >= 0 ? '+' : ''}${currency(position.pnl)}</b>`
+            : `<strong>Cash · ${percentage.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
+        tooltip.classList.add('is-visible');
+    };
+
+    slices.forEach((slice, index) => {
+        const percentage = total > 0 ? (slice.value / total) * 100 : 0;
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'portfolio-donut-slice');
+        circle.setAttribute('cx', '60');
+        circle.setAttribute('cy', '60');
+        circle.setAttribute('r', '46');
+        circle.setAttribute('stroke', palette[index % palette.length]);
+        circle.setAttribute('stroke-dasharray', `${circumference * percentage / 100} ${circumference}`);
+        circle.setAttribute('stroke-dashoffset', `${-circumference * cursor / 100}`);
+        circle.setAttribute('tabindex', '0');
+        circle.setAttribute('role', 'button');
+        circle.setAttribute('aria-label', `${slice.code}, ${percentage.toFixed(2)} percent`);
+        circle.addEventListener('pointerenter', () => showTooltip(slice, percentage));
+        circle.addEventListener('focus', () => showTooltip(slice, percentage));
+        circle.addEventListener('click', () => showTooltip(slice, percentage));
+        circle.addEventListener('pointerleave', () => tooltip.classList.remove('is-visible'));
+        circle.addEventListener('blur', () => tooltip.classList.remove('is-visible'));
+        svg.appendChild(circle);
+        cursor += percentage;
+    });
 }
 
 async function fetchTxfQuote() {
@@ -599,7 +707,9 @@ async function fetchMarketUsage() {
     const cachedUsage = readCachedMarketData<MarketUsage>(MARKET_USAGE_CACHE_KEY);
     const showOffline = () => {
         if (cachedUsage) {
-            renderMarketUsage(cachedUsage, true);
+            // The endpoint is reachable but this request failed (e.g. 401 when not
+            // signed in). Only flag offline if the cached snapshot is actually stale.
+            renderMarketUsage(cachedUsage, isDataStale(cachedUsage.fetchedAt, MARKET_USAGE_STALE_MS));
         } else {
             section.classList.add('is-offline');
             const status = document.getElementById('market-usage-status');
@@ -608,7 +718,9 @@ async function fetchMarketUsage() {
     };
 
     try {
-        const response = await fetch('/maya-sawa/market/usage');
+        const response = await fetch('/maya-sawa/market/usage', {
+            headers: marketAuthHeaders(),
+        });
         if (!response.ok) {
             showOffline();
             return;
@@ -645,8 +757,19 @@ async function fetchQffQuote() {
 async function fetchPortfolio() {
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
-        const response = await fetch('/maya-sawa/market/portfolio');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const response = await fetch('/maya-sawa/market/portfolio', {
+            headers: marketAuthHeaders(),
+        });
+        if (!response.ok) {
+            let detail = '';
+            try {
+                const body = await response.json();
+                detail = body?.error?.message || body?.detail?.message || body?.detail || '';
+            } catch {
+                // Keep the HTTP status when the response body is not JSON.
+            }
+            throw new Error(`HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
+        }
         const portfolio: Portfolio = await response.json();
         writeCachedMarketData(PORTFOLIO_CACHE_KEY, portfolio);
         renderPortfolio(portfolio);
@@ -657,6 +780,11 @@ async function fetchPortfolio() {
             document.getElementById('portfolio-section')?.classList.add('is-offline');
             const status = document.getElementById('portfolio-status');
             if (status) status.textContent = 'Offline';
+            const updated = document.getElementById('portfolio-updated');
+            if (updated) {
+                const message = error instanceof Error ? error.message : 'Portfolio unavailable';
+                updated.textContent = `${message} · Sign in with manage-users access`;
+            }
         }
     }
 }
@@ -753,8 +881,9 @@ function initIndexPage() {
         fetchTxfQuote();
         fetchQffQuote();
         fetchMarketUsage();
-        fetchPortfolio();
     }, 600_000);
+    if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
+    _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
     updateVisitCount();
 }
 

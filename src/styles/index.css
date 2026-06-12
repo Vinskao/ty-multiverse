@@ -166,6 +166,7 @@
 	gap: 1rem;
 	padding: 1.25rem;
 	overflow: hidden;
+	container-type: inline-size;
 	border: 1px solid color-mix(in srgb, #d8a43b 45%, transparent);
 	border-radius: 1rem;
 	background:
@@ -221,9 +222,16 @@
 .market-metrics {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.6rem;
 	margin: 0;
+}
+
+/* Expand to 4 columns only when the card itself is wide enough to avoid clipping */
+@container (min-width: 21rem) {
+	.market-metrics {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
 }
 
 .market-metrics div {
@@ -235,13 +243,14 @@
 	color: var(--gray-400);
 	font-size: 0.7rem;
 	text-transform: uppercase;
+	overflow-wrap: anywhere;
 }
 
 .market-metrics dd {
 	margin: 0.2rem 0 0;
 	font-weight: 700;
 	font-size: clamp(0.75rem, 2cqi, 1rem);
-	white-space: nowrap;
+	overflow-wrap: anywhere;
 }
 
 .market-usage-section {
@@ -257,6 +266,7 @@
 	border: 1px solid color-mix(in srgb, #61f6ea 35%, transparent);
 	border-radius: 1rem;
 	overflow: hidden;
+	container-type: inline-size;
 	background:
 		linear-gradient(135deg, color-mix(in srgb, #61f6ea 10%, transparent), transparent 60%),
 		var(--gradient-subtle);
@@ -304,7 +314,7 @@
 
 .portfolio-summary {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0.75rem;
 }
 
@@ -326,43 +336,141 @@
 	font-size: clamp(0.9rem, 2cqi, 1.25rem);
 }
 
-.portfolio-positions {
-	display: grid;
-	gap: 0.5rem;
-}
-
-.portfolio-position {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
-	gap: 0.35rem 0.75rem;
-	padding: 0.7rem 0;
-	border-top: 1px solid var(--gray-800);
-}
-
-.portfolio-position > div:first-child,
-.portfolio-position-value {
-	display: grid;
-}
-
-.portfolio-position-value {
-	text-align: right;
-}
-
-.portfolio-position-pnl {
-	grid-column: 1 / -1;
-	font-size: 0.75rem;
-	font-weight: 700;
-}
-
-.portfolio-position-pnl.up {
+.portfolio-summary strong.up {
 	color: #ef5350;
 }
 
-.portfolio-position-pnl.down {
+.portfolio-summary strong.down {
 	color: #26a69a;
 }
 
+.portfolio-allocation {
+	display: grid;
+	justify-items: center;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 0;
+}
+
+.portfolio-donut {
+	position: relative;
+	width: min(18rem, 72vw);
+	aspect-ratio: 1;
+}
+
+.portfolio-donut svg {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	transform: rotate(-90deg);
+}
+
+.portfolio-donut-track,
+.portfolio-donut-slice {
+	fill: none;
+	stroke-width: 15;
+}
+
+.portfolio-donut-track {
+	stroke: var(--gray-800);
+}
+
+.portfolio-donut-slice {
+	cursor: pointer;
+	transition: stroke-width 0.18s ease, filter 0.18s ease;
+}
+
+.portfolio-donut-slice:hover,
+.portfolio-donut-slice:focus {
+	stroke-width: 20;
+	filter: brightness(1.2);
+	outline: none;
+}
+
+.portfolio-donut-center {
+	position: absolute;
+	inset: 28%;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--gray-999);
+	color: var(--gray-300);
+	text-align: center;
+	pointer-events: none;
+}
+
+.portfolio-donut-center strong {
+	font-size: 1.8rem;
+	line-height: 1;
+}
+
+.portfolio-donut-center span {
+	font-size: 0.66rem;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.portfolio-tooltip {
+	position: absolute;
+	z-index: 2;
+	left: 50%;
+	bottom: 0.25rem;
+	display: none;
+	min-width: 13rem;
+	padding: 0.75rem;
+	border: 1px solid color-mix(in srgb, #61f6ea 45%, transparent);
+	border-radius: 0.75rem;
+	background: color-mix(in srgb, var(--gray-999) 94%, transparent);
+	box-shadow: var(--shadow-md);
+	transform: translate(-50%, 105%);
+	backdrop-filter: blur(12px);
+}
+
+.portfolio-tooltip.is-visible {
+	display: grid;
+	gap: 0.18rem;
+}
+
+.portfolio-tooltip span {
+	color: var(--gray-300);
+	font-size: 0.72rem;
+}
+
+.portfolio-tooltip small {
+	color: var(--gray-400);
+	font-size: 0.66rem;
+	letter-spacing: 0.08em;
+}
+
+.portfolio-tooltip b {
+	font-size: 0.75rem;
+}
+
+.portfolio-tooltip .up {
+	color: #ef5350;
+}
+
+.portfolio-tooltip .down {
+	color: #26a69a;
+}
+
+.portfolio-chart-hint {
+	margin: 0 0 2.5rem;
+	color: var(--gray-400);
+	font-size: 0.72rem;
+	text-align: center;
+}
+
 @media (max-width: 768px) {
+	.portfolio-summary {
+		grid-template-columns: 1fr;
+	}
+
+	.portfolio-allocation {
+		justify-items: center;
+	}
+
 	.video-container {
 		padding: 0 1rem;
 	}
@@ -737,7 +845,7 @@
 .categories {
 	width: 100%;
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
 	gap: 1rem;
 	padding: 1rem;
 	box-sizing: border-box;

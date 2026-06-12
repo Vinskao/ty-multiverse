@@ -5,6 +5,7 @@ pipeline {
                 apiVersion: v1
                 kind: Pod
                 spec:
+                  activeDeadlineSeconds: 7200
                   serviceAccountName: jenkins-admin
                   containers:
                   - name: node
@@ -29,11 +30,11 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "100m"
-                        memory: "1024Mi"
+                        cpu: "10m"
+                        memory: "256Mi"
                       limits:
-                        cpu: "500m"
-                        memory: "2048Mi"
+                        cpu: "250m"
+                        memory: "1024Mi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""

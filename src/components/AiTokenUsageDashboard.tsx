@@ -129,7 +129,9 @@ const styles = {
     background: 'linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(79,70,229,0.12) 100%)',
     border: '2px solid rgba(79,70,229,0.6)',
     borderRadius: '12px',
-    padding: '1rem 1.5rem',
+    padding: '1rem clamp(0.75rem, 3vw, 1.5rem)',
+    minWidth: 0,
+    overflow: 'hidden',
     boxShadow: '0 4px 16px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
@@ -144,11 +146,13 @@ const styles = {
   },
 
   kpiValue: {
-    fontSize: '1.8rem',
+    fontSize: 'clamp(1rem, 4.5vw, 1.8rem)',
     fontWeight: 700,
     lineHeight: 1,
     color: '#FFFFFF',
     letterSpacing: '-0.02em',
+    minWidth: 0,
+    overflowWrap: 'anywhere' as const,
   },
 
   panel: {
@@ -180,16 +184,17 @@ const styles = {
 
   table: {
     width: '100%',
+    tableLayout: 'fixed' as const,
     borderCollapse: 'collapse' as const,
     fontSize: '0.7rem',
   },
 
   th: {
-    padding: '4px 6px',
+    padding: '4px 5px',
     textAlign: 'left' as const,
     fontWeight: 600,
-    fontSize: '0.65rem',
-    letterSpacing: '0.06em',
+    fontSize: '0.6rem',
+    letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
     color: '#61F6EA',
     opacity: 1,
@@ -197,20 +202,26 @@ const styles = {
   },
 
   td: {
-    padding: '4px 6px',
+    padding: '4px 5px',
     borderBottom: '1px solid rgba(255,255,255,0.04)',
     color: '#E0E0E0',
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
   },
+
+  tdNum: {
+    overflowWrap: 'anywhere' as const,
+  } as React.CSSProperties,
 
   providerBadge: (color: string) => ({
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '4px 10px',
+    gap: '4px',
+    padding: '3px 7px',
     borderRadius: '20px',
-    fontSize: '0.72rem',
+    fontSize: '0.62rem',
     fontWeight: 600,
+    lineHeight: 1.2,
+    maxWidth: '100%',
     background: `${color}20`,
     border: `1.5px solid ${color}`,
     color: color,
@@ -592,7 +603,7 @@ export default function AiTokenUsageDashboard() {
       )}
 
       {/* First row: 4 KPI cards */}
-      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 7rem), 1fr))' }}>
         <KpiCard label="本月用量" value={formatTokens(overview?.thisMonth ?? 0)} />
         <KpiCard label="上月用量" value={formatTokens(overview?.lastMonth ?? 0)} />
         <KpiCard label="本年用量" value={formatTokens(overview?.thisYear ?? 0)} />
@@ -600,14 +611,14 @@ export default function AiTokenUsageDashboard() {
       </div>
 
       {/* Second row: 3 KPI cards (averages) */}
-      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 7rem), 1fr))' }}>
         <KpiCard label="日均" value={formatTokens(overview?.dailyAverage ?? 0)} />
         <KpiCard label="月均" value={formatTokens(overview?.monthlyAverage ?? 0)} />
         <KpiCard label="年均" value={formatTokens(overview?.yearlyAverage ?? 0)} />
       </div>
 
       {/* Third row: 3 KPI cards (trailing metrics) */}
-      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 7rem), 1fr))' }}>
         <KpiCard label="Trailing WoW" value={formatGrowth(trailingWow ?? overview?.wowPercent)} />
         <KpiCard label="Trailing MoM" value={formatGrowth(trailingMom ?? overview?.momPercent)} />
         <KpiCard label="Trailing YoY" value={formatGrowth(trailingYoy ?? overview?.yoyPercent)} />
@@ -638,7 +649,7 @@ export default function AiTokenUsageDashboard() {
       </div>
 
       {/* Chart + breakdown row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 2fr)', gap: '0.75rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 13rem), 1fr))', gap: '0.75rem', alignItems: 'start' }}>
         {/* Line chart */}
         <div ref={linePanelRef} style={{ ...styles.panel, minWidth: 0 }}>
           <div style={styles.panelLabel}>Daily Token Usage · {selectedRangeLabel}</div>
@@ -663,6 +674,13 @@ export default function AiTokenUsageDashboard() {
             ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
             : (
               <table style={styles.table}>
+                <colgroup>
+                  <col style={{ width: '23%' }} />
+                  <col style={{ width: '26%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '18.5%' }} />
+                  <col style={{ width: '18.5%' }} />
+                </colgroup>
                 <thead>
                   <tr>
                     {['Provider', 'Model', 'Calls', 'Tokens', 'Cost'].map((h) => (
@@ -681,8 +699,8 @@ export default function AiTokenUsageDashboard() {
                         </td>
                         <td style={{ ...styles.td, whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{model}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
+                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
+                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
                       </tr>
                     ))
                   )}
