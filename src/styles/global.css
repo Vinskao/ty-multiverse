@@ -449,6 +449,7 @@ h5 {
   display: flex;
   flex-wrap: wrap; /* Allow pills to wrap */
   gap: 0.5rem 0.75rem; /* row-gap column-gap */
+  justify-content: center;
 }
 
 /* Styling for individual algorithm pills */

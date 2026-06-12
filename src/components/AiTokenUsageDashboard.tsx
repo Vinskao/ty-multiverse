@@ -120,9 +120,9 @@ const styles = {
   },
 
   kpiRow: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '0.75rem',
-    flexWrap: 'wrap' as const,
   },
 
   kpiCard: {
@@ -130,8 +130,6 @@ const styles = {
     border: '2px solid rgba(79,70,229,0.6)',
     borderRadius: '12px',
     padding: '1rem 1.5rem',
-    minWidth: '140px',
-    flex: '1',
     boxShadow: '0 4px 16px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
@@ -183,14 +181,14 @@ const styles = {
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
-    fontSize: '0.82rem',
+    fontSize: '0.7rem',
   },
 
   th: {
-    padding: '6px 10px',
+    padding: '4px 6px',
     textAlign: 'left' as const,
     fontWeight: 600,
-    fontSize: '0.7rem',
+    fontSize: '0.65rem',
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     color: '#61F6EA',
@@ -199,10 +197,10 @@ const styles = {
   },
 
   td: {
-    padding: '7px 10px',
+    padding: '4px 6px',
     borderBottom: '1px solid rgba(255,255,255,0.04)',
     color: '#E0E0E0',
-    fontSize: '0.9rem',
+    fontSize: '0.75rem',
   },
 
   providerBadge: (color: string) => ({
@@ -585,24 +583,35 @@ export default function AiTokenUsageDashboard() {
           <span style={{ fontSize: '1.1em' }}></span>
           AI Token Usage
         </h2>
-        <div style={styles.kpiRow}>
-          <KpiCard label="本月用量" value={formatTokens(overview?.thisMonth ?? 0)} />
-          <KpiCard label="上月用量" value={formatTokens(overview?.lastMonth ?? 0)} />
-          <KpiCard label="本年用量" value={formatTokens(overview?.thisYear ?? 0)} />
-          <KpiCard label="可觀測總用量" value={formatTokens(overview?.observableTotal ?? 0)} />
-          <KpiCard label="日均" value={formatTokens(overview?.dailyAverage ?? 0)} />
-          <KpiCard label="月均" value={formatTokens(overview?.monthlyAverage ?? 0)} />
-          <KpiCard label="年均" value={formatTokens(overview?.yearlyAverage ?? 0)} />
-          <KpiCard label="Trailing WoW" value={formatGrowth(trailingWow ?? overview?.wowPercent)} />
-          <KpiCard label="Trailing MoM" value={formatGrowth(trailingMom ?? overview?.momPercent)} />
-          <KpiCard label="Trailing YoY" value={formatGrowth(trailingYoy ?? overview?.yoyPercent)} />
-        </div>
       </div>
+
       {overview?.dataSince && (
-        <div style={{ fontSize: '0.7rem', opacity: 0.55, margin: '-0.75rem 0 1rem' }}>
+        <div style={{ fontSize: '0.7rem', opacity: 0.55, margin: '0 0 1rem 0' }}>
           統計起始：{overview.dataSince} · 時區：{overview.timezone}
         </div>
       )}
+
+      {/* First row: 4 KPI cards */}
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <KpiCard label="本月用量" value={formatTokens(overview?.thisMonth ?? 0)} />
+        <KpiCard label="上月用量" value={formatTokens(overview?.lastMonth ?? 0)} />
+        <KpiCard label="本年用量" value={formatTokens(overview?.thisYear ?? 0)} />
+        <KpiCard label="可觀測總用量" value={formatTokens(overview?.observableTotal ?? 0)} />
+      </div>
+
+      {/* Second row: 3 KPI cards (averages) */}
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <KpiCard label="日均" value={formatTokens(overview?.dailyAverage ?? 0)} />
+        <KpiCard label="月均" value={formatTokens(overview?.monthlyAverage ?? 0)} />
+        <KpiCard label="年均" value={formatTokens(overview?.yearlyAverage ?? 0)} />
+      </div>
+
+      {/* Third row: 3 KPI cards (trailing metrics) */}
+      <div style={{ ...styles.kpiRow, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <KpiCard label="Trailing WoW" value={formatGrowth(trailingWow ?? overview?.wowPercent)} />
+        <KpiCard label="Trailing MoM" value={formatGrowth(trailingMom ?? overview?.momPercent)} />
+        <KpiCard label="Trailing YoY" value={formatGrowth(trailingYoy ?? overview?.yoyPercent)} />
+      </div>
 
       <div ref={weeklyPanelRef} style={{ ...styles.panel, marginBottom: '0.75rem' }}>
         <div style={styles.panelLabel}>Weekly Cost Trend</div>
@@ -648,7 +657,7 @@ export default function AiTokenUsageDashboard() {
         </div>
 
         {/* Provider breakdown table */}
-        <div style={{ ...styles.panel, minWidth: 0, overflowX: 'auto' }}>
+        <div style={{ ...styles.panel, minWidth: 0 }}>
           <div style={styles.panelLabel}>Provider / Model · {selectedRangeLabel}</div>
           {byProvider.size === 0
             ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
@@ -656,7 +665,7 @@ export default function AiTokenUsageDashboard() {
               <table style={styles.table}>
                 <thead>
                   <tr>
-                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost', 'Token Eff.'].map((h) => (
+                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost'].map((h) => (
                       <th key={h} style={styles.th}>{h}</th>
                     ))}
                   </tr>
@@ -670,17 +679,10 @@ export default function AiTokenUsageDashboard() {
                             {PROVIDER_LABELS[provider.toLowerCase()] ?? provider}
                           </span>
                         </td>
-                        <td style={{ ...styles.td, minWidth: '170px', maxWidth: '240px', whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{model}</td>
+                        <td style={{ ...styles.td, whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{model}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const, color: '#C4B5FD', fontWeight: 600 }}>
-                          {formatTokenEfficiency(
-                            stats.totalInputTokens,
-                            stats.totalOutputTokens,
-                            stats.totalCacheCreationInputTokens,
-                          )}
-                        </td>
                       </tr>
                     ))
                   )}

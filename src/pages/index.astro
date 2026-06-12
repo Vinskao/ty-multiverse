@@ -119,6 +119,49 @@ const skillsCategories = skillsData.categories;
 						<!-- D3 Bubble Chart showing skill categories and scores -->
 						<SkillsBubbleChart client:load data={bubbleChartData} categoriesData={skillsCategories} />
 					</div>
+
+					<div class="leetcode-graph">
+						<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
+						<div id="leetcode-stats" class="leetcode-container">
+							<div class="leetcode-card">
+								<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
+								<p id="total-solved" data-i18n="home.loading">Loading...</p>
+								<div class="progress-bar">
+									<div id="total-progress"></div>
+								</div>
+							</div>
+							<div class="leetcode-card">
+								<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
+								<p id="easy-solved" data-i18n="home.loading">Loading...</p>
+								<div class="progress-bar">
+									<div id="easy-progress"></div>
+								</div>
+							</div>
+							<div class="leetcode-card">
+								<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
+								<p id="medium-solved" data-i18n="home.loading">Loading...</p>
+								<div class="progress-bar">
+									<div id="medium-progress"></div>
+								</div>
+							</div>
+							<div class="leetcode-card">
+								<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
+								<p id="hard-solved" data-i18n="home.loading">Loading...</p>
+								<div class="progress-bar">
+									<div id="hard-progress"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="algorithms-section">
+						<h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
+						<div class="algorithms-list">
+							{algorithmsUsed.map((algo) => (
+								<span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
+							))}
+						</div>
+					</div>
 				</div>
 
 				<div class="hero-side">
@@ -144,48 +187,6 @@ const skillsCategories = skillsData.categories;
 		
 						</div>
 
-						<div class="leetcode-graph">
-							<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
-							<div id="leetcode-stats" class="leetcode-container">
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
-									<p id="total-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="total-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
-									<p id="easy-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="easy-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
-									<p id="medium-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="medium-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
-									<p id="hard-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="hard-progress"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-                        <div class="algorithms-section">
-                            <h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
-                            <div class="algorithms-list">
-                                {algorithmsUsed.map((algo) => (
-                                    <span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
-                                ))}
-                            </div>
-                        </div>
 					</div>
 				</div>
 

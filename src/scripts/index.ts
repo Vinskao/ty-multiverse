@@ -286,8 +286,8 @@ async function fetchLeetCodeStats() {
         // 本地开发：http://localhost:8000/maya-sawa/proxy/leetcode-stats/{username}
         const response = await fetch(`/maya-sawa/proxy/leetcode-stats/${username}`);
         
-        // 503：標記服務不可用並靜默隱藏（不顯示錯誤）
-        if (response.status === 503) {
+        // Proxy/backend 5xx means the optional local Maya Sawa chain is unavailable.
+        if (response.status >= 500) {
             serviceAvailabilityManager.block(SERVICE_KEYS.LEETCODE);
             return;
         }
