@@ -5,6 +5,7 @@ import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 import { config } from '../services/core/config';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
+let _marketQuoteTimer: number | null = null;
 
 // 定義提示文字（全域常量）
 const shadeDescriptions: Record<string, string> = {
@@ -363,6 +364,303 @@ async function fetchLeetCodeStats() {
     }
 }
 
+interface TxfQuote {
+    symbol: string;
+    deliveryMonth?: string;
+    close: number;
+    open: number;
+    high: number;
+    low: number;
+    change: number;
+    changePercent: number;
+    volume: number;
+    timestamp?: string;
+}
+
+interface MarketUsage {
+    connections: number;
+    bytes: number;
+    limitBytes: number;
+    remainingBytes: number;
+    usedMb: number;
+    limitMb: number;
+    remainingMb: number;
+    fetchedAt: string;
+    source: string;
+}
+
+interface PortfolioPosition {
+    code: string;
+    productType: string;
+    direction: string;
+    quantity: number;
+    averagePrice: number;
+    lastPrice: number;
+    pnl: number;
+    marketValue: number;
+    assetPercentage: number;
+}
+
+interface Portfolio {
+    cashBalance: number | null;
+    balanceAvailable: boolean;
+    balanceError?: string;
+    accountErrors?: Record<string, string>;
+    balanceDate: string;
+    totalAssetsEstimated: number | null;
+    totalPositionExposure: number;
+    positions: PortfolioPosition[];
+    fetchedAt: string;
+    source: string;
+    valuationNote: string;
+}
+
+const TXF_QUOTE_CACHE_KEY = 'market:txf-quote';
+const QFF_QUOTE_CACHE_KEY = 'market:qff-quote';
+const MARKET_USAGE_CACHE_KEY = 'market:usage';
+const PORTFOLIO_CACHE_KEY = 'market:portfolio';
+
+function readCachedMarketData<T>(key: string): T | null {
+    try {
+        const raw = window.localStorage.getItem(key);
+        return raw ? JSON.parse(raw) as T : null;
+    } catch (error) {
+        console.warn(`Failed to read cached market data for ${key}:`, error);
+        return null;
+    }
+}
+
+function writeCachedMarketData<T>(key: string, value: T) {
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.warn(`Failed to cache market data for ${key}:`, error);
+    }
+}
+
+function renderTxfQuote(quote: TxfQuote, offline = false) {
+    const section = document.getElementById('txf-quote-section');
+    if (!section) return;
+
+    const formatNumber = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    section.classList.toggle('is-offline', offline);
+    setText('txf-contract', `${quote.symbol}${quote.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
+    setText('txf-price', formatNumber(quote.close));
+    setText('txf-change', `${quote.change >= 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
+    setText('txf-open', formatNumber(quote.open));
+    setText('txf-high', formatNumber(quote.high));
+    setText('txf-low', formatNumber(quote.low));
+    setText('txf-volume', quote.volume.toLocaleString());
+    setText('txf-market-status', offline ? 'Offline' : '10m');
+    setText(
+        'txf-updated',
+        quote.timestamp
+            ? new Date(quote.timestamp).toLocaleString()
+            : new Date().toLocaleString(),
+    );
+
+    const change = document.getElementById('txf-change');
+    change?.classList.toggle('up', quote.change >= 0);
+    change?.classList.toggle('down', quote.change < 0);
+}
+
+function renderQffQuote(quote: TxfQuote, offline = false) {
+    const section = document.getElementById('qff-quote-section');
+    if (!section) return;
+
+    const formatNumber = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    section.classList.toggle('is-offline', offline);
+    setText('qff-contract', `${quote.symbol}${quote.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
+    setText('qff-price', formatNumber(quote.close));
+    setText('qff-change', `${quote.change >= 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
+    setText('qff-open', formatNumber(quote.open));
+    setText('qff-high', formatNumber(quote.high));
+    setText('qff-low', formatNumber(quote.low));
+    setText('qff-volume', quote.volume.toLocaleString());
+    setText('qff-market-status', offline ? 'Offline' : '10m');
+    setText('qff-updated', quote.timestamp ? new Date(quote.timestamp).toLocaleString() : new Date().toLocaleString());
+
+    const change = document.getElementById('qff-change');
+    change?.classList.toggle('up', quote.change >= 0);
+    change?.classList.toggle('down', quote.change < 0);
+}
+
+function renderMarketUsage(usage: MarketUsage, offline = false) {
+    const section = document.getElementById('market-usage-section');
+    if (!section) return;
+
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    section.classList.toggle('is-offline', offline);
+    setText('market-usage-used', `${usage.usedMb.toFixed(1)} MB`);
+    setText('market-usage-limit', `/ ${usage.limitMb.toFixed(0)} MB`);
+    setText('market-usage-remaining', `${usage.remainingMb.toFixed(1)} MB`);
+    setText('market-usage-connections', usage.connections.toString());
+    setText('market-usage-updated', new Date(usage.fetchedAt).toLocaleTimeString());
+    setText('market-usage-source', usage.source);
+    setText('market-usage-status', offline ? 'Offline' : '10m');
+
+    const progress = document.getElementById('market-usage-progress-bar');
+    if (progress) {
+        const usedRatio = usage.limitBytes > 0 ? Math.min((usage.bytes / usage.limitBytes) * 100, 100) : 0;
+        progress.style.width = `${usedRatio}%`;
+    }
+}
+
+function renderPortfolio(portfolio: Portfolio, offline = false) {
+    const section = document.getElementById('portfolio-section');
+    const positionsContainer = document.getElementById('portfolio-positions');
+    if (!section || !positionsContainer) return;
+
+    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    section.classList.toggle('is-offline', offline);
+    document.getElementById('portfolio-status')!.textContent = offline ? 'Offline' : '10m';
+    document.getElementById('portfolio-cash')!.textContent = portfolio.cashBalance === null
+        ? 'Unavailable'
+        : currency(portfolio.cashBalance);
+    document.getElementById('portfolio-total')!.textContent = portfolio.totalAssetsEstimated === null
+        ? currency(portfolio.totalPositionExposure)
+        : currency(portfolio.totalAssetsEstimated);
+    document.getElementById('portfolio-updated')!.textContent = `${new Date(portfolio.fetchedAt).toLocaleString()} · ${portfolio.valuationNote}`;
+
+    if (portfolio.positions.length === 0) {
+        const unavailable = portfolio.accountErrors && Object.keys(portfolio.accountErrors).length > 0;
+        positionsContainer.innerHTML = `<p class="market-updated">${unavailable ? 'Position account unavailable' : 'No open positions'}</p>`;
+        return;
+    }
+
+    positionsContainer.innerHTML = portfolio.positions.map((position) => `
+        <article class="portfolio-position">
+            <div>
+                <strong>${position.code}</strong>
+                <span>${position.productType} · ${position.direction} · ${position.quantity}</span>
+            </div>
+            <div class="portfolio-position-value">
+                <strong>${position.assetPercentage.toFixed(2)}%</strong>
+                <span>${currency(position.marketValue)}</span>
+            </div>
+            <div class="portfolio-position-pnl ${position.pnl >= 0 ? 'up' : 'down'}">
+                P/L ${position.pnl >= 0 ? '+' : ''}${currency(position.pnl)}
+            </div>
+        </article>
+    `).join('');
+}
+
+async function fetchTxfQuote() {
+    const section = document.getElementById('txf-quote-section');
+    if (!section) return;
+    const cachedQuote = readCachedMarketData<TxfQuote>(TXF_QUOTE_CACHE_KEY);
+    const showOffline = () => {
+        if (cachedQuote) {
+            renderTxfQuote(cachedQuote, true);
+        } else {
+            section.classList.add('is-offline');
+            const status = document.getElementById('txf-market-status');
+            if (status) status.textContent = 'Offline';
+            const updated = document.getElementById('txf-updated');
+            if (updated && updated.textContent === 'Loading...') {
+                updated.textContent = 'Market data temporarily unavailable';
+            }
+        }
+    };
+
+    try {
+        const response = await fetch('/maya-sawa/market/taiex-futures');
+        if (!response.ok) {
+            showOffline();
+            return;
+        }
+
+        const quote: TxfQuote = await response.json();
+        writeCachedMarketData(TXF_QUOTE_CACHE_KEY, quote);
+        renderTxfQuote(quote);
+    } catch (error) {
+        console.error('Error fetching TXF quote:', error);
+        showOffline();
+    }
+}
+
+async function fetchMarketUsage() {
+    const section = document.getElementById('market-usage-section');
+    if (!section) return;
+    const cachedUsage = readCachedMarketData<MarketUsage>(MARKET_USAGE_CACHE_KEY);
+    const showOffline = () => {
+        if (cachedUsage) {
+            renderMarketUsage(cachedUsage, true);
+        } else {
+            section.classList.add('is-offline');
+            const status = document.getElementById('market-usage-status');
+            if (status) status.textContent = 'Offline';
+        }
+    };
+
+    try {
+        const response = await fetch('/maya-sawa/market/usage');
+        if (!response.ok) {
+            showOffline();
+            return;
+        }
+
+        const usage: MarketUsage = await response.json();
+        writeCachedMarketData(MARKET_USAGE_CACHE_KEY, usage);
+        renderMarketUsage(usage);
+    } catch (error) {
+        console.error('Error fetching market usage:', error);
+        showOffline();
+    }
+}
+
+async function fetchQffQuote() {
+    const cachedQuote = readCachedMarketData<TxfQuote>(QFF_QUOTE_CACHE_KEY);
+    try {
+        const response = await fetch('/maya-sawa/market/mini-tsmc-futures');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const quote: TxfQuote = await response.json();
+        writeCachedMarketData(QFF_QUOTE_CACHE_KEY, quote);
+        renderQffQuote(quote);
+    } catch (error) {
+        console.error('Error fetching QFFR1 quote:', error);
+        if (cachedQuote) renderQffQuote(cachedQuote, true);
+        else {
+            document.getElementById('qff-quote-section')?.classList.add('is-offline');
+            const status = document.getElementById('qff-market-status');
+            if (status) status.textContent = 'Offline';
+        }
+    }
+}
+
+async function fetchPortfolio() {
+    const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
+    try {
+        const response = await fetch('/maya-sawa/market/portfolio');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const portfolio: Portfolio = await response.json();
+        writeCachedMarketData(PORTFOLIO_CACHE_KEY, portfolio);
+        renderPortfolio(portfolio);
+    } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        if (cachedPortfolio) renderPortfolio(cachedPortfolio, true);
+        else {
+            document.getElementById('portfolio-section')?.classList.add('is-offline');
+            const status = document.getElementById('portfolio-status');
+            if (status) status.textContent = 'Offline';
+        }
+    }
+}
+
 // Visit Counter Functionality
 async function updateVisitCount() {
     try {
@@ -446,6 +744,17 @@ function initIndexPage() {
 
     // Always retry on page load so stale local availability state cannot keep this section hidden.
     fetchLeetCodeStats();
+    fetchTxfQuote();
+    fetchQffQuote();
+    fetchMarketUsage();
+    fetchPortfolio();
+    if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
+    _marketQuoteTimer = window.setInterval(() => {
+        fetchTxfQuote();
+        fetchQffQuote();
+        fetchMarketUsage();
+        fetchPortfolio();
+    }, 600_000);
     updateVisitCount();
 }
 

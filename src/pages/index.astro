@@ -115,6 +115,116 @@ const skillsCategories = skillsData.categories;
 						<p class="visit-counter"><span data-i18n="home.visitorCounterPrefix">Sequence #</span><span id="visit-count">...</span><span data-i18n="home.visitorCounterSuffix">: Identity Synchronized</span></p>
 						</div>
 					</div>
+
+					<section id="market-overview" class="market-overview">
+						<div class="market-overview-header">
+							<div>
+								<h4 class="section-title" data-i18n="home.marketOverviewTitle">Market Overview</h4>
+							</div>
+							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
+						</div>
+						<div class="market-overview-grid">
+							<section id="txf-quote-section" class="market-quote-section" aria-live="polite">
+								<div class="market-quote-heading">
+									<div>
+										<h5 class="section-title" data-i18n="home.marketTitle">TAIEX Futures</h5>
+									</div>
+									<span id="txf-market-status" class="market-status">Loading</span>
+								</div>
+								<div class="market-quote-card">
+									<div>
+										<p id="txf-contract" class="market-contract">TXF</p>
+										<p id="txf-updated" class="market-updated" data-i18n="home.loading">Loading...</p>
+									</div>
+									<div class="market-price-block">
+										<strong id="txf-price">--</strong>
+										<span id="txf-change">--</span>
+									</div>
+									<dl class="market-metrics">
+										<div><dt>Open</dt><dd id="txf-open">--</dd></div>
+										<div><dt>High</dt><dd id="txf-high">--</dd></div>
+										<div><dt>Low</dt><dd id="txf-low">--</dd></div>
+										<div><dt>Volume</dt><dd id="txf-volume">--</dd></div>
+									</dl>
+								</div>
+							</section>
+
+							<section id="qff-quote-section" class="market-quote-section" aria-live="polite">
+								<div class="market-quote-heading">
+									<div>
+										<h5 class="section-title">Mini TSMC Futures</h5>
+									</div>
+									<span id="qff-market-status" class="market-status">Loading</span>
+								</div>
+								<div class="market-quote-card market-quote-card--tsmc">
+									<div>
+										<p id="qff-contract" class="market-contract">QFFR1</p>
+										<p id="qff-updated" class="market-updated">Loading...</p>
+									</div>
+									<div class="market-price-block">
+										<strong id="qff-price">--</strong>
+										<span id="qff-change">--</span>
+									</div>
+									<dl class="market-metrics">
+										<div><dt>Open</dt><dd id="qff-open">--</dd></div>
+										<div><dt>High</dt><dd id="qff-high">--</dd></div>
+										<div><dt>Low</dt><dd id="qff-low">--</dd></div>
+										<div><dt>Volume</dt><dd id="qff-volume">--</dd></div>
+									</dl>
+								</div>
+							</section>
+
+							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
+								<div class="market-quote-heading">
+									<div>
+										<h5 class="section-title" data-i18n="home.marketUsageTitle">Shioaji Usage</h5>
+									</div>
+									<span id="market-usage-status" class="market-status">Loading</span>
+								</div>
+								<div class="market-usage-card">
+									<div class="market-usage-hero">
+										<strong id="market-usage-used">--</strong>
+										<span id="market-usage-limit">--</span>
+									</div>
+									<div class="market-usage-progress">
+										<div id="market-usage-progress-bar"></div>
+									</div>
+									<dl class="market-metrics">
+										<div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div>
+										<div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div>
+										<div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div>
+										<div><dt data-i18n="home.marketUsageSource">Source</dt><dd id="market-usage-source">--</dd></div>
+									</dl>
+								</div>
+							</section>
+
+							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite">
+								<div class="market-quote-heading">
+									<div>
+										<h5 class="section-title">Account Portfolio</h5>
+									</div>
+									<span id="portfolio-status" class="market-status">Loading</span>
+								</div>
+								<div class="market-usage-card portfolio-card">
+									<div class="portfolio-summary">
+										<div>
+											<span>Cash balance</span>
+											<strong id="portfolio-cash">--</strong>
+										</div>
+										<div>
+											<span>Estimated total assets</span>
+											<strong id="portfolio-total">--</strong>
+										</div>
+									</div>
+									<div id="portfolio-positions" class="portfolio-positions">
+										<p class="market-updated">Loading positions...</p>
+									</div>
+									<p id="portfolio-updated" class="market-updated">--</p>
+								</div>
+							</section>
+						</div>
+					</section>
+
 					<div class="hero-content">
 						<!-- D3 Bubble Chart showing skill categories and scores -->
 						<SkillsBubbleChart client:load data={bubbleChartData} categoriesData={skillsCategories} />
