@@ -24,6 +24,7 @@
     "marketUsageConnections": { "en": "Connections", "zh": "連線數" },
     "marketUsageUpdated": { "en": "Updated", "zh": "更新時間" },
     "marketUsageSource": { "en": "Source", "zh": "來源" },
+    "adminOnlyContact": { "en": "This feature is available to administrators. Please contact an administrator.", "zh": "此功能僅供管理員使用，請聯繫管理員。" },
     "leetcodeLabels": {
       "solved": { "en": "Total Solved", "zh": "總計解題" },
       "easy": { "en": "Easy", "zh": "簡單" },

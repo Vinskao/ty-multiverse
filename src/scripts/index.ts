@@ -497,9 +497,27 @@ function writeCachedMarketData<T>(key: string, value: T) {
 }
 
 function marketAuthHeaders(): HeadersInit {
-    const token = window.localStorage.getItem('token')
+    const token = new URLSearchParams(window.location.search).get('token')
+        || window.localStorage.getItem('token')
         || window.localStorage.getItem('accessToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function adminOnlyMessage(): string {
+    return window.AppLang?.get?.() === 'zh'
+        ? '此功能僅供管理員使用，請聯繫管理員。'
+        : 'This feature is available to administrators. Please contact an administrator.';
+}
+
+function showAdminOnly(section: HTMLElement, statusId: string, messageId: string) {
+    section.classList.remove('is-offline');
+    const status = document.getElementById(statusId);
+    if (status) status.textContent = '403';
+    const message = document.getElementById(messageId);
+    if (message) {
+        message.textContent = adminOnlyMessage();
+        message.hidden = false;
+    }
 }
 
 function renderTxfQuote(quote: TxfQuote, offline = false) {
@@ -569,6 +587,8 @@ function renderMarketUsage(usage: MarketUsage, offline = false) {
     };
 
     section.classList.toggle('is-offline', offline);
+    const accessMessage = document.getElementById('market-usage-access-message');
+    if (accessMessage) accessMessage.hidden = true;
     setText('market-usage-used', `${usage.usedMb.toFixed(1)} MB`);
     setText('market-usage-limit', `/ ${usage.limitMb.toFixed(0)} MB`);
     setText('market-usage-remaining', `${usage.remainingMb.toFixed(1)} MB`);
@@ -590,6 +610,8 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
 
     const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     section.classList.toggle('is-offline', offline);
+    const accessMessage = document.getElementById('portfolio-access-message');
+    if (accessMessage) accessMessage.hidden = true;
     document.getElementById('portfolio-status')!.textContent = offline ? 'Offline' : '1h';
     document.getElementById('portfolio-cash')!.textContent = portfolio.cashBalance === null
         ? 'Unavailable'
@@ -611,18 +633,45 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
     const count = document.getElementById('portfolio-position-count');
     if (!chart || !svg || !tooltip || !count) return;
 
-    const palette = ['#61f6ea', '#d8a43b', '#ef5350', '#7dd3fc', '#a3e635', '#fb923c', '#c084fc', '#f472b6', '#818cf8', '#2dd4bf'];
     const total = portfolio.totalAssetsEstimated || portfolio.totalPositionExposure;
-    const slices = [
-        ...(portfolio.cashBalance && portfolio.cashBalance > 0
-            ? [{ code: 'Cash', value: portfolio.cashBalance, position: null }]
-            : []),
-        ...portfolio.positions.map((position) => ({
+    const positionSlices = portfolio.positions
+        .map((position) => ({
             code: position.code,
             value: position.marketValue,
             position,
-        })),
-    ].filter((slice) => slice.value > 0).sort((a, b) => b.value - a.value);
+        }))
+        .filter((slice) => slice.value > 0);
+    const profitableSlices = positionSlices
+        .filter((slice) => slice.position.pnl >= 0)
+        .sort((a, b) => Math.abs(b.position.pnl) - Math.abs(a.position.pnl));
+    const losingSlices = positionSlices
+        .filter((slice) => slice.position.pnl < 0)
+        .sort((a, b) => Math.abs(a.position.pnl) - Math.abs(b.position.pnl));
+    const cashSlices = portfolio.cashBalance && portfolio.cashBalance > 0
+        ? [{ code: 'Cash', value: portfolio.cashBalance, position: null }]
+        : [];
+    const slices = [...cashSlices, ...profitableSlices, ...losingSlices];
+    const profitRank = new Map(
+        [...profitableSlices].reverse().map((slice, index) => [slice.position.code, index]),
+    );
+    const lossRank = new Map(
+        losingSlices.map((slice, index) => [slice.position.code, index]),
+    );
+    const rankedLightness = (rank: number, count: number) => {
+        if (count <= 1) return 44;
+        return 76 - ((rank / (count - 1)) * 42);
+    };
+    const pnlColor = (position: PortfolioPosition | null) => {
+        if (!position) return '#8b95a5';
+
+        if (position.pnl >= 0) {
+            const rank = profitRank.get(position.code) ?? 0;
+            return `hsl(4 78% ${rankedLightness(rank, profitableSlices.length)}%)`;
+        }
+
+        const rank = lossRank.get(position.code) ?? 0;
+        return `hsl(154 62% ${rankedLightness(rank, losingSlices.length)}%)`;
+    };
 
     count.textContent = String(portfolio.positionCount ?? portfolio.positions.length);
     chart.setAttribute('aria-label', `${portfolio.positionCount ?? portfolio.positions.length} stock positions`);
@@ -644,14 +693,14 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
         tooltip.classList.add('is-visible');
     };
 
-    slices.forEach((slice, index) => {
+    slices.forEach((slice) => {
         const percentage = total > 0 ? (slice.value / total) * 100 : 0;
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('class', 'portfolio-donut-slice');
         circle.setAttribute('cx', '60');
         circle.setAttribute('cy', '60');
         circle.setAttribute('r', '46');
-        circle.setAttribute('stroke', palette[index % palette.length]);
+        circle.setAttribute('stroke', pnlColor(slice.position));
         circle.setAttribute('stroke-dasharray', `${circumference * percentage / 100} ${circumference}`);
         circle.setAttribute('stroke-dashoffset', `${-circumference * cursor / 100}`);
         circle.setAttribute('tabindex', '0');
@@ -721,6 +770,10 @@ async function fetchMarketUsage() {
         const response = await fetch('/maya-sawa/market/usage', {
             headers: marketAuthHeaders(),
         });
+        if (response.status === 403) {
+            showAdminOnly(section, 'market-usage-status', 'market-usage-access-message');
+            return;
+        }
         if (!response.ok) {
             showOffline();
             return;
@@ -760,6 +813,10 @@ async function fetchPortfolio() {
         const response = await fetch('/maya-sawa/market/portfolio', {
             headers: marketAuthHeaders(),
         });
+        if (response.status === 403) {
+            showAdminOnly(section, 'portfolio-status', 'portfolio-access-message');
+            return;
+        }
         if (!response.ok) {
             let detail = '';
             try {
