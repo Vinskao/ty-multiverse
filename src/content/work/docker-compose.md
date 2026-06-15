@@ -89,7 +89,7 @@ services:
     image: mcr.microsoft.com/azure-sql-edge:latest
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "REDACTED_SECRET="
+      SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
       MSSQL_COLLATION: "Chinese_Taiwan_Stroke_CI_AI"
       TZ: "Asia/Taipei"
     ports:
@@ -104,8 +104,10 @@ services:
     command: >
       /bin/bash -c "
         sleep 20;
-        /opt/mssql-tools/bin/sqlcmd -S sql_edge -U SA -P 'REDACTED_SECRET=' -d master -i /data/init-db.sql;
+        /opt/mssql-tools/bin/sqlcmd -S sql_edge -U SA -P \"$$MSSQL_SA_PASSWORD\" -d master -i /data/init-db.sql;
         "
+    environment:
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
     volumes:
       - ./data:/data
     networks:
@@ -144,6 +146,14 @@ networks:
     name: discord_network
     external: true
 ```
+
+啟動前，請透過環境變數或不提交至版本控制的 `.env` 設定資料庫密碼：
+
+```dotenv
+MSSQL_SA_PASSWORD=<your-strong-password>
+```
+
+請將 `.env` 加入 `.gitignore`，避免帳密被提交至版本控制。
 
 寫完此檔案，在根目錄執行：
 
