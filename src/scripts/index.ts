@@ -814,7 +814,7 @@ async function fetchPortfolio() {
             headers: marketAuthHeaders(),
         });
         if (response.status === 403) {
-            showAdminOnly(section, 'portfolio-status', 'portfolio-access-message');
+            showAdminOnly(document.getElementById('portfolio-section'), 'portfolio-status', 'portfolio-access-message');
             return;
         }
         if (!response.ok) {

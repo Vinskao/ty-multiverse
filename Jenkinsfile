@@ -98,7 +98,8 @@ pipeline {
                             string(credentialsId: 'PUBLIC_FRONTEND_URL', variable: 'PUBLIC_FRONTEND_URL'),
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
                             string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
-                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM')
+                            string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
+                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL')
                         ]) {
                         sh '''
                             # 確認 Dockerfile 存在
@@ -130,7 +131,8 @@ pipeline {
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
                             string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
-                            string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL')
+                            string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL'),
+                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL')
                         ]) {
                             sh '''
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
@@ -147,6 +149,7 @@ pipeline {
                                     --build-arg PUBLIC_CLIENT_ID="${PUBLIC_CLIENT_ID}" \
                                     --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
                                     --build-arg PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL}" \
+                                    --build-arg PUBLIC_MAYA_SAWA_URL="${PUBLIC_MAYA_SAWA_URL}" \
                                     -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
                                     -t ${DOCKER_IMAGE}:latest \
                                     .

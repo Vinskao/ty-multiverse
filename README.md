@@ -876,6 +876,57 @@ graph LR
 - **Docker Container**: `docker:23-dind`
 - **Kubectl Container**: `bitnami/kubectl:latest`
 
+## Troubleshooting
+
+### Vite 7 Plugin Transform Hook Compatibility (Astro 6.1.x)
+
+#### Problem
+When using Astro 6.1.x with Vite 7.3.1, the dev server may crash with:
+```
+TypeError: Cannot read properties of undefined (reading 'call')
+  at EnvironmentPluginContainer.transform (config.js:28797:51)
+```
+
+#### Root Cause
+Vite 7 introduced a new plugin hook syntax where `transform` can be an object with `filter` and `handler` properties:
+```ts
+// Vite 7 syntax
+transform: {
+  filter: { id: /\.jsx$/ },
+  handler(code, id) { ... }
+}
+```
+
+However, Astro 6.1.x did not fully support this syntax. The `@vitejs/plugin-react`, `@astrojs/mdx`, and other integrations were updated in Astro 6.4.x to properly implement the new Vite 7 plugin hooks.
+
+When the handler is missing or improperly defined, `getHookHandler(plugin.transform)` returns `undefined`, causing the crash:
+```ts
+// vite/dist/node/chunks/config.js:28795
+const handler = getHookHandler(plugin.transform);  // returns undefined
+result = await this.handleHookPromise(handler.call(ctx, code, id, optionsWithSSR));  // ← TypeError
+```
+
+#### Solution
+Upgrade Astro and integrations to latest minor versions:
+
+```bash
+npm install astro@^6.4.7 @astrojs/react@^5.0.7 @astrojs/mdx@latest
+```
+
+**Version requirements:**
+- `astro` ≥ 6.4.7
+- `@astrojs/react` ≥ 5.0.7
+- `@astrojs/mdx` ≥ 6.0.3
+- `vite` ≥ 7.3.5 (pulled in automatically)
+
+#### Why It Happens
+Astro 6.1.2 was released before Vite 7 final release. By 6.4.7, all integrations had been updated to properly handle Vite 7's new plugin hook object form with both `filter` and `handler` properties.
+
+#### Verification
+After upgrade, dev server should start without errors and all pages should load correctly.
+
+---
+
 ## Other
 
 ### Video Merge Service

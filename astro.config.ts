@@ -11,9 +11,6 @@ export default defineConfig({
   }),
   base: '/tymultiverse',
   integrations: [react(), mdx(), sitemap()],
-  // Enable view transitions for SPA-like navigation
-  // @ts-ignore
-  viewTransitions: true, // Note: viewTransitions is deprecated in newer Astro versions in favor of <ViewTransitions /> component or other config, but if it works in current version, keep it. The property might not be in the type definition if updated.
   markdown: {
     remarkPlugins: []
   },
@@ -25,7 +22,7 @@ export default defineConfig({
       proxy: {
         // 原有的本地後端代理
         '/maya-sawa': {
-          target: 'http://127.0.0.1:8000',
+          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://peoplesystem.tatdvsonorth.com',
           changeOrigin: true,
           secure: false,
           configure: (proxy, options) => {
@@ -42,7 +39,7 @@ export default defineConfig({
         },
         // 新增：代理遠端 API
         '/maya-v2': {
-          target: 'http://127.0.0.1:8000',
+          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://peoplesystem.tatdvsonorth.com',
           changeOrigin: true,
           secure: false, // 如果是自簽證書可設為 false
           rewrite: (path) => path, // 保持路徑不變
