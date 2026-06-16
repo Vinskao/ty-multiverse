@@ -396,12 +396,23 @@ interface PortfolioPosition {
     productType: string;
     direction: string;
     quantity: number;
+    signedQuantity: number;
     ydQuantity: number;
     averagePrice: number;
     lastPrice: number;
     pnl: number;
     marketValue: number;
     assetPercentage: number;
+}
+
+interface FuturesSummary {
+    equity: number;
+    equityAmount: number;
+    availableMargin: number;
+    openPositionPnl: number;
+    maintenanceMargin: number;
+    initialMargin: number;
+    positionCount: number;
 }
 
 interface Portfolio {
@@ -416,6 +427,9 @@ interface Portfolio {
     positionCount: number;
     cashPercentage: number;
     positions: PortfolioPosition[];
+    stockPositions?: PortfolioPosition[];
+    futuresPositions?: PortfolioPosition[];
+    futuresSummary?: FuturesSummary;
     fetchedAt: string;
     source: string;
     valuationNote: string;
@@ -623,7 +637,65 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     const totalPnl = portfolio.totalPnl ?? portfolio.positions.reduce((sum, position) => sum + position.pnl, 0);
     document.getElementById('portfolio-pnl')!.textContent = currency(totalPnl);
     document.getElementById('portfolio-pnl')!.className = totalPnl >= 0 ? 'up' : 'down';
+    renderFuturesSummary(portfolio);
+    renderFuturesPositions(portfolio);
     renderPortfolioAllocation(portfolio);
+}
+
+function renderFuturesSummary(portfolio: Portfolio) {
+    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    const summary = portfolio.futuresSummary;
+    const positions = portfolio.futuresPositions ?? portfolio.positions.filter((position) => position.productType === 'futures');
+
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    setText('futures-position-count', `${positions.length} contracts`);
+    if (!summary) {
+        setText('futures-equity', 'Unavailable');
+        setText('futures-equity-amount', 'Unavailable');
+        setText('futures-available-margin', 'Unavailable');
+        setText('futures-open-position-pnl', positions.length ? currency(positions.reduce((sum, position) => sum + position.pnl, 0)) : 'Unavailable');
+        return;
+    }
+
+    setText('futures-equity', currency(summary.equity));
+    setText('futures-equity-amount', currency(summary.equityAmount));
+    setText('futures-available-margin', currency(summary.availableMargin));
+    setText('futures-open-position-pnl', currency(summary.openPositionPnl));
+
+    const pnl = document.getElementById('futures-open-position-pnl');
+    if (pnl) pnl.className = summary.openPositionPnl >= 0 ? 'up' : 'down';
+}
+
+function renderFuturesPositions(portfolio: Portfolio) {
+    const container = document.getElementById('futures-positions-list');
+    if (!container) return;
+
+    const positions = portfolio.futuresPositions ?? portfolio.positions.filter((position) => position.productType === 'futures');
+    if (positions.length === 0) {
+        container.innerHTML = '<p class="market-updated">No open futures positions.</p>';
+        return;
+    }
+
+    const currency = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    container.innerHTML = positions
+        .map((position) => `
+            <article class="futures-position-item">
+                <div class="futures-position-main">
+                    <strong>${position.name || position.code}</strong>
+                    <span>${position.code} · ${position.direction} · Net ${position.signedQuantity > 0 ? '+' : ''}${position.signedQuantity}</span>
+                </div>
+                <div class="futures-position-meta">
+                    <span>Cost ${currency(position.averagePrice)}</span>
+                    <span>Market ${currency(position.lastPrice)}</span>
+                    <b class="${position.pnl >= 0 ? 'up' : 'down'}">P/L ${position.pnl >= 0 ? '+' : ''}NT$ ${currency(position.pnl)}</b>
+                </div>
+            </article>
+        `)
+        .join('');
 }
 
 function renderPortfolioAllocation(portfolio: Portfolio) {
@@ -634,7 +706,8 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
     if (!chart || !svg || !tooltip || !count) return;
 
     const total = portfolio.totalAssetsEstimated || portfolio.totalPositionExposure;
-    const positionSlices = portfolio.positions
+    const stockPositions = portfolio.stockPositions ?? portfolio.positions.filter((position) => position.productType === 'stock');
+    const positionSlices = stockPositions
         .map((position) => ({
             code: position.code,
             value: position.marketValue,
@@ -673,8 +746,8 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
         return `hsl(154 62% ${rankedLightness(rank, losingSlices.length)}%)`;
     };
 
-    count.textContent = String(portfolio.positionCount ?? portfolio.positions.length);
-    chart.setAttribute('aria-label', `${portfolio.positionCount ?? portfolio.positions.length} stock positions`);
+    count.textContent = String(stockPositions.length);
+    chart.setAttribute('aria-label', `${stockPositions.length} stock positions`);
     svg.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
     let cursor = 0;
     const circumference = 2 * Math.PI * 46;
@@ -756,8 +829,7 @@ async function fetchMarketUsage() {
     const cachedUsage = readCachedMarketData<MarketUsage>(MARKET_USAGE_CACHE_KEY);
     const showOffline = () => {
         if (cachedUsage) {
-            // The endpoint is reachable but this request failed (e.g. 401 when not
-            // signed in). Only flag offline if the cached snapshot is actually stale.
+            // The endpoint is reachable but this request failed. Only flag offline if the cached snapshot is actually stale.
             renderMarketUsage(cachedUsage, isDataStale(cachedUsage.fetchedAt, MARKET_USAGE_STALE_MS));
         } else {
             section.classList.add('is-offline');
@@ -767,13 +839,7 @@ async function fetchMarketUsage() {
     };
 
     try {
-        const response = await fetch('/maya-sawa/market/usage', {
-            headers: marketAuthHeaders(),
-        });
-        if (response.status === 403) {
-            showAdminOnly(section, 'market-usage-status', 'market-usage-access-message');
-            return;
-        }
+        const response = await fetch('/api/market/usage');
         if (!response.ok) {
             showOffline();
             return;
@@ -808,15 +874,11 @@ async function fetchQffQuote() {
 }
 
 async function fetchPortfolio() {
+    const section = document.getElementById('portfolio-section');
+    if (!section) return;
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
-        const response = await fetch('/maya-sawa/market/portfolio', {
-            headers: marketAuthHeaders(),
-        });
-        if (response.status === 403) {
-            showAdminOnly(document.getElementById('portfolio-section'), 'portfolio-status', 'portfolio-access-message');
-            return;
-        }
+        const response = await fetch('/api/market/portfolio');
         if (!response.ok) {
             let detail = '';
             try {
@@ -834,13 +896,13 @@ async function fetchPortfolio() {
         console.error('Error fetching portfolio:', error);
         if (cachedPortfolio) renderPortfolio(cachedPortfolio, true);
         else {
-            document.getElementById('portfolio-section')?.classList.add('is-offline');
+            section.classList.add('is-offline');
             const status = document.getElementById('portfolio-status');
             if (status) status.textContent = 'Offline';
             const updated = document.getElementById('portfolio-updated');
             if (updated) {
                 const message = error instanceof Error ? error.message : 'Portfolio unavailable';
-                updated.textContent = `${message} · Sign in with manage-users access`;
+                updated.textContent = `${message} · Portfolio data unavailable`;
             }
         }
     }

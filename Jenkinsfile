@@ -99,7 +99,8 @@ pipeline {
                             string(credentialsId: 'PUBLIC_PEOPLE_IMAGE_URL', variable: 'PUBLIC_PEOPLE_IMAGE_URL'),
                             string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
-                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL')
+                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL'),
+                            string(credentialsId: 'MARKET_INTERNAL_SECRET', variable: 'MARKET_INTERNAL_SECRET')
                         ]) {
                         sh '''
                             # 確認 Dockerfile 存在
@@ -132,7 +133,8 @@ pipeline {
                             string(credentialsId: 'PUBLIC_CLIENT_ID', variable: 'PUBLIC_CLIENT_ID'),
                             string(credentialsId: 'PUBLIC_REALM', variable: 'PUBLIC_REALM'),
                             string(credentialsId: 'PUBLIC_API_BASE_URL', variable: 'PUBLIC_API_BASE_URL'),
-                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL')
+                            string(credentialsId: 'PUBLIC_MAYA_SAWA_URL', variable: 'PUBLIC_MAYA_SAWA_URL'),
+                            string(credentialsId: 'MARKET_INTERNAL_SECRET', variable: 'MARKET_INTERNAL_SECRET')
                         ]) {
                             sh '''
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
@@ -169,16 +171,28 @@ pipeline {
 			steps {
 				container('kubectl') {
 					script {
-                        sh '''
-                            # 更新部署
-                            kubectl set image deployment/ty-multiverse-frontend ty-multiverse-frontend=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
-                            
-                            # 等待部署完成
-                            kubectl rollout status deployment/ty-multiverse-frontend --timeout=300s
-                            
-                            # 驗證部署
-                            kubectl get deployments -n default
-                        '''
+                        withCredentials([
+                            string(credentialsId: 'MARKET_INTERNAL_SECRET', variable: 'MARKET_INTERNAL_SECRET')
+                        ]) {
+                            sh '''
+                                # 建立或更新 market-internal-secret
+                                kubectl create secret generic market-internal-secret \
+                                    --from-literal=MARKET_INTERNAL_SECRET="${MARKET_INTERNAL_SECRET}" \
+                                    --dry-run=client -o yaml | kubectl apply -f - -n default
+
+                                # 更新部署
+                                kubectl set image deployment/ty-multiverse-frontend ty-multiverse-frontend=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
+
+                                # 強制重啟讓新 env 生效
+                                kubectl rollout restart deployment/ty-multiverse-frontend -n default
+
+                                # 等待部署完成
+                                kubectl rollout status deployment/ty-multiverse-frontend --timeout=300s
+
+                                # 驗證部署
+                                kubectl get deployments -n default
+                            '''
+                        }
                     }
 				}
 			}

@@ -13,6 +13,7 @@ stringData:
   PUBLIC_REALM: "${{ secrets.PUBLIC_REALM }}"
   PUBLIC_API_BASE_URL: "${{ secrets.PUBLIC_API_BASE_URL }}"
   PUBLIC_TYMG_URL: "${{ secrets.PUBLIC_TYMG_URL }}"
+  MARKET_INTERNAL_SECRET: "${{ secrets.MARKET_INTERNAL_SECRET }}"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -116,6 +117,13 @@ spec:
             secretKeyRef:
               name: ty-multiverse-frontend-secrets
               key: PUBLIC_TYMG_URL
+        - name: MARKET_INTERNAL_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: market-internal-secret
+              key: MARKET_INTERNAL_SECRET
+        - name: MAYA_SAWA_INTERNAL_URL
+          value: "http://maya-sawa:8000/maya-sawa"
 ---
 apiVersion: v1
 kind: Service
