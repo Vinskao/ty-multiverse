@@ -176,9 +176,15 @@ pipeline {
                         ]) {
                             sh '''
                                 # 建立或更新 market-internal-secret
-                                kubectl create secret generic market-internal-secret \
-                                    --from-literal=MARKET_INTERNAL_SECRET="${MARKET_INTERNAL_SECRET}" \
-                                    --dry-run=client -o yaml | kubectl apply -f - -n default
+                                # 防呆：credential 為空時不要覆寫既有 secret（避免把有效值清成空字串，
+                                # 這正是先前 Usage/Portfolio 顯示不出資料的根因）
+                                if [ -n "${MARKET_INTERNAL_SECRET}" ]; then
+                                    kubectl create secret generic market-internal-secret \
+                                        --from-literal=MARKET_INTERNAL_SECRET="${MARKET_INTERNAL_SECRET}" \
+                                        --dry-run=client -o yaml | kubectl apply -f - -n default
+                                else
+                                    echo "WARNING: MARKET_INTERNAL_SECRET credential is empty; keeping existing market-internal-secret unchanged"
+                                fi
 
                                 # 將 MARKET_INTERNAL_SECRET 和 MAYA_SAWA_INTERNAL_URL 注入 deployment spec
                                 # strategic merge patch 會依 name 合併，已存在則更新，不存在則新增（冪等）
