@@ -756,8 +756,7 @@ async function fetchMarketUsage() {
     const cachedUsage = readCachedMarketData<MarketUsage>(MARKET_USAGE_CACHE_KEY);
     const showOffline = () => {
         if (cachedUsage) {
-            // The endpoint is reachable but this request failed (e.g. 401 when not
-            // signed in). Only flag offline if the cached snapshot is actually stale.
+            // The endpoint is reachable but this request failed. Only flag offline if the cached snapshot is actually stale.
             renderMarketUsage(cachedUsage, isDataStale(cachedUsage.fetchedAt, MARKET_USAGE_STALE_MS));
         } else {
             section.classList.add('is-offline');
@@ -767,13 +766,7 @@ async function fetchMarketUsage() {
     };
 
     try {
-        const response = await fetch('/maya-sawa/market/usage', {
-            headers: marketAuthHeaders(),
-        });
-        if (response.status === 403) {
-            showAdminOnly(section, 'market-usage-status', 'market-usage-access-message');
-            return;
-        }
+        const response = await fetch('/api/market/usage');
         if (!response.ok) {
             showOffline();
             return;
@@ -808,15 +801,11 @@ async function fetchQffQuote() {
 }
 
 async function fetchPortfolio() {
+    const section = document.getElementById('portfolio-section');
+    if (!section) return;
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
-        const response = await fetch('/maya-sawa/market/portfolio', {
-            headers: marketAuthHeaders(),
-        });
-        if (response.status === 403) {
-            showAdminOnly(document.getElementById('portfolio-section'), 'portfolio-status', 'portfolio-access-message');
-            return;
-        }
+        const response = await fetch('/api/market/portfolio');
         if (!response.ok) {
             let detail = '';
             try {
@@ -834,13 +823,13 @@ async function fetchPortfolio() {
         console.error('Error fetching portfolio:', error);
         if (cachedPortfolio) renderPortfolio(cachedPortfolio, true);
         else {
-            document.getElementById('portfolio-section')?.classList.add('is-offline');
+            section.classList.add('is-offline');
             const status = document.getElementById('portfolio-status');
             if (status) status.textContent = 'Offline';
             const updated = document.getElementById('portfolio-updated');
             if (updated) {
                 const message = error instanceof Error ? error.message : 'Portfolio unavailable';
-                updated.textContent = `${message} · Sign in with manage-users access`;
+                updated.textContent = `${message} · Portfolio data unavailable`;
             }
         }
     }
