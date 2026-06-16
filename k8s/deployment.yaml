@@ -123,7 +123,7 @@ spec:
               name: market-internal-secret
               key: MARKET_INTERNAL_SECRET
         - name: MAYA_SAWA_INTERNAL_URL
-          value: "http://maya-sawa:8000/maya-sawa"
+          value: "http://maya-sawa/maya-sawa"
 ---
 apiVersion: v1
 kind: Service

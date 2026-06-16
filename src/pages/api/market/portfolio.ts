@@ -1,7 +1,9 @@
 import type { APIRoute } from 'astro';
 
-const MAYA_SAWA_URL = import.meta.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa:8000/maya-sawa';
-const INTERNAL_SECRET = import.meta.env.MARKET_INTERNAL_SECRET;
+// Read at runtime from the container env (Astro inlines `import.meta.env` for
+// non-PUBLIC vars at build time, so a server-only secret must come from process.env).
+const MAYA_SAWA_URL = process.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa/maya-sawa';
+const INTERNAL_SECRET = process.env.MARKET_INTERNAL_SECRET;
 
 export const GET: APIRoute = async () => {
   if (!INTERNAL_SECRET) {

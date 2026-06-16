@@ -183,7 +183,7 @@ pipeline {
                                 # 將 MARKET_INTERNAL_SECRET 和 MAYA_SAWA_INTERNAL_URL 注入 deployment spec
                                 # strategic merge patch 會依 name 合併，已存在則更新，不存在則新增（冪等）
                                 kubectl patch deployment ty-multiverse-frontend -n default --type=strategic -p \
-                                  '{"spec":{"template":{"spec":{"containers":[{"name":"ty-multiverse-frontend","env":[{"name":"MARKET_INTERNAL_SECRET","valueFrom":{"secretKeyRef":{"name":"market-internal-secret","key":"MARKET_INTERNAL_SECRET"}}},{"name":"MAYA_SAWA_INTERNAL_URL","value":"http://maya-sawa:8000/maya-sawa"}]}]}}}}'
+                                  '{"spec":{"template":{"spec":{"containers":[{"name":"ty-multiverse-frontend","env":[{"name":"MARKET_INTERNAL_SECRET","valueFrom":{"secretKeyRef":{"name":"market-internal-secret","key":"MARKET_INTERNAL_SECRET"}}},{"name":"MAYA_SAWA_INTERNAL_URL","value":"http://maya-sawa/maya-sawa"}]}]}}}}'
 
                                 # 更新部署
                                 kubectl set image deployment/ty-multiverse-frontend ty-multiverse-frontend=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
