@@ -927,6 +927,72 @@ After upgrade, dev server should start without errors and all pages should load 
 
 ---
 
+### Market Overview 儀表板（Usage / Portfolio）顯示不出資料
+
+#### 問題現象
+首頁 `Market Overview` 的 **Usage** 與 **Account Portfolio** 區塊一直顯示 `Offline` / `--`，
+但 **臺股期貨（TXF）/ 小台積（QFFR1）** 報價卻正常。
+
+#### 根因（三個獨立問題疊加）
+1. **`market-internal-secret` 是空值（0 bytes）**
+   - 前端 server route `src/pages/api/market/{usage,portfolio}.ts` 用 `X-Internal-Secret`
+     向 maya-sawa 的 `/market/internal/*` 端點取資料；secret 為空時直接回 `503 Internal secret not configured`。
+   - 來源：Jenkins credential `MARKET_INTERNAL_SECRET` 當初是空的，Deploy 階段
+     `kubectl create secret ... --from-literal=MARKET_INTERNAL_SECRET=""` 把它建成空字串。
+   - 修法：用非空值重建 secret；並在 `Jenkinsfile` 加防呆——credential 為空時**不覆寫**既有 secret。
+2. **連線埠錯誤（8000 vs 80）**
+   - maya-sawa 的 `Service` 只開 **port 80**（`targetPort: 8000`），但程式與 deployment env
+     都指向 `http://maya-sawa:8000`，叢集內根本連不上（connection refused / timeout）。
+   - 修法：改為 `http://maya-sawa/maya-sawa`（走 service port 80）。
+3. **Astro 在 build 時把 `import.meta.env` 寫死**
+   - server-only 變數 `import.meta.env.MARKET_INTERNAL_SECRET` 在 **build 階段被 inline 成 `undefined`**，
+     執行期再怎麼設 k8s env 都沒用（實測：`process.env` 讀得到 48 bytes，但 route 仍回 503）。
+   - 修法：server route 改用 **`process.env.MARKET_INTERNAL_SECRET`**（執行期讀取，密鑰也不會被烤進前端 bundle）。
+
+#### 驗證指令（叢集內，不外洩密鑰）
+```bash
+## 確認 secret 不是空的
+kubectl describe secret market-internal-secret      # 應為 48 bytes，不是 0
+
+## 從 maya-sawa pod 用自身 env 的密鑰打自己的 internal 端點（應回 200 + 真實資料）
+kubectl exec <maya-pod> -- python3 -c 'import os,urllib.request; \
+  r=urllib.request.urlopen(urllib.request.Request("http://localhost:8000/maya-sawa/market/internal/usage", \
+  headers={"X-Internal-Secret":os.getenv("MARKET_INTERNAL_SECRET","")})); print(r.status, r.read()[:200])'
+
+## 從前端 pod 確認 server route（修好後應回 200，未修前回 503）
+kubectl exec <frontend-pod> -- node -e 'fetch("http://localhost:4321/api/market/usage").then(r=>r.text()).then(console.log)'
+```
+
+> 重點教訓：**前端 server route 的機密一律用 `process.env`，不要用 `import.meta.env`**；
+> 叢集內呼叫服務務必對齊 `Service` 實際 port。
+
+### 期貨（Futures）無資料、但證券（Stock）正常
+
+#### 問題現象
+`Account Portfolio` 的證券部分（現金、總資產、未實現損益、持股 donut）都正常，
+但 **Futures equity / Equity amount / Available margin / Open position P/L** 全部 `Unavailable`，
+且 `Futures Positions` 顯示 `0 contracts`。
+
+#### 根因
+maya-sawa 的 `ShioajiMarketService._fetch_portfolio()`（`maya_sawa/services/shioaji_market.py`）
+**只查股票帳戶**（`account_balance` + `list_stock_positions`），完全沒有查期貨帳戶。
+前端 `index.ts` 早已預期 `futuresSummary / futuresPositions / stockPositions / signedQuantity`
+欄位，但後端從未產生 → 期貨區塊永遠是 `Unavailable`。
+
+#### 修法（後端補上期貨查詢）
+- `ReadOnlyShioajiClient` 新增 `list_futures_positions()`（`list_positions(futopt_account)`）與 `margin()`。
+- `_fetch_portfolio` 補抓期貨部位與權益／保證金，輸出 `futuresPositions` / `futuresSummary` / `stockPositions`。
+- **帶號口數陷阱**：Shioaji `position.quantity` 是「絕對口數」，做空也回正數；
+  必須用 `direction`（`Buy`/`Sell`）換算 `signedQuantity = -quantity if Sell else quantity`。
+- 期貨權益欄位：`margin.equity` / `equity_amount` / `available_margin` / `future_open_position`。
+- 成本價用 `position.price`、未實現損益用 `position.pnl`；`last_price` 不保證存在，
+  缺值時改用合約快照 `api.snapshots([contract])[0].close` 取現價。
+
+> 期貨帳務查詢（`list_positions` / `margin`）屬「帳務類」API，限速 25 次/5 秒且吃流量配額，
+> 因此沿用既有的 Redis 快取機制（`SHIOAJI_PORTFOLIO_CACHE_SECONDS`，預設 1 小時刷新一次），不可高頻輪詢。
+
+---
+
 ## Other
 
 ### Video Merge Service
