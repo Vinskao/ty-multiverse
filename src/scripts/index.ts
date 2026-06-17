@@ -638,6 +638,23 @@ function renderMarketUsage(usage: MarketUsage, offline = false) {
     }
 }
 
+function prettifyFormula(formula: string): string {
+    // "(A + B + C) / (D + E + F)"  →  vertical fraction
+    const formatGroup = (group: string): string => {
+        const inner = group.trim().replace(/^\(|\)$/g, '').trim();
+        const terms = inner.split(/\s*\+\s*/);
+        if (terms.length <= 1) return group.trim();
+        const [first, ...rest] = terms;
+        return `( ${first}\n` + rest.map((t) => `+ ${t}`).join('\n') + ' )';
+    };
+
+    const parts = formula.split(' / ');
+    if (parts.length === 2) {
+        return `${formatGroup(parts[0])}\n÷\n${formatGroup(parts[1])}`;
+    }
+    return formula;
+}
+
 function renderPortfolio(portfolio: Portfolio, offline = false) {
     const section = document.getElementById('portfolio-section');
     if (!section) return;
@@ -678,10 +695,16 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     const secPos = portfolio.positions.filter((p) => p.productType !== 'futures');
     const secPnl = secPos.reduce((s, p) => s + p.pnl, 0);
     const futPnl = futPos.reduce((s, p) => s + p.pnl, 0);
+    const nbCurrency = (value: number) => {
+        const sign = value >= 0 ? '+' : '-';
+        const amount = Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+        return `${sign}NT$ ${amount}`;
+    };
     setSummaryTooltip('portfolio-pnl', 'portfolio-pnl-tooltip',
-        `證券 ${secPnl >= 0 ? '+' : ''}${currency(secPnl)} / 期貨 ${futPnl >= 0 ? '+' : ''}${currency(futPnl)}`
+        `證券  ${nbCurrency(secPnl)}\n+ 期貨  ${nbCurrency(futPnl)}`
     );
-    setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip', portfolio.summaryFormulas?.leverageRatio);
+    setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
+        portfolio.summaryFormulas?.leverageRatio ? prettifyFormula(portfolio.summaryFormulas.leverageRatio) : undefined);
     renderPortfolioAllocation(portfolio);
 }
 

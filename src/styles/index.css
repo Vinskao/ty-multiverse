@@ -265,7 +265,7 @@
 	padding: 1.25rem;
 	border: 1px solid color-mix(in srgb, #61f6ea 35%, transparent);
 	border-radius: 1rem;
-	overflow: hidden;
+	overflow: visible;
 	container-type: inline-size;
 	background:
 		linear-gradient(135deg, color-mix(in srgb, #61f6ea 10%, transparent), transparent 60%),
@@ -365,7 +365,7 @@
 	pointer-events: none;
 	transition: opacity 140ms ease, transform 140ms ease;
 	z-index: 5;
-	white-space: normal;
+	white-space: pre-line;
 	overflow-wrap: anywhere;
 }
 
@@ -474,7 +474,7 @@
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	justify-items: center;
-	align-items: end;
+	align-items: center;
 	gap: 1rem;
 	width: 100%;
 }
@@ -559,25 +559,38 @@
 .portfolio-donut-center {
 	position: absolute;
 	inset: 28%;
-	display: grid;
-	place-items: center;
 	border-radius: 50%;
 	background: var(--gray-999);
 	color: var(--gray-300);
 	text-align: center;
 	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .portfolio-donut-center strong {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -58%);
+	display: block;
 	font-size: 1.8rem;
 	line-height: 1;
 }
 
 .portfolio-donut-center span {
+	position: absolute;
+	left: 50%;
+	bottom: 0.9rem;
+	transform: translateX(-50%);
+	display: block;
 	font-size: 0.66rem;
 	font-weight: 800;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
+	line-height: 1;
+	white-space: nowrap;
 }
 
 .portfolio-tooltip {

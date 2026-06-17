@@ -24,13 +24,13 @@ function getProviderColor(provider: string): string {
 }
 
 function formatTokens(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+  if (n >= 1_000_000) return `${Math.round(n / 1_000_000)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return String(Math.round(n));
 }
 
 function formatCost(n: number): string {
-  return `$${(n ?? 0).toFixed(4)}`;
+  return `$${Math.round(n ?? 0)}`;
 }
 
 function formatTokenEfficiency(inputTokens: number, outputTokens: number, cacheCreationTokens: number): string {
@@ -209,7 +209,7 @@ const styles = {
   },
 
   tdNum: {
-    overflowWrap: 'anywhere' as const,
+    whiteSpace: 'nowrap' as const,
   } as React.CSSProperties,
 
   providerBadge: (color: string) => ({
@@ -675,11 +675,11 @@ export default function AiTokenUsageDashboard() {
             : (
               <table style={styles.table}>
                 <colgroup>
-                  <col style={{ width: '23%' }} />
-                  <col style={{ width: '26%' }} />
+                  <col style={{ width: '20%' }} />
+                  <col style={{ width: '24%' }} />
                   <col style={{ width: '14%' }} />
-                  <col style={{ width: '18.5%' }} />
-                  <col style={{ width: '18.5%' }} />
+                  <col style={{ width: '20%' }} />
+                  <col style={{ width: '22%' }} />
                 </colgroup>
                 <thead>
                   <tr>
