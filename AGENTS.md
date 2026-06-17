@@ -258,6 +258,30 @@
 import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
 import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 
+## 8. 這次排查的經驗
+
+### Astro base path API 路徑
+- 專案 base 是 `/tymultiverse`，所以在 client-side `fetch()` 裡不能直接寫 `/api/...`，否則瀏覽器會打到站台根路徑 `/api/...`。
+- 這次 `Account Portfolio` 一直顯示舊資料，是因為前端打到 `https://peoplesystem.tatdvsonorth.com/api/market/portfolio`，實際回 `404`，然後 UI 走 localStorage fallback。
+- 之後只要是在 client script 內打本站自己的 Astro API，請優先用：
+  - `import.meta.env.BASE_URL`
+  - 或集中成一個像 `astroApiPath()` 的 helper
+
+### 快取與部署
+- Astro build 產出的 client bundle 檔名帶 hash，且靜態資源通常是 `cache-control: immutable`。
+- 若修正只改到 bundle，但 HTML 還指向舊檔名，Chrome 可能長時間沿用舊 JS。
+- 驗證頁面時，除了看 API `200`，也要確認：
+  - HTML 指到的新 bundle 檔名
+  - 瀏覽器實際載入的 JS 是否已包含新路徑
+  - localStorage 是否還殘留舊的 `market:portfolio`
+
+### Portfolio fallback
+- `fetchPortfolio()` 失敗時會退回 localStorage，這是設計如此，不是一定代表 API 還沒修好。
+- 若畫面顯示 `Offline` 但 API 已正常，請先懷疑：
+  - client bundle 還是舊版
+  - 路徑 base 沒帶對
+  - 或瀏覽器快取 / localStorage 還沒被新資料覆蓋
+
 // Step 1（service 層）
 await apiService.request({ url, serviceKey: SERVICE_KEYS.BACKEND });
 
