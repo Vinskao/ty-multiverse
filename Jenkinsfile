@@ -30,16 +30,18 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "10m"
-                        memory: "256Mi"
-                      limits:
-                        cpu: "250m"
+                        cpu: "500m"
                         memory: "1024Mi"
+                      limits:
+                        cpu: "2000m"
+                        memory: "3072Mi"
                     env:
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
                     - name: DOCKER_BUILDKIT
                       value: "1"
+                    - name: DOCKER_DRIVER
+                      value: "overlay2"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
@@ -138,23 +140,25 @@ pipeline {
                         ]) {
                             sh '''
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                                docker info
                                 
                                 # 生產構建：禁用所有快取，確保最新
-                                docker build \
-                                    --no-cache \
-                                    --build-arg PUBLIC_DECKOFCARDS_URL="${PUBLIC_DECKOFCARDS_URL}" \
-                                    --build-arg PUBLIC_TYMB_URL="${PUBLIC_TYMB_URL}" \
-                                    --build-arg PUBLIC_TYMG_URL="${PUBLIC_TYMG_URL}" \
-                                    --build-arg PUBLIC_SSO_URL="${PUBLIC_SSO_URL}" \
-                                    --build-arg PUBLIC_FRONTEND_URL="${PUBLIC_FRONTEND_URL}" \
-                                    --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
-                                    --build-arg PUBLIC_CLIENT_ID="${PUBLIC_CLIENT_ID}" \
-                                    --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
-                                    --build-arg PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL}" \
-                                    --build-arg PUBLIC_MAYA_SAWA_URL="${PUBLIC_MAYA_SAWA_URL}" \
-                                    -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                                    -t ${DOCKER_IMAGE}:latest \
-                                    .
+                                timeout 30m docker build \
+                                  --no-cache \
+                                  --progress=plain \
+                                  --build-arg PUBLIC_DECKOFCARDS_URL="${PUBLIC_DECKOFCARDS_URL}" \
+                                  --build-arg PUBLIC_TYMB_URL="${PUBLIC_TYMB_URL}" \
+                                  --build-arg PUBLIC_TYMG_URL="${PUBLIC_TYMG_URL}" \
+                                  --build-arg PUBLIC_SSO_URL="${PUBLIC_SSO_URL}" \
+                                  --build-arg PUBLIC_FRONTEND_URL="${PUBLIC_FRONTEND_URL}" \
+                                  --build-arg PUBLIC_PEOPLE_IMAGE_URL="${PUBLIC_PEOPLE_IMAGE_URL}" \
+                                  --build-arg PUBLIC_CLIENT_ID="${PUBLIC_CLIENT_ID}" \
+                                  --build-arg PUBLIC_REALM="${PUBLIC_REALM}" \
+                                  --build-arg PUBLIC_API_BASE_URL="${PUBLIC_API_BASE_URL}" \
+                                  --build-arg PUBLIC_MAYA_SAWA_URL="${PUBLIC_MAYA_SAWA_URL}" \
+                                  -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                                  -t ${DOCKER_IMAGE}:latest \
+                                  .
                                 
                                 docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                                 docker push ${DOCKER_IMAGE}:latest
