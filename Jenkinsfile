@@ -40,8 +40,6 @@ pipeline {
                       value: ""
                     - name: DOCKER_BUILDKIT
                       value: "1"
-                    - name: DOCKER_DRIVER
-                      value: "overlay2"
                     volumeMounts:
                     - mountPath: /home/jenkins/agent
                       name: workspace-volume
