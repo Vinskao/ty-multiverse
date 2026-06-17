@@ -30,8 +30,8 @@ pipeline {
                       privileged: true
                     resources:
                       requests:
-                        cpu: "500m"
-                        memory: "1024Mi"
+                        cpu: "50m"
+                        memory: "512Mi"
                       limits:
                         cpu: "2000m"
                         memory: "3072Mi"
