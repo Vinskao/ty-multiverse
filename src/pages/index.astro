@@ -207,57 +207,69 @@ const skillsCategories = skillsData.categories;
 								</div>
 								<div class="market-usage-card portfolio-card">
 									<div class="portfolio-summary">
-										<div>
+										<div class="portfolio-summary-item">
 											<span>Cash balance</span>
-											<strong id="portfolio-cash">--</strong>
+											<strong id="portfolio-cash" tabindex="0">--</strong>
+											<div id="portfolio-cash-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
-										<div>
+										<div class="portfolio-summary-item">
 											<span>Estimated total assets</span>
-											<strong id="portfolio-total">--</strong>
+											<strong id="portfolio-total" tabindex="0">--</strong>
+											<div id="portfolio-total-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
-										<div>
+										<div class="portfolio-summary-item">
 											<span>Total unrealized P/L</span>
-											<strong id="portfolio-pnl">--</strong>
+											<strong id="portfolio-pnl" tabindex="0">--</strong>
+											<div id="portfolio-pnl-tooltip" class="portfolio-summary-tooltip" role="status"></div>
+										</div>
+										<div class="portfolio-summary-item">
+											<span>Leverage</span>
+											<strong id="portfolio-leverage" tabindex="0">--</strong>
+											<div id="portfolio-leverage-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 									</div>
-									<div class="futures-summary">
-										<div>
-											<span>Futures equity</span>
-											<strong id="futures-equity">--</strong>
-										</div>
-										<div>
-											<span>Equity amount</span>
-											<strong id="futures-equity-amount">--</strong>
-										</div>
-										<div>
-											<span>Available margin</span>
-											<strong id="futures-available-margin">--</strong>
-										</div>
-										<div>
-											<span>Open position P/L</span>
-											<strong id="futures-open-position-pnl">--</strong>
-										</div>
-									</div>
-									<div class="futures-positions">
-										<div class="futures-positions-header">
-											<strong>Futures Positions</strong>
-											<span id="futures-position-count">--</span>
-										</div>
-										<div id="futures-positions-list" class="futures-positions-list">
-											<p class="market-updated">Loading...</p>
-										</div>
-									</div>
-									<div class="portfolio-allocation">
-										<div id="portfolio-allocation-chart" class="portfolio-donut" aria-label="Stock allocation">
-											<svg id="portfolio-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Stock allocation chart"></svg>
-											<div class="portfolio-donut-center">
-												<strong id="portfolio-position-count">--</strong>
-												<span>Holdings</span>
+
+									<!-- Donut charts: Securities (left) / Futures (right), Combined below -->
+									<div class="portfolio-donuts">
+										<div class="portfolio-donuts-row">
+											<div class="portfolio-donut-section">
+												<span class="portfolio-donut-label">Securities</span>
+												<div id="portfolio-allocation-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Stock allocation">
+													<svg id="portfolio-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Stock allocation chart"></svg>
+													<div class="portfolio-donut-center">
+														<strong id="portfolio-position-count">--</strong>
+														<span>Holdings</span>
+													</div>
+													<div id="portfolio-tooltip" class="portfolio-tooltip" role="status"></div>
+												</div>
 											</div>
-											<div id="portfolio-tooltip" class="portfolio-tooltip" role="status"></div>
+											<div class="portfolio-donut-section">
+												<span class="portfolio-donut-label">Futures</span>
+												<div id="portfolio-futures-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Futures allocation">
+													<svg id="portfolio-futures-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Futures allocation chart"></svg>
+													<div class="portfolio-donut-center">
+														<strong id="portfolio-futures-count">--</strong>
+														<span>Contracts</span>
+													</div>
+													<div id="portfolio-futures-tooltip" class="portfolio-tooltip" role="status"></div>
+												</div>
+											</div>
 										</div>
-										<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
+										<div class="portfolio-donut-section">
+											<span class="portfolio-donut-label">Combined</span>
+											<div id="portfolio-combined-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Combined allocation">
+												<svg id="portfolio-combined-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Combined allocation chart"></svg>
+												<div class="portfolio-donut-center">
+													<strong id="portfolio-combined-count">--</strong>
+													<span>Total</span>
+												</div>
+												<div id="portfolio-combined-tooltip" class="portfolio-tooltip" role="status"></div>
+											</div>
+										</div>
 									</div>
+									<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
+
+	
 									<p id="portfolio-updated" class="market-updated">--</p>
 									<p id="portfolio-access-message" class="market-updated" hidden></p>
 								</div>

@@ -314,26 +314,66 @@
 
 .portfolio-summary {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 	gap: 0.75rem;
 }
 
-.portfolio-summary div {
+.portfolio-summary > div {
 	display: grid;
 	gap: 0.25rem;
 	padding: 0.75rem;
 	border: 1px solid var(--gray-800);
 	border-radius: 0.75rem;
+	container-type: inline-size;
+	min-width: 0;
+	position: relative;
 }
 
 .portfolio-summary span,
 .portfolio-position span {
 	color: var(--gray-400);
 	font-size: 0.72rem;
+	overflow-wrap: anywhere;
 }
 
 .portfolio-summary strong {
-	font-size: clamp(0.9rem, 2cqi, 1.25rem);
+	font-size: clamp(0.75rem, 5cqi, 1.25rem);
+	overflow-wrap: anywhere;
+	word-break: break-all;
+}
+
+.portfolio-summary-item strong {
+	cursor: help;
+	outline: none;
+}
+
+.portfolio-summary-tooltip {
+	position: absolute;
+	left: 0.75rem;
+	right: 0.75rem;
+	bottom: calc(100% + 0.5rem);
+	padding: 0.5rem 0.625rem;
+	border: 1px solid rgba(144, 161, 197, 0.35);
+	border-radius: 0.5rem;
+	background: rgba(8, 13, 24, 0.96);
+	color: var(--gray-200);
+	font-size: 0.72rem;
+	line-height: 1.4;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+	opacity: 0;
+	transform: translateY(0.25rem);
+	pointer-events: none;
+	transition: opacity 140ms ease, transform 140ms ease;
+	z-index: 5;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.portfolio-summary-item:hover .portfolio-summary-tooltip,
+.portfolio-summary-item:focus-within .portfolio-summary-tooltip,
+.portfolio-summary-tooltip.is-visible {
+	opacity: 1;
+	transform: translateY(0);
 }
 
 .portfolio-summary strong.up {
@@ -423,6 +463,51 @@
 	font-size: 0.78rem;
 }
 
+.portfolio-donuts {
+	display: grid;
+	justify-items: center;
+	gap: 1.25rem;
+	padding: 0.75rem 0;
+}
+
+.portfolio-donuts-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	justify-items: center;
+	align-items: end;
+	gap: 1rem;
+	width: 100%;
+}
+
+.portfolio-donut-section {
+	display: grid;
+	justify-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.portfolio-donut-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--gray-400);
+}
+
+.portfolio-sector {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.portfolio-sector-title {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--gray-400);
+	margin: 0;
+}
+
 .portfolio-allocation {
 	display: grid;
 	justify-items: center;
@@ -433,8 +518,13 @@
 
 .portfolio-donut {
 	position: relative;
-	width: min(18rem, 72vw);
+	width: 100%;
+	max-width: 13rem;
 	aspect-ratio: 1;
+}
+
+.portfolio-donut--sm {
+	max-width: 9rem;
 }
 
 .portfolio-donut svg {
@@ -552,6 +642,10 @@
 
 	.portfolio-allocation {
 		justify-items: center;
+	}
+
+	.portfolio-donuts-row {
+		gap: 0.75rem;
 	}
 
 	.video-container {

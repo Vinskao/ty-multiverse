@@ -402,6 +402,9 @@ interface PortfolioPosition {
     lastPrice: number;
     pnl: number;
     marketValue: number;
+    allocationValue?: number;
+    contractSizeShares?: number;
+    valuationFormula?: string;
     assetPercentage: number;
 }
 
@@ -417,12 +420,18 @@ interface FuturesSummary {
 
 interface Portfolio {
     cashBalance: number | null;
+    stockCashBalance?: number | null;
+    futuresAvailableCash?: number;
     balanceAvailable: boolean;
     balanceError?: string;
     accountErrors?: Record<string, string>;
     balanceDate: string;
     totalAssetsEstimated: number | null;
     totalPositionExposure: number;
+    stockMarketValue?: number;
+    futuresContractExposure?: number;
+    futuresEquity?: number;
+    leverageRatio?: number | null;
     totalPnl: number;
     positionCount: number;
     cashPercentage: number;
@@ -430,6 +439,12 @@ interface Portfolio {
     stockPositions?: PortfolioPosition[];
     futuresPositions?: PortfolioPosition[];
     futuresSummary?: FuturesSummary;
+    summaryFormulas?: {
+        cashBalance?: string | null;
+        totalAssetsEstimated?: string | null;
+        totalPnl?: string | null;
+        leverageRatio?: string | null;
+    };
     fetchedAt: string;
     source: string;
     valuationNote: string;
@@ -628,6 +643,15 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     if (!section) return;
 
     const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    const setSummaryTooltip = (valueId: string, tooltipId: string, formula: string | null | undefined) => {
+        const valueEl = document.getElementById(valueId);
+        const tooltipEl = document.getElementById(tooltipId);
+        if (!valueEl || !tooltipEl) return;
+        const content = formula?.trim() || 'Unavailable';
+        tooltipEl.textContent = content;
+        valueEl.setAttribute('aria-label', `${valueEl.textContent || ''}. Formula: ${content}`);
+    };
+
     section.classList.toggle('is-offline', offline);
     const accessMessage = document.getElementById('portfolio-access-message');
     if (accessMessage) accessMessage.hidden = true;
@@ -642,156 +666,177 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     const totalPnl = portfolio.totalPnl ?? portfolio.positions.reduce((sum, position) => sum + position.pnl, 0);
     document.getElementById('portfolio-pnl')!.textContent = currency(totalPnl);
     document.getElementById('portfolio-pnl')!.className = totalPnl >= 0 ? 'up' : 'down';
-    renderFuturesSummary(portfolio);
-    renderFuturesPositions(portfolio);
+    const leverage = document.getElementById('portfolio-leverage');
+    if (leverage) {
+        leverage.textContent = portfolio.leverageRatio === null || portfolio.leverageRatio === undefined
+            ? 'Unavailable'
+            : `${portfolio.leverageRatio.toFixed(2)}x`;
+    }
+    setSummaryTooltip('portfolio-cash', 'portfolio-cash-tooltip', portfolio.summaryFormulas?.cashBalance);
+    setSummaryTooltip('portfolio-total', 'portfolio-total-tooltip', portfolio.summaryFormulas?.totalAssetsEstimated);
+    const futPos = portfolio.futuresPositions ?? portfolio.positions.filter((p) => p.productType === 'futures');
+    const secPos = portfolio.positions.filter((p) => p.productType !== 'futures');
+    const secPnl = secPos.reduce((s, p) => s + p.pnl, 0);
+    const futPnl = futPos.reduce((s, p) => s + p.pnl, 0);
+    setSummaryTooltip('portfolio-pnl', 'portfolio-pnl-tooltip',
+        `證券 ${secPnl >= 0 ? '+' : ''}${currency(secPnl)} / 期貨 ${futPnl >= 0 ? '+' : ''}${currency(futPnl)}`
+    );
+    setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip', portfolio.summaryFormulas?.leverageRatio);
     renderPortfolioAllocation(portfolio);
 }
 
-function renderFuturesSummary(portfolio: Portfolio) {
-    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-    const summary = portfolio.futuresSummary;
-    const positions = portfolio.futuresPositions ?? portfolio.positions.filter((position) => position.productType === 'futures');
 
-    const setText = (id: string, value: string) => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
-    };
+type DonutSlice = { key: string; code: string; value: number; position: PortfolioPosition | null; isFutures?: boolean };
 
-    setText('futures-position-count', `${positions.length} contracts`);
-    if (!summary) {
-        setText('futures-equity', 'Unavailable');
-        setText('futures-equity-amount', 'Unavailable');
-        setText('futures-available-margin', 'Unavailable');
-        setText('futures-open-position-pnl', positions.length ? currency(positions.reduce((sum, position) => sum + position.pnl, 0)) : 'Unavailable');
-        return;
-    }
-
-    setText('futures-equity', currency(summary.equity));
-    setText('futures-equity-amount', currency(summary.equityAmount));
-    setText('futures-available-margin', currency(summary.availableMargin));
-    setText('futures-open-position-pnl', currency(summary.openPositionPnl));
-
-    const pnl = document.getElementById('futures-open-position-pnl');
-    if (pnl) pnl.className = summary.openPositionPnl >= 0 ? 'up' : 'down';
+function getAllocationValue(position: PortfolioPosition): number {
+    return Math.abs(position.allocationValue ?? position.marketValue);
 }
 
-function renderFuturesPositions(portfolio: Portfolio) {
-    const container = document.getElementById('futures-positions-list');
-    if (!container) return;
+function buildPnlColorFns(profitableSlices: DonutSlice[], losingSlices: DonutSlice[]) {
+    const maxProfitPnl = Math.max(...profitableSlices.map((s) => Math.abs(s.position?.pnl ?? 0)), 1);
+    const maxLossPnl   = Math.max(...losingSlices.map((s)   => Math.abs(s.position?.pnl ?? 0)), 1);
 
-    const positions = portfolio.futuresPositions ?? portfolio.positions.filter((position) => position.productType === 'futures');
-    if (positions.length === 0) {
-        container.innerHTML = '<p class="market-updated">No open futures positions.</p>';
-        return;
-    }
+    // Bigger absolute P/L → darker (lower lightness); near-zero → lighter
+    const absLightness = (absPnl: number, maxPnl: number) => 76 - (absPnl / maxPnl) * 42;
 
-    const currency = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 0 });
-    container.innerHTML = positions
-        .map((position) => `
-            <article class="futures-position-item">
-                <div class="futures-position-main">
-                    <strong>${position.name || position.code}</strong>
-                    <span>${position.code} · ${position.direction} · Net ${position.signedQuantity > 0 ? '+' : ''}${position.signedQuantity}</span>
-                </div>
-                <div class="futures-position-meta">
-                    <span>Cost ${currency(position.averagePrice)}</span>
-                    <span>Market ${currency(position.lastPrice)}</span>
-                    <b class="${position.pnl >= 0 ? 'up' : 'down'}">P/L ${position.pnl >= 0 ? '+' : ''}NT$ ${currency(position.pnl)}</b>
-                </div>
-            </article>
-        `)
-        .join('');
-}
-
-function renderPortfolioAllocation(portfolio: Portfolio) {
-    const chart = document.getElementById('portfolio-allocation-chart');
-    const svg = document.getElementById('portfolio-donut-svg');
-    const tooltip = document.getElementById('portfolio-tooltip');
-    const count = document.getElementById('portfolio-position-count');
-    if (!chart || !svg || !tooltip || !count) return;
-
-    const total = portfolio.totalAssetsEstimated || portfolio.totalPositionExposure;
-    const stockPositions = portfolio.stockPositions ?? portfolio.positions.filter((position) => position.productType === 'stock');
-    const positionSlices = stockPositions
-        .map((position) => ({
-            code: position.code,
-            value: position.marketValue,
-            position,
-        }))
-        .filter((slice) => slice.value > 0);
-    const profitableSlices = positionSlices
-        .filter((slice) => slice.position.pnl >= 0)
-        .sort((a, b) => Math.abs(b.position.pnl) - Math.abs(a.position.pnl));
-    const losingSlices = positionSlices
-        .filter((slice) => slice.position.pnl < 0)
-        .sort((a, b) => Math.abs(a.position.pnl) - Math.abs(b.position.pnl));
-    const cashSlices = portfolio.cashBalance && portfolio.cashBalance > 0
-        ? [{ code: 'Cash', value: portfolio.cashBalance, position: null }]
-        : [];
-    const slices = [...cashSlices, ...profitableSlices, ...losingSlices];
-    const profitRank = new Map(
-        [...profitableSlices].reverse().map((slice, index) => [slice.position.code, index]),
-    );
-    const lossRank = new Map(
-        losingSlices.map((slice, index) => [slice.position.code, index]),
-    );
-    const rankedLightness = (rank: number, count: number) => {
-        if (count <= 1) return 44;
-        return 76 - ((rank / (count - 1)) * 42);
-    };
-    const pnlColor = (position: PortfolioPosition | null) => {
+    return (slice: DonutSlice) => {
+        const position = slice.position;
         if (!position) return '#8b95a5';
-
-        if (position.pnl >= 0) {
-            const rank = profitRank.get(position.code) ?? 0;
-            return `hsl(4 78% ${rankedLightness(rank, profitableSlices.length)}%)`;
-        }
-
-        const rank = lossRank.get(position.code) ?? 0;
-        return `hsl(154 62% ${rankedLightness(rank, losingSlices.length)}%)`;
+        const l = position.pnl >= 0
+            ? absLightness(Math.abs(position.pnl), maxProfitPnl)
+            : absLightness(Math.abs(position.pnl), maxLossPnl);
+        return position.pnl >= 0
+            ? `hsl(4 78% ${l.toFixed(1)}%)`
+            : `hsl(154 62% ${l.toFixed(1)}%)`;
     };
+}
 
-    count.textContent = String(stockPositions.length);
-    chart.setAttribute('aria-label', `${stockPositions.length} stock positions`);
-    svg.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
+function renderDonut(
+    svgEl: HTMLElement,
+    tooltipEl: HTMLElement,
+    countEl: HTMLElement | null,
+    slices: DonutSlice[],
+    total: number,
+    colorFn: (slice: DonutSlice) => string,
+    currency: (v: number) => string,
+    ariaLabel: string,
+) {
+    if (countEl) countEl.textContent = String(slices.filter((s) => s.position).length);
+    svgEl.setAttribute('aria-label', ariaLabel);
+    svgEl.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
     let cursor = 0;
     const circumference = 2 * Math.PI * 46;
-    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
-    const showTooltip = (slice: typeof slices[number], percentage: number) => {
-        const position = slice.position;
-        tooltip.innerHTML = position
-            ? `<strong>${position.name || position.code}</strong>
-               <small>${position.code} · ${percentage.toFixed(2)}%</small>
-               <span>${position.quantity} shares · YD ${position.ydQuantity ?? 0}</span>
-               <span>Cost ${position.averagePrice.toLocaleString()} · Last ${position.lastPrice.toLocaleString()}</span>
-               <span>Value ${currency(position.marketValue)}</span>
-               <b class="${position.pnl >= 0 ? 'up' : 'down'}">P/L ${position.pnl >= 0 ? '+' : ''}${currency(position.pnl)}</b>`
-            : `<strong>Cash · ${percentage.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
-        tooltip.classList.add('is-visible');
+    const showTip = (slice: DonutSlice, pct: number) => {
+        const pos = slice.position;
+        if (!pos) {
+            tooltipEl.innerHTML = `<strong>Cash · ${pct.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
+        } else if (slice.isFutures) {
+            tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
+               <small>${pos.code} · ${pct.toFixed(2)}%</small>
+               <span>${pos.direction} · Net ${pos.signedQuantity > 0 ? '+' : ''}${pos.signedQuantity}</span>
+               <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
+               <span>分子 ${currency(slice.value)} / 分母 ${currency(total)}</span>
+               <b class="${pos.pnl >= 0 ? 'up' : 'down'}">P/L ${pos.pnl >= 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+        } else {
+            tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
+               <small>${pos.code} · ${pct.toFixed(2)}%</small>
+               <span>${pos.quantity} shares · YD ${pos.ydQuantity ?? 0}</span>
+               <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
+               <span>Value ${currency(pos.marketValue)}</span>
+               <b class="${pos.pnl >= 0 ? 'up' : 'down'}">P/L ${pos.pnl >= 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+        }
+        tooltipEl.classList.add('is-visible');
     };
 
     slices.forEach((slice) => {
-        const percentage = total > 0 ? (slice.value / total) * 100 : 0;
+        const pct = total > 0 ? (slice.value / total) * 100 : 0;
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('class', 'portfolio-donut-slice');
         circle.setAttribute('cx', '60');
         circle.setAttribute('cy', '60');
         circle.setAttribute('r', '46');
-        circle.setAttribute('stroke', pnlColor(slice.position));
-        circle.setAttribute('stroke-dasharray', `${circumference * percentage / 100} ${circumference}`);
+        circle.setAttribute('stroke', colorFn(slice));
+        circle.setAttribute('stroke-dasharray', `${circumference * pct / 100} ${circumference}`);
         circle.setAttribute('stroke-dashoffset', `${-circumference * cursor / 100}`);
         circle.setAttribute('tabindex', '0');
         circle.setAttribute('role', 'button');
-        circle.setAttribute('aria-label', `${slice.code}, ${percentage.toFixed(2)} percent`);
-        circle.addEventListener('pointerenter', () => showTooltip(slice, percentage));
-        circle.addEventListener('focus', () => showTooltip(slice, percentage));
-        circle.addEventListener('click', () => showTooltip(slice, percentage));
-        circle.addEventListener('pointerleave', () => tooltip.classList.remove('is-visible'));
-        circle.addEventListener('blur', () => tooltip.classList.remove('is-visible'));
-        svg.appendChild(circle);
-        cursor += percentage;
+        circle.setAttribute('aria-label', `${slice.code}, ${pct.toFixed(2)} percent`);
+        circle.addEventListener('pointerenter', () => showTip(slice, pct));
+        circle.addEventListener('focus', () => showTip(slice, pct));
+        circle.addEventListener('click', () => showTip(slice, pct));
+        circle.addEventListener('pointerleave', () => tooltipEl.classList.remove('is-visible'));
+        circle.addEventListener('blur', () => tooltipEl.classList.remove('is-visible'));
+        svgEl.appendChild(circle);
+        cursor += pct;
     });
+}
+
+function renderPortfolioAllocation(portfolio: Portfolio) {
+    const currency = (value: number) => `NT$ ${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    const stockPositions = portfolio.stockPositions ?? portfolio.positions.filter((p) => p.productType === 'stock');
+    const futuresPositions = portfolio.futuresPositions ?? portfolio.positions.filter((p) => p.productType === 'futures');
+
+    // Build stock slices
+    const profitableStock: DonutSlice[] = stockPositions
+        .filter((p) => p.pnl >= 0 && getAllocationValue(p) > 0)
+        .map((p, index) => ({ key: `stock:profit:${p.code}:${index}`, code: p.code, value: getAllocationValue(p), position: p }))
+        .sort((a, b) => Math.abs(b.position!.pnl) - Math.abs(a.position!.pnl));
+    const losingStock: DonutSlice[] = stockPositions
+        .filter((p) => p.pnl < 0 && getAllocationValue(p) > 0)
+        .map((p, index) => ({ key: `stock:loss:${p.code}:${index}`, code: p.code, value: getAllocationValue(p), position: p }))
+        .sort((a, b) => Math.abs(a.position!.pnl) - Math.abs(b.position!.pnl));
+    const cashSlices: DonutSlice[] = portfolio.cashBalance && portfolio.cashBalance > 0
+        ? [{ key: 'cash', code: 'Cash', value: portfolio.cashBalance, position: null }]
+        : [];
+    const stockSlices: DonutSlice[] = [...profitableStock, ...losingStock];
+    const stockTotal = stockSlices.reduce((sum, slice) => sum + slice.value, 0);
+
+    // Build futures slices
+    const profitableFut: DonutSlice[] = futuresPositions
+        .map((p, index) => ({ key: `futures:${p.code}:${index}`, code: p.code, value: getAllocationValue(p), position: p, isFutures: true }))
+        .filter((slice) => slice.position!.pnl >= 0 && slice.value > 0)
+        .sort((a, b) => Math.abs(b.position!.pnl) - Math.abs(a.position!.pnl));
+    const losingFut: DonutSlice[] = futuresPositions
+        .map((p, index) => ({ key: `futures:${p.code}:${index}`, code: p.code, value: getAllocationValue(p), position: p, isFutures: true }))
+        .filter((slice) => slice.position!.pnl < 0 && slice.value > 0)
+        .sort((a, b) => Math.abs(a.position!.pnl) - Math.abs(b.position!.pnl));
+    const futuresSlices: DonutSlice[] = [...profitableFut, ...losingFut];
+
+    // Combined slices
+    const combinedSlices: DonutSlice[] = [...cashSlices, ...stockSlices, ...futuresSlices];
+    const combinedTotal = combinedSlices.reduce((s, sl) => s + sl.value, 0);
+
+    // Shared P/L color function for all donut views.
+    const allProfitable = [...profitableStock, ...profitableFut];
+    const allLosing = [...losingStock, ...losingFut];
+    const colorFn = buildPnlColorFns(allProfitable, allLosing);
+
+    // Securities donut
+    const stockSvg = document.getElementById('portfolio-donut-svg');
+    const stockTooltip = document.getElementById('portfolio-tooltip');
+    const stockCount = document.getElementById('portfolio-position-count');
+    if (stockSvg && stockTooltip) {
+        renderDonut(stockSvg, stockTooltip, stockCount, stockSlices, stockTotal, colorFn, currency, `${stockPositions.length} stock positions`);
+    }
+
+    // Futures donut
+    const futSvg = document.getElementById('portfolio-futures-donut-svg');
+    const futTooltip = document.getElementById('portfolio-futures-tooltip');
+    const futCount = document.getElementById('portfolio-futures-count');
+    if (futSvg && futTooltip) {
+        const futTotal = futuresSlices.reduce((s, sl) => s + sl.value, 0);
+        renderDonut(futSvg, futTooltip, futCount, futuresSlices, futTotal, colorFn, currency, `${futuresPositions.length} futures positions`);
+    }
+
+    // Combined donut
+    const combinedSvg = document.getElementById('portfolio-combined-donut-svg');
+    const combinedTooltip = document.getElementById('portfolio-combined-tooltip');
+    const combinedCount = document.getElementById('portfolio-combined-count');
+    if (combinedSvg && combinedTooltip) {
+        if (combinedCount) combinedCount.textContent = String(stockPositions.length + futuresPositions.length);
+        renderDonut(combinedSvg, combinedTooltip, null, combinedSlices, combinedTotal, colorFn, currency, `${combinedSlices.length} total positions`);
+    }
 }
 
 async function fetchTxfQuote() {
