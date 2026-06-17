@@ -440,6 +440,11 @@ const QFF_QUOTE_CACHE_KEY = 'market:qff-quote';
 const MARKET_USAGE_CACHE_KEY = 'market:usage';
 const PORTFOLIO_CACHE_KEY = 'market:portfolio';
 
+const astroApiPath = (path: string) => {
+    const base = import.meta.env.BASE_URL || '/';
+    return `${base.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+};
+
 // Usage refreshes server-side every ~10 min; treat data older than this as stale.
 const MARKET_USAGE_STALE_MS = 30 * 60 * 1000;
 
@@ -839,7 +844,7 @@ async function fetchMarketUsage() {
     };
 
     try {
-        const response = await fetch('/api/market/usage');
+        const response = await fetch(astroApiPath('/api/market/usage'));
         if (!response.ok) {
             showOffline();
             return;
@@ -878,7 +883,7 @@ async function fetchPortfolio() {
     if (!section) return;
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
-        const response = await fetch('/api/market/portfolio');
+        const response = await fetch(astroApiPath('/api/market/portfolio'));
         if (!response.ok) {
             let detail = '';
             try {
