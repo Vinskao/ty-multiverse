@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import PowerRackDiagram, { type RackPart } from './PowerRackDiagram';
+import { config } from '../services/core/config';
 
 interface MappingData {
   version?: string;
@@ -35,6 +36,7 @@ function getLang(): 'en' | 'zh' {
 export default function ResearchZone({ mappingData }: Props) {
   const [openId, setOpenId] = useState<string>(RESEARCH_ITEMS[0]?.id ?? '');
   const [lang, setLang] = useState<'en' | 'zh'>('en');
+  const [mapping, setMapping] = useState<MappingData>(mappingData);
 
   // Track current site language and re-render on change.
   useEffect(() => {
@@ -43,6 +45,24 @@ export default function ResearchZone({ mappingData }: Props) {
     if (!AppLang?.onChange) return;
     const cleanup = AppLang.onChange(() => setLang(getLang()));
     return cleanup;
+  }, []);
+
+  // Fetch the latest mapping from the backend (which proxies the OCI private bucket).
+  // On any failure, silently keep the local bundled fallback passed via props.
+  useEffect(() => {
+    const backend = config.api.backendUrl;
+    if (!backend) return;
+    // backendUrl (PUBLIC_TYMB_URL) already includes the /tymb context-path.
+    const url = `${backend.replace(/\/$/, '')}/resources/company-product-mapping`;
+    let cancelled = false;
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((json) => {
+        const data = (json?.data ?? json) as MappingData;
+        if (!cancelled && Array.isArray(data?.rackParts)) setMapping(data);
+      })
+      .catch(() => {/* keep local fallback */});
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -63,7 +83,7 @@ export default function ResearchZone({ mappingData }: Props) {
             </button>
             {isOpen && (
               <div className="research-item-panel" id={`research-panel-${item.id}`} role="region">
-                {item.render({ mapping: mappingData, lang })}
+                {item.render({ mapping, lang })}
               </div>
             )}
           </div>
