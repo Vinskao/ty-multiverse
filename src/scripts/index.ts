@@ -537,6 +537,18 @@ function marketAuthHeaders(): HeadersInit {
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function hasMarketAuth(): boolean {
+    return Object.keys(marketAuthHeaders()).length > 0;
+}
+
+function clearPortfolioCache() {
+    try {
+        window.localStorage.removeItem(PORTFOLIO_CACHE_KEY);
+    } catch (error) {
+        console.warn('Failed to clear portfolio cache:', error);
+    }
+}
+
 function adminOnlyMessage(): string {
     return window.AppLang?.get?.() === 'zh'
         ? '此功能僅供管理員使用，請聯繫管理員。'
@@ -706,6 +718,45 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
         portfolio.summaryFormulas?.leverageRatio ? prettifyFormula(portfolio.summaryFormulas.leverageRatio) : undefined);
     renderPortfolioAllocation(portfolio);
+}
+
+function resetPortfolioDisplay(message = 'Login required to view account portfolio') {
+    const section = document.getElementById('portfolio-section');
+    if (!section) return;
+
+    section.classList.remove('is-offline');
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    setText('portfolio-status', 'Login');
+    setText('portfolio-cash', '--');
+    setText('portfolio-total', '--');
+    setText('portfolio-pnl', '--');
+    setText('portfolio-leverage', '--');
+    setText('portfolio-position-count', '--');
+    setText('portfolio-futures-count', '--');
+    setText('portfolio-combined-count', '--');
+    setText('portfolio-updated', message);
+
+    document.getElementById('portfolio-pnl')?.classList.remove('up', 'down');
+    document.querySelectorAll('.portfolio-summary-tooltip').forEach((tooltip) => {
+        tooltip.textContent = '';
+        tooltip.classList.remove('is-visible');
+    });
+    const accessMessage = document.getElementById('portfolio-access-message');
+    if (accessMessage) {
+        accessMessage.textContent = '';
+        accessMessage.hidden = true;
+    }
+    ['portfolio-donut-svg', 'portfolio-futures-donut-svg', 'portfolio-combined-donut-svg'].forEach((id) => {
+        const svg = document.getElementById(id);
+        if (svg) svg.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
+    });
+    ['portfolio-tooltip', 'portfolio-futures-tooltip', 'portfolio-combined-tooltip'].forEach((id) => {
+        document.getElementById(id)?.classList.remove('is-visible');
+    });
 }
 
 
@@ -949,6 +1000,11 @@ async function fetchQffQuote() {
 async function fetchPortfolio() {
     const section = document.getElementById('portfolio-section');
     if (!section) return;
+    if (!hasMarketAuth()) {
+        clearPortfolioCache();
+        resetPortfolioDisplay();
+        return;
+    }
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
         const response = await fetch(astroApiPath('/api/market/portfolio'));
