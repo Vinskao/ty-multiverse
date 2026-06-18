@@ -19,6 +19,7 @@ import qaplatformCssUrl from '../styles/qaplatform.css?url';
 import qabotv2CssUrl from '../styles/qabotv2.css?url';
 import tableAjaxCssUrl from '../styles/table-ajax.css?url';
 import themeToggleCssUrl from '../styles/theme-toggle.css?url';
+import researchZoneCssUrl from '../styles/research-zone.css?url';
 
 // Component Imports
 import MainHead from '../components/MainHead.astro';
@@ -188,6 +189,7 @@ const { title, description } = Astro.props;
 		<link rel="stylesheet" href={qaplatformCssUrl} />
 		<link rel="stylesheet" href={qabotv2CssUrl} />
 		<link rel="stylesheet" href={tableAjaxCssUrl} />
+		<link rel="stylesheet" href={researchZoneCssUrl} />
 		<slot name="head" />
 		<MainHead title={title} description={description} />
 		<ClientRouter />

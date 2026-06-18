@@ -494,6 +494,13 @@
 	color: var(--gray-400);
 }
 
+.portfolio-donut-sub-value {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--gray-200);
+	letter-spacing: 0.02em;
+}
+
 .portfolio-sector {
 	display: grid;
 	gap: 0.75rem;

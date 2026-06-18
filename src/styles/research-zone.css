@@ -1,0 +1,255 @@
+/* Research Zone — accordion banner + power-rack SVG diagram */
+
+.research-zone-wrapper {
+	margin-block: 1rem;
+}
+
+.research-zone-wrapper > .section-title {
+	margin-bottom: 1rem;
+}
+
+.research-zone {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.research-item {
+	border: 1px solid var(--gray-800);
+	border-radius: 0.75rem;
+	background: var(--gray-999);
+	overflow: hidden;
+}
+
+.research-item.is-open {
+	border-color: var(--accent-regular);
+}
+
+.research-item-header {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.9rem 1.25rem;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	color: var(--gray-200);
+	font-size: var(--text-md);
+	font-weight: 600;
+	text-align: left;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.research-item-header:hover {
+	background: var(--gray-900);
+}
+
+.research-item.is-open .research-item-header {
+	color: var(--accent-regular);
+	background: var(--gray-900);
+}
+
+.research-item-chevron {
+	flex: none;
+	color: var(--accent-regular);
+	font-size: var(--text-base);
+}
+
+.research-item-panel {
+	padding: 1.25rem;
+	border-top: 1px solid var(--gray-800);
+	animation: research-expand 0.25s ease;
+}
+
+@keyframes research-expand {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Power rack diagram ---- */
+.power-rack {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.power-rack-svg {
+	width: 100%;
+	max-width: 460px;
+	height: auto;
+}
+
+.rack-frame {
+	fill: var(--gray-900);
+	stroke: var(--gray-700);
+	stroke-width: 2;
+}
+
+.rack-caption {
+	fill: var(--gray-300);
+	font-size: 13px;
+	font-weight: 700;
+	text-anchor: middle;
+}
+
+.rack-busbar {
+	fill: var(--accent-regular);
+	opacity: 0.85;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.rack-busbar:hover,
+.rack-busbar:focus {
+	opacity: 1;
+	outline: none;
+}
+
+.rack-busbar-label {
+	fill: var(--gray-0);
+	font-size: 9px;
+	font-weight: 700;
+	pointer-events: none;
+}
+
+.rack-region {
+	cursor: pointer;
+}
+
+.rack-region-box {
+	fill: var(--gray-100);
+	stroke: var(--gray-700);
+	stroke-width: 1.5;
+	transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.rack-region:hover .rack-region-box,
+.rack-region:focus .rack-region-box,
+.rack-region.is-active .rack-region-box {
+	fill: var(--gray-200);
+	stroke: var(--accent-regular);
+	outline: none;
+}
+
+.rack-region-label {
+	fill: var(--gray-300);
+	font-size: 12px;
+	font-weight: 600;
+	pointer-events: none;
+}
+
+.rack-region:hover .rack-region-label,
+.rack-region.is-active .rack-region-label {
+	fill: var(--gray-0);
+}
+
+.rack-psu {
+	fill: var(--accent-light);
+	opacity: 0.7;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.rack-psu:hover,
+.rack-psu:focus,
+.rack-psu.is-active {
+	opacity: 1;
+	outline: none;
+}
+
+.rack-flow {
+	stroke: var(--gray-500);
+	stroke-width: 2;
+	fill: none;
+}
+
+.rack-flow--hv {
+	stroke: var(--accent-dark);
+	stroke-width: 2.5;
+}
+
+.rack-flow--lv {
+	stroke: var(--accent-regular);
+	stroke-dasharray: 3 2;
+}
+
+.rack-arrow-hv {
+	fill: var(--accent-dark);
+}
+
+.rack-flow-label {
+	fill: var(--gray-400);
+	font-size: 9px;
+	pointer-events: none;
+}
+
+/* ---- Tooltip ---- */
+.power-rack-tooltip {
+	position: absolute;
+	transform: translate(12px, 12px);
+	max-width: 280px;
+	z-index: 5;
+	padding: 0.75rem 0.9rem;
+	background: var(--gray-50);
+	border: 1px solid var(--accent-regular);
+	border-radius: 0.6rem;
+	box-shadow: var(--shadow-md);
+	pointer-events: none;
+}
+
+.power-rack-tooltip-title {
+	display: block;
+	color: var(--gray-0);
+	font-size: var(--text-base);
+	font-weight: 700;
+}
+
+.power-rack-tooltip-summary {
+	margin: 0.35rem 0 0.5rem;
+	color: var(--gray-300);
+	font-size: var(--text-sm);
+	line-height: 1.4;
+}
+
+.power-rack-tooltip-heading {
+	display: block;
+	margin-bottom: 0.25rem;
+	color: var(--accent-regular);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.power-rack-tooltip-list {
+	margin: 0;
+	padding-left: 1rem;
+	color: var(--gray-200);
+	font-size: var(--text-sm);
+	line-height: 1.5;
+}
+
+.power-rack-company {
+	font-weight: 600;
+	color: var(--gray-0);
+}
+
+.power-rack-product {
+	color: var(--gray-400);
+}
+
+.power-rack-hint {
+	margin-top: 0.75rem;
+	color: var(--gray-400);
+	font-size: var(--text-sm);
+	text-align: center;
+}
+
+@media (min-width: 50em) {
+	.research-item-header {
+		font-size: var(--text-lg);
+	}
+}

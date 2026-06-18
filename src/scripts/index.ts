@@ -738,6 +738,8 @@ function resetPortfolioDisplay(message = 'Login required to view account portfol
     setText('portfolio-position-count', '--');
     setText('portfolio-futures-count', '--');
     setText('portfolio-combined-count', '--');
+    setText('portfolio-securities-value', '--');
+    setText('portfolio-futures-equity', '--');
     setText('portfolio-updated', message);
 
     document.getElementById('portfolio-pnl')?.classList.remove('up', 'down');
@@ -893,6 +895,11 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
     if (stockSvg && stockTooltip) {
         renderDonut(stockSvg, stockTooltip, stockCount, stockSlices, stockTotal, colorFn, currency, `${stockPositions.length} stock positions`);
     }
+    const securitiesValueEl = document.getElementById('portfolio-securities-value');
+    if (securitiesValueEl) {
+        const mv = portfolio.stockMarketValue ?? stockTotal;
+        securitiesValueEl.textContent = currency(mv);
+    }
 
     // Futures donut
     const futSvg = document.getElementById('portfolio-futures-donut-svg');
@@ -901,6 +908,11 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
     if (futSvg && futTooltip) {
         const futTotal = futuresSlices.reduce((s, sl) => s + sl.value, 0);
         renderDonut(futSvg, futTooltip, futCount, futuresSlices, futTotal, colorFn, currency, `${futuresPositions.length} futures positions`);
+    }
+    const futuresEquityEl = document.getElementById('portfolio-futures-equity');
+    if (futuresEquityEl) {
+        const eq = portfolio.futuresEquity ?? portfolio.futuresSummary?.equity;
+        futuresEquityEl.textContent = eq !== undefined ? currency(eq) : '--';
     }
 
     // Combined donut

@@ -15,6 +15,8 @@ import Pill from '../components/Pill.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
 import SkillsBubbleChart from '../components/SkillsBubbleChart';
 import AiTokenUsageDashboard from '../components/AiTokenUsageDashboard';
+import ResearchZone from '../components/ResearchZone';
+import companyProductMapping from '../storages/companyProductMapping.json';
 
 // Page section components
 import ContactCTA from '../components/ContactCTA.astro';
@@ -241,6 +243,7 @@ const skillsCategories = skillsData.categories;
 																			</div>
 													<div id="portfolio-tooltip" class="portfolio-tooltip" role="status"></div>
 												</div>
+												<span id="portfolio-securities-value" class="portfolio-donut-sub-value">--</span>
 											</div>
 											<div class="portfolio-donut-section">
 												<span class="portfolio-donut-label">Futures</span>
@@ -251,6 +254,7 @@ const skillsCategories = skillsData.categories;
 																			</div>
 													<div id="portfolio-futures-tooltip" class="portfolio-tooltip" role="status"></div>
 												</div>
+												<span id="portfolio-futures-equity" class="portfolio-donut-sub-value">--</span>
 											</div>
 										</div>
 										<div class="portfolio-donut-section">
@@ -351,6 +355,12 @@ const skillsCategories = skillsData.categories;
 
 				
 			</header>
+
+			<!-- Research Zone: accordion of research components -->
+			<section class="research-zone-wrapper wrapper">
+				<h4 class="section-title" data-i18n="home.researchZoneTitle">Research Zone</h4>
+				<ResearchZone client:visible mappingData={companyProductMapping} />
+			</section>
 
 			<!-- Skills Categories moved from hero-content -->
 			<div class="hero-content categories-section">

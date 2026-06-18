@@ -32,6 +32,7 @@
       "hard": { "en": "Hard", "zh": "困難" }
     },
     "patternsTitle": { "en": "Patterns Learned", "zh": "已學習模式" },
+    "researchZoneTitle": { "en": "Research Zone", "zh": "研究區" },
     "skillsTitle": {
       "backend": { "en": "BackEnd", "zh": "後端開發" },
       "frontend": { "en": "FrontEnd", "zh": "前端開發" },

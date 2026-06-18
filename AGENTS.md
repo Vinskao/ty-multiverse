@@ -88,6 +88,11 @@
 3. If the component is dynamic, use the `getI18n` helper pattern to update text in scripts
 4. Verify persistence across page navigations
 
+### Build Environment / 建置環境
+- This frontend requires Node.js `>= 22.12.0` for `astro build`.
+- The local shell may still default to Node 20, so use the bundled workspace Node when building or testing if the runtime check fails.
+- If you see `Node.js v20.x is not supported by Astro!`, rerun with the bundled executable from the workspace dependencies instead of changing app code.
+
 ---
 
 ## 5. Astro CSS Loading / Astro CSS 載入規則
