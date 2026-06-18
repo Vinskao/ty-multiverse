@@ -6,10 +6,9 @@ import type { iconPaths } from "./IconPaths";
 // 鐛插彇 URL 鍙冩暩
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get("username");
-const token = url.searchParams.get("token");
-const refreshToken = url.searchParams.get("refresh_token");
+// #4: token / refresh_token 不再經 URL 傳遞（機密改由 localStorage + 後端強制）
 
-// 妾㈡煡鐧诲叆鐙€鎱?
+// 檢查登入狀態（username 非機密，僅用於 SSR 顯示判斷）
 const isLoggedIn = !!username;
 
 // 鐛插彇鐣跺墠璺緫
@@ -27,7 +26,7 @@ const textLinks: {
     label: "Home",
     i18nKey: "nav.home",
     href: isLoggedIn
-      ? `/tymultiverse/?username=${username}&token=${token}&refresh_token=${refreshToken}`
+      ? `/tymultiverse/?username=${username}`
       : "/tymultiverse/",
     isActive:
       currentPath === "/tymultiverse/" ||
@@ -45,7 +44,7 @@ const textLinks: {
     label: "Work",
     i18nKey: "nav.work",
     href: isLoggedIn
-      ? `/tymultiverse/work/?username=${username}&token=${token}`
+      ? `/tymultiverse/work/?username=${username}`
       : "/tymultiverse/work/",
     isActive: currentPath.startsWith("/tymultiverse/work"),
   },
@@ -53,7 +52,7 @@ const textLinks: {
     label: "About",
     i18nKey: "nav.about",
     href: isLoggedIn
-      ? `/tymultiverse/about/?username=${username}&token=${token}`
+      ? `/tymultiverse/about/?username=${username}`
       : "/tymultiverse/about/",
     isActive: currentPath.startsWith("/tymultiverse/about"),
   },
@@ -62,21 +61,21 @@ const textLinks: {
         {
           label: "Control",
           i18nKey: "nav.control",
-          href: `/tymultiverse/control/?username=${username}&token=${token}`,
+          href: `/tymultiverse/control/?username=${username}`,
           isActive: currentPath.startsWith("/tymultiverse/control"),
         },
         {
           label: "Wildland",
           i18nKey: "nav.wildland",
           adminOnly: true,
-          href: `/tymultiverse/wildland/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
+          href: `/tymultiverse/wildland/?username=${username}`,
           isActive: currentPath.startsWith("/tymultiverse/wildland"),
         },
         {
           label: "Palais",
           i18nKey: "nav.palais",
           adminOnly: true,
-          href: `/tymultiverse/palais/?username=${username}&token=${token}&refresh_token=${refreshToken || ""}`,
+          href: `/tymultiverse/palais/?username=${username}`,
           isActive: currentPath.startsWith("/tymultiverse/palais"),
         },
       ]

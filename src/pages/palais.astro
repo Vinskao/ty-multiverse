@@ -8,10 +8,9 @@ import galwallCssUrl from "../styles/galwall.css?url";
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get("username");
-const token = url.searchParams.get("token");
 
 // 檢查登入狀態
-const isLoggedIn = !!username && !!token;
+const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
 
 // 如果未登入，重定向到登入頁面
 if (!isLoggedIn) {
@@ -54,27 +53,27 @@ if (!isLoggedIn) {
 
       <div class="system-container module-buttons">
         <a
-          href={`/tymultiverse/palais/fight?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/fight?username=${username}`}
           class="module-button">Fight</a
         >
         <a
-          href={`/tymultiverse/palais/group?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/group?username=${username}`}
           class="module-button">Group</a
         >
         <a
-          href={`/tymultiverse/palais/dance?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/dance?username=${username}`}
           class="module-button">Dance</a
         >
         <a
-          href={`/tymultiverse/palais/party?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/party?username=${username}`}
           class="module-button">Party</a
         >
         <a
-          href={`/tymultiverse/palais/live?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/live?username=${username}`}
           class="module-button">Live</a
         >
         <a
-          href={`/tymultiverse/palais/levels?username=${username}&token=${token}`}
+          href={`/tymultiverse/palais/levels?username=${username}`}
           class="module-button">Levels</a
         >
       </div>

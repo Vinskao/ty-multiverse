@@ -5,9 +5,8 @@ import AiTokenUsageDashboard from "../components/AiTokenUsageDashboard";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
 
-const isLoggedIn = !!username && !!token;
+const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
 
 if (!isLoggedIn) {
   return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);

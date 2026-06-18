@@ -16,8 +16,8 @@ const showExtensions = variant !== 'overlay';
 
 // 檢查登入狀態
 const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
-const isLoggedIn = !!username && !!token;
+// #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
+const isLoggedIn = !!username;
 
 function sanitize(text: string): string {
   if (!text) return '';

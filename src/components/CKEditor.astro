@@ -8,7 +8,7 @@ if (!hostUrl) {
 // 獲取 URL 參數來檢查登入狀態
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
+// #4: 不再從 URL 取 token；client 端一律從 localStorage 取（見 getAuthToken）
 ---
 
 <!-- 編輯器容器 - 包含兩層，外層控制整體佈局，內層是 CKEditor 的掛載點 -->
@@ -292,7 +292,7 @@ const token = url.searchParams.get('token');
     }
 </style>
 
-<script define:vars={{ hostUrl, EDITOR_ID: '1', username, token }}>
+<script define:vars={{ hostUrl, EDITOR_ID: '1', username }}>
     // 確保DOM載入後再執行
     document.addEventListener('DOMContentLoaded', () => {
         // 檢查登入狀態 - 增加更多的檢查條件

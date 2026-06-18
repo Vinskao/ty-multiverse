@@ -107,6 +107,17 @@ export class NavController {
     if (urlParams.get('username')) {
       localStorage.setItem('username', urlParams.get('username')!);
     }
+
+    // P2：機密已落地 localStorage，立刻把 token/refresh_token/id_token 從網址列洗掉，
+    // 不留在瀏覽器歷史與後續請求的 Referer 中（username 非機密，保留供 SSR 判斷）。
+    if (urlParams.has('token') || urlParams.has('refresh_token') || urlParams.has('refreshToken') || urlParams.has('id_token')) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('token');
+      cleanUrl.searchParams.delete('refresh_token');
+      cleanUrl.searchParams.delete('refreshToken');
+      cleanUrl.searchParams.delete('id_token');
+      window.history.replaceState({}, '', cleanUrl);
+    }
   }
 
   private setupEventListeners() {
@@ -493,20 +504,21 @@ export class NavController {
       startTokenVerification(this.token, this.refreshToken || '',
         // token 刷新時的回調
         (newToken, newRefreshToken) => {
-          // 更新 localStorage
+          // 更新 localStorage（canonical 來源；token 不再寫進 URL）
           if (newToken) {
             localStorage.setItem('token', newToken);
+            this.token = newToken;
           }
           if (newRefreshToken) {
             localStorage.setItem('refreshToken', newRefreshToken);
+            this.refreshToken = newRefreshToken;
           }
 
-          // 更新 URL 參數
+          // 確保網址列不殘留 token/refresh_token
           const newUrl = new URL(window.location.href);
-          newUrl.searchParams.set('token', newToken);
-          if (newRefreshToken) {
-            newUrl.searchParams.set('refresh_token', newRefreshToken);
-          }
+          newUrl.searchParams.delete('token');
+          newUrl.searchParams.delete('refresh_token');
+          newUrl.searchParams.delete('refreshToken');
           window.history.replaceState({}, '', newUrl);
         },
         // token 無效時的回調
@@ -592,17 +604,17 @@ export class NavController {
       }
     }
     if (workLink && this.isLoggedIn) {
-      workLink.href = `/tymultiverse/work/?username=${this.username}&token=${this.token}`;
+      workLink.href = `/tymultiverse/work/?username=${this.username}`;
     }
     if (aboutLink && this.isLoggedIn) {
-      aboutLink.href = `/tymultiverse/about/?username=${this.username}&token=${this.token}`;
+      aboutLink.href = `/tymultiverse/about/?username=${this.username}`;
     }
 
     // Control 需要用戶登入權限
     if (controlLink) {
       controlLink.style.display = (this.isLoggedIn && this.hasUserAccess) ? 'block' : 'none';
       if (controlLink && this.isLoggedIn && this.hasUserAccess) {
-        (controlLink as HTMLAnchorElement).href = `/tymultiverse/control/?username=${this.username}&token=${this.token}`;
+        (controlLink as HTMLAnchorElement).href = `/tymultiverse/control/?username=${this.username}`;
       }
     }
 
@@ -626,14 +638,14 @@ export class NavController {
 
       if (shouldShowWildland && this.token) {
         try {
-          // 使用 URL API 保存原始路徑，僅更新參數
+          // 僅帶 username（非機密）；token/refresh_token 不再進 URL，由各頁從 localStorage 讀取
           const originalHref = wildlandLink.getAttribute('href') || '/tymultiverse/wildland/';
           const baseUrl = window.location.origin;
           const url = new URL(originalHref, baseUrl);
 
           url.searchParams.set('username', this.username || '');
-          url.searchParams.set('token', this.token);
-          url.searchParams.set('refresh_token', this.refreshToken || '');
+          url.searchParams.delete('token');
+          url.searchParams.delete('refresh_token');
 
           wildlandLink.href = url.pathname + url.search;
         } catch (e) {
@@ -662,14 +674,14 @@ export class NavController {
 
       if (shouldShowPalais && this.token) {
         try {
-          // 使用 URL API 保存原始路徑，僅更新參數
+          // 僅帶 username（非機密）；token/refresh_token 不再進 URL，由各頁從 localStorage 讀取
           const originalHref = palaisLink.getAttribute('href') || '/tymultiverse/palais/';
           const baseUrl = window.location.origin;
           const url = new URL(originalHref, baseUrl);
 
           url.searchParams.set('username', this.username || '');
-          url.searchParams.set('token', this.token);
-          url.searchParams.set('refresh_token', this.refreshToken || '');
+          url.searchParams.delete('token');
+          url.searchParams.delete('refresh_token');
 
           palaisLink.href = url.pathname + url.search;
         } catch (e) {

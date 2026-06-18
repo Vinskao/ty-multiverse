@@ -7,10 +7,9 @@ import controlCssUrl from "../styles/control.css?url";
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
-const token = url.searchParams.get('token');
 
 // 檢查登入狀態
-const isLoggedIn = !!username && !!token;
+const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
 
 // 如果未登入，重定向到登入頁面
 if (!isLoggedIn) {

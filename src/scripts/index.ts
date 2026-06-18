@@ -531,8 +531,8 @@ function writeCachedMarketData<T>(key: string, value: T) {
 }
 
 function marketAuthHeaders(): HeadersInit {
-    const token = new URLSearchParams(window.location.search).get('token')
-        || window.localStorage.getItem('token')
+    // #4: token 不再從 URL 取，一律從 localStorage（canonical 來源）
+    const token = window.localStorage.getItem('token')
         || window.localStorage.getItem('accessToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
