@@ -308,3 +308,108 @@ cleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.BACKEND, v => { el.st
 - Recovery 節流：同一 key 24h 內只 ping 一次
 - localStorage key 格式：`svc_block_{serviceKey}`
 - `onChange()` 回傳 cleanup 函式，View Transitions 環境下必須在重新初始化前呼叫清除，防止監聽器累積（參考 `§1 i18n` 的 `_langCleanup` 模式）
+
+---
+
+## 本地啟動
+
+Node.js 版本要求 >= 22.12.0（`astro@6`）：
+
+```bash
+nvm use        # 或 nvm install 22.12.0 && nvm use 22.12.0
+npm install
+npm run dev
+```
+
+## Docker 建置
+
+```bash
+# 建置
+docker build --no-cache -t papakao/ty-multiverse-frontend .
+docker run -p 4321:4321 ty-multiverse-frontend
+
+# ARM64 多平台
+docker build --build-arg PLATFORM=linux/arm64 -t papakao/ty-multiverse-frontend .
+docker push papakao/ty-multiverse-frontend:latest
+```
+
+## Article Sync API 測試
+
+```bash
+# 檢查文件狀態（GET）
+curl -X GET "http://localhost:4321/tymultiverse/md-exporter"
+curl -X GET "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter"
+
+# 執行同步（POST）
+curl -X POST "http://localhost:4321/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" -d '{"action": "sync"}'
+curl -X POST "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" \
+  -H "Content-Type: application/json" -d '{"action": "sync"}'
+```
+
+Windows PowerShell：
+```powershell
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method GET | ConvertTo-Json -Depth 10
+Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}' | ConvertTo-Json -Depth 10
+```
+
+## Kubernetes CronJob（文章同步）
+
+```bash
+# 查看 CronJob 狀態
+kubectl get cronjobs -n default
+
+# 手動觸發
+kubectl create job --from=cronjob/ty-multiverse-article-sync manual-sync-$(date +%s) -n default
+
+# 查看日誌
+kubectl logs job/manual-sync-$(date +%s) -n default
+kubectl get jobs -n default | grep ty-multiverse-article-sync
+```
+
+## Market Overview 503 排查指令
+
+```bash
+# 確認 secret 不是空的（應為 48 bytes）
+kubectl describe secret market-internal-secret
+
+# 從 maya-sawa pod 測試 internal 端點
+kubectl exec <maya-pod> -- python3 -c 'import os,urllib.request; \
+  r=urllib.request.urlopen(urllib.request.Request("http://localhost:8000/maya-sawa/market/internal/usage", \
+  headers={"X-Internal-Secret":os.getenv("MARKET_INTERNAL_SECRET","")})); print(r.status, r.read()[:200])'
+
+# 從前端 pod 確認 server route
+kubectl exec <frontend-pod> -- node -e 'fetch("http://localhost:4321/api/market/usage").then(r=>r.text()).then(console.log)'
+```
+
+**重點教訓**：前端 server route 機密一律用 `process.env`，不要用 `import.meta.env`（build 階段會被 inline 成 undefined）。叢集內呼叫服務務必對齊 Service 實際 port（maya-sawa service port 80，非 8000）。
+
+## Video Service 本地開發
+
+```bash
+# 安裝 FFmpeg
+# Windows: choco install ffmpeg
+# macOS: brew install ffmpeg
+# Linux: sudo apt install ffmpeg
+
+npm install
+npm run video-service          # 或 npm run video-service:dev（nodemon 模式）
+```
+
+測試：
+```bash
+curl http://localhost:3000/health
+curl -X POST http://localhost:3000/api/videos/merge \
+  -H "Content-Type: application/json" \
+  -d '{"videoUrls":["http://..."],"outputFormat":"webm","removeBackground":true}'
+```
+
+## Vite 7 / Astro 6 相容性問題
+
+若 dev server 出現 `TypeError: Cannot read properties of undefined (reading 'call')`：
+
+```bash
+npm install astro@^6.4.7 @astrojs/react@^5.0.7 @astrojs/mdx@latest
+```
+
+版本要求：`astro` >= 6.4.7、`@astrojs/react` >= 5.0.7、`vite` >= 7.3.5。
