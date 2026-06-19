@@ -412,4 +412,38 @@ curl -X POST http://localhost:3000/api/videos/merge \
 npm install astro@^6.4.7 @astrojs/react@^5.0.7 @astrojs/mdx@latest
 ```
 
+---
+
+## Security Hardening: Token URL Removal (2026-06-19)
+
+### #4 Remove JWT/Token from URL Query Parameters (P1–P3 Completed)
+
+**問題**：access/refresh token 原透過 URL query param 在整站導覽傳遞
+- Nav.astro、palais、~15 SSR 頁把 token 掛在連結（`?username=...&token=...&refresh_token=...`）
+- 導致 token 殘留在瀏覽器歷史、伺服器日誌、Referer header
+- Gateway 回呼也把 token 串進 302 redirect URL、甚至 log 出明文
+
+**修正** (P1–P3 已完成、前端 build 通過)：
+
+1. **P1 移除導覽接力** ([Nav.astro](src/components/Nav.astro), [NavScript.ts](src/scripts/NavScript.ts))
+   - Nav.astro 連結：移除 `&token=...&refresh_token=...`，只留 `?username=...`（非機密）
+   - NavScript.ts updateNavLinks()：工作/控制/Wildland/Palais 連結不再帶 token
+   - `username` 保留（非機密、用於 SSR 判斷登入狀態）
+
+2. **P2 落地洗網址** (NavScript.ts getUrlParams)
+   - URL token 捕獲並存進 localStorage 後，立刻 `history.replaceState` 洗掉 query param 中的 token/refresh_token/id_token
+   - 避免留在瀏覽器歷史與後續請求的 Referer
+
+3. **P3 SSR gate 改讀 storage** (~15 pages + components)
+   - [people-management.astro](src/pages/people-management.astro), [control.astro](src/pages/control.astro), palais/* 等：改 `isLoggedIn = !!username` （從原本 `!!username && !!token`）
+   - [CKEditor.astro](src/components/CKEditor.astro), [Briefing.astro](src/components/Briefing.astro)：不再從 URL 讀 token，改讀 localStorage
+   - [index.ts](src/scripts/index.ts) marketAuthHeaders()：只從 localStorage 取 token（不再 fallback URL）
+
+**部署注意**：
+- 前端 build 通過（`npx astro build`），型別檢查無誤
+- 瀏覽器 admin 寫入仍正常（localStorage 內有 JWT）
+- 測試流程：登入後確認 URL 只有 username 無 token；refresh_token 不再進任何 URL
+
+**P4b 待做**（已排獨立 task）：refresh_token/id_token 改 httpOnly cookie（涉 Gateway/auth.ts 改動，需可實測的 token 過期場景）。
+
 版本要求：`astro` >= 6.4.7、`@astrojs/react` >= 5.0.7、`vite` >= 7.3.5。
