@@ -494,6 +494,36 @@
 	color: var(--gray-400);
 }
 
+/* Combined row holds up to three donuts (台灣 / 海外 / 全部); flex lets a hidden
+   overseas donut collapse and keeps the rest centered. */
+.portfolio-donuts-row--combined {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+}
+
+.portfolio-region-split {
+	display: block;
+	margin-top: 0.15rem;
+	font-size: 0.62rem;
+	line-height: 1.3;
+	color: var(--gray-400);
+	letter-spacing: 0.02em;
+}
+
+.portfolio-region-label {
+	justify-self: start;
+	width: 100%;
+	font-size: 0.8rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--accent-regular);
+	border-bottom: 1px solid var(--gray-800, rgba(255, 255, 255, 0.08));
+	padding-bottom: 0.25rem;
+}
+
 .portfolio-donut-sub-value {
 	font-size: 0.72rem;
 	font-weight: 600;

@@ -463,12 +463,37 @@ interface Portfolio {
             grossPositionValue: number;
             unrealizedPnl: number;
         };
+        positions: Array<{
+            code: string;
+            name: string;
+            assetClass: string;
+            currency: string;
+            quantity: number;
+            averagePrice: number;
+            lastPrice: number;
+            marketValue: number;
+            marketValueTwd: number;
+            pnl: number;
+            pnlTwd: number;
+        }>;
         fetchedAt: string;
         source: string;
+    };
+    regions?: {
+        taiwan: RegionFigures;
+        overseas: RegionFigures;
+        total: RegionFigures;
     };
     fetchedAt: string;
     source: string;
     valuationNote: string;
+}
+
+interface RegionFigures {
+    cash: number | null;
+    totalAssets: number | null;
+    totalPnl: number | null;
+    leverage: number | null;
 }
 
 const TXF_QUOTE_CACHE_KEY = 'market:txf-quote';
@@ -739,21 +764,24 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
         portfolio.summaryFormulas?.leverageRatio ? prettifyFormula(portfolio.summaryFormulas.leverageRatio) : undefined);
 
-    const ibkrItem = document.getElementById('portfolio-ibkr-item');
-    const ibkrValue = document.getElementById('portfolio-ibkr');
-    if (ibkrItem && ibkrValue) {
-        if (portfolio.ibkr) {
-            const { usd, twd, usdTwdRate } = portfolio.ibkr;
-            ibkrItem.hidden = false;
-            ibkrValue.textContent = currency(twd.netLiquidation);
-            setSummaryTooltip('portfolio-ibkr', 'portfolio-ibkr-tooltip',
-                `Net liq US$ ${usd.netLiquidation.toLocaleString()}\n`
-                + `Cash US$ ${usd.cashBalance.toLocaleString()}\n`
-                + `@ ${usdTwdRate} USD/TWD`);
+    // Region split sub-lines (台 Taiwan · 外 Overseas) under Cash / Total / Leverage.
+    const regions = portfolio.regions;
+    const hasOverseas = !!regions && ((regions.overseas.totalAssets ?? 0) !== 0 || (regions.overseas.cash ?? 0) !== 0);
+    const setSplit = (id: string, fmt: (r: RegionFigures) => string) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (regions && hasOverseas) {
+            el.textContent = `台 ${fmt(regions.taiwan)} · 外 ${fmt(regions.overseas)}`;
+            el.hidden = false;
         } else {
-            ibkrItem.hidden = true;
+            el.hidden = true;
         }
-    }
+    };
+    const cur0 = (v: number | null) => v === null ? '—' : currency(v);
+    const lev = (v: number | null) => v === null || v === undefined ? '—' : `${v.toFixed(2)}x`;
+    setSplit('portfolio-cash-split', (r) => cur0(r.cash));
+    setSplit('portfolio-total-split', (r) => cur0(r.totalAssets));
+    setSplit('portfolio-leverage-split', (r) => lev(r.leverage));
     renderPortfolioAllocation(portfolio);
 }
 
@@ -772,8 +800,10 @@ function resetPortfolioDisplay(message = 'Login required to view account portfol
     setText('portfolio-total', '--');
     setText('portfolio-pnl', '--');
     setText('portfolio-leverage', '--');
-    const ibkrItem = document.getElementById('portfolio-ibkr-item');
-    if (ibkrItem) ibkrItem.hidden = true;
+    ['portfolio-cash-split', 'portfolio-total-split', 'portfolio-leverage-split'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ''; (el as HTMLElement).hidden = true; }
+    });
     setText('portfolio-position-count', '--');
     setText('portfolio-futures-count', '--');
     setText('portfolio-combined-count', '--');
@@ -791,17 +821,52 @@ function resetPortfolioDisplay(message = 'Login required to view account portfol
         accessMessage.textContent = '';
         accessMessage.hidden = true;
     }
-    ['portfolio-donut-svg', 'portfolio-futures-donut-svg', 'portfolio-combined-donut-svg'].forEach((id) => {
+    [
+        'portfolio-donut-svg', 'portfolio-futures-donut-svg', 'portfolio-overseas-donut-svg',
+        'portfolio-combined-tw-donut-svg', 'portfolio-combined-os-donut-svg', 'portfolio-combined-donut-svg',
+    ].forEach((id) => {
         const svg = document.getElementById(id);
         if (svg) svg.innerHTML = '<circle class="portfolio-donut-track" cx="60" cy="60" r="46"></circle>';
     });
-    ['portfolio-tooltip', 'portfolio-futures-tooltip', 'portfolio-combined-tooltip'].forEach((id) => {
+    [
+        'portfolio-tooltip', 'portfolio-futures-tooltip', 'portfolio-overseas-tooltip',
+        'portfolio-combined-tw-tooltip', 'portfolio-combined-os-tooltip', 'portfolio-combined-tooltip',
+    ].forEach((id) => {
         document.getElementById(id)?.classList.remove('is-visible');
+    });
+    ['portfolio-overseas-count', 'portfolio-combined-tw-count', 'portfolio-combined-os-count'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '--';
+    });
+    const overseasValue = document.getElementById('portfolio-overseas-value');
+    if (overseasValue) overseasValue.textContent = '--';
+    ['portfolio-overseas-section', 'portfolio-combined-os-wrap'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) (el as HTMLElement).hidden = true;
     });
 }
 
 
-type DonutSlice = { key: string; code: string; value: number; position: PortfolioPosition | null; isFutures?: boolean };
+type OverseasMeta = {
+    name: string;
+    assetClass: string;
+    currency: string;
+    quantity: number;
+    averagePrice: number;
+    lastPrice: number;
+    marketValueNative: number;
+    pnlNative: number;
+    pnlTwd: number;
+};
+type DonutSlice = {
+    key: string;
+    code: string;
+    value: number;
+    position: PortfolioPosition | null;
+    isFutures?: boolean;
+    isOverseas?: boolean;
+    overseas?: OverseasMeta;
+};
 
 function getAllocationValue(position: PortfolioPosition): number {
     return Math.abs(position.allocationValue ?? position.marketValue);
@@ -846,6 +911,14 @@ function renderDonut(
         const pos = slice.position;
         if (!pos) {
             tooltipEl.innerHTML = `<strong>Cash · ${pct.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
+        } else if (slice.isOverseas && slice.overseas) {
+            const o = slice.overseas;
+            const nativeFmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            tooltipEl.innerHTML = `<strong>${o.name || slice.code}</strong>
+               <small>${slice.code} · ${o.assetClass} · ${pct.toFixed(2)}%</small>
+               <span>Qty ${o.quantity} · Cost ${nativeFmt(o.averagePrice)} · Last ${nativeFmt(o.lastPrice)}</span>
+               <span>Value ${o.currency} ${nativeFmt(o.marketValueNative)} · ${currency(slice.value)}</span>
+               <b class="${o.pnlTwd >= 0 ? 'up' : 'down'}">P/L ${o.pnlTwd >= 0 ? '+' : ''}${currency(o.pnlTwd)}</b>`;
         } else if (slice.isFutures) {
             tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
                <small>${pos.code} · ${pct.toFixed(2)}%</small>
@@ -901,9 +974,6 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
         .filter((p) => p.pnl < 0 && getAllocationValue(p) > 0)
         .map((p, index) => ({ key: `stock:loss:${p.code}:${index}`, code: p.code, value: getAllocationValue(p), position: p }))
         .sort((a, b) => Math.abs(a.position!.pnl) - Math.abs(b.position!.pnl));
-    const cashSlices: DonutSlice[] = portfolio.cashBalance && portfolio.cashBalance > 0
-        ? [{ key: 'cash', code: 'Cash', value: portfolio.cashBalance, position: null }]
-        : [];
     const stockSlices: DonutSlice[] = [...profitableStock, ...losingStock];
     const stockTotal = stockSlices.reduce((sum, slice) => sum + slice.value, 0);
 
@@ -918,50 +988,100 @@ function renderPortfolioAllocation(portfolio: Portfolio) {
         .sort((a, b) => Math.abs(a.position!.pnl) - Math.abs(b.position!.pnl));
     const futuresSlices: DonutSlice[] = [...profitableFut, ...losingFut];
 
-    // Combined slices
-    const combinedSlices: DonutSlice[] = [...cashSlices, ...stockSlices, ...futuresSlices];
-    const combinedTotal = combinedSlices.reduce((s, sl) => s + sl.value, 0);
+    // Build 海外 (IBKR) slices, converted to NT$. The merge already folded IBKR
+    // cash into portfolio.cashBalance, so recover the Taiwan-only cash here.
+    const ibkrCashTwd = portfolio.ibkr?.twd.cashBalance ?? 0;
+    const overseasPositions = portfolio.ibkr?.positions ?? [];
+    const toOverseasSlice = (p: NonNullable<Portfolio['ibkr']>['positions'][number], index: number): DonutSlice => ({
+        key: `os:${p.code}:${index}`,
+        code: p.code,
+        value: Math.abs(p.marketValueTwd),
+        position: { pnl: p.pnlTwd } as PortfolioPosition, // only .pnl is read (color)
+        isOverseas: true,
+        overseas: {
+            name: p.name,
+            assetClass: p.assetClass,
+            currency: p.currency,
+            quantity: p.quantity,
+            averagePrice: p.averagePrice,
+            lastPrice: p.lastPrice,
+            marketValueNative: p.marketValue,
+            pnlNative: p.pnl,
+            pnlTwd: p.pnlTwd,
+        },
+    });
+    const profitableOs: DonutSlice[] = overseasPositions
+        .filter((p) => p.pnlTwd >= 0 && Math.abs(p.marketValueTwd) > 0)
+        .map(toOverseasSlice)
+        .sort((a, b) => Math.abs(b.position!.pnl) - Math.abs(a.position!.pnl));
+    const losingOs: DonutSlice[] = overseasPositions
+        .filter((p) => p.pnlTwd < 0 && Math.abs(p.marketValueTwd) > 0)
+        .map(toOverseasSlice)
+        .sort((a, b) => Math.abs(a.position!.pnl) - Math.abs(b.position!.pnl));
+    const overseasSlices: DonutSlice[] = [...profitableOs, ...losingOs];
+    const overseasTotal = overseasSlices.reduce((s, sl) => s + sl.value, 0);
 
-    // Shared P/L color function for all donut views.
-    const allProfitable = [...profitableStock, ...profitableFut];
-    const allLosing = [...losingStock, ...losingFut];
-    const colorFn = buildPnlColorFns(allProfitable, allLosing);
+    const twCash = Math.max((portfolio.cashBalance ?? 0) - ibkrCashTwd, 0);
+    const twCashSlices: DonutSlice[] = twCash > 0
+        ? [{ key: 'tw-cash', code: 'Cash', value: twCash, position: null }]
+        : [];
+    const osCashSlices: DonutSlice[] = ibkrCashTwd > 0
+        ? [{ key: 'os-cash', code: 'Cash', value: ibkrCashTwd, position: null }]
+        : [];
 
-    // Securities donut
-    const stockSvg = document.getElementById('portfolio-donut-svg');
-    const stockTooltip = document.getElementById('portfolio-tooltip');
-    const stockCount = document.getElementById('portfolio-position-count');
-    if (stockSvg && stockTooltip) {
-        renderDonut(stockSvg, stockTooltip, stockCount, stockSlices, stockTotal, colorFn, currency, `${stockPositions.length} stock positions`);
-    }
+    // Combined views: 台灣 / 海外 / 全部
+    const twCombinedSlices: DonutSlice[] = [...twCashSlices, ...stockSlices, ...futuresSlices];
+    const osCombinedSlices: DonutSlice[] = [...osCashSlices, ...overseasSlices];
+    const allCombinedSlices: DonutSlice[] = [...twCombinedSlices, ...osCombinedSlices];
+    const sumValues = (slices: DonutSlice[]) => slices.reduce((s, sl) => s + sl.value, 0);
+
+    // Shared P/L color function across all donut views (all values are NT$).
+    const colorFn = buildPnlColorFns(
+        [...profitableStock, ...profitableFut, ...profitableOs],
+        [...losingStock, ...losingFut, ...losingOs],
+    );
+
+    const drawDonut = (svgId: string, tipId: string, countId: string | null, slices: DonutSlice[], total: number, aria: string) => {
+        const svg = document.getElementById(svgId);
+        const tip = document.getElementById(tipId);
+        const count = countId ? document.getElementById(countId) : null;
+        if (svg && tip) renderDonut(svg, tip, count, slices, total, colorFn, currency, aria);
+    };
+
+    // 台灣 Securities donut
+    drawDonut('portfolio-donut-svg', 'portfolio-tooltip', 'portfolio-position-count', stockSlices, stockTotal, `${stockPositions.length} stock positions`);
     const securitiesValueEl = document.getElementById('portfolio-securities-value');
-    if (securitiesValueEl) {
-        const mv = portfolio.stockMarketValue ?? stockTotal;
-        securitiesValueEl.textContent = currency(mv);
-    }
+    if (securitiesValueEl) securitiesValueEl.textContent = currency(portfolio.stockMarketValue ?? stockTotal);
 
-    // Futures donut
-    const futSvg = document.getElementById('portfolio-futures-donut-svg');
-    const futTooltip = document.getElementById('portfolio-futures-tooltip');
-    const futCount = document.getElementById('portfolio-futures-count');
-    if (futSvg && futTooltip) {
-        const futTotal = futuresSlices.reduce((s, sl) => s + sl.value, 0);
-        renderDonut(futSvg, futTooltip, futCount, futuresSlices, futTotal, colorFn, currency, `${futuresPositions.length} futures positions`);
-    }
+    // 台灣 Futures donut
+    const futuresTotal = sumValues(futuresSlices);
+    drawDonut('portfolio-futures-donut-svg', 'portfolio-futures-tooltip', 'portfolio-futures-count', futuresSlices, futuresTotal, `${futuresPositions.length} futures positions`);
     const futuresEquityEl = document.getElementById('portfolio-futures-equity');
     if (futuresEquityEl) {
         const eq = portfolio.futuresEquity ?? portfolio.futuresSummary?.equity;
         futuresEquityEl.textContent = eq !== undefined ? currency(eq) : '--';
     }
 
-    // Combined donut
-    const combinedSvg = document.getElementById('portfolio-combined-donut-svg');
-    const combinedTooltip = document.getElementById('portfolio-combined-tooltip');
-    const combinedCount = document.getElementById('portfolio-combined-count');
-    if (combinedSvg && combinedTooltip) {
-        if (combinedCount) combinedCount.textContent = String(stockPositions.length + futuresPositions.length);
-        renderDonut(combinedSvg, combinedTooltip, null, combinedSlices, combinedTotal, colorFn, currency, `${combinedSlices.length} total positions`);
+    // 海外 (IBKR) donut — hide the whole region when there are no overseas holdings
+    const hasOverseas = overseasSlices.length > 0 || ibkrCashTwd > 0;
+    const overseasSection = document.getElementById('portfolio-overseas-section');
+    const overseasCombinedWrap = document.getElementById('portfolio-combined-os-wrap');
+    if (overseasSection) overseasSection.hidden = !hasOverseas;
+    if (overseasCombinedWrap) overseasCombinedWrap.hidden = !hasOverseas;
+    if (hasOverseas) {
+        drawDonut('portfolio-overseas-donut-svg', 'portfolio-overseas-tooltip', 'portfolio-overseas-count', overseasSlices, overseasTotal, `${overseasSlices.length} overseas positions`);
+        const overseasValueEl = document.getElementById('portfolio-overseas-value');
+        if (overseasValueEl) overseasValueEl.textContent = currency(portfolio.ibkr?.twd.netLiquidation ?? overseasTotal);
+        drawDonut('portfolio-combined-os-donut-svg', 'portfolio-combined-os-tooltip', 'portfolio-combined-os-count', osCombinedSlices, sumValues(osCombinedSlices), `${osCombinedSlices.length} overseas combined`);
     }
+
+    // Combined 台灣
+    drawDonut('portfolio-combined-tw-donut-svg', 'portfolio-combined-tw-tooltip', 'portfolio-combined-tw-count', twCombinedSlices, sumValues(twCombinedSlices), `${twCombinedSlices.length} Taiwan combined`);
+
+    // Combined 全部
+    const combinedCount = document.getElementById('portfolio-combined-count');
+    if (combinedCount) combinedCount.textContent = String(stockPositions.length + futuresPositions.length + overseasSlices.length);
+    drawDonut('portfolio-combined-donut-svg', 'portfolio-combined-tooltip', null, allCombinedSlices, sumValues(allCombinedSlices), `${allCombinedSlices.length} total positions`);
 }
 
 async function fetchTxfQuote() {

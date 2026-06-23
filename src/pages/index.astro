@@ -212,11 +212,13 @@ const skillsCategories = skillsData.categories;
 										<div class="portfolio-summary-item">
 											<span>Cash balance</span>
 											<strong id="portfolio-cash" tabindex="0">--</strong>
+											<small id="portfolio-cash-split" class="portfolio-region-split" hidden></small>
 											<div id="portfolio-cash-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 										<div class="portfolio-summary-item">
 											<span>Estimated total assets</span>
 											<strong id="portfolio-total" tabindex="0">--</strong>
+											<small id="portfolio-total-split" class="portfolio-region-split" hidden></small>
 											<div id="portfolio-total-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 										<div class="portfolio-summary-item">
@@ -227,17 +229,15 @@ const skillsCategories = skillsData.categories;
 										<div class="portfolio-summary-item">
 											<span>Leverage</span>
 											<strong id="portfolio-leverage" tabindex="0">--</strong>
+											<small id="portfolio-leverage-split" class="portfolio-region-split" hidden></small>
 											<div id="portfolio-leverage-tooltip" class="portfolio-summary-tooltip" role="status"></div>
-										</div>
-										<div class="portfolio-summary-item" id="portfolio-ibkr-item" hidden>
-											<span>IBKR (incl.)</span>
-											<strong id="portfolio-ibkr" tabindex="0">--</strong>
-											<div id="portfolio-ibkr-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 									</div>
 
-									<!-- Donut charts: Securities (left) / Futures (right), Combined below -->
+									<!-- Donut charts grouped by region: 台灣 (Shioaji) / 海外 (IBKR) / Combined -->
 									<div class="portfolio-donuts">
+										<!-- 台灣 region: Securities + Futures -->
+										<span class="portfolio-region-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
 										<div class="portfolio-donuts-row">
 											<div class="portfolio-donut-section">
 												<span class="portfolio-donut-label">Securities</span>
@@ -262,14 +262,53 @@ const skillsCategories = skillsData.categories;
 												<span id="portfolio-futures-equity" class="portfolio-donut-sub-value">--</span>
 											</div>
 										</div>
-										<div class="portfolio-donut-section">
-											<span class="portfolio-donut-label">Combined</span>
-											<div id="portfolio-combined-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Combined allocation">
-												<svg id="portfolio-combined-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Combined allocation chart"></svg>
+
+										<!-- 海外 region: IBKR (single donut, converted to NT$) -->
+										<span class="portfolio-region-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
+										<div class="portfolio-donut-section" id="portfolio-overseas-section" hidden>
+											<span class="portfolio-donut-label">IBKR</span>
+											<div id="portfolio-overseas-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Overseas allocation">
+												<svg id="portfolio-overseas-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas allocation chart"></svg>
 												<div class="portfolio-donut-center">
-													<strong id="portfolio-combined-count">--</strong>
+													<strong id="portfolio-overseas-count">--</strong>
+												</div>
+												<div id="portfolio-overseas-tooltip" class="portfolio-tooltip" role="status"></div>
+											</div>
+											<span id="portfolio-overseas-value" class="portfolio-donut-sub-value">--</span>
+										</div>
+
+										<!-- Combined region: 台灣 / 海外 / 全部 -->
+										<span class="portfolio-region-label" data-i18n="home.portfolioRegionCombined">Combined</span>
+										<div class="portfolio-donuts-row portfolio-donuts-row--combined">
+											<div class="portfolio-donut-section">
+												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
+												<div class="portfolio-donut portfolio-donut--sm" aria-label="Taiwan combined allocation">
+													<svg id="portfolio-combined-tw-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Taiwan combined chart"></svg>
+													<div class="portfolio-donut-center">
+														<strong id="portfolio-combined-tw-count">--</strong>
 													</div>
-												<div id="portfolio-combined-tooltip" class="portfolio-tooltip" role="status"></div>
+													<div id="portfolio-combined-tw-tooltip" class="portfolio-tooltip" role="status"></div>
+												</div>
+											</div>
+											<div class="portfolio-donut-section" id="portfolio-combined-os-wrap" hidden>
+												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
+												<div class="portfolio-donut portfolio-donut--sm" aria-label="Overseas combined allocation">
+													<svg id="portfolio-combined-os-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas combined chart"></svg>
+													<div class="portfolio-donut-center">
+														<strong id="portfolio-combined-os-count">--</strong>
+													</div>
+													<div id="portfolio-combined-os-tooltip" class="portfolio-tooltip" role="status"></div>
+												</div>
+											</div>
+											<div class="portfolio-donut-section">
+												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionAll">全部 All</span>
+												<div id="portfolio-combined-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Combined allocation">
+													<svg id="portfolio-combined-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Combined allocation chart"></svg>
+													<div class="portfolio-donut-center">
+														<strong id="portfolio-combined-count">--</strong>
+													</div>
+													<div id="portfolio-combined-tooltip" class="portfolio-tooltip" role="status"></div>
+												</div>
 											</div>
 										</div>
 									</div>
