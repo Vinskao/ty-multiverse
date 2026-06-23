@@ -233,142 +233,93 @@ const skillsCategories = skillsData.categories;
 											<div id="portfolio-leverage-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 									</div>
-
-									<!-- Donut charts grouped by region: 台灣 (Shioaji) / 海外 (IBKR) / Combined -->
-									<div class="portfolio-donuts">
-										<!-- 台灣 region: Securities + Futures -->
-										<span class="portfolio-region-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
-										<div class="portfolio-donuts-row">
-											<div class="portfolio-donut-section">
-												<span class="portfolio-donut-label">Securities</span>
-												<div id="portfolio-allocation-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Stock allocation">
-													<svg id="portfolio-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Stock allocation chart"></svg>
-													<div class="portfolio-donut-center">
-														<strong id="portfolio-position-count">--</strong>
-																			</div>
-													<div id="portfolio-tooltip" class="portfolio-tooltip" role="status"></div>
-												</div>
-												<span id="portfolio-securities-value" class="portfolio-donut-sub-value">--</span>
-											</div>
-											<div class="portfolio-donut-section">
-												<span class="portfolio-donut-label">Futures</span>
-												<div id="portfolio-futures-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Futures allocation">
-													<svg id="portfolio-futures-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Futures allocation chart"></svg>
-													<div class="portfolio-donut-center">
-														<strong id="portfolio-futures-count">--</strong>
-																			</div>
-													<div id="portfolio-futures-tooltip" class="portfolio-tooltip" role="status"></div>
-												</div>
-												<span id="portfolio-futures-equity" class="portfolio-donut-sub-value">--</span>
-											</div>
-										</div>
-
-										<!-- 海外 region: IBKR (single donut, converted to NT$) -->
-										<span class="portfolio-region-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
-										<div class="portfolio-donut-section" id="portfolio-overseas-section" hidden>
-											<span class="portfolio-donut-label">IBKR</span>
-											<div id="portfolio-overseas-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Overseas allocation">
-												<svg id="portfolio-overseas-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas allocation chart"></svg>
-												<div class="portfolio-donut-center">
-													<strong id="portfolio-overseas-count">--</strong>
-												</div>
-												<div id="portfolio-overseas-tooltip" class="portfolio-tooltip" role="status"></div>
-											</div>
-											<span id="portfolio-overseas-value" class="portfolio-donut-sub-value">--</span>
-										</div>
-
-										<!-- Combined region: 台灣 / 海外 / 全部 -->
-										<span class="portfolio-region-label" data-i18n="home.portfolioRegionCombined">Combined</span>
-										<div class="portfolio-donuts-row portfolio-donuts-row--combined">
-											<div class="portfolio-donut-section">
-												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
-												<div class="portfolio-donut portfolio-donut--sm" aria-label="Taiwan combined allocation">
-													<svg id="portfolio-combined-tw-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Taiwan combined chart"></svg>
-													<div class="portfolio-donut-center">
-														<strong id="portfolio-combined-tw-count">--</strong>
-													</div>
-													<div id="portfolio-combined-tw-tooltip" class="portfolio-tooltip" role="status"></div>
-												</div>
-											</div>
-											<div class="portfolio-donut-section" id="portfolio-combined-os-wrap" hidden>
-												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
-												<div class="portfolio-donut portfolio-donut--sm" aria-label="Overseas combined allocation">
-													<svg id="portfolio-combined-os-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas combined chart"></svg>
-													<div class="portfolio-donut-center">
-														<strong id="portfolio-combined-os-count">--</strong>
-													</div>
-													<div id="portfolio-combined-os-tooltip" class="portfolio-tooltip" role="status"></div>
-												</div>
-											</div>
-											<div class="portfolio-donut-section">
-												<span class="portfolio-donut-label" data-i18n="home.portfolioRegionAll">全部 All</span>
-												<div id="portfolio-combined-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Combined allocation">
-													<svg id="portfolio-combined-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Combined allocation chart"></svg>
-													<div class="portfolio-donut-center">
-														<strong id="portfolio-combined-count">--</strong>
-													</div>
-													<div id="portfolio-combined-tooltip" class="portfolio-tooltip" role="status"></div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
-
-	
 									<p id="portfolio-updated" class="market-updated">--</p>
 									<p id="portfolio-access-message" class="market-updated" hidden></p>
 								</div>
 							</section>
 						</div>
+
+					<!-- Donut charts: full market-overview-grid width -->
+					<div class="portfolio-donuts-fullwidth">
+						<!-- 台灣 region: Securities + Futures -->
+						<span class="portfolio-region-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
+						<div class="portfolio-donuts-row">
+							<div class="portfolio-donut-section">
+								<span class="portfolio-donut-label">Securities</span>
+								<div id="portfolio-allocation-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Stock allocation">
+									<svg id="portfolio-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Stock allocation chart"></svg>
+									<div class="portfolio-donut-center">
+										<strong id="portfolio-position-count">--</strong>
+									</div>
+									<div id="portfolio-tooltip" class="portfolio-tooltip" role="status"></div>
+								</div>
+								<span id="portfolio-securities-value" class="portfolio-donut-sub-value">--</span>
+							</div>
+							<div class="portfolio-donut-section">
+								<span class="portfolio-donut-label">Futures</span>
+								<div id="portfolio-futures-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Futures allocation">
+									<svg id="portfolio-futures-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Futures allocation chart"></svg>
+									<div class="portfolio-donut-center">
+										<strong id="portfolio-futures-count">--</strong>
+									</div>
+									<div id="portfolio-futures-tooltip" class="portfolio-tooltip" role="status"></div>
+								</div>
+								<span id="portfolio-futures-equity" class="portfolio-donut-sub-value">--</span>
+							</div>
+						</div>
+
+						<!-- 海外 region -->
+						<span class="portfolio-region-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
+						<div class="portfolio-donut-section" id="portfolio-overseas-section" hidden>
+							<span class="portfolio-donut-label">ASSETS</span>
+							<div id="portfolio-overseas-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Overseas allocation">
+								<svg id="portfolio-overseas-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas allocation chart"></svg>
+								<div class="portfolio-donut-center">
+									<strong id="portfolio-overseas-count">--</strong>
+								</div>
+								<div id="portfolio-overseas-tooltip" class="portfolio-tooltip" role="status"></div>
+							</div>
+							<span id="portfolio-overseas-value" class="portfolio-donut-sub-value">--</span>
+						</div>
+
+						<!-- Combined region: 台灣 / 海外 / 全部 -->
+						<span class="portfolio-region-label" data-i18n="home.portfolioRegionCombined">Combined</span>
+						<div class="portfolio-donuts-row portfolio-donuts-row--combined">
+							<div class="portfolio-donut-section">
+								<span class="portfolio-donut-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
+								<div class="portfolio-donut portfolio-donut--sm" aria-label="Taiwan combined allocation">
+									<svg id="portfolio-combined-tw-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Taiwan combined chart"></svg>
+									<div class="portfolio-donut-center">
+										<strong id="portfolio-combined-tw-count">--</strong>
+									</div>
+									<div id="portfolio-combined-tw-tooltip" class="portfolio-tooltip" role="status"></div>
+								</div>
+							</div>
+							<div class="portfolio-donut-section" id="portfolio-combined-os-wrap" hidden>
+								<span class="portfolio-donut-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
+								<div class="portfolio-donut portfolio-donut--sm" aria-label="Overseas combined allocation">
+									<svg id="portfolio-combined-os-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Overseas combined chart"></svg>
+									<div class="portfolio-donut-center">
+										<strong id="portfolio-combined-os-count">--</strong>
+									</div>
+									<div id="portfolio-combined-os-tooltip" class="portfolio-tooltip" role="status"></div>
+								</div>
+							</div>
+							<div class="portfolio-donut-section">
+								<span class="portfolio-donut-label" data-i18n="home.portfolioRegionAll">全部 All</span>
+								<div id="portfolio-combined-chart" class="portfolio-donut portfolio-donut--sm" aria-label="Combined allocation">
+									<svg id="portfolio-combined-donut-svg" viewBox="0 0 120 120" role="img" aria-label="Combined allocation chart"></svg>
+									<div class="portfolio-donut-center">
+										<strong id="portfolio-combined-count">--</strong>
+									</div>
+									<div id="portfolio-combined-tooltip" class="portfolio-tooltip" role="status"></div>
+								</div>
+							</div>
+						</div>
+						<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
+					</div>
 					</section>
 
-					<div class="hero-content">
-						<!-- D3 Bubble Chart showing skill categories and scores -->
-						<SkillsBubbleChart client:load data={bubbleChartData} categoriesData={skillsCategories} />
-					</div>
-
-					<div class="leetcode-graph">
-						<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
-						<div id="leetcode-stats" class="leetcode-container">
-							<div class="leetcode-card">
-								<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
-								<p id="total-solved" data-i18n="home.loading">Loading...</p>
-								<div class="progress-bar">
-									<div id="total-progress"></div>
-								</div>
-							</div>
-							<div class="leetcode-card">
-								<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
-								<p id="easy-solved" data-i18n="home.loading">Loading...</p>
-								<div class="progress-bar">
-									<div id="easy-progress"></div>
-								</div>
-							</div>
-							<div class="leetcode-card">
-								<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
-								<p id="medium-solved" data-i18n="home.loading">Loading...</p>
-								<div class="progress-bar">
-									<div id="medium-progress"></div>
-								</div>
-							</div>
-							<div class="leetcode-card">
-								<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
-								<p id="hard-solved" data-i18n="home.loading">Loading...</p>
-								<div class="progress-bar">
-									<div id="hard-progress"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="algorithms-section">
-						<h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
-						<div class="algorithms-list">
-							{algorithmsUsed.map((algo) => (
-								<span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
-							))}
-						</div>
-					</div>
 				</div>
 
 				<div class="hero-side">
@@ -390,8 +341,51 @@ const skillsCategories = skillsData.categories;
 							</div>
 						</div>
 
+						<div class="leetcode-graph">
+							<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
+							<div id="leetcode-stats" class="leetcode-container">
+								<div class="leetcode-card">
+									<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
+									<p id="total-solved" data-i18n="home.loading">Loading...</p>
+									<div class="progress-bar">
+										<div id="total-progress"></div>
+									</div>
+								</div>
+								<div class="leetcode-card">
+									<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
+									<p id="easy-solved" data-i18n="home.loading">Loading...</p>
+									<div class="progress-bar">
+										<div id="easy-progress"></div>
+									</div>
+								</div>
+								<div class="leetcode-card">
+									<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
+									<p id="medium-solved" data-i18n="home.loading">Loading...</p>
+									<div class="progress-bar">
+										<div id="medium-progress"></div>
+									</div>
+								</div>
+								<div class="leetcode-card">
+									<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
+									<p id="hard-solved" data-i18n="home.loading">Loading...</p>
+									<div class="progress-bar">
+										<div id="hard-progress"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="algorithms-section">
+							<h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
+							<div class="algorithms-list">
+								{algorithmsUsed.map((algo) => (
+									<span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
+								))}
+							</div>
+						</div>
+
 						<div class="portrait-container">
-		
+
 						</div>
 
 					</div>
@@ -400,14 +394,13 @@ const skillsCategories = skillsData.categories;
 				
 			</header>
 
-			<!-- Research Zone: accordion of research components -->
-			<section class="research-zone-wrapper wrapper">
-				<h4 class="section-title" data-i18n="home.researchZoneTitle">Research Zone</h4>
-				<ResearchZone client:visible mappingData={companyProductMapping} />
-			</section>
+			<!-- Skills Bubble Chart: full-width -->
+			<div class="wrapper">
+				<SkillsBubbleChart client:load data={bubbleChartData} categoriesData={skillsCategories} />
+			</div>
 
-			<!-- Skills Categories moved from hero-content -->
-			<div class="hero-content categories-section">
+			<!-- Skills Overview: full-width above Research Zone -->
+			<div class="wrapper categories-section">
 				<div class="categories">
 					{skillsCategories.map((category) => {
 						return (
@@ -442,6 +435,12 @@ const skillsCategories = skillsData.categories;
 			</div>
 
 			<Skills />
+
+			<!-- Research Zone: accordion of research components -->
+			<section class="research-zone-wrapper wrapper">
+				<h4 class="section-title" data-i18n="home.researchZoneTitle">Research Zone</h4>
+				<ResearchZone client:visible mappingData={companyProductMapping} />
+			</section>
 
 		</div>
 

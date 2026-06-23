@@ -743,9 +743,10 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     document.getElementById('portfolio-pnl')!.className = totalPnl >= 0 ? 'up' : 'down';
     const leverage = document.getElementById('portfolio-leverage');
     if (leverage) {
-        leverage.textContent = portfolio.leverageRatio === null || portfolio.leverageRatio === undefined
+        const totalLev = portfolio.regions?.total?.leverage ?? portfolio.leverageRatio;
+        leverage.textContent = totalLev === null || totalLev === undefined
             ? 'Unavailable'
-            : `${portfolio.leverageRatio.toFixed(2)}x`;
+            : `${totalLev.toFixed(2)}x`;
     }
     setSummaryTooltip('portfolio-cash', 'portfolio-cash-tooltip', portfolio.summaryFormulas?.cashBalance);
     setSummaryTooltip('portfolio-total', 'portfolio-total-tooltip', portfolio.summaryFormulas?.totalAssetsEstimated);
