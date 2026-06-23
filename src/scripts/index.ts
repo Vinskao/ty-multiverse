@@ -445,6 +445,27 @@ interface Portfolio {
         totalPnl?: string | null;
         leverageRatio?: string | null;
     };
+    ibkr?: {
+        accountId: string;
+        baseCurrency: string;
+        usdTwdRate: number;
+        rateSource: string;
+        usd: {
+            cashBalance: number;
+            netLiquidation: number;
+            grossPositionValue: number;
+            unrealizedPnl: number;
+            realizedPnl: number;
+        };
+        twd: {
+            cashBalance: number;
+            netLiquidation: number;
+            grossPositionValue: number;
+            unrealizedPnl: number;
+        };
+        fetchedAt: string;
+        source: string;
+    };
     fetchedAt: string;
     source: string;
     valuationNote: string;
@@ -717,6 +738,22 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     );
     setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
         portfolio.summaryFormulas?.leverageRatio ? prettifyFormula(portfolio.summaryFormulas.leverageRatio) : undefined);
+
+    const ibkrItem = document.getElementById('portfolio-ibkr-item');
+    const ibkrValue = document.getElementById('portfolio-ibkr');
+    if (ibkrItem && ibkrValue) {
+        if (portfolio.ibkr) {
+            const { usd, twd, usdTwdRate } = portfolio.ibkr;
+            ibkrItem.hidden = false;
+            ibkrValue.textContent = currency(twd.netLiquidation);
+            setSummaryTooltip('portfolio-ibkr', 'portfolio-ibkr-tooltip',
+                `Net liq US$ ${usd.netLiquidation.toLocaleString()}\n`
+                + `Cash US$ ${usd.cashBalance.toLocaleString()}\n`
+                + `@ ${usdTwdRate} USD/TWD`);
+        } else {
+            ibkrItem.hidden = true;
+        }
+    }
     renderPortfolioAllocation(portfolio);
 }
 
@@ -735,6 +772,8 @@ function resetPortfolioDisplay(message = 'Login required to view account portfol
     setText('portfolio-total', '--');
     setText('portfolio-pnl', '--');
     setText('portfolio-leverage', '--');
+    const ibkrItem = document.getElementById('portfolio-ibkr-item');
+    if (ibkrItem) ibkrItem.hidden = true;
     setText('portfolio-position-count', '--');
     setText('portfolio-futures-count', '--');
     setText('portfolio-combined-count', '--');

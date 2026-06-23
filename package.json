@@ -55,6 +55,7 @@
     "undici": "^7.4.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.9",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -66,6 +67,7 @@
     "@types/react-dom": "^19.2.3",
     "jsdom": "^27.0.1",
     "nodemon": "^3.0.2",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   },
   "optionalDependencies": {
