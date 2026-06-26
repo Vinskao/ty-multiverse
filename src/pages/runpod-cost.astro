@@ -1,0 +1,30 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import RunpodCostDashboard from "../components/RunpodCostDashboard";
+
+const url = new URL(Astro.request.url);
+const username = url.searchParams.get('username');
+
+const isLoggedIn = !!username; // 與 ai-usage 一致：機密改由 localStorage + 後端強制
+
+if (!isLoggedIn) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+---
+
+<!DOCTYPE html>
+<meta charset="UTF-8" />
+<html>
+  <head></head>
+  <body>
+    <BaseLayout title="RunPod GPU Cost | Wavo Yuropha">
+      <div class="stack gap-20">
+        <main class="wrapper stack gap-8">
+          <Hero title="RunPod GPU Cost" align="start" />
+          <RunpodCostDashboard client:load />
+        </main>
+      </div>
+    </BaseLayout>
+  </body>
+</html>
