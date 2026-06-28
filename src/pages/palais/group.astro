@@ -46,6 +46,14 @@ if (!isLoggedIn) {
   </div>
 </div>
 
+<div id="palais-cart">
+  <div class="cart-header">
+    <span>🧺 菜籃</span>
+    <span class="cart-count" id="cart-count">0</span>
+  </div>
+  <div id="cart-items"></div>
+</div>
+
 <script is:inline async src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script is:inline async defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js"></script>
 
@@ -135,10 +143,95 @@ if (!isLoggedIn) {
   }
 
   .army-title {
-    font-size: 24px;
+    font-size: 10px; /* 從 24px 縮到約 1/5，但仍可讀 */
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  }
+
+  /* --- 浮動菜籃 --- */
+  #palais-cart {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
+    width: 200px;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(20, 20, 30, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  #palais-cart.drag-over {
+    border-color: #46A3FF;
+    box-shadow: 0 0 0 2px #46A3FF, 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  #palais-cart .cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    cursor: default;
+    user-select: none;
+  }
+
+  #palais-cart .cart-count {
+    font-size: 12px;
+    background: #007FFF;
+    border-radius: 10px;
+    padding: 1px 8px;
+  }
+
+  #cart-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    overflow-y: auto;
+    min-height: 60px;
+    align-content: flex-start;
+  }
+
+  #cart-items:empty::after {
+    content: '把人拖曳到這裡';
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    margin: auto;
+  }
+
+  /* 菜籃內的角色卡：取消重疊版面、縮小 */
+  #cart-items > div {
+    position: relative !important;
+    display: inline-block !important;
+    width: 56px !important;
+    margin: 0 !important;
+    left: auto !important;
+    bottom: auto !important;
+  }
+
+  #cart-items > div > img {
+    height: 72px !important;
+    width: auto !important;
+  }
+
+  /* 菜籃內隱藏卡片底部的詳細資訊，避免擠爆 */
+  #cart-items > div > div {
+    display: none !important;
+  }
+
+  .pg-draggable {
+    cursor: grab;
   }
 
   #group-container .box-container > div {
@@ -162,6 +255,66 @@ if (!isLoggedIn) {
   }
 
   const PEOPLE_IMAGE_URL = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
+
+  // --- 浮動菜籃（drag & drop，localStorage 記住）---
+
+  let draggedCard: HTMLElement | null = null;
+  const CART_KEY = 'palais-cart-v1';
+
+  function getCartSet(): Set<string> {
+    try { return new Set(JSON.parse(localStorage.getItem(CART_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveCartSet(set: Set<string>) {
+    localStorage.setItem(CART_KEY, JSON.stringify([...set]));
+  }
+  function updateCartCount() {
+    const count = document.getElementById('cart-count');
+    const items = document.getElementById('cart-items');
+    if (count && items) count.textContent = String(items.children.length);
+  }
+  function moveCardToCart(card: HTMLElement) {
+    const items = document.getElementById('cart-items');
+    if (!items || !card) return;
+    items.appendChild(card);
+    const set = getCartSet();
+    if (card.dataset.name) set.add(card.dataset.name);
+    saveCartSet(set);
+    updateCartCount();
+  }
+  function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
+    const grid = armyContainer.querySelector('.box-container');
+    if (!grid || !card) return;
+    grid.appendChild(card);
+    const set = getCartSet();
+    if (card.dataset.name) set.delete(card.dataset.name);
+    saveCartSet(set);
+    updateCartCount();
+  }
+  // 重整 / 刷新後：把記住的人從各隊伍移回菜籃
+  function applyCartState() {
+    const set = getCartSet();
+    const items = document.getElementById('cart-items');
+    if (!items) return;
+    set.forEach((name) => {
+      const card = document.querySelector<HTMLElement>(
+        `.army-container .box-container > div[data-name="${(window as any).CSS.escape(name)}"]`
+      );
+      if (card) items.appendChild(card);
+    });
+    updateCartCount();
+  }
+  function initCart() {
+    const cart = document.getElementById('palais-cart');
+    if (!cart) return;
+    cart.addEventListener('dragover', (e) => { e.preventDefault(); cart.classList.add('drag-over'); });
+    cart.addEventListener('dragleave', () => { cart.classList.remove('drag-over'); });
+    cart.addEventListener('drop', (e) => {
+      e.preventDefault();
+      cart.classList.remove('drag-over');
+      if (draggedCard) moveCardToCart(draggedCard);
+    });
+  }
 
   // --- Lightbox ---
 
@@ -187,6 +340,17 @@ if (!isLoggedIn) {
   function createCharacterCard(character: any, timestamp: string) {
     const characterContainer = document.createElement('div');
     characterContainer.style.cssText = 'display:none;width:200px;text-align:center;margin-left:-100px;position:relative;z-index:1;vertical-align:bottom;cursor:pointer;';
+
+    // 拖曳支援：標記身分，讓卡片可被拖進菜籃 / 拖回隊伍
+    characterContainer.draggable = true;
+    characterContainer.classList.add('pg-draggable');
+    characterContainer.dataset.name = character.name || '';
+    characterContainer.dataset.army = character.armyName || '';
+    characterContainer.addEventListener('dragstart', (e) => {
+      draggedCard = characterContainer;
+      e.dataTransfer?.setData('text/plain', character.name || '');
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    });
 
     const img = document.createElement('img');
     img.style.cssText = 'width:auto;height:300px;display:block;margin:0 auto;padding:0;border:none;z-index:2;object-fit:contain;';
@@ -231,6 +395,13 @@ if (!isLoggedIn) {
     const armyContainer = document.createElement('div');
     armyContainer.className = 'army-container';
     armyContainer.style.marginTop = '50px';
+
+    // 放置目標：把菜籃裡的人拖回這個隊伍
+    armyContainer.addEventListener('dragover', (e) => { e.preventDefault(); });
+    armyContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedCard) moveCardToArmy(draggedCard, armyContainer);
+    });
 
     const armyTitle = document.createElement('h2');
     armyTitle.className = 'army-title';
@@ -307,6 +478,9 @@ if (!isLoggedIn) {
       container.innerHTML = '';
       container.appendChild(mainContainer);
 
+      // 還原菜籃：把記住的人移回浮動菜籃
+      applyCartState();
+
       if (isRefresh) {
         const refreshBtn = document.getElementById('refresh-data');
         if (refreshBtn) refreshBtn.removeAttribute('disabled');
@@ -373,6 +547,7 @@ if (!isLoggedIn) {
   }
 
   document.addEventListener("DOMContentLoaded", async function () {
+    initCart();
     loadData();
 
     const refreshBtn = document.getElementById('refresh-data');
