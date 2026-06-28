@@ -49,7 +49,10 @@ if (!isLoggedIn) {
 <div id="palais-cart">
   <div class="cart-header">
     <span>🧺 菜籃</span>
-    <span class="cart-count" id="cart-count">0</span>
+    <span class="cart-header-right">
+      <span class="cart-count" id="cart-count">0</span>
+      <button id="cart-clear" class="cart-clear-btn" type="button">清空</button>
+    </span>
   </div>
   <div id="cart-items"></div>
 </div>
@@ -211,6 +214,33 @@ if (!isLoggedIn) {
     padding: 1px 8px;
   }
 
+  #palais-cart .cart-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #palais-cart .cart-clear-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255, 87, 87, 0.85);
+    border: none;
+    border-radius: 6px;
+    padding: 2px 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  #palais-cart .cart-clear-btn:hover {
+    background: #ff5757;
+  }
+
+  #palais-cart .cart-clear-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
   #cart-items {
     display: flex;
     flex-wrap: nowrap; /* 單一橫排，不換行 */
@@ -303,6 +333,8 @@ if (!isLoggedIn) {
     const count = document.getElementById('cart-count');
     const items = document.getElementById('cart-items');
     if (count && items) count.textContent = String(items.children.length);
+    const clearBtn = document.getElementById('cart-clear') as HTMLButtonElement | null;
+    if (clearBtn && items) clearBtn.disabled = items.children.length === 0;
   }
   function flashCartFull() {
     const cart = document.getElementById('palais-cart');
@@ -351,6 +383,29 @@ if (!isLoggedIn) {
     });
     updateCartCount();
   }
+  // 依隊伍名稱找到對應的 .army-container（用標題文字比對）
+  function findArmyContainer(army: string): HTMLElement | null {
+    const containers = document.querySelectorAll<HTMLElement>('.army-container');
+    for (const c of containers) {
+      const title = c.querySelector('.army-title');
+      if (title && title.textContent === army) return c;
+    }
+    return null;
+  }
+  // 清空菜籃：把所有人放回原隊伍
+  function clearCart() {
+    const items = document.getElementById('cart-items');
+    if (!items) return;
+    Array.from(items.children).forEach((node) => {
+      const card = node as HTMLElement;
+      const container = findArmyContainer(card.dataset.army || '');
+      const grid = container?.querySelector('.box-container');
+      if (grid) grid.appendChild(card);
+      else card.remove(); // 找不到原隊伍（理論上不會）就移除孤兒節點
+    });
+    saveCartSet(new Set());
+    updateCartCount();
+  }
   function initCart() {
     const cart = document.getElementById('palais-cart');
     if (!cart) return;
@@ -361,6 +416,8 @@ if (!isLoggedIn) {
       cart.classList.remove('drag-over');
       if (draggedCard) moveCardToCart(draggedCard);
     });
+    const clearBtn = document.getElementById('cart-clear');
+    if (clearBtn) clearBtn.addEventListener('click', clearCart);
   }
 
   // --- Lightbox ---
