@@ -174,8 +174,7 @@ if (!isLoggedIn) {
     right: 16px;
     bottom: 16px;
     z-index: 9999;
-    width: 200px;
-    max-height: 60vh;
+    width: min(70vw, 720px);
     display: flex;
     flex-direction: column;
     background: rgba(20, 20, 30, 0.92);
@@ -214,12 +213,25 @@ if (!isLoggedIn) {
 
   #cart-items {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* 單一橫排，不換行 */
     gap: 6px;
     padding: 10px;
-    overflow-y: auto;
+    overflow: hidden; /* 不出捲軸；滿了就禁止添加 */
     min-height: 60px;
-    align-content: flex-start;
+    align-items: center;
+  }
+
+  /* 菜籃放不下時的提示動畫 */
+  #palais-cart.cart-full {
+    border-color: #ff5757 !important;
+    box-shadow: 0 0 0 2px #ff5757, 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+    animation: cart-shake 0.3s ease;
+  }
+
+  @keyframes cart-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
   }
 
   #cart-items:empty::after {
@@ -292,10 +304,26 @@ if (!isLoggedIn) {
     const items = document.getElementById('cart-items');
     if (count && items) count.textContent = String(items.children.length);
   }
+  function flashCartFull() {
+    const cart = document.getElementById('palais-cart');
+    if (!cart) return;
+    cart.classList.add('cart-full');
+    setTimeout(() => cart.classList.remove('cart-full'), 500);
+  }
   function moveCardToCart(card: HTMLElement) {
     const items = document.getElementById('cart-items');
     if (!items || !card) return;
+    // 若已在菜籃內，忽略（避免自我拖放觸發溢出判斷）
+    if (card.parentElement === items) return;
+    const prevParent = card.parentElement;
     items.appendChild(card);
+    // 單排限制：若加入後會超出寬度（換行），退回原處、禁止添加
+    if (items.scrollWidth > items.clientWidth) {
+      if (prevParent) prevParent.appendChild(card);
+      else card.remove();
+      flashCartFull();
+      return;
+    }
     const set = getCartSet();
     if (card.dataset.name) set.add(card.dataset.name);
     saveCartSet(set);
