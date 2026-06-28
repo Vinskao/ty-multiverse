@@ -332,7 +332,29 @@ if (!isLoggedIn) {
 </style>
 
 <script>
-  import "../../scripts/palaisMediaZoom";
+  // 滾輪縮放：直接在本頁綁定 #group-container（不依賴共享 script 的時機，
+  // 並支援 Astro View Transitions 的 SPA 導頁重綁）
+  function bindGroupZoom() {
+    const container = document.getElementById('group-container') as (HTMLElement & { _zoomBound?: boolean }) | null;
+    if (!container || container._zoomBound) return;
+    container._zoomBound = true;
+    const MIN = 0.5, MAX = 2.5, STEP = 0.1;
+    const getScale = () => {
+      const v = parseFloat(container.style.getPropertyValue('--palais-media-scale') || '1');
+      return Number.isFinite(v) && v > 0 ? v : 1;
+    };
+    container.style.setProperty('--palais-media-scale', String(getScale()));
+    container.addEventListener('wheel', (e) => {
+      const t = e.target as Element | null;
+      const media = t?.closest('img, video');
+      if (!media || !container.contains(media)) return;
+      e.preventDefault();
+      const dir = e.deltaY < 0 ? 1 : -1;
+      const next = Math.min(MAX, Math.max(MIN, getScale() + dir * STEP));
+      container.style.setProperty('--palais-media-scale', String(next));
+    }, { passive: false });
+  }
+  document.addEventListener('astro:page-load', bindGroupZoom);
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
     throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
@@ -727,6 +749,7 @@ if (!isLoggedIn) {
   }
 
   document.addEventListener("DOMContentLoaded", async function () {
+    bindGroupZoom();
     initCart();
     loadData();
 
