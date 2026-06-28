@@ -52,6 +52,7 @@ if (!isLoggedIn) {
     <span class="cart-header-right">
       <span class="cart-count" id="cart-count">0</span>
       <button id="cart-clear" class="cart-clear-btn" type="button">清空</button>
+      <button id="cart-toggle" class="cart-toggle-btn" type="button" title="最小化">—</button>
     </span>
   </div>
   <div id="cart-items"></div>
@@ -241,6 +242,33 @@ if (!isLoggedIn) {
     cursor: default;
   }
 
+  #palais-cart .cart-toggle-btn {
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 6px;
+    padding: 2px 9px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  #palais-cart .cart-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* 最小化：只留標題列 */
+  #palais-cart.minimized {
+    width: auto;
+  }
+
+  #palais-cart.minimized #cart-items,
+  #palais-cart.minimized .cart-clear-btn {
+    display: none;
+  }
+
   #cart-items {
     display: flex;
     flex-wrap: nowrap; /* 單一橫排，不換行 */
@@ -406,6 +434,18 @@ if (!isLoggedIn) {
     saveCartSet(new Set());
     updateCartCount();
   }
+  const MIN_KEY = 'palais-cart-min';
+  function setMinimized(min: boolean) {
+    const cart = document.getElementById('palais-cart');
+    const toggle = document.getElementById('cart-toggle');
+    if (!cart) return;
+    cart.classList.toggle('minimized', min);
+    if (toggle) {
+      toggle.textContent = min ? '🧺' : '—';
+      toggle.setAttribute('title', min ? '展開' : '最小化');
+    }
+    localStorage.setItem(MIN_KEY, min ? '1' : '0');
+  }
   function initCart() {
     const cart = document.getElementById('palais-cart');
     if (!cart) return;
@@ -414,10 +454,18 @@ if (!isLoggedIn) {
     cart.addEventListener('drop', (e) => {
       e.preventDefault();
       cart.classList.remove('drag-over');
+      // 最小化狀態下拖入：先展開再加入，才能正確判斷單排容量
+      if (cart.classList.contains('minimized')) setMinimized(false);
       if (draggedCard) moveCardToCart(draggedCard);
     });
     const clearBtn = document.getElementById('cart-clear');
     if (clearBtn) clearBtn.addEventListener('click', clearCart);
+    const toggle = document.getElementById('cart-toggle');
+    if (toggle) toggle.addEventListener('click', () => {
+      setMinimized(!cart.classList.contains('minimized'));
+    });
+    // 還原最小化狀態
+    setMinimized(localStorage.getItem(MIN_KEY) === '1');
   }
 
   // --- Lightbox ---
