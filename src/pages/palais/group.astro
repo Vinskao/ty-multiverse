@@ -721,7 +721,7 @@ if (!isLoggedIn) {
         if (refreshBtn) refreshBtn.setAttribute('disabled', 'true');
       }
 
-      container.in王+后rHTML = '<div style="text-align:center;padding:50px;color:white;font-size:20px;">載入數據中...</div>';
+      container.innerHTML = '<div style="text-align:center;padding:50px;color:white;font-size:20px;">載入數據中...</div>';
 
       characterService = (await import('../../services/api/characterService')).default.getInstance();
 
