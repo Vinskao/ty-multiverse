@@ -128,6 +128,10 @@ export class NavController {
           target.origin === window.location.origin &&
           target.pathname.startsWith('/tymultiverse/')
         ) {
+          // 補回 username，否則各頁 SSR 閘門看不到 username 會再轉去 login 造成無限迴圈
+          if (this.username && !target.searchParams.get('username')) {
+            target.searchParams.set('username', this.username);
+          }
           window.location.replace(target.pathname + target.search + target.hash);
           return;
         }
