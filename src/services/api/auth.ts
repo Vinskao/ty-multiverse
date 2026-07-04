@@ -500,6 +500,18 @@ export class AuthService {
 let isVerifying = false;
 let lastVerifyTime = 0;
 const VERIFY_COOLDOWN = 7000;
+
+function getJwtExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = JSON.parse(atob(normalized));
+    return typeof decoded.exp === 'number' ? decoded.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
 let lastToken = null; // 追踪上一次驗證的 token
 let verificationInterval = null; // 追踪定期驗證的 interval
 
@@ -526,10 +538,6 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
   }
 
   // 如果 token 沒有變化，跳過驗證
-  if (token === lastToken) {
-    return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
-  }
-
   // 檢查 token 是否為空
   if (!token || token.trim() === '') {
     console.warn('⚠️ Token 為空，跳過驗證');
@@ -542,6 +550,17 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
   }
 
   // 如果正在驗證或距離上次驗證時間太短，則跳過
+  const expiresAt = getJwtExpiry(token);
+  if (expiresAt && expiresAt > Date.now() + 30_000) {
+    lastToken = token;
+    return {
+      valid: true,
+      tokenRefreshed: false,
+      accessToken: token,
+      refreshToken: refreshToken
+    };
+  }
+
   if (isVerifying || Date.now() - lastVerifyTime < VERIFY_COOLDOWN) {
     return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
   }
@@ -685,29 +704,27 @@ function startTokenVerification(
   }
 
   // 立即進行一次驗證
-  verifyToken(token, refreshToken).then((result) => {
+  let currentToken = token;
+  let currentRefreshToken = refreshToken;
+
+  const verifyCurrentToken = async () => {
+    const result = await verifyToken(currentToken, currentRefreshToken);
     if (!result.valid) {
       onTokenInvalid();
       return;
     }
 
     if (result.tokenRefreshed && result.accessToken && result.refreshToken) {
+      currentToken = result.accessToken;
+      currentRefreshToken = result.refreshToken;
       onTokenRefreshed(result.accessToken, result.refreshToken);
     }
-  });
+  };
+
+  void verifyCurrentToken();
 
   // 設置定期驗證（每 5 分鐘）
-  verificationInterval = window.setInterval(async () => {
-    const result = await verifyToken(token, refreshToken);
-    if (!result.valid) {
-      onTokenInvalid();
-      return;
-    }
-
-    if (result.tokenRefreshed && result.accessToken && result.refreshToken) {
-      onTokenRefreshed(result.accessToken, result.refreshToken);
-    }
-  }, 5 * 60 * 1000);
+  verificationInterval = window.setInterval(verifyCurrentToken, 5 * 60 * 1000);
 }
 
 /**

@@ -100,6 +100,8 @@ export class NavController {
     // 將 token 儲存到 localStorage 中，供其他組件使用（如果 URL 中有新值，更新 localStorage）
     if (urlParams.get('token')) {
       localStorage.setItem('token', urlParams.get('token')!);
+      // 登入成功拿到新 token：清除 relogin 防循環旗標
+      sessionStorage.removeItem('tym_relogin_attempted');
     }
     if (urlParams.get('refreshToken') || urlParams.get('refresh_token')) {
       localStorage.setItem('refreshToken', urlParams.get('refreshToken') || urlParams.get('refresh_token')!);
@@ -117,6 +119,19 @@ export class NavController {
       cleanUrl.searchParams.delete('refreshToken');
       cleanUrl.searchParams.delete('id_token');
       window.history.replaceState({}, '', cleanUrl);
+
+      const postLoginRedirect = sessionStorage.getItem('tym_post_login_redirect');
+      if (postLoginRedirect) {
+        sessionStorage.removeItem('tym_post_login_redirect');
+        const target = new URL(postLoginRedirect, window.location.origin);
+        if (
+          target.origin === window.location.origin &&
+          target.pathname.startsWith('/tymultiverse/')
+        ) {
+          window.location.replace(target.pathname + target.search + target.hash);
+          return;
+        }
+      }
     }
   }
 
@@ -504,6 +519,8 @@ export class NavController {
       startTokenVerification(this.token, this.refreshToken || '',
         // token 刷新時的回調
         (newToken, newRefreshToken) => {
+          // token 刷新成功：清除 relogin 防循環旗標
+          sessionStorage.removeItem('tym_relogin_attempted');
           // 更新 localStorage（canonical 來源；token 不再寫進 URL）
           if (newToken) {
             localStorage.setItem('token', newToken);
@@ -551,8 +568,18 @@ export class NavController {
           // 更新導航鏈接，顯示登入按鈕
           this.updateNavLinks();
 
-          // 禁用重定向，防止循環
-          // window.location.href = '/tymultiverse/';
+          // 受保護頁面上 token 失效：自動導回 login 重新走 SSO 流程。
+          // Keycloak SSO session 通常還活著，會靜默取得全新 token（不需重輸密碼）。
+          // 用 sessionStorage 旗標防止 relogin 循環（若 SSO 也真的過期，第二次就不再自動跳）。
+          const RELOGIN_FLAG = 'tym_relogin_attempted';
+          const path = window.location.pathname;
+          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work)/.test(path);
+          if (isProtectedPage && !sessionStorage.getItem(RELOGIN_FLAG)) {
+            sessionStorage.setItem(RELOGIN_FLAG, '1');
+            const current = window.location.pathname + window.location.search;
+            sessionStorage.setItem('tym_post_login_redirect', current);
+            window.location.href = `/tymultiverse/login?redirect=${encodeURIComponent(current)}`;
+          }
         }
       );
     }
@@ -695,4 +722,4 @@ export class NavController {
 // 初始化 Nav 控制器
 export function initNav() {
   new NavController();
-} 
+}

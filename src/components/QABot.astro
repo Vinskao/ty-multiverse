@@ -347,25 +347,20 @@
     private pruneAvailableBots() {
       if (!Array.isArray(this.state.availableBots)) return;
 
-      const beforeFilter = [...this.state.availableBots];
-      this.state.availableBots = this.state.availableBots.filter((n) => {
-        const hasMessages = this.hasValidMessages(n);
-        const hasThumbnail = thumbnailService.isThumbnailAvailable(n);
-        return hasMessages && hasThumbnail;
-      });
+      this.state.availableBots = this.state.availableBots.filter((n) =>
+        this.hasValidMessages(n)
+      );
 
       // 確保至少 Maya 存在（如果她有句庫且有頭像的話）
       if (
         !this.state.availableBots.includes("Maya") &&
-        this.hasValidMessages("Maya") &&
-        thumbnailService.isThumbnailAvailable("Maya")
+        this.hasValidMessages("Maya")
       ) {
         this.state.availableBots.unshift("Maya");
       }
 
       // 如果當前 bot 沒有句庫或沒有頭像 → 換成清單第一個
-      const isCurrentValid = this.hasValidMessages(this.state.botName) && 
-                            thumbnailService.isThumbnailAvailable(this.state.botName);
+      const isCurrentValid = this.hasValidMessages(this.state.botName);
       
       if (!isCurrentValid && this.state.availableBots.length) {
         this.state.botName = this.state.availableBots[0];
@@ -390,11 +385,6 @@
             const names = [...cached.data];
             if (!names.includes("Maya")) names.unshift("Maya");
             this.state.availableBots = names;
-
-            const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-            thumbnailService.preLoadThumbnailsProgressive(names, baseUrl, (name) => {
-              this.onThumbnailLoaded(name);
-            });
 
             if (this.messages) this.pruneAvailableBots();
             this.state.currentBotIndex = names.indexOf("Maya");
@@ -425,11 +415,6 @@
           this.state.availableBots = names;
 
           // ????????????progressive: ??????????????? selector??
-          const baseUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL;
-          thumbnailService.preLoadThumbnailsProgressive(names, baseUrl, (name) => {
-            this.onThumbnailLoaded(name);
-          });
-
           // ?????????????????
           if (this.messages) this.pruneAvailableBots();
 

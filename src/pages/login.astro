@@ -137,6 +137,19 @@ const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');
     
     // 清除可能干擾的 localStorage 項（如 lastVisitedPath）
     try {
+      const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
+      if (requestedRedirect) {
+        const target = new URL(requestedRedirect, window.location.origin);
+        if (
+          target.origin === window.location.origin &&
+          target.pathname.startsWith('/tymultiverse/')
+        ) {
+          sessionStorage.setItem(
+            'tym_post_login_redirect',
+            target.pathname + target.search + target.hash,
+          );
+        }
+      }
       localStorage.removeItem('lastVisitedPath');
       localStorage.removeItem('lastVisitedTymultiverseUrl');
     } catch (err) {

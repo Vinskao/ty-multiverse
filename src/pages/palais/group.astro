@@ -328,33 +328,12 @@ if (!isLoggedIn) {
 
   #group-container .box-container > div > img {
     height: calc(300px * var(--palais-media-scale)) !important;
+    max-width: calc(200px * var(--palais-media-scale)) !important;
   }
 </style>
 
 <script>
-  // 滾輪縮放：直接在本頁綁定 #group-container（不依賴共享 script 的時機，
-  // 並支援 Astro View Transitions 的 SPA 導頁重綁）
-  function bindGroupZoom() {
-    const container = document.getElementById('group-container') as (HTMLElement & { _zoomBound?: boolean }) | null;
-    if (!container || container._zoomBound) return;
-    container._zoomBound = true;
-    const MIN = 0.5, MAX = 2.5, STEP = 0.1;
-    const getScale = () => {
-      const v = parseFloat(container.style.getPropertyValue('--palais-media-scale') || '1');
-      return Number.isFinite(v) && v > 0 ? v : 1;
-    };
-    container.style.setProperty('--palais-media-scale', String(getScale()));
-    container.addEventListener('wheel', (e) => {
-      const t = e.target as Element | null;
-      const media = t?.closest('img, video');
-      if (!media || !container.contains(media)) return;
-      e.preventDefault();
-      const dir = e.deltaY < 0 ? 1 : -1;
-      const next = Math.min(MAX, Math.max(MIN, getScale() + dir * STEP));
-      container.style.setProperty('--palais-media-scale', String(next));
-    }, { passive: false });
-  }
-  document.addEventListener('astro:page-load', bindGroupZoom);
+  import '../../scripts/palaisMediaZoom';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
     throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
@@ -539,9 +518,9 @@ if (!isLoggedIn) {
 
   // --- Character card ---
 
-  function createCharacterCard(character: any, timestamp: string) {
+  function createCharacterCard(character: any, timestamp: string, priority = false) {
     const characterContainer = document.createElement('div');
-    characterContainer.style.cssText = 'display:none;width:200px;text-align:center;margin-left:-100px;position:relative;z-index:1;vertical-align:bottom;cursor:pointer;';
+    characterContainer.style.cssText = 'display:inline-block;width:200px;min-height:300px;text-align:center;margin-left:-100px;position:relative;z-index:1;vertical-align:bottom;cursor:pointer;';
 
     // 拖曳支援：標記身分，讓卡片可被拖進菜籃 / 拖回隊伍
     characterContainer.draggable = true;
@@ -555,12 +534,15 @@ if (!isLoggedIn) {
     });
 
     const img = document.createElement('img');
-    img.style.cssText = 'width:auto;height:300px;display:block;margin:0 auto;padding:0;border:none;z-index:2;object-fit:contain;';
+    img.style.cssText = 'width:auto;max-width:200px;height:300px;display:block;margin:0 auto;padding:0;border:none;z-index:2;object-fit:contain;opacity:0;transition:opacity 160ms ease;';
     img.alt = character.nameOriginal;
+    img.decoding = 'async';
+    img.loading = priority ? 'eager' : 'lazy';
+    img.fetchPriority = priority ? 'high' : 'auto';
 
     const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(character.name || 'default')}.png?t=${timestamp}`;
 
-    img.onload = () => { characterContainer.style.display = 'inline-block'; };
+    img.onload = () => { img.style.opacity = '1'; };
     img.onerror = () => { characterContainer.remove(); };
     img.src = originalUrl;
 
@@ -593,7 +575,13 @@ if (!isLoggedIn) {
 
   // --- Army container ---
 
-  function createArmyContainer(army: string, characters: any[], timestamp: string) {
+  function createArmyContainer(
+    army: string,
+    characters: any[],
+    timestamp: string,
+    priorityName: string,
+    priorityBudget: { remaining: number },
+  ) {
     const armyContainer = document.createElement('div');
     armyContainer.className = 'army-container';
     armyContainer.style.marginTop = '50px';
@@ -616,12 +604,19 @@ if (!isLoggedIn) {
 
     // 根據第一張卡片寬度設定左側 padding，避免最左邊的圖被容器邊緣切到
     if (characters.length > 0) {
-      const firstCard = createCharacterCard(characters[0], timestamp);
+      const isPriority = (character: any) => {
+        const matchesUser = (character.name || '').toLowerCase() === priorityName;
+        if (matchesUser) return true;
+        if (priorityBudget.remaining <= 0) return false;
+        priorityBudget.remaining -= 1;
+        return true;
+      };
+      const firstCard = createCharacterCard(characters[0], timestamp, isPriority(characters[0]));
       const cardWidth = parseInt(firstCard.style.width) || 200;
       charactersGrid.style.paddingLeft = (cardWidth / 2) + 'px';
       charactersGrid.appendChild(firstCard);
       characters.slice(1).forEach(character => {
-        charactersGrid.appendChild(createCharacterCard(character, timestamp));
+        charactersGrid.appendChild(createCharacterCard(character, timestamp, isPriority(character)));
       });
     }
 
@@ -632,6 +627,59 @@ if (!isLoggedIn) {
 
   let currentFilteredData: any[] = [];
   let characterService: any = null;
+
+  async function mapWithConcurrency<T>(
+    items: T[],
+    limit: number,
+    worker: (item: T) => Promise<void>,
+  ) {
+    let index = 0;
+    const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (index < items.length) {
+        await worker(items[index++]);
+      }
+    });
+    await Promise.all(runners);
+  }
+
+  async function sortArmyCardsByTotalPower(characters: any[]) {
+    const damageService = (await import('../../services/api/damageService')).default.getInstance();
+
+    await mapWithConcurrency(characters, 5, async (character) => {
+      const fallbackPower =
+        (Number(character.physicPower) || 0) +
+        (Number(character.magicPower) || 0) +
+        (Number(character.utilityPower) || 0);
+      try {
+        const totalPower = await damageService.getCharacterDamage(character.name);
+        character.totalPower = totalPower > 0 ? totalPower : fallbackPower;
+      } catch {
+        character.totalPower = fallbackPower;
+      }
+    });
+
+    const powerByName = new Map(
+      characters.map((character) => [
+        character.name,
+        Number(character.totalPower) || 0,
+      ]),
+    );
+
+    document.querySelectorAll<HTMLElement>('.army-container .box-container').forEach((grid) => {
+      const cards = Array.from(grid.children) as HTMLElement[];
+      cards.forEach((card) => {
+        card.dataset.totalPower = String(
+          powerByName.get(card.dataset.name || '') || 0,
+        );
+      });
+      cards
+        .sort((a, b) =>
+          Number(b.dataset.totalPower || 0) -
+          Number(a.dataset.totalPower || 0)
+        )
+        .forEach((card) => grid.appendChild(card));
+    });
+  }
 
   async function loadData(isRefresh = false) {
     try {
@@ -662,6 +710,15 @@ if (!isLoggedIn) {
         return true;
       });
 
+      const priorityName = (
+        new URLSearchParams(window.location.search).get('username') || ''
+      ).toLowerCase();
+      currentFilteredData.sort((a: any, b: any) => {
+        const aPriority = (a.name || '').toLowerCase() === priorityName ? 0 : 1;
+        const bPriority = (b.name || '').toLowerCase() === priorityName ? 0 : 1;
+        return aPriority - bPriority;
+      });
+
       const armyGroups: Record<string, any[]> = {};
       currentFilteredData.forEach((character: any) => {
         const army = character.armyName;
@@ -672,9 +729,18 @@ if (!isLoggedIn) {
       const timestamp = characterService.getMediaTimestamp();
       const mainContainer = document.createElement('div');
       mainContainer.className = 'army-groups';
+      const priorityBudget = { remaining: 2 };
 
       Object.entries(armyGroups).forEach(([army, characters]) => {
-        mainContainer.appendChild(createArmyContainer(army, characters as any[], timestamp));
+        mainContainer.appendChild(
+          createArmyContainer(
+            army,
+            characters as any[],
+            timestamp,
+            priorityName,
+            priorityBudget,
+          ),
+        );
       });
 
       container.innerHTML = '';
@@ -682,6 +748,7 @@ if (!isLoggedIn) {
 
       // 還原菜籃：把記住的人移回浮動菜籃
       applyCartState();
+      void sortArmyCardsByTotalPower(currentFilteredData);
 
       if (isRefresh) {
         const refreshBtn = document.getElementById('refresh-data');
@@ -748,8 +815,40 @@ if (!isLoggedIn) {
     });
   }
 
+  async function saveImagesDirectlyOnLocalWindows(padded: boolean) {
+    const endpoint = '/tymultiverse/api/local-character-download';
+    let capabilityResponse: Response;
+    try {
+      capabilityResponse = await fetch(endpoint, {
+        headers: { Accept: 'application/json' },
+      });
+    } catch {
+      return null;
+    }
+
+    if (!capabilityResponse.ok) return null;
+    const capability = await capabilityResponse.json();
+    if (!capability.available) return null;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        names: currentFilteredData.map((character) => character.name || 'default'),
+        padded,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || 'Local image save failed');
+    }
+    return result;
+  }
+
   document.addEventListener("DOMContentLoaded", async function () {
-    bindGroupZoom();
     initCart();
     loadData();
 
@@ -765,6 +864,19 @@ if (!isLoggedIn) {
           downloadBtn.setAttribute('disabled', 'true');
           const originalText = downloadBtn.innerHTML;
           downloadBtn.textContent = '準備中...';
+
+          const localResult = await saveImagesDirectlyOnLocalWindows(false);
+          if (localResult) {
+            downloadBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
+            if (localResult.failures?.length) {
+              console.warn('部分圖片無法儲存:', localResult.failures);
+            }
+            setTimeout(() => {
+              downloadBtn.removeAttribute('disabled');
+              downloadBtn.innerHTML = originalText;
+            }, 3000);
+            return;
+          }
 
           if (typeof (window as any).JSZip === 'undefined') {
             const script = document.createElement('script');
@@ -830,6 +942,19 @@ if (!isLoggedIn) {
           downloadPaddedBtn.setAttribute('disabled', 'true');
           const originalText = downloadPaddedBtn.innerHTML;
           downloadPaddedBtn.textContent = '準備中...';
+
+          const localResult = await saveImagesDirectlyOnLocalWindows(true);
+          if (localResult) {
+            downloadPaddedBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
+            if (localResult.failures?.length) {
+              console.warn('部分含邊框圖片無法儲存:', localResult.failures);
+            }
+            setTimeout(() => {
+              downloadPaddedBtn.removeAttribute('disabled');
+              downloadPaddedBtn.innerHTML = originalText;
+            }, 3000);
+            return;
+          }
 
           if (typeof (window as any).JSZip === 'undefined') {
             const script = document.createElement('script');
