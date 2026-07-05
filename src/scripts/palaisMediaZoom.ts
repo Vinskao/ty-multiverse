@@ -25,9 +25,18 @@ function getScale(container: ZoomContainer) {
 
 function setScale(container: ZoomContainer, scale: number) {
   const nextScale = clamp(scale);
-  container.dataset.palaisMediaScale = String(nextScale);
-  container.style.setProperty('--palais-media-scale', String(nextScale));
-  container.setAttribute('aria-label', `Media zoom ${formatScale(nextScale)}x`);
+  const group = container.dataset.palaisMediaZoomGroup;
+  const targets = group
+    ? document.querySelectorAll<ZoomContainer>(
+        `[data-palais-media-zoom-group="${CSS.escape(group)}"]`,
+      )
+    : [container];
+
+  targets.forEach((target) => {
+    target.dataset.palaisMediaScale = String(nextScale);
+    target.style.setProperty('--palais-media-scale', String(nextScale));
+    target.setAttribute('aria-label', `Media zoom ${formatScale(nextScale)}x`);
+  });
 }
 
 function bindContainer(container: ZoomContainer) {

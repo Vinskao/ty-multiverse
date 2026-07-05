@@ -26,13 +26,13 @@ if (!isLoggedIn) {
             <span class="icon">🔄</span> 刷新數據與圖片
           </button>
           <button id="download-all-png" class="download-btn">
-            <span class="icon">📦</span> 下載所有角色圖片 (ZIP)
+            <span class="icon">📦</span> 下載所有角色圖片
           </button>
           <button id="download-all-padded" class="download-btn">
-            <span class="icon">🖼️</span> 下載所有角色圖片（含邊框）(ZIP)
+            <span class="icon">🖼️</span> 下載所有角色圖片（含邊框）
           </button>
         </div>
-        <div id="group-container" data-palais-media-zoom></div>
+        <div id="group-container" data-palais-media-zoom data-palais-media-zoom-group="group-page"></div>
       </div>
     </main>
   </div>
@@ -46,7 +46,7 @@ if (!isLoggedIn) {
   </div>
 </div>
 
-<div id="palais-cart">
+<div id="palais-cart" data-palais-media-zoom data-palais-media-zoom-group="group-page">
   <div class="cart-header">
     <span>🧺 菜籃</span>
     <span class="cart-header-right">
@@ -267,11 +267,23 @@ if (!isLoggedIn) {
   #cart-items {
     display: flex;
     flex-wrap: nowrap; /* 單一橫排，不換行 */
-    gap: 6px;
-    padding: 10px;
+    gap: calc(10px * var(--palais-media-scale));
+    padding: 12px;
     overflow: hidden; /* 不出捲軸；滿了就禁止添加 */
-    min-height: 60px;
+    min-height: calc(132px * var(--palais-media-scale));
     align-items: center;
+    transition: transform 0.25s ease;
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  #palais-cart:hover {
+    background: rgba(28, 28, 42, 0.96);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
+  }
+
+  #palais-cart:hover #cart-items {
+    transform: scale(1.12);
   }
 
   /* 菜籃放不下時的提示動畫 */
@@ -294,18 +306,18 @@ if (!isLoggedIn) {
     margin: auto;
   }
 
-  /* 菜籃內的角色卡：取消重疊版面、縮小 */
+  /* 菜籃內的角色卡：加大並跟主畫面共用縮放倍率 */
   #cart-items > div {
     position: relative !important;
     display: inline-block !important;
-    width: 56px !important;
+    width: calc(96px * var(--palais-media-scale)) !important;
     margin: 0 !important;
     left: auto !important;
     bottom: auto !important;
   }
 
   #cart-items > div > img {
-    height: 72px !important;
+    height: calc(120px * var(--palais-media-scale)) !important;
     width: auto !important;
   }
 
@@ -885,6 +897,59 @@ if (!isLoggedIn) {
     return result;
   }
 
+  async function saveImagesDirectlyOnLocalMac(
+    padded: boolean,
+    onProgress: (completed: number, total: number) => void,
+  ) {
+    const endpoint = '/tymultiverse/api/save-character-image';
+    let capabilityResponse: Response;
+    try {
+      capabilityResponse = await fetch(endpoint, {
+        headers: { Accept: 'application/json' },
+      });
+    } catch {
+      return null;
+    }
+
+    if (!capabilityResponse.ok) return null;
+    const capability = await capabilityResponse.json();
+    if (!capability.available) return null;
+
+    let saved = 0;
+    const failures: Array<{ name: string; error: string }> = [];
+    const total = currentFilteredData.length;
+
+    for (const character of currentFilteredData) {
+      const name = character.name || 'default';
+      const imageUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png?t=${characterService.getMediaTimestamp()}`;
+      try {
+        const blob = padded
+          ? await addPaddingToImage(imageUrl)
+          : await fetch(imageUrl).then((response) => {
+              if (!response.ok) throw new Error(`圖片下載失敗 (${response.status})`);
+              return response.blob();
+            });
+        if (!blob) throw new Error('圖片處理失敗');
+
+        const form = new FormData();
+        form.append('file', blob, `${name}.png`);
+        form.append('fileName', `${name}.png`);
+        form.append('padded', String(padded));
+        const response = await fetch(endpoint, { method: 'POST', body: form });
+        if (!response.ok) throw new Error(await response.text() || `寫入失敗 (${response.status})`);
+        saved++;
+      } catch (error) {
+        failures.push({
+          name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      onProgress(saved + failures.length, total);
+    }
+
+    return { ...capability, padded, requested: total, saved, failures };
+  }
+
   // 用 astro:page-load 而非 DOMContentLoaded：BaseLayout 有 ClientRouter（View Transitions），
   // SPA 導航切進本頁時 DOMContentLoaded 不會再觸發，會導致 loadData 沒跑、圖片不顯示。
   // astro:page-load 在初次載入與每次 SPA 導航都會觸發（頁內元素皆有 null 檢查，離開本頁也安全）。
@@ -912,6 +977,19 @@ if (!isLoggedIn) {
             if (localResult.failures?.length) {
               console.warn('部分圖片無法儲存:', localResult.failures);
             }
+            setTimeout(() => {
+              downloadBtn.removeAttribute('disabled');
+              downloadBtn.innerHTML = originalText;
+            }, 3000);
+            return;
+          }
+
+          const macResult = await saveImagesDirectlyOnLocalMac(false, (completed, total) => {
+            downloadBtn.textContent = `寫入中 (${completed}/${total})...`;
+          });
+          if (macResult) {
+            downloadBtn.textContent = `已覆蓋 ${macResult.saved}/${macResult.requested} 張`;
+            if (macResult.failures.length) console.warn('部分圖片無法儲存:', macResult.failures);
             setTimeout(() => {
               downloadBtn.removeAttribute('disabled');
               downloadBtn.innerHTML = originalText;
@@ -990,6 +1068,19 @@ if (!isLoggedIn) {
             if (localResult.failures?.length) {
               console.warn('部分含邊框圖片無法儲存:', localResult.failures);
             }
+            setTimeout(() => {
+              downloadPaddedBtn.removeAttribute('disabled');
+              downloadPaddedBtn.innerHTML = originalText;
+            }, 3000);
+            return;
+          }
+
+          const macResult = await saveImagesDirectlyOnLocalMac(true, (completed, total) => {
+            downloadPaddedBtn.textContent = `處理中 (${completed}/${total})...`;
+          });
+          if (macResult) {
+            downloadPaddedBtn.textContent = `已覆蓋 ${macResult.saved}/${macResult.requested} 張`;
+            if (macResult.failures.length) console.warn('部分含邊框圖片無法儲存:', macResult.failures);
             setTimeout(() => {
               downloadPaddedBtn.removeAttribute('disabled');
               downloadPaddedBtn.innerHTML = originalText;
