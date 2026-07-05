@@ -1033,7 +1033,10 @@ if (!isLoggedIn) {
   // SPA 導航切進本頁時 DOMContentLoaded 不會再觸發，會導致 loadData 沒跑、圖片不顯示。
   // astro:page-load 在初次載入與每次 SPA 導航都會觸發（頁內元素皆有 null 檢查，離開本頁也安全）。
   document.addEventListener("astro:page-load", async function () {
-    if (!document.getElementById('group-container')) return;
+    const groupContainer = document.getElementById('group-container');
+    if (!groupContainer || groupContainer.dataset.initialized === 'true') return;
+    groupContainer.dataset.initialized = 'true';
+
     initCart();
     loadData();
 
