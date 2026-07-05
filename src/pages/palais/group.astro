@@ -141,11 +141,13 @@ if (!isLoggedIn) {
   .army-container {
     margin: 20px 0;
     padding: 15px;
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     position: relative;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    transition: none;
   }
 
   /* 滑鼠移到的那一排：整列放大並浮起 */
@@ -157,8 +159,11 @@ if (!isLoggedIn) {
 
   .army-container:hover {
     z-index: 5;
-    background: rgba(255, 255, 255, 0.16);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    filter: none;
+    transform: none;
   }
 
 
@@ -169,8 +174,15 @@ if (!isLoggedIn) {
     text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
   }
 
+  .army-total-power {
+    margin-left: 8px;
+    color: #ffd75e;
+    font-weight: 700;
+  }
+
   /* --- 浮動菜籃 --- */
   #palais-cart {
+    --palais-media-scale: 1;
     position: fixed;
     left: 0;
     right: 0;
@@ -179,18 +191,29 @@ if (!isLoggedIn) {
     width: 100%;
     display: flex;
     flex-direction: column;
-    background: rgba(20, 20, 30, 0.92);
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
-    overflow: hidden;
+    background: transparent; /* 菜籃背景完全透明 */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    filter: none;
+    box-shadow: none !important; /* 不留陰影，避免遮住後面內容 */
+    border: none;
+    overflow: visible; /* 全尺寸卡片不被裁切 */
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
   #palais-cart.drag-over {
-    border-color: #46A3FF;
-    box-shadow: 0 0 0 2px #46A3FF, 0 8px 30px rgba(0, 0, 0, 0.5);
+    border-color: transparent;
+    box-shadow: none !important;
+  }
+
+  #palais-cart:hover,
+  #palais-cart:hover #cart-items {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transform: none !important;
   }
 
   #palais-cart .cart-header {
@@ -201,7 +224,7 @@ if (!isLoggedIn) {
     font-size: 13px;
     font-weight: 700;
     color: #fff;
-    background: rgba(255, 255, 255, 0.08);
+    background: transparent;
     cursor: ns-resize; /* 只能上下拖曳移動 */
     user-select: none;
     touch-action: none;
@@ -267,24 +290,14 @@ if (!isLoggedIn) {
   #cart-items {
     display: flex;
     flex-wrap: nowrap; /* 單一橫排，不換行 */
-    gap: calc(10px * var(--palais-media-scale));
-    padding: 12px;
+    gap: 0; /* 跟外面一樣：靠在一起、重疊排列，不留間距 */
+    /* 左側預留半張卡寬度，讓第一張的負 margin 不被切到 */
+    padding: 12px 12px 12px calc(100px * var(--palais-media-scale));
     overflow: hidden; /* 不出捲軸；滿了就禁止添加 */
-    min-height: calc(132px * var(--palais-media-scale));
-    align-items: center;
-    transition: transform 0.25s ease;
-    transform-origin: center center;
-    will-change: transform;
+    min-height: calc(330px * var(--palais-media-scale));
+    align-items: flex-end; /* 底部對齊，與主畫面一致 */
   }
 
-  #palais-cart:hover {
-    background: rgba(28, 28, 42, 0.96);
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
-  }
-
-  #palais-cart:hover #cart-items {
-    transform: scale(1.12);
-  }
 
   /* 菜籃放不下時的提示動畫 */
   #palais-cart.cart-full {
@@ -306,19 +319,26 @@ if (!isLoggedIn) {
     margin: auto;
   }
 
-  /* 菜籃內的角色卡：加大並跟主畫面共用縮放倍率 */
+  /* 菜籃內的角色卡：跟外面主畫面角色一樣大小、一樣重疊靠在一起 */
   #cart-items > div {
     position: relative !important;
     display: inline-block !important;
-    width: calc(96px * var(--palais-media-scale)) !important;
-    margin: 0 !important;
+    width: calc(200px * var(--palais-media-scale)) !important;
+    /* 與外面相同的負 margin，讓角色彼此重疊靠攏；拿掉一個會自動補位 */
+    margin: 0 0 0 calc(-100px * var(--palais-media-scale)) !important;
     left: auto !important;
     bottom: auto !important;
+    flex: 0 0 auto !important;
+    transform: none !important;
+    transition: none !important;
   }
 
   #cart-items > div > img {
-    height: calc(120px * var(--palais-media-scale)) !important;
+    height: calc(300px * var(--palais-media-scale)) !important;
+    max-width: calc(200px * var(--palais-media-scale)) !important;
     width: auto !important;
+    transform: none !important;
+    transition: opacity 160ms ease !important;
   }
 
   /* 菜籃內隱藏卡片底部的詳細資訊，避免擠爆 */
@@ -335,7 +355,7 @@ if (!isLoggedIn) {
     position: absolute;
     top: 45%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translate(-50%, -50%);
     padding: 6px 12px;
     border-radius: 999px;
     background: rgba(0, 0, 0, 0.72);
@@ -348,12 +368,17 @@ if (!isLoggedIn) {
     pointer-events: none;
     opacity: 0;
     z-index: 5;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s ease;
   }
 
-  .pg-draggable:hover .power-badge {
+  #group-container .pg-draggable:hover .power-badge {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+  }
+
+  #cart-items .pg-draggable:hover,
+  #cart-items .pg-draggable:hover > img {
+    transform: none !important;
+    filter: none !important;
   }
 
   #group-container .box-container > div {
@@ -449,8 +474,7 @@ if (!isLoggedIn) {
   function findArmyContainer(army: string): HTMLElement | null {
     const containers = document.querySelectorAll<HTMLElement>('.army-container');
     for (const c of containers) {
-      const title = c.querySelector('.army-title');
-      if (title && title.textContent === army) return c;
+      if (c.dataset.group === army) return c;
     }
     return null;
   }
@@ -469,11 +493,25 @@ if (!isLoggedIn) {
     updateCartCount();
   }
   const MIN_KEY = 'palais-cart-min';
+  const POS_KEY = 'palais-cart-top';
   function setMinimized(min: boolean) {
     const cart = document.getElementById('palais-cart');
     const toggle = document.getElementById('cart-toggle');
     if (!cart) return;
     cart.classList.toggle('minimized', min);
+    if (min) {
+      cart.style.top = 'auto';
+      cart.style.bottom = '0';
+    } else {
+      const savedTop = localStorage.getItem(POS_KEY);
+      if (savedTop !== null) {
+        const h = cart.offsetHeight || 80;
+        const maxTop = Math.max(0, window.innerHeight - h);
+        const top = Math.min(Math.max(0, parseInt(savedTop, 10)), maxTop);
+        cart.style.top = top + 'px';
+        cart.style.bottom = 'auto';
+      }
+    }
     if (toggle) {
       toggle.textContent = min ? '🧺' : '—';
       toggle.setAttribute('title', min ? '展開' : '最小化');
@@ -483,11 +521,9 @@ if (!isLoggedIn) {
   function initCart() {
     const cart = document.getElementById('palais-cart');
     if (!cart) return;
-    cart.addEventListener('dragover', (e) => { e.preventDefault(); cart.classList.add('drag-over'); });
-    cart.addEventListener('dragleave', () => { cart.classList.remove('drag-over'); });
+    cart.addEventListener('dragover', (e) => { e.preventDefault(); });
     cart.addEventListener('drop', (e) => {
       e.preventDefault();
-      cart.classList.remove('drag-over');
       // 最小化狀態下拖入：先展開再加入，才能正確判斷單排容量
       if (cart.classList.contains('minimized')) setMinimized(false);
       if (draggedCard) moveCardToCart(draggedCard);
@@ -502,7 +538,6 @@ if (!isLoggedIn) {
     setMinimized(localStorage.getItem(MIN_KEY) === '1');
 
     // 只能上下拖曳：標題列當把手，改變 top
-    const POS_KEY = 'palais-cart-top';
     const applyCartTop = (top: number) => {
       const h = cart.offsetHeight || 80;
       const maxTop = Math.max(0, window.innerHeight - h);
@@ -529,7 +564,9 @@ if (!isLoggedIn) {
     }
     // 還原上次拖曳的位置（預設貼底）
     const savedTop = localStorage.getItem(POS_KEY);
-    if (savedTop !== null) applyCartTop(parseInt(savedTop, 10));
+    if (!cart.classList.contains('minimized') && savedTop !== null) {
+      applyCartTop(parseInt(savedTop, 10));
+    }
   }
 
   // --- Lightbox ---
@@ -625,6 +662,7 @@ if (!isLoggedIn) {
   ) {
     const armyContainer = document.createElement('div');
     armyContainer.className = 'army-container';
+    armyContainer.dataset.group = army;
     armyContainer.style.marginTop = '50px';
 
     // 放置目標：把菜籃裡的人拖回這個隊伍
@@ -636,7 +674,11 @@ if (!isLoggedIn) {
 
     const armyTitle = document.createElement('h2');
     armyTitle.className = 'army-title';
-    armyTitle.textContent = army;
+    armyTitle.append(document.createTextNode(army));
+    const armyTotalPower = document.createElement('span');
+    armyTotalPower.className = 'army-total-power';
+    armyTotalPower.textContent = '⚡ 計算中…';
+    armyTitle.appendChild(armyTotalPower);
     armyTitle.style.marginBottom = '15px';
 
     const charactersGrid = document.createElement('div');
@@ -653,11 +695,14 @@ if (!isLoggedIn) {
         return true;
       };
       const firstCard = createCharacterCard(characters[0], timestamp, isPriority(characters[0]));
+      firstCard.dataset.group = army;
       const cardWidth = parseInt(firstCard.style.width) || 200;
       charactersGrid.style.paddingLeft = (cardWidth / 2) + 'px';
       charactersGrid.appendChild(firstCard);
       characters.slice(1).forEach(character => {
-        charactersGrid.appendChild(createCharacterCard(character, timestamp, isPriority(character)));
+        const card = createCharacterCard(character, timestamp, isPriority(character));
+        card.dataset.group = army;
+        charactersGrid.appendChild(card);
       });
     }
 
@@ -721,6 +766,40 @@ if (!isLoggedIn) {
         )
         .forEach((card) => grid.appendChild(card));
     });
+
+    document.querySelectorAll<HTMLElement>('.army-container').forEach((container) => {
+      const groupName = container.dataset.group;
+      if (!groupName) return;
+
+      const totalPower = Array.from(
+        document.querySelectorAll<HTMLElement>('.pg-draggable'),
+      )
+        .filter((card) => card.dataset.group === groupName)
+        .reduce(
+          (total, card) =>
+            total + (powerByName.get(card.dataset.name || '') || 0),
+          0,
+        );
+
+      const total = container.querySelector<HTMLElement>('.army-total-power');
+      if (total) total.textContent = `⚡ ${totalPower.toLocaleString()}`;
+      container.dataset.totalPower = String(totalPower);
+    });
+
+    const groupsContainer = document.querySelector<HTMLElement>('.army-groups');
+    if (groupsContainer) {
+      Array.from(
+        groupsContainer.querySelectorAll<HTMLElement>(':scope > .army-container'),
+      )
+        .sort((a, b) => {
+          const powerDifference =
+            Number(b.dataset.totalPower || 0) -
+            Number(a.dataset.totalPower || 0);
+          if (powerDifference !== 0) return powerDifference;
+          return (a.dataset.group || '').localeCompare(b.dataset.group || '');
+        })
+        .forEach((container) => groupsContainer.appendChild(container));
+    }
   }
 
   async function loadData(isRefresh = false) {
