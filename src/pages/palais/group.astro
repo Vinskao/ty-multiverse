@@ -833,15 +833,18 @@ if (!isLoggedIn) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        const padX = Math.round(img.width * 0.1);
-        const padY = Math.round(img.height * 0.2);
+        // 左右各 18%、上方 20%、下方 25%（與 server 端 sharp 邊框一致）
+        const padLeft = Math.round(img.width * 0.18);
+        const padRight = Math.round(img.width * 0.18);
+        const padTop = Math.round(img.height * 0.2);
+        const padBottom = Math.round(img.height * 0.25);
         const canvas = document.createElement('canvas');
-        canvas.width = img.width + padX * 2;
-        canvas.height = img.height + padY * 2;
+        canvas.width = img.width + padLeft + padRight;
+        canvas.height = img.height + padTop + padBottom;
         const ctx = canvas.getContext('2d');
         if (!ctx) { resolve(null); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, padX, padY);
+        ctx.drawImage(img, padLeft, padTop);
         canvas.toBlob(blob => resolve(blob), 'image/png');
       };
       img.onerror = () => resolve(null);
@@ -882,7 +885,11 @@ if (!isLoggedIn) {
     return result;
   }
 
-  document.addEventListener("DOMContentLoaded", async function () {
+  // 用 astro:page-load 而非 DOMContentLoaded：BaseLayout 有 ClientRouter（View Transitions），
+  // SPA 導航切進本頁時 DOMContentLoaded 不會再觸發，會導致 loadData 沒跑、圖片不顯示。
+  // astro:page-load 在初次載入與每次 SPA 導航都會觸發（頁內元素皆有 null 檢查，離開本頁也安全）。
+  document.addEventListener("astro:page-load", async function () {
+    if (!document.getElementById('group-container')) return;
     initCart();
     loadData();
 

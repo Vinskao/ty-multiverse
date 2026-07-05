@@ -119,10 +119,10 @@ export const POST: APIRoute = async ({ request }) => {
         }
         output = await sharp(source)
           .extend({
-            left: Math.round(metadata.width * 0.1),
-            right: Math.round(metadata.width * 0.1),
+            left: Math.round(metadata.width * 0.18),
+            right: Math.round(metadata.width * 0.18),
             top: Math.round(metadata.height * 0.2),
-            bottom: Math.round(metadata.height * 0.2),
+            bottom: Math.round(metadata.height * 0.25),
             background: { r: 0, g: 0, b: 0, alpha: 0 },
           })
           .png()
