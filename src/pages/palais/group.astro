@@ -943,7 +943,68 @@ if (!isLoggedIn) {
     });
   }
 
+  async function saveImagesToBrowserDirectory(padded: boolean) {
+    const picker = (window as any).showDirectoryPicker;
+    if (!window.isSecureContext || typeof picker !== 'function') return null;
+
+    let directory: any;
+    try {
+      directory = await picker.call(window, {
+        id: padded ? 'palais-characters-padded' : 'palais-characters',
+        mode: 'readwrite',
+      });
+    } catch (error) {
+      if ((error as DOMException)?.name === 'AbortError') {
+        return { cancelled: true, padded, requested: 0, saved: 0, failures: [] };
+      }
+      throw error;
+    }
+
+    let saved = 0;
+    const failures: Array<{ name: string; error: string }> = [];
+    const timestamp = characterService.getMediaTimestamp();
+
+    for (const character of currentFilteredData) {
+      const name = character.name || 'default';
+      const imageUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png?t=${timestamp}`;
+      try {
+        const blob = padded
+          ? await addPaddingToImage(imageUrl)
+          : await fetch(imageUrl).then((response) => {
+              if (!response.ok) throw new Error(`Image download failed (${response.status})`);
+              return response.blob();
+            });
+        if (!blob) throw new Error('Image processing failed');
+
+        const fileHandle = await directory.getFileHandle(`${name}.png`, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        saved += 1;
+      } catch (error) {
+        failures.push({
+          name,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return {
+      source: 'browser-directory',
+      padded,
+      requested: currentFilteredData.length,
+      saved,
+      failures,
+    };
+  }
+
   async function saveImagesDirectlyOnLocalWindows(padded: boolean) {
+    const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+    if (!isLocalhost) {
+      const browserResult = await saveImagesToBrowserDirectory(padded);
+      if (browserResult) return browserResult;
+    }
+
     const endpoint = '/tymultiverse/api/local-character-download';
     let capabilityResponse: Response;
     try {
@@ -1055,6 +1116,11 @@ if (!isLoggedIn) {
 
           const localResult = await saveImagesDirectlyOnLocalWindows(false);
           if (localResult) {
+            if (localResult.cancelled) {
+              downloadBtn.removeAttribute('disabled');
+              downloadBtn.innerHTML = originalText;
+              return;
+            }
             downloadBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
             if (localResult.failures?.length) {
               console.warn('部分圖片無法儲存:', localResult.failures);
@@ -1146,6 +1212,11 @@ if (!isLoggedIn) {
 
           const localResult = await saveImagesDirectlyOnLocalWindows(true);
           if (localResult) {
+            if (localResult.cancelled) {
+              downloadPaddedBtn.removeAttribute('disabled');
+              downloadPaddedBtn.innerHTML = originalText;
+              return;
+            }
             downloadPaddedBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
             if (localResult.failures?.length) {
               console.warn('部分含邊框圖片無法儲存:', localResult.failures);
