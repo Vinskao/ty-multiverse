@@ -153,6 +153,8 @@ if (!isLoggedIn) {
 
   /* 滑鼠移到的那一排：整列放大並浮起 */
   .army-container .box-container {
+    position: relative;
+    z-index: 1;
     transition: transform 0.25s ease;
     transform-origin: center center;
     will-change: transform;
@@ -178,26 +180,30 @@ if (!isLoggedIn) {
 
   .army-title {
     position: absolute;
-    left: calc(-5vw - 15px);
-    top: calc(300px * var(--palais-media-scale) - 12px);
-    width: max-content;
-    max-width: 5vw;
+    left: 15px;
+    right: 15px;
+    top: 15px;
+    width: auto;
+    height: calc(300px * var(--palais-media-scale));
     margin: 0;
-    line-height: 1.35;
-    text-align: right;
-    overflow-wrap: anywhere;
+    font-size: clamp(28px, 6vw, 72px);
+    line-height: 1.1;
+    text-align: center;
+    overflow: hidden;
+    opacity: 0.28;
     pointer-events: none;
     z-index: 0;
     font-size: 10px; /* 從 24px 縮到約 1/5，但仍可讀 */
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    text-shadow: 0 0 12px currentColor, 0 0 28px currentColor;
   }
 
   .army-total-power {
     display: block;
-    margin: 2px 0 0;
+    margin: 12px 0 0;
     color: #ffd75e;
+    font-size: 0.42em;
     font-weight: 700;
   }
 
