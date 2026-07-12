@@ -189,9 +189,12 @@ if (!isLoggedIn) {
     margin: 0;
     font-size: clamp(28px, 6vw, 72px);
     line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     overflow: hidden;
-    opacity: 0.28;
     pointer-events: none;
     z-index: 0;
     font-size: 10px; /* 從 24px 縮到約 1/5，但仍可讀 */
@@ -800,12 +803,26 @@ if (!isLoggedIn) {
     );
 
     const getPowerColor = (power: number) => {
-      if (power >= 2600) return '#FFD700';
-      if (power >= 1600) return '#00FF00';
-      if (power >= 900) return '#00FFFF';
-      if (power >= 400) return '#0000FF';
-      if (power >= 50) return '#800080';
-      return '#808080';
+      const stops = [
+        [0, [128, 128, 128]],
+        [50, [128, 0, 128]],
+        [400, [0, 0, 255]],
+        [900, [0, 255, 255]],
+        [1600, [0, 255, 0]],
+        [2600, [255, 215, 0]],
+        [3600, [255, 0, 0]],
+      ] as const;
+      const value = Math.max(0, power);
+      const upper = stops.findIndex(([threshold]) => value <= threshold);
+      if (upper <= 0) return `rgb(${stops[0][1].join(', ')})`;
+      if (upper === -1) return 'rgb(255, 0, 0)';
+      const [lowValue, lowColor] = stops[upper - 1];
+      const [highValue, highColor] = stops[upper];
+      const ratio = (value - lowValue) / (highValue - lowValue);
+      const color = lowColor.map((channel, index) =>
+        Math.round(channel + (highColor[index] - channel) * ratio),
+      );
+      return `rgb(${color.join(', ')})`;
     };
 
     document.querySelectorAll<HTMLElement>('.army-container .box-container').forEach((grid) => {
