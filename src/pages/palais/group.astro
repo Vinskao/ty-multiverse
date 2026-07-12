@@ -139,6 +139,7 @@ if (!isLoggedIn) {
   }
 
   .army-container {
+    --palais-row-height: calc(300px * var(--palais-media-scale));
     margin: 20px 0;
     padding: 15px;
     background: transparent;
@@ -174,7 +175,7 @@ if (!isLoggedIn) {
   }
 
   .army-container + .army-container {
-    margin-top: calc(-135px * var(--palais-media-scale)) !important;
+    margin-top: calc(var(--palais-row-height) * -0.45) !important;
   }
 
 
@@ -184,7 +185,7 @@ if (!isLoggedIn) {
     right: 15px;
     top: 15px;
     width: auto;
-    height: calc(300px * var(--palais-media-scale));
+    height: var(--palais-row-height);
     margin: 0;
     font-size: clamp(28px, 6vw, 72px);
     line-height: 1.1;
