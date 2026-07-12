@@ -177,6 +177,17 @@ if (!isLoggedIn) {
 
 
   .army-title {
+    position: absolute;
+    left: calc(-5vw - 15px);
+    top: calc(300px * var(--palais-media-scale) - 12px);
+    width: max-content;
+    max-width: 5vw;
+    margin: 0;
+    line-height: 1.35;
+    text-align: right;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    z-index: 0;
     font-size: 10px; /* 從 24px 縮到約 1/5，但仍可讀 */
     font-weight: bold;
     color: #fff;
@@ -184,7 +195,8 @@ if (!isLoggedIn) {
   }
 
   .army-total-power {
-    margin-left: 8px;
+    display: block;
+    margin: 2px 0 0;
     color: #ffd75e;
     font-weight: 700;
   }
@@ -412,6 +424,11 @@ if (!isLoggedIn) {
 
   #group-container .box-container > div:hover > img {
     filter: none !important;
+  }
+
+  #group-container .character-name {
+    text-align: center;
+    text-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
   }
 </style>
 
@@ -655,6 +672,7 @@ if (!isLoggedIn) {
     infoContainer.style.cssText = 'color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:200px;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;padding:5px;border-radius:5px;';
 
     const nameText = document.createElement('p');
+    nameText.className = 'character-name';
     nameText.textContent = character.nameOriginal;
     nameText.style.cssText = 'margin:0;font-weight:bold;font-size:clamp(8px,1.2vw,10px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
 
@@ -774,11 +792,22 @@ if (!isLoggedIn) {
       ]),
     );
 
+    const getPowerColor = (power: number) => {
+      if (power >= 2600) return '#FFD700';
+      if (power >= 1600) return '#00FF00';
+      if (power >= 900) return '#00FFFF';
+      if (power >= 400) return '#0000FF';
+      if (power >= 50) return '#800080';
+      return '#808080';
+    };
+
     document.querySelectorAll<HTMLElement>('.army-container .box-container').forEach((grid) => {
       const cards = Array.from(grid.children) as HTMLElement[];
       cards.forEach((card) => {
         const power = powerByName.get(card.dataset.name || '') || 0;
         card.dataset.totalPower = String(power);
+        const name = card.querySelector<HTMLElement>('.character-name');
+        if (name) name.style.color = getPowerColor(power);
         const badge = card.querySelector<HTMLElement>('.power-badge');
         if (badge) badge.textContent = `⚔ ${power.toLocaleString()}`;
       });
