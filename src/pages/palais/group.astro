@@ -166,6 +166,10 @@ if (!isLoggedIn) {
     transform: none;
   }
 
+  .army-container + .army-container {
+    margin-top: calc(-30px * var(--palais-media-scale)) !important;
+  }
+
 
   .army-title {
     font-size: 10px; /* 從 24px 縮到約 1/5，但仍可讀 */
@@ -384,11 +388,25 @@ if (!isLoggedIn) {
   #group-container .box-container > div {
     width: calc(200px * var(--palais-media-scale)) !important;
     margin-left: calc(-100px * var(--palais-media-scale)) !important;
+    transition: transform 180ms ease !important;
+    transform-origin: center bottom;
+    will-change: transform;
   }
 
   #group-container .box-container > div > img {
     height: calc(300px * var(--palais-media-scale)) !important;
     max-width: calc(200px * var(--palais-media-scale)) !important;
+    filter: none !important;
+  }
+
+  #group-container .box-container > div:hover {
+    z-index: 10 !important;
+    transform: scale(1.04) !important;
+    filter: none !important;
+  }
+
+  #group-container .box-container > div:hover > img {
+    filter: none !important;
   }
 </style>
 
@@ -663,7 +681,7 @@ if (!isLoggedIn) {
     const armyContainer = document.createElement('div');
     armyContainer.className = 'army-container';
     armyContainer.dataset.group = army;
-    armyContainer.style.marginTop = '50px';
+    armyContainer.style.marginTop = '0';
 
     // 放置目標：把菜籃裡的人拖回這個隊伍
     armyContainer.addEventListener('dragover', (e) => { e.preventDefault(); });
@@ -1090,6 +1108,30 @@ if (!isLoggedIn) {
     return { ...capability, padded, requested: total, saved, failures };
   }
 
+  function formatSaveResult(result: {
+    requested: number;
+    saved: number;
+    failures?: Array<{ name: string; error: string }>;
+  }) {
+    const failed = result.failures?.length || 0;
+    return failed > 0
+      ? `已覆蓋 ${result.saved}/${result.requested} 張，失敗 ${failed} 張`
+      : `已覆蓋 ${result.saved}/${result.requested} 張`;
+  }
+
+  function alertSaveFailures(
+    title: string,
+    failures?: Array<{ name: string; error: string }>,
+  ) {
+    if (!failures?.length) return;
+    const preview = failures
+      .slice(0, 8)
+      .map((failure) => `${failure.name}: ${failure.error}`)
+      .join('\n');
+    const suffix = failures.length > 8 ? `\n...還有 ${failures.length - 8} 筆` : '';
+    alert(`${title}\n${preview}${suffix}`);
+  }
+
   // 用 astro:page-load 而非 DOMContentLoaded：BaseLayout 有 ClientRouter（View Transitions），
   // SPA 導航切進本頁時 DOMContentLoaded 不會再觸發，會導致 loadData 沒跑、圖片不顯示。
   // astro:page-load 在初次載入與每次 SPA 導航都會觸發（頁內元素皆有 null 檢查，離開本頁也安全）。
@@ -1121,10 +1163,8 @@ if (!isLoggedIn) {
               downloadBtn.innerHTML = originalText;
               return;
             }
-            downloadBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
-            if (localResult.failures?.length) {
-              console.warn('部分圖片無法儲存:', localResult.failures);
-            }
+            downloadBtn.textContent = formatSaveResult(localResult);
+            alertSaveFailures('部分圖片沒有覆蓋到：', localResult.failures);
             setTimeout(() => {
               downloadBtn.removeAttribute('disabled');
               downloadBtn.innerHTML = originalText;
@@ -1136,8 +1176,8 @@ if (!isLoggedIn) {
             downloadBtn.textContent = `寫入中 (${completed}/${total})...`;
           });
           if (macResult) {
-            downloadBtn.textContent = `已覆蓋 ${macResult.saved}/${macResult.requested} 張`;
-            if (macResult.failures.length) console.warn('部分圖片無法儲存:', macResult.failures);
+            downloadBtn.textContent = formatSaveResult(macResult);
+            alertSaveFailures('部分圖片沒有覆蓋到：', macResult.failures);
             setTimeout(() => {
               downloadBtn.removeAttribute('disabled');
               downloadBtn.innerHTML = originalText;
@@ -1188,7 +1228,7 @@ if (!isLoggedIn) {
           link.download = `palais_characters_${new Date().toISOString().split('T')[0]}.zip`;
           link.click();
 
-          downloadBtn.textContent = '下載成功！';
+          downloadBtn.textContent = '已下載 zip（未直接覆蓋）';
           setTimeout(() => {
             downloadBtn.removeAttribute('disabled');
             downloadBtn.innerHTML = originalText;
@@ -1217,10 +1257,8 @@ if (!isLoggedIn) {
               downloadPaddedBtn.innerHTML = originalText;
               return;
             }
-            downloadPaddedBtn.textContent = `已覆蓋 ${localResult.saved}/${localResult.requested} 張`;
-            if (localResult.failures?.length) {
-              console.warn('部分含邊框圖片無法儲存:', localResult.failures);
-            }
+            downloadPaddedBtn.textContent = formatSaveResult(localResult);
+            alertSaveFailures('部分含邊框圖片沒有覆蓋到：', localResult.failures);
             setTimeout(() => {
               downloadPaddedBtn.removeAttribute('disabled');
               downloadPaddedBtn.innerHTML = originalText;
@@ -1232,8 +1270,8 @@ if (!isLoggedIn) {
             downloadPaddedBtn.textContent = `處理中 (${completed}/${total})...`;
           });
           if (macResult) {
-            downloadPaddedBtn.textContent = `已覆蓋 ${macResult.saved}/${macResult.requested} 張`;
-            if (macResult.failures.length) console.warn('部分含邊框圖片無法儲存:', macResult.failures);
+            downloadPaddedBtn.textContent = formatSaveResult(macResult);
+            alertSaveFailures('部分含邊框圖片沒有覆蓋到：', macResult.failures);
             setTimeout(() => {
               downloadPaddedBtn.removeAttribute('disabled');
               downloadPaddedBtn.innerHTML = originalText;
@@ -1280,7 +1318,7 @@ if (!isLoggedIn) {
           link.download = `palais_characters_padded_${new Date().toISOString().split('T')[0]}.zip`;
           link.click();
 
-          downloadPaddedBtn.textContent = '下載成功！';
+          downloadPaddedBtn.textContent = '已下載 zip（未直接覆蓋）';
           setTimeout(() => {
             downloadPaddedBtn.removeAttribute('disabled');
             downloadPaddedBtn.innerHTML = originalText;
