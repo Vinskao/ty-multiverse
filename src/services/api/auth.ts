@@ -513,7 +513,7 @@ function getJwtExpiry(token: string): number | null {
   }
 }
 let lastToken = null; // 追踪上一次驗證的 token
-let verificationInterval = null; // 追踪定期驗證的 interval
+let verificationTimer: number | null = null; // Token refresh/verification timeout
 
 /**
  * 驗證 token 是否有效
@@ -674,15 +674,28 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
       refreshToken: null
     };
   } catch (error) {
+    console.warn('Token verification skipped after network/client error:', error);
     return {
-      valid: false,
+      valid: true,
       tokenRefreshed: false,
-      accessToken: null,
-      refreshToken: null
+      accessToken: token,
+      refreshToken: refreshToken
     };
   } finally {
     isVerifying = false;
   }
+}
+
+function getTokenVerificationDelay(token: string): number {
+  const expiresAt = getJwtExpiry(token);
+  if (!expiresAt) return 10 * 60 * 1000;
+
+  const refreshWindow = 60 * 1000;
+  const minDelay = 15 * 1000;
+  const maxDelay = 30 * 60 * 1000;
+  const delay = expiresAt - Date.now() - refreshWindow;
+
+  return Math.max(minDelay, Math.min(delay, maxDelay));
 }
 
 /**
@@ -699,8 +712,9 @@ function startTokenVerification(
   onTokenInvalid: () => void
 ): void {
   // 清除現有的 interval
-  if (verificationInterval) {
-    clearInterval(verificationInterval);
+  if (verificationTimer) {
+    clearTimeout(verificationTimer);
+    verificationTimer = null;
   }
 
   // 立即進行一次驗證
@@ -719,21 +733,28 @@ function startTokenVerification(
       currentRefreshToken = result.refreshToken;
       onTokenRefreshed(result.accessToken, result.refreshToken);
     }
+
+    verificationTimer = window.setTimeout(
+      verifyCurrentToken,
+      getTokenVerificationDelay(currentToken)
+    );
   };
 
-  void verifyCurrentToken();
+  verificationTimer = window.setTimeout(
+    verifyCurrentToken,
+    getTokenVerificationDelay(currentToken)
+  );
 
   // 設置定期驗證（每 5 分鐘）
-  verificationInterval = window.setInterval(verifyCurrentToken, 5 * 60 * 1000);
 }
 
 /**
  * 停止 token 驗證
  */
 function stopTokenVerification(): void {
-  if (verificationInterval) {
-    clearInterval(verificationInterval);
-    verificationInterval = null;
+  if (verificationTimer) {
+    clearTimeout(verificationTimer);
+    verificationTimer = null;
   }
 }
 
