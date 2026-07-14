@@ -174,6 +174,10 @@ if (!isLoggedIn) {
     z-index: 20;
   }
 
+  .army-container.is-empty {
+    display: none;
+  }
+
   .army-container + .army-container {
     margin-top: calc(var(--palais-row-height) * -0.45) !important;
   }
@@ -545,6 +549,13 @@ if (!isLoggedIn) {
     cart.classList.add('cart-full');
     setTimeout(() => cart.classList.remove('cart-full'), 500);
   }
+  function syncArmyEmptyState(container: Element | null) {
+    if (!(container instanceof HTMLElement)) return;
+    const hasCards = Boolean(
+      container.querySelector('.box-container > .pg-draggable'),
+    );
+    container.classList.toggle('is-empty', !hasCards);
+  }
   function moveCardToCart(card: HTMLElement) {
     const items = document.getElementById('cart-items');
     if (!items || !card) return;
@@ -562,6 +573,7 @@ if (!isLoggedIn) {
     const set = getCartSet();
     if (card.dataset.name) set.add(card.dataset.name);
     saveCartSet(set);
+    syncArmyEmptyState(prevParent?.closest('.army-container') || null);
     updateCartCount();
   }
   function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
@@ -571,6 +583,7 @@ if (!isLoggedIn) {
     const set = getCartSet();
     if (card.dataset.name) set.delete(card.dataset.name);
     saveCartSet(set);
+    syncArmyEmptyState(armyContainer);
     updateCartCount();
   }
   // 重整 / 刷新後：把記住的人從各隊伍移回菜籃
@@ -584,6 +597,7 @@ if (!isLoggedIn) {
       );
       if (card) items.appendChild(card);
     });
+    document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     updateCartCount();
   }
   // 依隊伍名稱找到對應的 .army-container（用標題文字比對）
@@ -605,6 +619,7 @@ if (!isLoggedIn) {
       if (grid) grid.appendChild(card);
       else card.remove(); // 找不到原隊伍（理論上不會）就移除孤兒節點
     });
+    document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     saveCartSet(new Set());
     updateCartCount();
   }
@@ -731,7 +746,11 @@ if (!isLoggedIn) {
     const originalUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(character.name || 'default')}.png?t=${timestamp}`;
 
     img.onload = () => { img.style.opacity = '1'; };
-    img.onerror = () => { characterContainer.remove(); };
+    img.onerror = () => {
+      const grid = characterContainer.closest('.box-container');
+      characterContainer.remove();
+      syncArmyEmptyState(grid?.closest('.army-container') || null);
+    };
     img.src = originalUrl;
 
     characterContainer.addEventListener('click', () => openLightbox(originalUrl, character.nameOriginal));
@@ -779,6 +798,7 @@ if (!isLoggedIn) {
   ) {
     const armyContainer = document.createElement('div');
     armyContainer.className = 'army-container';
+    if (characters.length === 0) armyContainer.classList.add('is-empty');
     armyContainer.dataset.group = army;
     armyContainer.style.marginTop = '0';
 
