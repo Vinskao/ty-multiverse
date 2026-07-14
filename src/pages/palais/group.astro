@@ -876,12 +876,13 @@ if (!isLoggedIn) {
         [900, [0, 255, 255]],
         [1600, [0, 255, 0]],
         [2600, [255, 215, 0]],
-        [3600, [255, 0, 0]],
+        [3600, [210, 0, 0]],
+        [6000, [255, 72, 72]],
       ] as const;
       const value = Math.max(0, power);
       const upper = stops.findIndex(([threshold]) => value <= threshold);
-      if (upper <= 0) return `rgb(${stops[0][1].join(', ')})`;
-      if (upper === -1) return 'rgb(255, 0, 0)';
+      if (upper === -1) return `rgb(${stops[stops.length - 1][1].join(', ')})`;
+      if (upper === 0) return `rgb(${stops[0][1].join(', ')})`;
       const [lowValue, lowColor] = stops[upper - 1];
       const [highValue, highColor] = stops[upper];
       const ratio = (value - lowValue) / (highValue - lowValue);
