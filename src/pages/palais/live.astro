@@ -105,13 +105,9 @@ const mergeEndpoint = isDev
             <video id="result-video" controls class="result-video"></video>
           </div>
           <div class="result-actions">
-            <a id="download-mp4" class="download-btn" target="_blank"
-              >Download MP4</a
-            >
-            <a id="download-gif" class="download-btn gif-btn" target="_blank"
-              >Download GIF</a
-            >
-            <button id="reset-btn" class="reset-btn">Start New</button>
+            <a id="download-mp4" class="btn is-primary" target="_blank">Download MP4</a>
+            <a id="download-gif" class="btn is-accent" target="_blank">Download GIF</a>
+            <button id="reset-btn" class="btn is-outline">Start New</button>
           </div>
         </div>
       </div>
@@ -367,45 +363,6 @@ const mergeEndpoint = isDev
     gap: 1rem;
   }
 
-  .download-btn,
-  .reset-btn {
-    padding: 0.75rem 2rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-
-  .download-btn {
-    background: var(--accent-regular);
-    color: white;
-    border: none;
-    font-size: 1rem;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .gif-btn {
-    background: #4a4a4a;
-  }
-
-  .gif-btn:hover {
-    background: #666;
-  }
-
-  .reset-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .download-btn:hover {
-    background: var(--accent-light);
-  }
-  .reset-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
 </style>
 
 <script>

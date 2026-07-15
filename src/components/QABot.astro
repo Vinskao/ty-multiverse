@@ -1216,10 +1216,10 @@
         const topics =
           this.state.currentLanguage === "chinese"
             ? [
-                { key: "Java", text: "☕ Java 開發" },
-                { key: "OOP及DI框架", text: "🏗️ OOP及DI框架" },
-                { key: "部署實踐", text: "🚀 部署實踐" },
-                { key: "redis 及 mq 的差異", text: "🗄️ Redis 與 MQ 的差異" },
+                { key: "Java", text: "Java 開發" },
+                { key: "OOP及DI框架", text: "OOP及DI框架" },
+                { key: "部署實踐", text: "部署實踐" },
+                { key: "redis 及 mq 的差異", text: "Redis 與 MQ 的差異" },
                 {
                   key: "了解妳",
                   text:
@@ -1227,12 +1227,12 @@
                 },
               ]
             : [
-                { key: "Java", text: "☕ Java Development" },
-                { key: "OOP及DI框架", text: "🏗️ OOP & DI Frameworks" },
-                { key: "部署實踐", text: "🚀 Deployment Practices" },
+                { key: "Java", text: "Java Development" },
+                { key: "OOP及DI框架", text: "OOP & DI Frameworks" },
+                { key: "部署實踐", text: "Deployment Practices" },
                 {
                   key: "redis 及 mq 的差異",
-                  text: "🗄️ Redis & MQ Differences",
+                  text: "Redis & MQ Differences",
                 },
                 { key: "了解妳", text: "Learn More About Maya" },
               ];
@@ -2402,8 +2402,8 @@
       const metadata = templates?.metadata || {
         content_length: "內容長度",
         source: "來源",
-        reanalyze: "🔄 重新分析",
-        copy_result: "📋 複製結果",
+        reanalyze: "重新分析",
+        copy_result: "複製結果",
       };
 
       const typeLabels: Record<string, string> = {
@@ -2432,10 +2432,10 @@
         </div>
         <div class="analysis-actions">
           <button class="reanalyze-btn btn is-primary" onclick="this.closest('.message').dispatchEvent(new CustomEvent('reanalyze'))">
-            ${metadata.reanalyze || "🔄 重新分析"}
+            ${metadata.reanalyze || "重新分析"}
           </button>
           <button class="copy-btn btn is-warning" onclick="navigator.clipboard.writeText('${answer.replace(/'/g, "\\'")}')">
-            ${metadata.copy_result || "📋 複製結果"}
+            ${metadata.copy_result || "複製結果"}
           </button>
         </div>
       `;

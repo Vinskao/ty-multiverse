@@ -6,66 +6,8 @@
   
   <!-- 同步全部按鈕 -->
   <div style="margin-bottom: 30px; text-align: center;">
-    <button id="sync-all-btn" style="
-      padding: 8px 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 24px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      position: relative;
-      overflow: hidden;
-      min-width: 140px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin-right: 15px;
-    ">
-      <span>同步全部</span>
-      <div style="
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s ease;
-      "></div>
-    </button>
-    
-    <button id="export-btn" style="
-      padding: 8px 20px;
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      color: white;
-      border: none;
-      border-radius: 24px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      position: relative;
-      overflow: hidden;
-      min-width: 140px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    ">
-      <span>匯出表格</span>
-      <div style="
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s ease;
-      "></div>
-    </button>
+    <button id="sync-all-btn" class="btn is-primary" style="margin-right: 15px;">同步全部</button>
+    <button id="export-btn" class="btn is-success">匯出表格</button>
   </div>
   
   <!-- 戰力統計 -->
@@ -500,20 +442,23 @@
       return 'transparent';
     }
     
-    // 高於中位數的部分分成5個區間，從淺紅到深紅
+    // 高於中位數的部分分成8個區間；相鄰區間同時改變色相與亮度，
+    // 避免舊版 5 個相近粉紅在數值差幾千時看起來一樣
     const adjustedPercentage = (percentage - 0.5) * 2; // 將0.5-1映射到0-1
-    const range = Math.floor(adjustedPercentage * 5); // 分成5個區間
-    
-    // 顏色漸變：從淺紅到深紅
+    const range = Math.floor(adjustedPercentage * 8);
+
     const colors = [
-      '#FFE6E6', // 50-60%  淺粉紅
-      '#FFCCCC', // 60-70%  粉紅
-      '#FFB3B3', // 70-80%  淺紅
-      '#FF8080', // 80-90%  紅
-      '#FF0000'  // 90-100% 最紅
+      '#FFD9A0', // 淺橙
+      '#FFB347', // 橙
+      '#FF8C42', // 深橙
+      '#FF6B4A', // 橙紅
+      '#FF4D4D', // 亮紅
+      '#E62E2E', // 紅
+      '#B81414', // 深紅
+      '#800000'  // 暗酒紅
     ];
-    
-    return colors[Math.min(range, 4)]; // 確保不會超出陣列範圍
+
+    return colors[Math.min(range, colors.length - 1)];
   }
 
   // 更新戰力統計
@@ -1323,22 +1268,8 @@
     
     // 禁用按鈕並顯示載入狀態
     syncBtn.disabled = true;
-    syncBtn.innerHTML = `
-      <span>同步中...</span>
-      <div style="
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s ease;
-      "></div>
-    `;
-    syncBtn.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
-    syncBtn.style.transform = 'scale(0.95)';
-    syncBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.5)';
-    
+    syncBtn.textContent = '同步中...';
+
     try {
       console.log('🔄 開始同步所有角色數據...');
       
@@ -1366,21 +1297,7 @@
     } finally {
       // 恢復按鈕狀態
       syncBtn.disabled = false;
-      syncBtn.innerHTML = `
-        <span>同步全部</span>
-        <div style="
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          transition: left 0.5s ease;
-        "></div>
-      `;
-      syncBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-      syncBtn.style.transform = 'translateY(0) scale(1)';
-      syncBtn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+      syncBtn.textContent = '同步全部';
     }
   }
 
@@ -1391,22 +1308,8 @@
     
     // 禁用按鈕並顯示載入狀態
     exportBtn.disabled = true;
-    exportBtn.innerHTML = `
-      <span>匯出中...</span>
-      <div style="
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s ease;
-      "></div>
-    `;
-    exportBtn.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)';
-    exportBtn.style.transform = 'scale(0.95)';
-    exportBtn.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.5)';
-    
+    exportBtn.textContent = '匯出中...';
+
     try {
       console.log('📊 開始匯出表格...');
       
@@ -1519,21 +1422,7 @@
     } finally {
       // 恢復按鈕狀態
       exportBtn.disabled = false;
-      exportBtn.innerHTML = `
-        <span>匯出表格</span>
-        <div style="
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          transition: left 0.5s ease;
-        "></div>
-      `;
-      exportBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-      exportBtn.style.transform = 'translateY(0) scale(1)';
-      exportBtn.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
+      exportBtn.textContent = '匯出表格';
     }
   }
 
@@ -1543,120 +1432,12 @@
     const syncBtn = document.getElementById('sync-all-btn') as HTMLButtonElement;
     if (syncBtn) {
       syncBtn.addEventListener('click', syncAllCharacters);
-      
-      // 添加懸停效果
-      syncBtn.addEventListener('mouseover', () => {
-        if (!syncBtn.disabled) {
-          syncBtn.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
-          syncBtn.style.transform = 'translateY(-2px) scale(1.04)';
-          syncBtn.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.6)';
-          
-          // 啟動閃光效果
-          const shine = syncBtn.querySelector('div') as HTMLElement;
-          if (shine) {
-            shine.style.left = '100%';
-          }
-          
-          // 旋轉圖標
-          const icon = syncBtn.querySelector('span') as HTMLElement;
-          if (icon) {
-            // icon.style.transform = 'rotate(180deg)';
-          }
-        }
-      });
-      
-      syncBtn.addEventListener('mouseout', () => {
-        if (!syncBtn.disabled) {
-          syncBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          syncBtn.style.transform = 'translateY(0) scale(1)';
-          syncBtn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-          
-          // 重置閃光效果
-          const shine = syncBtn.querySelector('div') as HTMLElement;
-          if (shine) {
-            shine.style.left = '-100%';
-          }
-          
-          // 重置圖標
-          const icon = syncBtn.querySelector('span') as HTMLElement;
-          if (icon) {
-            // icon.style.transform = 'rotate(0deg)';
-          }
-        }
-      });
-      
-      // 添加點擊效果
-      syncBtn.addEventListener('mousedown', () => {
-        if (!syncBtn.disabled) {
-          syncBtn.style.transform = 'translateY(-1px) scale(0.98)';
-        }
-      });
-      
-      syncBtn.addEventListener('mouseup', () => {
-        if (!syncBtn.disabled) {
-          syncBtn.style.transform = 'translateY(-3px) scale(1.05)';
-        }
-      });
     }
     
     // 綁定匯出按鈕事件
     const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
     if (exportBtn) {
       exportBtn.addEventListener('click', exportToExcel);
-      
-      // 添加懸停效果
-      exportBtn.addEventListener('mouseover', () => {
-        if (!exportBtn.disabled) {
-          exportBtn.style.background = 'linear-gradient(135deg, #20c997 0%, #19a77d 100%)';
-          exportBtn.style.transform = 'translateY(-2px) scale(1.04)';
-          exportBtn.style.boxShadow = '0 12px 35px rgba(32, 201, 151, 0.6)';
-          
-          // 啟動閃光效果
-          const shine = exportBtn.querySelector('div') as HTMLElement;
-          if (shine) {
-            shine.style.left = '100%';
-          }
-          
-          // 旋轉圖標
-          const icon = exportBtn.querySelector('span') as HTMLElement;
-          if (icon) {
-            // icon.style.transform = 'rotate(180deg)';
-          }
-        }
-      });
-      
-      exportBtn.addEventListener('mouseout', () => {
-        if (!exportBtn.disabled) {
-          exportBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-          exportBtn.style.transform = 'translateY(0) scale(1)';
-          exportBtn.style.boxShadow = '0 8px 25px rgba(40, 167, 69, 0.4)';
-          
-          // 重置閃光效果
-          const shine = exportBtn.querySelector('div') as HTMLElement;
-          if (shine) {
-            shine.style.left = '-100%';
-          }
-          
-          // 重置圖標
-          const icon = exportBtn.querySelector('span') as HTMLElement;
-          if (icon) {
-            // icon.style.transform = 'rotate(0deg)';
-          }
-        }
-      });
-      
-      // 添加點擊效果
-      exportBtn.addEventListener('mousedown', () => {
-        if (!exportBtn.disabled) {
-          exportBtn.style.transform = 'translateY(-1px) scale(0.98)';
-        }
-      });
-      
-      exportBtn.addEventListener('mouseup', () => {
-        if (!exportBtn.disabled) {
-          exportBtn.style.transform = 'translateY(-3px) scale(1.05)';
-        }
-      });
     }
     
     // 自動清理暫存，確保每次載入都是最新資料
@@ -1847,8 +1628,9 @@
         const levelSize = Math.floor(1000 * multiplier);
         const levelMax = currentMin + levelSize - 1;
         const levelName = "Level " + "S".repeat(levelIndex + 1);
-        const redValue = Math.max(50, 255 - (levelIndex * 20));
-        const color = `rgb(${redValue}, 0, 0)`;
+        // 紅色系但級距分明：亮度每級下降 9%（淺鮭紅 → 暗酒紅），
+        // 比舊的 rgb(255-20i,0,0)（相鄰級肉眼幾乎無差）辨識度高得多
+        const color = `hsl(0, 92%, ${Math.max(22, 78 - levelIndex * 9)}%)`;
         
         POWER_LEVELS.unshift({
           name: levelName,

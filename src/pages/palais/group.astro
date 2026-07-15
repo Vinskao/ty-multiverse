@@ -22,15 +22,9 @@ if (!isLoggedIn) {
       <Hero title="Palais" tagline="Group Module" align="start" />
       <div class="system-container">
         <div class="action-bar">
-          <button id="refresh-data" class="refresh-btn">
-            <span class="icon">🔄</span><span class="button-label">刷新數據與圖片</span>
-          </button>
-          <button id="download-all-png" class="download-btn">
-            <span class="icon">📦</span><span class="button-label">下載所有角色圖片</span>
-          </button>
-          <button id="download-all-padded" class="download-btn">
-            <span class="icon">🖼️</span><span class="button-label">下載所有角色圖片（含邊框）</span>
-          </button>
+          <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據與圖片</span></button>
+          <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
+          <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
         <div id="group-container" data-palais-media-zoom data-palais-media-zoom-group="group-page"></div>
       </div>
@@ -48,11 +42,10 @@ if (!isLoggedIn) {
 
 <div id="palais-cart" data-palais-media-zoom data-palais-media-zoom-group="group-page">
   <div class="cart-header">
-    <span>🧺 菜籃</span>
+    <span class="cart-title">菜籃<span class="cart-count" id="cart-count">0</span></span>
     <span class="cart-header-right">
-      <span class="cart-count" id="cart-count">0</span>
-      <button id="cart-clear" class="cart-clear-btn" type="button">清空</button>
-      <button id="cart-toggle" class="cart-toggle-btn" type="button" title="最小化">—</button>
+      <button id="cart-clear" class="btn is-danger is-sm" type="button">清空</button>
+      <button id="cart-toggle" class="btn is-outline is-sm" type="button" title="最小化">收合</button>
     </span>
   </div>
   <div id="cart-items"></div>
@@ -71,6 +64,9 @@ if (!isLoggedIn) {
 
   .action-bar {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
     justify-content: flex-end;
     padding: 15px 5%;
     background: rgba(255, 255, 255, 0.05);
@@ -79,63 +75,6 @@ if (!isLoggedIn) {
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     gap: 15px;
-  }
-
-  .refresh-btn,
-  .download-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .refresh-btn {
-    background: linear-gradient(135deg, #6c757d, #495057);
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-  }
-
-  .download-btn {
-    background: linear-gradient(135deg, #46A3FF, #007FFF);
-    box-shadow: 0 4px 15px rgba(70, 163, 255, 0.3);
-  }
-
-  .refresh-btn:hover,
-  .download-btn:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-  }
-
-  .refresh-btn:hover {
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-  }
-
-  .download-btn:hover {
-    box-shadow: 0 6px 20px rgba(70, 163, 255, 0.4);
-  }
-
-  .refresh-btn:active,
-  .download-btn:active {
-    transform: translateY(0);
-  }
-
-  .refresh-btn:disabled,
-  .download-btn:disabled {
-    background: #666;
-    cursor: wait;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .refresh-btn .icon,
-  .download-btn .icon {
-    font-size: 18px;
   }
 
   .army-container {
@@ -251,74 +190,60 @@ if (!isLoggedIn) {
     transform: none !important;
   }
 
+  /* 標題列：置中的玻璃膠囊，當拖曳把手 */
   #palais-cart .cart-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    gap: 16px;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 6px 10px 6px 16px;
     font-size: 13px;
     font-weight: 700;
     color: #fff;
-    background: transparent;
+    background: rgba(9, 11, 17, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
     cursor: ns-resize; /* 只能上下拖曳移動 */
     user-select: none;
     touch-action: none;
   }
 
+  #palais-cart .cart-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.08em;
+  }
+
   #palais-cart .cart-count {
-    font-size: 12px;
-    background: #007FFF;
-    border-radius: 10px;
-    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--accent-regular, #255187);
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+    padding: 1px 7px;
   }
 
   #palais-cart .cart-header-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
-  #palais-cart .cart-clear-btn {
-    font-size: 12px;
-    font-weight: 600;
-    color: #fff;
-    background: rgba(255, 87, 87, 0.85);
-    border: none;
-    border-radius: 6px;
-    padding: 2px 10px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  #palais-cart .cart-clear-btn:hover {
-    background: #ff5757;
-  }
-
-  #palais-cart .cart-clear-btn:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-
-  #palais-cart .cart-toggle-btn {
-    font-size: 14px;
-    line-height: 1;
-    font-weight: 700;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    border-radius: 6px;
-    padding: 2px 9px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  #palais-cart .cart-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+  #palais-cart .cart-header .btn.is-outline {
+    color: rgba(255, 255, 255, 0.85);
   }
 
   /* 最小化：滿版橫幅只留標題列 */
   #palais-cart.minimized #cart-items,
-  #palais-cart.minimized .cart-clear-btn {
+  #palais-cart.minimized #cart-clear {
     display: none;
   }
 
@@ -347,11 +272,25 @@ if (!isLoggedIn) {
     75% { transform: translateX(4px); }
   }
 
+  /* 空菜籃：顯示虛線置放區提示 */
+  #cart-items:empty {
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    margin: 10px 5%;
+    background: rgba(9, 11, 17, 0.25);
+  }
+
   #cart-items:empty::after {
     content: '把人拖曳到這裡';
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 13px;
+    letter-spacing: 0.1em;
     margin: auto;
+  }
+
+  #palais-cart.drag-over #cart-items:empty {
+    border-color: var(--accent-light, #61f6ea);
+    background: rgba(97, 246, 234, 0.06);
   }
 
   /* 菜籃內的角色卡：跟外面主畫面角色一樣大小、一樣重疊靠在一起 */
@@ -468,8 +407,7 @@ if (!isLoggedIn) {
       box-sizing: border-box;
     }
 
-    .refresh-btn,
-    .download-btn {
+    .action-bar .btn {
       min-width: 0;
       min-height: 48px;
       justify-content: center;
@@ -477,12 +415,6 @@ if (!isLoggedIn) {
       padding: 7px 5px;
       font-size: 12px;
       line-height: 1.2;
-    }
-
-    .refresh-btn .icon,
-    .download-btn .icon {
-      flex: 0 0 auto;
-      font-size: 16px;
     }
 
     .button-label {
@@ -644,7 +576,7 @@ if (!isLoggedIn) {
       }
     }
     if (toggle) {
-      toggle.textContent = min ? '🧺' : '—';
+      toggle.textContent = min ? '展開' : '收合';
       toggle.setAttribute('title', min ? '展開' : '最小化');
     }
     localStorage.setItem(MIN_KEY, min ? '1' : '0');
@@ -760,7 +692,7 @@ if (!isLoggedIn) {
     // hover 時顯示在人物身上的總戰力徽章（數值由排序流程填入 dataset 後更新）
     const powerBadge = document.createElement('div');
     powerBadge.className = 'power-badge';
-    powerBadge.textContent = '⚔ …';
+    powerBadge.textContent = '…';
     characterContainer.appendChild(powerBadge);
 
     const infoContainer = document.createElement('div');
@@ -814,7 +746,7 @@ if (!isLoggedIn) {
     armyTitle.append(document.createTextNode(army));
     const armyTotalPower = document.createElement('span');
     armyTotalPower.className = 'army-total-power';
-    armyTotalPower.textContent = '⚡ 計算中…';
+    armyTotalPower.textContent = '計算中…';
     armyTitle.appendChild(armyTotalPower);
     armyTitle.style.marginBottom = '15px';
 
@@ -920,7 +852,7 @@ if (!isLoggedIn) {
         const name = card.querySelector<HTMLElement>('.character-name');
         if (name) name.style.color = getPowerColor(power);
         const badge = card.querySelector<HTMLElement>('.power-badge');
-        if (badge) badge.textContent = `⚔ ${power.toLocaleString()}`;
+        if (badge) badge.textContent = power.toLocaleString();
       });
       cards
         .sort((a, b) =>
@@ -945,7 +877,7 @@ if (!isLoggedIn) {
         );
 
       const total = container.querySelector<HTMLElement>('.army-total-power');
-      if (total) total.textContent = `⚡ ${totalPower.toLocaleString()}`;
+      if (total) total.textContent = totalPower.toLocaleString();
       container.dataset.totalPower = String(totalPower);
     });
 
@@ -1064,7 +996,7 @@ if (!isLoggedIn) {
 
         const errorTitle = document.createElement('div');
         errorTitle.style.cssText = 'font-weight:bold;font-size:16px;margin-bottom:10px;color:#ff3333;';
-        errorTitle.textContent = '🚨 載入失敗 - Group 模組';
+        errorTitle.textContent = '載入失敗 - Group 模組';
 
         const errorMessage = document.createElement('div');
         const errMsg = error instanceof Error ? error.message : String(error);
