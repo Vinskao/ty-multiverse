@@ -43,19 +43,8 @@ const links = [
 			<div class="article-count" style="text-align: center;">
 				<p class="article-count-text" style="margin: 0 auto;" data-i18n="work.articleCount" data-i18n-count={projects.length}>📚 Total {projects.length} articles</p>
 				<div class="sync-section" style="margin-top: 1rem; text-align: center;">
-					<button id="sync-articles-btn" class="sync-btn" data-i18n="work.syncBtn" style="
-						background: #007acc;
-						color: white;
-						border: none;
-						padding: 0.75rem 1.5rem;
-						border-radius: 6px;
-						cursor: pointer;
-						font-size: 0.9rem;
-						font-weight: 500;
-						transition: all 0.2s ease;
-						box-shadow: 0 2px 4px rgba(0, 122, 204, 0.2);
-					">
-						🔄 Sync Articles to DB
+					<button id="sync-articles-btn" class="btn is-primary" data-i18n="work.syncBtn">
+						Sync Articles to DB
 					</button>
 					<div id="sync-status" class="sync-status" style="
 						margin-top: 0.5rem;
@@ -106,8 +95,7 @@ const links = [
 						
 						// 禁用按鈕並顯示載入狀態
 						syncBtn.disabled = true;
-						syncBtn.style.background = '#666';
-						syncBtn.textContent = lang === 'zh' ? '🔄 同步中...' : '🔄 Syncing...';
+						syncBtn.textContent = lang === 'zh' ? '同步中...' : 'Syncing...';
 						syncStatus.textContent = getI18n('work.syncPreparing');
 						syncStatus.style.color = '#666';
 
@@ -127,9 +115,8 @@ const links = [
 							const msg = lang === 'zh' ? '同步成功' : result.message;
 							const articleText = lang === 'zh' ? '篇文章' : 'articles';
 							
-							syncStatus.textContent = `✅ ${msg} (${result.articleCount} ${articleText}${vectorInfo}${purgeInfo})`;
+							syncStatus.textContent = `${msg} (${result.articleCount} ${articleText}${vectorInfo}${purgeInfo})`;
 							syncStatus.style.color = '#28a745';
-							syncBtn.style.background = '#28a745';
 							syncBtn.textContent = getI18n('work.synced');
 						} else {
 							throw new Error(result.message);
@@ -137,15 +124,13 @@ const links = [
 
 					} catch (error) {
 						console.error('Sync failed:', error);
-						syncStatus.textContent = `❌ ${getI18n('work.retry')}: ${error.message}`;
+						syncStatus.textContent = `${getI18n('work.retry')}: ${error.message}`;
 						syncStatus.style.color = '#dc3545';
-						syncBtn.style.background = '#dc3545';
 						syncBtn.textContent = getI18n('work.retry');
 					} finally {
 						syncBtn.disabled = false;
 						// 3秒後恢復原始狀態
 						setTimeout(() => {
-							syncBtn.style.background = '#007acc';
 							syncBtn.textContent = getI18n('work.syncBtn');
 							syncStatus.textContent = '';
 						}, 3000);

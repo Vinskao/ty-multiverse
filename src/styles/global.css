@@ -308,6 +308,17 @@ h5 {
   padding: 0.55em;
 }
 
+.btn.is-danger {
+  --btn-bg-current: var(--btn-bg-danger);
+  --btn-br-current: var(--btn-br-danger);
+}
+
+.btn.is-sm {
+  padding: 0.35em 0.9em;
+  font-size: var(--text-xs, 0.75rem);
+  border-width: 1px;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
@@ -371,6 +382,8 @@ h5 {
   --btn-br-success: #43a047;
   --btn-bg-accent: #ede7f6;
   --btn-br-accent: #5e35b1;
+  --btn-bg-danger: #fdecea;
+  --btn-br-danger: #d64545;
 }
 
 :root.theme-dark {
@@ -384,6 +397,8 @@ h5 {
   --btn-br-success: #e8f5e9;
   --btn-bg-accent: #5e35b1;
   --btn-br-accent: #ede7f6;
+  --btn-bg-danger: #d64545;
+  --btn-br-danger: #fdecea;
 }
 
 :root.theme-dark .btn {

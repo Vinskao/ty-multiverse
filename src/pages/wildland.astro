@@ -41,63 +41,6 @@ const username = url.searchParams.get('username');
         gap: 15px;
       }
 
-      .refresh-btn,
-      .download-btn {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 20px;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .refresh-btn {
-        background: linear-gradient(135deg, #6c757d, #495057);
-        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-      }
-
-      .download-btn {
-        background: linear-gradient(135deg, #46A3FF, #007FFF);
-        box-shadow: 0 4px 15px rgba(70, 163, 255, 0.3);
-      }
-
-      .refresh-btn:hover,
-      .download-btn:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-      }
-
-      .refresh-btn:hover {
-        box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-      }
-
-      .download-btn:hover {
-        box-shadow: 0 6px 20px rgba(70, 163, 255, 0.4);
-      }
-
-      .refresh-btn:active,
-      .download-btn:active {
-        transform: translateY(0);
-      }
-
-      .refresh-btn:disabled,
-      .download-btn:disabled {
-        background: #666;
-        cursor: wait;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .refresh-btn .icon,
-      .download-btn .icon {
-        font-size: 18px;
-      }
-
       .army-container {
         margin: 20px 0;
         padding: 15px;
@@ -130,15 +73,9 @@ const username = url.searchParams.get('username');
             align="start"
           />
           <div class="action-bar">
-            <button id="refresh-data" class="refresh-btn">
-              <span class="icon">🔄</span> 刷新數據與圖片
-            </button>
-            <button id="download-all-png" class="download-btn">
-              <span class="icon">📦</span> 下載所有角色圖片 (ZIP)
-            </button>
-            <button id="download-all-padded" class="download-btn">
-              <span class="icon">🖼️</span> 下載所有角色圖片（含邊框）(ZIP)
-            </button>
+            <button id="refresh-data" class="btn is-outline">刷新數據與圖片</button>
+            <button id="download-all-png" class="btn is-primary">下載所有角色圖片 (ZIP)</button>
+            <button id="download-all-padded" class="btn is-primary">下載所有角色圖片（含邊框）(ZIP)</button>
           </div>
           <div id="group-container"></div>
         </main>

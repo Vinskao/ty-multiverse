@@ -1,9 +1,7 @@
 ---
 ---
 <div class="galwall-action-bar">
-  <button id="galwall-refresh-btn" class="galwall-refresh-btn">
-    <span class="icon">🔄</span> 刷新牆面
-  </button>
+  <button id="galwall-refresh-btn" class="btn is-outline">刷新牆面</button>
 </div>
 <div id="galwallWrapper">
   <div id="containerFront"></div>
@@ -63,7 +61,7 @@
     if (isRefresh) {
       if (refreshBtn) {
         refreshBtn.disabled = true;
-        refreshBtn.innerHTML = '<span class="icon">⌛</span> 刷新中...';
+        refreshBtn.textContent = '刷新中...';
       }
       containerFront.innerHTML = '<div style="color:white;padding:20px;">更新中...</div>';
       containerBack.innerHTML = '';
@@ -127,7 +125,7 @@
 
     if (isRefresh && refreshBtn) {
       refreshBtn.disabled = false;
-      refreshBtn.innerHTML = '<span class="icon">🔄</span> 刷新牆面';
+      refreshBtn.textContent = '刷新牆面';
     }
   }
 
