@@ -61,6 +61,10 @@ class CharacterService {
   async refreshCharacters(): Promise<Person[]> {
     console.log('🔄 強制刷新角色數據...');
     this.clearCache();
+    // 戰力是由最新人物能力與武器資料計算出的衍生值。刷新人物時也必須
+    // 清除獨立的戰力快取，否則 Group 頁面會繼續顯示更新前的總戰力。
+    const damageService = (await import('./damageService')).default.getInstance();
+    damageService.clearDamageCache();
     this.refreshMediaTimestamp(); // 同時刷新媒體時間戳
     return await this.getCharacters();
   }
