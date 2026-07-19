@@ -847,6 +847,9 @@ if (!isLoggedIn) {
         card.dataset.group = army;
         charactersGrid.appendChild(card);
       });
+
+      // 人物卡一建立就還原使用者在此 group 儲存的順序，避免等待戰力計算時跳位。
+      applyGroupOrder(charactersGrid);
     }
 
     armyContainer.appendChild(armyTitle);
@@ -871,8 +874,11 @@ if (!isLoggedIn) {
     await Promise.all(runners);
   }
 
-  async function sortArmyCardsByTotalPower(characters: any[]) {
+  async function sortArmyCardsByTotalPower(characters: any[], forceRefresh = false) {
     const damageService = (await import('../../services/api/damageService')).default.getInstance();
+
+    // 人物資料被手動刷新時，同步失效戰力快取；一般載入仍保留 2 分鐘快取。
+    if (forceRefresh) damageService.clearDamageCache();
 
     await mapWithConcurrency(characters, 5, async (character) => {
       const fallbackPower =
@@ -1075,7 +1081,7 @@ if (!isLoggedIn) {
 
       // 還原菜籃：把記住的人移回浮動菜籃
       applyCartState();
-      void sortArmyCardsByTotalPower(currentFilteredData);
+      await sortArmyCardsByTotalPower(currentFilteredData, isRefresh);
 
       if (isRefresh) {
         const refreshBtn = document.getElementById('refresh-data');
