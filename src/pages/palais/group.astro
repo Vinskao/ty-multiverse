@@ -22,7 +22,8 @@ if (!isLoggedIn) {
       <Hero title="Palais" tagline="Group Module" align="start" />
       <div class="system-container">
         <div class="action-bar">
-          <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據與圖片</span></button>
+          <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據</span></button>
+          <button id="refresh-images" class="btn is-outline"><span class="button-label">刷新圖片</span></button>
           <button id="reset-group-order" class="btn is-outline"><span class="button-label">依總戰力排序</span></button>
           <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
@@ -765,7 +766,7 @@ if (!isLoggedIn) {
     };
     img.src = originalUrl;
 
-    characterContainer.addEventListener('click', () => openLightbox(originalUrl, character.nameOriginal));
+    characterContainer.addEventListener('click', () => openLightbox(img.src, character.nameOriginal));
     characterContainer.addEventListener('mouseover', () => { img.style.zIndex = '3'; });
     characterContainer.addEventListener('mouseout', () => { img.style.zIndex = '2'; });
 
@@ -1140,6 +1141,23 @@ if (!isLoggedIn) {
     }
   }
 
+  async function refreshImages() {
+    const refreshImagesBtn = document.getElementById('refresh-images');
+    try {
+      refreshImagesBtn?.setAttribute('disabled', 'true');
+      characterService = (await import('../../services/api/characterService')).default.getInstance();
+      const timestamp = characterService.refreshMediaTimestamp();
+      document.querySelectorAll<HTMLImageElement>('.pg-draggable > img').forEach((img) => {
+        const imageUrl = new URL(img.src);
+        imageUrl.searchParams.set('t', timestamp);
+        img.style.opacity = '0';
+        img.src = imageUrl.toString();
+      });
+    } finally {
+      refreshImagesBtn?.removeAttribute('disabled');
+    }
+  }
+
   function addPaddingToImage(url: string): Promise<Blob | null> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -1349,6 +1367,11 @@ if (!isLoggedIn) {
     const refreshBtn = document.getElementById('refresh-data');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => loadData(true));
+    }
+
+    const refreshImagesBtn = document.getElementById('refresh-images');
+    if (refreshImagesBtn) {
+      refreshImagesBtn.addEventListener('click', refreshImages);
     }
 
     const resetOrderBtn = document.getElementById('reset-group-order');

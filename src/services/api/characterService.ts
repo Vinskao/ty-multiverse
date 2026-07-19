@@ -65,7 +65,6 @@ class CharacterService {
     // 清除獨立的戰力快取，否則 Group 頁面會繼續顯示更新前的總戰力。
     const damageService = (await import('./damageService')).default.getInstance();
     damageService.clearDamageCache();
-    this.refreshMediaTimestamp(); // 同時刷新媒體時間戳
     return await this.getCharacters();
   }
 
