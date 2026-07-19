@@ -335,9 +335,13 @@ if (!isLoggedIn) {
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 6px 12px;
-    border-radius: 999px;
+    border-radius: 12px;
     background: rgba(0, 0, 0, 0.72);
     color: #ffd75e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     font-weight: 700;
     font-size: 14px;
     white-space: nowrap;
@@ -347,6 +351,12 @@ if (!isLoggedIn) {
     opacity: 0;
     z-index: 5;
     transition: opacity 0.15s ease;
+  }
+
+  .power-badge-pr {
+    color: #fff;
+    font-size: 0.78em;
+    font-weight: 600;
   }
 
   #group-container .pg-draggable:hover .power-badge {
@@ -749,7 +759,13 @@ if (!isLoggedIn) {
     // hover 時顯示在人物身上的總戰力徽章（數值由排序流程填入 dataset 後更新）
     const powerBadge = document.createElement('div');
     powerBadge.className = 'power-badge';
-    powerBadge.textContent = '…';
+    const powerBadgeValue = document.createElement('span');
+    powerBadgeValue.className = 'power-badge-value';
+    powerBadgeValue.textContent = '…';
+    const powerBadgePr = document.createElement('span');
+    powerBadgePr.className = 'power-badge-pr';
+    powerBadgePr.textContent = 'PR …';
+    powerBadge.append(powerBadgeValue, powerBadgePr);
     characterContainer.appendChild(powerBadge);
 
     const infoContainer = document.createElement('div');
@@ -890,6 +906,13 @@ if (!isLoggedIn) {
       Math.round(channel + (to[index] - channel) * Math.min(1, Math.max(0, ratio))),
     );
 
+    const getPercentileRank = (power: number) => {
+      if (power <= 0 || rankedPowers.length === 0) return 0;
+      const lowerCount = rankedPowers.filter((candidate) => candidate < power).length;
+      const equalCount = rankedPowers.filter((candidate) => candidate === power).length;
+      return ((lowerCount + equalCount / 2) / rankedPowers.length) * 100;
+    };
+
     const getPowerColor = (power: number) => {
       const rank = rankedPowers.indexOf(power) + 1;
       const percentile = rank > 0 ? rank / rankedPowers.length : 1;
@@ -931,8 +954,10 @@ if (!isLoggedIn) {
         card.dataset.totalPower = String(power);
         const name = card.querySelector<HTMLElement>('.character-name');
         if (name) name.style.color = getPowerColor(power);
-        const badge = card.querySelector<HTMLElement>('.power-badge');
-        if (badge) badge.textContent = power.toLocaleString();
+        const badgeValue = card.querySelector<HTMLElement>('.power-badge-value');
+        if (badgeValue) badgeValue.textContent = power.toLocaleString();
+        const badgePr = card.querySelector<HTMLElement>('.power-badge-pr');
+        if (badgePr) badgePr.textContent = `PR ${getPercentileRank(power).toFixed(1)}`;
       });
       if (!applyGroupOrder(grid)) {
         cards
