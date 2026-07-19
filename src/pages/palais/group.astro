@@ -124,13 +124,15 @@ if (!isLoggedIn) {
 
   .army-title {
     position: absolute;
-    left: 15px;
-    right: 15px;
+    left: 0;
+    right: 0;
     top: 15px;
-    width: auto;
+    width: 100%;
     height: var(--palais-row-height);
     margin: 0;
-    font-size: clamp(44px, 8vw, 96px);
+    box-sizing: border-box;
+    padding-inline: clamp(8px, 2vw, 28px);
+    font-size: clamp(72px, 11vw, 156px);
     line-height: 1.1;
     display: flex;
     flex-direction: column;
@@ -148,10 +150,12 @@ if (!isLoggedIn) {
 
   .army-total-power {
     display: block;
-    margin: 12px 0 0;
+    width: 100%;
+    margin: 14px 0 0;
     color: #ffd75e;
-    font-size: 0.42em;
+    font-size: 0.55em;
     font-weight: 700;
+    line-height: 1;
   }
 
   /* --- 浮動菜籃 --- */
@@ -438,7 +442,7 @@ if (!isLoggedIn) {
       left: 0;
       right: 0;
       top: 0;
-      font-size: clamp(44px, 14vw, 64px);
+      font-size: clamp(58px, 18vw, 90px);
     }
 
   }
