@@ -807,7 +807,10 @@ if (!isLoggedIn) {
         (Number(character.utilityPower) || 0);
       try {
         const totalPower = await damageService.getCharacterDamage(character.name);
-        character.totalPower = totalPower > 0 ? totalPower : fallbackPower;
+        // damageWithWeapon must never be lower than the character's own powers.
+        // Prefer the larger value so a stale server-side damage cache cannot make
+        // the UI display less than physic + magic + utility.
+        character.totalPower = Math.max(totalPower || 0, fallbackPower);
       } catch {
         character.totalPower = fallbackPower;
       }
