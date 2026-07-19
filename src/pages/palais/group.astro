@@ -23,6 +23,7 @@ if (!isLoggedIn) {
       <div class="system-container">
         <div class="action-bar">
           <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據與圖片</span></button>
+          <button id="reset-group-order" class="btn is-outline"><span class="button-label">依總戰力排序</span></button>
           <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
@@ -503,6 +504,18 @@ if (!isLoggedIn) {
       )
       .forEach((card) => grid.appendChild(card));
     return true;
+  }
+
+  function resetAllGroupOrders() {
+    localStorage.removeItem(GROUP_ORDER_KEY);
+    document.querySelectorAll<HTMLElement>('.army-container .box-container').forEach((grid) => {
+      Array.from(grid.children)
+        .map((card) => card as HTMLElement)
+        .sort((a, b) =>
+          Number(b.dataset.totalPower || 0) - Number(a.dataset.totalPower || 0)
+        )
+        .forEach((card) => grid.appendChild(card));
+    });
   }
 
   function getCartSet(): Set<string> {
@@ -1336,6 +1349,11 @@ if (!isLoggedIn) {
     const refreshBtn = document.getElementById('refresh-data');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => loadData(true));
+    }
+
+    const resetOrderBtn = document.getElementById('reset-group-order');
+    if (resetOrderBtn) {
+      resetOrderBtn.addEventListener('click', resetAllGroupOrders);
     }
 
     const downloadBtn = document.getElementById('download-all-png');
