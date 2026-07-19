@@ -910,8 +910,6 @@ if (!isLoggedIn) {
         [900, [0, 255, 255]],
         [1600, [0, 255, 0]],
         [2600, [255, 215, 0]],
-        [3600, [210, 0, 0]],
-        [6000, [255, 72, 72]],
       ] as const;
       const value = Math.max(0, power);
       const upper = stops.findIndex(([threshold]) => value <= threshold);
