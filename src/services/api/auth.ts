@@ -740,10 +740,9 @@ function startTokenVerification(
     );
   };
 
-  verificationTimer = window.setTimeout(
-    verifyCurrentToken,
-    getTokenVerificationDelay(currentToken)
-  );
+  // Verify immediately on page load. Waiting until the next refresh window
+  // leaves protected content visible when a stored session already expired.
+  void verifyCurrentToken();
 
   // 設置定期驗證（每 5 分鐘）
 }

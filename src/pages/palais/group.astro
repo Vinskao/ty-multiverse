@@ -379,6 +379,11 @@ if (!isLoggedIn) {
     will-change: transform;
   }
 
+  /* 戰力低於 100：將原本剩餘的 100px 可見間距再縮短 50%。 */
+  #group-container .box-container > div.is-low-power {
+    margin-left: calc(-150px * var(--palais-media-scale)) !important;
+  }
+
   #group-container .box-container > div > img {
     height: calc(300px * var(--palais-media-scale)) !important;
     max-width: calc(200px * var(--palais-media-scale)) !important;
@@ -972,6 +977,7 @@ if (!isLoggedIn) {
       cards.forEach((card) => {
         const power = powerByName.get(card.dataset.name || '') || 0;
         card.dataset.totalPower = String(power);
+        card.classList.toggle('is-low-power', power < 100);
         const name = card.querySelector<HTMLElement>('.character-name');
         if (name) name.style.color = getPowerColor(power);
         const badgeValue = card.querySelector<HTMLElement>('.power-badge-value');

@@ -574,15 +574,14 @@ export class NavController {
 
           // 受保護頁面上 token 失效：自動導回 login 重新走 SSO 流程。
           // Keycloak SSO session 通常還活著，會靜默取得全新 token（不需重輸密碼）。
-          // 用 sessionStorage 旗標防止 relogin 循環（若 SSO 也真的過期，第二次就不再自動跳）。
-          const RELOGIN_FLAG = 'tym_relogin_attempted';
+          // 登入頁不屬於受保護路徑，因此可直接導向，不必把失效頁留在畫面或瀏覽紀錄中。
           const path = window.location.pathname;
           const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work)/.test(path);
-          if (isProtectedPage && !sessionStorage.getItem(RELOGIN_FLAG)) {
-            sessionStorage.setItem(RELOGIN_FLAG, '1');
+          if (isProtectedPage) {
             const current = window.location.pathname + window.location.search;
             sessionStorage.setItem('tym_post_login_redirect', current);
-            window.location.href = `/tymultiverse/login?redirect=${encodeURIComponent(current)}`;
+            // Do not leave a stale protected URL in browser history.
+            window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(current)}`);
           }
         }
       );
