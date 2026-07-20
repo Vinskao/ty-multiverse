@@ -96,6 +96,13 @@ if (!isLoggedIn) {
 
   /* 滑鼠移到的那一排：整列放大並浮起 */
   .army-container .box-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    width: calc(100vw - (120px * var(--palais-media-scale)));
+    max-width: 100%;
+    row-gap: 40px;
     position: relative;
     z-index: 1;
     transition: transform 0.25s ease;
@@ -374,6 +381,7 @@ if (!isLoggedIn) {
 
   #group-container .box-container > div {
     width: calc(200px * var(--palais-media-scale)) !important;
+    flex: 0 0 calc(200px * var(--palais-media-scale));
     margin-left: calc(-100px * var(--palais-media-scale)) !important;
     transition: transform 180ms ease !important;
     transform-origin: center bottom;
@@ -383,6 +391,11 @@ if (!isLoggedIn) {
   /* 戰力低於 100：將原本剩餘的 100px 可見間距再縮短 50%。 */
   #group-container .box-container > div.is-low-power {
     margin-left: calc(-150px * var(--palais-media-scale)) !important;
+  }
+
+  /* 第一個人物不重疊，避免整列左側被負 margin 裁切。 */
+  #group-container .box-container > div:first-child {
+    margin-left: 0 !important;
   }
 
   #group-container .box-container > div > img {
@@ -859,8 +872,6 @@ if (!isLoggedIn) {
       };
       const firstCard = createCharacterCard(characters[0], timestamp, isPriority(characters[0]));
       firstCard.dataset.group = army;
-      const cardWidth = parseInt(firstCard.style.width) || 200;
-      charactersGrid.style.paddingLeft = `calc(${cardWidth / 2}px * var(--palais-media-scale))`;
       charactersGrid.appendChild(firstCard);
       characters.slice(1).forEach(character => {
         const card = createCharacterCard(character, timestamp, isPriority(character));
