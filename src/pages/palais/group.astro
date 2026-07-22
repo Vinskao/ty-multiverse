@@ -28,7 +28,7 @@ if (!isLoggedIn) {
           <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
-        <div id="group-container" data-palais-media-zoom data-palais-media-zoom-group="group-page"></div>
+        <div id="group-container" data-palais-media-zoom data-palais-media-zoom-controls="keyboard" data-palais-media-zoom-group="group-page"></div>
       </div>
     </main>
   </div>
@@ -42,7 +42,7 @@ if (!isLoggedIn) {
   </div>
 </div>
 
-<div id="palais-cart" data-palais-media-zoom data-palais-media-zoom-group="group-page">
+<div id="palais-cart" data-palais-media-zoom data-palais-media-zoom-controls="keyboard" data-palais-media-zoom-group="group-page">
   <div class="cart-header">
     <span class="cart-title">菜籃<span class="cart-count" id="cart-count">0</span></span>
     <span class="cart-header-right">
@@ -861,7 +861,6 @@ if (!isLoggedIn) {
     charactersGrid.style.margin = '0 auto';
     charactersGrid.style.textAlign = 'center';
 
-    // 根據第一張卡片寬度設定左側 padding，避免最左邊的圖被容器邊緣切到
     if (characters.length > 0) {
       const isPriority = (character: any) => {
         const matchesUser = (character.name || '').toLowerCase() === priorityName;
