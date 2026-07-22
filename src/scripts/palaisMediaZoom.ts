@@ -73,16 +73,16 @@ function bindKeyboardZoom() {
   if (keyboardZoomBound) return;
   keyboardZoomBound = true;
 
-  document.addEventListener('keydown', (event) => {
-    if (!event.ctrlKey || event.metaKey || event.altKey) return;
+  window.addEventListener('keydown', (event) => {
+    if ((!event.ctrlKey && !event.metaKey) || event.altKey) return;
 
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
 
     const direction =
-      event.key === '+' || event.key === '=' || event.code === 'NumpadAdd'
+      event.key === '+' || event.key === '=' || event.code === 'Equal' || event.code === 'NumpadAdd'
         ? 1
-        : event.key === '-' || event.code === 'NumpadSubtract'
+        : event.key === '-' || event.key === '_' || event.code === 'Minus' || event.code === 'NumpadSubtract'
           ? -1
           : 0;
     if (!direction) return;
@@ -94,7 +94,7 @@ function bindKeyboardZoom() {
 
     event.preventDefault();
     setScale(container, getScale(container) + direction * STEP);
-  });
+  }, { capture: true });
 }
 
 function initPalaisMediaZoom() {
