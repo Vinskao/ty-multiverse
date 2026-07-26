@@ -767,8 +767,9 @@ if (!isLoggedIn) {
   });
 
   // --- Hover 互動影片（取代原本的滑鼠放大）---
-  // 檔名規則：兩個人名以底線相接（例：Medicis_Kyu.mp4），與 <name>.png 放在同一位置。
-  // hover 某人 self 時：找出所有 self_對方.mp4 或 對方_self.mp4，
+  // 檔名規則：name1_name2.mp4（兩個人名以底線相接，例：Medicis_Kyu.mp4），與 <name>.png 同位置。
+  // 影片只屬於「name1」——只在 name1 角色的位置顯示。
+  // 因此 hover 某人 self 時只找 self_對方.mp4（self 當 name1），不再試反向的 對方_self，探測量減半。
   // 依序播放——正放一次 → 倒帶反放一次 → 換下一部，播完最後一部再循環回第一部。
   // 無聲、自動連續播放、無控制列。
 
@@ -784,14 +785,8 @@ if (!isLoggedIn) {
           .filter((n) => n && n !== selfName),
       ),
     );
-    // 依「對方在名單中的順序」建立候選，讓 影片一 / 影片二… 的順序穩定
-    const bases: string[] = [];
-    const seen = new Set<string>();
-    for (const other of others) {
-      for (const base of [`${selfName}_${other}`, `${other}_${selfName}`]) {
-        if (!seen.has(base)) { seen.add(base); bases.push(base); }
-      }
-    }
+    // 只找 self_對方（self = name1）；依對方在名單中的順序，讓 影片一 / 影片二… 順序穩定
+    const bases = others.map((other) => `${selfName}_${other}`);
     const found: (string | null)[] = new Array(bases.length).fill(null);
     await mapWithConcurrency(
       bases.map((base, i) => ({ base, i })),
