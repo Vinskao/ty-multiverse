@@ -419,10 +419,32 @@ if (!isLoggedIn) {
     filter: none !important;
   }
 
+  /* hover 不再放大，改為在人物身上播放兩人互動影片（見 attachHoverVideo）。 */
   #group-container .box-container > div:hover {
     z-index: 10 !important;
-    transform: scale(1.04) !important;
+    transform: none !important;
     filter: none !important;
+  }
+
+  /* 播放互動影片期間：整張卡壓到兩側鄰居（z-index:1）之下，
+     讓左右兩人的圖蓋在影片上方。放在 :hover 規則之後，覆蓋其 z-index。 */
+  #group-container .box-container > div.pair-playing {
+    z-index: 0 !important;
+  }
+
+  /* hover 播放的互動影片：疊在人物圖上，無控制列。 */
+  #group-container .box-container > div > video.pair-video {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: calc(300px * var(--palais-media-scale));
+    width: auto;
+    max-width: calc(200px * var(--palais-media-scale));
+    object-fit: contain;
+    z-index: 3;
+    display: none;
+    pointer-events: none;
   }
 
   #group-container .box-container > div:hover > img {
@@ -496,6 +518,7 @@ if (!isLoggedIn) {
 
 <script>
   import '../../scripts/palaisMediaZoom';
+  import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
     throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
@@ -743,6 +766,139 @@ if (!isLoggedIn) {
     if (e.target === document.getElementById('pg-lightbox')) closeLightbox();
   });
 
+  // --- Hover 互動影片（取代原本的滑鼠放大）---
+  // 檔名規則：兩個人名以底線相接（例：Medicis_Kyu.mp4），與 <name>.png 放在同一位置。
+  // hover 某人 self 時：找出所有 self_對方.mp4 或 對方_self.mp4，
+  // 依序播放——正放一次 → 倒帶反放一次 → 換下一部，播完最後一部再循環回第一部。
+  // 無聲、自動連續播放、無控制列。
+
+  const pairVideoCache = new Map<string, Promise<string[]>>();
+  // 全域鎖：同一時間只跑一輪互動影片；已在播放時，hover 其他人不會再啟動。
+  let pairVideoRunning = false;
+
+  async function discoverPairVideos(selfName: string, timestamp: string): Promise<string[]> {
+    const others = Array.from(
+      new Set(
+        currentFilteredData
+          .map((c) => c.name as string)
+          .filter((n) => n && n !== selfName),
+      ),
+    );
+    // 依「對方在名單中的順序」建立候選，讓 影片一 / 影片二… 的順序穩定
+    const bases: string[] = [];
+    const seen = new Set<string>();
+    for (const other of others) {
+      for (const base of [`${selfName}_${other}`, `${other}_${selfName}`]) {
+        if (!seen.has(base)) { seen.add(base); bases.push(base); }
+      }
+    }
+    const found: (string | null)[] = new Array(bases.length).fill(null);
+    await mapWithConcurrency(
+      bases.map((base, i) => ({ base, i })),
+      8,
+      async ({ base, i }) => {
+        const url = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(base)}.mp4`;
+        try {
+          const res = await fetch(`${url}?t=${timestamp}`, { method: 'HEAD' });
+          if (res.ok) found[i] = url;
+        } catch { /* 不存在就略過 */ }
+      },
+    );
+    return found.filter((u): u is string => !!u);
+  }
+
+  function getPairVideos(selfName: string, timestamp: string): Promise<string[]> {
+    const key = selfName.toLowerCase();
+    let cached = pairVideoCache.get(key);
+    if (!cached) {
+      cached = discoverPairVideos(selfName, timestamp);
+      pairVideoCache.set(key, cached);
+    }
+    return cached;
+  }
+
+  // 倒帶反放沿用 dance.ts 的作法，已抽象到 videoRewind 的 reversePlay。
+  // 一旦 hover 觸發就跑完「整輪」（每部影片正放+反放各一次，走完全部）才停，
+  // 期間即使滑鼠移開也不中斷；整輪結束才變回圖片，下一次 hover 才會再啟動。
+  function attachHoverVideo(card: HTMLElement, img: HTMLImageElement, selfName: string) {
+    let videoEl: HTMLVideoElement | null = null;
+    let urls: string[] = [];
+    let idx = 0;
+    let reverseHandle: ReversePlayHandle | null = null;
+
+    const stopReverse = () => { reverseHandle?.cancel(); reverseHandle = null; };
+
+    // 整輪結束：停止、還原圖片、放行下一次 hover
+    const finish = () => {
+      stopReverse();
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        try { videoEl.load(); } catch { /* noop */ }
+        videoEl.style.display = 'none';
+      }
+      img.style.visibility = '';
+      card.classList.remove('pair-playing');
+      pairVideoRunning = false; // 放行下一輪
+    };
+
+    // 正放結束 → 倒帶反放（沿用 dance.ts 的逐格倒退，抽象於 videoRewind）
+    const onEnded = () => {
+      if (!videoEl) return;
+      stopReverse();
+      reverseHandle = reversePlay(videoEl, {
+        onComplete: () => {
+          // 這部（正放+反放）完成；還有下一部就換下一部，否則整輪結束
+          if (idx >= urls.length - 1) { finish(); return; }
+          idx += 1;
+          playForward();
+        },
+      });
+    };
+
+    const playForward = () => {
+      if (!videoEl || urls.length === 0) return;
+      stopReverse();
+      const ts = characterService?.getMediaTimestamp?.() ?? '';
+      videoEl.style.display = 'block';
+      img.style.visibility = 'hidden';
+      videoEl.src = `${urls[idx]}?t=${ts}`;
+      videoEl.playbackRate = 1;
+      const p = videoEl.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    };
+
+    const ensureVideo = () => {
+      if (videoEl) return;
+      videoEl = document.createElement('video');
+      videoEl.className = 'pair-video';
+      videoEl.muted = true;
+      videoEl.defaultMuted = true;
+      videoEl.setAttribute('muted', '');
+      videoEl.playsInline = true;
+      videoEl.setAttribute('playsinline', '');
+      videoEl.preload = 'auto';
+      videoEl.controls = false;
+      videoEl.addEventListener('ended', onEnded);
+      card.appendChild(videoEl);
+    };
+
+    // 只在 mouseenter 啟動；不監聽 mouseleave（移開仍播完整輪）
+    card.addEventListener('mouseenter', async () => {
+      if (pairVideoRunning) return; // 已有一輪在播放，不啟動也不排隊
+      pairVideoRunning = true;
+      ensureVideo();
+      const ts = characterService?.getMediaTimestamp?.() ?? '';
+      let list: string[] = [];
+      try { list = await getPairVideos(selfName, ts); } catch { list = []; }
+      if (list.length === 0) { pairVideoRunning = false; return; } // 沒互動影片：釋放鎖，維持原圖
+      urls = list;
+      idx = 0;
+      card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
+      playForward();
+    });
+  }
+
   // --- Character card ---
 
   function createCharacterCard(character: any, timestamp: string, priority = false) {
@@ -803,6 +959,9 @@ if (!isLoggedIn) {
     characterContainer.addEventListener('click', () => openLightbox(img.src, character.nameOriginal));
     characterContainer.addEventListener('mouseover', () => { img.style.zIndex = '3'; });
     characterContainer.addEventListener('mouseout', () => { img.style.zIndex = '2'; });
+
+    // hover 時在人物身上播放兩人互動影片（正放→反放→換下一部循環）
+    attachHoverVideo(characterContainer, img, character.name || '');
 
     // hover 時顯示在人物身上的總戰力徽章（數值由排序流程填入 dataset 後更新）
     const powerBadge = document.createElement('div');
