@@ -102,9 +102,12 @@ if (!isLoggedIn) {
     align-items: flex-end;
     width: calc(100vw - (120px * var(--palais-media-scale)));
     max-width: 100%;
-    /* 每張卡都用 -100px 負 margin 重疊；容器左側補一張重疊寬度的 padding，
-       讓最左邊那張不被裁切，同時抵銷半個重疊量，使整列視覺置中（與菜籃一致）。 */
-    padding-left: calc(100px * var(--palais-media-scale));
+    /* 每張卡的重疊量（負 margin）。人物通常不佔滿整張 200px PNG，兩側是透明的，
+       所以重疊要拉大一點才不會看到大空隙。想更緊 / 更鬆只要改這個數字。 */
+    --card-overlap: calc(140px * var(--palais-media-scale));
+    /* 容器左側補一張重疊寬度的 padding：讓最左邊那張不被裁切，
+       同時抵銷半個重疊量，使整列視覺置中（與菜籃一致）。 */
+    padding-left: var(--card-overlap);
     box-sizing: border-box;
     row-gap: 40px;
     position: relative;
@@ -386,15 +389,15 @@ if (!isLoggedIn) {
   #group-container .box-container > div {
     width: calc(200px * var(--palais-media-scale)) !important;
     flex: 0 0 calc(200px * var(--palais-media-scale));
-    margin-left: calc(-100px * var(--palais-media-scale)) !important;
+    margin-left: calc(-1 * var(--card-overlap)) !important;
     transition: transform 180ms ease !important;
     transform-origin: center bottom;
     will-change: transform;
   }
 
-  /* 戰力低於 100：將原本剩餘的 100px 可見間距再縮短 50%。 */
+  /* 戰力低於 100：在一般重疊量的基礎上，再多疊 50px 讓弱角更靠攏。 */
   #group-container .box-container > div.is-low-power {
-    margin-left: calc(-150px * var(--palais-media-scale)) !important;
+    margin-left: calc(-1 * var(--card-overlap) - 50px * var(--palais-media-scale)) !important;
   }
 
   #group-container .box-container > div > img {
