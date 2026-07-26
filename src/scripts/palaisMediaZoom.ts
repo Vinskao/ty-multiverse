@@ -10,6 +10,8 @@ type ZoomContainer = HTMLElement & {
   };
 };
 
+let keyboardZoomBound = false;
+
 function clamp(value: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 }
@@ -48,6 +50,8 @@ function bindContainer(container: ZoomContainer) {
   container.addEventListener(
     'wheel',
     (event) => {
+      if (container.dataset.palaisMediaZoomControls === 'keyboard') return;
+
       const target = event.target as Element | null;
       const mediaTarget = target?.closest('img, video');
 
@@ -65,7 +69,36 @@ function bindContainer(container: ZoomContainer) {
   );
 }
 
+function bindKeyboardZoom() {
+  if (keyboardZoomBound) return;
+  keyboardZoomBound = true;
+
+  window.addEventListener('keydown', (event) => {
+    if ((!event.ctrlKey && !event.metaKey) || event.altKey) return;
+
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+    const direction =
+      event.key === '+' || event.key === '=' || event.code === 'Equal' || event.code === 'NumpadAdd'
+        ? 1
+        : event.key === '-' || event.key === '_' || event.code === 'Minus' || event.code === 'NumpadSubtract'
+          ? -1
+          : 0;
+    if (!direction) return;
+
+    const container = document.querySelector<ZoomContainer>(
+      '[data-palais-media-zoom][data-palais-media-zoom-controls="keyboard"]',
+    );
+    if (!container) return;
+
+    event.preventDefault();
+    setScale(container, getScale(container) + direction * STEP);
+  }, { capture: true });
+}
+
 function initPalaisMediaZoom() {
+  bindKeyboardZoom();
   document
     .querySelectorAll<ZoomContainer>('[data-palais-media-zoom]')
     .forEach(bindContainer);
