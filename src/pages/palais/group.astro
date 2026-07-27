@@ -771,6 +771,8 @@ if (!isLoggedIn) {
   function initCart() {
     const cart = document.getElementById('palais-cart');
     if (!cart) return;
+    // 菜籃也算一「排」：hover 進去，裡面每個有影片的人一起播
+    attachRowHoverPlayback(cart);
     cart.addEventListener('dragover', (e) => { e.preventDefault(); });
     cart.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -850,15 +852,46 @@ if (!isLoggedIn) {
   // 延遲：查表是同步的，真正的延遲來自影片下載，所以卡片一進視窗就先把要播的那支
   //       預熱（preload=auto），hover 時只呼叫 play()。播完不清 src，靠 LRU 控制記憶體。
 
-  /** 一次 hover 最多播幾支（避免某人有 20 支時要播 40 輪才放行）。 */
-  const CLIPS_PER_HOVER = 1;
-  /** 同時保留 src 的卡片數上限；超過就淘汰最久沒用的，釋放記憶體與頻寬。 */
-  const WARM_LRU_SIZE = 12;
+  /** 同時保留 src 的卡片數上限；超過就淘汰最久沒用的，釋放記憶體與頻寬。
+   *  整排一起播，所以要放得下一整排的第一支。 */
+  const WARM_LRU_SIZE = 36;
   /** 預熱併發數：別跟人物 PNG 搶頻寬。 */
-  const WARM_CONCURRENCY = 2;
+  const WARM_CONCURRENCY = 3;
+  /**
+   * 同時可播放的影片數上限。
+   * 整排一起播本來就會開很多支，這個上限只用來擋「連續觸發太多排」——
+   * 每支都在解碼，開到上百支會直接拖垮整頁。
+   * 第一排永遠放行（見 triggerRowPlayback），所以再大的排也不會完全不播。
+   */
+  const MAX_CONCURRENT_VIDEOS = 40;
 
-  // 全域鎖：同一時間只跑一支互動影片；已在播放時，hover 其他人不會再啟動。
-  let pairVideoRunning = false;
+  /** 目前正在播放的卡片（取代原本「同時只准一支」的全域鎖）。 */
+  const playingCards = new Set<HTMLElement>();
+
+  /**
+   * 每排正在播放的支數。
+   * 同一排可能有多支同時播，黑幕必須等「最後一支」結束才收 —— 用計數而不是布林，
+   * 否則先結束的那支會把還在播的那支的背景一起關掉。
+   */
+  const rowPlayCount = new Map<HTMLElement, number>();
+
+  function acquireRowDim(row: HTMLElement | null) {
+    if (!row) return;
+    const next = (rowPlayCount.get(row) ?? 0) + 1;
+    rowPlayCount.set(row, next);
+    row.classList.add('is-video-playing');
+  }
+
+  function releaseRowDim(row: HTMLElement | null) {
+    if (!row) return;
+    const next = (rowPlayCount.get(row) ?? 1) - 1;
+    if (next > 0) {
+      rowPlayCount.set(row, next);
+      return;
+    }
+    rowPlayCount.delete(row);
+    row.classList.remove('is-video-playing');
+  }
 
   function getCharacterNames(): string[] {
     return Array.from(
@@ -1075,26 +1108,33 @@ if (!isLoggedIn) {
   }
 
   // 倒帶反放沿用 dance.ts 的作法，已抽象到 videoRewind 的 reversePlay。
-  // 一支影片正放一次 + 反放一次就結束；期間即使滑鼠移開也不中斷。
+  // 每支影片正放一次 + 反放一次，然後換下一支，直到這個人的影片全部播完。
+  // 期間即使滑鼠移開也不中斷。
   function attachHoverVideo(card: HTMLElement, img: HTMLImageElement, selfName: string) {
     let videoEl: HTMLVideoElement | null = null;
-    let clipsPlayed = 0;
-    let currentUrl = '';
+    /** 這個人的完整播放清單（他擁有的全部影片 URL），一次 hover 會全部播完。 */
+    let playlist: string[] = [];
+    let clipIndex = 0;
+    /** 目前 <video> 已載入的 URL（含時間戳），用來避免重設相同的 src 而丟掉緩衝。 */
+    let loadedUrl = '';
     let reverseHandle: ReversePlayHandle | null = null;
     // 播放期間被套上黑幕的那一排（卡片可能被拖進菜籃，所以每次重新取）
     let dimmedRow: HTMLElement | null = null;
 
     const stopReverse = () => { reverseHandle?.cancel(); reverseHandle = null; };
 
-    // 互動影片是黑底 mp4：播放時把整排（或菜籃）襯成黑色，影片才不會看起來像貼了張黑方塊
+    // 互動影片是黑底 mp4：播放時把整排（或菜籃）襯成黑色，影片才不會看起來像貼了張黑方塊。
+    // 用計數持有，同排多支同時播時黑幕會撐到最後一支結束。
     const dimRow = () => {
+      if (dimmedRow) return; // 已持有，不重複計數
       dimmedRow =
         card.closest<HTMLElement>('.army-container') ??
         card.closest<HTMLElement>('#palais-cart');
-      dimmedRow?.classList.add('is-video-playing');
+      acquireRowDim(dimmedRow);
     };
     const undimRow = () => {
-      dimmedRow?.classList.remove('is-video-playing');
+      if (!dimmedRow) return;
+      releaseRowDim(dimmedRow);
       dimmedRow = null;
     };
 
@@ -1114,31 +1154,38 @@ if (!isLoggedIn) {
       return videoEl;
     };
 
-    /** 從這個人參與的影片裡挑一支。隨機挑，讓重複 hover 有變化。 */
-    const pickClip = (groups: string[][]): string => {
-      const group = groups[Math.floor(Math.random() * groups.length)]!;
-      return groupUrl(PEOPLE_IMAGE_URL, group);
+    /** 這個人擁有的全部影片（他排在檔名第一位的那些），播放順序即索引順序。 */
+    const buildPlaylist = (): string[] =>
+      getGroupsFor(selfName).map((group) => groupUrl(PEOPLE_IMAGE_URL, group));
+
+    /** 載入指定 URL；已經是同一支就不動，保住既有緩衝。 */
+    const loadClip = (url: string) => {
+      const video = ensureVideo();
+      const ts = characterService?.getMediaTimestamp?.() ?? '';
+      const full = `${url}?t=${ts}`;
+      if (loadedUrl === full) return video;
+      loadedUrl = full;
+      video.preload = 'auto';
+      video.src = full;
+      try { video.load(); } catch { /* noop */ }
+      return video;
     };
 
     /**
-     * 預熱：把要播的那支設進 <video> 開始下載。
+     * 預熱：把清單第一支設進 <video> 開始下載。
      * hover 時就只剩 play()，沒有網路等待 —— 這是「hover 立刻開播」的關鍵。
+     * 後續幾支在前一支播放期間才載入，不會一口氣把整排的所有影片都拉下來。
      */
     const warmClip = async () => {
       if (warmedCards.has(card)) return;
-      const ts = characterService?.getMediaTimestamp?.() ?? '';
       // 只讀快取，同步、零網路。沒建快取或這個人沒影片，一律當作沒有。
-      const groups = getGroupsFor(selfName);
-      if (groups.length === 0) {
+      playlist = buildPlaylist();
+      if (playlist.length === 0) {
         warmedCards.add(card); // 確定沒影片，別再排隊
         return;
       }
 
-      const video = ensureVideo();
-      currentUrl = pickClip(groups);
-      video.preload = 'auto';
-      video.src = `${currentUrl}?t=${ts}`;
-      try { video.load(); } catch { /* noop */ }
+      const video = loadClip(playlist[0]!);
 
       warmedCards.add(card);
       touchWarm(card);
@@ -1163,8 +1210,8 @@ if (!isLoggedIn) {
     };
     (card as any).__warmClip = warmClip;
 
-    // 整支結束：停止、還原圖片、放行下一次 hover。
-    // 注意不清 src —— 保留已下載的緩衝，同一個人再 hover 是瞬開。
+    // 全部播完：停止、還原圖片、讓出並行名額。
+    // 注意不清 src —— 保留已下載的緩衝，再次 hover 時第一支是瞬開。
     const finish = () => {
       stopReverse();
       undimRow();
@@ -1176,67 +1223,106 @@ if (!isLoggedIn) {
       }
       img.style.visibility = '';
       card.classList.remove('pair-playing');
-      pairVideoRunning = false; // 放行下一輪
+      clipIndex = 0;
+      playingCards.delete(card);
 
-      // 下次換一支：重新抽籤並在閒置時暖起來
-      warmedCards.delete(card);
-      const idle = (window as any).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
-      idle(() => requestWarm(card));
+      // 回到清單第一支待命，等閒置時重新暖起來
+      if (playlist.length > 1) {
+        warmedCards.delete(card);
+        const idle = (window as any).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
+        idle(() => requestWarm(card));
+      }
     };
 
     // 正放結束 → 倒帶反放（沿用 dance.ts 的逐格倒退，抽象於 videoRewind）
+    // 反放結束 → 換下一支；整份清單播完才收工。
     const onEnded = () => {
       if (!videoEl) return;
       stopReverse();
       reverseHandle = reversePlay(videoEl, {
         onComplete: () => {
-          clipsPlayed += 1;
-          if (clipsPlayed >= CLIPS_PER_HOVER) { finish(); return; }
-          playForward();
+          clipIndex += 1;
+          if (clipIndex >= playlist.length) { finish(); return; }
+          playCurrent();
         },
       });
     };
 
-    const playForward = () => {
-      const video = videoEl;
-      if (!video || !currentUrl) { finish(); return; }
+    /** 播放 playlist[clipIndex]：需要換片時才重設 src。 */
+    const playCurrent = () => {
+      const url = playlist[clipIndex];
+      if (!url) { finish(); return; }
       stopReverse();
+      const video = loadClip(url);
       video.style.display = 'block';
       img.style.visibility = 'hidden';
       try { video.currentTime = 0; } catch { /* noop */ }
       video.playbackRate = 1;
       const p = video.play();
-      if (p && typeof p.catch === 'function') p.catch(() => { finish(); });
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          // 這支播不起來就跳過，別讓整份清單卡在這裡
+          clipIndex += 1;
+          if (clipIndex >= playlist.length) finish();
+          else playCurrent();
+        });
+      }
     };
 
-    // 只在 mouseenter 啟動；不監聽 mouseleave（移開仍播完）
-    card.addEventListener('mouseenter', async () => {
-      if (pairVideoRunning) return; // 已有一支在播放，不啟動也不排隊
-      // 快取說這個人沒影片 → 立刻放棄，不佔鎖也不連線
-      if (getGroupsFor(selfName).length === 0) return;
+    /**
+     * 開始播放這個人的全部影片。由「整排 hover」統一觸發，不是卡片自己。
+     * 已經在播就不理會 —— 不會被重複觸發打斷。
+     */
+    const startPlayback = async () => {
+      if (playingCards.has(card)) return;
+      playlist = buildPlaylist();
+      if (playlist.length === 0) return; // 沒影片，維持原圖
 
-      pairVideoRunning = true;
+      playingCards.add(card);
       touchWarm(card);
+      clipIndex = 0;
+      card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
+      dimRow(); // 整排襯黑，配合黑底影片
 
-      // 已預熱：src 就緒，直接播（零等待）
-      if (videoEl?.src && currentUrl) {
-        clipsPlayed = 0;
-        card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
-        dimRow(); // 整排襯黑，配合黑底影片
-        playForward();
-        return;
+      // 沒預熱到（剛進頁面就 hover）就先暖第一支，其餘邊播邊載
+      if (!loadedUrl) {
+        try { await warmClip(); } catch { /* noop */ }
       }
-
-      // 還沒暖到（剛進頁面就 hover）：插隊暖一次再播
-      try { await warmClip(); } catch { /* noop */ }
-      if (!videoEl?.src || !currentUrl) { pairVideoRunning = false; return; }
-      clipsPlayed = 0;
-      card.classList.add('pair-playing');
-      dimRow();
-      playForward();
-    });
+      playCurrent();
+    };
+    (card as any).__startPlayback = startPlayback;
+    (card as any).__hasClips = () => buildPlaylist().length > 0;
 
     observeForWarm(card);
+  }
+
+  /**
+   * 整排觸發：hover 一排，該排每個有影片的人都開始播自己的全部影片。
+   * 多排可以同時被觸發，彼此不互相取消。
+   *
+   * 名額判斷是「整排全有全無」——半排在動半排不動看起來像壞掉。
+   * 而且第一排永遠放行（不管它多大），避免大排永遠達不到門檻而完全不會播。
+   */
+  function triggerRowPlayback(row: HTMLElement) {
+    const candidates = Array.from(row.querySelectorAll<HTMLElement>('.pg-draggable')).filter(
+      (card) =>
+        !playingCards.has(card) &&
+        typeof (card as any).__startPlayback === 'function' &&
+        (card as any).__hasClips?.(),
+    );
+    if (candidates.length === 0) return;
+
+    const isFirstRow = playingCards.size === 0;
+    if (!isFirstRow && playingCards.size + candidates.length > MAX_CONCURRENT_VIDEOS) return;
+
+    for (const card of candidates) (card as any).__startPlayback();
+  }
+
+  /** 把某個容器（隊伍排／菜籃）接上「整排 hover 觸發」。 */
+  function attachRowHoverPlayback(row: HTMLElement) {
+    if (row.dataset.rowPlaybackBound === 'true') return;
+    row.dataset.rowPlaybackBound = 'true';
+    row.addEventListener('mouseenter', () => triggerRowPlayback(row));
   }
 
   // --- Character card ---
@@ -1398,6 +1484,8 @@ if (!isLoggedIn) {
 
     armyContainer.appendChild(armyTitle);
     armyContainer.appendChild(charactersGrid);
+    // hover 這一排 → 排上每個有影片的人同時開始播自己的全部影片
+    attachRowHoverPlayback(armyContainer);
     return armyContainer;
   }
 
@@ -1565,9 +1653,12 @@ if (!isLoggedIn) {
         if (refreshBtn) refreshBtn.setAttribute('disabled', 'true');
       }
 
-      // 卡片要整批重建：先斷開預熱觀察器與緩衝，避免舊節點被 IntersectionObserver 抓住不放
+      // 卡片要整批重建：先斷開預熱觀察器與緩衝，避免舊節點被 IntersectionObserver 抓住不放。
+      // 播放中／黑幕計數也要歸零，否則舊卡片被丟棄後名額與黑幕永遠不會被釋放。
       warmObserver?.disconnect();
       warmObserver = null;
+      playingCards.clear();
+      rowPlayCount.clear();
       resetWarmState();
 
       container.innerHTML = '<div style="text-align:center;padding:50px;color:white;font-size:20px;">載入數據中...</div>';
