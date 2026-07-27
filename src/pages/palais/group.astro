@@ -1280,8 +1280,38 @@ if (!isLoggedIn) {
       videoEl.preload = 'none';
       videoEl.controls = false;
       videoEl.addEventListener('ended', onEnded);
+      // 只有「真的播起來了」才把人物圖藏起來。
+      // 之前是一送出 play() 就先藏圖，只要那支影片載不起來（404、壞檔、非 faststart
+      // 拖太久），ended 永遠不會來 -> finish() 不會跑 -> 圖永遠是隱藏的，整個人不見。
+      videoEl.addEventListener('playing', () => {
+        clearWatchdog();
+        if (!videoEl) return;
+        videoEl.style.display = 'block';
+        img.style.visibility = 'hidden';
+      });
+      videoEl.addEventListener('error', () => skipClip('load error'));
       card.appendChild(videoEl);
       return videoEl;
+    };
+
+    /** 這支放不出來就跳下一支；全都不行就收工。絕不讓流程卡死在隱藏狀態。 */
+    const skipClip = (reason: string) => {
+      clearWatchdog();
+      if (!playingCards.has(card)) return; // 沒在播就不用理
+      console.warn(`[palais] ${selfName} 跳過 ${playlist[clipIndex]}（${reason}）`);
+      clipIndex += 1;
+      if (clipIndex >= playlist.length) finish();
+      else playCurrent();
+    };
+
+    let watchdog: number | null = null;
+    const clearWatchdog = () => {
+      if (watchdog !== null) { clearTimeout(watchdog); watchdog = null; }
+    };
+    /** 送出 play() 後若遲遲沒有 playing 事件，視為這支有問題。 */
+    const armWatchdog = () => {
+      clearWatchdog();
+      watchdog = window.setTimeout(() => skipClip('逾時未開始播放'), 8000);
     };
 
     /** 這個人擁有的全部影片（他排在檔名第一位的那些），播放順序即索引順序。 */
@@ -1344,6 +1374,7 @@ if (!isLoggedIn) {
     // 注意不清 src —— 保留已下載的緩衝，再次 hover 時第一支是瞬開。
     const finish = () => {
       stopReverse();
+      clearWatchdog();
       undimRow();
       if (videoEl) {
         videoEl.pause();
@@ -1384,24 +1415,22 @@ if (!isLoggedIn) {
       });
     };
 
-    /** 播放 playlist[clipIndex]：需要換片時才重設 src。 */
+    /**
+     * 播放 playlist[clipIndex]：需要換片時才重設 src。
+     * 注意這裡**不動 img 的顯示狀態** —— 要等 'playing' 事件才藏圖，
+     * 這樣影片載不起來時人物圖仍然好好地在畫面上。
+     */
     const playCurrent = () => {
       const url = playlist[clipIndex];
       if (!url) { finish(); return; }
       stopReverse();
       const video = loadClip(url);
-      video.style.display = 'block';
-      img.style.visibility = 'hidden';
       try { video.currentTime = 0; } catch { /* noop */ }
       video.playbackRate = 1;
+      armWatchdog();
       const p = video.play();
       if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          // 這支播不起來就跳過，別讓整份清單卡在這裡
-          clipIndex += 1;
-          if (clipIndex >= playlist.length) finish();
-          else playCurrent();
-        });
+        p.catch(() => skipClip('play() 被拒絕'));
       }
     };
 
@@ -1492,7 +1521,12 @@ if (!isLoggedIn) {
         const next = cards[i + 1];
         if (next) requestWarm(next);
         try {
-          await (card as any).__startPlayback();
+          // 最後一道保險：任何情況下都不讓一張卡永遠擋住右邊的鄰居。
+          // 正常結束靠 __startPlayback 的 Promise，這裡只是硬上限。
+          await Promise.race([
+            (card as any).__startPlayback(),
+            new Promise<void>((resolve) => setTimeout(resolve, 120000)),
+          ]);
         } catch { /* 單一張出錯不該卡住整段 */ }
         queuedCards.delete(card);
       }
