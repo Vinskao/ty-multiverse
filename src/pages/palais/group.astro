@@ -585,11 +585,11 @@ if (!isLoggedIn) {
   import {
     buildIndex,
     clearIndex,
+    getGroupsFor,
     getIndexStats,
     getIndexStatus,
-    getPairNames,
+    groupUrl,
     probeCharacter,
-    toVideoUrls,
   } from '../../scripts/pairVideoIndex';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
@@ -838,24 +838,29 @@ if (!isLoggedIn) {
     if (e.target === document.getElementById('pg-lightbox')) closeLightbox();
   });
 
-  // --- Hover 互動影片（取代原本的滑鼠放大）---
-  // 檔名規則：name1_name2.mp4（兩個人名以底線相接，例：Medicis_Kyu.mp4），與 <name>.png 同位置。
-  // 影片只屬於「name1」——只在 name1 角色的位置顯示。
-  // 因此 hover 某人 self 時只找 self_對方.mp4（self 當 name1），不再試反向的 對方_self，探測量減半。
-  // 依序播放——正放一次 → 倒帶反放一次 → 換下一部，播完最後一部再循環回第一部。
-  // 無聲、自動連續播放、無控制列。
+  // --- Hover 互動影片 ---
+  // 檔名規則：A_B.mp4 / A_B_C.mp4…（成員以底線相接，角色名不含底線），與 <name>.png 同位置。
+  // 任一成員 hover 都會播放該片（三人組的三個人都能觸發）。
+  // 一次 hover 只播「一支」：正放一次 → 倒帶反放一次 → 結束。
+  // 無聲、無控制列。
+  //
+  // 索引：整張「誰參與了哪些影片」的表由 pairVideoIndex 建好並存進 localStorage，
+  //       hover 只做一次 O(1) 查表，完全不連線。
+  //
+  // 延遲：查表是同步的，真正的延遲來自影片下載，所以卡片一進視窗就先把要播的那支
+  //       預熱（preload=auto），hover 時只呼叫 play()。播完不清 src，靠 LRU 控制記憶體。
 
-  // --- 影片快取（索引）---
-  // 原本：hover 一個人 → 對其他所有人各發一次 HEAD（O(N) 探測；全部 hover 過就是 O(N²)），
-  //       而且只存在記憶體，重整就全部重來。
-  // 現在：整張「誰對誰有影片」的鄰接表由 pairVideoIndex 建好並存進 localStorage，
-  //       hover 只做一次 O(1) 雜湊查表，完全不連線。
-  //       索引來源優先 manifest（1 次 GET），沒有 manifest 才退回 HEAD 全掃、且只掃一次。
+  /** 一次 hover 最多播幾支（避免某人參與 20 支時要播 40 輪才放行）。 */
+  const CLIPS_PER_HOVER = 1;
+  /** 同時保留 src 的卡片數上限；超過就淘汰最久沒用的，釋放記憶體與頻寬。 */
+  const WARM_LRU_SIZE = 12;
+  /** 預熱併發數：別跟人物 PNG 搶頻寬。 */
+  const WARM_CONCURRENCY = 2;
 
-  // 全域鎖：同一時間只跑一輪互動影片；已在播放時，hover 其他人不會再啟動。
+  // 全域鎖：同一時間只跑一支互動影片；已在播放時，hover 其他人不會再啟動。
   let pairVideoRunning = false;
   // 降級路徑用的去重表：同一個人只補掃一次
-  const pendingProbes = new Map<string, Promise<string[]>>();
+  const pendingProbes = new Map<string, Promise<string[][]>>();
 
   function getCharacterNames(): string[] {
     return Array.from(
@@ -868,13 +873,13 @@ if (!isLoggedIn) {
   }
 
   /**
-   * 取得某人的互動影片清單。
+   * 取得某人參與的影片組合。
    * 1. 索引命中 → 同步回傳（零網路）
-   * 2. 索引沒建過 → 只補掃這個人，結果併回索引，下次就是 O(1)
+   * 2. 索引沒建過 → 只補掃這個人的兩人組，結果併回索引，下次就是 O(1)
    */
-  function getPairVideos(selfName: string, timestamp: string): Promise<string[]> {
-    const cached = getPairNames(selfName);
-    if (cached) return Promise.resolve(toVideoUrls(PEOPLE_IMAGE_URL, selfName, cached));
+  function getGroupsForCharacter(selfName: string, timestamp: string): string[][] | Promise<string[][]> {
+    const cached = getGroupsFor(selfName);
+    if (cached) return cached;
 
     let pending = pendingProbes.get(selfName);
     if (!pending) {
@@ -882,10 +887,93 @@ if (!isLoggedIn) {
         baseUrl: PEOPLE_IMAGE_URL,
         names: getCharacterNames(),
         mediaTimestamp: timestamp,
-      }).then((others) => toVideoUrls(PEOPLE_IMAGE_URL, selfName, others));
+      });
       pendingProbes.set(selfName, pending);
     }
     return pending;
+  }
+
+  // --- 預熱 LRU ---
+  // 卡片自己的 <video> 就是預載緩衝：進視窗時設好 src 開始下載，hover 時直接 play()。
+  // 播完只 pause + 倒帶，不清 src，所以同一個人再 hover 是瞬開。
+
+  const warmedCards = new Set<HTMLElement>();
+  /** 最近使用順序（Set 保留插入序，重新 add 前先 delete 就等於 move-to-end）。 */
+  const warmOrder = new Set<HTMLElement>();
+  const warmQueue: HTMLElement[] = [];
+  let warmingCount = 0;
+
+  function touchWarm(card: HTMLElement) {
+    warmOrder.delete(card);
+    warmOrder.add(card);
+  }
+
+  function evictWarm() {
+    while (warmOrder.size > WARM_LRU_SIZE) {
+      const oldest = warmOrder.values().next().value as HTMLElement | undefined;
+      if (!oldest) break;
+      warmOrder.delete(oldest);
+      warmedCards.delete(oldest);
+      const video = oldest.querySelector<HTMLVideoElement>('video.pair-video');
+      // 正在播的那支不能砍
+      if (!video || !video.paused) continue;
+      video.removeAttribute('src');
+      video.preload = 'none';
+      try { video.load(); } catch { /* noop */ }
+    }
+  }
+
+  function pumpWarmQueue() {
+    while (warmingCount < WARM_CONCURRENCY && warmQueue.length > 0) {
+      const card = warmQueue.shift()!;
+      const warm = (card as any).__warmClip as (() => Promise<void>) | undefined;
+      if (!warm) continue;
+      warmingCount += 1;
+      warm().finally(() => {
+        warmingCount -= 1;
+        pumpWarmQueue();
+      });
+    }
+  }
+
+  function requestWarm(card: HTMLElement) {
+    if (warmedCards.has(card) || warmQueue.includes(card)) {
+      touchWarm(card);
+      return;
+    }
+    warmQueue.push(card);
+    pumpWarmQueue();
+  }
+
+  /** 索引或媒體時間戳變了：丟掉所有已預熱的緩衝，下一輪重新暖。 */
+  function resetWarmState() {
+    warmQueue.length = 0;
+    warmedCards.clear();
+    warmOrder.clear();
+    document.querySelectorAll<HTMLVideoElement>('video.pair-video').forEach((video) => {
+      if (!video.paused) return; // 正在播的不動
+      video.removeAttribute('src');
+      video.preload = 'none';
+      try { video.load(); } catch { /* noop */ }
+    });
+  }
+
+  /** 卡片進入視窗就預熱它要播的那支影片。 */
+  let warmObserver: IntersectionObserver | null = null;
+  function observeForWarm(card: HTMLElement) {
+    if (!('IntersectionObserver' in window)) return;
+    if (!warmObserver) {
+      warmObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) requestWarm(entry.target as HTMLElement);
+          }
+        },
+        // 提早一個畫面開始暖，滑到的時候通常已經好了
+        { rootMargin: '200px 0px' },
+      );
+    }
+    warmObserver.observe(card);
   }
 
   /** 「建立影片快取」按鈕：掃一次、存起來，之後 hover 全部走快取。 */
@@ -903,12 +991,13 @@ if (!isLoggedIn) {
     if (status.exists && !status.stale) {
       const stats = getIndexStats();
       const built = stats ? new Date(stats.builtAt).toLocaleString() : '';
-      if (!confirm(`快取已是最新（${stats?.edges ?? 0} 部影片，建立於 ${built}）。要重新掃描嗎？`)) return;
+      if (!confirm(`快取已是最新（${stats?.videos ?? 0} 支影片，建立於 ${built}）。要重新掃描嗎？`)) return;
     }
 
     const originalLabel = label?.textContent ?? '建立影片快取';
     button?.setAttribute('disabled', 'true');
     pendingProbes.clear();
+    resetWarmState();
     clearIndex();
 
     try {
@@ -916,7 +1005,6 @@ if (!isLoggedIn) {
         baseUrl: PEOPLE_IMAGE_URL,
         names,
         mediaTimestamp: timestamp,
-        concurrency: 8,
         onProgress: ({ done, total, found }) => {
           if (label) {
             const percent = total > 0 ? Math.round((done / total) * 100) : 100;
@@ -924,19 +1012,43 @@ if (!isLoggedIn) {
           }
         },
       });
-      const edges = Object.values(index.pairs).reduce((sum, list) => sum + list.length, 0);
+
+      const arity = Object.entries(
+        index.groups.reduce<Record<number, number>>((acc, group) => {
+          acc[group.length] = (acc[group.length] ?? 0) + 1;
+          return acc;
+        }, {}),
+      )
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([size, count]) => `${size}人${count}`)
+        .join('・');
+
       if (label) {
-        label.textContent =
-          index.source === 'manifest'
-            ? `已從清單建立（${edges} 部）`
-            : `已建立快取（${edges} 部）`;
+        const prefix = index.source === 'manifest' ? '已從清單建立' : '已建立快取';
+        label.textContent = `${prefix}（${index.groups.length} 支${arity ? `：${arity}` : ''}）`;
       }
+
+      const slow = index.slowStartFiles ?? [];
+      if (slow.length > 0) {
+        alert(
+          `有 ${slow.length} 支影片不是 faststart（moov atom 在檔尾），\n` +
+          'hover 時瀏覽器必須下載完整支才能播第一格，會明顯卡頓。\n\n' +
+          '請用以下指令重新輸出（不會重新編碼，很快）：\n' +
+          'ffmpeg -i in.mp4 -c copy -movflags +faststart out.mp4\n\n' +
+          `例如：${slow.slice(0, 5).join('、')}${slow.length > 5 ? ' …' : ''}\n` +
+          '完整清單見 console。',
+        );
+      }
+
+      // 索引換了，之前暖的內容作廢，重新暖一輪
+      resetWarmState();
+      document.querySelectorAll<HTMLElement>('.pg-draggable').forEach(requestWarm);
     } catch (error) {
       console.error('建立影片快取失敗:', error);
       if (label) label.textContent = '建立失敗，請重試';
     } finally {
       button?.removeAttribute('disabled');
-      setTimeout(() => { if (label) label.textContent = originalLabel; }, 4000);
+      setTimeout(() => { if (label) label.textContent = originalLabel; }, 5000);
     }
   }
 
@@ -953,20 +1065,22 @@ if (!isLoggedIn) {
     } else if (status.stale) {
       button.setAttribute('title', `快取可能過期（${status.missingNames.length} 位新角色未收錄）。點此重新掃描。`);
     } else {
+      const slow = stats?.slowStartFiles?.length ?? 0;
       button.setAttribute(
         'title',
-        `快取有效：${stats?.edges ?? 0} 部影片，來源 ${stats?.source === 'manifest' ? '清單檔' : '掃描'}。點此重建。`,
+        `快取有效：${stats?.videos ?? 0} 支影片，來源 ${stats?.source === 'manifest' ? '清單檔' : '掃描'}。` +
+        (slow > 0 ? `⚠ ${slow} 支非 faststart，開播會卡。` : '') +
+        '點此重建。',
       );
     }
   }
 
   // 倒帶反放沿用 dance.ts 的作法，已抽象到 videoRewind 的 reversePlay。
-  // 一旦 hover 觸發就跑完「整輪」（每部影片正放+反放各一次，走完全部）才停，
-  // 期間即使滑鼠移開也不中斷；整輪結束才變回圖片，下一次 hover 才會再啟動。
+  // 一支影片正放一次 + 反放一次就結束；期間即使滑鼠移開也不中斷。
   function attachHoverVideo(card: HTMLElement, img: HTMLImageElement, selfName: string) {
     let videoEl: HTMLVideoElement | null = null;
-    let urls: string[] = [];
-    let idx = 0;
+    let clipsPlayed = 0;
+    let currentUrl = '';
     let reverseHandle: ReversePlayHandle | null = null;
     // 播放期間被套上黑幕的那一排（卡片可能被拖進菜籃，所以每次重新取）
     let dimmedRow: HTMLElement | null = null;
@@ -985,19 +1099,90 @@ if (!isLoggedIn) {
       dimmedRow = null;
     };
 
-    // 整輪結束：停止、還原圖片、放行下一次 hover
+    const ensureVideo = () => {
+      if (videoEl) return videoEl;
+      videoEl = document.createElement('video');
+      videoEl.className = 'pair-video';
+      videoEl.muted = true;
+      videoEl.defaultMuted = true;
+      videoEl.setAttribute('muted', '');
+      videoEl.playsInline = true;
+      videoEl.setAttribute('playsinline', '');
+      videoEl.preload = 'none';
+      videoEl.controls = false;
+      videoEl.addEventListener('ended', onEnded);
+      card.appendChild(videoEl);
+      return videoEl;
+    };
+
+    /** 從這個人參與的影片裡挑一支。隨機挑，讓重複 hover 有變化。 */
+    const pickClip = (groups: string[][]): string => {
+      const group = groups[Math.floor(Math.random() * groups.length)]!;
+      return groupUrl(PEOPLE_IMAGE_URL, group);
+    };
+
+    /**
+     * 預熱：把要播的那支設進 <video> 開始下載。
+     * hover 時就只剩 play()，沒有網路等待 —— 這是「hover 立刻開播」的關鍵。
+     */
+    const warmClip = async () => {
+      if (warmedCards.has(card)) return;
+      const ts = characterService?.getMediaTimestamp?.() ?? '';
+      let groups: string[][] = [];
+      try { groups = await getGroupsForCharacter(selfName, ts); } catch { groups = []; }
+      if (groups.length === 0) {
+        warmedCards.add(card); // 確定沒影片，別再排隊
+        return;
+      }
+
+      const video = ensureVideo();
+      currentUrl = pickClip(groups);
+      video.preload = 'auto';
+      video.src = `${currentUrl}?t=${ts}`;
+      try { video.load(); } catch { /* noop */ }
+
+      warmedCards.add(card);
+      touchWarm(card);
+      evictWarm();
+
+      // 等到能play再算暖完，才不會讓併發池一口氣放行全部卡片
+      await new Promise<void>((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          video.removeEventListener('canplaythrough', done);
+          video.removeEventListener('loadeddata', done);
+          video.removeEventListener('error', done);
+          resolve();
+        };
+        video.addEventListener('canplaythrough', done);
+        video.addEventListener('loadeddata', done);
+        video.addEventListener('error', done);
+        setTimeout(done, 8000); // 保險：別讓某支卡死整條預熱佇列
+      });
+    };
+    (card as any).__warmClip = warmClip;
+
+    // 整支結束：停止、還原圖片、放行下一次 hover。
+    // 注意不清 src —— 保留已下載的緩衝，同一個人再 hover 是瞬開。
     const finish = () => {
       stopReverse();
       undimRow();
       if (videoEl) {
         videoEl.pause();
-        videoEl.removeAttribute('src');
-        try { videoEl.load(); } catch { /* noop */ }
+        try { videoEl.currentTime = 0; } catch { /* noop */ }
+        videoEl.playbackRate = 1;
         videoEl.style.display = 'none';
       }
       img.style.visibility = '';
       card.classList.remove('pair-playing');
       pairVideoRunning = false; // 放行下一輪
+
+      // 下次換一支：重新抽籤並在閒置時暖起來
+      warmedCards.delete(card);
+      const idle = (window as any).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
+      idle(() => requestWarm(card));
     };
 
     // 正放結束 → 倒帶反放（沿用 dance.ts 的逐格倒退，抽象於 videoRewind）
@@ -1006,56 +1191,50 @@ if (!isLoggedIn) {
       stopReverse();
       reverseHandle = reversePlay(videoEl, {
         onComplete: () => {
-          // 這部（正放+反放）完成；還有下一部就換下一部，否則整輪結束
-          if (idx >= urls.length - 1) { finish(); return; }
-          idx += 1;
+          clipsPlayed += 1;
+          if (clipsPlayed >= CLIPS_PER_HOVER) { finish(); return; }
           playForward();
         },
       });
     };
 
     const playForward = () => {
-      if (!videoEl || urls.length === 0) return;
+      const video = videoEl;
+      if (!video || !currentUrl) { finish(); return; }
       stopReverse();
-      const ts = characterService?.getMediaTimestamp?.() ?? '';
-      videoEl.style.display = 'block';
+      video.style.display = 'block';
       img.style.visibility = 'hidden';
-      videoEl.src = `${urls[idx]}?t=${ts}`;
-      videoEl.playbackRate = 1;
-      const p = videoEl.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
+      try { video.currentTime = 0; } catch { /* noop */ }
+      video.playbackRate = 1;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => { finish(); });
     };
 
-    const ensureVideo = () => {
-      if (videoEl) return;
-      videoEl = document.createElement('video');
-      videoEl.className = 'pair-video';
-      videoEl.muted = true;
-      videoEl.defaultMuted = true;
-      videoEl.setAttribute('muted', '');
-      videoEl.playsInline = true;
-      videoEl.setAttribute('playsinline', '');
-      videoEl.preload = 'auto';
-      videoEl.controls = false;
-      videoEl.addEventListener('ended', onEnded);
-      card.appendChild(videoEl);
-    };
-
-    // 只在 mouseenter 啟動；不監聽 mouseleave（移開仍播完整輪）
+    // 只在 mouseenter 啟動；不監聽 mouseleave（移開仍播完）
     card.addEventListener('mouseenter', async () => {
-      if (pairVideoRunning) return; // 已有一輪在播放，不啟動也不排隊
+      if (pairVideoRunning) return; // 已有一支在播放，不啟動也不排隊
       pairVideoRunning = true;
-      ensureVideo();
-      const ts = characterService?.getMediaTimestamp?.() ?? '';
-      let list: string[] = [];
-      try { list = await getPairVideos(selfName, ts); } catch { list = []; }
-      if (list.length === 0) { pairVideoRunning = false; return; } // 沒互動影片：釋放鎖，維持原圖
-      urls = list;
-      idx = 0;
-      card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
-      dimRow(); // 整排襯黑，配合黑底影片
+      touchWarm(card);
+
+      // 已預熱：src 就緒，直接播（零等待）
+      if (videoEl?.src && currentUrl) {
+        clipsPlayed = 0;
+        card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
+        dimRow(); // 整排襯黑，配合黑底影片
+        playForward();
+        return;
+      }
+
+      // 還沒暖到（剛進頁面就 hover）：插隊暖一次再播
+      try { await warmClip(); } catch { /* noop */ }
+      if (!videoEl?.src || !currentUrl) { pairVideoRunning = false; return; }
+      clipsPlayed = 0;
+      card.classList.add('pair-playing');
+      dimRow();
       playForward();
     });
+
+    observeForWarm(card);
   }
 
   // --- Character card ---
@@ -1384,6 +1563,11 @@ if (!isLoggedIn) {
         if (refreshBtn) refreshBtn.setAttribute('disabled', 'true');
       }
 
+      // 卡片要整批重建：先斷開預熱觀察器與緩衝，避免舊節點被 IntersectionObserver 抓住不放
+      warmObserver?.disconnect();
+      warmObserver = null;
+      resetWarmState();
+
       container.innerHTML = '<div style="text-align:center;padding:50px;color:white;font-size:20px;">載入數據中...</div>';
 
       characterService = (await import('../../services/api/characterService')).default.getInstance();
@@ -1504,6 +1688,9 @@ if (!isLoggedIn) {
         img.style.opacity = '0';
         img.src = imageUrl.toString();
       });
+      // 時間戳變了，已預熱的影片 URL 全部作廢，重暖一輪
+      resetWarmState();
+      document.querySelectorAll<HTMLElement>('.pg-draggable').forEach(requestWarm);
       syncPairIndexButton();
     } finally {
       refreshImagesBtn?.removeAttribute('disabled');

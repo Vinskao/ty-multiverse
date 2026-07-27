@@ -1,36 +1,48 @@
 /**
- * 互動影片索引（pair video index）
+ * 互動影片索引（video index）
+ *
+ * 檔名規則：`A_B.mp4`、`A_B_C.mp4`… 成員以底線相接。角色名不含底線，所以 split('_')
+ * 就能還原成員清單，任意人數都通用。
  *
  * 問題：group 頁 hover 一個角色時，原本要對「其他每一個角色」各發一次 HEAD
- * 去猜 `self_other.mp4` 存不存在 —— 單次 hover O(N) 次網路探測，
- * 全部人都 hover 過就是 O(N²)（N≈角色數）。而且重整後全部重來。
+ * 去猜檔名存不存在 —— 單次 hover O(N) 次網路探測，全部人 hover 過就是 O(N²)。
+ * 而且只存記憶體，重整全部重來。
  *
  * 解法：把「線性掃描」換成「預先建好的索引」。
- *   - 資料結構：有向圖的鄰接表 adjacency list，`self -> [other, ...]`，
- *     只存實際存在的邊（E 條，E << N²），用 Record 當雜湊表 → 查詢 O(1)。
+ *   - 資料結構：`groups: string[][]`（每組成員）＋ `byName: name -> groups 的索引`。
+ *     只存實際存在的組合（E 組，E << Nᵏ），查詢是 O(1) 雜湊查表。
+ *     成員只存一份、byName 存整數索引，所以三人組不會被複製三次。
  *   - 建索引的來源優先序：
- *       1. manifest：靜態主機上的 `pair-videos.json`（一次 GET 拿到全部檔名）→ 建表成本 O(E)
- *       2. probe：沒有 manifest 時才退回 HEAD 全掃 O(N²)，但「只做一次」，
- *          結果（含「整張表已建完」這個事實＝完整的 negative cache）寫進 localStorage。
+ *       1. manifest：靜態主機上的 `pair-videos.json`，一次 GET 拿到全部檔名。
+ *          成本 O(E)，與 N 和「幾人一組」完全無關 —— 三人以上只能靠這條。
+ *       2. probe：沒有 manifest 才退回 HEAD 全掃，但只掃「兩人組」N(N-1) 次，
+ *          因為三人組是 O(N³)（N=50 約 12 萬次請求）現實上不可行。
  *   - 之後 hover 完全不碰網路。
  */
 
-const STORAGE_KEY = 'palais-pair-video-index-v1';
+const STORAGE_KEY = 'palais-video-index-v2';
 const MANIFEST_FILENAME = 'pair-videos.json';
-const INDEX_VERSION = 1;
+const INDEX_VERSION = 2;
 
-export type PairIndexSource = 'manifest' | 'probe';
+export type IndexSource = 'manifest' | 'probe';
 
-export interface PairVideoIndex {
+/** 存進 localStorage 的形狀（byName 是衍生資料，不落地，載入時重算）。 */
+interface StoredIndex {
   version: number;
-  /** 建索引當下的媒體時間戳；與現值不同代表可能已過期（仍可用，只是建議重建）。 */
   mediaTimestamp: string;
   builtAt: number;
-  source: PairIndexSource;
+  source: IndexSource;
   /** 建索引時掃過的角色名單，用來判斷有沒有新角色加入。 */
   names: string[];
-  /** 鄰接表：self -> [other, ...]，順序即播放順序。只列出存在的影片。 */
-  pairs: Record<string, string[]>;
+  /** 每組的成員，順序即檔名順序。 */
+  groups: string[][];
+  /** moov atom 不在檔頭的檔案（非 faststart，會讓 hover 卡住）。 */
+  slowStartFiles?: string[];
+}
+
+export interface VideoIndex extends StoredIndex {
+  /** 反向索引：角色名 -> 他參與的 groups 索引。 */
+  byName: Record<string, number[]>;
 }
 
 export interface BuildProgress {
@@ -39,52 +51,107 @@ export interface BuildProgress {
   found: number;
 }
 
+// --- 檔名 <-> 成員 ---
+
+export function groupFileBase(group: string[]): string {
+  return group.join('_');
+}
+
+export function groupUrl(baseUrl: string, group: string[]): string {
+  return `${baseUrl}/${encodeURIComponent(groupFileBase(group))}.mp4`;
+}
+
+/** `A_B_C` -> ['A','B','C']；任一段不是已知角色、或有重複、或不足兩人就回 null。 */
+function parseGroupFromBase(base: string, nameSet: Set<string>): string[] | null {
+  const parts = base.split('_');
+  if (parts.length < 2) return null;
+  const seen = new Set<string>();
+  for (const part of parts) {
+    if (!nameSet.has(part) || seen.has(part)) return null;
+    seen.add(part);
+  }
+  return parts;
+}
+
+function buildByName(groups: string[][]): Record<string, number[]> {
+  const byName: Record<string, number[]> = {};
+  groups.forEach((group, index) => {
+    for (const member of group) {
+      (byName[member] ??= []).push(index);
+    }
+  });
+  return byName;
+}
+
+function hydrate(stored: StoredIndex): VideoIndex {
+  return { ...stored, byName: buildByName(stored.groups) };
+}
+
 // --- 儲存 ---
 
-let memoryIndex: PairVideoIndex | null | undefined;
+let memoryIndex: VideoIndex | null | undefined;
 
-export function loadIndex(): PairVideoIndex | null {
+export function loadIndex(): VideoIndex | null {
   if (memoryIndex !== undefined) return memoryIndex;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return (memoryIndex = null);
-    const parsed = JSON.parse(raw) as PairVideoIndex;
-    if (parsed?.version !== INDEX_VERSION || !parsed.pairs) {
+    const parsed = JSON.parse(raw) as StoredIndex;
+    if (parsed?.version !== INDEX_VERSION || !Array.isArray(parsed.groups)) {
       localStorage.removeItem(STORAGE_KEY);
       return (memoryIndex = null);
     }
-    return (memoryIndex = parsed);
+    return (memoryIndex = hydrate(parsed));
   } catch {
     return (memoryIndex = null);
   }
 }
 
-export function saveIndex(index: PairVideoIndex): void {
+export function saveIndex(index: VideoIndex): void {
   memoryIndex = index;
+  const { byName: _byName, ...stored } = index;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(index));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
     // 配額爆掉時只留記憶體版本，不讓整個流程失敗
-    console.warn('[pairVideoIndex] 無法寫入 localStorage:', error);
+    console.warn('[videoIndex] 無法寫入 localStorage:', error);
   }
 }
 
 export function clearIndex(): void {
   memoryIndex = null;
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('palais-pair-video-index-v1'); // 舊版索引
+  } catch { /* noop */ }
 }
 
-/** O(1) 查詢。回傳 null 代表索引裡沒有這個人的資料（尚未建索引）。 */
-export function getPairNames(selfName: string): string[] | null {
+// --- 查詢（O(1)）---
+
+export interface LookupOptions {
+  /** 只回傳「這個人排在檔名第一位」的組（舊行為）。預設 false：任一成員都能觸發。 */
+  ownerOnly?: boolean;
+}
+
+/**
+ * 取得某角色參與的所有影片組合。
+ * 回傳 null 代表索引裡沒有這個人的資料（尚未建索引），空陣列代表「確定沒有」。
+ */
+export function getGroupsFor(name: string, options: LookupOptions = {}): string[][] | null {
   const index = loadIndex();
   if (!index) return null;
-  return index.pairs[selfName] ?? null;
+  if (!index.names.includes(name)) return null;
+  const ids = index.byName[name] ?? [];
+  const groups = ids.map((id) => index.groups[id]!).filter(Boolean);
+  return options.ownerOnly ? groups.filter((group) => group[0] === name) : groups;
 }
 
 /** 索引是否涵蓋這批角色、且時間戳仍相符。 */
 export function getIndexStatus(names: string[], mediaTimestamp: string) {
   const index = loadIndex();
-  if (!index) return { exists: false, stale: false, missingNames: names, index: null as PairVideoIndex | null };
+  if (!index) {
+    return { exists: false, stale: false, missingNames: names, index: null as VideoIndex | null };
+  }
   const known = new Set(index.names);
   const missingNames = names.filter((name) => !known.has(name));
   return {
@@ -98,67 +165,112 @@ export function getIndexStatus(names: string[], mediaTimestamp: string) {
 export function getIndexStats() {
   const index = loadIndex();
   if (!index) return null;
-  const edges = Object.values(index.pairs).reduce((sum, list) => sum + list.length, 0);
+  const byArity: Record<number, number> = {};
+  for (const group of index.groups) {
+    byArity[group.length] = (byArity[group.length] ?? 0) + 1;
+  }
   return {
     source: index.source,
     builtAt: index.builtAt,
     characters: index.names.length,
-    edges,
+    videos: index.groups.length,
+    byArity,
+    slowStartFiles: index.slowStartFiles ?? [],
   };
 }
 
-// --- 來源 1：manifest（一次 GET） ---
+// --- faststart 檢查 ---
 
-/**
- * 把 `A_B.mp4` 這種檔名切回 (A, B)。
- * 名字本身可能含底線，所以不能直接 split('_')；改成掃描每一個可能的切點，
- * 兩邊都必須落在已知名單內（O(名字長度) 次雜湊查詢）。
- */
-function splitPairFilename(base: string, nameSet: Set<string>): [string, string] | null {
-  let cursor = base.indexOf('_');
-  while (cursor !== -1) {
-    const left = base.slice(0, cursor);
-    const right = base.slice(cursor + 1);
-    if (nameSet.has(left) && nameSet.has(right)) return [left, right];
-    cursor = base.indexOf('_', cursor + 1);
-  }
-  return null;
+function readBoxType(view: DataView, offset: number): string {
+  let type = '';
+  for (let i = 0; i < 4; i += 1) type += String.fromCharCode(view.getUint8(offset + i));
+  return type;
 }
 
-function buildPairsFromFilenames(files: string[], names: string[]): Record<string, string[]> {
+/**
+ * 抓檔案前 1KB，走一遍 MP4 的頂層 box，看 `moov` 有沒有排在 `mdat` 前面。
+ * moov 在檔尾（非 faststart）的話，瀏覽器必須把整支下載完才能播第一格 ——
+ * 這是 hover 卡頓最常見、也是前端救不回來的原因。
+ * 回傳 true = faststart OK，false = 有問題，null = 判斷不出來（不計入）。
+ */
+export async function checkFastStart(url: string): Promise<boolean | null> {
+  try {
+    const response = await fetch(url, { headers: { Range: 'bytes=0-1023' } });
+    if (!response.ok) return null;
+    const buffer = await response.arrayBuffer();
+    const view = new DataView(buffer);
+    let pos = 0;
+    while (pos + 8 <= view.byteLength) {
+      let size = view.getUint32(pos);
+      const type = readBoxType(view, pos + 4);
+      if (type === 'moov') return true;
+      if (type === 'mdat') return false;
+      if (size === 1) {
+        if (pos + 16 > view.byteLength) return null;
+        // 64-bit largesize：只取低 32 位元，這種尺寸一定超出 1KB，直接判定看不到
+        size = view.getUint32(pos + 12);
+      }
+      if (size <= 0) return null;
+      pos += size;
+    }
+    return null; // 前 1KB 之內看不到 moov/mdat
+  } catch {
+    return null;
+  }
+}
+
+/** 抽樣檢查，回傳非 faststart 的檔名。 */
+export async function sampleFastStart(
+  baseUrl: string,
+  groups: string[][],
+  sampleSize = 12,
+): Promise<string[]> {
+  if (groups.length === 0) return [];
+  const step = Math.max(1, Math.floor(groups.length / sampleSize));
+  const sample: string[][] = [];
+  for (let i = 0; i < groups.length && sample.length < sampleSize; i += step) {
+    sample.push(groups[i]!);
+  }
+
+  const bad: string[] = [];
+  await mapWithConcurrency(sample, 4, async (group) => {
+    const ok = await checkFastStart(groupUrl(baseUrl, group));
+    if (ok === false) bad.push(`${groupFileBase(group)}.mp4`);
+  });
+  return bad;
+}
+
+// --- 來源 1：manifest（一次 GET，任意人數） ---
+
+function groupsFromFilenames(files: string[], names: string[]): string[][] {
   const nameSet = new Set(names);
-  const order = new Map(names.map((name, i) => [name, i]));
-  const pairs: Record<string, string[]> = {};
-  for (const name of names) pairs[name] = [];
-
+  const groups: string[][] = [];
+  const seen = new Set<string>();
   for (const file of files) {
-    if (!file.toLowerCase().endsWith('.mp4')) continue;
-    const parsed = splitPairFilename(file.slice(0, -4), nameSet);
+    const trimmed = file.split('/').pop() ?? file;
+    if (!trimmed.toLowerCase().endsWith('.mp4')) continue;
+    const parsed = parseGroupFromBase(trimmed.slice(0, -4), nameSet);
     if (!parsed) continue;
-    const [self, other] = parsed;
-    if (self === other) continue;
-    pairs[self]!.push(other);
+    const key = groupFileBase(parsed);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    groups.push(parsed);
   }
-
-  // 讓播放順序穩定：依對方在角色名單中的順序排（與原本探測順序一致）
-  for (const list of Object.values(pairs)) {
-    list.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
-  }
-  return pairs;
+  return groups;
 }
 
 /**
  * 嘗試從靜態主機抓 manifest。抓不到（404 / 格式不符）就回 null，由呼叫端退回 probe。
- * 支援三種格式：
- *   ["A_B.mp4", ...]
- *   { "files": ["A_B.mp4", ...] }
- *   { "pairs": { "A": ["B", "C"] } }   ← 已經建好的鄰接表
+ * 支援：
+ *   ["A_B.mp4", "A_B_C.mp4", ...]
+ *   { "files": [...] }
+ *   { "groups": [["A","B"], ["A","B","C"]] }   ← 已經建好的成員清單
  */
 export async function fetchRemoteManifest(
   baseUrl: string,
   names: string[],
   mediaTimestamp: string,
-): Promise<PairVideoIndex | null> {
+): Promise<VideoIndex | null> {
   try {
     const response = await fetch(
       `${baseUrl}/${MANIFEST_FILENAME}?t=${encodeURIComponent(mediaTimestamp)}`,
@@ -167,30 +279,32 @@ export async function fetchRemoteManifest(
     if (!response.ok) return null;
     const payload = await response.json();
 
-    let pairs: Record<string, string[]> | null = null;
+    let groups: string[][] | null = null;
     if (Array.isArray(payload)) {
-      pairs = buildPairsFromFilenames(payload, names);
+      groups = groupsFromFilenames(payload, names);
     } else if (Array.isArray(payload?.files)) {
-      pairs = buildPairsFromFilenames(payload.files, names);
-    } else if (payload?.pairs && typeof payload.pairs === 'object') {
-      pairs = payload.pairs;
+      groups = groupsFromFilenames(payload.files, names);
+    } else if (Array.isArray(payload?.groups)) {
+      groups = (payload.groups as string[][]).filter(
+        (group) => Array.isArray(group) && group.length >= 2,
+      );
     }
-    if (!pairs) return null;
+    if (!groups) return null;
 
-    return {
+    return hydrate({
       version: INDEX_VERSION,
       mediaTimestamp,
       builtAt: Date.now(),
       source: 'manifest',
       names: [...names],
-      pairs,
-    };
+      groups,
+    });
   } catch {
     return null;
   }
 }
 
-// --- 來源 2：probe（HEAD 全掃，只做一次） ---
+// --- 來源 2：probe（HEAD 全掃兩人組，只做一次） ---
 
 async function mapWithConcurrency<T>(
   items: T[],
@@ -215,75 +329,86 @@ export interface BuildOptions {
   concurrency?: number;
   onProgress?: (progress: BuildProgress) => void;
   signal?: AbortSignal;
-  /** 略過 manifest、直接 HEAD 全掃。 */
+  /** 略過 manifest、直接 HEAD 全掃兩人組。 */
   forceProbe?: boolean;
+  /** 建完後抽樣檢查 faststart（預設開啟）。 */
+  checkFastStart?: boolean;
 }
 
 /**
  * 建立（或重建）整張索引。
- * 先試 manifest（1 次請求）；失敗才 HEAD 全掃 N*(N-1) 次，掃完存檔。
+ * 先試 manifest（1 次請求、任意人數）；失敗才 HEAD 全掃兩人組 N(N-1) 次。
  */
-export async function buildIndex(options: BuildOptions): Promise<PairVideoIndex> {
-  const { baseUrl, names, mediaTimestamp, concurrency = 8, onProgress, signal, forceProbe } = options;
+export async function buildIndex(options: BuildOptions): Promise<VideoIndex> {
+  const {
+    baseUrl,
+    names,
+    mediaTimestamp,
+    concurrency = 6, // HTTP/1.1 對同一 origin 本來就只有 6 條連線，開更大沒意義
+    onProgress,
+    signal,
+    forceProbe,
+    checkFastStart: wantFastStartCheck = true,
+  } = options;
+
+  let index: VideoIndex | null = null;
 
   if (!forceProbe) {
-    const remote = await fetchRemoteManifest(baseUrl, names, mediaTimestamp);
-    if (remote) {
-      const found = Object.values(remote.pairs).reduce((sum, list) => sum + list.length, 0);
-      onProgress?.({ done: names.length, total: names.length, found });
-      saveIndex(remote);
-      return remote;
-    }
+    index = await fetchRemoteManifest(baseUrl, names, mediaTimestamp);
+    if (index) onProgress?.({ done: 1, total: 1, found: index.groups.length });
   }
 
-  const pairs: Record<string, string[]> = {};
-  for (const name of names) pairs[name] = [];
-
-  // 展開成一維工作清單，讓併發池吃滿；`slot` 保留順序，避免結果次序隨機。
-  const jobs: Array<{ self: string; other: string; slot: number }> = [];
-  names.forEach((self) => {
-    names.forEach((other, slot) => {
-      if (self !== other) jobs.push({ self, other, slot });
+  if (!index) {
+    // 展開成一維工作清單讓併發池吃滿；slot 保留順序，避免結果次序隨機。
+    const jobs: Array<{ self: string; other: string; slot: number }> = [];
+    names.forEach((self, selfSlot) => {
+      names.forEach((other, otherSlot) => {
+        if (self !== other) jobs.push({ self, other, slot: selfSlot * names.length + otherSlot });
+      });
     });
-  });
 
-  const hits = new Map<string, Array<{ other: string; slot: number }>>();
-  let done = 0;
-  let found = 0;
+    const hits: Array<{ group: string[]; slot: number }> = [];
+    let done = 0;
 
-  await mapWithConcurrency(
-    jobs,
-    concurrency,
-    async ({ self, other, slot }) => {
-      const url = `${baseUrl}/${encodeURIComponent(`${self}_${other}`)}.mp4?t=${encodeURIComponent(mediaTimestamp)}`;
-      try {
-        const response = await fetch(url, { method: 'HEAD', signal });
-        if (response.ok) {
-          if (!hits.has(self)) hits.set(self, []);
-          hits.get(self)!.push({ other, slot });
-          found += 1;
+    await mapWithConcurrency(
+      jobs,
+      concurrency,
+      async ({ self, other, slot }) => {
+        const url = `${groupUrl(baseUrl, [self, other])}?t=${encodeURIComponent(mediaTimestamp)}`;
+        try {
+          const response = await fetch(url, { method: 'HEAD', signal });
+          if (response.ok) hits.push({ group: [self, other], slot });
+        } catch { /* 不存在 / 被中斷就當作沒有 */ }
+        done += 1;
+        if (done % 10 === 0 || done === jobs.length) {
+          onProgress?.({ done, total: jobs.length, found: hits.length });
         }
-      } catch { /* 不存在 / 被中斷就當作沒有 */ }
-      done += 1;
-      if (done % 10 === 0 || done === jobs.length) {
-        onProgress?.({ done, total: jobs.length, found });
-      }
-    },
-    signal,
-  );
+      },
+      signal,
+    );
 
-  hits.forEach((list, self) => {
-    pairs[self] = list.sort((a, b) => a.slot - b.slot).map((entry) => entry.other);
-  });
+    index = hydrate({
+      version: INDEX_VERSION,
+      mediaTimestamp,
+      builtAt: Date.now(),
+      source: 'probe',
+      names: [...names],
+      groups: hits.sort((a, b) => a.slot - b.slot).map((hit) => hit.group),
+    });
+  }
 
-  const index: PairVideoIndex = {
-    version: INDEX_VERSION,
-    mediaTimestamp,
-    builtAt: Date.now(),
-    source: 'probe',
-    names: [...names],
-    pairs,
-  };
+  if (wantFastStartCheck && !signal?.aborted) {
+    const bad = await sampleFastStart(baseUrl, index.groups);
+    index.slowStartFiles = bad;
+    if (bad.length > 0) {
+      console.warn(
+        `[videoIndex] 有 ${bad.length} 支影片的 moov atom 不在檔頭（非 faststart），` +
+        'hover 時瀏覽器必須下載完整支才能播第一格。請用 ' +
+        '`ffmpeg -i in.mp4 -c copy -movflags +faststart out.mp4` 重新輸出：',
+        bad,
+      );
+    }
+  }
 
   // 中斷的話不要把半成品當成完整索引存起來
   if (!signal?.aborted) saveIndex(index);
@@ -291,48 +416,53 @@ export async function buildIndex(options: BuildOptions): Promise<PairVideoIndex>
 }
 
 /**
- * 只補掃單一角色（沒有整張索引時的降級路徑，維持原本 hover 行為但結果會被記住）。
+ * 只補掃單一角色的兩人組（沒有整張索引時的降級路徑，維持原本 hover 行為但結果會被記住）。
  */
 export async function probeCharacter(
   selfName: string,
   options: { baseUrl: string; names: string[]; mediaTimestamp: string; concurrency?: number },
-): Promise<string[]> {
-  const { baseUrl, names, mediaTimestamp, concurrency = 8 } = options;
+): Promise<string[][]> {
+  const { baseUrl, names, mediaTimestamp, concurrency = 6 } = options;
   const others = names.filter((name) => name && name !== selfName);
-  const found: Array<string | null> = new Array(others.length).fill(null);
+  const found: Array<string[] | null> = new Array(others.length).fill(null);
 
   await mapWithConcurrency(
     others.map((other, slot) => ({ other, slot })),
     concurrency,
     async ({ other, slot }) => {
-      const url = `${baseUrl}/${encodeURIComponent(`${selfName}_${other}`)}.mp4?t=${encodeURIComponent(mediaTimestamp)}`;
+      const url = `${groupUrl(baseUrl, [selfName, other])}?t=${encodeURIComponent(mediaTimestamp)}`;
       try {
         const response = await fetch(url, { method: 'HEAD' });
-        if (response.ok) found[slot] = other;
+        if (response.ok) found[slot] = [selfName, other];
       } catch { /* noop */ }
     },
   );
 
-  const result = found.filter((name): name is string => !!name);
+  const result = found.filter((group): group is string[] => !!group);
 
   // 併回索引，下次就不用再掃這個人
   const existing = loadIndex();
-  const index: PairVideoIndex = existing ?? {
-    version: INDEX_VERSION,
-    mediaTimestamp,
-    builtAt: Date.now(),
-    source: 'probe',
-    names: [],
-    pairs: {},
-  };
-  index.pairs[selfName] = result;
-  if (!index.names.includes(selfName)) index.names = [...index.names, selfName];
-  saveIndex(index);
+  const stored: StoredIndex = existing
+    ? { ...existing, groups: [...existing.groups] }
+    : {
+        version: INDEX_VERSION,
+        mediaTimestamp,
+        builtAt: Date.now(),
+        source: 'probe',
+        names: [],
+        groups: [],
+      };
+
+  const seen = new Set(stored.groups.map(groupFileBase));
+  for (const group of result) {
+    const key = groupFileBase(group);
+    if (!seen.has(key)) {
+      seen.add(key);
+      stored.groups.push(group);
+    }
+  }
+  if (!stored.names.includes(selfName)) stored.names = [...stored.names, selfName];
+  saveIndex(hydrate(stored));
 
   return result;
-}
-
-/** 由鄰接表組出可播放的影片 URL（不含時間戳，播放時再加）。 */
-export function toVideoUrls(baseUrl: string, selfName: string, others: string[]): string[] {
-  return others.map((other) => `${baseUrl}/${encodeURIComponent(`${selfName}_${other}`)}.mp4`);
 }
