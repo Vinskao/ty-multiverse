@@ -1,32 +1,35 @@
 /**
  * 互動影片索引（video index）
  *
- * 檔名規則：`A_B.mp4`、`A_B_C.mp4`… 成員以底線相接。角色名不含底線，所以 split('_')
- * 就能還原成員清單，任意人數都通用。
+ * 檔名規則：`A_B.mp4`、`A_B_C.mp4`… 成員以底線相接，角色名不含底線。
+ * **影片只屬於第一個名字（name1）**，只在 name1 的位置播放；第一個底線之後的成員
+ * 只是內容的一部分，不影響「誰能觸發」。所以索引就是 `name1 -> 他的影片清單`。
  *
- * 問題：group 頁 hover 一個角色時，原本要對「其他每一個角色」各發一次 HEAD
- * 去猜檔名存不存在 —— 單次 hover O(N) 次網路探測，全部人 hover 過就是 O(N²)。
- * 而且只存記憶體，重整全部重來。
+ * 查詢：O(1) 雜湊查表，且 **hover 路徑完全不連線**。
+ * 索引沒有的人就是沒有影片 —— 不會臨時去探測（那正是以前 hover 會卡住的原因）。
  *
- * 解法：把「線性掃描」換成「預先建好的索引」。
- *   - 資料結構：`groups: string[][]`（每組成員）＋ `byName: name -> groups 的索引`。
- *     只存實際存在的組合（E 組，E << Nᵏ），查詢是 O(1) 雜湊查表。
- *     成員只存一份、byName 存整數索引，所以三人組不會被複製三次。
- *   - 建索引的來源優先序：
- *       1. manifest：靜態主機上的 `pair-videos.json`，一次 GET 拿到全部檔名。
- *          成本 O(E)，與 N 和「幾人一組」完全無關 —— 三人以上只能靠這條。
- *       2. probe：沒有 manifest 才退回 HEAD 全掃，但只掃「兩人組」N(N-1) 次，
- *          因為三人組是 O(N³)（N=50 約 12 萬次請求）現實上不可行。
- *   - 之後 hover 完全不碰網路。
+ * 建索引只在使用者按「建立影片快取」時發生，來源優先序：
+ *   1. manifest：靜態主機上的 `pair-videos.json`，一次 GET 拿到全部檔名。
+ *      成本 O(E)，與 N 和「幾人一組」無關 —— 三人以上只能靠這條。
+ *   2. probe：沒有 manifest 才退回 HEAD 掃兩人組 N(N-1) 次。
+ *      三人組是 O(N³)（N=50 約 12 萬次請求）現實上不可行，不掃。
  */
 
-const STORAGE_KEY = 'palais-video-index-v2';
+const STORAGE_KEY = 'palais-video-index-v3';
+const LEGACY_KEYS = ['palais-pair-video-index-v1', 'palais-video-index-v2'];
 const MANIFEST_FILENAME = 'pair-videos.json';
-const INDEX_VERSION = 2;
+const INDEX_VERSION = 3;
+
+/**
+ * 掃描併發數。HTTP/1.1 對同一 origin 只有 6 條連線，但影像主機走 HTTP/2 的話
+ * 可以同時開很多串流 —— 這是掃描速度唯一的實質槓桿（掃描次數 N(N-1) 是固定的）。
+ * 設高一點在 HTTP/1.1 下也只是排隊，不會更慢。
+ */
+const DEFAULT_CONCURRENCY = 32;
 
 export type IndexSource = 'manifest' | 'probe';
 
-/** 存進 localStorage 的形狀（byName 是衍生資料，不落地，載入時重算）。 */
+/** 存進 localStorage 的形狀（byOwner 是衍生資料，不落地，載入時重算）。 */
 interface StoredIndex {
   version: number;
   mediaTimestamp: string;
@@ -34,15 +37,15 @@ interface StoredIndex {
   source: IndexSource;
   /** 建索引時掃過的角色名單，用來判斷有沒有新角色加入。 */
   names: string[];
-  /** 每組的成員，順序即檔名順序。 */
+  /** 每支影片的成員，順序即檔名順序；group[0] 就是擁有者。 */
   groups: string[][];
   /** moov atom 不在檔頭的檔案（非 faststart，會讓 hover 卡住）。 */
   slowStartFiles?: string[];
 }
 
 export interface VideoIndex extends StoredIndex {
-  /** 反向索引：角色名 -> 他參與的 groups 索引。 */
-  byName: Record<string, number[]>;
+  /** 反向索引：name1 -> 他擁有的 groups 索引。 */
+  byOwner: Record<string, number[]>;
 }
 
 export interface BuildProgress {
@@ -61,30 +64,27 @@ export function groupUrl(baseUrl: string, group: string[]): string {
   return `${baseUrl}/${encodeURIComponent(groupFileBase(group))}.mp4`;
 }
 
-/** `A_B_C` -> ['A','B','C']；任一段不是已知角色、或有重複、或不足兩人就回 null。 */
+/** `A_B_C` -> ['A','B','C']；第一段必須是已知角色，不足兩段就回 null。 */
 function parseGroupFromBase(base: string, nameSet: Set<string>): string[] | null {
   const parts = base.split('_');
   if (parts.length < 2) return null;
-  const seen = new Set<string>();
-  for (const part of parts) {
-    if (!nameSet.has(part) || seen.has(part)) return null;
-    seen.add(part);
-  }
+  if (!nameSet.has(parts[0]!)) return null;
   return parts;
 }
 
-function buildByName(groups: string[][]): Record<string, number[]> {
-  const byName: Record<string, number[]> = {};
+/** 只索引 group[0]：影片屬於 name1。 */
+function buildByOwner(groups: string[][]): Record<string, number[]> {
+  const byOwner: Record<string, number[]> = {};
   groups.forEach((group, index) => {
-    for (const member of group) {
-      (byName[member] ??= []).push(index);
-    }
+    const owner = group[0];
+    if (!owner) return;
+    (byOwner[owner] ??= []).push(index);
   });
-  return byName;
+  return byOwner;
 }
 
 function hydrate(stored: StoredIndex): VideoIndex {
-  return { ...stored, byName: buildByName(stored.groups) };
+  return { ...stored, byOwner: buildByOwner(stored.groups) };
 }
 
 // --- 儲存 ---
@@ -109,7 +109,7 @@ export function loadIndex(): VideoIndex | null {
 
 export function saveIndex(index: VideoIndex): void {
   memoryIndex = index;
-  const { byName: _byName, ...stored } = index;
+  const { byOwner: _byOwner, ...stored } = index;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch (error) {
@@ -122,28 +122,25 @@ export function clearIndex(): void {
   memoryIndex = null;
   try {
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('palais-pair-video-index-v1'); // 舊版索引
+    for (const key of LEGACY_KEYS) localStorage.removeItem(key);
   } catch { /* noop */ }
 }
 
-// --- 查詢（O(1)）---
-
-export interface LookupOptions {
-  /** 只回傳「這個人排在檔名第一位」的組（舊行為）。預設 false：任一成員都能觸發。 */
-  ownerOnly?: boolean;
-}
+// --- 查詢（O(1)，永不連線）---
 
 /**
- * 取得某角色參與的所有影片組合。
- * 回傳 null 代表索引裡沒有這個人的資料（尚未建索引），空陣列代表「確定沒有」。
+ * 取得某角色「擁有」的影片組合（他排在檔名第一位的那些）。
+ * 沒建索引或這個人沒有影片，一律回空陣列 —— 呼叫端不需要處理非同步。
  */
-export function getGroupsFor(name: string, options: LookupOptions = {}): string[][] | null {
+export function getGroupsFor(name: string): string[][] {
   const index = loadIndex();
-  if (!index) return null;
-  if (!index.names.includes(name)) return null;
-  const ids = index.byName[name] ?? [];
-  const groups = ids.map((id) => index.groups[id]!).filter(Boolean);
-  return options.ownerOnly ? groups.filter((group) => group[0] === name) : groups;
+  if (!index) return [];
+  const ids = index.byOwner[name] ?? [];
+  return ids.map((id) => index.groups[id]!).filter(Boolean);
+}
+
+export function hasIndex(): boolean {
+  return loadIndex() !== null;
 }
 
 /** 索引是否涵蓋這批角色、且時間戳仍相符。 */
@@ -174,9 +171,28 @@ export function getIndexStats() {
     builtAt: index.builtAt,
     characters: index.names.length,
     videos: index.groups.length,
+    owners: Object.keys(index.byOwner).length,
     byArity,
     slowStartFiles: index.slowStartFiles ?? [],
   };
+}
+
+// --- 併發工具 ---
+
+async function mapWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<void>,
+  signal?: AbortSignal,
+) {
+  let index = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (index < items.length) {
+      if (signal?.aborted) return;
+      await worker(items[index++]!);
+    }
+  });
+  await Promise.all(runners);
 }
 
 // --- faststart 檢查 ---
@@ -207,7 +223,7 @@ export async function checkFastStart(url: string): Promise<boolean | null> {
       if (type === 'mdat') return false;
       if (size === 1) {
         if (pos + 16 > view.byteLength) return null;
-        // 64-bit largesize：只取低 32 位元，這種尺寸一定超出 1KB，直接判定看不到
+        // 64-bit largesize：只取低 32 位元，這種尺寸一定超出 1KB
         size = view.getUint32(pos + 12);
       }
       if (size <= 0) return null;
@@ -233,7 +249,7 @@ export async function sampleFastStart(
   }
 
   const bad: string[] = [];
-  await mapWithConcurrency(sample, 4, async (group) => {
+  await mapWithConcurrency(sample, 6, async (group) => {
     const ok = await checkFastStart(groupUrl(baseUrl, group));
     if (ok === false) bad.push(`${groupFileBase(group)}.mp4`);
   });
@@ -264,7 +280,7 @@ function groupsFromFilenames(files: string[], names: string[]): string[][] {
  * 支援：
  *   ["A_B.mp4", "A_B_C.mp4", ...]
  *   { "files": [...] }
- *   { "groups": [["A","B"], ["A","B","C"]] }   ← 已經建好的成員清單
+ *   { "groups": [["A","B"], ["A","B","C"]] }
  */
 export async function fetchRemoteManifest(
   baseUrl: string,
@@ -304,23 +320,7 @@ export async function fetchRemoteManifest(
   }
 }
 
-// --- 來源 2：probe（HEAD 全掃兩人組，只做一次） ---
-
-async function mapWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  worker: (item: T) => Promise<void>,
-  signal?: AbortSignal,
-) {
-  let index = 0;
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (index < items.length) {
-      if (signal?.aborted) return;
-      await worker(items[index++]!);
-    }
-  });
-  await Promise.all(runners);
-}
+// --- 來源 2：probe（HEAD 掃兩人組） ---
 
 export interface BuildOptions {
   baseUrl: string;
@@ -329,22 +329,22 @@ export interface BuildOptions {
   concurrency?: number;
   onProgress?: (progress: BuildProgress) => void;
   signal?: AbortSignal;
-  /** 略過 manifest、直接 HEAD 全掃兩人組。 */
+  /** 略過 manifest、直接 HEAD 全掃。 */
   forceProbe?: boolean;
   /** 建完後抽樣檢查 faststart（預設開啟）。 */
   checkFastStart?: boolean;
 }
 
 /**
- * 建立（或重建）整張索引。
- * 先試 manifest（1 次請求、任意人數）；失敗才 HEAD 全掃兩人組 N(N-1) 次。
+ * 建立（或重建）整張索引。只由「建立影片快取」按鈕觸發。
+ * 先試 manifest（1 次請求、任意人數）；失敗才 HEAD 掃兩人組 N(N-1) 次。
  */
 export async function buildIndex(options: BuildOptions): Promise<VideoIndex> {
   const {
     baseUrl,
     names,
     mediaTimestamp,
-    concurrency = 6, // HTTP/1.1 對同一 origin 本來就只有 6 條連線，開更大沒意義
+    concurrency = DEFAULT_CONCURRENCY,
     onProgress,
     signal,
     forceProbe,
@@ -380,12 +380,14 @@ export async function buildIndex(options: BuildOptions): Promise<VideoIndex> {
           if (response.ok) hits.push({ group: [self, other], slot });
         } catch { /* 不存在 / 被中斷就當作沒有 */ }
         done += 1;
-        if (done % 10 === 0 || done === jobs.length) {
+        if (done % 25 === 0 || done === jobs.length) {
           onProgress?.({ done, total: jobs.length, found: hits.length });
         }
       },
       signal,
     );
+
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
     index = hydrate({
       version: INDEX_VERSION,
@@ -410,59 +412,6 @@ export async function buildIndex(options: BuildOptions): Promise<VideoIndex> {
     }
   }
 
-  // 中斷的話不要把半成品當成完整索引存起來
-  if (!signal?.aborted) saveIndex(index);
+  saveIndex(index);
   return index;
-}
-
-/**
- * 只補掃單一角色的兩人組（沒有整張索引時的降級路徑，維持原本 hover 行為但結果會被記住）。
- */
-export async function probeCharacter(
-  selfName: string,
-  options: { baseUrl: string; names: string[]; mediaTimestamp: string; concurrency?: number },
-): Promise<string[][]> {
-  const { baseUrl, names, mediaTimestamp, concurrency = 6 } = options;
-  const others = names.filter((name) => name && name !== selfName);
-  const found: Array<string[] | null> = new Array(others.length).fill(null);
-
-  await mapWithConcurrency(
-    others.map((other, slot) => ({ other, slot })),
-    concurrency,
-    async ({ other, slot }) => {
-      const url = `${groupUrl(baseUrl, [selfName, other])}?t=${encodeURIComponent(mediaTimestamp)}`;
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        if (response.ok) found[slot] = [selfName, other];
-      } catch { /* noop */ }
-    },
-  );
-
-  const result = found.filter((group): group is string[] => !!group);
-
-  // 併回索引，下次就不用再掃這個人
-  const existing = loadIndex();
-  const stored: StoredIndex = existing
-    ? { ...existing, groups: [...existing.groups] }
-    : {
-        version: INDEX_VERSION,
-        mediaTimestamp,
-        builtAt: Date.now(),
-        source: 'probe',
-        names: [],
-        groups: [],
-      };
-
-  const seen = new Set(stored.groups.map(groupFileBase));
-  for (const group of result) {
-    const key = groupFileBase(group);
-    if (!seen.has(key)) {
-      seen.add(key);
-      stored.groups.push(group);
-    }
-  }
-  if (!stored.names.includes(selfName)) stored.names = [...stored.names, selfName];
-  saveIndex(hydrate(stored));
-
-  return result;
 }

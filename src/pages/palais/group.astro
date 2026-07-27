@@ -589,7 +589,7 @@ if (!isLoggedIn) {
     getIndexStats,
     getIndexStatus,
     groupUrl,
-    probeCharacter,
+    hasIndex,
   } from '../../scripts/pairVideoIndex';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
@@ -840,17 +840,17 @@ if (!isLoggedIn) {
 
   // --- Hover 互動影片 ---
   // 檔名規則：A_B.mp4 / A_B_C.mp4…（成員以底線相接，角色名不含底線），與 <name>.png 同位置。
-  // 任一成員 hover 都會播放該片（三人組的三個人都能觸發）。
-  // 一次 hover 只播「一支」：正放一次 → 倒帶反放一次 → 結束。
-  // 無聲、無控制列。
+  // 影片只屬於第一個名字，只在 name1 的位置播放 —— 第一個底線之後是誰不影響觸發。
+  // 一次 hover 只播「一支」：正放一次 → 倒帶反放一次 → 結束。無聲、無控制列。
   //
-  // 索引：整張「誰參與了哪些影片」的表由 pairVideoIndex 建好並存進 localStorage，
-  //       hover 只做一次 O(1) 查表，完全不連線。
+  // 索引：`name1 -> 影片清單` 由 pairVideoIndex 建好並存進 localStorage。
+  //       **hover 一律只讀快取、完全不連線**；快取裡沒有就是沒有影片。
+  //       要更新快取只有一條路：按「建立影片快取」按鈕。
   //
   // 延遲：查表是同步的，真正的延遲來自影片下載，所以卡片一進視窗就先把要播的那支
   //       預熱（preload=auto），hover 時只呼叫 play()。播完不清 src，靠 LRU 控制記憶體。
 
-  /** 一次 hover 最多播幾支（避免某人參與 20 支時要播 40 輪才放行）。 */
+  /** 一次 hover 最多播幾支（避免某人有 20 支時要播 40 輪才放行）。 */
   const CLIPS_PER_HOVER = 1;
   /** 同時保留 src 的卡片數上限；超過就淘汰最久沒用的，釋放記憶體與頻寬。 */
   const WARM_LRU_SIZE = 12;
@@ -859,8 +859,6 @@ if (!isLoggedIn) {
 
   // 全域鎖：同一時間只跑一支互動影片；已在播放時，hover 其他人不會再啟動。
   let pairVideoRunning = false;
-  // 降級路徑用的去重表：同一個人只補掃一次
-  const pendingProbes = new Map<string, Promise<string[][]>>();
 
   function getCharacterNames(): string[] {
     return Array.from(
@@ -870,27 +868,6 @@ if (!isLoggedIn) {
           .filter(Boolean),
       ),
     );
-  }
-
-  /**
-   * 取得某人參與的影片組合。
-   * 1. 索引命中 → 同步回傳（零網路）
-   * 2. 索引沒建過 → 只補掃這個人的兩人組，結果併回索引，下次就是 O(1)
-   */
-  function getGroupsForCharacter(selfName: string, timestamp: string): string[][] | Promise<string[][]> {
-    const cached = getGroupsFor(selfName);
-    if (cached) return cached;
-
-    let pending = pendingProbes.get(selfName);
-    if (!pending) {
-      pending = probeCharacter(selfName, {
-        baseUrl: PEOPLE_IMAGE_URL,
-        names: getCharacterNames(),
-        mediaTimestamp: timestamp,
-      });
-      pendingProbes.set(selfName, pending);
-    }
-    return pending;
   }
 
   // --- 預熱 LRU ---
@@ -976,10 +953,22 @@ if (!isLoggedIn) {
     warmObserver.observe(card);
   }
 
-  /** 「建立影片快取」按鈕：掃一次、存起來，之後 hover 全部走快取。 */
+  /** 掃描中的中斷控制；再按一次按鈕就取消。 */
+  let buildAbort: AbortController | null = null;
+
+  /** 「建立影片快取」按鈕：掃一次、存起來。這是唯一會更新快取的入口。 */
   async function rebuildPairVideoIndex() {
     const button = document.getElementById('build-pair-index') as HTMLButtonElement | null;
     const label = button?.querySelector('.button-label') as HTMLElement | null;
+
+    // 掃描中再按一次 = 取消
+    if (buildAbort) {
+      buildAbort.abort();
+      buildAbort = null;
+      if (label) label.textContent = '已取消';
+      return;
+    }
+
     const names = getCharacterNames();
     if (names.length === 0) {
       alert('角色資料尚未載入完成，請稍候再試。');
@@ -995,8 +984,8 @@ if (!isLoggedIn) {
     }
 
     const originalLabel = label?.textContent ?? '建立影片快取';
-    button?.setAttribute('disabled', 'true');
-    pendingProbes.clear();
+    const startedAt = Date.now();
+    buildAbort = new AbortController();
     resetWarmState();
     clearIndex();
 
@@ -1005,11 +994,16 @@ if (!isLoggedIn) {
         baseUrl: PEOPLE_IMAGE_URL,
         names,
         mediaTimestamp: timestamp,
+        signal: buildAbort.signal,
         onProgress: ({ done, total, found }) => {
-          if (label) {
-            const percent = total > 0 ? Math.round((done / total) * 100) : 100;
-            label.textContent = `掃描中 ${percent}%（找到 ${found}）`;
-          }
+          if (!label) return;
+          const percent = total > 0 ? Math.round((done / total) * 100) : 100;
+          // 估算剩餘時間，長時間掃描才不會像當掉
+          const elapsed = (Date.now() - startedAt) / 1000;
+          const eta = done > 0 && percent < 100
+            ? `，約剩 ${Math.max(1, Math.round((elapsed / done) * (total - done)))}s`
+            : '';
+          label.textContent = `掃描中 ${percent}%（${found} 支${eta}）· 再按取消`;
         },
       });
 
@@ -1044,10 +1038,15 @@ if (!isLoggedIn) {
       resetWarmState();
       document.querySelectorAll<HTMLElement>('.pg-draggable').forEach(requestWarm);
     } catch (error) {
-      console.error('建立影片快取失敗:', error);
-      if (label) label.textContent = '建立失敗，請重試';
+      if ((error as DOMException)?.name === 'AbortError') {
+        if (label) label.textContent = '已取消（快取未變更）';
+      } else {
+        console.error('建立影片快取失敗:', error);
+        if (label) label.textContent = '建立失敗，請重試';
+      }
     } finally {
-      button?.removeAttribute('disabled');
+      buildAbort = null;
+      syncPairIndexButton();
       setTimeout(() => { if (label) label.textContent = originalLabel; }, 5000);
     }
   }
@@ -1060,10 +1059,10 @@ if (!isLoggedIn) {
     const timestamp = characterService?.getMediaTimestamp?.() ?? '';
     const status = getIndexStatus(names, timestamp);
     const stats = getIndexStats();
-    if (!status.exists) {
-      button.setAttribute('title', '尚未建立影片快取：hover 時才會逐一連線探測。點此掃描一次並存檔。');
+    if (!hasIndex() || !status.exists) {
+      button.setAttribute('title', '尚未建立影片快取，所以 hover 不會播影片。點此掃描一次並存檔。');
     } else if (status.stale) {
-      button.setAttribute('title', `快取可能過期（${status.missingNames.length} 位新角色未收錄）。點此重新掃描。`);
+      button.setAttribute('title', `快取可能過期（${status.missingNames.length} 位新角色未收錄，他們 hover 不會有影片）。點此重新掃描。`);
     } else {
       const slow = stats?.slowStartFiles?.length ?? 0;
       button.setAttribute(
@@ -1128,8 +1127,8 @@ if (!isLoggedIn) {
     const warmClip = async () => {
       if (warmedCards.has(card)) return;
       const ts = characterService?.getMediaTimestamp?.() ?? '';
-      let groups: string[][] = [];
-      try { groups = await getGroupsForCharacter(selfName, ts); } catch { groups = []; }
+      // 只讀快取，同步、零網路。沒建快取或這個人沒影片，一律當作沒有。
+      const groups = getGroupsFor(selfName);
       if (groups.length === 0) {
         warmedCards.add(card); // 確定沒影片，別再排隊
         return;
@@ -1213,6 +1212,9 @@ if (!isLoggedIn) {
     // 只在 mouseenter 啟動；不監聽 mouseleave（移開仍播完）
     card.addEventListener('mouseenter', async () => {
       if (pairVideoRunning) return; // 已有一支在播放，不啟動也不排隊
+      // 快取說這個人沒影片 → 立刻放棄，不佔鎖也不連線
+      if (getGroupsFor(selfName).length === 0) return;
+
       pairVideoRunning = true;
       touchWarm(card);
 
