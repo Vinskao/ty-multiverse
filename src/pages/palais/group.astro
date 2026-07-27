@@ -126,15 +126,37 @@ if (!isLoggedIn) {
 
   /* 互動影片是黑底 mp4：播放期間讓整排底下浮出一片黑，影片才不會像貼了張黑方塊。
      用徑向漸層而不是實心矩形，邊緣自然淡出，才不會硬生生蓋住上下重疊的鄰排。 */
+  /* 兩軸分開處理，才不會出現黑色矩形。
+     之前用單一 radial-gradient：它在「射線比例=1」才透明，但四個邊界的比例分別只有
+     0.42/0.42/0.62/0.38 —— 全部都還在純黑的狀態就被 box 裁掉，於是看到一個硬邊黑方塊。
+     row 又寬又扁，單一橢圓無法同時兼顧「核心夠黑」與「四邊淡出」，所以：
+       垂直 → linear-gradient 上色（上下淡出，處理與鄰排重疊的區域）
+       水平 → mask 淡出（左右邊界不留硬邊）*/
   .army-container::before {
     content: '';
     position: absolute;
-    inset: -60px -8%;
-    background: radial-gradient(
-      120% 100% at 50% 62%,
-      #000 0%,
-      #000 52%,
-      rgba(0, 0, 0, 0.75) 72%,
+    inset: -70px -6%;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.85) 16%,
+      #000 32%,
+      #000 68%,
+      rgba(0, 0, 0, 0.85) 84%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      #000 7%,
+      #000 93%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      #000 7%,
+      #000 93%,
       rgba(0, 0, 0, 0) 100%
     );
     opacity: 0;
@@ -249,12 +271,26 @@ if (!isLoggedIn) {
   #palais-cart::before {
     content: '';
     position: absolute;
-    inset: -40px -8%;
-    background: radial-gradient(
-      120% 100% at 50% 62%,
-      #000 0%,
-      #000 52%,
-      rgba(0, 0, 0, 0.75) 72%,
+    inset: -50px -6%;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.85) 16%,
+      #000 32%,
+      #000 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      #000 7%,
+      #000 93%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      #000 7%,
+      #000 93%,
       rgba(0, 0, 0, 0) 100%
     );
     opacity: 0;
@@ -870,6 +906,8 @@ if (!isLoggedIn) {
 
   /** 目前正在播放的卡片（取代原本「同時只准一支」的全域鎖）。 */
   const playingCards = new Set<HTMLElement>();
+  /** 已排進某段相鄰序列、等著輪到自己的卡片，避免重複觸發時被排第二次。 */
+  const queuedCards = new Set<HTMLElement>();
 
   /**
    * 每排正在播放的支數。
@@ -1207,6 +1245,9 @@ if (!isLoggedIn) {
     /** 目前 <video> 已載入的 URL（含時間戳），用來避免重設相同的 src 而丟掉緩衝。 */
     let loadedUrl = '';
     let reverseHandle: ReversePlayHandle | null = null;
+    /** 這一輪播放的 Promise（全部播完才 resolve），用來讓右邊的鄰居等待。 */
+    let activePromise: Promise<void> | null = null;
+    let resolveActive: (() => void) | null = null;
     // 播放期間被套上黑幕的那一排（卡片可能被拖進菜籃，所以每次重新取）
     let dimmedRow: HTMLElement | null = null;
 
@@ -1321,6 +1362,12 @@ if (!isLoggedIn) {
         const idle = (window as any).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
         idle(() => requestWarm(card));
       }
+
+      // 最後才放行等待者（右邊的鄰居），確保狀態都清乾淨了才交棒
+      const done = resolveActive;
+      resolveActive = null;
+      activePromise = null;
+      done?.();
     };
 
     // 正放結束 → 倒帶反放（沿用 dance.ts 的逐格倒退，抽象於 videoRewind）
@@ -1359,13 +1406,14 @@ if (!isLoggedIn) {
     };
 
     /**
-     * 開始播放這個人的全部影片。由「整排 hover」統一觸發，不是卡片自己。
-     * 已經在播就不理會 —— 不會被重複觸發打斷。
+     * 開始播放這個人的全部影片，回傳一個「全部播完才 resolve」的 Promise。
+     * 相鄰的兩個人靠這個 Promise 串成序列（左邊播完才輪到右邊）。
+     * 已經在播就回同一個 Promise —— 重複觸發不會打斷，也不會多跑一輪。
      */
-    const startPlayback = async () => {
-      if (playingCards.has(card)) return;
+    const startPlayback = (): Promise<void> => {
+      if (activePromise) return activePromise;
       playlist = buildPlaylist();
-      if (playlist.length === 0) return; // 沒影片，維持原圖
+      if (playlist.length === 0) return Promise.resolve(); // 沒影片，維持原圖
 
       playingCards.add(card);
       touchWarm(card);
@@ -1373,11 +1421,17 @@ if (!isLoggedIn) {
       card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
       dimRow(); // 整排襯黑，配合黑底影片
 
-      // 沒預熱到（剛進頁面就 hover）就先暖第一支，其餘邊播邊載
-      if (!loadedUrl) {
-        try { await warmClip(); } catch { /* noop */ }
-      }
-      playCurrent();
+      activePromise = new Promise<void>((resolve) => { resolveActive = resolve; });
+
+      void (async () => {
+        // 沒預熱到（剛進頁面就 hover）就先暖第一支，其餘邊播邊載
+        if (!loadedUrl) {
+          try { await warmClip(); } catch { /* noop */ }
+        }
+        playCurrent();
+      })();
+
+      return activePromise;
     };
     (card as any).__startPlayback = startPlayback;
     (card as any).__hasClips = () => buildPlaylist().length > 0;
@@ -1393,16 +1447,59 @@ if (!isLoggedIn) {
    * 而且第一排永遠放行（不管它多大），避免大排永遠達不到門檻而完全不會播。
    */
   function triggerRowPlayback(row: HTMLElement) {
-    const candidates = Array.from(row.querySelectorAll<HTMLElement>('.pg-draggable')).filter(
-      (card) =>
-        !playingCards.has(card) &&
-        typeof (card as any).__startPlayback === 'function' &&
-        (card as any).__hasClips?.(),
-    );
-    if (candidates.length === 0) return;
+    // 每個 grid（.box-container / 菜籃）內的卡片才有相鄰關係
+    const grids = Array.from(row.querySelectorAll<HTMLElement>('.box-container, #cart-items'));
+    const containers = grids.length > 0 ? grids : [row];
 
-    // 不設任何上限：hover 幾排就播幾排，排內每個有影片的人同時播。
-    for (const card of candidates) (card as any).__startPlayback();
+    for (const grid of containers) {
+      const cards = Array.from(grid.children).filter((el): el is HTMLElement =>
+        el instanceof HTMLElement && el.classList.contains('pg-draggable'),
+      );
+
+      // 切成「相鄰候選」的連續段。卡片彼此重疊一半，兩個緊鄰的人同時播畫面會打架，
+      // 所以同一段內要排隊（左→右）；被沒有影片的人隔開的兩段互不影響，可以同時播。
+      const chains: HTMLElement[][] = [];
+      let chain: HTMLElement[] = [];
+      for (const card of cards) {
+        const usable =
+          typeof (card as any).__startPlayback === 'function' &&
+          (card as any).__hasClips?.() &&
+          !playingCards.has(card) &&
+          !queuedCards.has(card);
+        if (usable) {
+          chain.push(card);
+        } else if (chain.length > 0) {
+          chains.push(chain);
+          chain = [];
+        }
+      }
+      if (chain.length > 0) chains.push(chain);
+
+      // 不設任何上限：hover 幾排就播幾排，不相鄰的段同時跑。
+      for (const c of chains) void runChain(c, row);
+    }
+  }
+
+  /** 一段相鄰的人：左邊整個播完，才輪到右邊。 */
+  async function runChain(cards: HTMLElement[], row: HTMLElement) {
+    cards.forEach((card) => queuedCards.add(card));
+    // 整段期間持有一次黑幕，避免交棒的空檔黑底閃一下又亮回來
+    acquireRowDim(row);
+    try {
+      for (let i = 0; i < cards.length; i += 1) {
+        const card = cards[i]!;
+        // 趁現在這支在播，先把下一位的第一支暖起來，交棒時才不會卡
+        const next = cards[i + 1];
+        if (next) requestWarm(next);
+        try {
+          await (card as any).__startPlayback();
+        } catch { /* 單一張出錯不該卡住整段 */ }
+        queuedCards.delete(card);
+      }
+    } finally {
+      cards.forEach((card) => queuedCards.delete(card));
+      releaseRowDim(row);
+    }
   }
 
   /** 把某個容器（隊伍排／菜籃）接上「整排 hover 觸發」。 */
@@ -1745,6 +1842,7 @@ if (!isLoggedIn) {
       warmObserver?.disconnect();
       warmObserver = null;
       playingCards.clear();
+      queuedCards.clear();
       rowPlayCount.clear();
       resetWarmState();
 
