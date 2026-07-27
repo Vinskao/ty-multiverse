@@ -283,6 +283,12 @@ function parseFilenames(files: string[], names: string[]): ParseReport {
       rejected.push({ file: trimmed, reason: '沒有底線，不是組合影片' });
       continue;
     }
+    // 連續底線（Wavo__Uiobbeci__Doire.mp4 這種手誤）會切出空字串成員。
+    // 放行的話會產生一組成員含空值的假資料，還可能跟正確檔名重複。
+    if (parts.some((part) => part === '')) {
+      rejected.push({ file: trimmed, reason: '檔名有連續底線（多打了一個 _）' });
+      continue;
+    }
     if (!nameSet.has(parts[0]!)) {
       rejected.push({ file: trimmed, reason: `第一個名字「${parts[0]}」不在角色名單裡` });
       continue;
