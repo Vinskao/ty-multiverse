@@ -258,21 +258,67 @@ export async function sampleFastStart(
 
 // --- 來源 1：manifest（一次 GET，任意人數） ---
 
-function groupsFromFilenames(files: string[], names: string[]): string[][] {
+export interface ParseReport {
+  groups: string[][];
+  /** 被略過的檔名與原因，用來診斷「清單有東西但一支都沒收錄」。 */
+  rejected: Array<{ file: string; reason: string }>;
+}
+
+function parseFilenames(files: string[], names: string[]): ParseReport {
   const nameSet = new Set(names);
   const groups: string[][] = [];
+  const rejected: Array<{ file: string; reason: string }> = [];
   const seen = new Set<string>();
+
   for (const file of files) {
-    const trimmed = file.split('/').pop() ?? file;
-    if (!trimmed.toLowerCase().endsWith('.mp4')) continue;
-    const parsed = parseGroupFromBase(trimmed.slice(0, -4), nameSet);
-    if (!parsed) continue;
-    const key = groupFileBase(parsed);
+    const trimmed = (file.split('/').pop() ?? file).trim();
+    if (!trimmed) continue;
+    if (!trimmed.toLowerCase().endsWith('.mp4')) {
+      rejected.push({ file: trimmed, reason: '不是 .mp4' });
+      continue;
+    }
+    const base = trimmed.slice(0, -4);
+    const parts = base.split('_');
+    if (parts.length < 2) {
+      rejected.push({ file: trimmed, reason: '沒有底線，不是組合影片' });
+      continue;
+    }
+    if (!nameSet.has(parts[0]!)) {
+      rejected.push({ file: trimmed, reason: `第一個名字「${parts[0]}」不在角色名單裡` });
+      continue;
+    }
+    const key = groupFileBase(parts);
     if (seen.has(key)) continue;
     seen.add(key);
-    groups.push(parsed);
+    groups.push(parts);
   }
-  return groups;
+  return { groups, rejected };
+}
+
+function groupsFromFilenames(files: string[], names: string[]): string[][] {
+  return parseFilenames(files, names).groups;
+}
+
+/**
+ * 直接用一份檔名清單建索引（不連線）。
+ * 給「manifest 還沒部署，但想立刻驗證」用：把資料夾裡的 mp4 檔名貼進來即可。
+ */
+export function buildIndexFromFiles(
+  files: string[],
+  names: string[],
+  mediaTimestamp: string,
+): { index: VideoIndex; rejected: Array<{ file: string; reason: string }> } {
+  const { groups, rejected } = parseFilenames(files, names);
+  const index = hydrate({
+    version: INDEX_VERSION,
+    mediaTimestamp,
+    builtAt: Date.now(),
+    source: 'manifest',
+    names: [...names],
+    groups,
+  });
+  saveIndex(index);
+  return { index, rejected };
 }
 
 /**
@@ -282,30 +328,68 @@ function groupsFromFilenames(files: string[], names: string[]): string[][] {
  *   { "files": [...] }
  *   { "groups": [["A","B"], ["A","B","C"]] }
  */
+export function manifestUrl(baseUrl: string): string {
+  return `${baseUrl}/${MANIFEST_FILENAME}`;
+}
+
+/** 上一次嘗試讀 manifest 的結果，讓 UI 能說清楚「為什麼退回 probe」。 */
+export let lastManifestError = '';
+
 export async function fetchRemoteManifest(
   baseUrl: string,
   names: string[],
   mediaTimestamp: string,
 ): Promise<VideoIndex | null> {
+  const url = `${manifestUrl(baseUrl)}?t=${encodeURIComponent(mediaTimestamp)}`;
+  lastManifestError = '';
   try {
-    const response = await fetch(
-      `${baseUrl}/${MANIFEST_FILENAME}?t=${encodeURIComponent(mediaTimestamp)}`,
-      { cache: 'no-cache' },
-    );
-    if (!response.ok) return null;
-    const payload = await response.json();
+    const response = await fetch(url, { cache: 'no-cache' });
+    if (!response.ok) {
+      lastManifestError = `HTTP ${response.status}（檔案不存在或無法讀取）`;
+      console.warn(`[videoIndex] 讀不到 manifest: ${url} -> ${lastManifestError}`);
+      return null;
+    }
+
+    let payload: any;
+    try {
+      payload = await response.json();
+    } catch {
+      lastManifestError = '回應不是合法 JSON（可能被導到 HTML 錯誤頁）';
+      console.warn(`[videoIndex] manifest 解析失敗: ${url} -> ${lastManifestError}`);
+      return null;
+    }
 
     let groups: string[][] | null = null;
+    let rawCount = 0;
     if (Array.isArray(payload)) {
+      rawCount = payload.length;
       groups = groupsFromFilenames(payload, names);
     } else if (Array.isArray(payload?.files)) {
+      rawCount = payload.files.length;
       groups = groupsFromFilenames(payload.files, names);
     } else if (Array.isArray(payload?.groups)) {
+      rawCount = payload.groups.length;
       groups = (payload.groups as string[][]).filter(
         (group) => Array.isArray(group) && group.length >= 2,
       );
     }
-    if (!groups) return null;
+
+    if (!groups) {
+      lastManifestError = 'JSON 格式不認得（需要 files 陣列或 groups 陣列）';
+      console.warn(`[videoIndex] ${lastManifestError}`, payload);
+      return null;
+    }
+
+    if (groups.length === 0 && rawCount > 0) {
+      // 清單有東西但一個都對不上 —— 幾乎都是「檔名的第一個名字不是角色名」
+      lastManifestError =
+        `清單有 ${rawCount} 筆，但沒有一筆的第一個名字對得上角色名單`;
+      console.warn(`[videoIndex] ${lastManifestError}`);
+    } else {
+      console.info(
+        `[videoIndex] manifest OK：${rawCount} 筆檔名 -> 收錄 ${groups.length} 支影片`,
+      );
+    }
 
     return hydrate({
       version: INDEX_VERSION,
@@ -315,7 +399,12 @@ export async function fetchRemoteManifest(
       names: [...names],
       groups,
     });
-  } catch {
+  } catch (error) {
+    lastManifestError =
+      error instanceof TypeError
+        ? '網路或 CORS 錯誤（跨網域讀取被擋）'
+        : String(error);
+    console.warn(`[videoIndex] 讀 manifest 失敗: ${url} -> ${lastManifestError}`);
     return null;
   }
 }

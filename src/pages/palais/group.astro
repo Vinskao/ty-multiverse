@@ -590,13 +590,16 @@ if (!isLoggedIn) {
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
   import {
     buildIndex,
+    buildIndexFromFiles,
     clearIndex,
     getGroupsFor,
     getIndexStats,
     getIndexStatus,
     groupUrl,
     hasIndex,
+    lastManifestError,
     loadIndex,
+    manifestUrl,
   } from '../../scripts/pairVideoIndex';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
@@ -1059,11 +1062,14 @@ if (!isLoggedIn) {
       // 否則使用者只會看到「某些人 hover 沒反應」而不知道是索引根本沒收錄。
       if (index.source === 'probe') {
         alert(
-          '快取是用「猜檔名」的方式建立的（沒有找到 pair-videos.json）。\n\n' +
-          '⚠ 這種模式只找得到「兩人組」A_B.mp4，\n' +
-          '三人以上的影片（例如 Wavo_Maya_Riuri.mp4）一律不會被收錄，\n' +
-          '所以那些人 hover 會沒反應。\n\n' +
-          '解法：執行 push-people 產生 pair-videos.json，再按一次本按鈕。',
+          '⚠ 這次是用「猜檔名」(probe) 建的快取，不是讀清單檔。\n\n' +
+          `讀不到：${manifestUrl(PEOPLE_IMAGE_URL)}\n` +
+          `原因：${lastManifestError || '未知'}\n\n` +
+          'probe 只找得到「兩人組」A_B.mp4。\n' +
+          '三人以上（例如 Wavo_Maya_Riuri.mp4）一律收錄不到，\n' +
+          '所以那些人 hover 不會有反應。\n\n' +
+          '解法：更新 shell profile 裡的 push-people 函式並執行一次，\n' +
+          '產生 pair-videos.json 後再按一次本按鈕。',
         );
       }
 
@@ -1095,6 +1101,34 @@ if (!isLoggedIn) {
       setTimeout(() => { if (label) label.textContent = originalLabel; }, 5000);
     }
   }
+
+  /**
+   * 應急用：manifest 還沒部署時，直接把檔名清單貼進來建索引（不連線）。
+   * 用法（console）：
+   *   palaisSetVideoFiles(['Wavo_Maya_Riuri.mp4', 'Wavo_Samui_Chiaki.mp4', ...])
+   * 檔名可從本機資料夾取得：Windows `dir /b *.mp4`、Git Bash `ls *.mp4`
+   */
+  (window as any).palaisSetVideoFiles = (files: string[]) => {
+    if (!Array.isArray(files) || files.length === 0) {
+      console.warn('[palais] 請傳入檔名陣列，例如 ["Wavo_Maya_Riuri.mp4"]');
+      return null;
+    }
+    const names = getCharacterNames();
+    if (names.length === 0) {
+      console.warn('[palais] 角色資料還沒載入完成，稍候再試');
+      return null;
+    }
+    const ts = characterService?.getMediaTimestamp?.() ?? '';
+    const { index, rejected } = buildIndexFromFiles(files, names, ts);
+
+    console.log(`[palais] 已建立索引：收錄 ${index.groups.length} 支，略過 ${rejected.length} 筆`);
+    if (rejected.length > 0) console.table(rejected);
+
+    resetWarmState();
+    document.querySelectorAll<HTMLElement>('.pg-draggable').forEach(requestWarm);
+    syncPairIndexButton();
+    return { accepted: index.groups.length, rejected };
+  };
 
   /**
    * 診斷用：在 console 執行 `palaisVideoIndex()` 看整份索引，
