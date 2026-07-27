@@ -91,7 +91,11 @@ if (!isLoggedIn) {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     position: relative;
-    z-index: 1;
+    /* 關鍵：這裡**不能**設 z-index。
+       一旦設了，每一排就成為獨立的堆疊環境（stacking context），排內子元素的 z-index
+       再也無法跨排比較 —— 黑幕就永遠只能相對自己那排排序，必定蓋住鄰排的人物。
+       留 auto 讓所有排的黑幕(0) / 標題(1) / 人物(1) 在同一個堆疊環境裡一起比較。 */
+    z-index: auto;
     transition: none;
   }
 
@@ -139,11 +143,9 @@ if (!isLoggedIn) {
     z-index: 0;
   }
 
-  /* 播放中的那一排：黑幕淡入，並整排抬到鄰排之上，避免被上下排壓住 */
-  .army-container.is-video-playing {
-    z-index: 30;
-  }
-
+  /* 播放中的那一排：黑幕淡入。
+     刻意**不**抬升整排 —— 黑幕必須留在 z-index:0，讓所有排的人物（z-index:1）
+     都疊在它之上，包含上下重疊到的鄰排。 */
   .army-container.is-video-playing::before {
     opacity: 1;
   }
@@ -155,7 +157,6 @@ if (!isLoggedIn) {
   }
 
   .army-container:hover {
-    z-index: 20;
     background: transparent;
     border-color: transparent;
     box-shadow: none;
@@ -163,7 +164,10 @@ if (!isLoggedIn) {
     transform: none;
   }
 
-  .army-container:focus-within {
+  /* 抬升改套在 .box-container（人物層）而不是整排。
+     套在整排會重新製造堆疊環境，黑幕又會跟著被抬起來蓋住鄰排。 */
+  .army-container:hover .box-container,
+  .army-container:focus-within .box-container {
     z-index: 20;
   }
 
@@ -195,7 +199,9 @@ if (!isLoggedIn) {
     text-align: center;
     overflow: hidden;
     pointer-events: none;
-    z-index: 0;
+    /* 1（不是 0）：要壓在所有排的黑幕(0)之上，否則鄰排播放時隊名會被黑幕吃掉。
+       和 .box-container 同層但 DOM 在前，所以人物仍然疊在標題之上。 */
+    z-index: 1;
 
     font-weight: bold;
     /* 隊伍名稱：低調的暗色，不發光 */
@@ -590,6 +596,7 @@ if (!isLoggedIn) {
     getIndexStatus,
     groupUrl,
     hasIndex,
+    loadIndex,
   } from '../../scripts/pairVideoIndex';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
@@ -857,13 +864,6 @@ if (!isLoggedIn) {
   const WARM_LRU_SIZE = 36;
   /** 預熱併發數：別跟人物 PNG 搶頻寬。 */
   const WARM_CONCURRENCY = 3;
-  /**
-   * 同時可播放的影片數上限。
-   * 整排一起播本來就會開很多支，這個上限只用來擋「連續觸發太多排」——
-   * 每支都在解碼，開到上百支會直接拖垮整頁。
-   * 第一排永遠放行（見 triggerRowPlayback），所以再大的排也不會完全不播。
-   */
-  const MAX_CONCURRENT_VIDEOS = 40;
 
   /** 目前正在播放的卡片（取代原本「同時只准一支」的全域鎖）。 */
   const playingCards = new Set<HTMLElement>();
@@ -1055,6 +1055,18 @@ if (!isLoggedIn) {
         label.textContent = `${prefix}（${index.groups.length} 支${arity ? `：${arity}` : ''}）`;
       }
 
+      // probe 只掃兩人組，三人以上（例如 Wavo_Maya_Riuri.mp4）掃不到 —— 一定要講清楚，
+      // 否則使用者只會看到「某些人 hover 沒反應」而不知道是索引根本沒收錄。
+      if (index.source === 'probe') {
+        alert(
+          '快取是用「猜檔名」的方式建立的（沒有找到 pair-videos.json）。\n\n' +
+          '⚠ 這種模式只找得到「兩人組」A_B.mp4，\n' +
+          '三人以上的影片（例如 Wavo_Maya_Riuri.mp4）一律不會被收錄，\n' +
+          '所以那些人 hover 會沒反應。\n\n' +
+          '解法：執行 push-people 產生 pair-videos.json，再按一次本按鈕。',
+        );
+      }
+
       const slow = index.slowStartFiles ?? [];
       if (slow.length > 0) {
         alert(
@@ -1083,6 +1095,49 @@ if (!isLoggedIn) {
       setTimeout(() => { if (label) label.textContent = originalLabel; }, 5000);
     }
   }
+
+  /**
+   * 診斷用：在 console 執行 `palaisVideoIndex()` 看整份索引，
+   * 或 `palaisVideoIndex('Wavo')` 看單一角色實際會播什麼。
+   */
+  (window as any).palaisVideoIndex = (name?: string) => {
+    const index = loadIndex();
+    if (!index) {
+      console.warn('[palais] 尚未建立影片快取，先按一次「建立影片快取」');
+      return null;
+    }
+    const owned = new Map<string, string[]>();
+    const involved = new Map<string, string[]>();
+    for (const group of index.groups) {
+      const file = `${group.join('_')}.mp4`;
+      const owner = group[0]!;
+      owned.set(owner, [...(owned.get(owner) ?? []), file]);
+      for (const member of group) {
+        involved.set(member, [...(involved.get(member) ?? []), file]);
+      }
+    }
+
+    if (name) {
+      const own = owned.get(name) ?? [];
+      console.log(`[palais] ${name} 擁有（hover 會播）${own.length} 支：`, own);
+      console.log(`[palais] ${name} 參與但不播（不是 name1）：`,
+        (involved.get(name) ?? []).filter((f) => !own.includes(f)));
+      return { owned: own, involved: involved.get(name) ?? [] };
+    }
+
+    console.log(
+      `[palais] 索引來源=${index.source}，共 ${index.groups.length} 支影片` +
+      (index.source === 'probe' ? '（probe 模式：三人以上的影片一律看不到）' : ''),
+    );
+    console.table(
+      [...involved.keys()].sort().map((n) => ({
+        角色: n,
+        擁有會播: owned.get(n)?.length ?? 0,
+        參與: involved.get(n)?.length ?? 0,
+      })),
+    );
+    return { source: index.source, files: index.groups.map((g) => `${g.join('_')}.mp4`) };
+  };
 
   /** 依索引狀態更新按鈕提示文字。 */
   function syncPairIndexButton() {
@@ -1312,9 +1367,7 @@ if (!isLoggedIn) {
     );
     if (candidates.length === 0) return;
 
-    const isFirstRow = playingCards.size === 0;
-    if (!isFirstRow && playingCards.size + candidates.length > MAX_CONCURRENT_VIDEOS) return;
-
+    // 不設任何上限：hover 幾排就播幾排，排內每個有影片的人同時播。
     for (const card of candidates) (card as any).__startPlayback();
   }
 
