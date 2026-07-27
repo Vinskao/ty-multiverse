@@ -25,6 +25,7 @@ if (!isLoggedIn) {
           <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據</span></button>
           <button id="refresh-images" class="btn is-outline"><span class="button-label">刷新圖片</span></button>
           <button id="reset-group-order" class="btn is-outline"><span class="button-label">依總戰力排序</span></button>
+          <button id="build-pair-index" class="btn is-outline" title="掃描一次所有互動影片並存成快取，之後 hover 不再連線"><span class="button-label">建立影片快取</span></button>
           <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
@@ -119,6 +120,40 @@ if (!isLoggedIn) {
     will-change: transform;
   }
 
+  /* 互動影片是黑底 mp4：播放期間讓整排底下浮出一片黑，影片才不會像貼了張黑方塊。
+     用徑向漸層而不是實心矩形，邊緣自然淡出，才不會硬生生蓋住上下重疊的鄰排。 */
+  .army-container::before {
+    content: '';
+    position: absolute;
+    inset: -60px -8%;
+    background: radial-gradient(
+      120% 100% at 50% 62%,
+      #000 0%,
+      #000 52%,
+      rgba(0, 0, 0, 0.75) 72%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 播放中的那一排：黑幕淡入，並整排抬到鄰排之上，避免被上下排壓住 */
+  .army-container.is-video-playing {
+    z-index: 30;
+  }
+
+  .army-container.is-video-playing::before {
+    opacity: 1;
+  }
+
+  /* 黑幕出現時，隊名的淡灰太暗會消失，稍微提亮讓它仍可辨識 */
+  .army-container.is-video-playing .army-title {
+    color: rgba(255, 255, 255, 0.22);
+    transition: color 260ms ease;
+  }
+
   .army-container:hover {
     z-index: 20;
     background: transparent;
@@ -202,6 +237,34 @@ if (!isLoggedIn) {
   #palais-cart.drag-over {
     border-color: transparent;
     box-shadow: none !important;
+  }
+
+  /* 菜籃裡的人播互動影片時，同樣襯一片黑（與各排一致） */
+  #palais-cart::before {
+    content: '';
+    position: absolute;
+    inset: -40px -8%;
+    background: radial-gradient(
+      120% 100% at 50% 62%,
+      #000 0%,
+      #000 52%,
+      rgba(0, 0, 0, 0.75) 72%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    opacity: 0;
+    transition: opacity 260ms ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #palais-cart.is-video-playing::before {
+    opacity: 1;
+  }
+
+  #palais-cart .cart-header,
+  #palais-cart #cart-items {
+    position: relative;
+    z-index: 1;
   }
 
   #palais-cart:hover,
@@ -519,6 +582,15 @@ if (!isLoggedIn) {
 <script>
   import '../../scripts/palaisMediaZoom';
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
+  import {
+    buildIndex,
+    clearIndex,
+    getIndexStats,
+    getIndexStatus,
+    getPairNames,
+    probeCharacter,
+    toVideoUrls,
+  } from '../../scripts/pairVideoIndex';
 
   if (!import.meta.env.PUBLIC_TYMB_URL) {
     throw new Error('PUBLIC_TYMB_URL 環境變量未設置');
@@ -773,43 +845,119 @@ if (!isLoggedIn) {
   // 依序播放——正放一次 → 倒帶反放一次 → 換下一部，播完最後一部再循環回第一部。
   // 無聲、自動連續播放、無控制列。
 
-  const pairVideoCache = new Map<string, Promise<string[]>>();
+  // --- 影片快取（索引）---
+  // 原本：hover 一個人 → 對其他所有人各發一次 HEAD（O(N) 探測；全部 hover 過就是 O(N²)），
+  //       而且只存在記憶體，重整就全部重來。
+  // 現在：整張「誰對誰有影片」的鄰接表由 pairVideoIndex 建好並存進 localStorage，
+  //       hover 只做一次 O(1) 雜湊查表，完全不連線。
+  //       索引來源優先 manifest（1 次 GET），沒有 manifest 才退回 HEAD 全掃、且只掃一次。
+
   // 全域鎖：同一時間只跑一輪互動影片；已在播放時，hover 其他人不會再啟動。
   let pairVideoRunning = false;
+  // 降級路徑用的去重表：同一個人只補掃一次
+  const pendingProbes = new Map<string, Promise<string[]>>();
 
-  async function discoverPairVideos(selfName: string, timestamp: string): Promise<string[]> {
-    const others = Array.from(
+  function getCharacterNames(): string[] {
+    return Array.from(
       new Set(
         currentFilteredData
-          .map((c) => c.name as string)
-          .filter((n) => n && n !== selfName),
+          .map((character) => character.name as string)
+          .filter(Boolean),
       ),
     );
-    // 只找 self_對方（self = name1）；依對方在名單中的順序，讓 影片一 / 影片二… 順序穩定
-    const bases = others.map((other) => `${selfName}_${other}`);
-    const found: (string | null)[] = new Array(bases.length).fill(null);
-    await mapWithConcurrency(
-      bases.map((base, i) => ({ base, i })),
-      8,
-      async ({ base, i }) => {
-        const url = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(base)}.mp4`;
-        try {
-          const res = await fetch(`${url}?t=${timestamp}`, { method: 'HEAD' });
-          if (res.ok) found[i] = url;
-        } catch { /* 不存在就略過 */ }
-      },
-    );
-    return found.filter((u): u is string => !!u);
   }
 
+  /**
+   * 取得某人的互動影片清單。
+   * 1. 索引命中 → 同步回傳（零網路）
+   * 2. 索引沒建過 → 只補掃這個人，結果併回索引，下次就是 O(1)
+   */
   function getPairVideos(selfName: string, timestamp: string): Promise<string[]> {
-    const key = selfName.toLowerCase();
-    let cached = pairVideoCache.get(key);
-    if (!cached) {
-      cached = discoverPairVideos(selfName, timestamp);
-      pairVideoCache.set(key, cached);
+    const cached = getPairNames(selfName);
+    if (cached) return Promise.resolve(toVideoUrls(PEOPLE_IMAGE_URL, selfName, cached));
+
+    let pending = pendingProbes.get(selfName);
+    if (!pending) {
+      pending = probeCharacter(selfName, {
+        baseUrl: PEOPLE_IMAGE_URL,
+        names: getCharacterNames(),
+        mediaTimestamp: timestamp,
+      }).then((others) => toVideoUrls(PEOPLE_IMAGE_URL, selfName, others));
+      pendingProbes.set(selfName, pending);
     }
-    return cached;
+    return pending;
+  }
+
+  /** 「建立影片快取」按鈕：掃一次、存起來，之後 hover 全部走快取。 */
+  async function rebuildPairVideoIndex() {
+    const button = document.getElementById('build-pair-index') as HTMLButtonElement | null;
+    const label = button?.querySelector('.button-label') as HTMLElement | null;
+    const names = getCharacterNames();
+    if (names.length === 0) {
+      alert('角色資料尚未載入完成，請稍候再試。');
+      return;
+    }
+
+    const timestamp = characterService?.getMediaTimestamp?.() ?? '';
+    const status = getIndexStatus(names, timestamp);
+    if (status.exists && !status.stale) {
+      const stats = getIndexStats();
+      const built = stats ? new Date(stats.builtAt).toLocaleString() : '';
+      if (!confirm(`快取已是最新（${stats?.edges ?? 0} 部影片，建立於 ${built}）。要重新掃描嗎？`)) return;
+    }
+
+    const originalLabel = label?.textContent ?? '建立影片快取';
+    button?.setAttribute('disabled', 'true');
+    pendingProbes.clear();
+    clearIndex();
+
+    try {
+      const index = await buildIndex({
+        baseUrl: PEOPLE_IMAGE_URL,
+        names,
+        mediaTimestamp: timestamp,
+        concurrency: 8,
+        onProgress: ({ done, total, found }) => {
+          if (label) {
+            const percent = total > 0 ? Math.round((done / total) * 100) : 100;
+            label.textContent = `掃描中 ${percent}%（找到 ${found}）`;
+          }
+        },
+      });
+      const edges = Object.values(index.pairs).reduce((sum, list) => sum + list.length, 0);
+      if (label) {
+        label.textContent =
+          index.source === 'manifest'
+            ? `已從清單建立（${edges} 部）`
+            : `已建立快取（${edges} 部）`;
+      }
+    } catch (error) {
+      console.error('建立影片快取失敗:', error);
+      if (label) label.textContent = '建立失敗，請重試';
+    } finally {
+      button?.removeAttribute('disabled');
+      setTimeout(() => { if (label) label.textContent = originalLabel; }, 4000);
+    }
+  }
+
+  /** 依索引狀態更新按鈕提示文字。 */
+  function syncPairIndexButton() {
+    const button = document.getElementById('build-pair-index');
+    if (!button) return;
+    const names = getCharacterNames();
+    const timestamp = characterService?.getMediaTimestamp?.() ?? '';
+    const status = getIndexStatus(names, timestamp);
+    const stats = getIndexStats();
+    if (!status.exists) {
+      button.setAttribute('title', '尚未建立影片快取：hover 時才會逐一連線探測。點此掃描一次並存檔。');
+    } else if (status.stale) {
+      button.setAttribute('title', `快取可能過期（${status.missingNames.length} 位新角色未收錄）。點此重新掃描。`);
+    } else {
+      button.setAttribute(
+        'title',
+        `快取有效：${stats?.edges ?? 0} 部影片，來源 ${stats?.source === 'manifest' ? '清單檔' : '掃描'}。點此重建。`,
+      );
+    }
   }
 
   // 倒帶反放沿用 dance.ts 的作法，已抽象到 videoRewind 的 reversePlay。
@@ -820,12 +968,27 @@ if (!isLoggedIn) {
     let urls: string[] = [];
     let idx = 0;
     let reverseHandle: ReversePlayHandle | null = null;
+    // 播放期間被套上黑幕的那一排（卡片可能被拖進菜籃，所以每次重新取）
+    let dimmedRow: HTMLElement | null = null;
 
     const stopReverse = () => { reverseHandle?.cancel(); reverseHandle = null; };
+
+    // 互動影片是黑底 mp4：播放時把整排（或菜籃）襯成黑色，影片才不會看起來像貼了張黑方塊
+    const dimRow = () => {
+      dimmedRow =
+        card.closest<HTMLElement>('.army-container') ??
+        card.closest<HTMLElement>('#palais-cart');
+      dimmedRow?.classList.add('is-video-playing');
+    };
+    const undimRow = () => {
+      dimmedRow?.classList.remove('is-video-playing');
+      dimmedRow = null;
+    };
 
     // 整輪結束：停止、還原圖片、放行下一次 hover
     const finish = () => {
       stopReverse();
+      undimRow();
       if (videoEl) {
         videoEl.pause();
         videoEl.removeAttribute('src');
@@ -890,6 +1053,7 @@ if (!isLoggedIn) {
       urls = list;
       idx = 0;
       card.classList.add('pair-playing'); // 播放期間壓到兩側圖片之下
+      dimRow(); // 整排襯黑，配合黑底影片
       playForward();
     });
   }
@@ -1281,6 +1445,7 @@ if (!isLoggedIn) {
 
       // 還原菜籃：把記住的人移回浮動菜籃
       applyCartState();
+      syncPairIndexButton();
       await sortArmyCardsByTotalPower(currentFilteredData, isRefresh);
 
       if (isRefresh) {
@@ -1339,6 +1504,7 @@ if (!isLoggedIn) {
         img.style.opacity = '0';
         img.src = imageUrl.toString();
       });
+      syncPairIndexButton();
     } finally {
       refreshImagesBtn?.removeAttribute('disabled');
     }
@@ -1563,6 +1729,11 @@ if (!isLoggedIn) {
     const resetOrderBtn = document.getElementById('reset-group-order');
     if (resetOrderBtn) {
       resetOrderBtn.addEventListener('click', resetAllGroupOrders);
+    }
+
+    const buildIndexBtn = document.getElementById('build-pair-index');
+    if (buildIndexBtn) {
+      buildIndexBtn.addEventListener('click', rebuildPairVideoIndex);
     }
 
     const downloadBtn = document.getElementById('download-all-png');
