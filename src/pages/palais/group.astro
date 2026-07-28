@@ -72,11 +72,30 @@ if (!isLoggedIn) {
    * 影片若留在各自卡片裡，不同 row 的 stacking context 會讓後排影片蓋住前排 PNG；
    * 抽到共同 layer 後，層級可以跨 row 一次比較，不再依賴 DOM 前後順序。
    */
-  #group-video-layer {
+  #group-info-layer,
+  #group-video-layer,
+  #group-hover-info-layer {
     position: absolute;
     inset: 0;
-    z-index: 1;
     pointer-events: none;
+  }
+
+  /* 人物文字預設在影片下面；只有 hover 中的那一位會進入影片上方的可見層。 */
+  #group-info-layer {
+    z-index: 0;
+  }
+
+  #group-video-layer {
+    z-index: 1;
+  }
+
+  #group-hover-info-layer {
+    z-index: 2;
+  }
+
+  #group-info-layer > .character-info,
+  #group-hover-info-layer > .character-info {
+    position: absolute;
   }
 
   .action-bar {
@@ -736,6 +755,19 @@ if (!isLoggedIn) {
     );
     container.classList.toggle('is-empty', !hasCards);
   }
+
+  let characterInfoLayoutFrame: number | null = null;
+  function scheduleCharacterInfoLayout() {
+    if (characterInfoLayoutFrame !== null) cancelAnimationFrame(characterInfoLayoutFrame);
+    characterInfoLayoutFrame = requestAnimationFrame(() => {
+      characterInfoLayoutFrame = null;
+      document.querySelectorAll<HTMLElement>('.pg-draggable').forEach((card) => {
+        (card as any).__placeInfo?.(card.matches(':hover'));
+      });
+    });
+  }
+  window.addEventListener('resize', scheduleCharacterInfoLayout);
+
   function moveCardToCart(card: HTMLElement) {
     const items = document.getElementById('cart-items');
     if (!items || !card) return;
@@ -743,6 +775,7 @@ if (!isLoggedIn) {
     if (card.parentElement === items) return;
     const prevParent = card.parentElement;
     items.appendChild(card);
+    scheduleCharacterInfoLayout();
     // 單排限制：若加入後會超出寬度（換行），退回原處、禁止添加
     if (items.scrollWidth > items.clientWidth) {
       if (prevParent) prevParent.appendChild(card);
@@ -760,6 +793,7 @@ if (!isLoggedIn) {
     const grid = armyContainer.querySelector('.box-container');
     if (!grid || !card) return;
     grid.appendChild(card);
+    scheduleCharacterInfoLayout();
     const set = getCartSet();
     if (card.dataset.name) set.delete(card.dataset.name);
     saveCartSet(set);
@@ -777,6 +811,7 @@ if (!isLoggedIn) {
       );
       if (card) items.appendChild(card);
     });
+    scheduleCharacterInfoLayout();
     document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     updateCartCount();
   }
@@ -799,6 +834,7 @@ if (!isLoggedIn) {
       if (grid) grid.appendChild(card);
       else card.remove(); // 找不到原隊伍（理論上不會）就移除孤兒節點
     });
+    scheduleCharacterInfoLayout();
     document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     saveCartSet(new Set());
     updateCartCount();
@@ -1621,12 +1657,13 @@ if (!isLoggedIn) {
         const next = cards[i + 1];
         if (next) requestWarm(next);
         try {
-          // 最後一道保險：任何情況下都不讓一張卡永遠擋住右邊的鄰居。
-          // 正常結束靠 __startPlayback 的 Promise，這裡只是硬上限。
-          await Promise.race([
-            (card as any).__startPlayback(),
-            new Promise<void>((resolve) => setTimeout(resolve, 120000)),
-          ]);
+          /*
+           * 必須等實際播放完成才能釋放 row。
+           * 舊的 120 秒 Promise.race 會在多支影片（正放＋倒放）尚未播完時假裝完成，
+           * 導致相鄰 row 被提前放行。壞片／載入失敗已由每支影片的 8 秒 watchdog
+           * 呼叫 skipClip，因此這裡不再設會破壞 row 互斥的硬逾時。
+           */
+          await (card as any).__startPlayback();
         } catch { /* 單一張出錯不該卡住整段 */ }
         queuedCards.delete(card);
       }
@@ -1680,6 +1717,7 @@ if (!isLoggedIn) {
         insertAfter ? characterContainer.nextSibling : characterContainer,
       );
       saveGroupOrder(grid);
+      scheduleCharacterInfoLayout();
       draggedCard = null;
     });
 
@@ -1720,6 +1758,7 @@ if (!isLoggedIn) {
     characterContainer.appendChild(powerBadge);
 
     const infoContainer = document.createElement('div');
+    infoContainer.className = 'character-info';
     infoContainer.style.cssText = 'color:#fff;text-shadow:0 0 2px rgba(0,0,0,0.5);width:100%;box-sizing:border-box;text-align:center;position:absolute;bottom:-40px;left:0;overflow:hidden;font-size:12px;z-index:4;background-color:transparent;padding:5px;border-radius:5px;';
 
     const nameText = document.createElement('p');
@@ -1740,6 +1779,42 @@ if (!isLoggedIn) {
     infoContainer.appendChild(sizeText);
     characterContainer.appendChild(img);
     characterContainer.appendChild(infoContainer);
+
+    const placeInfo = (hovered: boolean) => {
+      const groupContainer = characterContainer.closest<HTMLElement>('#group-container');
+      if (!groupContainer) {
+        // 菜籃不使用 group 的共用層，恢復成卡片內定位。
+        if (infoContainer.parentElement !== characterContainer) characterContainer.appendChild(infoContainer);
+        infoContainer.style.top = '';
+        infoContainer.style.bottom = '-40px';
+        infoContainer.style.left = '0';
+        infoContainer.style.width = '100%';
+        return;
+      }
+
+      const layerId = hovered ? 'group-hover-info-layer' : 'group-info-layer';
+      let layer = groupContainer.querySelector<HTMLElement>(`:scope > #${layerId}`);
+      if (!layer) {
+        layer = document.createElement('div');
+        layer.id = layerId;
+        groupContainer.prepend(layer);
+      }
+      if (infoContainer.parentElement !== layer) layer.appendChild(infoContainer);
+
+      const cardRect = characterContainer.getBoundingClientRect();
+      const containerRect = groupContainer.getBoundingClientRect();
+      infoContainer.style.bottom = '';
+      infoContainer.style.top = `${cardRect.bottom - containerRect.top - 40}px`;
+      infoContainer.style.left = `${cardRect.left - containerRect.left}px`;
+      infoContainer.style.width = `${cardRect.width}px`;
+    };
+    (characterContainer as any).__placeInfo = placeInfo;
+    characterContainer.addEventListener('mouseenter', () => placeInfo(true));
+    characterContainer.addEventListener('mouseleave', () => placeInfo(false));
+    requestAnimationFrame(() => {
+      if (characterContainer.isConnected) placeInfo(false);
+    });
+
     return characterContainer;
   }
 
