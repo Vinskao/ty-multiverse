@@ -234,9 +234,11 @@ if (!isLoggedIn) {
     text-align: center;
     overflow: hidden;
     pointer-events: none;
-    /* 1（不是 0）：要壓在所有排的黑幕(0)之上，否則鄰排播放時隊名會被黑幕吃掉。
-       人物層固定在 3，因此隊名放 2、影片層放 1。 */
-    z-index: 2;
+    /*
+     * 隊名與整排總戰力是最底層背景資訊：
+     * 必須低於共用影片層(1)與所有人物層(3)，不能穿透顯示在影片或人物上。
+     */
+    z-index: 0;
 
     font-weight: bold;
     /* 隊伍名稱：低調的暗色，不發光 */
