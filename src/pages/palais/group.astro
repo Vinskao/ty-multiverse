@@ -26,7 +26,7 @@ if (!isLoggedIn) {
           <button id="refresh-images" class="btn is-outline"><span class="button-label">刷新圖片</span></button>
           <button id="reset-group-order" class="btn is-outline"><span class="button-label">依總戰力排序</span></button>
           <button id="build-pair-index" class="btn is-outline" title="掃描一次所有互動影片並存成快取，之後 hover 不再連線"><span class="button-label">建立影片快取</span></button>
-          <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片</span></button>
+          <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片與影片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
         <div id="group-container" data-palais-media-zoom data-palais-media-zoom-controls="keyboard" data-palais-media-zoom-group="group-page"></div>
@@ -2210,6 +2210,26 @@ if (!isLoggedIn) {
     });
   }
 
+  async function getDownloadableVideoFiles(): Promise<string[]> {
+    const response = await fetch(
+      `${manifestUrl(PEOPLE_IMAGE_URL)}?t=${characterService.getMediaTimestamp()}`,
+      { cache: 'no-store' },
+    );
+    if (!response.ok) {
+      throw new Error(`影片清單下載失敗 (${response.status})`);
+    }
+    const manifest = await response.json();
+    const entries = Array.isArray(manifest) ? manifest : manifest?.files;
+    if (!Array.isArray(entries)) throw new Error('影片清單格式不正確');
+    return [...new Set(entries)]
+      .filter((file): file is string =>
+        typeof file === 'string' &&
+        file.toLowerCase().endsWith('.mp4') &&
+        !file.includes('/') &&
+        !file.includes('\\'),
+      );
+  }
+
   async function saveImagesToBrowserDirectory(padded: boolean) {
     const picker = (window as any).showDirectoryPicker;
     if (!window.isSecureContext || typeof picker !== 'function') return null;
@@ -2256,6 +2276,28 @@ if (!isLoggedIn) {
       }
     }
 
+    if (!padded) {
+      const videoFiles = await getDownloadableVideoFiles();
+      for (const fileName of videoFiles) {
+        try {
+          const response = await fetch(
+            `${PEOPLE_IMAGE_URL}/${encodeURIComponent(fileName)}?t=${timestamp}`,
+          );
+          if (!response.ok) throw new Error(`Video download failed (${response.status})`);
+          const fileHandle = await directory.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(await response.blob());
+          await writable.close();
+          saved += 1;
+        } catch (error) {
+          failures.push({
+            name: fileName,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    }
+
     return {
       source: 'browser-directory',
       padded,
@@ -2295,6 +2337,7 @@ if (!isLoggedIn) {
       body: JSON.stringify({
         names: currentFilteredData.map((character) => character.name || 'default'),
         padded,
+        includeVideos: !padded,
       }),
     });
     const result = await response.json();
@@ -2354,6 +2397,33 @@ if (!isLoggedIn) {
       onProgress(saved + failures.length, total);
     }
 
+    if (!padded) {
+      const videoFiles = await getDownloadableVideoFiles();
+      for (const fileName of videoFiles) {
+        try {
+          const response = await fetch(
+            `${PEOPLE_IMAGE_URL}/${encodeURIComponent(fileName)}?t=${characterService.getMediaTimestamp()}`,
+          );
+          if (!response.ok) throw new Error(`影片下載失敗 (${response.status})`);
+          const blob = await response.blob();
+          const form = new FormData();
+          form.append('file', blob, fileName);
+          form.append('fileName', fileName);
+          form.append('padded', 'false');
+          const saveResponse = await fetch(endpoint, { method: 'POST', body: form });
+          if (!saveResponse.ok) {
+            throw new Error(await saveResponse.text() || `寫入失敗 (${saveResponse.status})`);
+          }
+          saved++;
+        } catch (error) {
+          failures.push({
+            name: fileName,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    }
+
     return { ...capability, padded, requested: total, saved, failures };
   }
 
@@ -2364,8 +2434,8 @@ if (!isLoggedIn) {
   }) {
     const failed = result.failures?.length || 0;
     return failed > 0
-      ? `已覆蓋 ${result.saved}/${result.requested} 張，失敗 ${failed} 張`
-      : `已覆蓋 ${result.saved}/${result.requested} 張`;
+      ? `已覆蓋 ${result.saved} 個檔案，失敗 ${failed} 個`
+      : `已覆蓋 ${result.saved} 個檔案`;
   }
 
   function alertSaveFailures(
@@ -2462,9 +2532,10 @@ if (!isLoggedIn) {
           const JSZip = (window as any).JSZip;
           const zip = new JSZip();
           const imgFolder = zip.folder("characters");
+          const videoFiles = await getDownloadableVideoFiles();
 
           let completed = 0;
-          const total = currentFilteredData.length;
+          const total = currentFilteredData.length + videoFiles.length;
           downloadBtn.textContent = `下載中 (0/${total})...`;
 
           await Promise.all(currentFilteredData.map(async (char) => {
@@ -2481,6 +2552,19 @@ if (!isLoggedIn) {
             } catch (err) {
               console.warn(`無法下載圖片: ${imgUrl}`, err);
               completed++;
+            }
+          }));
+
+          await Promise.all(videoFiles.map(async (fileName) => {
+            const videoUrl = `${PEOPLE_IMAGE_URL}/${encodeURIComponent(fileName)}?t=${characterService.getMediaTimestamp()}`;
+            try {
+              const response = await fetch(videoUrl);
+              if (response.ok) imgFolder.file(fileName, await response.blob());
+            } catch (err) {
+              console.warn(`無法下載影片: ${videoUrl}`, err);
+            } finally {
+              completed++;
+              downloadBtn.textContent = `下載中 (${completed}/${total})...`;
             }
           }));
 

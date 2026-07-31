@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import path from 'node:path';
 
 export const prerender = false;
 
-const PERSON_DIRECTORY = '/Users/vinskao/person';
-const MAX_IMAGE_SIZE = 50 * 1024 * 1024;
+const PERSON_DIRECTORY = path.join(homedir(), 'Pictures', 'images', 'characters');
+const MAX_MEDIA_SIZE = 500 * 1024 * 1024;
 
 export const GET: APIRoute = async () => {
   return Response.json({
@@ -18,10 +19,10 @@ export const GET: APIRoute = async () => {
   });
 };
 
-function safePngName(value: FormDataEntryValue | null): string | null {
+function safeMediaName(value: FormDataEntryValue | null): string | null {
   if (typeof value !== 'string') return null;
   const baseName = path.basename(value).normalize('NFC');
-  if (!baseName.toLowerCase().endsWith('.png') || baseName !== value) return null;
+  if (!/\.(png|mp4)$/i.test(baseName) || baseName !== value) return null;
   return baseName;
 }
 
@@ -33,14 +34,14 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const form = await request.formData();
     const file = form.get('file');
-    const fileName = safePngName(form.get('fileName'));
+    const fileName = safeMediaName(form.get('fileName'));
     const padded = form.get('padded') === 'true';
 
     if (!(file instanceof File) || !fileName) {
-      return new Response('缺少有效的 PNG 檔案或檔名', { status: 400 });
+      return new Response('缺少有效的 PNG/MP4 檔案或檔名', { status: 400 });
     }
-    if (file.size <= 0 || file.size > MAX_IMAGE_SIZE) {
-      return new Response('圖片大小不合法', { status: 413 });
+    if (file.size <= 0 || file.size > MAX_MEDIA_SIZE) {
+      return new Response('媒體檔案大小不合法', { status: 413 });
     }
 
     const targetDirectory = padded
@@ -53,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     return Response.json({ path: targetPath });
   } catch (error) {
-    console.error('角色圖片寫入失敗:', error);
-    return new Response(error instanceof Error ? error.message : '角色圖片寫入失敗', { status: 500 });
+    console.error('角色媒體寫入失敗:', error);
+    return new Response(error instanceof Error ? error.message : '角色媒體寫入失敗', { status: 500 });
   }
 };

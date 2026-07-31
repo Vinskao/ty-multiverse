@@ -37,6 +37,12 @@ function safeFilename(name: string) {
   return `${sanitized}.png`;
 }
 
+function safeVideoFilename(name: unknown): name is string {
+  return typeof name === 'string' &&
+    name.toLowerCase().endsWith('.mp4') &&
+    path.basename(name) === name;
+}
+
 async function withConcurrency<T>(
   items: T[],
   limit: number,
@@ -69,7 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ available: false }, 409);
   }
 
-  let body: { names?: unknown; padded?: unknown };
+  let body: { names?: unknown; padded?: unknown; includeVideos?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -87,6 +93,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const names = [...new Set(body.names as string[])];
   const padded = body.padded === true;
+  const includeVideos = !padded && body.includeVideos === true;
   const destination = padded ? PADDED_DIR : CHARACTERS_DIR;
   const failures: Array<{ name: string; error: string }> = [];
   let saved = 0;
@@ -111,7 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       const source = Buffer.from(await response.arrayBuffer());
-      let output = source;
+      let output: Uint8Array = source;
       if (padded) {
         const metadata = await sharp(source).metadata();
         if (!metadata.width || !metadata.height) {
@@ -144,6 +151,50 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
   });
+
+  if (includeVideos) {
+    try {
+      const manifestResponse = await fetch(
+        new URL('pair-videos.json', `${IMAGE_BASE_URL.replace(/\/+$/, '')}/`),
+        { signal: AbortSignal.timeout(30_000), cache: 'no-store' },
+      );
+      if (!manifestResponse.ok) {
+        throw new Error(`Video manifest returned HTTP ${manifestResponse.status}`);
+      }
+      const manifest = await manifestResponse.json();
+      const entries = Array.isArray(manifest) ? manifest : manifest?.files;
+      if (!Array.isArray(entries)) throw new Error('Invalid video manifest');
+      const videoFiles = [...new Set(entries.filter(safeVideoFilename))];
+      await withConcurrency(videoFiles, 3, async (filename) => {
+        let temporaryPath: string | undefined;
+        try {
+          const response = await fetch(
+            new URL(encodeURIComponent(filename), `${IMAGE_BASE_URL.replace(/\/+$/, '')}/`),
+            { signal: AbortSignal.timeout(120_000) },
+          );
+          if (!response.ok) throw new Error(`Image server returned HTTP ${response.status}`);
+          const finalPath = path.join(destination, filename);
+          temporaryPath = `${finalPath}.${crypto.randomUUID()}.tmp`;
+          await writeFile(temporaryPath, Buffer.from(await response.arrayBuffer()));
+          await rm(finalPath, { force: true });
+          await rename(temporaryPath, finalPath);
+          temporaryPath = undefined;
+          saved += 1;
+        } catch (error) {
+          if (temporaryPath) await rm(temporaryPath, { force: true }).catch(() => {});
+          failures.push({
+            name: filename,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      });
+    } catch (error) {
+      failures.push({
+        name: 'pair-videos.json',
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   return json({
     available: true,
