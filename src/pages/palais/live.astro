@@ -467,9 +467,19 @@ const mergeEndpoint = isDev
   mergeBtn.addEventListener("click", async () => {
     if (mergeBtn.disabled) return;
 
+    // 前端先擋掉過大的上傳，避免拿到看不懂的 413
+    const MAX_TOTAL_BYTES = 1024 * 1024 * 1024; // 需與 ingress proxy-body-size 一致
+    const totalBytes = files.reduce((sum, f) => sum + (f ? f.size : 0), 0);
+    const totalMb = totalBytes / 1048576;
+    if (totalBytes > MAX_TOTAL_BYTES) {
+      statusMsg.innerText = `Total size ${totalMb.toFixed(1)} MB exceeds the ${(MAX_TOTAL_BYTES / 1048576).toFixed(0)} MB limit. Please trim or compress your videos.`;
+      statusMsg.style.color = "#ff6b6b";
+      return;
+    }
+
     setLoading(true);
-    statusMsg.innerText =
-      "Processing video synthesis... This may take a few minutes.";
+    statusMsg.style.color = "";
+    statusMsg.innerText = `Uploading ${totalMb.toFixed(1)} MB and processing... This may take a few minutes.`;
 
     const formData = new FormData();
     if (files[0]) formData.append("v1", files[0]);
@@ -499,8 +509,19 @@ const mergeEndpoint = isDev
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Synthesis failed");
+        if (response.status === 413) {
+          throw new Error(
+            `Upload too large (${totalMb.toFixed(1)} MB). Please trim or compress your videos and try again.`,
+          );
+        }
+        let detail = "Synthesis failed";
+        try {
+          const error = await response.json();
+          detail = error.detail || detail;
+        } catch (e) {
+          detail = `${detail} (HTTP ${response.status})`;
+        }
+        throw new Error(detail);
       }
 
       const data = await response.json();
