@@ -52,7 +52,10 @@ let selectedChars: { [rowId: number]: string[] } = {
 };
 
 const characterService = CharacterService.getInstance();
-const baseImagePath = (window as any).TY_MULTIVERSE_CONFIG?.peopleImageUrl ? (window as any).TY_MULTIVERSE_CONFIG.peopleImageUrl + "/" : '/';
+const peopleImageBase =
+    import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ||
+    (window as any).TY_MULTIVERSE_CONFIG?.peopleImageUrl;
+const baseImagePath = peopleImageBase ? peopleImageBase + "/" : '/';
 
 async function getValidCharacters(): Promise<CharOption[]> {
     try {
@@ -317,7 +320,13 @@ function updateVisualization() {
 }
 
 // Initial Run
-document.addEventListener('DOMContentLoaded', async () => {
+// 使用 ClientRouter（View Transitions）時 DOMContentLoaded 只會觸發一次，
+// client-side 導覽進來的頁面不會初始化，因此改用 astro:page-load。
+const initParty = async () => {
+    const stage = document.getElementById('choir-stage');
+    if (!stage || stage.dataset.partyBound === 'true') return;
+    stage.dataset.partyBound = 'true';
+
     const spinner = document.getElementById('loading-spinner');
     if (spinner) spinner.style.display = 'block';
 
@@ -353,6 +362,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         console.error('download-gif-btn not found in DOM!');
     }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initParty, { once: true });
+} else {
+    void initParty();
+}
+document.addEventListener('astro:page-load', () => {
+    void initParty();
 });
 
 async function handleDownload() {

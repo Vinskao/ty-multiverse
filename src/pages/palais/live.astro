@@ -91,7 +91,12 @@ const mergeEndpoint = isDev
           </div>
 
           <div class="action-area">
-            <button id="merge-btn" class="merge-btn" disabled>
+            <button
+              id="merge-btn"
+              class="merge-btn"
+              data-merge-endpoint={mergeEndpoint}
+              disabled
+            >
               <span class="btn-text">Synthesize Performance</span>
               <div class="loader" hidden></div>
             </button>
@@ -369,12 +374,19 @@ const mergeEndpoint = isDev
   import "../../scripts/palaisMediaZoom";
 </script>
 
-<script define:vars={{ mergeEndpoint }}>
-  const files = [null, null, null, null];
-  const mergeBtn = document.getElementById("merge-btn");
-  const statusMsg = document.getElementById("status-msg");
-  const loader = mergeBtn.querySelector(".loader");
-  const btnText = mergeBtn.querySelector(".btn-text");
+<script is:inline>
+  // 注意：本站使用 ClientRouter（View Transitions），script 只會在首次載入執行，
+  // 因此必須綁定 astro:page-load 才會在 client-side 導覽後重新初始化。
+  // endpoint 改由 #merge-btn 的 data-merge-endpoint 提供（每次 swap 都是新的 DOM）。
+  function initLiveSynthesis() {
+    const files = [null, null, null, null];
+    const mergeBtn = document.getElementById("merge-btn");
+    const statusMsg = document.getElementById("status-msg");
+    if (!mergeBtn || !statusMsg || mergeBtn.dataset.liveBound === "true") return;
+    const mergeEndpoint = mergeBtn.dataset.mergeEndpoint;
+    mergeBtn.dataset.liveBound = "true";
+    const loader = mergeBtn.querySelector(".loader");
+    const btnText = mergeBtn.querySelector(".btn-text");
 
   // Initialize file inputs
   for (let i = 0; i < 4; i++) {
@@ -532,7 +544,17 @@ const mergeEndpoint = isDev
     btnText.innerText = loading ? "Merging..." : "Synthesize Performance";
   }
 
-  document.getElementById("reset-btn").addEventListener("click", () => {
-    location.reload();
-  });
+    const resetBtn = document.getElementById("reset-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        location.reload();
+      });
+    }
+  }
+
+  initLiveSynthesis();
+  if (!window.__TY_LIVE_INIT_BOUND__) {
+    window.__TY_LIVE_INIT_BOUND__ = true;
+    document.addEventListener("astro:page-load", initLiveSynthesis);
+  }
 </script>

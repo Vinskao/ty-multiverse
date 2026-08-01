@@ -1,4 +1,10 @@
-document.addEventListener("DOMContentLoaded", async function () {
+// 使用 ClientRouter（View Transitions）時 DOMContentLoaded 只會觸發一次，
+// client-side 導覽進來的頁面不會初始化，因此改用 astro:page-load。
+const initDance = async function () {
+  const grid = document.getElementById('videos-grid');
+  if (!grid || grid.dataset.danceBound === 'true') return;
+  grid.dataset.danceBound = 'true';
+
   const MAX_NUMBERED_INDEX = 50;
   let videoGroups: Array<{character: string, videos: Array<{src: string, title: string}>}> = [];
   let characterStates = new Map();
@@ -30,8 +36,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 載入角色和影片內容
   async function loadDanceContent() {
+    // 不依賴 window.TY_MULTIVERSE_CONFIG（inline script 在 client-side 導覽時
+    // 不保證重新執行），直接使用 build 時內嵌的環境變數，window 值僅作備援。
     const config = (window as any).TY_MULTIVERSE_CONFIG || {};
-    const { tymbUrl, peopleImageUrl } = config;
+    const tymbUrl = import.meta.env.PUBLIC_TYMB_URL || config.tymbUrl;
+    const peopleImageUrl =
+      import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ||
+      config.peopleImageUrl ||
+      'http://peoplesystem.tatdvsonorth.com';
 
     try {
       updateLoadingStatus('loading', '正在獲取角色列表...');
@@ -952,5 +964,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   // 開始初始化
   initializeAll();
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { void initDance(); }, { once: true });
+} else {
+  void initDance();
+}
+document.addEventListener('astro:page-load', () => { void initDance(); });
 
