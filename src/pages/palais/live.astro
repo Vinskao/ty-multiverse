@@ -90,6 +90,18 @@ const mergeEndpoint = isDev
             </div>
           </div>
 
+          <div class="mode-selection">
+            <span class="mode-label">Loop Style</span>
+            <label class="radio-label">
+              <input type="checkbox" id="boomerang-toggle" />
+              <span class="radio-custom"></span>
+              <span>Boomerang (play forward, then reverse)</span>
+            </label>
+            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.45);">
+              Shorter clips always replay until the longest one finishes.
+            </span>
+          </div>
+
           <div class="action-area">
             <button
               id="merge-btn"
@@ -492,6 +504,9 @@ const mergeEndpoint = isDev
       'input[name="os-mode"]:checked',
     ).value;
     formData.append("mode", selectedMode);
+
+    const boomerangToggle = document.getElementById("boomerang-toggle");
+    formData.append("boomerang", boomerangToggle && boomerangToggle.checked ? "true" : "false");
 
     // Add per-video background removal options
     for (let i = 0; i < 4; i++) {
