@@ -549,8 +549,10 @@ const mergeEndpoint = isDev
       const downloadGif = document.getElementById("download-gif");
       const resultArea = document.getElementById("result-area");
 
-      const backendOrigin = new URL(mergeEndpoint).origin;
-      const mp4FullUrl = backendOrigin + data.mp4_url;
+      // 後端回傳的是不含路徑前綴的 /videos/download/...，取 origin 會把 prod 的
+      // /maya-sawa 前綴丟掉而 404，因此從 endpoint 去掉已知後綴當基底。
+      const backendBase = mergeEndpoint.replace(/\/videos\/merge-videos$/, "");
+      const mp4FullUrl = backendBase + data.mp4_url;
 
       resultVideo.src = mp4FullUrl;
 
@@ -562,7 +564,7 @@ const mergeEndpoint = isDev
 
       // gif_url 可能是 null（GIF 產生失敗時後端仍會回傳 MP4）
       if (data.gif_url) {
-        const gifFullUrl = backendOrigin + data.gif_url;
+        const gifFullUrl = backendBase + data.gif_url;
         downloadGif.href = gifFullUrl;
         downloadGif.download = `ty-multiverse-live-${timestamp}.gif`;
         downloadGif.hidden = false;
