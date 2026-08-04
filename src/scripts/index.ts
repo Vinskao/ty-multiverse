@@ -3,6 +3,7 @@
 import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
 import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 import { config } from '../services/core/config';
+import i18nData from '../storages/i18n.json';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -596,7 +597,7 @@ function clearPortfolioCache() {
 }
 
 function adminOnlyMessage(): string {
-    return window.AppLang?.get?.() === 'zh'
+    return (window as any).AppLang?.get?.() === 'zh'
         ? '此功能僅供管理員使用，請聯繫管理員。'
         : 'This feature is available to administrators. Please contact an administrator.';
 }
@@ -762,12 +763,32 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     setSummaryTooltip('portfolio-pnl', 'portfolio-pnl-tooltip',
         `證券  ${nbCurrency(secPnl)}\n+ 期貨  ${nbCurrency(futPnl)}`
     );
-    setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
-        portfolio.summaryFormulas?.leverageRatio ? prettifyFormula(portfolio.summaryFormulas.leverageRatio) : undefined);
-
     // Region split sub-lines (台 Taiwan · 外 Overseas) under Cash / Total / Leverage.
     const regions = portfolio.regions;
     const hasOverseas = !!regions && ((regions.overseas.totalAssets ?? 0) !== 0 || (regions.overseas.cash ?? 0) !== 0);
+
+    // 合併槓桿的後端公式與台灣單區公式不同；tooltip 和小字都必須跟目前顯示值一致。
+    const combinedLeverageFormula = hasOverseas && portfolio.ibkr && portfolio.totalAssetsEstimated
+        ? `(${Math.round(portfolio.totalPositionExposure).toLocaleString()} + IBKR ${Math.round(portfolio.ibkr.twd.grossPositionValue).toLocaleString()}) / ${Math.round(portfolio.totalAssetsEstimated).toLocaleString()}`
+        : portfolio.summaryFormulas?.leverageRatio;
+    setSummaryTooltip('portfolio-leverage', 'portfolio-leverage-tooltip',
+        combinedLeverageFormula ? prettifyFormula(combinedLeverageFormula) : undefined);
+
+    const leverageFormulaNote = document.getElementById('portfolio-leverage-formula');
+    const leverageLabel = document.getElementById('portfolio-leverage-label');
+    const lang = (window as any).AppLang?.get?.() === 'zh' ? 'zh' : 'en';
+    if (leverageFormulaNote) {
+        const key = hasOverseas ? 'leverageFormulaCombined' : 'leverageFormulaTaiwan';
+        const copy = i18nData.home[key];
+        leverageFormulaNote.dataset.i18n = `home.${key}`;
+        leverageFormulaNote.textContent = copy[lang];
+    }
+    if (leverageLabel) {
+        const key = hasOverseas ? 'portfolioLeverageCombined' : 'portfolioLeverageTaiwan';
+        const copy = i18nData.home[key];
+        leverageLabel.dataset.i18n = `home.${key}`;
+        leverageLabel.textContent = copy[lang];
+    }
     const setSplit = (id: string, fmt: (r: RegionFigures) => string) => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -782,7 +803,16 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     const lev = (v: number | null) => v === null || v === undefined ? '—' : `${v.toFixed(2)}x`;
     setSplit('portfolio-cash-split', (r) => cur0(r.cash));
     setSplit('portfolio-total-split', (r) => cur0(r.totalAssets));
-    setSplit('portfolio-leverage-split', (r) => lev(r.leverage));
+    const leverageSplit = document.getElementById('portfolio-leverage-split');
+    const taiwanLeverage = document.getElementById('portfolio-leverage-taiwan');
+    const overseasLeverage = document.getElementById('portfolio-leverage-overseas');
+    if (leverageSplit && regions && hasOverseas) {
+        if (taiwanLeverage) taiwanLeverage.textContent = lev(regions.taiwan.leverage);
+        if (overseasLeverage) overseasLeverage.textContent = lev(regions.overseas.leverage);
+        leverageSplit.hidden = false;
+    } else if (leverageSplit) {
+        leverageSplit.hidden = true;
+    }
     renderPortfolioAllocation(portfolio);
 }
 
@@ -801,10 +831,14 @@ function resetPortfolioDisplay(message = 'Login required to view account portfol
     setText('portfolio-total', '--');
     setText('portfolio-pnl', '--');
     setText('portfolio-leverage', '--');
-    ['portfolio-cash-split', 'portfolio-total-split', 'portfolio-leverage-split'].forEach((id) => {
+    ['portfolio-cash-split', 'portfolio-total-split'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) { el.textContent = ''; (el as HTMLElement).hidden = true; }
     });
+    const leverageSplit = document.getElementById('portfolio-leverage-split');
+    if (leverageSplit) leverageSplit.hidden = true;
+    setText('portfolio-leverage-taiwan', '--');
+    setText('portfolio-leverage-overseas', '--');
     setText('portfolio-position-count', '--');
     setText('portfolio-futures-count', '--');
     setText('portfolio-combined-count', '--');

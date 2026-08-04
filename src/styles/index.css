@@ -522,6 +522,21 @@
 	letter-spacing: 0.02em;
 }
 
+.portfolio-leverage-formula {
+	display: block;
+	margin-top: 0.2rem;
+	font-size: 0.58rem;
+	line-height: 1.35;
+	color: var(--gray-500);
+	overflow-wrap: anywhere;
+	white-space: pre-line;
+}
+
+.portfolio-region-split b {
+	color: inherit;
+	font: inherit;
+}
+
 .portfolio-region-label {
 	justify-self: start;
 	width: 100%;

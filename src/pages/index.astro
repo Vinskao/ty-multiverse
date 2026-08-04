@@ -225,11 +225,16 @@ const skillsCategories = skillsData.categories;
 											<span>Total unrealized P/L</span>
 											<strong id="portfolio-pnl" tabindex="0">--</strong>
 											<div id="portfolio-pnl-tooltip" class="portfolio-summary-tooltip" role="status"></div>
-										</div>
-										<div class="portfolio-summary-item">
-											<span>Leverage</span>
+									</div>
+									<div class="portfolio-summary-item">
+											<span id="portfolio-leverage-label" data-i18n="home.portfolioLeverageCombined">Combined leverage</span>
 											<strong id="portfolio-leverage" tabindex="0">--</strong>
-											<small id="portfolio-leverage-split" class="portfolio-region-split" hidden></small>
+											<small id="portfolio-leverage-split" class="portfolio-region-split" hidden>
+												<span data-i18n="home.portfolioRegionTaiwan">Taiwan</span> <b id="portfolio-leverage-taiwan">--</b>
+												<span aria-hidden="true"> · </span>
+												<span data-i18n="home.portfolioRegionOverseas">Overseas</span> <b id="portfolio-leverage-overseas">--</b>
+											</small>
+											<small id="portfolio-leverage-formula" class="portfolio-leverage-formula" data-i18n="home.leverageFormulaCombined">Numerator: TW exposure + overseas positions · Denominator: combined assets</small>
 											<div id="portfolio-leverage-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 									</div>
