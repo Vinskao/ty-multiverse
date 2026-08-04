@@ -1,29 +1,29 @@
 import type { APIRoute } from 'astro';
 
-// Prod (node SSR) reads the runtime container env via `process.env` — Astro inlines
-// `import.meta.env` at build time (undefined for server-only vars). Local `astro dev`
-// is the opposite: it injects `.env` into `import.meta.env`, not `process.env`.
-// Read both so the secret/URL resolves in dev AND prod.
+// Prod (node SSR) reads the runtime container env via `process.env`; local
+// `astro dev` injects `.env` into `import.meta.env`. Read both in either mode.
 const MAYA_SAWA_URL = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa/maya-sawa';
-const INTERNAL_SECRET = process.env.MARKET_INTERNAL_SECRET || import.meta.env.MARKET_INTERNAL_SECRET;
 
-export const GET: APIRoute = async () => {
-  if (!INTERNAL_SECRET) {
+export const GET: APIRoute = async ({ request }) => {
+  const authorization = request.headers.get('authorization');
+  if (!authorization?.toLowerCase().startsWith('bearer ')) {
     return new Response(
-      JSON.stringify({
-        error: 'Internal secret not configured',
-      }),
+      JSON.stringify({ detail: 'Bearer token required' }),
       {
-        status: 503,
+        status: 401,
         headers: { 'Content-Type': 'application/json' },
       }
     );
   }
 
   try {
-    const response = await fetch(`${MAYA_SAWA_URL}/market/internal/portfolio`, {
+    // Use Maya Sawa's user-facing endpoint so its Keycloak `manage-users`
+    // authorization is always enforced. Never expose the internal-secret route
+    // through a public Astro endpoint.
+    const response = await fetch(`${MAYA_SAWA_URL}/market/portfolio`, {
       headers: {
-        'X-Internal-Secret': INTERNAL_SECRET,
+        Authorization: authorization,
+        Accept: 'application/json',
       },
     });
 

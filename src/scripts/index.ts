@@ -1213,7 +1213,9 @@ async function fetchPortfolio() {
     }
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
     try {
-        const response = await fetch(astroApiPath('/api/market/portfolio'));
+        const response = await fetch(astroApiPath('/api/market/portfolio'), {
+            headers: marketAuthHeaders(),
+        });
         if (!response.ok) {
             let detail = '';
             try {
