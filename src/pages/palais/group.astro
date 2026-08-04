@@ -25,7 +25,7 @@ if (!isLoggedIn) {
           <button id="refresh-data" class="btn is-outline"><span class="button-label">刷新數據</span></button>
           <button id="refresh-images" class="btn is-outline"><span class="button-label">刷新圖片</span></button>
           <button id="reset-group-order" class="btn is-outline"><span class="button-label">依總戰力排序</span></button>
-          <button id="build-pair-index" class="btn is-outline" title="掃描一次所有互動影片並存成快取，之後 hover 不再連線"><span class="button-label">建立影片快取</span></button>
+          <button id="build-pair-index" class="btn is-outline" title="掃描一次所有互動影片並存成快取，之後自動播放不再連線"><span class="button-label">建立影片快取</span></button>
           <button id="download-all-png" class="btn is-primary"><span class="button-label">下載所有角色圖片與影片</span></button>
           <button id="download-all-padded" class="btn is-primary"><span class="button-label">下載所有角色圖片（含邊框）</span></button>
         </div>
@@ -558,7 +558,7 @@ if (!isLoggedIn) {
     filter: none !important;
   }
 
-  /* hover 不再放大，改為在人物身上播放兩人互動影片（見 attachHoverVideo）。 */
+  /* hover 不再放大；互動影片由頁面載入後的自動排程播放。 */
   #group-container .box-container > div:hover {
     z-index: 10 !important;
     transform: none !important;
@@ -570,7 +570,7 @@ if (!isLoggedIn) {
     z-index: auto !important;
   }
 
-  /* hover 播放的互動影片：位於所有 row 人物層之下，無控制列。 */
+  /* 自動播放的互動影片：位於所有 row 人物層之下，無控制列。 */
   #group-video-layer > video.pair-video,
   #cart-items > div > video.pair-video {
     position: absolute;
@@ -868,8 +868,6 @@ if (!isLoggedIn) {
   function initCart() {
     const cart = document.getElementById('palais-cart');
     if (!cart) return;
-    // 菜籃也算一「排」：hover 進去，裡面每個有影片的人一起播
-    attachRowHoverPlayback(cart);
     cart.addEventListener('dragover', (e) => { e.preventDefault(); });
     cart.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -937,17 +935,17 @@ if (!isLoggedIn) {
     if (e.target === document.getElementById('pg-lightbox')) closeLightbox();
   });
 
-  // --- Hover 互動影片 ---
+  // --- 自動播放互動影片 ---
   // 檔名規則：A_B.mp4 / A_B_C.mp4…（成員以底線相接，角色名不含底線），與 <name>.png 同位置。
   // 影片只屬於第一個名字，只在 name1 的位置播放 —— 第一個底線之後是誰不影響觸發。
-  // 一次 hover 只播「一支」：正放一次 → 倒帶反放一次 → 結束。無聲、無控制列。
+  // 每支影片正放一次 → 倒帶反放一次 → 結束。無聲、無控制列。
   //
   // 索引：`name1 -> 影片清單` 由 pairVideoIndex 建好並存進 localStorage。
-  //       **hover 一律只讀快取、完全不連線**；快取裡沒有就是沒有影片。
+  //       **播放排程一律只讀快取、完全不連線**；快取裡沒有就是沒有影片。
   //       要更新快取只有一條路：按「建立影片快取」按鈕。
   //
   // 延遲：查表是同步的，真正的延遲來自影片下載，所以卡片一進視窗就先把要播的那支
-  //       預熱（preload=auto），hover 時只呼叫 play()。播完不清 src，靠 LRU 控制記憶體。
+  //       預熱（preload=auto），輪到播放時只呼叫 play()。播完不清 src，靠 LRU 控制記憶體。
 
   /** 同時保留 src 的卡片數上限；超過就淘汰最久沒用的，釋放記憶體與頻寬。
    *  整排一起播，所以要放得下一整排的第一支。 */
@@ -957,11 +955,12 @@ if (!isLoggedIn) {
 
   /** 目前正在播放的卡片（取代原本「同時只准一支」的全域鎖）。 */
   const playingCards = new Set<HTMLElement>();
-  /** 已排進某段相鄰序列、等著輪到自己的卡片，避免重複觸發時被排第二次。 */
+  /** 等待相鄰卡片播放完畢的卡片。 */
   const queuedCards = new Set<HTMLElement>();
-  /** 正在執行／等待執行的隊伍排；相鄰兩排不可同時播放，隔一排則可並行。 */
-  const activePlaybackRows = new Set<HTMLElement>();
-  const pendingPlaybackRows = new Set<HTMLElement>();
+  /** 依目前實際版面座標建立的無向鄰接圖。 */
+  let playbackNeighbours = new Map<HTMLElement, Set<HTMLElement>>();
+  /** 每次重建人物資料都換一個 run id，避免舊影片結束後啟動新一輪的卡片。 */
+  let automaticPlaybackRun = 0;
 
   /**
    * 每排正在播放的支數。
@@ -1292,9 +1291,9 @@ if (!isLoggedIn) {
   // 倒帶反放沿用 dance.ts 的作法，已抽象到 videoRewind 的 reversePlay。
   // 每支影片正放一次 + 反放一次，然後換下一支，直到這個人的影片全部播完。
   // 期間即使滑鼠移開也不中斷。
-  function attachHoverVideo(card: HTMLElement, img: HTMLImageElement, selfName: string) {
+  function attachPairVideo(card: HTMLElement, img: HTMLImageElement, selfName: string) {
     let videoEl: HTMLVideoElement | null = null;
-    /** 這個人的完整播放清單（他擁有的全部影片 URL），一次 hover 會全部播完。 */
+    /** 這個人的完整播放清單（他擁有的全部影片 URL），輪到時會全部播完。 */
     let playlist: string[] = [];
     let clipIndex = 0;
     /** 目前 <video> 已載入的 URL（含時間戳），用來避免重設相同的 src 而丟掉緩衝。 */
@@ -1551,133 +1550,104 @@ if (!isLoggedIn) {
     observeForWarm(card);
   }
 
-  /** 只把實際顯示的隊伍排算進上下相鄰關係；菜籃維持獨立。 */
-  function visibleArmyRows(): HTMLElement[] {
-    const container = document.getElementById('group-container');
-    if (!container) return [];
-    return Array.from(container.children).filter((child): child is HTMLElement =>
-      child instanceof HTMLElement &&
-      child.classList.contains('army-container') &&
-      !child.classList.contains('is-empty'),
-    );
-  }
-
-  function areAdjacentRows(a: HTMLElement, b: HTMLElement): boolean {
-    if (a === b || a.id === 'palais-cart' || b.id === 'palais-cart') return false;
-    const rows = visibleArmyRows();
-    const aIndex = rows.indexOf(a);
-    const bIndex = rows.indexOf(b);
-    return aIndex >= 0 && bIndex >= 0 && Math.abs(aIndex - bIndex) === 1;
-  }
-
-  function rowIsBlocked(row: HTMLElement): boolean {
-    return Array.from(activePlaybackRows).some((active) => areAdjacentRows(row, active));
-  }
-
-  /** 每次有一排結束，就按觸發順序放行目前不再與 active row 相鄰的等待排。 */
-  function drainPendingPlaybackRows() {
-    for (const row of Array.from(pendingPlaybackRows)) {
-      if (!row.isConnected) {
-        pendingPlaybackRows.delete(row);
-        continue;
-      }
-      if (rowIsBlocked(row)) continue;
-      pendingPlaybackRows.delete(row);
-      void runRowPlayback(row);
-    }
+  function connectPlaybackNeighbours(a: HTMLElement, b: HTMLElement) {
+    if (a === b) return;
+    playbackNeighbours.get(a)?.add(b);
+    playbackNeighbours.get(b)?.add(a);
   }
 
   /**
-   * 整排觸發：同排仍依角色相鄰關係排隊；跨排只允許不相鄰的 row 同時播放。
-   * 例如第 1、3 排可並行，第 2 排會等到兩側都釋放後才開始。
+   * 依人物實際顯示位置建立鄰接圖：
+   * - 左／右：同一排 DOM 順序的直接鄰居。
+   * - 上／下：相鄰隊伍排中，水平中心距離最近的兩個人物。
+   *
+   * 上下排的人物數量與位置不一致，因此不能用相同 index 判斷；以畫面座標找兩個最近者
+   * 可以涵蓋人物落在上／下方兩人之間的交錯版面。
    */
-  function triggerRowPlayback(row: HTMLElement) {
-    if (activePlaybackRows.has(row) || pendingPlaybackRows.has(row)) return;
-    if (rowIsBlocked(row)) {
-      pendingPlaybackRows.add(row);
-      return;
-    }
-    void runRowPlayback(row);
-  }
+  function buildPlaybackNeighbourGraph(cards: HTMLElement[]) {
+    playbackNeighbours = new Map(
+      cards.map((card) => [card, new Set<HTMLElement>()] as const),
+    );
 
-  async function runRowPlayback(row: HTMLElement) {
-    // 先佔用 row，再做任何非同步工作，讓同一事件迴圈觸發的相鄰排看得到鎖。
-    activePlaybackRows.add(row);
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.army-groups > .army-container'))
+      .filter((row) => !row.classList.contains('is-empty'))
+      .map((row) => Array.from(row.querySelectorAll<HTMLElement>(':scope > .box-container > .pg-draggable')));
 
-    // 每個 grid（.box-container / 菜籃）內的卡片才有相鄰關係
-    const grids = Array.from(row.querySelectorAll<HTMLElement>('.box-container, #cart-items'));
-    const containers = grids.length > 0 ? grids : [row];
-    const jobs: Promise<void>[] = [];
-
-    for (const grid of containers) {
-      const cards = Array.from(grid.children).filter((el): el is HTMLElement =>
-        el instanceof HTMLElement && el.classList.contains('pg-draggable'),
-      );
-
-      // 切成「相鄰候選」的連續段。卡片彼此重疊一半，兩個緊鄰的人同時播畫面會打架，
-      // 所以同一段內要排隊（左→右）；被沒有影片的人隔開的兩段互不影響，可以同時播。
-      const chains: HTMLElement[][] = [];
-      let chain: HTMLElement[] = [];
-      for (const card of cards) {
-        const usable =
-          typeof (card as any).__startPlayback === 'function' &&
-          (card as any).__hasClips?.() &&
-          !playingCards.has(card) &&
-          !queuedCards.has(card);
-        if (usable) {
-          chain.push(card);
-        } else if (chain.length > 0) {
-          chains.push(chain);
-          chain = [];
-        }
+    for (const rowCards of rows) {
+      for (let i = 1; i < rowCards.length; i += 1) {
+        connectPlaybackNeighbours(rowCards[i - 1]!, rowCards[i]!);
       }
-      if (chain.length > 0) chains.push(chain);
-
-      // 同一排內不相鄰的角色段仍可同時跑。
-      for (const c of chains) jobs.push(runChain(c, row));
     }
 
-    try {
-      await Promise.all(jobs);
-    } finally {
-      activePlaybackRows.delete(row);
-      drainPendingPlaybackRows();
+    const centreX = (card: HTMLElement) => {
+      const rect = card.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    };
+    const connectClosestTwo = (source: HTMLElement, candidates: HTMLElement[]) => {
+      const x = centreX(source);
+      candidates
+        .map((candidate) => ({ candidate, distance: Math.abs(centreX(candidate) - x) }))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 2)
+        .forEach(({ candidate }) => connectPlaybackNeighbours(source, candidate));
+    };
+
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+      const rowCards = rows[rowIndex]!;
+      const above = rows[rowIndex - 1] ?? [];
+      const below = rows[rowIndex + 1] ?? [];
+      for (const card of rowCards) {
+        connectClosestTwo(card, above);
+        connectClosestTwo(card, below);
+      }
+    }
+
+    // 菜籃是獨立的 fixed 區域，只建立籃內的左右鄰接，不與隊伍排建立上下關係。
+    const cartCards = Array.from(document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable'));
+    for (let i = 1; i < cartCards.length; i += 1) {
+      connectPlaybackNeighbours(cartCards[i - 1]!, cartCards[i]!);
     }
   }
 
-  /** 一段相鄰的人：左邊整個播完，才輪到右邊。 */
-  async function runChain(cards: HTMLElement[], row: HTMLElement) {
-    cards.forEach((card) => queuedCards.add(card));
-    // 整段期間持有一次黑幕，避免交棒的空檔黑底閃一下又亮回來
-    acquireRowDim(row);
-    try {
-      for (let i = 0; i < cards.length; i += 1) {
-        const card = cards[i]!;
-        // 趁現在這支在播，先把下一位的第一支暖起來，交棒時才不會卡
-        const next = cards[i + 1];
-        if (next) requestWarm(next);
-        try {
-          /*
-           * 必須等實際播放完成才能釋放 row。
-           * 舊的 120 秒 Promise.race 會在多支影片（正放＋倒放）尚未播完時假裝完成，
-           * 導致相鄰 row 被提前放行。壞片／載入失敗已由每支影片的 8 秒 watchdog
-           * 呼叫 skipClip，因此這裡不再設會破壞 row 互斥的硬逾時。
-           */
-          await (card as any).__startPlayback();
-        } catch { /* 單一張出錯不該卡住整段 */ }
+  function hasPlayingNeighbour(card: HTMLElement) {
+    return Array.from(playbackNeighbours.get(card) ?? [])
+      .some((neighbour) => playingCards.has(neighbour));
+  }
+
+  /** 放行所有目前沒有播放中鄰居的卡片；互不相鄰者會在同一輪一起開始。 */
+  function drainAutomaticPlayback(run: number) {
+    if (run !== automaticPlaybackRun) return;
+    for (const card of Array.from(queuedCards)) {
+      if (!card.isConnected) {
         queuedCards.delete(card);
+        continue;
       }
-    } finally {
-      cards.forEach((card) => queuedCards.delete(card));
-      releaseRowDim(row);
+      if (hasPlayingNeighbour(card)) continue;
+
+      queuedCards.delete(card);
+      const start = (card as any).__startPlayback as (() => Promise<void>) | undefined;
+      if (!start) continue;
+      void start()
+        .catch(() => { /* 單一人物的壞片不阻塞其他人 */ })
+        .finally(() => drainAutomaticPlayback(run));
     }
   }
 
-  /** 把某個容器（隊伍排／菜籃）接上「整排 hover 觸發」。 */
-  function attachRowHoverPlayback(row: HTMLElement) {
-    if (row.dataset.rowPlaybackBound === 'true') return;
-    row.dataset.rowPlaybackBound = 'true';
-    row.addEventListener('mouseenter', () => triggerRowPlayback(row));
+  /** 頁面完成排版後自動播放所有有影片的人物，僅相鄰人物需要等待。 */
+  async function startAutomaticPlayback() {
+    const run = ++automaticPlaybackRun;
+    // 等排序後的 DOM 完成兩次 layout/paint，再讀取精確座標。
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    if (run !== automaticPlaybackRun) return;
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.pg-draggable'))
+      .filter((card) =>
+        typeof (card as any).__startPlayback === 'function' &&
+        (card as any).__hasClips?.(),
+      );
+    buildPlaybackNeighbourGraph(cards);
+    cards.forEach((card) => queuedCards.add(card));
+    drainAutomaticPlayback(run);
   }
 
   // --- Character card ---
@@ -1744,8 +1714,8 @@ if (!isLoggedIn) {
     characterContainer.addEventListener('mouseover', () => { img.style.zIndex = '3'; });
     characterContainer.addEventListener('mouseout', () => { img.style.zIndex = '2'; });
 
-    // hover 時在人物身上播放兩人互動影片（正放→反放→換下一部循環）
-    attachHoverVideo(characterContainer, img, character.name || '');
+    // 註冊人物互動影片（正放→反放→換下一部循環），由全頁空間排程器自動啟動。
+    attachPairVideo(characterContainer, img, character.name || '');
 
     // hover 時顯示在人物身上的總戰力徽章（數值由排序流程填入 dataset 後更新）
     const powerBadge = document.createElement('div');
@@ -1880,8 +1850,6 @@ if (!isLoggedIn) {
 
     armyContainer.appendChild(armyTitle);
     armyContainer.appendChild(charactersGrid);
-    // hover 這一排 → 排上每個有影片的人同時開始播自己的全部影片
-    attachRowHoverPlayback(armyContainer);
     return armyContainer;
   }
 
@@ -2053,10 +2021,10 @@ if (!isLoggedIn) {
       // 播放中／黑幕計數也要歸零，否則舊卡片被丟棄後名額與黑幕永遠不會被釋放。
       warmObserver?.disconnect();
       warmObserver = null;
+      automaticPlaybackRun += 1;
       playingCards.clear();
       queuedCards.clear();
-      activePlaybackRows.clear();
-      pendingPlaybackRows.clear();
+      playbackNeighbours.clear();
       rowPlayCount.clear();
       resetWarmState();
 
@@ -2123,6 +2091,7 @@ if (!isLoggedIn) {
       applyCartState();
       syncPairIndexButton();
       await sortArmyCardsByTotalPower(currentFilteredData, isRefresh);
+      void startAutomaticPlayback();
 
       if (isRefresh) {
         const refreshBtn = document.getElementById('refresh-data');
