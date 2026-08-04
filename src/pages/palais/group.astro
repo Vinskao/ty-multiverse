@@ -1629,11 +1629,16 @@ if (!isLoggedIn) {
       if (!start) continue;
       void start()
         .catch(() => { /* 單一人物的壞片不阻塞其他人 */ })
-        .finally(() => drainAutomaticPlayback(run));
+        .finally(() => {
+          if (run !== automaticPlaybackRun || !card.isConnected) return;
+          // 播完完整清單後排回隊尾，讓已等待的鄰居優先取得下一個播放時段。
+          queuedCards.add(card);
+          drainAutomaticPlayback(run);
+        });
     }
   }
 
-  /** 頁面完成排版後自動播放所有有影片的人物，僅相鄰人物需要等待。 */
+  /** 頁面完成排版後持續循環播放所有影片，僅相鄰人物需要輪流等待。 */
   async function startAutomaticPlayback() {
     const run = ++automaticPlaybackRun;
     // 等排序後的 DOM 完成兩次 layout/paint，再讀取精確座標。
