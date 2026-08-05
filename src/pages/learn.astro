@@ -8,45 +8,134 @@ if (!username) {
 ---
 
 <BaseLayout title="Learn | TY Multiverse" description="TOEIC practice and learning history">
-  <main class="wrapper learn-page">
-    <header class="learn-header">
-      <div>
-        <p class="learn-meta">LEARN</p>
-        <h1 id="quiz-title">TOEIC Reading Mini Mock Test</h1>
-        <p id="quiz-description" class="learn-meta">載入題目中…</p>
-      </div>
-      <div id="learn-timer" class="learn-timer" aria-live="polite">00:00</div>
-    </header>
+  <div class="learn-shell">
+    <aside class="learn-sidebar" aria-label="主題">
+      <p class="learn-meta">LEARN</p>
+      <h2 class="learn-sidebar-title">主題</h2>
+      <nav id="learn-topics" class="learn-topics">載入中…</nav>
+      <section class="learn-history" aria-labelledby="history-title">
+        <h3 id="history-title">最近作答</h3>
+        <div id="learn-history-content">尚無紀錄</div>
+      </section>
+    </aside>
 
-    <section id="learn-status" class="learn-status" aria-live="polite">正在讀取題庫…</section>
-    <form id="learn-form" hidden>
-      <div id="learn-questions"></div>
-      <div class="learn-actions">
-        <button id="learn-submit" type="submit">完成並送出</button>
-        <span id="learn-score" class="learn-score" aria-live="polite"></span>
-      </div>
-    </form>
+    <main class="learn-main">
+      <!-- 主題總覽：尚未進入任何主題時顯示 -->
+      <section id="learn-overview" class="learn-overview">
+        <h1>選一個主題開始</h1>
+        <p class="learn-meta">
+          每個主題都分成四個難度階梯，題目與選項每次都會重新亂序。
+          一輪必須全部作答完才能送出並進入檢討；中途離開會保留進度，下次回來接著寫。
+        </p>
+      </section>
 
-    <section class="learn-history" aria-labelledby="history-title">
-      <h2 id="history-title">最近作答</h2>
-      <div id="learn-history-content">尚無紀錄</div>
-    </section>
-  </main>
+      <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
+      <section id="learn-answering" class="learn-phase" hidden>
+        <header class="learn-header">
+          <div>
+            <p class="learn-meta"><span class="learn-phase-tag">作答中</span> <span id="answering-resumed"></span></p>
+            <h1 id="answering-title">—</h1>
+            <p id="answering-description" class="learn-meta"></p>
+          </div>
+          <div class="learn-timer" id="learn-timer" aria-live="polite">00:00</div>
+        </header>
+
+        <div class="learn-progress" aria-live="polite">
+          <div class="learn-progress-bar"><span id="learn-progress-fill"></span></div>
+          <span id="learn-progress-label">0 / 0</span>
+        </div>
+
+        <form id="learn-form">
+          <div id="learn-questions"></div>
+          <div class="learn-actions">
+            <button id="learn-submit" type="submit" disabled>全部作答完才能送出</button>
+            <span id="learn-notice" class="learn-notice" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- 檢討階段：正解、逐選項解析、累計答錯次數 -->
+      <section id="learn-review" class="learn-phase" hidden>
+        <header class="learn-header">
+          <div>
+            <p class="learn-meta"><span class="learn-phase-tag review">檢討中</span></p>
+            <h1 id="review-title">—</h1>
+            <p id="review-summary" class="learn-meta"></p>
+          </div>
+          <div class="learn-review-actions">
+            <button id="review-scorecard" type="button" class="ghost">累計成績單</button>
+            <button id="review-restart" type="button">再寫一輪</button>
+          </div>
+        </header>
+        <div id="learn-review-body"></div>
+      </section>
+
+      <!-- 累計成績單 -->
+      <section id="learn-scorecard" class="learn-phase" hidden>
+        <header class="learn-header">
+          <div>
+            <p class="learn-meta"><span class="learn-phase-tag">累計成績單</span></p>
+            <h1 id="scorecard-title">—</h1>
+            <p id="scorecard-summary" class="learn-meta"></p>
+          </div>
+          <button id="scorecard-back" type="button" class="ghost">返回</button>
+        </header>
+        <div id="learn-scorecard-body"></div>
+      </section>
+
+      <p id="learn-status" class="learn-status" hidden></p>
+    </main>
+  </div>
 </BaseLayout>
 
 <script>
   import { GATEWAY_API_BASE } from "../common/constants/api";
 
-  type Option = { key: string; text: string };
-  type Question = { id: number; position: number; section: string; passageKey?: string; passageText?: string;
-    prompt: string; options: Option[]; correctCount: number; incorrectCount: number };
-  type Quiz = { id: string; title: string; description: string; recommendedMinutes: number; questions: Question[] };
-  type AnswerResult = { questionId: number; selectedOption?: string; correctOption: string; correct: boolean;
-    explanation: string; correctCount: number; incorrectCount: number };
+  type Topic = {
+    id: string; title: string; description: string; partCode?: string; recommendedMinutes?: number;
+    questionCount: number; difficulties: number[]; state: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+    answeredCount: number; completedRounds: number; lastScore?: number; lastTotal?: number;
+    lastSubmittedAt?: string; lastAttemptId?: number;
+  };
+  type SessionOption = { key: string; text: string };
+  type SessionQuestion = {
+    id: number; order: number; section: string; difficulty?: number; passageKey?: string;
+    passageText?: string; prompt: string; options: SessionOption[]; selectedOption?: string;
+  };
+  type Session = {
+    attemptId: number; quizId: string; quizTitle: string; description?: string; recommendedMinutes?: number;
+    startedAt: string; totalQuestions: number; answeredCount: number; resumed: boolean;
+    questions: SessionQuestion[];
+  };
+  type ReviewOption = { key: string; text: string; rationale?: string; correct: boolean; selected: boolean };
+  type ReviewItem = {
+    questionId: number; order: number; position?: number; section: string; difficulty?: number;
+    focusPoint?: string; passageKey?: string; passageText?: string; prompt: string;
+    options: ReviewOption[]; selectedOption?: string; correctOption: string; correct: boolean;
+    explanation: string; lifetimeCorrect: number; lifetimeIncorrect: number;
+  };
+  type Review = {
+    attemptId: number; quizId: string; quizTitle: string; score: number; totalQuestions: number;
+    durationSeconds?: number; submittedAt: string; items: ReviewItem[];
+  };
+  type ScorecardRow = {
+    questionId: number; position?: number; section: string; difficulty?: number; focusPoint?: string;
+    prompt: string; timesAnswered: number; correctCount: number; incorrectCount: number;
+  };
+  type Scorecard = {
+    quizId: string; quizTitle: string; completedRounds: number; questionCount: number;
+    totalCorrect: number; totalIncorrect: number; rows: ScorecardRow[];
+  };
 
+  const DIFFICULTY_LABELS: Record<number, string> = { 1: "基礎", 2: "進階", 3: "精熟", 4: "挑戰" };
+
+  let topics: Topic[] = [];
+  let currentQuizId: string | null = null;
+  let session: Session | null = null;
+  let answered = new Set<number>();
   let startedAt = Date.now();
   let timerId: number | undefined;
-  let currentQuiz: Quiz | null = null;
+  let saving = 0;
 
   function authHeaders() {
     const token = localStorage.getItem("token");
@@ -54,7 +143,9 @@ if (!username) {
   }
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${GATEWAY_API_BASE}${path}`, { ...init, headers: { ...authHeaders(), ...(init.headers || {}) } });
+    const response = await fetch(`${GATEWAY_API_BASE}${path}`, {
+      ...init, headers: { ...authHeaders(), ...(init.headers || {}) }
+    });
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload?.success) throw new Error(payload?.message || `HTTP ${response.status}`);
     return payload.data as T;
@@ -67,24 +158,118 @@ if (!username) {
     return node;
   }
 
-  function renderQuiz(quiz: Quiz) {
-    currentQuiz = quiz;
-    document.querySelector<HTMLElement>("#quiz-title")!.textContent = quiz.title;
-    document.querySelector<HTMLElement>("#quiz-description")!.textContent =
-      `${quiz.description}｜建議 ${quiz.recommendedMinutes} 分鐘`;
-    const container = document.querySelector<HTMLElement>("#learn-questions")!;
+  function query<T extends HTMLElement>(selector: string) {
+    return document.querySelector<T>(selector);
+  }
+
+  function showPhase(id: "overview" | "answering" | "review" | "scorecard") {
+    for (const name of ["overview", "answering", "review", "scorecard"] as const) {
+      const node = query(`#learn-${name}`);
+      if (node) node.hidden = name !== id;
+    }
+    const status = query("#learn-status");
+    if (status) status.hidden = true;
+  }
+
+  function showError(message: string) {
+    const status = query("#learn-status");
+    if (!status) return;
+    status.textContent = message;
+    status.hidden = false;
+  }
+
+  // ------------------------------------------------------------- sidebar
+
+  function difficultyBadges(topic: Topic) {
+    const wrapper = element("span", "learn-badges");
+    for (const level of topic.difficulties ?? []) {
+      wrapper.append(element("span", `learn-badge level-${level}`, DIFFICULTY_LABELS[level] ?? `L${level}`));
+    }
+    return wrapper;
+  }
+
+  function renderTopics(activeId?: string) {
+    const container = query("#learn-topics");
+    if (!container) return;
+    container.replaceChildren();
+
+    for (const topic of topics) {
+      const button = element("button", "learn-topic");
+      button.type = "button";
+      if (topic.id === activeId) button.classList.add("active");
+      button.dataset.topicId = topic.id;
+
+      button.append(element("span", "learn-topic-part", topic.partCode ?? "TOPIC"));
+      button.append(element("span", "learn-topic-title", topic.title));
+      button.append(difficultyBadges(topic));
+
+      let status: string;
+      if (topic.state === "IN_PROGRESS") {
+        status = `未完成 ${topic.answeredCount} / ${topic.questionCount}，接續作答`;
+        button.classList.add("in-progress");
+      } else if (topic.state === "COMPLETED") {
+        status = `已完成 ${topic.completedRounds} 輪｜上次 ${topic.lastScore}/${topic.lastTotal}`;
+      } else {
+        status = `${topic.questionCount} 題，尚未開始`;
+      }
+      button.append(element("span", "learn-topic-status", status));
+      container.append(button);
+    }
+
+    if (!topics.length) container.append(element("p", "learn-meta", "目前沒有可作答的主題"));
+  }
+
+  // ---------------------------------------------------- answering phase
+
+  function updateProgress() {
+    if (!session) return;
+    const total = session.totalQuestions;
+    const done = answered.size;
+    const fill = query("#learn-progress-fill");
+    if (fill) fill.style.width = `${total ? (done / total) * 100 : 0}%`;
+    const label = query("#learn-progress-label");
+    if (label) label.textContent = `${done} / ${total}`;
+
+    const submit = query<HTMLButtonElement>("#learn-submit");
+    if (submit) {
+      const complete = done >= total;
+      submit.disabled = !complete || saving > 0;
+      submit.textContent = complete ? "送出並進入檢討" : `還有 ${total - done} 題未作答`;
+    }
+  }
+
+  function renderSession(data: Session) {
+    session = data;
+    currentQuizId = data.quizId;
+    answered = new Set(data.questions.filter(q => q.selectedOption).map(q => q.id));
+
+    query("#answering-title")!.textContent = data.quizTitle;
+    query("#answering-description")!.textContent =
+      [data.description, data.recommendedMinutes ? `建議 ${data.recommendedMinutes} 分鐘` : null]
+        .filter(Boolean).join("｜");
+    query("#answering-resumed")!.textContent = data.resumed ? "接續上次未完成的進度" : "本輪已重新亂序";
+
+    const container = query("#learn-questions")!;
     container.replaceChildren();
     let lastPassageKey = "";
 
-    for (const question of quiz.questions) {
+    for (const question of data.questions) {
       if (question.passageKey && question.passageKey !== lastPassageKey && question.passageText) {
         container.append(element("article", "learn-passage", question.passageText));
         lastPassageKey = question.passageKey;
       }
       const card = element("fieldset", "learn-question");
       card.dataset.questionId = String(question.id);
-      const legend = element("h3", "", `${question.position}. ${question.prompt}`);
-      card.append(legend);
+      if (question.selectedOption) card.classList.add("answered");
+
+      const head = element("div", "learn-question-head");
+      head.append(element("span", "learn-question-no", String(question.order)));
+      if (question.difficulty) {
+        head.append(element("span", `learn-badge level-${question.difficulty}`,
+          DIFFICULTY_LABELS[question.difficulty] ?? `L${question.difficulty}`));
+      }
+      card.append(head, element("h3", "", question.prompt));
+
       const choices = element("div", "learn-options");
       for (const option of question.options) {
         const label = element("label", "learn-option");
@@ -92,17 +277,38 @@ if (!username) {
         radio.type = "radio";
         radio.name = `question-${question.id}`;
         radio.value = option.key;
+        radio.checked = question.selectedOption === option.key;
         label.append(radio, element("span", "", `(${option.key}) ${option.text}`));
         choices.append(label);
       }
-      card.append(choices, element("div", "learn-performance",
-        `你的歷史：答對 ${question.correctCount} 次／答錯 ${question.incorrectCount} 次`));
+      card.append(choices);
       container.append(card);
     }
-    document.querySelector<HTMLElement>("#learn-status")!.hidden = true;
-    document.querySelector<HTMLFormElement>("#learn-form")!.hidden = false;
+
     startedAt = Date.now();
     startTimer();
+    updateProgress();
+    showPhase("answering");
+  }
+
+  async function persistAnswer(questionId: number, selectedOption: string) {
+    if (!session) return;
+    saving++;
+    const notice = query("#learn-notice");
+    if (notice) notice.textContent = "儲存中…";
+    try {
+      const ack = await request<{ answeredCount: number }>(
+        `/learn/topics/${session.quizId}/session/answers`,
+        { method: "POST", body: JSON.stringify({ questionId, selectedOption }) }
+      );
+      answered.add(questionId);
+      if (notice) notice.textContent = `已儲存 ${ack.answeredCount} 題`;
+    } catch (error) {
+      if (notice) notice.textContent = error instanceof Error ? error.message : "儲存失敗，請再試一次";
+    } finally {
+      saving--;
+      updateProgress();
+    }
   }
 
   function startTimer() {
@@ -110,83 +316,226 @@ if (!username) {
     const tick = () => {
       const seconds = Math.floor((Date.now() - startedAt) / 1000);
       const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
-      document.querySelector<HTMLElement>("#learn-timer")!.textContent = `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
+      const node = query("#learn-timer");
+      if (node) node.textContent = `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
     };
     tick();
     timerId = window.setInterval(tick, 1000);
   }
 
-  function showResults(results: AnswerResult[]) {
-    for (const result of results) {
-      const card = document.querySelector<HTMLElement>(`[data-question-id="${result.questionId}"]`)!;
-      card.classList.add(result.correct ? "correct" : "incorrect");
-      card.querySelectorAll<HTMLInputElement>("input").forEach(input => input.disabled = true);
-      const selected = result.selectedOption ? `你的答案：${result.selectedOption}` : "未作答";
-      card.append(element("div", "learn-explanation",
-        `${selected}｜正確答案：${result.correctOption}\n${result.explanation}`));
-      const performance = card.querySelector<HTMLElement>(".learn-performance")!;
-      performance.textContent = `累計：答對 ${result.correctCount} 次／答錯 ${result.incorrectCount} 次`;
-    }
+  function stopTimer() {
+    if (timerId) window.clearInterval(timerId);
+    timerId = undefined;
   }
 
-  async function loadHistory() {
-    const target = document.querySelector<HTMLElement>("#learn-history-content")!;
-    try {
-      const history = await request<any[]>("/learn/attempts");
-      if (!history.length) return;
-      target.replaceChildren(...history.slice(0, 5).map(item => element("p", "",
-        `${new Date(item.submittedAt).toLocaleString()} — ${item.score}/${item.totalQuestions}`)));
-    } catch { target.textContent = "暫時無法讀取作答紀錄"; }
+  // ------------------------------------------------------- review phase
+
+  function renderReview(review: Review) {
+    stopTimer();
+    currentQuizId = review.quizId;
+    query("#review-title")!.textContent = review.quizTitle;
+    const minutes = review.durationSeconds ? `｜用時 ${Math.round(review.durationSeconds / 60)} 分鐘` : "";
+    query("#review-summary")!.textContent =
+      `得分 ${review.score} / ${review.totalQuestions}${minutes}｜逐題檢討，每個選項都說明為何對或為何錯`;
+
+    const body = query("#learn-review-body")!;
+    body.replaceChildren();
+    let lastPassageKey = "";
+
+    for (const item of review.items) {
+      if (item.passageKey && item.passageKey !== lastPassageKey && item.passageText) {
+        body.append(element("article", "learn-passage", item.passageText));
+        lastPassageKey = item.passageKey;
+      }
+      const card = element("article", `learn-question ${item.correct ? "correct" : "incorrect"}`);
+
+      const head = element("div", "learn-question-head");
+      head.append(element("span", "learn-question-no", String(item.order)));
+      head.append(element("span", `learn-verdict ${item.correct ? "ok" : "ng"}`, item.correct ? "答對" : "答錯"));
+      if (item.difficulty) {
+        head.append(element("span", `learn-badge level-${item.difficulty}`,
+          DIFFICULTY_LABELS[item.difficulty] ?? `L${item.difficulty}`));
+      }
+      if (item.focusPoint) head.append(element("span", "learn-focus", item.focusPoint));
+      card.append(head, element("h3", "", item.prompt));
+
+      const list = element("div", "learn-options review");
+      for (const option of item.options) {
+        const row = element("div", "learn-review-option");
+        if (option.correct) row.classList.add("is-correct");
+        if (option.selected) row.classList.add("is-selected");
+
+        const marks = [option.correct ? "正解" : null, option.selected ? "你的選擇" : null].filter(Boolean);
+        const heading = element("p", "learn-review-option-head",
+          `(${option.key}) ${option.text}${marks.length ? `　— ${marks.join("／")}` : ""}`);
+        row.append(heading);
+        if (option.rationale) row.append(element("p", "learn-rationale", option.rationale));
+        list.append(row);
+      }
+      card.append(list);
+
+      if (item.explanation) {
+        const box = element("div", "learn-explanation");
+        box.append(element("strong", "", "整題重點"), element("p", "", item.explanation));
+        card.append(box);
+      }
+      card.append(element("p", "learn-performance",
+        `這一題你累計答對 ${item.lifetimeCorrect} 次／答錯 ${item.lifetimeIncorrect} 次`));
+      body.append(card);
+    }
+
+    showPhase("review");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function initLearn() {
-    const status = document.querySelector<HTMLElement>("#learn-status");
-    const form = document.querySelector<HTMLFormElement>("#learn-form");
-    if (!status || !form) {
-      if (timerId) window.clearInterval(timerId);
-      return;
+  function renderScorecard(card: Scorecard) {
+    query("#scorecard-title")!.textContent = card.quizTitle;
+    query("#scorecard-summary")!.textContent =
+      `已完成 ${card.completedRounds} 輪｜累計答對 ${card.totalCorrect} 次、答錯 ${card.totalIncorrect} 次｜依答錯次數由高至低排列`;
+
+    const body = query("#learn-scorecard-body")!;
+    body.replaceChildren();
+
+    const table = element("table", "learn-scorecard-table");
+    const head = element("tr");
+    for (const label of ["題號", "考點", "難度", "作答次數", "答對", "答錯"]) {
+      head.append(element("th", "", label));
     }
-    if (form.dataset.submitBound !== "true") {
-      form.dataset.submitBound = "true";
-      form.addEventListener("submit", submitAttempt);
+    table.append(head);
+
+    for (const row of card.rows) {
+      const tr = element("tr");
+      if (row.incorrectCount > 0) tr.classList.add("has-errors");
+      tr.append(element("td", "", row.position ? String(row.position) : "—"));
+      tr.append(element("td", "learn-scorecard-focus", row.focusPoint || row.prompt.slice(0, 40) + "…"));
+      tr.append(element("td", "", row.difficulty ? (DIFFICULTY_LABELS[row.difficulty] ?? `L${row.difficulty}`) : "—"));
+      tr.append(element("td", "", String(row.timesAnswered)));
+      tr.append(element("td", "", String(row.correctCount)));
+      tr.append(element("td", "learn-scorecard-wrong", String(row.incorrectCount)));
+      table.append(tr);
     }
-    if (!localStorage.getItem("token")) {
-      window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
-      return;
-    }
+    body.append(table);
+    showPhase("scorecard");
+  }
+
+  // ------------------------------------------------------------- actions
+
+  async function openTopic(quizId: string) {
+    renderTopics(quizId);
     try {
-      const quizzes = await request<Array<{id: string}>>("/learn/quizzes");
-      if (!quizzes.length) throw new Error("目前沒有可作答的題目");
-      renderQuiz(await request<Quiz>(`/learn/quizzes/${quizzes[0].id}`));
-      await loadHistory();
+      const topic = topics.find(item => item.id === quizId);
+      // 已完成且沒有進行中的一輪：先看上一輪檢討，由使用者決定是否再寫一輪
+      if (topic?.state === "COMPLETED" && topic.lastAttemptId) {
+        renderReview(await request<Review>(`/learn/attempts/${topic.lastAttemptId}/review`));
+        return;
+      }
+      renderSession(await request<Session>(`/learn/topics/${quizId}/session`, { method: "POST" }));
     } catch (error) {
-      status.textContent = error instanceof Error ? error.message : "題目載入失敗";
+      showError(error instanceof Error ? error.message : "無法開啟這個主題");
+    }
+  }
+
+  async function startNewRound(quizId: string) {
+    try {
+      renderSession(await request<Session>(`/learn/topics/${quizId}/session`, { method: "POST" }));
+      await loadTopics(quizId);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "無法開始新的一輪");
     }
   }
 
   async function submitAttempt(event: SubmitEvent) {
     event.preventDefault();
-    if (!currentQuiz) return;
-    const button = document.querySelector<HTMLButtonElement>("#learn-submit")!;
+    if (!session) return;
+    const button = query<HTMLButtonElement>("#learn-submit")!;
     button.disabled = true;
-    const answers: Record<number, string> = {};
-    for (const question of currentQuiz.questions) {
-      const checked = document.querySelector<HTMLInputElement>(`input[name="question-${question.id}"]:checked`);
-      if (checked) answers[question.id] = checked.value;
-    }
     try {
-      const result = await request<any>(`/learn/quizzes/${currentQuiz.id}/attempts`, {
+      const review = await request<Review>(`/learn/topics/${session.quizId}/attempts`, {
         method: "POST",
-        body: JSON.stringify({ answers, durationSeconds: Math.floor((Date.now() - startedAt) / 1000) })
+        body: JSON.stringify({ durationSeconds: Math.floor((Date.now() - startedAt) / 1000) })
       });
-      if (timerId) window.clearInterval(timerId);
-      document.querySelector<HTMLElement>("#learn-score")!.textContent = `得分 ${result.score} / ${result.totalQuestions}`;
-      showResults(result.answers);
+      renderReview(review);
+      await loadTopics(session.quizId);
       await loadHistory();
-      button.textContent = "已送出";
     } catch (error) {
       button.disabled = false;
-      document.querySelector<HTMLElement>("#learn-score")!.textContent = error instanceof Error ? error.message : "送出失敗";
+      const notice = query("#learn-notice");
+      if (notice) notice.textContent = error instanceof Error ? error.message : "送出失敗";
+    }
+  }
+
+  async function loadTopics(activeId?: string) {
+    topics = await request<Topic[]>("/learn/topics");
+    renderTopics(activeId);
+  }
+
+  async function loadHistory() {
+    const target = query("#learn-history-content");
+    if (!target) return;
+    try {
+      const history = await request<Array<{ submittedAt: string; score: number; totalQuestions: number; quizTitle: string }>>("/learn/attempts");
+      if (!history.length) {
+        target.textContent = "尚無紀錄";
+        return;
+      }
+      target.replaceChildren(...history.slice(0, 6).map(item => element("p", "learn-history-row",
+        `${new Date(item.submittedAt).toLocaleDateString()}　${item.quizTitle}　${item.score}/${item.totalQuestions}`)));
+    } catch {
+      target.textContent = "暫時無法讀取作答紀錄";
+    }
+  }
+
+  function bindOnce(node: HTMLElement | null, key: string, type: string, handler: EventListener) {
+    if (!node || node.dataset[key] === "true") return;
+    node.dataset[key] = "true";
+    node.addEventListener(type, handler);
+  }
+
+  async function initLearn() {
+    const shell = document.querySelector(".learn-shell");
+    if (!shell) {
+      stopTimer();
+      return;
+    }
+    if (!localStorage.getItem("token")) {
+      window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
+      return;
+    }
+
+    bindOnce(query("#learn-topics"), "bound", "click", event => {
+      const button = (event.target as HTMLElement).closest<HTMLElement>("[data-topic-id]");
+      if (button?.dataset.topicId) void openTopic(button.dataset.topicId);
+    });
+
+    bindOnce(query("#learn-form"), "bound", "submit", event => void submitAttempt(event as SubmitEvent));
+
+    bindOnce(query("#learn-questions"), "bound", "change", event => {
+      const input = event.target as HTMLInputElement;
+      if (input?.type !== "radio") return;
+      const card = input.closest<HTMLElement>("[data-question-id]");
+      if (!card?.dataset.questionId) return;
+      card.classList.add("answered");
+      void persistAnswer(Number(card.dataset.questionId), input.value);
+    });
+
+    bindOnce(query("#review-restart"), "bound", "click", () => {
+      if (currentQuizId) void startNewRound(currentQuizId);
+    });
+
+    bindOnce(query("#review-scorecard"), "bound", "click", () => {
+      if (!currentQuizId) return;
+      void request<Scorecard>(`/learn/topics/${currentQuizId}/scorecard`).then(renderScorecard)
+        .catch(error => showError(error instanceof Error ? error.message : "無法讀取成績單"));
+    });
+
+    bindOnce(query("#scorecard-back"), "bound", "click", () => showPhase("review"));
+
+    try {
+      showPhase("overview");
+      await loadTopics();
+      await loadHistory();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "主題載入失敗");
     }
   }
 
