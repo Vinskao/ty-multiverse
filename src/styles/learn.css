@@ -1,0 +1,20 @@
+.learn-page { max-width: 920px; margin-inline: auto; }
+.learn-header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: 1.5rem; }
+.learn-meta { color: var(--gray-500); margin: .35rem 0 0; }
+.learn-timer { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent-regular); }
+.learn-status, .learn-history { padding: 1rem; border: 1px solid var(--gray-800); border-radius: .75rem; background: var(--gray-999-basis); }
+.learn-question { padding: 1.25rem; margin: 1rem 0; border: 1px solid var(--gray-800); border-radius: .8rem; background: var(--gray-999-basis); }
+.learn-question.correct { border-color: #2cba6c; }
+.learn-question.incorrect { border-color: #e85d75; }
+.learn-question h3 { margin: 0 0 .8rem; font-size: 1rem; }
+.learn-passage { white-space: pre-wrap; line-height: 1.65; padding: 1.25rem; margin: 1.5rem 0 .5rem; border-left: 4px solid var(--accent-regular); background: var(--gray-999-basis); }
+.learn-options { display: grid; gap: .55rem; }
+.learn-option { display: flex; gap: .65rem; align-items: flex-start; padding: .65rem .75rem; border-radius: .5rem; cursor: pointer; }
+.learn-option:hover { background: var(--gray-900); }
+.learn-explanation { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-800); line-height: 1.6; }
+.learn-performance { color: var(--gray-500); font-size: .9rem; margin-top: .65rem; }
+.learn-actions { position: sticky; bottom: 1rem; display: flex; gap: 1rem; align-items: center; padding: 1rem; margin-top: 1.25rem; border-radius: .8rem; background: color-mix(in srgb, var(--gray-999-basis) 92%, transparent); box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+.learn-actions button { padding: .7rem 1.25rem; border: 0; border-radius: .5rem; background: var(--accent-regular); color: white; font-weight: 700; cursor: pointer; }
+.learn-actions button:disabled { opacity: .55; cursor: wait; }
+.learn-score { font-size: 1.15rem; font-weight: 700; }
+@media (max-width: 600px) { .learn-header { align-items: flex-start; flex-direction: column; } .learn-question { padding: 1rem; } }

@@ -576,7 +576,7 @@ export class NavController {
           // Keycloak SSO session 通常還活著，會靜默取得全新 token（不需重輸密碼）。
           // 登入頁不屬於受保護路徑，因此可直接導向，不必把失效頁留在畫面或瀏覽紀錄中。
           const path = window.location.pathname;
-          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work)/.test(path);
+          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work|learn)/.test(path);
           if (isProtectedPage) {
             const current = window.location.pathname + window.location.search;
             sessionStorage.setItem('tym_post_login_redirect', current);
@@ -609,6 +609,7 @@ export class NavController {
     const workLink = document.querySelector('a[href^="/tymultiverse/work"]') as HTMLAnchorElement;
     const aboutLink = document.querySelector('a[href^="/tymultiverse/about"]') as HTMLAnchorElement;
     const controlLink = document.querySelector('a[href^="/tymultiverse/control"]') as HTMLElement;
+    const learnLink = document.querySelector('a[href^="/tymultiverse/learn"]') as HTMLElement;
     const wildlandLink = document.querySelector('a[href*="/tymultiverse/wildland"]') as HTMLAnchorElement;
     const palaisLink = document.querySelector('a[href*="/tymultiverse/palais"]') as HTMLAnchorElement;
 
@@ -638,6 +639,15 @@ export class NavController {
     }
     if (aboutLink && this.isLoggedIn) {
       aboutLink.href = `/tymultiverse/about/?username=${this.username}`;
+    }
+
+    if (learnLink) {
+      learnLink.style.display = (this.isLoggedIn && this.hasUserAccess) ? 'block' : 'none';
+      const parentLi = learnLink.closest('li');
+      if (parentLi) parentLi.style.display = learnLink.style.display;
+      if (this.isLoggedIn && this.hasUserAccess) {
+        (learnLink as HTMLAnchorElement).href = `/tymultiverse/learn/?username=${this.username}`;
+      }
     }
 
     // Control 需要用戶登入權限

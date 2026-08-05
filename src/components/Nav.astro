@@ -59,6 +59,12 @@ const textLinks: {
   ...(isLoggedIn
     ? [
         {
+          label: "Learn",
+          i18nKey: "nav.learn",
+          href: `/tymultiverse/learn/?username=${username}`,
+          isActive: currentPath.startsWith("/tymultiverse/learn"),
+        },
+        {
           label: "Control",
           i18nKey: "nav.control",
           href: `/tymultiverse/control/?username=${username}`,
@@ -202,7 +208,7 @@ const iconLinks: {
         }
       </div>
       <div class="nav-controls-footer">
-        <button class="reset-website-btn lang-toggle-btn" data-i18n="home.resetWebsite">Reset Website</button>
+        <button class="reset-website-btn lang-toggle-btn" data-i18n="home.resetWebsite">Reset</button>
         <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
       </div>
     </div>
@@ -484,4 +490,3 @@ const iconLinks: {
     cursor: not-allowed;
   }
 </style>
-

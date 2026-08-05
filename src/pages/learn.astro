@@ -1,0 +1,194 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const username = new URL(Astro.request.url).searchParams.get("username");
+if (!username) {
+  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+}
+---
+
+<BaseLayout title="Learn | TY Multiverse" description="TOEIC practice and learning history">
+  <main class="wrapper learn-page">
+    <header class="learn-header">
+      <div>
+        <p class="learn-meta">LEARN</p>
+        <h1 id="quiz-title">TOEIC Reading Mini Mock Test</h1>
+        <p id="quiz-description" class="learn-meta">載入題目中…</p>
+      </div>
+      <div id="learn-timer" class="learn-timer" aria-live="polite">00:00</div>
+    </header>
+
+    <section id="learn-status" class="learn-status" aria-live="polite">正在讀取題庫…</section>
+    <form id="learn-form" hidden>
+      <div id="learn-questions"></div>
+      <div class="learn-actions">
+        <button id="learn-submit" type="submit">完成並送出</button>
+        <span id="learn-score" class="learn-score" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <section class="learn-history" aria-labelledby="history-title">
+      <h2 id="history-title">最近作答</h2>
+      <div id="learn-history-content">尚無紀錄</div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+  import { GATEWAY_API_BASE } from "../common/constants/api";
+
+  type Option = { key: string; text: string };
+  type Question = { id: number; position: number; section: string; passageKey?: string; passageText?: string;
+    prompt: string; options: Option[]; correctCount: number; incorrectCount: number };
+  type Quiz = { id: string; title: string; description: string; recommendedMinutes: number; questions: Question[] };
+  type AnswerResult = { questionId: number; selectedOption?: string; correctOption: string; correct: boolean;
+    explanation: string; correctCount: number; incorrectCount: number };
+
+  let startedAt = Date.now();
+  let timerId: number | undefined;
+  let currentQuiz: Quiz | null = null;
+
+  function authHeaders() {
+    const token = localStorage.getItem("token");
+    return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  }
+
+  async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const response = await fetch(`${GATEWAY_API_BASE}${path}`, { ...init, headers: { ...authHeaders(), ...(init.headers || {}) } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload?.success) throw new Error(payload?.message || `HTTP ${response.status}`);
+    return payload.data as T;
+  }
+
+  function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function renderQuiz(quiz: Quiz) {
+    currentQuiz = quiz;
+    document.querySelector<HTMLElement>("#quiz-title")!.textContent = quiz.title;
+    document.querySelector<HTMLElement>("#quiz-description")!.textContent =
+      `${quiz.description}｜建議 ${quiz.recommendedMinutes} 分鐘`;
+    const container = document.querySelector<HTMLElement>("#learn-questions")!;
+    container.replaceChildren();
+    let lastPassageKey = "";
+
+    for (const question of quiz.questions) {
+      if (question.passageKey && question.passageKey !== lastPassageKey && question.passageText) {
+        container.append(element("article", "learn-passage", question.passageText));
+        lastPassageKey = question.passageKey;
+      }
+      const card = element("fieldset", "learn-question");
+      card.dataset.questionId = String(question.id);
+      const legend = element("h3", "", `${question.position}. ${question.prompt}`);
+      card.append(legend);
+      const choices = element("div", "learn-options");
+      for (const option of question.options) {
+        const label = element("label", "learn-option");
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = `question-${question.id}`;
+        radio.value = option.key;
+        label.append(radio, element("span", "", `(${option.key}) ${option.text}`));
+        choices.append(label);
+      }
+      card.append(choices, element("div", "learn-performance",
+        `你的歷史：答對 ${question.correctCount} 次／答錯 ${question.incorrectCount} 次`));
+      container.append(card);
+    }
+    document.querySelector<HTMLElement>("#learn-status")!.hidden = true;
+    document.querySelector<HTMLFormElement>("#learn-form")!.hidden = false;
+    startedAt = Date.now();
+    startTimer();
+  }
+
+  function startTimer() {
+    if (timerId) window.clearInterval(timerId);
+    const tick = () => {
+      const seconds = Math.floor((Date.now() - startedAt) / 1000);
+      const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
+      document.querySelector<HTMLElement>("#learn-timer")!.textContent = `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
+    };
+    tick();
+    timerId = window.setInterval(tick, 1000);
+  }
+
+  function showResults(results: AnswerResult[]) {
+    for (const result of results) {
+      const card = document.querySelector<HTMLElement>(`[data-question-id="${result.questionId}"]`)!;
+      card.classList.add(result.correct ? "correct" : "incorrect");
+      card.querySelectorAll<HTMLInputElement>("input").forEach(input => input.disabled = true);
+      const selected = result.selectedOption ? `你的答案：${result.selectedOption}` : "未作答";
+      card.append(element("div", "learn-explanation",
+        `${selected}｜正確答案：${result.correctOption}\n${result.explanation}`));
+      const performance = card.querySelector<HTMLElement>(".learn-performance")!;
+      performance.textContent = `累計：答對 ${result.correctCount} 次／答錯 ${result.incorrectCount} 次`;
+    }
+  }
+
+  async function loadHistory() {
+    const target = document.querySelector<HTMLElement>("#learn-history-content")!;
+    try {
+      const history = await request<any[]>("/learn/attempts");
+      if (!history.length) return;
+      target.replaceChildren(...history.slice(0, 5).map(item => element("p", "",
+        `${new Date(item.submittedAt).toLocaleString()} — ${item.score}/${item.totalQuestions}`)));
+    } catch { target.textContent = "暫時無法讀取作答紀錄"; }
+  }
+
+  async function initLearn() {
+    const status = document.querySelector<HTMLElement>("#learn-status");
+    const form = document.querySelector<HTMLFormElement>("#learn-form");
+    if (!status || !form) {
+      if (timerId) window.clearInterval(timerId);
+      return;
+    }
+    if (form.dataset.submitBound !== "true") {
+      form.dataset.submitBound = "true";
+      form.addEventListener("submit", submitAttempt);
+    }
+    if (!localStorage.getItem("token")) {
+      window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
+      return;
+    }
+    try {
+      const quizzes = await request<Array<{id: string}>>("/learn/quizzes");
+      if (!quizzes.length) throw new Error("目前沒有可作答的題目");
+      renderQuiz(await request<Quiz>(`/learn/quizzes/${quizzes[0].id}`));
+      await loadHistory();
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "題目載入失敗";
+    }
+  }
+
+  async function submitAttempt(event: SubmitEvent) {
+    event.preventDefault();
+    if (!currentQuiz) return;
+    const button = document.querySelector<HTMLButtonElement>("#learn-submit")!;
+    button.disabled = true;
+    const answers: Record<number, string> = {};
+    for (const question of currentQuiz.questions) {
+      const checked = document.querySelector<HTMLInputElement>(`input[name="question-${question.id}"]:checked`);
+      if (checked) answers[question.id] = checked.value;
+    }
+    try {
+      const result = await request<any>(`/learn/quizzes/${currentQuiz.id}/attempts`, {
+        method: "POST",
+        body: JSON.stringify({ answers, durationSeconds: Math.floor((Date.now() - startedAt) / 1000) })
+      });
+      if (timerId) window.clearInterval(timerId);
+      document.querySelector<HTMLElement>("#learn-score")!.textContent = `得分 ${result.score} / ${result.totalQuestions}`;
+      showResults(result.answers);
+      await loadHistory();
+      button.textContent = "已送出";
+    } catch (error) {
+      button.disabled = false;
+      document.querySelector<HTMLElement>("#learn-score")!.textContent = error instanceof Error ? error.message : "送出失敗";
+    }
+  }
+
+  document.addEventListener("astro:page-load", initLearn);
+</script>
