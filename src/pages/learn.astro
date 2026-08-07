@@ -13,6 +13,7 @@ if (!username) {
       <p class="learn-meta">LEARN</p>
       <h2 class="learn-sidebar-title">主題</h2>
       <nav id="learn-topics" class="learn-topics">載入中…</nav>
+      <button id="learn-mentor-open" class="learn-mentor-link" type="button" hidden>導師模式：全班作答狀況</button>
       <section class="learn-history" aria-labelledby="history-title">
         <h3 id="history-title">最近作答</h3>
         <div id="learn-history-content">尚無紀錄</div>
@@ -67,7 +68,22 @@ if (!username) {
             <button id="review-restart" type="button">再寫一輪</button>
           </div>
         </header>
+        <!-- 排行榜：檢討模式下才看得到其他人的平均作答狀況 -->
+        <section id="learn-ranking" class="learn-ranking" hidden></section>
         <div id="learn-review-body"></div>
+      </section>
+
+      <!-- 導師模式：所有帳號的作答狀況 -->
+      <section id="learn-mentor" class="learn-phase" hidden>
+        <header class="learn-header">
+          <div>
+            <p class="learn-meta"><span class="learn-phase-tag mentor">導師模式</span></p>
+            <h1>全班作答狀況</h1>
+            <p id="mentor-summary" class="learn-meta"></p>
+          </div>
+          <button id="mentor-refresh" type="button" class="ghost">重新整理</button>
+        </header>
+        <div id="learn-mentor-body"></div>
       </section>
 
       <!-- 累計成績單 -->
@@ -113,11 +129,37 @@ if (!username) {
     focusPoint?: string; passageKey?: string; passageText?: string; prompt: string;
     options: ReviewOption[]; selectedOption?: string; correctOption: string; correct: boolean;
     explanation: string; lifetimeCorrect: number; lifetimeIncorrect: number;
+    cohortCorrect: number; cohortIncorrect: number; cohortAccuracy?: number | null;
+  };
+  type RankingRow = {
+    rank: number; userId: string; self: boolean; rounds: number; averageScore: number;
+    averageAccuracy: number; bestScore?: number | null; averageDurationSeconds?: number | null;
+    lastSubmittedAt?: string | null;
+  };
+  type Ranking = {
+    quizId: string; quizTitle: string; questionCount: number; learnerCount: number;
+    cohortAverageScore?: number | null; cohortAverageAccuracy?: number | null;
+    selfRank?: number | null; rows: RankingRow[];
   };
   type Review = {
     attemptId: number; quizId: string; quizTitle: string; score: number; totalQuestions: number;
-    durationSeconds?: number; submittedAt: string; items: ReviewItem[];
+    durationSeconds?: number; submittedAt: string; items: ReviewItem[]; ranking?: Ranking | null;
   };
+  type MentorTopicProgress = {
+    quizId: string; quizTitle: string; state: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+    questionCount: number; completedRounds: number; answeredCount: number;
+    averageScore?: number | null; averageAccuracy?: number | null; bestScore?: number | null;
+    lastScore?: number | null; lastSubmittedAt?: string | null;
+  };
+  type MentorLearner = {
+    userId: string; totalRounds: number; averageAccuracy?: number | null; lastActiveAt?: string | null;
+    topicsInProgress: number; topicsCompleted: number; topics: MentorTopicProgress[];
+  };
+  type MentorOverview = {
+    learnerCount: number; totalRounds: number; cohortAverageAccuracy?: number | null;
+    learners: MentorLearner[];
+  };
+  type Profile = { userId: string; mentor: boolean };
   type ScorecardRow = {
     questionId: number; position?: number; section: string; difficulty?: number; focusPoint?: string;
     prompt: string; timesAnswered: number; correctCount: number; incorrectCount: number;
@@ -136,6 +178,7 @@ if (!username) {
   let startedAt = Date.now();
   let timerId: number | undefined;
   let saving = 0;
+  let profile: Profile | null = null;
 
   function authHeaders() {
     const token = localStorage.getItem("token");
@@ -162,8 +205,8 @@ if (!username) {
     return document.querySelector<T>(selector);
   }
 
-  function showPhase(id: "overview" | "answering" | "review" | "scorecard") {
-    for (const name of ["overview", "answering", "review", "scorecard"] as const) {
+  function showPhase(id: "overview" | "answering" | "review" | "scorecard" | "mentor") {
+    for (const name of ["overview", "answering", "review", "scorecard", "mentor"] as const) {
       const node = query(`#learn-${name}`);
       if (node) node.hidden = name !== id;
     }
@@ -328,6 +371,59 @@ if (!username) {
     timerId = undefined;
   }
 
+  // ----------------------------------------------------------- ranking
+
+  function percent(value?: number | null) {
+    return value === null || value === undefined ? "—" : `${Math.round(value * 100)}%`;
+  }
+
+  /** 排行榜只放平均值，不會出現別人的答案；作答階段不會呼叫，只在檢討模式顯示。 */
+  function renderRanking(ranking?: Ranking | null) {
+    const container = query("#learn-ranking");
+    if (!container) return;
+    container.replaceChildren();
+    if (!ranking || !ranking.rows.length) {
+      container.hidden = true;
+      return;
+    }
+    container.hidden = false;
+
+    const head = element("div", "learn-ranking-head");
+    head.append(element("h2", "", "排行榜"));
+    head.append(element("p", "learn-meta",
+      `${ranking.learnerCount} 位學習者｜全體平均 ${
+        ranking.cohortAverageScore === null || ranking.cohortAverageScore === undefined
+          ? "—" : ranking.cohortAverageScore.toFixed(1)
+      } / ${ranking.questionCount}（正確率 ${percent(ranking.cohortAverageAccuracy)}）${
+        ranking.selfRank ? `｜你目前第 ${ranking.selfRank} 名` : ""
+      }`));
+    container.append(head);
+
+    const table = element("table", "learn-scorecard-table");
+    const header = element("tr");
+    for (const label of ["名次", "帳號", "完成輪數", "平均分數", "正確率", "最佳", "平均用時", "最後作答"]) {
+      header.append(element("th", "", label));
+    }
+    table.append(header);
+
+    for (const row of ranking.rows) {
+      const tr = element("tr");
+      if (row.self) tr.classList.add("is-self");
+      tr.append(element("td", "", String(row.rank)));
+      tr.append(element("td", "", row.self ? `${row.userId}（你）` : row.userId));
+      tr.append(element("td", "", String(row.rounds)));
+      tr.append(element("td", "", row.averageScore.toFixed(1)));
+      tr.append(element("td", "", percent(row.averageAccuracy)));
+      tr.append(element("td", "", row.bestScore === null || row.bestScore === undefined ? "—" : String(row.bestScore)));
+      tr.append(element("td", "", row.averageDurationSeconds
+        ? `${Math.round(row.averageDurationSeconds / 60)} 分` : "—"));
+      tr.append(element("td", "", row.lastSubmittedAt
+        ? new Date(row.lastSubmittedAt).toLocaleDateString() : "—"));
+      table.append(tr);
+    }
+    container.append(table);
+  }
+
   // ------------------------------------------------------- review phase
 
   function renderReview(review: Review) {
@@ -337,6 +433,7 @@ if (!username) {
     const minutes = review.durationSeconds ? `｜用時 ${Math.round(review.durationSeconds / 60)} 分鐘` : "";
     query("#review-summary")!.textContent =
       `得分 ${review.score} / ${review.totalQuestions}${minutes}｜逐題檢討，每個選項都說明為何對或為何錯`;
+    renderRanking(review.ranking);
 
     const body = query("#learn-review-body")!;
     body.replaceChildren();
@@ -381,6 +478,10 @@ if (!username) {
       }
       card.append(element("p", "learn-performance",
         `這一題你累計答對 ${item.lifetimeCorrect} 次／答錯 ${item.lifetimeIncorrect} 次`));
+      const crowdTotal = item.cohortCorrect + item.cohortIncorrect;
+      card.append(element("p", "learn-performance cohort", crowdTotal
+        ? `所有人平均：作答 ${crowdTotal} 次，正確率 ${percent(item.cohortAccuracy)}`
+        : "所有人平均：目前還沒有其他作答紀錄"));
       body.append(card);
     }
 
@@ -416,6 +517,79 @@ if (!username) {
     }
     body.append(table);
     showPhase("scorecard");
+  }
+
+  // -------------------------------------------------------- mentor mode
+
+  const STATE_LABELS: Record<MentorTopicProgress["state"], string> = {
+    NOT_STARTED: "尚未開始", IN_PROGRESS: "作答中", COMPLETED: "已完成"
+  };
+
+  function renderMentor(overview: MentorOverview) {
+    query("#mentor-summary")!.textContent =
+      `${overview.learnerCount} 個帳號｜累計 ${overview.totalRounds} 輪｜全體平均正確率 ${percent(overview.cohortAverageAccuracy)}`;
+
+    const body = query("#learn-mentor-body")!;
+    body.replaceChildren();
+
+    if (!overview.learners.length) {
+      body.append(element("p", "learn-meta", "目前還沒有任何帳號作答"));
+      showPhase("mentor");
+      return;
+    }
+
+    for (const learner of overview.learners) {
+      const card = element("article", "learn-question");
+      const head = element("div", "learn-question-head");
+      head.append(element("span", "learn-topic-title", learner.userId));
+      head.append(element("span", "learn-badge", `${learner.totalRounds} 輪`));
+      head.append(element("span", "learn-badge", `正確率 ${percent(learner.averageAccuracy)}`));
+      if (learner.topicsInProgress) {
+        head.append(element("span", "learn-badge level-3", `${learner.topicsInProgress} 個主題作答中`));
+      }
+      head.append(element("span", "learn-focus", learner.lastActiveAt
+        ? `最後作答 ${new Date(learner.lastActiveAt).toLocaleString()}` : "尚未送出任何一輪"));
+      card.append(head);
+
+      const table = element("table", "learn-scorecard-table");
+      const header = element("tr");
+      for (const label of ["主題", "狀態", "完成輪數", "平均分數", "正確率", "最佳", "上一輪", "最後作答"]) {
+        header.append(element("th", "", label));
+      }
+      table.append(header);
+
+      for (const topic of learner.topics) {
+        const tr = element("tr");
+        if (topic.state === "IN_PROGRESS") tr.classList.add("has-errors");
+        tr.append(element("td", "learn-scorecard-focus", topic.quizTitle));
+        tr.append(element("td", "", topic.state === "IN_PROGRESS"
+          ? `${STATE_LABELS[topic.state]}（${topic.answeredCount}/${topic.questionCount}）`
+          : STATE_LABELS[topic.state]));
+        tr.append(element("td", "", String(topic.completedRounds)));
+        tr.append(element("td", "", topic.averageScore === null || topic.averageScore === undefined
+          ? "—" : topic.averageScore.toFixed(1)));
+        tr.append(element("td", "", percent(topic.averageAccuracy)));
+        const best = topic.bestScore;
+        const last = topic.lastScore;
+        tr.append(element("td", "", best === null || best === undefined ? "—" : String(best)));
+        tr.append(element("td", "", last === null || last === undefined
+          ? "—" : `${last} / ${topic.questionCount}`));
+        tr.append(element("td", "", topic.lastSubmittedAt
+          ? new Date(topic.lastSubmittedAt).toLocaleDateString() : "—"));
+        table.append(tr);
+      }
+      card.append(table);
+      body.append(card);
+    }
+    showPhase("mentor");
+  }
+
+  async function loadMentor() {
+    try {
+      renderMentor(await request<MentorOverview>("/learn/mentor/overview"));
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "無法讀取全班作答狀況");
+    }
   }
 
   // ------------------------------------------------------------- actions
@@ -530,10 +704,18 @@ if (!username) {
 
     bindOnce(query("#scorecard-back"), "bound", "click", () => showPhase("review"));
 
+    bindOnce(query("#learn-mentor-open"), "bound", "click", () => void loadMentor());
+    bindOnce(query("#mentor-refresh"), "bound", "click", () => void loadMentor());
+
     try {
       showPhase("overview");
       await loadTopics();
       await loadHistory();
+      // 導師帳號一進來就直接看到全班作答狀況，不必先挑主題。
+      profile = await request<Profile>("/learn/profile").catch(() => null);
+      const mentorButton = query("#learn-mentor-open");
+      if (mentorButton) mentorButton.hidden = !profile?.mentor;
+      if (profile?.mentor) await loadMentor();
     } catch (error) {
       showError(error instanceof Error ? error.message : "主題載入失敗");
     }
