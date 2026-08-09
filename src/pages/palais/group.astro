@@ -1586,23 +1586,29 @@ if (!isLoggedIn) {
       const rect = card.getBoundingClientRect();
       return rect.left + rect.width / 2;
     };
-    const connectClosestTwo = (source: HTMLElement, candidates: HTMLElement[]) => {
+    const closestTwoOf = (source: HTMLElement, candidates: HTMLElement[]) => {
       const x = centreX(source);
-      candidates
+      return candidates
         .map((candidate) => ({ candidate, distance: Math.abs(centreX(candidate) - x) }))
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 2)
-        .forEach(({ candidate }) => connectPlaybackNeighbours(source, candidate));
+        .map((entry) => entry.candidate);
+    };
+    /**
+     * 只在雙方互為對方最近的兩個之一時才連線。
+     * 單向的「最近兩個」會讓排數不對稱時，某張卡被大量卡片同時選中而變成鄰接圖的 hub，
+     * 導致該位置幾乎永遠有鄰居在播、永遠輪不到自己（如較短排旁邊接著較長排的情況）。
+     */
+    const connectMutualClosestTwo = (rowA: HTMLElement[], rowB: HTMLElement[]) => {
+      for (const a of rowA) {
+        for (const b of closestTwoOf(a, rowB)) {
+          if (closestTwoOf(b, rowA).includes(a)) connectPlaybackNeighbours(a, b);
+        }
+      }
     };
 
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-      const rowCards = rows[rowIndex]!;
-      const above = rows[rowIndex - 1] ?? [];
-      const below = rows[rowIndex + 1] ?? [];
-      for (const card of rowCards) {
-        connectClosestTwo(card, above);
-        connectClosestTwo(card, below);
-      }
+    for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
+      connectMutualClosestTwo(rows[rowIndex - 1]!, rows[rowIndex]!);
     }
 
     // 菜籃是獨立的 fixed 區域，只建立籃內的左右鄰接，不與隊伍排建立上下關係。
