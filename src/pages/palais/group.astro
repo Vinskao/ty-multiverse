@@ -788,6 +788,7 @@ if (!isLoggedIn) {
     saveCartSet(set);
     syncArmyEmptyState(prevParent?.closest('.army-container') || null);
     updateCartCount();
+    refreshPlaybackNeighbours();
   }
   function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
     const grid = armyContainer.querySelector('.box-container');
@@ -799,6 +800,7 @@ if (!isLoggedIn) {
     saveCartSet(set);
     syncArmyEmptyState(armyContainer);
     updateCartCount();
+    refreshPlaybackNeighbours();
   }
   // 重整 / 刷新後：把記住的人從各隊伍移回菜籃
   function applyCartState() {
@@ -838,6 +840,7 @@ if (!isLoggedIn) {
     document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     saveCartSet(new Set());
     updateCartCount();
+    refreshPlaybackNeighbours();
   }
   const MIN_KEY = 'palais-cart-min';
   const POS_KEY = 'palais-cart-top';
@@ -1655,6 +1658,17 @@ if (!isLoggedIn) {
     drainAutomaticPlayback(run);
   }
 
+  /** 拖曳改變了卡片的視覺位置後呼叫：重建鄰接圖，讓「相鄰不可同播」的規則對到新位置。 */
+  function refreshPlaybackNeighbours() {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.pg-draggable'))
+      .filter((card) =>
+        typeof (card as any).__startPlayback === 'function' &&
+        (card as any).__hasClips?.(),
+      );
+    buildPlaybackNeighbourGraph(cards);
+    drainAutomaticPlayback(automaticPlaybackRun);
+  }
+
   // --- Character card ---
 
   function createCharacterCard(character: any, timestamp: string, priority = false) {
@@ -1693,6 +1707,7 @@ if (!isLoggedIn) {
       );
       saveGroupOrder(grid);
       scheduleCharacterInfoLayout();
+      refreshPlaybackNeighbours();
       draggedCard = null;
     });
 
