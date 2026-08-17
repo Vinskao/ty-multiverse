@@ -495,7 +495,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                       <h6>{subcategory.name}</h6>
                                       <div class="skill-tags">
                                         {(() => {
-                                          const allowedBySubcat = {
+                                          const allowedBySubcat: any = {
                                             Java: ["Java 8 11 17 21"],
                                             General: [
                                               "XML Configuration",
