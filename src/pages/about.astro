@@ -41,7 +41,11 @@ const lang = (Astro.url.searchParams.get("lang") ?? "en") as LangKey;
 const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
 // Calculate experience years
-const softwareTitles = ["Software Engineer", "Open Source Backend Engineer", "Freelancer"];
+const softwareTitles = [
+  "Software Engineer",
+  "Open Source Backend Engineer",
+  "Freelance Software Engineer",
+];
 const projectManagementTitles = ["Fintech PM, MA Program"];
 
 function parsePeriodDate(s: string): Date {
@@ -50,20 +54,49 @@ function parsePeriodDate(s: string): Date {
   return new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
 }
 
-function monthsBetween(start: Date, end: Date): number {
-  return Math.max(0, (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth());
+// Absolute month index, so overlapping periods can be compared and merged
+function monthIndex(d: Date): number {
+  return d.getFullYear() * 12 + d.getMonth();
 }
 
-let swMonths = 0;
-let pmMonths = 0;
-let totalMonths = 0;
+// Sum month ranges without counting an overlapping month twice
+function mergedMonths(ranges: [number, number][]): number {
+  const sorted = [...ranges].filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
+  let total = 0;
+  let curStart = -1;
+  let curEnd = -1;
+  for (const [start, end] of sorted) {
+    if (curEnd < 0) {
+      curStart = start;
+      curEnd = end;
+    } else if (start <= curEnd) {
+      curEnd = Math.max(curEnd, end);
+    } else {
+      total += curEnd - curStart;
+      curStart = start;
+      curEnd = end;
+    }
+  }
+  if (curEnd >= 0) total += curEnd - curStart;
+  return total;
+}
+
+const swRanges: [number, number][] = [];
+const pmRanges: [number, number][] = [];
+const allRanges: [number, number][] = [];
 for (const job of experienceData) {
   const [startStr, endStr] = job.period.split("~");
-  const months = monthsBetween(parsePeriodDate(startStr), parsePeriodDate(endStr));
-  totalMonths += months;
-  if (softwareTitles.includes(job.title)) swMonths += months;
-  if (projectManagementTitles.includes(job.title)) pmMonths += months;
+  const range: [number, number] = [
+    monthIndex(parsePeriodDate(startStr)),
+    monthIndex(parsePeriodDate(endStr)),
+  ];
+  allRanges.push(range);
+  if (softwareTitles.includes(job.title)) swRanges.push(range);
+  if (projectManagementTitles.includes(job.title)) pmRanges.push(range);
 }
+const swMonths = mergedMonths(swRanges);
+const pmMonths = mergedMonths(pmRanges);
+const totalMonths = mergedMonths(allRanges);
 const swYears = (swMonths / 12).toFixed(1);
 const pmYears = (pmMonths / 12).toFixed(1);
 const totalYears = (totalMonths / 12).toFixed(1);
