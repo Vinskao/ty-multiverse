@@ -447,3 +447,68 @@ npm install astro@^6.4.7 @astrojs/react@^5.0.7 @astrojs/mdx@latest
 **P4b 待做**（已排獨立 task）：refresh_token/id_token 改 httpOnly cookie（涉 Gateway/auth.ts 改動，需可實測的 token 過期場景）。
 
 版本要求：`astro` >= 6.4.7、`@astrojs/react` >= 5.0.7、`vite` >= 7.3.5。
+
+---
+
+## 9. Git 紀錄驅動的 About 更新流程
+
+### 目標
+
+將工作專案最近的 Git commit 整理成可公開、可驗證、適合履歷閱讀的工程成果，更新 About 頁面。Git Commit Ingest 僅負責建立可搜尋知識，不會直接修改 `about.astro`；頁面更新必須走本節流程。
+
+### 目前流程：本機 Agent
+
+1. 在來源 repository 執行唯讀擷取：
+   ```bash
+   echo "REPO: $(git remote get-url origin)"
+   git log -n 50 --stat --date=iso-strict \
+     --pretty=format:'===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---'
+   ```
+2. 將 commit 依主題分群，例如：功能交付、架構改善、整合／Rehosting、可靠性、測試與文件。
+3. 排除履歷噪音：merge commit、純格式調整、產物檔、大量搬檔、沒有可說明工程價值的 trivial change。
+4. 將保留項目改寫成成果導向文案；只陳述 commit 可支持的事實，不推測商業成效、效能數字或個人歸屬。
+5. 去除內部機密：內網 URL、token、帳密、客戶資料、環境名稱與不適合公開的識別碼不得出現在公開頁面。
+6. 同步產出英文與繁體中文，優先整合進 `src/storages/about.json` 既有且語意相符的欄位（例如對應職務的 `projectExperience` 或 `responsibilities`）。不得為單次匯入任意新增 `recentDelivery`、`latestCommits` 等平行資料模型；只有既有模型確實無法表達產品需求時，才能先設計並審核新 schema。`src/pages/about.astro` 只負責 SSR 呈現與既有版面結構。
+7. 執行 `npm run build`，並以 `?lang=en`、`?lang=zh` 分別檢查頁面內容與版面。
+8. 人工確認後才 commit、push 或部署。不要讓分析流程自動發布。
+
+### 未來流程：AI API Adapter
+
+AI API 接通後，保留相同的輸入、輸出與驗證邊界，只替換第 2–4 步的分析器：
+
+```text
+GitLogCollector (local, read-only)
+  -> CommitSanitizer (remove secrets/noise)
+  -> CommitAnalyzer (LocalAgent | AiApiClient)
+  -> AboutDraftValidator (schema + bilingual + evidence checks)
+  -> about.json
+  -> Astro build + human review
+```
+
+建議 AI API 回傳固定 JSON，不要直接回傳或覆寫 Astro 原始碼：
+
+```json
+{
+  "source": { "repo": "redacted", "commitCount": 50 },
+  "themes": [
+    {
+      "id": "customer-maintenance",
+      "evidence": ["<commit-hash>"],
+      "en": "Outcome-focused public summary",
+      "zh": "成果導向的公開摘要"
+    }
+  ],
+  "excluded": [
+    { "commit": "<commit-hash>", "reason": "merge-or-trivial" }
+  ]
+}
+```
+
+### AI API 接入規則
+
+- API key 只能從 server-side `process.env` 讀取，不可進入 client bundle、URL、Git log 或瀏覽器 localStorage。
+- 送出前先由 `CommitSanitizer` 過濾 remote URL、疑似 secret、個資與內部環境資訊。
+- `evidence` 至少保留一個 commit hash，讓每條文案可追溯；hash 僅供內部驗證，不必顯示在公開頁面。
+- 對 API 回傳做 schema validation、字數限制、雙語欄位與重複內容檢查。
+- AI API 失敗、逾時或輸出不合法時，回退本機 Agent／人工整理，不得清空既有 About 內容。
+- AI 僅產生草稿；寫檔、建置、視覺檢查與發布仍是獨立且可審核的步驟。
