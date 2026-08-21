@@ -88,6 +88,31 @@
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 }
 
+/* Merged layout preview: separate canvas, does not affect the stage above */
+.merged-preview-wrapper {
+  width: fit-content;
+  min-width: 100%;
+  margin: 1rem auto 0;
+  background: radial-gradient(circle at bottom, #2a2a2a 0%, #1a1a1a 100%);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.merged-preview-label {
+  color: var(--gray-300);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.merged-preview-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  background: transparent;
+}
+
 .controls-section {
   background: rgba(0, 0, 0, 0.2);
   padding: 1.5rem;

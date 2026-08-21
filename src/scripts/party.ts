@@ -243,6 +243,7 @@ function handleSelection(rowId: number, charName: string, isChecked: boolean) {
     updateVisualization();
     updateSelectionStatus();
     updateCheckboxStates(); // Update visibility of options in other rows
+    updateMergedPreview(); // Independent live preview; does not touch #choir-stage
 }
 
 function updateVisualization() {
@@ -526,6 +527,99 @@ async function loadCharacterImage(charName: string): Promise<HTMLImageElement | 
     });
 }
 
+// Builds the offscreen merged-layout canvas for a given selection.
+// Pure/independent of any on-screen element; callers decide whether to
+// draw it into a visible <canvas> (live preview) or export it (download).
+async function buildMergedCanvas(selection: string[]): Promise<HTMLCanvasElement | null> {
+    if (selection.length < 1) return null;
+
+    // Up to 3 per side; fewer is fine, they just spread out over the
+    // space three characters would have occupied.
+    const picks = selection.slice(0, MERGE_GROUP_SIZE * 2);
+    const leftCount = Math.min(MERGE_GROUP_SIZE, Math.ceil(picks.length / 2));
+    const leftPicks = picks.slice(0, leftCount);
+    const rightPicks = picks.slice(leftCount);
+
+    const images = await Promise.all(picks.map(loadCharacterImage));
+    if (images.some(img => !img)) return null;
+    const loaded = images as HTMLImageElement[];
+
+    // Slot dimensions come from the individual character images.
+    const slotHeight = Math.max(...loaded.map(img => img.naturalHeight || img.height));
+    const slotWidth = Math.max(...loaded.map(img => img.naturalWidth || img.width));
+
+    const canvas = document.createElement('canvas');
+    const scale = 2; // keep export crisp
+    canvas.width = slotWidth * MERGE_SLOT_COUNT * scale;
+    canvas.height = slotHeight * scale;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+    ctx.scale(scale, scale);
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // stays transparent
+
+    const fullStep = slotWidth * (1 - MERGE_OVERLAP_RATIO); // -20% margin overlap
+    // The region a full group of 3 would span; reserved even when the
+    // side holds fewer characters.
+    const groupWidth = slotWidth + (MERGE_GROUP_SIZE - 1) * fullStep;
+    const leftStart = 0;
+    const rightStart = slotWidth * MERGE_SLOT_COUNT - groupWidth;
+
+    const drawGroup = (groupImages: HTMLImageElement[], startX: number) => {
+        const count = groupImages.length;
+        if (count === 0) return;
+        // Spread the members evenly across the reserved group region.
+        const step = count > 1 ? (groupWidth - slotWidth) / (count - 1) : 0;
+        const offset = count > 1 ? 0 : (groupWidth - slotWidth) / 2;
+
+        groupImages.forEach((img, index) => {
+            const naturalW = img.naturalWidth || img.width;
+            const naturalH = img.naturalHeight || img.height;
+            // Fit each character into the slot without distorting it,
+            // anchored to the bottom of the canvas.
+            const drawH = slotHeight;
+            const drawW = naturalW * (drawH / naturalH);
+            const x = startX + offset + index * step + (slotWidth - drawW) / 2;
+            ctx.drawImage(img, x, slotHeight - drawH, drawW, drawH);
+        });
+    };
+
+    drawGroup(loaded.slice(0, leftPicks.length), leftStart);
+    drawGroup(loaded.slice(leftPicks.length, leftPicks.length + rightPicks.length), rightStart);
+
+    return canvas;
+}
+
+// Redraws the visible merged-preview canvas from the current selection.
+// This canvas is independent of #choir-stage: it never reads from or
+// writes to the stage's DOM, so arranging the stage never affects it
+// and vice versa.
+let mergedPreviewToken = 0;
+async function updateMergedPreview() {
+    const previewCanvas = document.getElementById('merged-preview-canvas') as HTMLCanvasElement | null;
+    if (!previewCanvas) return;
+
+    const token = ++mergedPreviewToken;
+    const selection = getOrderedSelection();
+    const previewCtx = previewCanvas.getContext('2d');
+    if (!previewCtx) return;
+
+    if (selection.length < 1) {
+        previewCanvas.width = 0;
+        previewCanvas.height = 0;
+        return;
+    }
+
+    const source = await buildMergedCanvas(selection);
+    if (token !== mergedPreviewToken) return; // a newer selection change superseded this render
+    if (!source) return;
+
+    previewCanvas.width = source.width;
+    previewCanvas.height = source.height;
+    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    previewCtx.drawImage(source, 0, 0);
+}
+
 async function handleDownloadMerged() {
     const btn = document.getElementById('download-merged-btn') as HTMLButtonElement | null;
 
@@ -542,62 +636,11 @@ async function handleDownloadMerged() {
     }
 
     try {
-        // Up to 3 per side; fewer is fine, they just spread out over the
-        // space three characters would have occupied.
-        const picks = selection.slice(0, MERGE_GROUP_SIZE * 2);
-        const leftCount = Math.min(MERGE_GROUP_SIZE, Math.ceil(picks.length / 2));
-        const leftPicks = picks.slice(0, leftCount);
-        const rightPicks = picks.slice(leftCount);
-
-        const images = await Promise.all(picks.map(loadCharacterImage));
-        if (images.some(img => !img)) {
+        const canvas = await buildMergedCanvas(selection);
+        if (!canvas) {
             alert('Some character images failed to load. Please try again.');
             return;
         }
-        const loaded = images as HTMLImageElement[];
-
-        // Slot dimensions come from the individual character images.
-        const slotHeight = Math.max(...loaded.map(img => img.naturalHeight || img.height));
-        const slotWidth = Math.max(...loaded.map(img => img.naturalWidth || img.width));
-
-        const canvas = document.createElement('canvas');
-        const scale = 2; // keep export crisp
-        canvas.width = slotWidth * MERGE_SLOT_COUNT * scale;
-        canvas.height = slotHeight * scale;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvas 2D context unavailable');
-        ctx.scale(scale, scale);
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // stays transparent
-
-        const fullStep = slotWidth * (1 - MERGE_OVERLAP_RATIO); // -20% margin overlap
-        // The region a full group of 3 would span; reserved even when the
-        // side holds fewer characters.
-        const groupWidth = slotWidth + (MERGE_GROUP_SIZE - 1) * fullStep;
-        const leftStart = 0;
-        const rightStart = slotWidth * MERGE_SLOT_COUNT - groupWidth;
-
-        const drawGroup = (groupImages: HTMLImageElement[], startX: number) => {
-            const count = groupImages.length;
-            if (count === 0) return;
-            // Spread the members evenly across the reserved group region.
-            const step = count > 1 ? (groupWidth - slotWidth) / (count - 1) : 0;
-            const offset = count > 1 ? 0 : (groupWidth - slotWidth) / 2;
-
-            groupImages.forEach((img, index) => {
-                const naturalW = img.naturalWidth || img.width;
-                const naturalH = img.naturalHeight || img.height;
-                // Fit each character into the slot without distorting it,
-                // anchored to the bottom of the canvas.
-                const drawH = slotHeight;
-                const drawW = naturalW * (drawH / naturalH);
-                const x = startX + offset + index * step + (slotWidth - drawW) / 2;
-                ctx.drawImage(img, x, slotHeight - drawH, drawW, drawH);
-            });
-        };
-
-        drawGroup(loaded.slice(0, leftPicks.length), leftStart);
-        drawGroup(loaded.slice(leftPicks.length, leftPicks.length + rightPicks.length), rightStart);
 
         const link = document.createElement('a');
         link.download = 'choir-party-merged.png';
