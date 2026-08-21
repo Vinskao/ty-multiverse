@@ -353,6 +353,12 @@ const initParty = async () => {
         downloadBtn.addEventListener('click', handleDownload);
     }
     
+    // Bind merged layout download
+    const downloadMergedBtn = document.getElementById('download-merged-btn');
+    if (downloadMergedBtn) {
+        downloadMergedBtn.addEventListener('click', handleDownloadMerged);
+    }
+
     // Bind GIF download
     const downloadGifBtn = document.getElementById('download-gif-btn');
     console.log('Looking for download-gif-btn:', downloadGifBtn);
@@ -485,3 +491,125 @@ function updateSelectionStatus() {
     statusDiv.textContent = message;
 }
 
+
+// ============================================================
+// Merged Layout Export: 3 characters | empty slot | 3 characters
+// Canvas height = individual character image height,
+// Canvas width  = 7 character widths.
+// Each group of 3 overlaps by -20% of a character width.
+// Background stays transparent.
+// ============================================================
+
+const MERGE_SLOT_COUNT = 7;
+const MERGE_GROUP_SIZE = 3;
+const MERGE_OVERLAP_RATIO = 0.2; // -20% margin between neighbours in a group
+
+function getOrderedSelection(): string[] {
+    const ordered: string[] = [];
+    [5, 4, 3, 2, 1].forEach(rowId => {
+        (selectedChars[rowId] || []).forEach(name => ordered.push(name));
+    });
+    return ordered;
+}
+
+async function loadCharacterImage(charName: string): Promise<HTMLImageElement | null> {
+    const { imageCacheService } = await import('../services/imageCacheService');
+    const url = await imageCacheService.getImageObjectUrl(`${baseImagePath}${charName}.png`);
+    if (!url) return null;
+
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
+async function handleDownloadMerged() {
+    const btn = document.getElementById('download-merged-btn') as HTMLButtonElement | null;
+
+    const selection = getOrderedSelection();
+    if (selection.length < 1) {
+        alert('Select at least one character first.');
+        return;
+    }
+
+    const originalText = btn?.textContent ?? '';
+    if (btn) {
+        btn.textContent = 'Merging...';
+        btn.disabled = true;
+    }
+
+    try {
+        // Up to 3 per side; fewer is fine, they just spread out over the
+        // space three characters would have occupied.
+        const picks = selection.slice(0, MERGE_GROUP_SIZE * 2);
+        const leftCount = Math.min(MERGE_GROUP_SIZE, Math.ceil(picks.length / 2));
+        const leftPicks = picks.slice(0, leftCount);
+        const rightPicks = picks.slice(leftCount);
+
+        const images = await Promise.all(picks.map(loadCharacterImage));
+        if (images.some(img => !img)) {
+            alert('Some character images failed to load. Please try again.');
+            return;
+        }
+        const loaded = images as HTMLImageElement[];
+
+        // Slot dimensions come from the individual character images.
+        const slotHeight = Math.max(...loaded.map(img => img.naturalHeight || img.height));
+        const slotWidth = Math.max(...loaded.map(img => img.naturalWidth || img.width));
+
+        const canvas = document.createElement('canvas');
+        const scale = 2; // keep export crisp
+        canvas.width = slotWidth * MERGE_SLOT_COUNT * scale;
+        canvas.height = slotHeight * scale;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D context unavailable');
+        ctx.scale(scale, scale);
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // stays transparent
+
+        const fullStep = slotWidth * (1 - MERGE_OVERLAP_RATIO); // -20% margin overlap
+        // The region a full group of 3 would span; reserved even when the
+        // side holds fewer characters.
+        const groupWidth = slotWidth + (MERGE_GROUP_SIZE - 1) * fullStep;
+        const leftStart = 0;
+        const rightStart = slotWidth * MERGE_SLOT_COUNT - groupWidth;
+
+        const drawGroup = (groupImages: HTMLImageElement[], startX: number) => {
+            const count = groupImages.length;
+            if (count === 0) return;
+            // Spread the members evenly across the reserved group region.
+            const step = count > 1 ? (groupWidth - slotWidth) / (count - 1) : 0;
+            const offset = count > 1 ? 0 : (groupWidth - slotWidth) / 2;
+
+            groupImages.forEach((img, index) => {
+                const naturalW = img.naturalWidth || img.width;
+                const naturalH = img.naturalHeight || img.height;
+                // Fit each character into the slot without distorting it,
+                // anchored to the bottom of the canvas.
+                const drawH = slotHeight;
+                const drawW = naturalW * (drawH / naturalH);
+                const x = startX + offset + index * step + (slotWidth - drawW) / 2;
+                ctx.drawImage(img, x, slotHeight - drawH, drawW, drawH);
+            });
+        };
+
+        drawGroup(loaded.slice(0, leftPicks.length), leftStart);
+        drawGroup(loaded.slice(leftPicks.length, leftPicks.length + rightPicks.length), rightStart);
+
+        const link = document.createElement('a');
+        link.download = 'choir-party-merged.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (err: any) {
+        console.error('Merged export failed:', err);
+        alert('Failed to generate merged image: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    }
+}
