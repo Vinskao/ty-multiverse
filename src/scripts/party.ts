@@ -634,9 +634,17 @@ async function buildMergedCanvas(selection: string[]): Promise<HTMLCanvasElement
     if (images.some(img => !img)) return null;
     const loaded = images as HTMLImageElement[];
 
-    // Slot dimensions come from the individual character images.
-    const slotHeight = Math.max(...loaded.map(img => img.naturalHeight || img.height));
-    const slotWidth = Math.max(...loaded.map(img => img.naturalWidth || img.width));
+    // Slot dimensions: source character images can be very high-resolution
+    // (thousands of px tall), so cap the slot height and scale each image
+    // down to it. Without this cap the canvas can exceed the browser's max
+    // canvas size and silently render blank.
+    const MAX_SLOT_HEIGHT = 400;
+    const slotHeight = MAX_SLOT_HEIGHT;
+    const slotWidth = Math.max(...loaded.map(img => {
+        const naturalW = img.naturalWidth || img.width;
+        const naturalH = img.naturalHeight || img.height;
+        return naturalW * (slotHeight / naturalH);
+    }));
 
     const canvas = document.createElement('canvas');
     const scale = 2; // keep export crisp
