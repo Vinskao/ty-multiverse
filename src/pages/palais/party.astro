@@ -51,6 +51,15 @@ const peopleImageUrl =
                         <canvas id="merged-preview-canvas" class="merged-preview-canvas"></canvas>
                     </div>
 
+                    <!-- Merged preview's own character picker (independent of the row picker below) -->
+                    <div class="merged-controls-header">
+                        <div class="selection-status" id="merged-selection-status"></div>
+                        <button id="download-merged-btn" class="btn is-outline">Download Merged (3 + 3)</button>
+                    </div>
+                    <div id="merged-party-controls" class="controls-section">
+                        <!-- Dynamic Checkboxes for merged preview -->
+                    </div>
+
                     <!-- Controls -->
                     <div class="controls-header">
                         <div
@@ -76,7 +85,6 @@ const peopleImageUrl =
                             <div id="selection-status" class="selection-status" style="flex-grow: 1;">
                             </div>
                             <button id="download-btn" class="btn is-outline" style="margin-right: 0.5rem;">Download (No BG)</button>
-                            <button id="download-merged-btn" class="btn is-outline" style="margin-right: 0.5rem;">Download Merged (3 + 3)</button>
                             <button id="download-gif-btn" class="btn is-accent">Download GIF</button>
                         </div>
                     </div>

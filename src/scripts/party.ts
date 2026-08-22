@@ -39,6 +39,10 @@ const MIN_OVERLAP = -10; // px
 const MAX_OVERLAP = -70; // px
 const MIN_SELECTION = 5;
 
+const MERGE_SLOT_COUNT = 7;
+const MERGE_GROUP_SIZE = 3;
+const MERGE_OVERLAP_RATIO = 0.2; // -20% margin between neighbours in a group
+
 interface CharOption {
     id: string;      // The unique identifier which also serves as the filename base (e.g. "Name" or "NameFighting")
     name: string;    // Display name
@@ -50,6 +54,11 @@ let allCharacters: CharOption[] = [];
 let selectedChars: { [rowId: number]: string[] } = {
     1: [], 2: [], 3: [], 4: [], 5: []
 };
+
+// Independent selection for the merged-preview canvas. This never reads
+// from or writes to `selectedChars`, so picking characters here has no
+// effect on the choir-stage picker and vice versa.
+let mergedSelectedChars: string[] = [];
 
 const characterService = CharacterService.getInstance();
 const peopleImageBase =
@@ -183,6 +192,99 @@ function renderControls() {
     updateCheckboxStates();
 }
 
+// Renders the merged-preview's own character picker. Independent of
+// #party-controls / renderControls(): separate container, separate
+// checkbox state (mergedSelectedChars), separate max (6 total, 3 per side).
+const MERGE_MAX_TOTAL = MERGE_GROUP_SIZE * 2;
+
+function renderMergedControls() {
+    const container = document.getElementById('merged-party-controls');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const grouped: { [key: string]: CharOption[] } = {};
+    allCharacters.forEach(char => {
+        const armyKey = char.army || 'Others';
+        if (!grouped[armyKey]) grouped[armyKey] = [];
+        grouped[armyKey].push(char);
+    });
+
+    const sortedArmies = Object.keys(grouped).sort();
+
+    sortedArmies.forEach(armyName => {
+        const armyGroup = document.createElement('div');
+        armyGroup.className = 'army-group';
+        armyGroup.style.marginBottom = '1.5rem';
+        armyGroup.style.borderBottom = '1px solid #444';
+        armyGroup.style.paddingBottom = '0.5rem';
+
+        const armyHeader = document.createElement('h4');
+        armyHeader.textContent = armyName;
+        armyHeader.style.margin = '0 0 0.5rem 0';
+        armyHeader.style.fontSize = '1em';
+        armyHeader.style.color = '#ccc';
+        armyHeader.style.fontWeight = 'bold';
+        armyGroup.appendChild(armyHeader);
+
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.className = 'character-checkboxes';
+
+        grouped[armyName].sort((a, b) => a.name.localeCompare(b.name));
+
+        grouped[armyName].forEach(char => {
+            const label = document.createElement('label');
+            label.className = 'char-checkbox';
+            label.dataset.char = char.id;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = char.id;
+
+            checkbox.onchange = (e) => handleMergedSelection(char.id, (e.target as HTMLInputElement).checked);
+
+            const span = document.createElement('span');
+            span.textContent = char.name;
+
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            checkboxContainer.appendChild(label);
+        });
+
+        armyGroup.appendChild(checkboxContainer);
+        container.appendChild(armyGroup);
+    });
+
+    updateMergedSelectionStatus();
+}
+
+function handleMergedSelection(charId: string, isChecked: boolean) {
+    if (isChecked) {
+        if (mergedSelectedChars.length >= MERGE_MAX_TOTAL) {
+            const checkbox = document.querySelector(`#merged-party-controls input[value="${charId}"]`) as HTMLInputElement;
+            if (checkbox) checkbox.checked = false;
+            alert(`Merged preview supports up to ${MERGE_MAX_TOTAL} characters (3 + 3).`);
+            return;
+        }
+        if (!mergedSelectedChars.includes(charId)) {
+            mergedSelectedChars.push(charId);
+        }
+    } else {
+        const index = mergedSelectedChars.indexOf(charId);
+        if (index > -1) mergedSelectedChars.splice(index, 1);
+    }
+
+    updateMergedSelectionStatus();
+    updateMergedPreview();
+}
+
+function updateMergedSelectionStatus() {
+    const statusDiv = document.getElementById('merged-selection-status');
+    if (!statusDiv) return;
+    const total = mergedSelectedChars.length;
+    statusDiv.textContent = `Selected: ${total} / ${MERGE_MAX_TOTAL}`;
+    statusDiv.style.color = total > 0 ? '#51cf66' : '#ff6b6b';
+}
+
 function switchActiveRow(rowId: string) {
     const rowSections = document.querySelectorAll('.row-selector') as NodeListOf<HTMLElement>;
     rowSections.forEach(section => {
@@ -243,7 +345,6 @@ function handleSelection(rowId: number, charName: string, isChecked: boolean) {
     updateVisualization();
     updateSelectionStatus();
     updateCheckboxStates(); // Update visibility of options in other rows
-    updateMergedPreview(); // Independent live preview; does not touch #choir-stage
 }
 
 function updateVisualization() {
@@ -337,6 +438,7 @@ const initParty = async () => {
 
     renderControls();
     updateSelectionStatus();
+    renderMergedControls();
 
     // Bind row switcher
     const rowSelect = document.getElementById('active-row-select') as HTMLSelectElement;
@@ -501,18 +603,6 @@ function updateSelectionStatus() {
 // Background stays transparent.
 // ============================================================
 
-const MERGE_SLOT_COUNT = 7;
-const MERGE_GROUP_SIZE = 3;
-const MERGE_OVERLAP_RATIO = 0.2; // -20% margin between neighbours in a group
-
-function getOrderedSelection(): string[] {
-    const ordered: string[] = [];
-    [5, 4, 3, 2, 1].forEach(rowId => {
-        (selectedChars[rowId] || []).forEach(name => ordered.push(name));
-    });
-    return ordered;
-}
-
 async function loadCharacterImage(charName: string): Promise<HTMLImageElement | null> {
     const { imageCacheService } = await import('../services/imageCacheService');
     const url = await imageCacheService.getImageObjectUrl(`${baseImagePath}${charName}.png`);
@@ -600,7 +690,7 @@ async function updateMergedPreview() {
     if (!previewCanvas) return;
 
     const token = ++mergedPreviewToken;
-    const selection = getOrderedSelection();
+    const selection = mergedSelectedChars;
     const previewCtx = previewCanvas.getContext('2d');
     if (!previewCtx) return;
 
@@ -623,7 +713,7 @@ async function updateMergedPreview() {
 async function handleDownloadMerged() {
     const btn = document.getElementById('download-merged-btn') as HTMLButtonElement | null;
 
-    const selection = getOrderedSelection();
+    const selection = mergedSelectedChars;
     if (selection.length < 1) {
         alert('Select at least one character first.');
         return;

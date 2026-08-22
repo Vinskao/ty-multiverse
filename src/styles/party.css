@@ -113,6 +113,14 @@
   background: transparent;
 }
 
+.merged-controls-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 0.5rem auto 0;
+  max-width: 1000px;
+}
+
 .controls-section {
   background: rgba(0, 0, 0, 0.2);
   padding: 1.5rem;
