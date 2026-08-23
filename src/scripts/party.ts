@@ -39,9 +39,14 @@ const MIN_OVERLAP = -10; // px
 const MAX_OVERLAP = -70; // px
 const MIN_SELECTION = 5;
 
-const MERGE_SLOT_COUNT = 7;
 const MERGE_GROUP_SIZE = 3;
-const MERGE_OVERLAP_RATIO = 0.2; // -20% margin between neighbours in a group
+// 與 group.astro 完全一致的人物間隔機制：那邊每張卡 200px 寬、margin-left: -100px
+// （見 group.astro 的 --card-overlap 與 #group-container .box-container > div），
+// 也就是固定重疊 50% 的槽寬、step = 0.5 槽寬，且不隨人數改變。
+const MERGE_OVERLAP_RATIO = 100 / 200;
+// 兩組之間的空白，單位為槽寬。原本是 7 槽總寬扣掉兩組各 2.6 槽 = 1.8 槽，
+// 現在縮到只剩 35%。
+const MERGE_CENTER_GAP_RATIO = 1.8 * 0.35;
 
 interface CharOption {
     id: string;      // The unique identifier which also serves as the filename base (e.g. "Name" or "NameFighting")
@@ -596,10 +601,10 @@ function updateSelectionStatus() {
 
 
 // ============================================================
-// Merged Layout Export: 3 characters | empty slot | 3 characters
+// Merged Layout Export: 3 characters | 中間空白 | 3 characters
 // Canvas height = individual character image height,
-// Canvas width  = 7 character widths.
-// Each group of 3 overlaps by -20% of a character width.
+// Canvas width  = 兩組寬度 + 中間空白（由常數推導，見 MERGE_CENTER_GAP_RATIO）。
+// 組內人物間隔沿用 group.astro 的機制：固定重疊 50% 槽寬，不隨人數變動。
 // Background stays transparent.
 // ============================================================
 
@@ -646,9 +651,17 @@ async function buildMergedCanvas(selection: string[]): Promise<HTMLCanvasElement
         return naturalW * (slotHeight / naturalH);
     }));
 
+    // 版面寬度由「兩組 + 中間空白」推導，不再用寫死的 7 槽，
+    // 這樣改重疊率或中間空白時畫布會跟著對。
+    const fullStep = slotWidth * (1 - MERGE_OVERLAP_RATIO);
+    // 一整組 3 人所佔的寬度；即使該側人數不足 3 也保留同樣的區域。
+    const groupWidth = slotWidth + (MERGE_GROUP_SIZE - 1) * fullStep;
+    const centerGap = slotWidth * MERGE_CENTER_GAP_RATIO;
+    const totalWidth = groupWidth * 2 + centerGap;
+
     const canvas = document.createElement('canvas');
     const scale = 2; // keep export crisp
-    canvas.width = slotWidth * MERGE_SLOT_COUNT * scale;
+    canvas.width = totalWidth * scale;
     canvas.height = slotHeight * scale;
 
     const ctx = canvas.getContext('2d');
@@ -656,19 +669,18 @@ async function buildMergedCanvas(selection: string[]): Promise<HTMLCanvasElement
     ctx.scale(scale, scale);
     ctx.clearRect(0, 0, canvas.width, canvas.height); // stays transparent
 
-    const fullStep = slotWidth * (1 - MERGE_OVERLAP_RATIO); // -20% margin overlap
-    // The region a full group of 3 would span; reserved even when the
-    // side holds fewer characters.
-    const groupWidth = slotWidth + (MERGE_GROUP_SIZE - 1) * fullStep;
     const leftStart = 0;
-    const rightStart = slotWidth * MERGE_SLOT_COUNT - groupWidth;
+    const rightStart = totalWidth - groupWidth;
 
-    const drawGroup = (groupImages: HTMLImageElement[], startX: number) => {
+    // 間隔固定為 fullStep，不再依人數平均攤開 —— group.astro 的 margin-left 是常數，
+    // 一排 3 人或 5 人，相鄰兩人的距離都一樣。這裡要一模一樣。
+    // anchor='end' 用於右側：人數不足 3 時靠右對齊，讓兩側對稱。
+    const drawGroup = (groupImages: HTMLImageElement[], startX: number, anchor: 'start' | 'end' = 'start') => {
         const count = groupImages.length;
         if (count === 0) return;
-        // Spread the members evenly across the reserved group region.
-        const step = count > 1 ? (groupWidth - slotWidth) / (count - 1) : 0;
-        const offset = count > 1 ? 0 : (groupWidth - slotWidth) / 2;
+        const step = fullStep;
+        const spanWidth = slotWidth + (count - 1) * step;
+        const offset = anchor === 'end' ? groupWidth - spanWidth : 0;
 
         groupImages.forEach((img, index) => {
             const naturalW = img.naturalWidth || img.width;
@@ -682,8 +694,8 @@ async function buildMergedCanvas(selection: string[]): Promise<HTMLCanvasElement
         });
     };
 
-    drawGroup(loaded.slice(0, leftPicks.length), leftStart);
-    drawGroup(loaded.slice(leftPicks.length, leftPicks.length + rightPicks.length), rightStart);
+    drawGroup(loaded.slice(0, leftPicks.length), leftStart, 'start');
+    drawGroup(loaded.slice(leftPicks.length, leftPicks.length + rightPicks.length), rightStart, 'end');
 
     return canvas;
 }
