@@ -109,9 +109,26 @@ async function getValidCharacters(): Promise<CharOption[]> {
         // Flatten returns
         return results.flat();
     } catch (e) {
+        // 不要把失敗吞成空陣列。以前這裡 return []，畫面就只是永遠空白、
+        // 沒有任何提示（後端或 gateway 沒起來時就是這個症狀），只能開 console 才知道。
         console.error("Failed to fetch characters", e);
-        return [];
+        throw e;
     }
+}
+
+// 在控制區顯示一則訊息（載入失敗或真的沒有角色），避免頁面靜默空白。
+function showPartyMessage(message: string, isError: boolean) {
+    ['party-controls', 'merged-party-controls'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'party-message';
+        div.textContent = message;
+        div.style.padding = '1rem';
+        div.style.color = isError ? '#ff6b6b' : 'var(--gray-300)';
+        el.appendChild(div);
+    });
 }
 
 function renderControls() {
@@ -437,9 +454,28 @@ const initParty = async () => {
     const spinner = document.getElementById('loading-spinner');
     if (spinner) spinner.style.display = 'block';
 
-    allCharacters = await getValidCharacters();
+    try {
+        allCharacters = await getValidCharacters();
+    } catch (e: any) {
+        if (spinner) spinner.style.display = 'none';
+        // 這個頁面沒有角色就什麼都不能做，所以失敗要講出來，並保留重新載入的入口。
+        // 之前失敗會靜默停在空畫面，最常見的原因是 backend/gateway 沒起來。
+        stage.dataset.partyBound = 'false'; // 允許使用者重新載入頁面後再試
+        showPartyMessage(
+            `載入角色失敗：${e?.message || e}。請確認後端服務是否正常，然後重新整理頁面。`,
+            true
+        );
+        return;
+    }
 
     if (spinner) spinner.style.display = 'none';
+
+    if (allCharacters.length === 0) {
+        // 抓取成功但一個角色都沒有：多半是圖片伺服器連不上（每個角色都被判定成沒有圖片），
+        // 或資料庫真的是空的。同樣不要讓畫面空白無提示。
+        showPartyMessage('沒有可用的角色（角色圖片全部無法載入，或資料庫沒有資料）。', true);
+        return;
+    }
 
     renderControls();
     updateSelectionStatus();

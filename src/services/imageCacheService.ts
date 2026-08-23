@@ -3,6 +3,8 @@ const NEG_CACHE_PREFIX = 'img_404_';
 
 class ImageCacheService {
   private objectUrlMap = new Map<string, string>();          // url → object URL
+  // 網路錯誤只警告一次，避免幾百張圖同時失敗時洗版 console。
+  private static networkErrorWarned = false;
   private negativeCache = new Set<string>();                 // 404 URLs (in-memory + localStorage)
 
   constructor() {
@@ -71,8 +73,15 @@ class ImageCacheService {
         this.objectUrlMap.set(key, objUrl);
         return objUrl;
       } catch (err) {
-        // Network error - might be temporary, but let's not mark as failed immediately 
-        // unless we want to avoid spamming. For now, just return null.
+        // 網路錯誤（主機連不上）與 404（圖片不存在）在呼叫端都是 null，兩者無法分辨；
+        // 圖片主機整個掛掉時，每個角色都會被判定成「沒有圖片」，頁面就變成空的而且
+        // 完全沒有線索。這裡不標記 negative cache（可能只是暫時性），但要留下一次警告。
+        if (!ImageCacheService.networkErrorWarned) {
+          ImageCacheService.networkErrorWarned = true;
+          console.warn(
+            '⚠️ 圖片請求發生網路錯誤（不是 404），圖片主機可能連不上：', url, err
+          );
+        }
         return null;
       }
     } catch (e) {

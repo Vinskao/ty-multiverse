@@ -92,7 +92,15 @@ class CharacterService {
       const cached = localStorage.getItem(this.cacheKey);
       if (!cached) return null;
 
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      // 空陣列一律當成「沒有快取」。角色清單正常情況不可能是空的，
+      // 空的幾乎都代表上次抓取失敗；若把它當有效快取回傳，頁面會整整
+      // 五分鐘持續空白，即使後端早就恢復了也一樣。
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        this.clearCache();
+        return null;
+      }
+      return parsed;
     } catch (error) {
       console.error('讀取緩存失敗:', error);
       return null;
@@ -101,6 +109,8 @@ class CharacterService {
 
   // 緩存角色數據
   private cacheCharacters(characters: Person[]): void {
+    // 不要快取空結果，理由同 getCachedCharacters()。
+    if (!Array.isArray(characters) || characters.length === 0) return;
     try {
       const expiry = Date.now() + this.cacheDuration;
       localStorage.setItem(this.cacheKey, JSON.stringify(characters));
