@@ -242,6 +242,7 @@ export class NavController {
       this.username = null;
       this.hasUserAccess = false;
       this.isAdmin = false;
+      document.dispatchEvent(new CustomEvent('tym:auth-changed'));
 
       // 更新導航鏈接
       this.updateNavLinks();
@@ -274,6 +275,7 @@ export class NavController {
         this.username = null;
         this.hasUserAccess = false;
         this.isAdmin = false;
+        document.dispatchEvent(new CustomEvent('tym:auth-changed'));
 
         // 更新導航鏈接
         this.updateNavLinks();
@@ -341,6 +343,12 @@ export class NavController {
     }
   }
 
+  private setAdmin(value: boolean) {
+    this.isAdmin = value;
+    localStorage.setItem('isAdmin', value ? 'true' : 'false');
+    document.dispatchEvent(new CustomEvent('tym:auth-changed'));
+  }
+
   private async validateAdminAccess() {
     try {
       if (this.isLoggedIn && this.token) {
@@ -348,7 +356,7 @@ export class NavController {
         const hasManageUsersRole = this.checkManageUsersRoleFromToken(this.token);
 
         if (hasManageUsersRole) {
-          this.isAdmin = true;
+          this.setAdmin(true);
           this.updateNavLinks();
           return; // 如果從 Token 中確認有角色，就不需要調用 API 了
         }
@@ -370,30 +378,27 @@ export class NavController {
 
         if (response.ok) {
           const data = await response.json();
-          this.isAdmin = true;
-          localStorage.setItem('isAdmin', 'true');
+          this.setAdmin(true);
           // 權限驗證成功後，更新導航鏈接以顯示 admin 專用鏈接
           this.updateNavLinks();
         } else if (response.status === 403) {
           // 用戶已登入但沒有管理員權限
-          this.isAdmin = false;
-          localStorage.setItem('isAdmin', 'false');
+          this.setAdmin(false);
         } else if (response.status === 401) {
           // Token 無效
-          this.isAdmin = false;
-          localStorage.setItem('isAdmin', 'false');
+          this.setAdmin(false);
         } else if (response.status === 404) {
           // 端點不存在或路由問題，但 Token 解析已經檢查過了
           // 如果 Token 解析已經確認有 manage-users，保持 isAdmin = true
           // 否則設置為 false
           if (!hasManageUsersRole) {
-            this.isAdmin = false;
+            this.setAdmin(false);
           }
         } else {
           // 其他錯誤
           // 如果 Token 解析已經確認有 manage-users，保持 isAdmin = true
           if (!hasManageUsersRole) {
-            this.isAdmin = false;
+            this.setAdmin(false);
           }
         }
       }
@@ -402,9 +407,9 @@ export class NavController {
       // 如果 Token 解析已經確認有 manage-users，保持 isAdmin = true
       if (this.token) {
         const hasManageUsersRole = this.checkManageUsersRoleFromToken(this.token);
-        this.isAdmin = hasManageUsersRole;
+        this.setAdmin(hasManageUsersRole);
       } else {
-        this.isAdmin = false;
+        this.setAdmin(false);
       }
     }
   }
@@ -556,6 +561,8 @@ export class NavController {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('username');
+          localStorage.removeItem('isAdmin');
+          document.dispatchEvent(new CustomEvent('tym:auth-changed'));
 
           // 清除保存的頁面路徑，防止重定向循環
           localStorage.removeItem('lastVisitedPath');

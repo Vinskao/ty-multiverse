@@ -976,10 +976,21 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 
         if (!panel || !image || !commandEl || !copyBtn || !submitBtn || !textarea || !result || !embedding) return;
 
-        const isAdmin = localStorage.getItem("isAdmin") === "true";
-        panel.hidden = !isAdmin;
-        image.style.display = isAdmin ? "none" : "";
-        if (overlay) overlay.style.display = isAdmin ? "none" : "";
+        // Only reveal once the visitor is actually logged in: a stale isAdmin
+        // flag must not expose the panel without a live token.
+        const applyVisibility = () => {
+          const visible =
+            !!localStorage.getItem("token") &&
+            localStorage.getItem("isAdmin") === "true";
+          panel.hidden = !visible;
+          image.style.display = visible ? "none" : "";
+          if (overlay) overlay.style.display = visible ? "none" : "";
+        };
+
+        applyVisibility();
+        // NavScript resolves the role asynchronously, so re-check when it lands.
+        window.addEventListener("storage", applyVisibility);
+        document.addEventListener("tym:auth-changed", applyVisibility);
         commandEl.textContent = gitCommand;
 
         copyBtn.onclick = async () => {
