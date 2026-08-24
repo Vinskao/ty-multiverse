@@ -472,7 +472,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                               </div>
                             </div>
                           ))}
-                        <AboutMermaidDiagram id="astroArchitecture" className="margin-top" />
+                        <AboutMermaidDiagram id="bankingIntegration" className="margin-top" />
                         {/* Backend/API skills used at TCS */}
                         {skillsData.categories
                           .filter(
@@ -554,8 +554,6 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                   ))}
                             </div>
                           ))}
-                        {/* Architecture Diagram: Angular + Java Gateway System */}
-                        <AboutMermaidDiagram id="angularGateway" className="margin-top" />
                       </div>
                     )}
 
@@ -708,6 +706,9 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                               )}
                           </div>
                         ))}
+                      {/* Architecture Diagrams: own Astro site + Angular/Java Gateway integration */}
+                      <AboutMermaidDiagram id="astroArchitecture" className="margin-top" />
+                      <AboutMermaidDiagram id="angularGateway" />
                     </div>
                   )}
 

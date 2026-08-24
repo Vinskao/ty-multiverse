@@ -5,8 +5,8 @@
     "company": "Tata Consultancy Services",
     "period": "2025/12~Present",
     "topic": {
-      "en": "Angular.js + Java Gateway — Frontend/Backend Integration Architecture",
-      "zh": "Angular.js 前端 + Java Gateway — 前後端整合架構"
+      "en": "Enterprise Banking Frontend — Widget UI, BFF & Legacy Rehosting",
+      "zh": "企業金融前端 — Widget UI、BFF 與 Legacy Rehosting 架構"
     }
   },
   {
@@ -31,6 +31,26 @@
   },
   {
     "index": 3,
+    "role": { "en": "Freelancer", "zh": "自由接案" },
+    "company": "Self-Employed",
+    "period": "2023/3~2024/1",
+    "topic": {
+      "en": "Astro Frontend — File-based Routing & Layout Composition",
+      "zh": "Astro 前端 — 檔案式路由與版型組合架構"
+    }
+  },
+  {
+    "index": 4,
+    "role": { "en": "Freelancer", "zh": "自由接案" },
+    "company": "Self-Employed",
+    "period": "2023/3~2024/1",
+    "topic": {
+      "en": "Angular.js + Java Gateway — Frontend/Backend Integration Architecture",
+      "zh": "Angular.js 前端 + Java Gateway — 前後端整合架構"
+    }
+  },
+  {
+    "index": 5,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -40,7 +60,7 @@
     }
   },
   {
-    "index": 4,
+    "index": 6,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -50,7 +70,7 @@
     }
   },
   {
-    "index": 5,
+    "index": 7,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -60,7 +80,7 @@
     }
   },
   {
-    "index": 6,
+    "index": 8,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -70,7 +90,7 @@
     }
   },
   {
-    "index": 7,
+    "index": 9,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -80,7 +100,7 @@
     }
   },
   {
-    "index": 8,
+    "index": 10,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -90,7 +110,7 @@
     }
   },
   {
-    "index": 9,
+    "index": 11,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -100,7 +120,7 @@
     }
   },
   {
-    "index": 10,
+    "index": 12,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -110,7 +130,7 @@
     }
   },
   {
-    "index": 11,
+    "index": 13,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
@@ -120,7 +140,7 @@
     }
   },
   {
-    "index": 12,
+    "index": 14,
     "role": { "en": "Open Source Backend Engineer", "zh": "開源後端工程師" },
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",

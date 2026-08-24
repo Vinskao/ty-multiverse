@@ -4,6 +4,7 @@ import MermaidDiagram from "./MermaidDiagram.astro";
 type DiagramId =
   | "astroArchitecture"
   | "angularGateway"
+  | "bankingIntegration"
   | "mayaSawaV1Flow"
   | "mayaSawaV1System"
   | "backendArchitecture"
@@ -57,6 +58,63 @@ const diagrams: Record<DiagramId, string> = {
     style K fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
     style L fill:#14b8a6,stroke:#0f766e,stroke-width:2px,color:#ffffff
     style M fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff`,
+
+  bankingIntegration: `flowchart LR
+    subgraph "Presentation Layer (Widget-based SPA)"
+        W["Reusable Form Widgets\\n(TextBox / CheckBox / TypeAhead)"]
+        GRID["Data Grid\\nList + Row Actions"]
+        FORM["Entity Maintenance Screens\\n(Create / View / Modify)"]
+        W --> FORM
+        GRID --> FORM
+    end
+
+    subgraph "Dual-Control Workflow"
+        MK["Maker\\nSubmit Change"]
+        CK["Checker\\nReview & Approve"]
+        SB["Send Back\\nfor Correction"]
+        MK --> CK
+        CK -->|"reject"| SB
+        SB --> MK
+    end
+
+    subgraph "BFF Layer"
+        BFF["Backend for Frontend\\nVersioned Release Train"]
+        HDR["Header Enrichment\\nOrganisational Unit / Channel"]
+        CFG["Externalised Config\\nPer-environment Matrix"]
+        BFF --> HDR
+        BFF --> CFG
+    end
+
+    subgraph "Domain Microservices"
+        MS1["Customer Domain"]
+        MS2["Payment Domain"]
+        MS3["Reference Data"]
+    end
+
+    subgraph "Legacy Core (Rehosting)"
+        BR["Protocol Bridge\\nRPC to REST Adapter"]
+        TP["Transaction Processing Monitor\\n(Legacy Core Banking)"]
+        BR --> TP
+    end
+
+    FORM -->|"REST API"| BFF
+    CK -->|"REST API"| BFF
+    HDR --> MS1
+    HDR --> MS2
+    HDR --> MS3
+    MS1 --> BR
+    MS2 --> BR
+
+    classDef ui fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
+    classDef mc fill:#f3e5f5,stroke:#8e24aa,color:#0b1a33
+    classDef bff fill:#fff3e0,stroke:#ff9800,color:#0b1a33
+    classDef ms fill:#e0f2f1,stroke:#00897b,color:#0b1a33
+    classDef lg fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    class W,GRID,FORM ui
+    class MK,CK,SB mc
+    class BFF,HDR,CFG bff
+    class MS1,MS2,MS3 ms
+    class BR,TP lg`,
 
   angularGateway: `flowchart LR
     subgraph "Frontend (Angular.js)"
