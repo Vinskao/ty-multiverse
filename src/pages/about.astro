@@ -100,7 +100,14 @@ const totalMonths = mergedMonths(allRanges);
 const swYears = (swMonths / 12).toFixed(1);
 const pmYears = (pmMonths / 12).toFixed(1);
 const totalYears = (totalMonths / 12).toFixed(1);
-const gitCommitCommand = `"REPO: $(git remote get-url origin)"; git log -n 50 --stat --date=iso-strict --pretty=format:"===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---"`;
+const gitCommitCommand = `{
+  printf 'REPO: '
+  git remote get-url origin
+  git --no-pager log -n 50 --stat --date=iso-strict \
+    --pretty=format:'===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---'
+} > git-last-50-commits.txt
+
+less git-last-50-commits.txt`;
 
 // Function to highlight dates in project descriptions
 function highlightDates(text: string): string {
@@ -961,7 +968,14 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     </script>
 
     <script>
-      const gitCommand = `"REPO: $(git remote get-url origin)"; git log -n 50 --stat --date=iso-strict --pretty=format:"===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---"`;
+      const gitCommand = `{
+  printf 'REPO: '
+  git remote get-url origin
+  git --no-pager log -n 50 --stat --date=iso-strict \
+    --pretty=format:'===COMMIT===%nHASH: %H%nDATE: %cI%nMSG: %s%n%b%n---FILES---'
+} > git-last-50-commits.txt
+
+less git-last-50-commits.txt`;
 
       function initGitCommitIngest() {
         const panel = document.querySelector<HTMLElement>("[data-admin-git-commit]");
