@@ -810,6 +810,18 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                 )}
                                 {subcategory.name === "NoSQL" && (
                                   <>
+                                    <div class="architecture-note" role="note">
+                                      <strong>
+                                        {lang === "zh"
+                                          ? "已驗證：RabbitMQ 持久化事件架構"
+                                          : "Verified: persistent RabbitMQ event architecture"}
+                                      </strong>
+                                      <p>
+                                        {lang === "zh"
+                                          ? "既有 classic queue 繼續處理非同步工作；寫入型業務事件則透過 transactional outbox 發布到可重放的 tymb-events stream。RabbitMQ 中斷期間事件會留在 PostgreSQL，服務恢復後自動補送。"
+                                          : "Existing classic queues continue to process asynchronous work, while write-side business events are published through a transactional outbox to the replayable tymb-events stream. Events remain in PostgreSQL during a RabbitMQ outage and are delivered automatically after recovery."}
+                                      </p>
+                                    </div>
                                     <AboutMermaidDiagram id="rabbitMqKubernetes" />
                                     <AboutMermaidDiagram id="webfluxConsumerFlow" />
                                   </>

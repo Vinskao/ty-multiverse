@@ -567,81 +567,66 @@ const diagrams: Record<DiagramId, string> = {
                                       class operator,workers compute;
                                       class pubRT,privRT net;`,
 
-  rabbitMqKubernetes: `graph LR
-    A[Backend<br/>Spring Boot<br/>AsyncMessageService] --> B[RabbitMQ<br/>Queues & Exchanges]
+  rabbitMqKubernetes: `flowchart LR
+    API["Backend API<br/>Spring Boot"] -->|"AMQP commands"| CQ["Classic work queues<br/>existing async jobs"]
 
-    subgraph K8s["Kubernetes Runtime"]
-      K1[Kubelet<br/>Probe Manager]
-      K2[startupProbe<br/>/actuator/health]
-      K3[readinessProbe<br/>/actuator/health/readiness]
-      K4[livenessProbe<br/>/actuator/health/liveness]
-      C[Consumer Pod<br/>Spring Boot WebFlux<br/>Reactive RabbitMQ + R2DBC]
+    subgraph OKE["OKE Kubernetes Runtime"]
+      RMQ["RabbitMQ 4.1 StatefulSet<br/>AMQP 5672 · Stream 5552"]
+      PVC[("OCI Block Volume PVC<br/>50 GiB · persistent")]
+      SECRET["Kubernetes Secret<br/>RabbitMQ credentials"]
+      CONSUMER["Consumer Pod<br/>Spring WebFlux + R2DBC"]
+      PUBLISHER["Outbox Publisher<br/>confirm + retry/backoff"]
+      RMQ --- PVC
+      SECRET -.-> RMQ
+      SECRET -.-> CONSUMER
     end
 
-    subgraph Biz["Business Queue Consumers"]
-      Q1[weapon-save]
-      Q2[weapon-delete-all]
-      Q3[people-insert-multiple]
-      Q4[people-delete-all]
-      Q5[async-result]
-    end
+    CQ --> RMQ --> CONSUMER
+    CONSUMER -->|"business write + event<br/>one transaction"| PG[("PostgreSQL<br/>business_event_outbox")]
+    PG --> PUBLISHER
+    PUBLISHER -->|"event.* · publisher confirm"| EX["tymb-event-exchange<br/>durable topic exchange"]
+    EX -->|"event.#"| STREAM[("tymb-events stream<br/>append-only · replayable<br/>30 days / 10 GiB retention")]
 
-    C --> D[PostgreSQL<br/>R2DBC]
-
-    K1 --> K2
-    K1 --> K3
-    K1 --> K4
-    K2 --> C
-    K3 --> C
-    K4 --> C
-
-    B --> C
-    C --> Q1
-    C --> Q2
-    C --> Q3
-    C --> Q4
-    C --> Q5
-
-    %% Vivid, high-contrast class colors for light theme
     classDef producer fill:#bbdefb,stroke:#1e88e5,color:#0b1a33
     classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
     classDef consumer fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
     classDef database fill:#ffcdd2,stroke:#c62828,color:#0b1a33
-    classDef k8s fill:#e3f2fd,stroke:#1565c0,color:#0b1a33
-    classDef queue fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+    classDef infra fill:#e3f2fd,stroke:#1565c0,color:#0b1a33
 
-    class A producer
-    class B mq
-    class C consumer
-    class D database
-    class K1,K2,K3,K4 k8s
-    class Q1,Q2,Q3,Q4,Q5 queue`,
+    class API producer
+    class CQ,RMQ,EX,STREAM mq
+    class CONSUMER,PUBLISHER consumer
+    class PG database
+    class PVC,SECRET infra`,
 
   webfluxConsumerFlow: `flowchart TD
-    MQ["RabbitMQ Exchange / Queue"] --> LISTENER["Reactive RabbitMQ Listener<br/>message delivery"]
-    LISTENER --> DESER["Deserialize JSON<br/>message DTO"]
-    DESER --> VALIDATE["Bean Validation / business validation"]
-    VALIDATE --> HANDLER["@Service message handler<br/>Mono / Flux pipeline"]
-    HANDLER --> TX["Reactive transaction boundary"]
-    TX --> R2DBC["R2DBC Repository"]
-    R2DBC --> PG[("PostgreSQL")]
-    PG --> ACK["complete successfully"]
-    ACK --> MQACK["ACK message"]
+    Q["Classic work queue"] --> C["WebFlux consumer"]
+    C --> TX["Reactive transaction"]
+    TX --> WRITE["Write business data"]
+    TX --> EVENT["Insert BusinessEvent into outbox"]
+    WRITE --> COMMIT["Commit both writes"]
+    EVENT --> COMMIT
+    COMMIT --> ACK["ACK work command"]
 
-    VALIDATE -. "invalid payload" .-> REJECT["Reject / dead-letter queue"]
-    HANDLER -. "transient failure" .-> RETRY["Retry with backoff"]
-    RETRY --> HANDLER
-    RETRY -. "retry exhausted" .-> DLQ["Dead-letter queue"]
-    R2DBC -. "database failure" .-> RETRY
+    EVENT --> POLL["Poll unpublished rows"]
+    POLL --> SEND["Publish event.* with eventId"]
+    SEND --> STREAM["Append to tymb-events stream"]
+    STREAM --> CONFIRM{"Publisher confirm ACK?"}
+    CONFIRM -->|"yes"| DONE["Set published_at"]
+    CONFIRM -->|"no / unavailable"| BACKOFF["Keep unpublished<br/>exponential backoff"]
+    BACKOFF --> POLL
+
+    DEDUPE["Downstream consumers<br/>deduplicate by eventId"]
+    STREAM --> DEDUPE
 
     classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
     classDef reactive fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
     classDef data fill:#ffcdd2,stroke:#c62828,color:#0b1a33
-    classDef error fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
-    class MQ,MQACK mq
-    class LISTENER,DESER,VALIDATE,HANDLER,TX,R2DBC,ACK reactive
-    class PG data
-    class REJECT,RETRY,DLQ error`,
+    classDef retry fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+    class Q,SEND,STREAM mq
+    class C,TX,POLL,CONFIRM,ACK reactive
+    class WRITE,EVENT,COMMIT,DONE,DEDUPE data
+    class BACKOFF retry`,
 
   retrievalPipeline: `graph TD
   %% User and Entry
