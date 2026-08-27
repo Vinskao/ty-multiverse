@@ -795,10 +795,13 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                   <>
                                     {/* --- Updated Backend Architecture Diagrams --- */}
                                     <AboutMermaidDiagram id="backendArchitecture" className="margin-top" />
+                                    <AboutMermaidDiagram id="springMvcRequestFlow" />
 
                                     <AboutMermaidDiagram id="securityArchitecture" />
+                                    <AboutMermaidDiagram id="springSecurityFilterFlow" />
 
                                     <AboutMermaidDiagram id="exceptionArchitecture" />
+                                    <AboutMermaidDiagram id="springExceptionResolutionFlow" />
                                   </>
                                 )}
 
@@ -806,7 +809,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                                   <AboutMermaidDiagram id="ociNetwork" />
                                 )}
                                 {subcategory.name === "NoSQL" && (
-                                  <AboutMermaidDiagram id="rabbitMqKubernetes" />
+                                  <>
+                                    <AboutMermaidDiagram id="rabbitMqKubernetes" />
+                                    <AboutMermaidDiagram id="webfluxConsumerFlow" />
+                                  </>
                                 )}
                                 {subcategory.name === "Frameworks & APIs" && (
                                   <>
@@ -1063,4 +1069,3 @@ less git-last-50-commits.txt`;
 
   <!-- Styles for export button live in ResumePreview component -->
 </BaseLayout>
-

@@ -8,10 +8,14 @@ type DiagramId =
   | "mayaSawaV1Flow"
   | "mayaSawaV1System"
   | "backendArchitecture"
+  | "springMvcRequestFlow"
   | "securityArchitecture"
+  | "springSecurityFilterFlow"
   | "exceptionArchitecture"
+  | "springExceptionResolutionFlow"
   | "ociNetwork"
   | "rabbitMqKubernetes"
+  | "webfluxConsumerFlow"
   | "retrievalPipeline"
   | "agentWorkflow"
   | "asyncQaSequence"
@@ -346,6 +350,42 @@ const diagrams: Record<DiagramId, string> = {
                                           PrimaryDataSourceConfig --> Database
                                           PeopleDataSourceConfig --> Database`,
 
+  springMvcRequestFlow: `flowchart TD
+    CLIENT["Browser / API Client"] --> TOMCAT["Embedded Tomcat<br/>Servlet Container"]
+
+    subgraph SERVLET["Servlet request pipeline"]
+      TOMCAT --> FILTER["Servlet Filter Chain<br/>CORS / request logging / Spring Security"]
+      FILTER --> DS["DispatcherServlet<br/>Spring MVC front controller"]
+      DS --> HM["HandlerMapping<br/>find Controller method"]
+      HM --> PRE["HandlerInterceptor.preHandle<br/>trace / tenant / audit checks"]
+      PRE --> BIND["HandlerMethodArgumentResolver<br/>JSON body + @Valid binding"]
+      BIND --> CTRL["@RestController<br/>request orchestration"]
+      CTRL --> SVC["@Service<br/>transactional business logic"]
+      SVC --> REPO["@Repository<br/>JPA / JDBC data access"]
+      REPO --> DB[("PostgreSQL")]
+    end
+
+    DB --> REPO
+    REPO --> SVC
+    SVC --> CTRL
+    CTRL --> POST["HandlerInterceptor.postHandle<br/>response metadata"]
+    POST --> CONV["HttpMessageConverter<br/>object to JSON"]
+    CONV --> FILTEROUT["Filter Chain returns response"]
+    FILTEROUT --> CLIENT
+
+    CTRL -. "throws exception" .-> ADVICE["@RestControllerAdvice<br/>central error response"]
+    SVC -. "throws exception" .-> ADVICE
+    ADVICE --> CONV
+
+    classDef entry fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
+    classDef spring fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    classDef data fill:#fff3e0,stroke:#fb8c00,color:#0b1a33
+    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    class CLIENT,TOMCAT entry
+    class FILTER,DS,HM,PRE,BIND,CTRL,SVC,REPO,POST,CONV,FILTEROUT spring
+    class DB data
+    class ADVICE error`,
+
   securityArchitecture: `classDiagram
                                           class SecurityConfig {
                                               +@EnableWebSecurity
@@ -393,6 +433,29 @@ const diagrams: Record<DiagramId, string> = {
                                           SecurityConfig --> SessionManagement
                                           SecurityConfig --> KeycloakController`,
 
+  springSecurityFilterFlow: `flowchart TD
+    REQ["HTTP Request<br/>Authorization: Bearer JWT"] --> CORS["CorsFilter"]
+    CORS --> SC["SecurityContextHolderFilter<br/>create / load context"]
+    SC --> JWT["BearerTokenAuthenticationFilter<br/>extract Bearer token"]
+    JWT --> DEC["JwtDecoder<br/>signature, issuer, expiry"]
+    DEC --> AUTH["JwtAuthenticationConverter<br/>claims to GrantedAuthority"]
+    AUTH --> AUTHZ["AuthorizationFilter<br/>request matcher + authenticated"]
+    AUTHZ --> MVC["DispatcherServlet and MVC pipeline"]
+    MVC --> METHOD["@PreAuthorize / @Secured<br/>method security"]
+    METHOD --> CTRL["@RestController"]
+    CTRL --> OK["200 JSON response"]
+
+    DEC -. "invalid / expired" .-> ENTRY["AuthenticationEntryPoint<br/>401 Unauthorized"]
+    AUTHZ -. "insufficient role" .-> DENIED["AccessDeniedHandler<br/>403 Forbidden"]
+    METHOD -. "access denied" .-> DENIED
+
+    classDef security fill:#fff3e0,stroke:#fb8c00,color:#0b1a33
+    classDef mvc fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    class CORS,SC,JWT,DEC,AUTH,AUTHZ security
+    class MVC,METHOD,CTRL,OK mvc
+    class ENTRY,DENIED error`,
+
   exceptionArchitecture: `classDiagram
                                           class GlobalExceptionHandler {
                                               +Chain of Responsibility
@@ -423,6 +486,33 @@ const diagrams: Record<DiagramId, string> = {
                                           GlobalExceptionHandler --> DataIntegrityApiExceptionHandler
                                           GlobalExceptionHandler --> ValidationApiExceptionHandler
                                           GlobalExceptionHandler --> DefaultApiExceptionHandler`,
+
+  springExceptionResolutionFlow: `flowchart TD
+    REQ["HTTP Request"] --> MVC["DispatcherServlet"]
+    MVC --> INVOKE["Invoke Controller method"]
+    INVOKE --> VALID["@Valid / data binding"]
+    INVOKE --> SERVICE["@Service / @Transactional"]
+    SERVICE --> DATA["@Repository / database"]
+    VALID -. "MethodArgumentNotValidException" .-> RESOLVER
+    SERVICE -. "BusinessException" .-> RESOLVER
+    DATA -. "DataIntegrityViolationException" .-> RESOLVER
+    INVOKE -. "unexpected Exception" .-> RESOLVER["HandlerExceptionResolver chain"]
+
+    RESOLVER --> ADVICE["@RestControllerAdvice"]
+    ADVICE --> BIZ["@ExceptionHandler BusinessException<br/>@Order 0"]
+    ADVICE --> INTEGRITY["@ExceptionHandler DataIntegrityViolationException<br/>@Order 1"]
+    ADVICE --> BINDING["@ExceptionHandler MethodArgumentNotValidException<br/>@Order 2"]
+    ADVICE --> FALLBACK["@ExceptionHandler Exception<br/>lowest precedence"]
+    BIZ --> ERR["Problem detail / error DTO<br/>HTTP status + code + trace id"]
+    INTEGRITY --> ERR
+    BINDING --> ERR
+    FALLBACK --> ERR
+    ERR --> RESP["JSON Error Response"]
+
+    classDef spring fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    class MVC,INVOKE,VALID,SERVICE,DATA spring
+    class RESOLVER,ADVICE,BIZ,INTEGRITY,BINDING,FALLBACK,ERR,RESP error`,
 
   ociNetwork: `flowchart LR
                                       user["User"] -->|SSH 22| bastion["Bastion (Public Subnet)"]
@@ -526,6 +616,32 @@ const diagrams: Record<DiagramId, string> = {
     class D database
     class K1,K2,K3,K4 k8s
     class Q1,Q2,Q3,Q4,Q5 queue`,
+
+  webfluxConsumerFlow: `flowchart TD
+    MQ["RabbitMQ Exchange / Queue"] --> LISTENER["Reactive RabbitMQ Listener<br/>message delivery"]
+    LISTENER --> DESER["Deserialize JSON<br/>message DTO"]
+    DESER --> VALIDATE["Bean Validation / business validation"]
+    VALIDATE --> HANDLER["@Service message handler<br/>Mono / Flux pipeline"]
+    HANDLER --> TX["Reactive transaction boundary"]
+    TX --> R2DBC["R2DBC Repository"]
+    R2DBC --> PG[("PostgreSQL")]
+    PG --> ACK["complete successfully"]
+    ACK --> MQACK["ACK message"]
+
+    VALIDATE -. "invalid payload" .-> REJECT["Reject / dead-letter queue"]
+    HANDLER -. "transient failure" .-> RETRY["Retry with backoff"]
+    RETRY --> HANDLER
+    RETRY -. "retry exhausted" .-> DLQ["Dead-letter queue"]
+    R2DBC -. "database failure" .-> RETRY
+
+    classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
+    classDef reactive fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
+    classDef data fill:#ffcdd2,stroke:#c62828,color:#0b1a33
+    classDef error fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+    class MQ,MQACK mq
+    class LISTENER,DESER,VALIDATE,HANDLER,TX,R2DBC,ACK reactive
+    class PG data
+    class REJECT,RETRY,DLQ error`,
 
   retrievalPipeline: `graph TD
   %% User and Entry
