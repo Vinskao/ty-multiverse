@@ -2,16 +2,38 @@
   import { getMermaidConfig } from "../scripts/mermaid-theme";
 
   let themeObserver: MutationObserver | null = null;
+  let mermaidLoading: Promise<void> | null = null;
+  let renderQueue: Promise<void> = Promise.resolve();
+
+  function renderMermaid(mermaidLib: any) {
+    // Initial load and Astro page-load can arrive together. Serialize redraws
+    // so a second pass never mistakes the first pass's SVG for Mermaid source.
+    renderQueue = renderQueue.then(async () => {
+      const diagrams = Array.from(document.querySelectorAll<HTMLElement>(".mermaid"));
+
+      diagrams.forEach((diagram) => {
+        const source = diagram.dataset.mermaidSource ?? diagram.textContent ?? "";
+        diagram.dataset.mermaidSource = source;
+        diagram.removeAttribute("data-processed");
+        diagram.textContent = source;
+      });
+
+      await mermaidLib.run({ nodes: diagrams });
+    });
+
+    return renderQueue;
+  }
 
   async function loadMermaid() {
     if (!window["mermaid"]) {
-      await new Promise<void>((resolve, reject) => {
+      mermaidLoading ??= new Promise<void>((resolve, reject) => {
         const s = document.createElement("script");
         s.src = "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js";
         s.onload = () => resolve();
         s.onerror = reject;
         document.head.appendChild(s);
       });
+      await mermaidLoading;
     }
 
     const mermaidLib = window["mermaid"] as any;
@@ -21,9 +43,7 @@
     const mermaidCfg = getMermaidConfig(isDarkMode);
     mermaidLib.initialize({ ...mermaidCfg, startOnLoad: true });
 
-    setTimeout(() => {
-      mermaidLib.init();
-    }, 100);
+    await renderMermaid(mermaidLib);
 
     if (!themeObserver) {
       themeObserver = new MutationObserver((mutations) => {
@@ -33,9 +53,7 @@
           const isDark = document.documentElement.classList.contains("theme-dark");
           mermaidLib.initialize({ ...getMermaidConfig(isDark), startOnLoad: true });
 
-          setTimeout(() => {
-            mermaidLib.init();
-          }, 100);
+          void renderMermaid(mermaidLib);
         });
       });
 

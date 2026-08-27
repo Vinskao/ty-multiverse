@@ -49,19 +49,19 @@ const diagrams: Record<DiagramId, string> = {
     G --> M
     H --> M
 
-    style A fill:#6366f1,stroke:#4338ca,stroke-width:3px,color:#ffffff
-    style B fill:#8b5cf6,stroke:#7c3aed,stroke-width:3px,color:#ffffff
-    style C fill:#7c3aed,stroke:#6d28d9,stroke-width:3px,color:#ffffff
-    style D fill:#4f46e5,stroke:#3730a3,stroke-width:3px,color:#ffffff
-    style E fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#ffffff
-    style F fill:#06b6d4,stroke:#0891b2,stroke-width:3px,color:#ffffff
-    style G fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
-    style H fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#ffffff
-    style I fill:#f59e0b,stroke:#d97706,stroke-width:3px,color:#ffffff
-    style J fill:#f97316,stroke:#ea580c,stroke-width:2px,color:#ffffff
-    style K fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:#ffffff
-    style L fill:#14b8a6,stroke:#0f766e,stroke-width:2px,color:#ffffff
-    style M fill:#10b981,stroke:#059669,stroke-width:2px,color:#ffffff`,
+    style A fill:#4338ca,stroke:#312e81,stroke-width:3px,color:#ffffff
+    style B fill:#6d28d9,stroke:#581c87,stroke-width:3px,color:#ffffff
+    style C fill:#6d28d9,stroke:#581c87,stroke-width:3px,color:#ffffff
+    style D fill:#3730a3,stroke:#312e81,stroke-width:3px,color:#ffffff
+    style E fill:#0369a1,stroke:#075985,stroke-width:2px,color:#ffffff
+    style F fill:#0e7490,stroke:#155e75,stroke-width:3px,color:#ffffff
+    style G fill:#0e7490,stroke:#155e75,stroke-width:2px,color:#ffffff
+    style H fill:#0e7490,stroke:#155e75,stroke-width:2px,color:#ffffff
+    style I fill:#92400e,stroke:#78350f,stroke-width:3px,color:#ffffff
+    style J fill:#9a3412,stroke:#7c2d12,stroke-width:2px,color:#ffffff
+    style K fill:#b91c1c,stroke:#991b1b,stroke-width:2px,color:#ffffff
+    style L fill:#0f766e,stroke:#115e59,stroke-width:2px,color:#ffffff
+    style M fill:#047857,stroke:#065f46,stroke-width:2px,color:#ffffff`,
 
   bankingIntegration: `flowchart LR
     subgraph "Presentation Layer (Widget-based SPA)"
@@ -109,11 +109,11 @@ const diagrams: Record<DiagramId, string> = {
     MS1 --> BR
     MS2 --> BR
 
-    classDef ui fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
-    classDef mc fill:#f3e5f5,stroke:#8e24aa,color:#0b1a33
-    classDef bff fill:#fff3e0,stroke:#ff9800,color:#0b1a33
-    classDef ms fill:#e0f2f1,stroke:#00897b,color:#0b1a33
-    classDef lg fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    classDef ui fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef mc fill:#6b21a8,stroke:#581c87,color:#ffffff
+    classDef bff fill:#9a3412,stroke:#7c2d12,color:#ffffff
+    classDef ms fill:#0f766e,stroke:#115e59,color:#ffffff
+    classDef lg fill:#166534,stroke:#14532d,color:#ffffff
     class W,GRID,FORM ui
     class MK,CK,SB mc
     class BFF,HDR,CFG bff
@@ -148,9 +148,9 @@ const diagrams: Record<DiagramId, string> = {
     INS -->|"Injects Headers"| BE
     ADP -->|"Transforms Payloads"| BE
 
-    classDef fe fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
-    classDef gw fill:#fff3e0,stroke:#ff9800,color:#0b1a33
-    classDef be fill:#e8f5e9,stroke:#43a047,color:#0b1a33
+    classDef fe fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef gw fill:#9a3412,stroke:#7c2d12,color:#ffffff
+    classDef be fill:#166534,stroke:#14532d,color:#ffffff
     class A,AR,REG fe
     class GW,INS,ADP,EXT gw
     class BE be`,
@@ -377,10 +377,10 @@ const diagrams: Record<DiagramId, string> = {
     SVC -. "throws exception" .-> ADVICE
     ADVICE --> CONV
 
-    classDef entry fill:#e8f4fd,stroke:#2196f3,color:#0b1a33
-    classDef spring fill:#e8f5e9,stroke:#43a047,color:#0b1a33
-    classDef data fill:#fff3e0,stroke:#fb8c00,color:#0b1a33
-    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    classDef entry fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef spring fill:#166534,stroke:#14532d,color:#ffffff
+    classDef data fill:#92400e,stroke:#78350f,color:#ffffff
+    classDef error fill:#9f1239,stroke:#881337,color:#ffffff
     class CLIENT,TOMCAT entry
     class FILTER,DS,HM,PRE,BIND,CTRL,SVC,REPO,POST,CONV,FILTEROUT spring
     class DB data
@@ -449,9 +449,9 @@ const diagrams: Record<DiagramId, string> = {
     AUTHZ -. "insufficient role" .-> DENIED["AccessDeniedHandler<br/>403 Forbidden"]
     METHOD -. "access denied" .-> DENIED
 
-    classDef security fill:#fff3e0,stroke:#fb8c00,color:#0b1a33
-    classDef mvc fill:#e8f5e9,stroke:#43a047,color:#0b1a33
-    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    classDef security fill:#92400e,stroke:#78350f,color:#ffffff
+    classDef mvc fill:#166534,stroke:#14532d,color:#ffffff
+    classDef error fill:#9f1239,stroke:#881337,color:#ffffff
     class CORS,SC,JWT,DEC,AUTH,AUTHZ security
     class MVC,METHOD,CTRL,OK mvc
     class ENTRY,DENIED error`,
@@ -509,8 +509,8 @@ const diagrams: Record<DiagramId, string> = {
     FALLBACK --> ERR
     ERR --> RESP["JSON Error Response"]
 
-    classDef spring fill:#e8f5e9,stroke:#43a047,color:#0b1a33
-    classDef error fill:#fce4ec,stroke:#d81b60,color:#0b1a33
+    classDef spring fill:#166534,stroke:#14532d,color:#ffffff
+    classDef error fill:#9f1239,stroke:#881337,color:#ffffff
     class MVC,INVOKE,VALID,SERVICE,DATA spring
     class RESOLVER,ADVICE,BIZ,INTEGRITY,BINDING,FALLBACK,ERR,RESP error`,
 
@@ -556,10 +556,10 @@ const diagrams: Record<DiagramId, string> = {
                                       intLB --> workers
 
                                       %% Improve contrast with vivid class definitions
-                                      classDef host fill:#eef3fb,stroke:#1f5bff,color:#0b1a33;
-                                      classDef control fill:#ede7f6,stroke:#5e35b1,color:#0b1a33;
-                                      classDef compute fill:#e8f5e9,stroke:#43a047,color:#0b1a33;
-                                      classDef net fill:#fff3e0,stroke:#fb8c00,color:#0b1a33;
+                                      classDef host fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
+                                      classDef control fill:#5b21b6,stroke:#4c1d95,color:#ffffff;
+                                      classDef compute fill:#166534,stroke:#14532d,color:#ffffff;
+                                      classDef net fill:#92400e,stroke:#78350f,color:#ffffff;
 
                                       %% Assign classes for better differentiation
                                       class bastion host;
@@ -587,11 +587,11 @@ const diagrams: Record<DiagramId, string> = {
     PUBLISHER -->|"event.* · publisher confirm"| EX["tymb-event-exchange<br/>durable topic exchange"]
     EX -->|"event.#"| STREAM[("tymb-events stream<br/>append-only · replayable<br/>30 days / 10 GiB retention")]
 
-    classDef producer fill:#bbdefb,stroke:#1e88e5,color:#0b1a33
-    classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
-    classDef consumer fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
-    classDef database fill:#ffcdd2,stroke:#c62828,color:#0b1a33
-    classDef infra fill:#e3f2fd,stroke:#1565c0,color:#0b1a33
+    classDef producer fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef mq fill:#6b21a8,stroke:#581c87,color:#ffffff
+    classDef consumer fill:#166534,stroke:#14532d,color:#ffffff
+    classDef database fill:#9f1239,stroke:#881337,color:#ffffff
+    classDef infra fill:#1e3a8a,stroke:#172554,color:#ffffff
 
     class API producer
     class CQ,RMQ,EX,STREAM mq
@@ -619,10 +619,10 @@ const diagrams: Record<DiagramId, string> = {
     DEDUPE["Downstream consumers<br/>deduplicate by eventId"]
     STREAM --> DEDUPE
 
-    classDef mq fill:#e1bee7,stroke:#8e24aa,color:#0b1a33
-    classDef reactive fill:#c8e6c9,stroke:#2e7d32,color:#0b1a33
-    classDef data fill:#ffcdd2,stroke:#c62828,color:#0b1a33
-    classDef retry fill:#fff3e0,stroke:#ef6c00,color:#0b1a33
+    classDef mq fill:#6b21a8,stroke:#581c87,color:#ffffff
+    classDef reactive fill:#166534,stroke:#14532d,color:#ffffff
+    classDef data fill:#9f1239,stroke:#881337,color:#ffffff
+    classDef retry fill:#92400e,stroke:#78350f,color:#ffffff
     class Q,SEND,STREAM mq
     class C,TX,POLL,CONFIRM,ACK reactive
     class WRITE,EVENT,COMMIT,DONE,DEDUPE data
@@ -674,11 +674,11 @@ const diagrams: Record<DiagramId, string> = {
   TBL -. indexed by .-> IDX2
 
   %% Styles
-  classDef trgm fill:#e3f2fd,stroke:#1e88e5,stroke-width:1px
-  classDef vec fill:#fce4ec,stroke:#d81b60,stroke-width:1px
-  classDef idx fill:#fff3e0,stroke:#fb8c00,stroke-width:1px
-  classDef ext fill:#ede7f6,stroke:#5e35b1,stroke-width:1px
-  classDef tbl fill:#f1f8e9,stroke:#43a047,stroke-width:1px`,
+  classDef trgm fill:#1d4ed8,stroke:#1e3a8a,stroke-width:1px,color:#ffffff
+  classDef vec fill:#9f1239,stroke:#881337,stroke-width:1px,color:#ffffff
+  classDef idx fill:#92400e,stroke:#78350f,stroke-width:1px,color:#ffffff
+  classDef ext fill:#5b21b6,stroke:#4c1d95,stroke-width:1px,color:#ffffff
+  classDef tbl fill:#166534,stroke:#14532d,stroke-width:1px,color:#ffffff`,
 
   agentWorkflow: `graph TB
     subgraph "Frontend Layer"
@@ -779,13 +779,13 @@ const diagrams: Record<DiagramId, string> = {
     RAG --> E1
 
     %% Style Definitions
-    classDef api fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000000
-    classDef process fill:#fff8e1,stroke:#ffa000,stroke-width:3px,color:#000000
-    classDef agent fill:#e3f2fd,stroke:#2196f3,stroke-width:3px,color:#000000
-    classDef workflow fill:#fff3e0,stroke:#ff9800,stroke-width:3px,color:#000000
-    classDef capability fill:#fce4ec,stroke:#e91e63,stroke-width:3px,color:#000000
-    classDef data fill:#f1f8e9,stroke:#43a047,stroke-width:3px,color:#000000
-    classDef external fill:#f3e5f5,stroke:#9c27b0,stroke-width:3px,color:#000000
+    classDef api fill:#166534,stroke:#14532d,stroke-width:3px,color:#ffffff
+    classDef process fill:#92400e,stroke:#78350f,stroke-width:3px,color:#ffffff
+    classDef agent fill:#1d4ed8,stroke:#1e3a8a,stroke-width:3px,color:#ffffff
+    classDef workflow fill:#9a3412,stroke:#7c2d12,stroke-width:3px,color:#ffffff
+    classDef capability fill:#9f1239,stroke:#881337,stroke-width:3px,color:#ffffff
+    classDef data fill:#166534,stroke:#14532d,stroke-width:3px,color:#ffffff
+    classDef external fill:#6b21a8,stroke:#581c87,stroke-width:3px,color:#ffffff
 
     class A1,A2,A3,A4,A5,A6,A7 api
     class P1,P2 process
