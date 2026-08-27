@@ -55,8 +55,8 @@
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
     "topic": {
-      "en": "TYM Backend — Spring Boot Application Layer & Data Source Config",
-      "zh": "TYM 後端 — Spring Boot 應用層與資料源設定架構"
+      "en": "Backend Platform — Application Layers & Data Access",
+      "zh": "後端平台 — 應用分層與資料存取架構"
     }
   },
   {
@@ -65,8 +65,8 @@
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
     "topic": {
-      "en": "TYM Backend — Security, JWT & OAuth2 Configuration",
-      "zh": "TYM 後端 — 安全性、JWT 與 OAuth2 設定架構"
+      "en": "Security Architecture — JWT & OAuth2",
+      "zh": "安全架構 — JWT 與 OAuth2"
     }
   },
   {
@@ -75,8 +75,8 @@
     "company": "Mercuries Life Insurance",
     "period": "2024/3~2025/11",
     "topic": {
-      "en": "TYM Backend — Global Exception Handling Chain of Responsibility",
-      "zh": "TYM 後端 — 全域例外處理責任鏈設計模式"
+      "en": "Backend Error Handling — Chain of Responsibility",
+      "zh": "後端例外處理 — 責任鏈設計模式"
     }
   },
   {

@@ -5,6 +5,7 @@ type DiagramId =
   | "astroArchitecture"
   | "angularGateway"
   | "bankingIntegration"
+  | "bankingImplementation"
   | "mayaSawaV1Flow"
   | "mayaSawaV1System"
   | "backendArchitecture"
@@ -15,6 +16,7 @@ type DiagramId =
   | "springExceptionResolutionFlow"
   | "ociNetwork"
   | "rabbitMqKubernetes"
+  | "rabbitMqOutboxArchitecture"
   | "webfluxConsumerFlow"
   | "retrievalPipeline"
   | "agentWorkflow"
@@ -119,6 +121,34 @@ const diagrams: Record<DiagramId, string> = {
     class BFF,HDR,CFG bff
     class MS1,MS2,MS3 ms
     class BR,TP lg`,
+
+  bankingImplementation: `flowchart TD
+    UI["Widget UI<br/>form state · validation · accessibility"] --> BFF["BFF API<br/>versioned endpoint"]
+    BFF --> AUTH["Security boundary<br/>token · role · channel checks"]
+    AUTH --> MAP["Request mapper<br/>UI DTO ↔ canonical model"]
+    MAP --> HDR["Header inserter<br/>organisation · channel · correlation ID"]
+    HDR --> ROUTE{"Target domain"}
+    ROUTE --> CUST["Customer service adapter"]
+    ROUTE --> PAY["Payment service adapter"]
+    ROUTE --> REF["Reference-data adapter"]
+    CUST --> LEGACY["Protocol bridge<br/>REST ↔ legacy RPC"]
+    PAY --> LEGACY
+    REF --> CACHE["Reference cache"]
+    LEGACY --> CORE["Transaction Processing Monitor<br/>legacy core banking"]
+    CORE --> RESP["Error mapping · audit · response DTO"]
+    CACHE --> RESP
+    RESP --> UI
+
+    classDef ui fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef bff fill:#9a3412,stroke:#7c2d12,color:#ffffff
+    classDef service fill:#0f766e,stroke:#115e59,color:#ffffff
+    classDef legacy fill:#6b21a8,stroke:#581c87,color:#ffffff
+    classDef data fill:#166534,stroke:#14532d,color:#ffffff
+    class UI ui
+    class BFF,AUTH,MAP,HDR,RESP bff
+    class ROUTE,CUST,PAY,REF service
+    class LEGACY,CORE legacy
+    class CACHE data`,
 
   angularGateway: `flowchart LR
     subgraph "Frontend (Angular.js)"
@@ -247,108 +277,52 @@ const diagrams: Record<DiagramId, string> = {
     Scheduler --> ArticleAPI`,
 
   backendArchitecture: `classDiagram
-                                          %% Application Layer
-                                          class TYMBackendApplication {
-                                              +@EnableWebSocket
-                                              +@EnableRetry
-                                              +@EnableAsync
-                                              +@EnableScheduling
-                                              +@EnableCaching
-                                              +@EnableRedisHttpSession
-                                              +@EnableWebSecurity
-                                              +@EnableMethodSecurity
-                                          }
-                                          
-                                          %% Security Layer
-                                          class SecurityConfig {
-                                              +@EnableWebSecurity
-                                              +@EnableMethodSecurity
-                                              +JWT Authentication
-                                              +OAuth2 Resource Server
-                                              +CORS Configuration
-                                          }
-                                          
-                                          class KeycloakController {
-                                              +OAuth2 Redirect
-                                              +Token Exchange
-                                              +User Info
-                                              +Token Introspect
-                                          }
-                                          
-                                          class Auth {
-                                              +User Management
-                                              +Admin Operations
-                                              +Token Validation
-                                          }
-                                          
-                                          %% Configuration Layer
-                                          class RedisConfig {
-                                              +@EnableCaching
-                                              +RedisConnectionFactory
-                                              +RedisTemplate
-                                              +TTL Management
-                                              +damage-calculations
-                                              +tymb:sessions
-                                              +Distributed Lock
-                                              +Lua Scripts
-                                          }
-                                          
-                                          class PrimaryDataSourceConfig {
-                                              +PrimaryHikariCP
-                                              +HikariCP Connection Pool
-                                              +Connection Management
-                                              +Connection Timeout
-                                              +Leak Detection
-                                          }
-                                          
-                                          class PeopleDataSourceConfig {
-                                              +PeopleHikariCP
-                                              +HikariCP Connection Pool
-                                              +Connection Management
-                                              +Connection Timeout
-                                              +Leak Detection
-                                          }
-                                          
-                                          class SessionConfig {
-                                              +@EnableRedisHttpSession
-                                              +Redis Session Store
-                                              +Session Timeout
-                                              +Session Fixation
-                                              +Session Security
-                                              +Concurrent Session Control
-                                          }
-                                          
-                                          %% Infrastructure Layer
-                                          class Database {
-                                              +PostgreSQL Primary
-                                              +PostgreSQL People
-                                              +Indexed Queries
-                                              +Batch Operations
-                                          }
-                                          
-                                          class Redis {
-                                              +Cache Storage
-                                              +Session Store
-                                              +Distributed Lock
-                                              +Concurrency Control
-                                          }
-                                          
-                                          %% Layer Relationships
-                                          TYMBackendApplication --> SecurityConfig
-                                          TYMBackendApplication --> RedisConfig
-                                          TYMBackendApplication --> PrimaryDataSourceConfig
-                                          TYMBackendApplication --> PeopleDataSourceConfig
-                                          TYMBackendApplication --> SessionConfig
-                                          
-                                          SecurityConfig --> KeycloakController
-                                          SecurityConfig --> Auth
-                                          SecurityConfig --> SessionConfig
-                                          
-                                          SessionConfig --> RedisConfig
-                                          RedisConfig --> Redis
-                                          
-                                          PrimaryDataSourceConfig --> Database
-                                          PeopleDataSourceConfig --> Database`,
+    class ApplicationPlatform {
+      +Async execution
+      +Scheduled work
+      +Caching
+      +Realtime transport
+    }
+
+    class SecurityBoundary {
+      +Authentication
+      +Authorization
+      +Cross-origin policy
+      +Session policy
+    }
+
+    class IntegrationBoundary {
+      +Identity-provider integration
+      +Token lifecycle
+      +External-service adapters
+    }
+
+    class CacheAndSessionStore {
+      +Cache lifecycle
+      +Session persistence
+      +Distributed coordination
+    }
+
+    class DataAccessLayer {
+      +Connection pooling
+      +Transaction boundary
+      +Query execution
+      +Health monitoring
+    }
+
+    class PersistentStore {
+      +Durable records
+      +Indexes
+      +Batch operations
+    }
+
+    ApplicationPlatform --> SecurityBoundary
+    ApplicationPlatform --> CacheAndSessionStore
+    ApplicationPlatform --> DataAccessLayer
+    SecurityBoundary --> IntegrationBoundary
+    SecurityBoundary --> CacheAndSessionStore
+    CacheAndSessionStore --> PersistentStore
+    DataAccessLayer --> PersistentStore`,
 
   springMvcRequestFlow: `flowchart TD
     CLIENT["Browser / API Client"] --> TOMCAT["Embedded Tomcat<br/>Servlet Container"]
@@ -387,73 +361,66 @@ const diagrams: Record<DiagramId, string> = {
     class ADVICE error`,
 
   securityArchitecture: `classDiagram
-                                          class SecurityConfig {
-                                              +@EnableWebSecurity
-                                              +@EnableMethodSecurity
-                                              +JWT Authentication
-                                              +OAuth2 Resource Server
-                                              +CORS Configuration
-                                              +Stateless Keycloak Endpoints
-                                          }
-                                          
-                                          class JWTValidation {
-                                              +OAuth2ResourceServer
-                                              +JwtDecoder
-                                              +CustomJwtGrantedAuthoritiesConverter
-                                              +Bearer Token Resolver
-                                          }
-                                          
-                                          class Authorization {
-                                              +ROLE_GUEST
-                                              +ROLE_MANAGE_USERS
-                                              +ROLE_ADMIN
-                                              +ROLE_USER
-                                              +permitAll() for /people/names
-                                              +authenticated() for protected endpoints
-                                          }
-                                          
-                                          class SessionManagement {
-                                              +Redis Session Storage
-                                              +Session Timeout
-                                              +Session Fixation
-                                              +@EnableRedisHttpSession
-                                              +tymb:sessions namespace
-                                          }
-                                          
-                                          class KeycloakController {
-                                              +OAuth2 Redirect
-                                              +Token Exchange
-                                              +User Info
-                                              +Token Introspect
-                                              +Dynamic redirectUri
-                                          }
-                                          
-                                          SecurityConfig --> JWTValidation
-                                          SecurityConfig --> Authorization
-                                          SecurityConfig --> SessionManagement
-                                          SecurityConfig --> KeycloakController`,
+    class SecurityBoundary {
+      +Cross-origin policy
+      +Token-based authentication
+      +Resource-server validation
+      +Method-level authorization
+    }
+
+    class TokenValidation {
+      +Bearer token extraction
+      +Signature and issuer validation
+      +Claim-to-authority mapping
+      +Expiry enforcement
+    }
+
+    class AuthorizationPolicy {
+      +Public-route policy
+      +Authenticated-route policy
+      +Role and permission evaluation
+      +Least-privilege access
+    }
+
+    class SessionPolicy {
+      +Session lifecycle
+      +Fixation protection
+      +Concurrent-session control
+      +Server-side session store
+    }
+
+    class IdentityIntegration {
+      +Authorization-code redirect
+      +Token exchange
+      +Identity lookup
+      +Token introspection
+    }
+
+    SecurityBoundary --> TokenValidation
+    SecurityBoundary --> AuthorizationPolicy
+    SecurityBoundary --> SessionPolicy
+    SecurityBoundary --> IdentityIntegration`,
 
   springSecurityFilterFlow: `flowchart TD
-    REQ["HTTP Request<br/>Authorization: Bearer JWT"] --> CORS["CorsFilter"]
-    CORS --> SC["SecurityContextHolderFilter<br/>create / load context"]
-    SC --> JWT["BearerTokenAuthenticationFilter<br/>extract Bearer token"]
-    JWT --> DEC["JwtDecoder<br/>signature, issuer, expiry"]
-    DEC --> AUTH["JwtAuthenticationConverter<br/>claims to GrantedAuthority"]
-    AUTH --> AUTHZ["AuthorizationFilter<br/>request matcher + authenticated"]
-    AUTHZ --> MVC["DispatcherServlet and MVC pipeline"]
-    MVC --> METHOD["@PreAuthorize / @Secured<br/>method security"]
-    METHOD --> CTRL["@RestController"]
-    CTRL --> OK["200 JSON response"]
+    REQ["Client request<br/>Bearer token"] --> CORS["Cross-origin policy"]
+    CORS --> SC["Security context"]
+    SC --> JWT["Token extraction"]
+    JWT --> DEC["Token validation<br/>signature · issuer · expiry"]
+    DEC --> AUTH["Claims-to-authorities mapping"]
+    AUTH --> AUTHZ["Route authorization"]
+    AUTHZ --> APP["Application boundary"]
+    APP --> POLICY["Method authorization"]
+    POLICY --> RESP["Sanitized response"]
 
-    DEC -. "invalid / expired" .-> ENTRY["AuthenticationEntryPoint<br/>401 Unauthorized"]
-    AUTHZ -. "insufficient role" .-> DENIED["AccessDeniedHandler<br/>403 Forbidden"]
-    METHOD -. "access denied" .-> DENIED
+    DEC -. "invalid token" .-> ENTRY["Unauthenticated response"]
+    AUTHZ -. "insufficient permission" .-> DENIED["Unauthorized response"]
+    POLICY -. "access denied" .-> DENIED
 
     classDef security fill:#92400e,stroke:#78350f,color:#ffffff
     classDef mvc fill:#166534,stroke:#14532d,color:#ffffff
     classDef error fill:#9f1239,stroke:#881337,color:#ffffff
     class CORS,SC,JWT,DEC,AUTH,AUTHZ security
-    class MVC,METHOD,CTRL,OK mvc
+    class APP,POLICY,RESP mvc
     class ENTRY,DENIED error`,
 
   exceptionArchitecture: `classDiagram
@@ -567,7 +534,7 @@ const diagrams: Record<DiagramId, string> = {
                                       class operator,workers compute;
                                       class pubRT,privRT net;`,
 
-  rabbitMqKubernetes: `flowchart LR
+  rabbitMqOutboxArchitecture: `flowchart LR
     API["Backend API<br/>Spring Boot"] -->|"AMQP commands"| CQ["Classic work queues<br/>existing async jobs"]
 
     subgraph OKE["OKE Kubernetes Runtime"]
@@ -627,6 +594,49 @@ const diagrams: Record<DiagramId, string> = {
     class C,TX,POLL,CONFIRM,ACK reactive
     class WRITE,EVENT,COMMIT,DONE,DEDUPE data
     class BACKOFF retry`,
+
+  rabbitMqKubernetes: `graph LR
+    A["Backend<br/>Spring Boot<br/>AsyncMessageService"] --> B["RabbitMQ<br/>Queues & Exchanges"]
+
+    subgraph K8s["Kubernetes Runtime"]
+      K1["Kubelet<br/>Probe Manager"]
+      K2["startupProbe<br/>/actuator/health"]
+      K3["readinessProbe<br/>/actuator/health/readiness"]
+      K4["livenessProbe<br/>/actuator/health/liveness"]
+      C["Consumer Pod<br/>Spring Boot WebFlux<br/>Reactive RabbitMQ + R2DBC"]
+    end
+
+    subgraph Biz["Business Queue Consumers"]
+      Q1[weapon-save]
+      Q2[weapon-delete-all]
+      Q3[people-insert-multiple]
+      Q4[people-delete-all]
+      Q5[async-result]
+    end
+
+    C --> D["PostgreSQL<br/>R2DBC"]
+    K1 --> K2 --> C
+    K1 --> K3 --> C
+    K1 --> K4 --> C
+    B --> C
+    C --> Q1
+    C --> Q2
+    C --> Q3
+    C --> Q4
+    C --> Q5
+
+    classDef producer fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff
+    classDef mq fill:#6b21a8,stroke:#581c87,color:#ffffff
+    classDef consumer fill:#166534,stroke:#14532d,color:#ffffff
+    classDef database fill:#9f1239,stroke:#881337,color:#ffffff
+    classDef k8s fill:#1e3a8a,stroke:#172554,color:#ffffff
+    classDef queue fill:#92400e,stroke:#78350f,color:#ffffff
+    class A producer
+    class B mq
+    class C consumer
+    class D database
+    class K1,K2,K3,K4 k8s
+    class Q1,Q2,Q3,Q4,Q5 queue`,
 
   retrievalPipeline: `graph TD
   %% User and Entry
