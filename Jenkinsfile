@@ -15,7 +15,7 @@ pipeline {
                     resources:
                       requests:
                         cpu: "25m"
-                        memory: "512Mi"
+                        memory: "384Mi"
                       limits:
                         cpu: "100m"
                         memory: "1024Mi"
@@ -31,7 +31,7 @@ pipeline {
                     resources:
                       requests:
                         cpu: "50m"
-                        memory: "512Mi"
+                        memory: "384Mi"
                       limits:
                         cpu: "2000m"
                         memory: "3072Mi"
@@ -64,8 +64,8 @@ pipeline {
                     image: jenkins/inbound-agent:3309.v27b_9314fd1a_4-1-jdk21
                     resources:
                       requests:
-                        cpu: "50m"
-                        memory: "256Mi"
+                        cpu: "25m"
+                        memory: "192Mi"
                       limits:
                         cpu: "100m"
                         memory: "512Mi"

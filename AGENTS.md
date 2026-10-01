@@ -258,6 +258,27 @@
 2. **UI 層**：呼叫 `serviceAvailabilityManager.onChange(key, visible => { element.style.display = visible ? '' : 'none'; })`，並保存回傳的 cleanup 函式
 3. **頁面載入**：呼叫 `serviceAvailabilityManager.checkRecovery(key)` 嘗試自動恢復（24h 節流）
 
+---
+
+## PeopleSystem Google Sheet 資料維護 / 人物與武器資料
+
+### 工作表結構
+- `memberMain` 是人物主資料表；第 1 列是欄名，`email`、`pp` 是刻意保留的欄位，不要因為批次補值而覆寫。
+- `weaponMain` 是武器關聯表，透過 `owner` 對應 `memberMain` 的 `name`／角色代號。
+- 人物敘事欄位 `personality`、`interest`、`likes`、`dislikes` 位於 `memberMain` 的 `U:X`，新增內容時要維持既有的「他人認知／自我認知」句型與中英混用風格。
+
+### 編輯規則
+- 補資料前先以精確範圍讀取欄名與目標列；不要以整張工作表的猜測欄位位置直接寫入。
+- 只更新明確缺漏的儲存格，使用 Google Sheets `updateCells` 的精確 `sheetId`／列欄索引，保留既有公式、格式、驗證與其他欄位內容。
+- `email`、`pp` 以及低填充率的系統／選填欄位（例如 `HRRatio`、`physicsFallout4`）不要擅自以 `0` 或空泛文字填滿；除非需求明確要求，應保留其原本的空值語意。
+- 若新增或修改人物列的武器設定，要在 `weaponMain` 增加對應 `owner` 資料，並沿用既有欄位格式：`owner`、`weapon`、`attributes`、`baseDamage`、`bonusDamage`、`bonusAttributes`、`stateAttributes`。
+- 完成寫入後重新讀取目標範圍驗證值是否落在正確列欄；不要只依賴批次更新成功回應。
+
+### 內容設計基準
+- 人物描述應從既有的 `race`、`profession`、`combat`、`physics`、`knownAs` 延伸，避免與角色能力或陣營矛盾。
+- `interest` 使用簡短英文標籤；`likes`／`dislikes` 使用逗號或頓號分隔的短語，與相鄰資料列一致。
+- 武器的 `attributes` 與 `bonusAttributes` 應呼應人物的屬性／職業；`stateAttributes` 描述可在遊戲或劇情中觸發的效果，不要加入無關欄位。
+
 ```typescript
 // 範例：接入新服務
 import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
