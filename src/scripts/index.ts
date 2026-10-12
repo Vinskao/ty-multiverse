@@ -10,7 +10,6 @@ import i18nData from '../storages/i18n.json';
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
-let _portfolioHistoryTimer: number | null = null;
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
 
@@ -21,19 +20,17 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
     if (!svg || !empty || !status) return;
     svg.replaceChildren();
 
-    if (points.length < 2) {
+    if (points.length === 0) {
         svg.classList.add('is-hidden');
         empty.hidden = false;
-        empty.textContent = points.length === 1
-            ? 'Only one daily snapshot is available. A trend will appear after the next daily valuation.'
-            : 'No daily portfolio history is available yet.';
-        status.textContent = `${points.length} days`;
+        empty.textContent = 'No daily portfolio history is available yet.';
+        status.textContent = '0 days';
         return;
     }
 
     empty.hidden = true;
     svg.classList.remove('is-hidden');
-    status.textContent = `${points.length} days`;
+    status.textContent = `${points.length} ${points.length === 1 ? 'day' : 'days'}`;
     const ns = 'http://www.w3.org/2000/svg';
     const make = (tag: string, attrs: Record<string, string>) => {
         const node = document.createElementNS(ns, tag);
@@ -49,7 +46,9 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
     const valueRange = maxValue - minValue || Math.max(maxValue * 0.05, 1);
     const low = minValue - valueRange * 0.12;
     const high = maxValue + valueRange * 0.12;
-    const x = (index: number) => pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
+    const x = (index: number) => points.length === 1
+        ? (pad.left + width - pad.right) / 2
+        : pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
     const y = (value: number) => pad.top + ((high - value) / (high - low)) * (height - pad.top - pad.bottom);
     const format = (value: number) => `NT$ ${Math.round(value).toLocaleString()}`;
 
@@ -73,8 +72,9 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
         svg.append(circle);
     });
 
-    [0, points.length - 1].forEach((index) => {
-        const label = make('text', { x: String(x(index)), y: String(height - 12), 'text-anchor': index === 0 ? 'start' : 'end', class: 'portfolio-history-axis-label' });
+    [...new Set([0, points.length - 1])].forEach((index) => {
+        const anchor = points.length === 1 ? 'middle' : index === 0 ? 'start' : 'end';
+        const label = make('text', { x: String(x(index)), y: String(height - 12), 'text-anchor': anchor, class: 'portfolio-history-axis-label' });
         label.textContent = new Date(`${points[index].date}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
         svg.append(label);
     });
@@ -1197,6 +1197,7 @@ async function fetchPortfolio() {
     if (!hasMarketAuth()) {
         clearPortfolioCache();
         resetPortfolioDisplay();
+        await fetchPortfolioHistory();
         return;
     }
     const cachedPortfolio = readCachedMarketData<Portfolio>(PORTFOLIO_CACHE_KEY);
@@ -1231,6 +1232,9 @@ async function fetchPortfolio() {
             }
         }
     }
+    // The portfolio endpoint persists today's valid snapshot before it returns;
+    // load history only after that write has completed to avoid an empty-day race.
+    await fetchPortfolioHistory();
 }
 
 // Visit Counter Functionality
@@ -1320,7 +1324,6 @@ function initIndexPage() {
     fetchQffQuote();
     fetchMarketUsage();
     fetchPortfolio();
-    fetchPortfolioHistory();
     if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
     _marketQuoteTimer = window.setInterval(() => {
         fetchTxfQuote();
@@ -1329,8 +1332,6 @@ function initIndexPage() {
     }, 600_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
-    if (_portfolioHistoryTimer !== null) window.clearInterval(_portfolioHistoryTimer);
-    _portfolioHistoryTimer = window.setInterval(fetchPortfolioHistory, 3_600_000);
     updateVisitCount();
 }
 
