@@ -89,7 +89,7 @@ async function fetchPortfolioHistory() {
         return;
     }
     try {
-        const response = await fetch(astroApiPath('/api/market/portfolio-history'), { headers: marketAuthHeaders() });
+        const response = await fetch(astroApiPath('/api/market/history'), { headers: marketAuthHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json() as { history?: PortfolioHistoryPoint[] };
         renderPortfolioHistory(Array.isArray(payload.history) ? payload.history : []);
