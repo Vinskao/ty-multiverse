@@ -10,6 +10,97 @@ import i18nData from '../storages/i18n.json';
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
+let _portfolioHistoryTimer: number | null = null;
+
+type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
+
+function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
+    const svg = document.getElementById('portfolio-history-svg') as SVGSVGElement | null;
+    const empty = document.getElementById('portfolio-history-empty');
+    const status = document.getElementById('portfolio-history-status');
+    if (!svg || !empty || !status) return;
+    svg.replaceChildren();
+
+    if (points.length < 2) {
+        svg.classList.add('is-hidden');
+        empty.hidden = false;
+        empty.textContent = points.length === 1
+            ? 'Only one daily snapshot is available. A trend will appear after the next daily valuation.'
+            : 'No daily portfolio history is available yet.';
+        status.textContent = `${points.length} days`;
+        return;
+    }
+
+    empty.hidden = true;
+    svg.classList.remove('is-hidden');
+    status.textContent = `${points.length} days`;
+    const ns = 'http://www.w3.org/2000/svg';
+    const make = (tag: string, attrs: Record<string, string>) => {
+        const node = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        return node;
+    };
+    const width = 900;
+    const height = 280;
+    const pad = { top: 20, right: 28, bottom: 42, left: 92 };
+    const values = points.map((point) => point.totalAssets);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const valueRange = maxValue - minValue || Math.max(maxValue * 0.05, 1);
+    const low = minValue - valueRange * 0.12;
+    const high = maxValue + valueRange * 0.12;
+    const x = (index: number) => pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
+    const y = (value: number) => pad.top + ((high - value) / (high - low)) * (height - pad.top - pad.bottom);
+    const format = (value: number) => `NT$ ${Math.round(value).toLocaleString()}`;
+
+    for (let tick = 0; tick < 4; tick += 1) {
+        const value = low + ((high - low) * tick) / 3;
+        const tickY = y(value);
+        svg.append(make('line', { x1: String(pad.left), x2: String(width - pad.right), y1: String(tickY), y2: String(tickY), class: 'portfolio-history-gridline' }));
+        const label = make('text', { x: String(pad.left - 10), y: String(tickY + 4), 'text-anchor': 'end', class: 'portfolio-history-axis-label' });
+        label.textContent = `${(value / 10000).toFixed(0)}萬`;
+        svg.append(label);
+    }
+
+    const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(point.totalAssets)}`).join(' ');
+    svg.append(make('path', { d: path, class: 'portfolio-history-line' }));
+    points.forEach((point, index) => {
+        const circle = make('circle', { cx: String(x(index)), cy: String(y(point.totalAssets)), r: '3.5', class: 'portfolio-history-point', tabindex: '0' });
+        const date = new Date(`${point.date}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const title = make('title', {});
+        title.textContent = `${date} · ${format(point.totalAssets)}`;
+        circle.append(title);
+        svg.append(circle);
+    });
+
+    [0, points.length - 1].forEach((index) => {
+        const label = make('text', { x: String(x(index)), y: String(height - 12), 'text-anchor': index === 0 ? 'start' : 'end', class: 'portfolio-history-axis-label' });
+        label.textContent = new Date(`${points[index].date}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
+        svg.append(label);
+    });
+}
+
+async function fetchPortfolioHistory() {
+    const status = document.getElementById('portfolio-history-status');
+    if (!status) return;
+    if (!hasMarketAuth()) {
+        renderPortfolioHistory([]);
+        status.textContent = 'Login';
+        return;
+    }
+    try {
+        const response = await fetch(astroApiPath('/api/market/portfolio-history'), { headers: marketAuthHeaders() });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { history?: PortfolioHistoryPoint[] };
+        renderPortfolioHistory(Array.isArray(payload.history) ? payload.history : []);
+    } catch (error) {
+        console.error('Error fetching daily portfolio history:', error);
+        renderPortfolioHistory([]);
+        status.textContent = 'Offline';
+        const empty = document.getElementById('portfolio-history-empty');
+        if (empty) empty.textContent = 'Daily portfolio history is temporarily unavailable.';
+    }
+}
 
 // 定義提示文字（全域常量）
 const shadeDescriptions: Record<string, string> = {
@@ -1229,6 +1320,7 @@ function initIndexPage() {
     fetchQffQuote();
     fetchMarketUsage();
     fetchPortfolio();
+    fetchPortfolioHistory();
     if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
     _marketQuoteTimer = window.setInterval(() => {
         fetchTxfQuote();
@@ -1237,6 +1329,8 @@ function initIndexPage() {
     }, 600_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
+    if (_portfolioHistoryTimer !== null) window.clearInterval(_portfolioHistoryTimer);
+    _portfolioHistoryTimer = window.setInterval(fetchPortfolioHistory, 3_600_000);
     updateVisitCount();
 }
 

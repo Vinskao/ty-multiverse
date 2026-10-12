@@ -327,6 +327,19 @@ const skillsCategories = skillsData.categories;
 						*/}
 						<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
 					</div>
+					<section id="portfolio-history-section" class="portfolio-history" aria-live="polite" aria-labelledby="portfolio-history-title">
+						<div class="portfolio-history-heading">
+							<div>
+								<h5 id="portfolio-history-title" class="section-title" data-i18n="home.portfolioHistoryTitle">Daily portfolio value</h5>
+								<p data-i18n="home.portfolioHistoryDescription">Taiwan estimated total assets · daily closing snapshot</p>
+							</div>
+							<span id="portfolio-history-status" class="portfolio-history-status">Loading</span>
+						</div>
+						<div id="portfolio-history-chart" class="portfolio-history-chart">
+							<p id="portfolio-history-empty" class="portfolio-history-empty" data-i18n="home.portfolioHistoryLoading">Loading daily history…</p>
+							<svg id="portfolio-history-svg" class="is-hidden" viewBox="0 0 900 280" role="img" aria-label="Daily Taiwan portfolio total asset trend"></svg>
+						</div>
+					</section>
 					</section>
 
 				</div>

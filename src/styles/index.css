@@ -706,6 +706,84 @@
 	text-align: center;
 }
 
+.portfolio-history {
+	width: 100%;
+	margin-top: 1.25rem;
+	padding: 1rem 1.25rem;
+	border: 1px solid var(--gray-800);
+	border-radius: 1rem;
+	background: color-mix(in srgb, var(--gray-900) 72%, transparent);
+}
+
+.portfolio-history-heading {
+	display: flex;
+	align-items: start;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.portfolio-history-heading p,
+.portfolio-history-empty {
+	margin: 0.25rem 0 0;
+	color: var(--gray-400);
+	font-size: 0.75rem;
+}
+
+.portfolio-history-status {
+	color: var(--gray-400);
+	font-size: 0.72rem;
+	white-space: nowrap;
+}
+
+.portfolio-history-chart {
+	width: 100%;
+	min-height: 12rem;
+	margin-top: 0.5rem;
+}
+
+.portfolio-history-chart svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	overflow: visible;
+}
+
+.portfolio-history-chart svg.is-hidden {
+	display: none;
+}
+
+.portfolio-history-gridline {
+	stroke: var(--gray-800);
+	stroke-width: 1;
+}
+
+.portfolio-history-axis-label {
+	fill: var(--gray-400);
+	font-size: 12px;
+}
+
+.portfolio-history-line {
+	fill: none;
+	stroke: #61f6ea;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.portfolio-history-point {
+	fill: #61f6ea;
+	stroke: var(--gray-999);
+	stroke-width: 2;
+	cursor: crosshair;
+}
+
+.portfolio-history-point:focus,
+.portfolio-history-point:hover {
+	stroke: #fff;
+	stroke-width: 3;
+	outline: none;
+}
+
 @media (max-width: 768px) {
 	.portfolio-summary {
 		grid-template-columns: 1fr;
