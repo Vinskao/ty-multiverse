@@ -81,7 +81,7 @@ docker ps -a -q --filter "name=k8s" | xargs -I {} docker stop {}
 docker ps -a -q --filter "name=k8s" | xargs -I {} docker rm {}
 ```
 
-```Java
+```java
 package com.example.demo;
 
 import org.springframework.boot.SpringApplication;
@@ -105,7 +105,7 @@ public class DemoApplication {
 
 ## Dockerfile 撰寫
 
-```Dockerfile
+```dockerfile
 # 使用包含 Maven 的 Java 基礎映像
 FROM maven:3.8.4-openjdk-11-slim as build
 

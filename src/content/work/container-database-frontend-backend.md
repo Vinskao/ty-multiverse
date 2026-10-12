@@ -75,7 +75,7 @@ docker run -e "ACCEPT_EULA=Y" \
 
 ### Dockerfile 撰寫
 
-```Dockerfile
+```dockerfile
 # 使用 Maven 和 OpenJDK 11 的官方基礎映像來構建專案
 FROM maven:3.8.4-openjdk-11-slim as build
 
@@ -149,7 +149,7 @@ docker run -d -p 8088:8088 --name discord-backend \
 
 ### Dockerfile 撰寫
 
-```Dockerfile
+```dockerfile
 # 使用 Node.js 官方镜像作为构建环境
 FROM node:lts AS build
 

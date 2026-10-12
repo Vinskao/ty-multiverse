@@ -24,7 +24,7 @@ init-db.sql 裡面放資料庫一啟動就想要建立的表跟插入的資料�
 
 ##### Spring Boot
 
-```Dockerfile
+```dockerfile
 # 第一階段，選用了一個包含Maven 3.8.4和OpenJDK 11的官方基礎映像。這個映像被用作構建階段，即編譯和打包Java應用。as build部分給這一階段命名為build
 # 使用 Maven 和 OpenJDK 11 的官方基礎映像來構建專案
 FROM maven:3.8.4-openjdk-11-slim as build
@@ -54,7 +54,7 @@ EXPOSE 8088
 
 ##### Vue
 
-```Dockerfile
+```dockerfile
 # 以 Node.js 官方的長期支持版本作為基礎映像
 FROM node:lts AS build
 

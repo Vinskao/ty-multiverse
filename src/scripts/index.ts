@@ -1,3 +1,5 @@
+import type { Portfolio, PortfolioPosition, RegionFigures } from '../types/portfolio';
+import { taiwanPortfolio } from '../services/core/taiwanPortfolio';
 // 加上tooltip
 // 使用 astro:page-load 來支援 View Transitions 的客戶端導航
 import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
@@ -58,7 +60,7 @@ function initTooltips() {
         const categories = document.querySelectorAll('.category');
         
         categories.forEach((category) => {
-            const pills = category.querySelectorAll('.pill');
+            const pills = category.querySelectorAll('.skill-pill');
             let totalScore = 0;
             
             pills.forEach((pill) => {
@@ -391,112 +393,6 @@ interface MarketUsage {
     source: string;
 }
 
-interface PortfolioPosition {
-    code: string;
-    name?: string;
-    productType: string;
-    direction: string;
-    quantity: number;
-    signedQuantity: number;
-    ydQuantity: number;
-    averagePrice: number;
-    lastPrice: number;
-    pnl: number;
-    marketValue: number;
-    allocationValue?: number;
-    contractSizeShares?: number;
-    valuationFormula?: string;
-    assetPercentage: number;
-}
-
-interface FuturesSummary {
-    equity: number;
-    equityAmount: number;
-    availableMargin: number;
-    openPositionPnl: number;
-    maintenanceMargin: number;
-    initialMargin: number;
-    positionCount: number;
-}
-
-interface Portfolio {
-    cashBalance: number | null;
-    stockCashBalance?: number | null;
-    futuresAvailableCash?: number;
-    balanceAvailable: boolean;
-    balanceError?: string;
-    accountErrors?: Record<string, string>;
-    balanceDate: string;
-    totalAssetsEstimated: number | null;
-    totalPositionExposure: number;
-    stockMarketValue?: number;
-    futuresContractExposure?: number;
-    futuresEquity?: number;
-    leverageRatio?: number | null;
-    totalPnl: number;
-    positionCount: number;
-    cashPercentage: number;
-    positions: PortfolioPosition[];
-    stockPositions?: PortfolioPosition[];
-    futuresPositions?: PortfolioPosition[];
-    futuresSummary?: FuturesSummary;
-    summaryFormulas?: {
-        cashBalance?: string | null;
-        totalAssetsEstimated?: string | null;
-        totalPnl?: string | null;
-        leverageRatio?: string | null;
-    };
-    ibkr?: {
-        accountId: string;
-        baseCurrency: string;
-        usdTwdRate: number;
-        rateSource: string;
-        usd: {
-            cashBalance: number;
-            netLiquidation: number;
-            grossPositionValue: number;
-            unrealizedPnl: number;
-            realizedPnl: number;
-        };
-        twd: {
-            cashBalance: number;
-            netLiquidation: number;
-            grossPositionValue: number;
-            unrealizedPnl: number;
-        };
-        positions: Array<{
-            code: string;
-            name: string;
-            assetClass: string;
-            currency: string;
-            quantity: number;
-            averagePrice: number;
-            lastPrice: number;
-            marketValue: number;
-            marketValueTwd: number;
-            pnl: number;
-            pnlTwd: number;
-        }>;
-        fetchedAt: string;
-        source: string;
-    };
-    regions?: {
-        taiwan: RegionFigures;
-        overseas: RegionFigures;
-        total: RegionFigures;
-    };
-    fetchedAt: string;
-    source: string;
-    valuationNote: string;
-}
-
-interface RegionFigures {
-    cash: number | null;
-    totalAssets: number | null;
-    totalPnl: number | null;
-    leverage: number | null;
-}
-
 const TXF_QUOTE_CACHE_KEY = 'market:txf-quote';
 const QFF_QUOTE_CACHE_KEY = 'market:qff-quote';
 const MARKET_USAGE_CACHE_KEY = 'market:usage';
@@ -715,6 +611,7 @@ function prettifyFormula(formula: string): string {
 }
 
 function renderPortfolio(portfolio: Portfolio, offline = false) {
+    portfolio = taiwanPortfolio(portfolio);
     const section = document.getElementById('portfolio-section');
     if (!section) return;
 

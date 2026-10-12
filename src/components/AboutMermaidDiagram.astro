@@ -67,26 +67,26 @@ const diagrams: Record<DiagramId, string> = {
 
   bankingIntegration: `flowchart LR
     subgraph "Presentation Layer (Widget-based SPA)"
-        W["Reusable Form Widgets\\n(TextBox / CheckBox / TypeAhead)"]
-        GRID["Data Grid\\nList + Row Actions"]
-        FORM["Entity Maintenance Screens\\n(Create / View / Modify)"]
+        W["Reusable Form Widgets<br/>(TextBox / CheckBox / TypeAhead)"]
+        GRID["Data Grid<br/>List + Row Actions"]
+        FORM["Entity Maintenance Screens<br/>(Create / View / Modify)"]
         W --> FORM
         GRID --> FORM
     end
 
     subgraph "Dual-Control Workflow"
-        MK["Maker\\nSubmit Change"]
-        CK["Checker\\nReview & Approve"]
-        SB["Send Back\\nfor Correction"]
+        MK["Maker<br/>Submit Change"]
+        CK["Checker<br/>Review &amp; Approve"]
+        SB["Send Back<br/>for Correction"]
         MK --> CK
         CK -->|"reject"| SB
         SB --> MK
     end
 
     subgraph "BFF Layer"
-        BFF["Backend for Frontend\\nVersioned Release Train"]
-        HDR["Header Enrichment\\nOrganisational Unit / Channel"]
-        CFG["Externalised Config\\nPer-environment Matrix"]
+        BFF["Backend for Frontend<br/>Versioned Release Train"]
+        HDR["Header Enrichment<br/>Organisational Unit / Channel"]
+        CFG["Externalised Config<br/>Per-environment Matrix"]
         BFF --> HDR
         BFF --> CFG
     end
@@ -98,8 +98,8 @@ const diagrams: Record<DiagramId, string> = {
     end
 
     subgraph "Legacy Core (Rehosting)"
-        BR["Protocol Bridge\\nRPC to REST Adapter"]
-        TP["Transaction Processing Monitor\\n(Legacy Core Banking)"]
+        BR["Protocol Bridge<br/>RPC to REST Adapter"]
+        TP["Transaction Processing Monitor<br/>(Legacy Core Banking)"]
         BR --> TP
     end
 
@@ -152,18 +152,18 @@ const diagrams: Record<DiagramId, string> = {
 
   angularGateway: `flowchart LR
     subgraph "Frontend (Angular.js)"
-        A["Angular Components\\n(View / Logic / Style)"]
+        A["Angular Components<br/>(View / Logic / Style)"]
         AR["Angular Routing Module"]
-        REG["Global Config Registry\\n(Registry + Singleton Pattern)"]
+        REG["Global Config Registry<br/>(Registry + Singleton Pattern)"]
         A --> AR
         A --> REG
     end
 
     subgraph "Gateway Layer (Java)"
         GW["Java Gateway"]
-        INS["Header Inserter Beans\\n(Java Interceptors)"]
-        ADP["Adapter / Facade\\n(XML + JSON Schema Mapping)"]
-        EXT["Externalized Config\\n(Multi-env Config Matrix)"]
+        INS["Header Inserter Beans<br/>(Java Interceptors)"]
+        ADP["Adapter / Facade<br/>(XML + JSON Schema Mapping)"]
+        EXT["Externalized Config<br/>(Multi-env Config Matrix)"]
         GW --> INS
         GW --> ADP
         GW --> EXT

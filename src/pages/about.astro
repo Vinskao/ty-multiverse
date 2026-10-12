@@ -47,6 +47,7 @@ const softwareTitles = [
   "Freelance Software Engineer",
 ];
 const projectManagementTitles = ["Fintech PM, MA Program"];
+const financeTitles = ["Macro Associate", "Auditor"];
 
 function parsePeriodDate(s: string): Date {
   if (s.trim().toLowerCase() === "present") return new Date();
@@ -83,6 +84,7 @@ function mergedMonths(ranges: [number, number][]): number {
 
 const swRanges: [number, number][] = [];
 const pmRanges: [number, number][] = [];
+const financeRanges: [number, number][] = [];
 const allRanges: [number, number][] = [];
 for (const job of experienceData) {
   const [startStr, endStr] = job.period.split("~");
@@ -93,12 +95,14 @@ for (const job of experienceData) {
   allRanges.push(range);
   if (softwareTitles.includes(job.title)) swRanges.push(range);
   if (projectManagementTitles.includes(job.title)) pmRanges.push(range);
+  if (financeTitles.includes(job.title)) financeRanges.push(range);
 }
 const swMonths = mergedMonths(swRanges);
 const pmMonths = mergedMonths(pmRanges);
 const totalMonths = mergedMonths(allRanges);
 const swYears = (swMonths / 12).toFixed(1);
 const pmYears = (pmMonths / 12).toFixed(1);
+const financeYears = (mergedMonths(financeRanges) / 12).toFixed(1);
 const totalYears = (totalMonths / 12).toFixed(1);
 const gitCommitCommand = `{
   printf 'REPO: '
@@ -248,6 +252,12 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
             <strong>{pmYears}{lang === "zh" ? " 年" : " yrs"}</strong>
           </span>
           <span class="exp-badge">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "金融經驗" : "Finance Experience"}
+            </span>
+            <strong>{financeYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+          <span class="exp-badge exp-badge-total">
             <span class="exp-badge-label">
               {lang === "zh" ? "總工作經驗" : "Total Professional Experience"}
             </span>

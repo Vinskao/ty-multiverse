@@ -57,10 +57,9 @@ text-align: left;
 }
 
 .exp-badges {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 .exp-badge {
@@ -75,7 +74,11 @@ text-align: left;
   font-size: 0.9rem;
   color: var(--gray-300, #aaa);
   letter-spacing: 0.01em;
-  min-width: 15rem;
+  min-width: 0;
+}
+
+.exp-badge-total {
+  grid-column: 1 / -1;
 }
 
 .exp-badge-label {
@@ -93,6 +96,14 @@ text-align: left;
 }
 
 @media (max-width: 640px) {
+  .exp-badges {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .exp-badge-total {
+    grid-column: auto;
+  }
+
   .exp-badge {
     min-width: min(100%, 18rem);
   }
@@ -334,7 +345,7 @@ line-height: 1.8;
 font-size: 1.1rem;
 }
 
-.content :global(a) {
+.content a {
 text-decoration: 1px solid underline transparent;
 text-underline-offset: 0.25em;
 transition: text-decoration-color var(--theme-transition), color 0.3s ease;
@@ -342,8 +353,8 @@ color: #514695;
 font-weight: 500;
 }
 
-.content :global(a:hover),
-.content :global(a:focus) {
+.content a:hover,
+.content a:focus {
 text-decoration-color: currentColor;
 color: #3a2f6b;
 }
@@ -911,7 +922,7 @@ max-width: none;
     padding: 3rem;
 }
 
-.about > :global(:first-child) {
+.about > :first-child {
     grid-column-start: 2;
     width: 100%;
     max-width: 100%;

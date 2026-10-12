@@ -227,14 +227,16 @@ const skillsCategories = skillsData.categories;
 											<div id="portfolio-pnl-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 									</div>
 									<div class="portfolio-summary-item">
-											<span id="portfolio-leverage-label" data-i18n="home.portfolioLeverageCombined">Combined leverage</span>
+											<span id="portfolio-leverage-label" data-i18n="home.portfolioLeverageTaiwan">Taiwan leverage</span>
 											<strong id="portfolio-leverage" tabindex="0">--</strong>
+											{/* Overseas leverage split paused.
 											<small id="portfolio-leverage-split" class="portfolio-region-split" hidden>
 												<span data-i18n="home.portfolioRegionTaiwan">Taiwan</span> <b id="portfolio-leverage-taiwan">--</b>
 												<span aria-hidden="true"> · </span>
 												<span data-i18n="home.portfolioRegionOverseas">Overseas</span> <b id="portfolio-leverage-overseas">--</b>
 											</small>
-											<small id="portfolio-leverage-formula" class="portfolio-leverage-formula" data-i18n="home.leverageFormulaCombined">Numerator: TW exposure + overseas positions · Denominator: combined assets</small>
+											*/}
+											<small id="portfolio-leverage-formula" class="portfolio-leverage-formula" data-i18n="home.leverageFormulaTaiwan">Taiwan: (futures exposure + stock value + cash) ÷ Taiwan assets</small>
 											<div id="portfolio-leverage-tooltip" class="portfolio-summary-tooltip" role="status"></div>
 										</div>
 									</div>
@@ -273,7 +275,8 @@ const skillsCategories = skillsData.categories;
 							</div>
 						</div>
 
-						<!-- 海外 region -->
+						{/* Overseas and combined views are paused; retain markup for reactivation.
+
 						<span class="portfolio-region-label" data-i18n="home.portfolioRegionOverseas">海外 Overseas</span>
 						<div class="portfolio-donut-section" id="portfolio-overseas-section" hidden>
 							<span class="portfolio-donut-label">ASSETS</span>
@@ -287,7 +290,7 @@ const skillsCategories = skillsData.categories;
 							<span id="portfolio-overseas-value" class="portfolio-donut-sub-value">--</span>
 						</div>
 
-						<!-- Combined region: 台灣 / 海外 / 全部 -->
+
 						<span class="portfolio-region-label" data-i18n="home.portfolioRegionCombined">Combined</span>
 						<div class="portfolio-donuts-row portfolio-donuts-row--combined">
 							<div class="portfolio-donut-section">
@@ -321,6 +324,7 @@ const skillsCategories = skillsData.categories;
 								</div>
 							</div>
 						</div>
+						*/}
 						<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
 					</div>
 					</section>

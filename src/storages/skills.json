@@ -184,7 +184,8 @@
                 "重構多個銀行業務模組的中介標頭注入元件，為 entity、user-id 與 branch-no 標頭實作三層優先順序回退策略：優先採用呼叫方傳入的覆蓋值，其次回退至 auth 系統，最後使用硬編碼環境預設值。",
                 "建立專用標頭注入 Bean 以整合外部第三方系統，透過 Spring @Value 綁定屬性注入授權 Token，並設定標準化標頭，包含分頁控制欄位。",
                 "實作自訂請求轉換器，以 Java 程式碼取代宣告式 JSON 欄位映射執行轉換邏輯；支援多信封請求結構偵測，並對欄位 key 進行別名映射以符合下游服務規格。",
-                "設計分頁 Aggregator 透明化自動分頁取得後端碼表 API 所有資料並合併為單一回應；透過在 XML 化 Aggregator 配置中明確補充元件宣告，解決 Spring bean 解析問題。"
+                "設計分頁 Aggregator 透明化自動分頁取得後端碼表 API 所有資料並合併為單一回應；透過在 XML 化 Aggregator 配置中明確補充元件宣告，解決 Spring bean 解析問題。",
+                "透過 Jolt 請求／回應轉換、XML 服務定義、分頁設定與 SQL URI／流程映射串接銀行服務；擴充確認書列印的 BPM 編排，包含範本解析與確認書資料取得。"
               ],
               "en": [
                 "Developed backend business logic and middleware control using Java. Created and modified Java files to set up Inserter Beans for dynamic injection of specified headers before forwarding requests to downstream systems.",
@@ -195,7 +196,8 @@
                 "Refactored middleware header inserter components across multiple banking modules to implement a three-tier fallback strategy for injecting entity, user-id, and branch-no headers: prefer caller-supplied header overrides, fall back to the auth system, then fall back to hardcoded environment defaults.",
                 "Created a dedicated header inserter bean for external third-party system integration, injecting authorization tokens from Spring @Value-bound properties and setting standardized headers including pagination controls.",
                 "Implemented a custom request transformer replacing declarative JSON field mapping with Java-driven transformation logic; handles multi-envelope request structure detection and performs field key aliasing for downstream service compatibility.",
-                "Designed a pagination aggregator to transparently auto-paginate a backend code list API and collapse all pages into a single merged response; resolved Spring bean resolution issue by explicitly registering aggregator components in XML-based aggregator configuration."
+                "Designed a pagination aggregator to transparently auto-paginate a backend code list API and collapse all pages into a single merged response; resolved Spring bean resolution issue by explicitly registering aggregator components in XML-based aggregator configuration.",
+                "Integrated banking services through Jolt request/response transformations, XML service definitions, pagination configuration, and SQL URI/process mappings; extended BPM orchestration for confirmation printing with template resolution and statement retrieval."
               ]
             }
           }
@@ -379,14 +381,18 @@
                 "實作並排查 BGL/Internal Account 金融帳戶流程，拆分 Account DTO/Entity/VO 責任，並以 AccountUsage 驅動欄位狀態、conditional UI、後端驗證、欄位互斥與相依性驗證。",
                 "處理 TWCT 相關帳戶驗證，包含 ID Type/ID Number alphanumeric constraint、Customer Group mapping、mirror account data consistency、ReconRequired 對 downstream 行為的控制，以及 ReconDirection Debit/Credit flow 判斷。",
                 "維護系統碼表與多語系 dropdown mapping，涵蓋 code_id/code_name/seq schema、code range 分段、同一 code 多語系 row mapping、frontend dropdown 到 backend enum mapping、code value/display name 分離、cache strategy，以及 max(code_id)+1 手動產號的 concurrency risk。",
-                "追蹤 API 行為從 browser request、frontend interceptor、backend filter 到 controller，檢查 Cookie/Authorization/Content-Type header、session domain/path/SameSite 問題、GET/POST CSRF 差異、JSON DTO binding failure、@ControllerAdvice 與 unified error response contract。"
+                "追蹤 API 行為從 browser request、frontend interceptor、backend filter 到 controller，檢查 Cookie/Authorization/Content-Type header、session domain/path/SameSite 問題、GET/POST CSRF 差異、JSON DTO binding failure、@ControllerAdvice 與 unified error response contract。",
+                "串接國內付款 Maker–Checker 流程、授權佇列、工作項目與覆核交易明細導覽，並保留表單變更時的付款 Payload。",
+                "整合央行報表媒體資料服務與映射，依後端回應實作大額交易申報檢查，包含無紀錄處理與現金提領支援。"
               ],
               "en": [
                 "Implemented Gateway interface integration, applying Adapter and Facade patterns to encapsulate complex legacy system interfaces and smooth frontend/backend spec differences. Maintained Externalized Config parameter tables, ensuring config/code separation and environment migration flexibility.",
                 "Implemented and debugged financial account flows for BGL/Internal Account modules, separating Account DTO/Entity/VO responsibilities and applying AccountUsage-driven field status, conditional UI behavior, backend validation, mutually exclusive fields, and dependent-field validation.",
                 "Handled TWCT-related account validation, including ID Type/ID Number alphanumeric constraints, customer group mapping, mirror-account data consistency, ReconRequired downstream behavior, and ReconDirection debit/credit flow checks.",
                 "Maintained system code and multilingual dropdown mapping with code_id/code_name/seq structure, code range governance, language-row mapping, frontend dropdown to backend enum translation, display-name/value separation, cache strategy, and concurrency risk awareness around max(code_id)+1 manual numbering.",
-                "Traced API behavior from browser request through frontend interceptor, backend filter, and controller, checking Cookie/Authorization/Content-Type headers, session domain/path/SameSite issues, GET/POST CSRF differences, JSON DTO binding failures, @ControllerAdvice handling, and unified error response contracts."
+                "Traced API behavior from browser request through frontend interceptor, backend filter, and controller, checking Cookie/Authorization/Content-Type headers, session domain/path/SameSite issues, GET/POST CSRF differences, JSON DTO binding failures, @ControllerAdvice handling, and unified error response contracts.",
+                "Connected domestic-payment maker-checker flows with authorization queues, work items, and checker transaction-detail navigation; preserved payment payloads during form changes.",
+                "Integrated central-bank report media-data services and mappings, and implemented large-amount reporting checks using backend responses, including missing-record handling and cash-withdrawal support."
               ]
             }
           }
@@ -495,13 +501,17 @@
                 "Built and debugged Angular reactive forms with FormGroup/FormControl/FormArray, setValue vs patchValue behavior, valueChanges/statusChanges subscriptions, touched/dirty state control, disabled vs readonly value handling, custom validators, async API validators, and dynamic setValidators/clearValidators/updateValueAndValidity timing.",
                 "Resolved dropdown and form-state issues caused by missing valueChanges subscriptions, OnPush change detection not being triggered, incorrect formControlName binding, and mismatches between weak frontend validation and strong backend validation.",
                 "Built 14 Angular screen components covering the full internal account lifecycle: Create, Query, View, Modify, Account Search, product and account attribute changes (product/code/branch), Add Transaction Conditions, and 4 customer memo flows (Search/Create/Maintain/Delete). Declared all components in the TW extension module and wired all routes in the Angular routing module.",
-                "Added 600+ i18n label keys to English and Traditional Chinese dictionary files for all internal account screens; corrected customer memo groupbox section labels from generic placeholder names to semantically accurate values."
+                "Added 600+ i18n label keys to English and Traditional Chinese dictionary files for all internal account screens; corrected customer memo groupbox section labels from generic placeholder names to semantically accurate values.",
+                "Refined individual/corporate customer maintenance with clicked-row context, branch identification, date normalization, FATCA and address payloads, hidden-field handling, required-field checks, and consistent submit/error dialogs.",
+                "Built confirmation-reprint search/reset, grid actions, customer-number validation, and English/Traditional Chinese messages; added shared module imports and lazy-loaded payment routes."
               ],
               "zh": [
                 "建置並排查 Angular reactive forms，涵蓋 FormGroup/FormControl/FormArray、setValue vs patchValue、valueChanges/statusChanges subscription、touched/dirty 狀態控制、disabled vs readonly 對 form value 的影響、自訂 validator、async API validator，以及 dynamic setValidators/clearValidators/updateValueAndValidity timing。",
                 "解決 dropdown 與表單狀態問題，包含未 subscribe valueChanges、OnPush 未觸發 detectChanges、formControlName 綁定錯誤，以及前端弱驗證與後端強驗證不一致造成的衝突。",
                 "建置 14 個涵蓋帳戶完整生命週期的 Angular 元件：設立、查詢、查看、維護、帳號搜尋、產品與帳戶屬性變更（產品/代碼/分行）、交易條件新增，以及客戶備註查詢/建立/維護/刪除四個流程；在 TW Extension 模組完成元件宣告並配置 Angular 路由。",
-                "在英文與繁體中文字典檔中新增 600+ 筆 i18n 標籤鍵值，涵蓋所有帳戶管理畫面；並將客戶備註群組框區段標籤從泛用佔位名稱修正為語意正確的顯示值。"
+                "在英文與繁體中文字典檔中新增 600+ 筆 i18n 標籤鍵值，涵蓋所有帳戶管理畫面；並將客戶備註群組框區段標籤從泛用佔位名稱修正為語意正確的顯示值。",
+                "完善個人／法人客戶維護，處理點擊列資料帶入、分行識別、日期正規化、FATCA 與地址 Payload、隱藏欄位、必填檢查，以及一致的送出／錯誤對話框。",
+                "建置確認書補印的查詢／重設、Grid 操作、客戶編號驗證與中英文訊息；加入共用模組匯入與付款路由延遲載入。"
               ]
             }
           }
