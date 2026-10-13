@@ -118,6 +118,25 @@ function initMarketCustomEditor() {
     const selectedBox = document.getElementById('market-custom-selected');
     const resultsBox = document.getElementById('market-search-results');
     const error = document.getElementById('market-custom-error');
+    const candidateBox = document.getElementById('market-candidate-results');
+    const identity = (value: { code: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) =>
+        `${value.productType}:${value.code.toUpperCase()}:${value.productType === 'futures' ? value.deliveryMonth ?? '' : ''}`;
+    const loadCandidates = async (query = '') => {
+        if (!candidateBox) return;
+        candidateBox.replaceChildren();
+        const response = await fetch(`${astroApiPath('/api/market/dashboard/candidates')}?q=${encodeURIComponent(query)}`, { headers: marketAuthHeaders() });
+        if (!response.ok) return;
+        const payload = await response.json();
+        (payload.results ?? []).forEach((item: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) => {
+            const row = document.createElement('div'); row.className = 'market-search-result';
+            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
+            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => identity(value) === identity(item)) ? 'Added' : 'Add';
+            add.disabled = add.textContent === 'Added' || selected.length >= 5;
+            add.addEventListener('click', () => { if (selected.length < 5) selected.push(item); renderSelected(); add.disabled = true; add.textContent = 'Added'; });
+            row.append(text, add); candidateBox.append(row);
+        });
+        if (!payload.results?.length) candidateBox.textContent = 'No historical candidates.';
+    };
     const renderSelected = () => {
         if (!selectedBox) return;
         selectedBox.replaceChildren();
@@ -133,7 +152,7 @@ function initMarketCustomEditor() {
         const response = await fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() });
         if (!response.ok) { button.hidden = true; return; }
         const payload = await response.json(); selected = payload.symbols ?? [];
-        renderSelected(); if (error) error.textContent = ''; dialog.showModal();
+        renderSelected(); if (error) error.textContent = ''; dialog.showModal(); void loadCandidates();
     });
     const search = async () => {
         const input = document.getElementById('market-symbol-search') as HTMLInputElement | null;
@@ -147,7 +166,7 @@ function initMarketCustomEditor() {
         (payload.results ?? []).forEach((item: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) => {
             const row = document.createElement('div'); row.className = 'market-search-result';
             const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
-            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => value.code === item.code && value.productType === item.productType) ? 'Added' : 'Add';
+            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => identity(value) === identity(item)) ? 'Added' : 'Add';
             add.disabled = add.textContent === 'Added' || selected.length >= 5;
             add.addEventListener('click', () => { if (selected.length < 5) selected.push(item); renderSelected(); add.disabled = true; add.textContent = 'Added'; });
             row.append(text, add); resultsBox.append(row);
@@ -155,6 +174,7 @@ function initMarketCustomEditor() {
         if (!payload.results?.length) resultsBox.textContent = 'No matching stock or futures contract.';
     };
     document.getElementById('market-search-submit')?.addEventListener('click', () => { void search(); });
+    document.getElementById('market-candidate-search')?.addEventListener('input', (event) => { void loadCandidates((event.target as HTMLInputElement).value); });
     document.getElementById('market-symbol-search')?.addEventListener('keydown', (event) => { if ((event as KeyboardEvent).key === 'Enter') { event.preventDefault(); void search(); } });
     document.getElementById('market-custom-cancel')?.addEventListener('click', () => dialog.close());
     document.getElementById('market-custom-save')?.addEventListener('click', async () => {

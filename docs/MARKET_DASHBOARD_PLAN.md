@@ -71,6 +71,62 @@
 
 本輪程式已落地公開安全的自動五大標籤快照、管理員自訂設定 PostgreSQL 表、合約搜尋與即時行情 proxy。TWSE／TPEx JSON 僅驗證端點樣本，尚無籌碼歷史 collector、三月回補、來源日報資料表或歷史 UI。上表標註後續／延後者不算本輪交付。
 
+### 正式站檢討：目前看不到原始籌碼頁面的原因
+
+使用者回看正式站後確認沒有看到原先要求的籌碼資料與分點頁。這是合理的驗收落差：本輪實際上線的只有市場商品摘要（固定台指期、自動五大標籤、管理員自訂）和即時行情；頁面沒有法人、資券、借券、分點／主力、持股結構或期貨籌碼歷史分頁。來源研究及畫面規格曾被記錄，但未完成資料模型、排程收集、回補 API 和圖表，所以不能視為已交付。
+
+「分點」最初需求尤其未完成。本輪雖查看富邦 TOP15 頁面，但只確認頁面聚合資訊及後端請求 403；沒有把個別券商分點資料成功擷取、正規化、儲存並呈現在本站，也沒有確認 OKE 上的正常瀏覽器收集可行。不能將 TOP15 網頁樣本或本輪「排除」決定誤當成已實作分點功能。下個 session 應優先查清可用且合規的來源與欄位，若免費官方資料無法提供逐分點買賣資料，清楚說明因此無法完成逐分點排行，而不是拿聚合 TOP15 或自創主力公式代替。
+
+下一輪先完成來源關卡，不可再由摘要功能直接跳到部署驗收：
+
+| 缺少資料／功能 | 目前狀態 | 下一步需要取得的證據或實作 |
+| --- | --- | --- |
+| 上市個股法人買賣超歷史 | TWSE T86 單日樣本已驗；沒有 collector、DB、三月回補及畫面 | 確認欄位及股數換算、日期/股票查詢；建立日增量與選股後回補，呈現外資／投信／自營商每日及 5/10/20 日累計 |
+| 上櫃個股法人買賣超歷史 | TPEx dailyTrade 單日樣本已驗；沒有 collector 或呈現 | 解讀重複欄名群組、逐檔驗證日期與休市日、統一上市櫃內部 schema 但保留來源欄位 |
+| 外資持股（上市／上櫃） | TWSE MI_QFIIS 單日樣本；TPEx 尚未完成端點證據 | 驗證持股數、比率、上限及頻率；顯示持股存量，不與法人買賣超混淆 |
+| 融資融券（上市／上櫃） | TWSE MI_MARGN 有回應但欄位 mapping 未確認；TPEx 未查清 | 依官方欄名／欄位位置核實融資買賣與餘額、融券及券資比；檢查單位與逐日歷史 |
+| 借券、借券賣出 | 尚未完成來源及歷史查證，未實作 | 找上市及上櫃正式端點，分辨借券餘額、借券賣出及還券，不混為一個數值 |
+| 分點買進／賣出及排行（使用者特別關注） | 富邦頁面曾檢視，但個別分點資料沒有進本系統；沒有 OKE 收集或 DB | 先確認合法可用端點/欄位能否提供個別分點買進、賣出、淨額、張數及日期；用上市/上櫃、多日期驗證。若來源只提供 TOP15 聚合，明列限制，不能稱為逐分點資料 |
+| 分點均價與券商「主力」 | 逐分點均價及主力定義未核實、未實作 | 必須得到買進與賣出逐分點成交金額/張數才能計算均價；主力公式需先定義，並標示涵蓋家數，不能冒稱券商相同指標 |
+| TDCC 集保級距歷史 | `/v1/opendata/1-5` 最新週樣本；三月週資料回補能力未證明，未實作 | 找可依日期取歷史的正式資料集或下載檔；保存每週各級距股數、人數、比例及來源日期 |
+| 董監持股、質押、轉讓 | 只找到 MOPS 分類入口；端點、歷史、欄位未查證且未實作 | 找可重複查詢的正式端點/檔案，確認公告日、持股、質押與轉讓數量和修正公告規則 |
+| 台指期法人及大額交易人 | 只有 TXF 單日樣本/Swagger 線索；沒有日歷史或圖表 | 對期貨法人多空交易與未平倉、大額交易人分別查明品種範圍、交易日覆蓋、淨額公式與可回補期 |
+| 個股期貨法人籌碼 | 商品涵蓋仍未證明，未實作 | 查詢個股期貨是否有可用法人/未平倉官方資料；不能以 TXF 大盤期貨資料代替 |
+| 三個月 K 線與成交量 | Shioaji 單次歷史限制已查，沒有分段下載、儲存或歷史圖 | 依現有合約/API 額度實作選定商品回補、日增量、補洞、來源時間與覆蓋狀態；禁止即時行情補造舊日期 |
+| 統一 DB／排程／覆蓋狀態 | 只有 selection/settings 兩表；無籌碼日資料 schema 或 collector | 依已定案資料源建可重跑 migration、唯一鍵/upsert、來源及抓取時間、單位、失敗/休市/未公布狀態與排程；新增商品觸發三月回補 |
+| 籌碼分頁、圖表、表格 | 正式站目前完全沒有原規格籌碼明細 UI | 在至少完成一輪真實歷史資料入庫後，才建行情、法人、資券借券、分點主力、持股結構、期貨籌碼 tabs；逐商品只顯示適用內容 |
+| 手機及完整互動驗收 | 本輪沒有正式站手機視窗實測；新增/移除設定、摘要展開、各分頁未逐項驗 | 桌面與手機驗證搜尋新增/移除、五格上限、重複限制、重新整理、展開/切換、深淺色與返回/語系狀態 |
+
+下一次部署完成標準應以正式站實際呈現至少一個已入庫的多日籌碼圖表及其資料表格為門檻；分點功能若未取得足夠合法逐分點來源，不可用「市場摘要已部署」結案。部署前再次用登入後正式站逐一確認每個已納入的資料分頁有真實值、來源日期和單位，並對照 DB/API；缺少項目保留明確未完成狀態。
+
+### Telegram bot 查證狀態（2026-10-13）
+
+使用者指定在 Telegram bot 頻道 `https://web.telegram.org/a/#-1001432508962` 問三項問題，並曾提醒該頁面可能被瀏覽器安全政策拒絕且不可繞過。後續使用者明確要求可用方式與 Telegram、Discord 互動；沿用已登入 Chrome 中正常可見的 Telegram/Discord UI 操作，未使用私有 API 或繞過安全控制。
+
+| 問題 | 本機 repo 已確認 | 尚不能確認／後續需問 bot |
+| --- | --- | --- |
+| 搜尋台積電為何沒出現小型台積電期貨 | `maya_sawa/services/shioaji_market.py` `_search_contracts` 會在 Futures 目錄中遞迴走訪，以 `code`、`name` 子字串比對；`product_type=futures` 時仍搜尋 futures。結果先按代碼排序，再全域截前 20 筆。合約僅在當前 Shioaji `api.Contracts.Futures` 目錄內可見時才可能被回傳。`tests/test_shioaji_market.py` 的 QFFR1「小型台積電期貨06」只證明測試假資料覆蓋；`get_mini_tsmc_futures_quote`/cache 以 QFFR1 查即時行情也不證明正式搜尋目錄包含該到期合約。 | 未取得正式站當時的 Shioaji 合約目錄快照、搜尋 query / productType、原始搜尋結果及搜尋時間，不能斷定是商品類別篩選、Taiwan 中文名稱比對、20 筆上限，或目錄/到期月份造成。請 bot 明確確認當時 Futures.QFF 分組與近月合約 code、name、delivery_month 是否存在，以及各類別 filter 的實際行為。 |
+| 排除權證但讓期貨出現 | 搜尋目前把 Stocks 與 Futures 目錄各自走訪，依明確 productType 選目錄；stock code/name 匹配沒有權證類別排除，未指定 productType 時兩類候選合併後按代碼截 20 筆。因此若結果列表前段被股票／權證佔滿，可能使期貨排不到前 20，但尚無正式結果快照證明這就是根因。`productType=futures` 目前是僅搜 Futures 的路徑。 | 尚未確認 Shioaji 股票合約物件中哪個正式欄位可穩定識別權證、權證標的代碼形式，以及目前正式 UI 是否有把正確類別送到後端。建議不要只靠名稱或代碼前綴猜；向 bot 確認 contract type/category 欄位並以真實目錄樣本制定排除條件，同時獨立保留 futures 結果/分類分頁。 |
+| 十個清單候選商品保留在 table | 目前資料庫只有有效自動五大快照與管理員 custom symbols；沒有十個來源清單、候選歷史 table 或到期/停用保留策略。 | 「十個清單」具體是哪十個來源/頁面、各清單是否能取得完整商品集合和日期、是否只取當日 Top N、候選 key 是否需 `productType+code+deliveryMonth`、期貨換月後要保留幾久、股票下市/代碼更名處理與重複規則，都沒有 bot 確認。初步建議用來源命名空間 + canonical `productType` + code +（期貨必填）deliveryMonth 作唯一身份；source-membership 另存 observed_at/last_seen，不覆寫來源；同一標的可有多來源關聯；候選去重用 canonical identity，來源別名另外保留；不因單次缺席刪除，採明確過期政策並保留 custom 所需歷史。但這只是待確認設計建議，並未代表十個清單資料已證明可取得或功能已實作。 |
+
+#### 實際詢問結果（2026-10-13 23:38 Asia/Taipei）
+
+- Telegram 已向 `@ShioajiSupportBot` 發送以上三題。Bot 原文回覆：「💤 Bot 休息中（值班時段 07:00-21:00），緊急或錯誤訊息我會處理；一般問題明天早上回覆，或到 Discord #python / #技術問答 發問（那邊 24 小時可討論）。」因此 Telegram 尚未提供三項技術答案；等待值班時段後續回覆。
+- Discord 已在既有 `#python` 討論串「台股與期貨完整籌碼資料來源確認」補問相同三個技術主題，避免另開重複 thread。送出後即時檢查尚無 bot/社群答覆，故目錄內容、權證分類欄位及十個清單資料可得性仍待確認。
+- 本機 repo 可確認：`_search_contracts` 遞迴搜尋當前 `api.Contracts.Futures` 目錄內 code/name，按代碼排序後最多回 20 筆；測試中的 QFFR1 假合約不能證明正式當下目錄狀態。Shioaji 搜尋結果目前無權證專門排除邏輯；十來源候選歷史資料表目前不存在。
+- 候選 table 的 `productType + code + deliveryMonth` 身份鍵、來源 membership 分開保存、跨清單去重及 last-seen 過期策略，目前只是本文件提出的設計建議，尚未經 Shioaji/Discord 確認。
+
+本輪只做查證、對外提問與文件紀錄，沒有修改搜尋程式、資料表或部署，也未提交。等待 Telegram 值班回覆及 Discord thread 回覆後，再補錄 bot/社群原文重點、結論與仍未確認項目；不要把 repo 推論當成對方確認。
+
+#### 2026-10-13 晚間先行實作（等待 bot 明日技術回覆）
+
+依使用者指示，先完成不依賴 bot 技術答案的搜尋改善與候選表雛形，整體籌碼歷史 collector／圖表及部署等工作留待明日再決定。
+
+- 搜尋現在明確排除 Shioaji `category == "W"` 的股票合約，另排除名稱明示「權證／認購／認售」者；未指定商品類別的搜尋分開保留最多 10 筆股票與 10 筆期貨，避免股票結果擠掉期貨。明確選 `futures` 時仍只搜尋 Futures 目錄，最多 20 筆。新增單元測試覆蓋 QFFR1 可在混合搜尋中出現，以及權證不出現。`category == W` 的正式目錄語意仍待 bot 確認；名稱詞判斷作為缺少類別 metadata 時的保守補充。
+- 新增 PostgreSQL 歷史候選與來源 membership 表，身份鍵為商品類別＋代碼＋期貨交割月份（股票交割月份固定空字串），每個來源另有來源鍵，跨清單可去重且保留各清單 first/last seen。每次重新觀察刷新 90 天過期時間；候選 API 排除已過期列，重現時恢復有效。Custom 搜尋結果會被記為 `shioaji-search` 來源，管理員可在 Custom 編輯 dialog 查詢歷史候選並加入名單。
+- **範圍限制：**「十個清單」尚未列出實際十來源，故本版只會累積 Shioaji 搜尋實際回傳的商品，並非完整抓取十張清單；尚無來源清單 batch ingestion，也沒有把未曾搜尋到的完整合約目錄自動加進 table。待 Telegram／Discord 回覆後補上來源定義、資料可得性及各來源同步策略。90 天也是暫定保留期；若來源只提供每日 Top N，需確認缺席與期貨月份換倉語意後才視為定案。Custom 已選商品的持久化不受候選 90 天顯示期限影響。
+- 驗證：前端使用 workspace Node v24.19.0 執行 `npm run build` 通過；後端 Python `compileall` 及兩 repo `git diff --check` 通過。後端 pytest 未能執行，因系統 Python 沒有 pytest。未部署、未提交。既有未提交的本文件與 `docs/PLAN_TO_PRODUCTION_WORKFLOW.md` 均保留。
+
 已驗證 URL：
 
 - `https://www.twse.com.tw/rwd/zh/fund/T86?date=20260713&selectType=ALLBUT0999&response=json`
@@ -104,6 +160,18 @@
 
 優先使用 `ssh oke-node` 部署新不可變 image＋經驗證的 manifests／migration，確認 rollout、Pod image、資料筆數、公開／受保護端點與實際 UI。Jenkins 作備援。僅 apply 舊 image 不算新程式上線。若失敗自主修復／回滾，完成後回報正式站驗證證據。
 
+### 本輪開發方法與正式站結果（2026-10-13）
+
+1. 先讀本計畫、前後端及部署相關 `AGENTS.md`，查看兩個 repo 的 branch、status 和現有 diff；保留使用者原有修改與未追蹤文件。
+2. 逐一查證候選來源的官方端點、實際回應、日期、欄位、單位、歷史深度及可部署存取方式。證據不完整者列入延後或排除表，不以「尚未查」當作來源不存在，也不把尚未實作寫成完成。
+3. 先完成 API／儲存模型與可重跑 SQL migration，再做前端 UI 和 proxy；公開路由回傳 allowlist 投影，管理員路由沿用後端權限檢查。有效持倉才更新五大快照，錯誤或不完整資料不清除舊快照。
+4. 執行相關後端測試與編譯、前端正式 build、diff whitespace 檢查；全專案檢查既有錯誤獨立記錄，不以警告掩蓋 build 結果。
+5. commit/push 到既有分支，沿用 Jenkins 發佈流程建置不可變 tag；用 OKE rollout、Pod image/digest 與 migration/table 查詢核實服務端狀態。再從已登入正式站驗 UI、端點授權、畫面快照時間與資料庫快照。
+
+本輪實際完成前後端變更、migration、測試和正式部署。後端測試 37 項通過；前端 build 通過。部署為前端 Jenkins #244 / `papakao/ty-multiverse-frontend:244`、Maya Jenkins #77 / `papakao/maya-sawa:77`，兩 deployment 均 READY 1/1；叢集記錄 image digest。Jenkins #77 顯示 Success；#244 console 證明以本輪 commit 建置並產生 :244 image，job 摘要狀態欄當時仍未更新。DB 已初始化，快照 2 rows、自訂設定 1 row。正式公開 API 回 200，匿名管理員自訂 API 回 401，公開 payload 僅包含市場固定／自動／自訂選擇欄位。登入正式站後，首頁五大自動部位與資料庫快照時間及商品一致；中、英文 About 直接網址均正確，SSO session 持續有效。未在文件或回報輸出帳戶金額。
+
+尚未完成的原始範圍：三個月籌碼回補及其 collector／歷史圖表、未通過證據關卡的來源，以及正式站手機尺寸與每個互動狀態完整驗收；不得因市場摘要已上線而標記整份原始需求全部完成。正式首頁 footer 目前顯示 `revision unknown`，需另查 Jenkins runtime build arg 傳遞及修正後再驗證。
+
 
 ## 來源定案紀錄規則
 
@@ -111,26 +179,36 @@
 
 ## 正式站驗收清單
 
-- [ ] 每項來源已明確納入／排除並附證據，沒有未查證項目假裝已完成。
-- [ ] 固定近月台指期、自動五大及管理員自訂完成；每個新有效快照更新，失敗快照不清空舊有效選擇。
+- [x] 每項本輪候選來源已明確納入／排除並附證據；尚待證項目仍標示待證或延後。
+- [x] 固定近月台指期、自動五大及管理員自訂完成；每個新有效快照更新，失敗快照不清空舊有效選擇。
 - [ ] 後端搜尋、商品身份／到期月份、重複檢查、五格上限、排序及 PostgreSQL 持久化完成；重啟後設定保留。
 - [ ] 納入資料完成三個曆月回補、累計所需前置資料與每日增量；來源日期、單位、唯一鍵、任務狀態及 DB 筆數可核對。
-- [ ] 相關授權／資料完整性測試與 build 通過；既存不相關檢查錯誤需明列，不能宣稱所有檢查通過。
-- [ ] 各變更服務以新不可變 image 部署，migration、rollout、實際 Pod image/digest 已驗證，保留前版與回滾方式。
-- [ ] 正式站匿名可讀公開市場資料；API 不含帳戶資訊；匿名／非管理員無法修改設定或讀受保護 Portfolio。
-- [ ] 真實瀏覽器登入使用者帳號後確實看到五大部位；與有效服務端快照核對，不輸出 token、帳密或持倉金額。若遇必須由使用者操作的登入／2FA，指出具體頁面與步驟，等待完成後接續驗證。
+- [x] 相關授權／資料完整性測試與 build 通過；另有全專案檢查既有 206 項錯誤記錄，未宣稱全部檢查通過。
+- [x] 各變更服務以新不可變 image 部署，migration、rollout 及實際 Pod image/digest 已驗證；上一版 ReplicaSet 保留。
+- [x] 正式站匿名可讀公開市場摘要；API 不含帳戶資訊；匿名管理員設定 API 回 401。
+- [x] 真實瀏覽器登入後看到五大部位，並與服務端快照商品及時間核對；未輸出 token、帳密或持倉金額。
 - [ ] 桌面／手機、摘要展開、適用分頁、搜尋新增移除、五格上限、重新整理、深淺主題及 View Transitions 通過。
-- [ ] About 直接中文／英文 URL、儲存語系衝突、切換與離開返回均通過，標題與標籤翻譯一致。
-- [ ] AI Token Usage 緊接市場區下方且全寬；既有 Portfolio 保護有效。
+- [x] About 直接中文／英文 URL 正式站驗證成功；儲存語系衝突及離開返回尚未逐項測。
+- [x] AI Token Usage 緊接市場區下方且全寬；既有 Portfolio 經登入後保護有效。
 - [ ] 回報正式站 URL、image/digest、資料覆蓋、登入後 UI 驗證證據及排除項目後才結束。
 
 ## VS Code 接續狀態（不代表功能完成）
+
+### 給下一個 session 的接續摘要
+
+使用者指出正式站沒有看到原始要求的籌碼及分點功能。先承認目前只交付市場摘要/選股，不要把前一輪的 source research 或部署當成籌碼功能完成。先讀本文件「正式站檢討」及上述來源表，從逐項來源查證和歷史資料管線開始，優先釐清分點資料是否有合法、可部署、逐分點的日期資料；再完成至少一組真實多日籌碼 DB/API/UI，部署後登入正式站逐頁驗收。所有尚未查證、無法取得和未實作項目分開列清。保留現有 diff 和 `docs/PLAN_TO_PRODUCTION_WORKFLOW.md`。
+
+使用者準備以 `codex --sandbox workspace-write --ask-for-approval never` 開新 session；授權其依 repo 規則自主執行，不需再次詢問是否開始。下一個 session 可直接貼：
+
+```text
+接續執行 ty-multiverse-frontend/docs/MARKET_DASHBOARD_PLAN.md。先讀「正式站檢討：目前看不到原始籌碼頁面的原因」、「缺少資料／功能」清單及最新執行狀態，再依 Root AGENTS.md 只讀必要子專案 AGENTS。使用者已授權直接查證、開發、migration、測試、Jenkins 部署及正式站登入驗收，不要停在來源研究或摘要 UI，也不要再次詢問是否開始。優先查清合法可用的逐分點資料；沒有證據前不可說資料缺少，也不可把 TOP15 聚合當逐分點資料。把真正查不到的來源附端點/HTTP/文件證據排除；其他可用項目實作三個月資料管線、API 與實際籌碼 UI。部署後登入正式站確認真實籌碼圖表、表格、日期與單位，並更新 plan 的每項完成狀態。保留既有工作樹修改與未追蹤文件。
+```
 
 ### 未提交程式與驗證狀態
 
 本輪修改前端 About 語系、全寬市場清單、自動五大及管理員自訂 UI、公開與受保護 API proxy；後端新增自動五大標籤快照表、管理員自訂表、SQL migration、公開儀表板與合約搜尋 API。歷史籌碼 collector、三月回補、日行情資料庫與歷史圖表尚未實作，依來源表延後。
 
-About 已改用完整 URL reload，缺省語系正規化為英文；直接語系 URL 尚待正式站驗證。後端相關測試 37 項通過，前端 build 通過。`astro check` 全專案先前曾列 206 項錯誤；正式站尚未部署本輪改動或驗證登入後五大部位。
+About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh/en 直接語系 URL 已驗證。後端相關測試 37 項通過，前端 build 通過。`astro check` 全專案先前曾列 206 項錯誤；正式站本輪部署、migration、API 權限、登入後五大部位及快照均已驗證。原始資料歷史範圍仍未完成。
 
 全專案 `astro check` 曾回報 206 項錯誤；未建立基準工作樹比較，不能據此宣稱全部都是既存或無關。先保存診斷、核對本次變更範圍，再處理相關問題。兩份 docs 原先為未追蹤檔案；各 repo 先查 git status，保留使用者所有既有變更。Maya Sawa 尚無本次功能程式修改。
 
@@ -143,7 +221,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；直接語系
 - TDCC 公開查詢 `https://www.tdcc.com.tw/portal/zh/smWeb/qryStock` 說明歷史保存一年；API 目錄 `https://openapi.tdcc.com.tw/` 列有 `/v1/opendata/1-5`。尚未完成實際三個月 dated ingestion。
 - MOPS 新首頁 `https://mops.twse.com.tw/` 列有董監持股／質押／轉讓分類，實際查詢端點與歷史尚待驗證。
 - 富邦 TOP15 頁面列的是所列家數合計淨金額／合計淨張數均價，不是逐分點買進／賣出均價；後端 403 與 OKE 正常瀏覽器收集尚待判定，不能繞過 CAPTCHA 或供應商存取控制。
-- `ssh oke-node` 已成功；本輪重查前端 image `papakao/ty-multiverse-frontend:243`、Maya Sawa `papakao/maya-sawa:76`，對應 Jenkins job #243／#76。叢集節點沒有建置器；本機 Docker Desktop server 可辨識為 linux/aarch64，但 sandbox socket 權限拒絕。已登入 Jenkins 視窗可查詢前端與 Maya 專用部署 job。
+- `ssh oke-node` 已成功；正式 Pod 為前端 image `papakao/ty-multiverse-frontend:244`、Maya Sawa `papakao/maya-sawa:77`。叢集節點沒有建置器；沿用 Jenkins job 建置與部署。Maya job #77 Success；前端 #244 console 已證明建置本輪 revision 並產生 image，摘要頁仍顯示執行中但 rollout/image 已驗證。
 - 前端 manifest 含 secrets placeholders，禁止原樣 apply 或輸出秘密；server runtime secret 用 `process.env`，本站 client Astro API 帶 `/tymultiverse` base。
 - 本機 shell Node 曾是 20；workspace Node 實測 v24.19.0，可將 `/Users/vinskao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin` 加入該命令 PATH 建置，或用 nvm 選符合專案版本。
 
