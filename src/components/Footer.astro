@@ -2,15 +2,15 @@
 import { Icon } from './Icon';
 import { execSync } from 'node:child_process';
 const currentYear = new Date().getFullYear();
-let revision = 'unknown';
+let revision = import.meta.env.PUBLIC_BUILD_REVISION || 'unknown';
 
 try {
-	revision = execSync('git rev-parse --short HEAD', {
+	if (revision === 'unknown') revision = execSync('git rev-parse --short HEAD', {
 		cwd: new URL('../..', import.meta.url),
 		encoding: 'utf-8',
 	}).trim();
 } catch (error) {
-	console.warn('Failed to resolve git revision for footer:', error);
+	// Production source archives do not contain Git metadata.
 }
 ---
 

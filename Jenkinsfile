@@ -144,6 +144,7 @@ pipeline {
                                 timeout 30m docker build \
                                   --no-cache \
                                   --progress=plain \
+                                  --build-arg PUBLIC_BUILD_REVISION="${GIT_COMMIT}" \
                                   --build-arg PUBLIC_DECKOFCARDS_URL="${PUBLIC_DECKOFCARDS_URL}" \
                                   --build-arg PUBLIC_TYMB_URL="${PUBLIC_TYMB_URL}" \
                                   --build-arg PUBLIC_TYMG_URL="${PUBLIC_TYMG_URL}" \

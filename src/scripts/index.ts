@@ -11,6 +11,180 @@ let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
 
+function initMarketWatchlist() {
+    const row = document.getElementById('txf-quote-section') as HTMLButtonElement | null;
+    const detail = document.getElementById('market-instrument-detail');
+    if (!row || !detail || row.dataset.bound === 'true') return;
+    row.dataset.bound = 'true';
+    row.addEventListener('click', () => {
+        const expanded = row.getAttribute('aria-expanded') === 'true';
+        row.setAttribute('aria-expanded', String(!expanded));
+        document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', 'false'));
+        detail.hidden = expanded;
+        if (!expanded) {
+            const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+            setText('market-detail-title', 'TXF · TAIEX Futures');
+        }
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            if (tab.disabled) return;
+            document.querySelectorAll('[data-market-tab]').forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
+        });
+    });
+}
+
+interface DashboardInstrument {
+    code: string; name: string; productType: 'stock' | 'futures';
+    quote?: TxfQuote | null;
+}
+interface MarketDashboardPayload {
+    fixed: DashboardInstrument;
+    automatic: { snapshotAt: string | null; positions: DashboardInstrument[] };
+    custom: DashboardInstrument[];
+}
+
+function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.replaceChildren();
+    if (!instruments.length) {
+        const empty = document.createElement('p');
+        empty.className = 'market-updated';
+        empty.textContent = emptyText;
+        target.append(empty);
+        return;
+    }
+    for (const instrument of instruments) {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'market-watch-row market-watch-row--selected';
+        row.dataset.marketCode = instrument.code;
+        row.setAttribute('aria-expanded', 'false');
+        const quote = instrument.quote;
+        const item = document.createElement('span'); item.className = 'market-watch-instrument';
+        const code = document.createElement('strong'); code.textContent = instrument.code;
+        const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? 'Stock' : 'Futures'}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
+        item.append(code, name);
+        const price = document.createElement('span'); price.className = 'market-watch-price';
+        const last = document.createElement('strong'); last.textContent = quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--';
+        const change = document.createElement('small');
+        change.textContent = quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable';
+        change.classList.toggle('up', Boolean(quote && quote.change >= 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
+        price.append(last, change);
+        const volume = document.createElement('span'); volume.textContent = quote?.volume?.toLocaleString() ?? '--';
+        const timestamp = document.createElement('span'); timestamp.className = 'market-updated'; timestamp.textContent = quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--';
+        row.append(item, price, volume, timestamp);
+        row.addEventListener('click', () => {
+            document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', String(item === row && row.getAttribute('aria-expanded') !== 'true')));
+            const detail = document.getElementById('market-instrument-detail');
+            const expanded = row.getAttribute('aria-expanded') === 'true';
+            if (detail) detail.hidden = !expanded;
+            const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+            setText('market-detail-title', `${instrument.code} · ${instrument.name}`);
+            setText('txf-contract', `${instrument.code}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
+            setText('market-detail-price', quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--');
+            setText('market-detail-change', quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable');
+            setText('txf-open', quote?.open?.toLocaleString() ?? '--'); setText('txf-high', quote?.high?.toLocaleString() ?? '--');
+            setText('txf-low', quote?.low?.toLocaleString() ?? '--'); setText('market-detail-volume', quote?.volume?.toLocaleString() ?? '--');
+            setText('market-detail-time', quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--');
+        });
+        target.append(row);
+    }
+}
+
+async function fetchMarketDashboard() {
+    try {
+        const response = await fetch(astroApiPath('/api/market/dashboard'));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json() as MarketDashboardPayload;
+        renderDashboardRows('market-auto-list', data.automatic?.positions ?? [], 'No complete valid holdings snapshot is available yet.');
+        renderDashboardRows('market-custom-list', data.custom ?? [], 'No custom instruments selected.');
+        const updated = document.getElementById('market-auto-updated');
+        if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
+    } catch (error) {
+        console.error('Market dashboard unavailable:', error);
+        renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
+        renderDashboardRows('market-custom-list', [], 'Custom selections are temporarily unavailable.');
+    }
+}
+
+function initMarketCustomEditor() {
+    const button = document.getElementById('market-custom-edit') as HTMLButtonElement | null;
+    const dialog = document.getElementById('market-custom-dialog') as HTMLDialogElement | null;
+    if (!button || !dialog || button.dataset.bound === 'true' || !hasMarketAuth()) return;
+    button.dataset.bound = 'true';
+    let selected: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }[] = [];
+    const selectedBox = document.getElementById('market-custom-selected');
+    const resultsBox = document.getElementById('market-search-results');
+    const error = document.getElementById('market-custom-error');
+    const renderSelected = () => {
+        if (!selectedBox) return;
+        selectedBox.replaceChildren();
+        const count = document.getElementById('market-custom-count'); if (count) count.textContent = `${selected.length} / 5`;
+        selected.forEach((item, index) => {
+            const row = document.createElement('div'); row.className = 'market-search-result';
+            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
+            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.addEventListener('click', () => { selected.splice(index, 1); renderSelected(); });
+            row.append(text, remove); selectedBox.append(row);
+        });
+    };
+    button.addEventListener('click', async () => {
+        const response = await fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() });
+        if (!response.ok) { button.hidden = true; return; }
+        const payload = await response.json(); selected = payload.symbols ?? [];
+        renderSelected(); if (error) error.textContent = ''; dialog.showModal();
+    });
+    const search = async () => {
+        const input = document.getElementById('market-symbol-search') as HTMLInputElement | null;
+        if (!input || !resultsBox) return;
+        resultsBox.replaceChildren();
+        if (error) error.textContent = '';
+        const query = input.value.trim(); if (!query) return;
+        const response = await fetch(`${astroApiPath('/api/market/dashboard/search')}?q=${encodeURIComponent(query)}`, { headers: marketAuthHeaders() });
+        if (!response.ok) { if (error) error.textContent = `Search unavailable (HTTP ${response.status}).`; return; }
+        const payload = await response.json();
+        (payload.results ?? []).forEach((item: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) => {
+            const row = document.createElement('div'); row.className = 'market-search-result';
+            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
+            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => value.code === item.code && value.productType === item.productType) ? 'Added' : 'Add';
+            add.disabled = add.textContent === 'Added' || selected.length >= 5;
+            add.addEventListener('click', () => { if (selected.length < 5) selected.push(item); renderSelected(); add.disabled = true; add.textContent = 'Added'; });
+            row.append(text, add); resultsBox.append(row);
+        });
+        if (!payload.results?.length) resultsBox.textContent = 'No matching stock or futures contract.';
+    };
+    document.getElementById('market-search-submit')?.addEventListener('click', () => { void search(); });
+    document.getElementById('market-symbol-search')?.addEventListener('keydown', (event) => { if ((event as KeyboardEvent).key === 'Enter') { event.preventDefault(); void search(); } });
+    document.getElementById('market-custom-cancel')?.addEventListener('click', () => dialog.close());
+    document.getElementById('market-custom-save')?.addEventListener('click', async () => {
+        const response = await fetch(astroApiPath('/api/market/dashboard/custom'), {
+            method: 'PUT', headers: { ...marketAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbols: selected }),
+        });
+        if (!response.ok) { if (error) error.textContent = `Save failed (HTTP ${response.status}).`; return; }
+        dialog.close(); await fetchMarketDashboard();
+    });
+    void fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() }).then((response) => { if (response.ok) button.hidden = false; }).catch(() => undefined);
+}
+
+function syncMarketDetail(quote: TxfQuote) {
+    const selectedCode = document.querySelector<HTMLButtonElement>('.market-watch-row--selected[aria-expanded="true"]')?.dataset.marketCode;
+    if (selectedCode && selectedCode.toUpperCase() !== 'TXF') return;
+    const setText = (id: string, value: string) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+    setText('market-detail-price', quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }));
+    const change = document.getElementById('market-detail-change');
+    if (change) {
+        change.textContent = `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`;
+        change.className = quote.change >= 0 ? 'up' : 'down';
+    }
+    setText('market-detail-volume', quote.volume.toLocaleString());
+    setText('market-detail-time', quote.timestamp ? new Date(quote.timestamp).toLocaleString() : '--');
+}
+
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
 
 function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
@@ -485,7 +659,6 @@ interface MarketUsage {
 }
 
 const TXF_QUOTE_CACHE_KEY = 'market:txf-quote';
-const QFF_QUOTE_CACHE_KEY = 'market:qff-quote';
 const MARKET_USAGE_CACHE_KEY = 'market:usage';
 const PORTFOLIO_CACHE_KEY = 'market:portfolio';
 
@@ -629,32 +802,7 @@ function renderTxfQuote(quote: TxfQuote, offline = false) {
     const change = document.getElementById('txf-change');
     change?.classList.toggle('up', quote.change >= 0);
     change?.classList.toggle('down', quote.change < 0);
-}
-
-function renderQffQuote(quote: TxfQuote, offline = false) {
-    const section = document.getElementById('qff-quote-section');
-    if (!section) return;
-
-    const formatNumber = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    const setText = (id: string, value: string) => {
-        const element = document.getElementById(id);
-        if (element) element.textContent = value;
-    };
-
-    section.classList.toggle('is-offline', offline);
-    setText('qff-contract', `${quote.symbol}${quote.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
-    setText('qff-price', formatNumber(quote.close));
-    setText('qff-change', `${quote.change >= 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
-    setText('qff-open', formatNumber(quote.open));
-    setText('qff-high', formatNumber(quote.high));
-    setText('qff-low', formatNumber(quote.low));
-    setText('qff-volume', quote.volume.toLocaleString());
-    setText('qff-market-status', offline ? 'Offline' : '10m');
-    setText('qff-updated', quote.timestamp ? new Date(quote.timestamp).toLocaleString() : new Date().toLocaleString());
-
-    const change = document.getElementById('qff-change');
-    change?.classList.toggle('up', quote.change >= 0);
-    change?.classList.toggle('down', quote.change < 0);
+    syncMarketDetail(quote);
 }
 
 function renderMarketUsage(usage: MarketUsage, offline = false) {
@@ -1172,25 +1320,6 @@ async function fetchMarketUsage() {
     }
 }
 
-async function fetchQffQuote() {
-    const cachedQuote = readCachedMarketData<TxfQuote>(QFF_QUOTE_CACHE_KEY);
-    try {
-        const response = await fetch('/maya-sawa/market/mini-tsmc-futures');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const quote: TxfQuote = await response.json();
-        writeCachedMarketData(QFF_QUOTE_CACHE_KEY, quote);
-        renderQffQuote(quote);
-    } catch (error) {
-        console.error('Error fetching QFFR1 quote:', error);
-        if (cachedQuote) renderQffQuote(cachedQuote, true);
-        else {
-            document.getElementById('qff-quote-section')?.classList.add('is-offline');
-            const status = document.getElementById('qff-market-status');
-            if (status) status.textContent = 'Offline';
-        }
-    }
-}
-
 async function fetchPortfolio() {
     const section = document.getElementById('portfolio-section');
     if (!section) return;
@@ -1235,6 +1364,7 @@ async function fetchPortfolio() {
     // The portfolio endpoint persists today's valid snapshot before it returns;
     // load history only after that write has completed to avoid an empty-day race.
     await fetchPortfolioHistory();
+    await fetchMarketDashboard();
 }
 
 // Visit Counter Functionality
@@ -1319,15 +1449,16 @@ function initIndexPage() {
     _leetcodeAvailabilityCleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.LEETCODE, setLeetcodeVisible);
 
     // Always retry on page load so stale local availability state cannot keep this section hidden.
+    initMarketWatchlist();
+    initMarketCustomEditor();
+    void fetchMarketDashboard();
     fetchLeetCodeStats();
     fetchTxfQuote();
-    fetchQffQuote();
     fetchMarketUsage();
     fetchPortfolio();
     if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
     _marketQuoteTimer = window.setInterval(() => {
         fetchTxfQuote();
-        fetchQffQuote();
         fetchMarketUsage();
     }, 600_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);

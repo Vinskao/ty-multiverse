@@ -126,80 +126,26 @@ const skillsCategories = skillsData.categories;
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
 						<div class="market-overview-grid">
-							<section id="txf-quote-section" class="market-quote-section" aria-live="polite">
-								<div class="market-quote-heading">
-									<div>
-										<h5 class="section-title" data-i18n="home.marketTitle">TAIEX Futures</h5>
-									</div>
+							<section id="market-watchlist" class="market-watchlist market-quote-section" aria-label="Market watchlist">
+								<div class="market-watchlist-heading"><span>Instrument</span><span>Price / change</span><span>Volume</span><span>Data time</span></div>
+								<button id="txf-quote-section" class="market-watch-row" type="button" aria-expanded="false" aria-controls="market-instrument-detail" data-market-symbol="TXF" aria-live="polite">
+									<span class="market-watch-instrument"><strong>TXF</strong><small>TAIEX Futures · front month</small></span>
+									<span class="market-watch-price"><strong id="txf-price">--</strong><small id="txf-change">--</small></span>
+									<span id="txf-volume">--</span><span id="txf-updated" class="market-updated">Loading...</span>
 									<span id="txf-market-status" class="market-status">Loading</span>
+								</button>
+								<div class="market-watch-group"><h5>Automatic top five holdings <small id="market-auto-updated"></small></h5><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
+								<div class="market-watch-group"><h5>Custom instruments <button id="market-custom-edit" type="button" hidden>Edit</button></h5><div id="market-custom-list" class="market-watch-list"><p class="market-updated">Loading...</p></div></div>
+								<div id="market-instrument-detail" class="market-instrument-detail" hidden>
+									<div class="market-detail-toolbar"><strong id="market-detail-title">TXF · TAIEX Futures</strong><div id="market-detail-tabs" role="tablist" aria-label="Market data"><button type="button" role="tab" aria-selected="true" data-market-tab="quote">Quote</button></div></div>
+									<div class="market-quote-card market-watch-detail-card"><p id="txf-contract" class="market-contract">TXF</p><div class="market-price-block"><strong id="market-detail-price">--</strong><span id="market-detail-change">--</span></div><dl class="market-metrics"><div><dt>Open</dt><dd id="txf-open">--</dd></div><div><dt>High</dt><dd id="txf-high">--</dd></div><div><dt>Low</dt><dd id="txf-low">--</dd></div><div><dt>Volume</dt><dd id="market-detail-volume">--</dd></div><div><dt>Quote time</dt><dd id="market-detail-time">--</dd></div></dl></div>
 								</div>
-								<div class="market-quote-card">
-									<div>
-										<p id="txf-contract" class="market-contract">TXF</p>
-										<p id="txf-updated" class="market-updated" data-i18n="home.loading">Loading...</p>
-									</div>
-									<div class="market-price-block">
-										<strong id="txf-price">--</strong>
-										<span id="txf-change">--</span>
-									</div>
-									<dl class="market-metrics">
-										<div><dt>Open</dt><dd id="txf-open">--</dd></div>
-										<div><dt>High</dt><dd id="txf-high">--</dd></div>
-										<div><dt>Low</dt><dd id="txf-low">--</dd></div>
-										<div><dt>Volume</dt><dd id="txf-volume">--</dd></div>
-									</dl>
-									<p id="market-usage-access-message" class="market-updated" hidden></p>
-								</div>
+							<dialog id="market-custom-dialog" class="market-custom-dialog"><form method="dialog"><div class="market-dialog-heading"><h3>Custom instruments</h3><button value="cancel" aria-label="Close">×</button></div></form><label for="market-symbol-search">Search stock or futures code / name</label><div class="market-search-row"><input id="market-symbol-search" type="search" autocomplete="off" placeholder="2330 or TSMC"><button id="market-search-submit" type="button">Search</button></div><div id="market-search-results" class="market-search-results" aria-live="polite"></div><h4>Selected <span id="market-custom-count">0 / 5</span></h4><div id="market-custom-selected" class="market-search-results"></div><p id="market-custom-error" role="status"></p><div class="market-dialog-actions"><button id="market-custom-save" type="button">Save</button><button id="market-custom-cancel" type="button">Cancel</button></div></dialog>
 							</section>
-
-							<section id="qff-quote-section" class="market-quote-section" aria-live="polite">
-								<div class="market-quote-heading">
-									<div>
-										<h5 class="section-title">Mini TSMC Futures</h5>
-									</div>
-									<span id="qff-market-status" class="market-status">Loading</span>
-								</div>
-								<div class="market-quote-card market-quote-card--tsmc">
-									<div>
-										<p id="qff-contract" class="market-contract">QFFR1</p>
-										<p id="qff-updated" class="market-updated">Loading...</p>
-									</div>
-									<div class="market-price-block">
-										<strong id="qff-price">--</strong>
-										<span id="qff-change">--</span>
-									</div>
-									<dl class="market-metrics">
-										<div><dt>Open</dt><dd id="qff-open">--</dd></div>
-										<div><dt>High</dt><dd id="qff-high">--</dd></div>
-										<div><dt>Low</dt><dd id="qff-low">--</dd></div>
-										<div><dt>Volume</dt><dd id="qff-volume">--</dd></div>
-									</dl>
-								</div>
-							</section>
-
 							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
-								<div class="market-quote-heading">
-									<div>
-										<h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5>
-									</div>
-									<span id="market-usage-status" class="market-status">Loading</span>
-								</div>
-								<div class="market-usage-card">
-									<div class="market-usage-hero">
-										<strong id="market-usage-used">--</strong>
-										<span id="market-usage-limit">--</span>
-									</div>
-									<div class="market-usage-progress">
-										<div id="market-usage-progress-bar"></div>
-									</div>
-									<dl class="market-metrics">
-										<div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div>
-										<div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div>
-										<div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div>
-									</dl>
-								</div>
+								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
+								<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
 							</section>
-
 							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite">
 								<div class="market-quote-heading">
 									<div>
@@ -353,9 +299,6 @@ const skillsCategories = skillsData.categories;
 							<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
 							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
 						</div>
-						<div class="ai-usage-home-section">
-							<AiTokenUsageDashboard client:load />
-						</div>
 						<div class="github-graph">
 							<h5 class="section-title" data-i18n="home.githubTitle">Github Contributions</h5>
 							<div>
@@ -414,6 +357,9 @@ const skillsCategories = skillsData.categories;
 				</div>
 
 				
+				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
+					<AiTokenUsageDashboard client:load />
+				</div>
 			</header>
 
 			<!-- Skills Bubble Chart: full-width -->

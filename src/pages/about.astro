@@ -37,7 +37,8 @@ function gradeFor(level: string): string {
 
 
 
-const lang = (Astro.url.searchParams.get("lang") ?? "en") as LangKey;
+const requestedLang = Astro.url.searchParams.get("lang")?.toLowerCase();
+const lang: LangKey = requestedLang?.startsWith("zh") ? "zh" : "en";
 const experienceData = aboutData.experience as unknown as ExperienceItem[];
 
 // Calculate experience years
@@ -919,8 +920,6 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>
     <script>
-      import { navigate } from "astro:transitions/client";
-
       let cleanupAboutLangSync: (() => void) | null = null;
 
       function normalizeLang(code?: string | null) {
@@ -944,8 +943,11 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
               appLang.set(urlLang);
             }
           } else {
-            url.searchParams.set("lang", appLangCode);
+            // About is SSR-rendered from the URL. Add the default language before
+            // syncing AppLang so a saved site preference cannot override this page.
+            url.searchParams.set("lang", "en");
             window.history.replaceState({}, "", url.toString());
+            if (appLangCode !== "en") appLang.set("en");
           }
 
           if (cleanupAboutLangSync) {
@@ -963,7 +965,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
                 (window as any).__saveLanguageSwitchScroll();
               }
               nextUrl.searchParams.set("lang", nextLang);
-              navigate(nextUrl.toString());
+              window.location.href = nextUrl.toString();
             }
           });
         } catch (_) {}
