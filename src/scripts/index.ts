@@ -252,7 +252,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     let low = Math.min(...valid.map((item) => item.low)); let high = Math.max(...valid.map((item) => item.high));
     const priceSpan = high - low || Math.max(Math.abs(high) * .05, 1); low -= priceSpan * .04; high += priceSpan * .04;
     const maxVolume = Math.max(...valid.map((item) => item.volume || 0), 1);
-    const left = 68; const right = width - 12; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
+    const left = 82; const right = width - 12; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
     const slot = (right - left) / Math.max(candles.length, 1); const candleWidth = Math.max(1.5, Math.min(9, slot * .64));
     const yPrice = (value: number) => priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
     candles.forEach((item, index) => {
