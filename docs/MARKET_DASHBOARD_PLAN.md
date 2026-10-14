@@ -65,7 +65,7 @@
 | TAIFEX 法人與大額交易人 | 法人日期資料源納入後續；大額交易人延後 | Official OpenAPI `MarketDataOfMajorInstitutionalTradersDetailsOfFuturesContractsBytheDate` 現行樣本日期 2026-10-13；官方日期查詢頁可指定 `2026/10/12` | 每日按指數類／股票期貨「商品種類」×法人，含交易及未平倉口數／契約金額；「股票期貨」不是個別 2330/QFF 契約 | 公開免登入；日期查詢範圍官方頁稱近三年。API 無日期參數，需以歷史網頁端點實測後才納入三月 collector；不可宣稱個股期貨法人資料 |
 | TDCC 集保級距 | 納入選定股票逐週回補及增量 | `/v1/opendata/1-5` 最新全市場樣本 2026-10-08；官方表單 `https://www.tdcc.com.tw/portal/zh/smWeb/qryStock` POST 可查 2330、2026-07-09 | 15 級距，人數／股數／比例；按來源日期保存週報 | 匿名官方頁面，無登入／付款；歷史保存一年。已確認表單 token/date/POST，可接入選定標的回補 |
 | MOPS 董監持股／質押／轉讓 | 延後，不展示 | 官方 MOPS 有相關分類；本輪未驗證可重現端點及日期 | 欄位、頻率及歷史範圍未核實 | 未查證不等同缺資料；完成端點驗證後再納入 |
-| 分點、主力與逐分點均價 | 排除本輪 | 富邦既有網頁樣本列 TOP15 聚合數；後端 HTTP 回 403 | 非逐分點買進／賣出均價；本站未定義券商「主力」對應公式 | 不繞過存取控制；未證明可部署使用的官方免費 API |
+| 分點、主力與逐分點均價 | 逐分點原始資料有 TWSE、TPEx 官方付費商品；均未購買／整合 | TWSE 不含權證日報，2012-10-25 起、外部 NT$80,000/月；TPEx 不含權證日報，2014-12-01 起、外部 NT$50,000/月。TPEx S32 格式列證券代號、券商代號／名稱、成交價格、買進股數、賣出股數 | 日報欄位可支援分點買賣排行與各方向成交加權均價；仍須確認 TPEx 檔案交付與外部傳輸條款。券商自營併總公司 | 本計畫未授權新增付費資料，故未購買／未整合；富邦免費 TOP15 網頁不是本系統資料 API，且後端請求 403 |
 | Shioaji 三個月 K 線歷史 | 延後，本輪不回補 | [官方歷史行情文件](https://sinotrade.github.io/zh/tutor/market_data/historical/) | 文件描述單次區間上限與 API 頻寬使用 | 尚未實作分段回補及額度監控，不能用即時 snapshots 冒充歷史行情 |
 | 固定 TXF、自訂五格 | 納入本輪應用功能 | Shioaji 合約目錄及 Redis 行情 | 開高低、成交量、時間與漲跌 | 沿用既有 Shioaji session |
 
@@ -73,31 +73,31 @@
 
 ### 正式站檢討：目前看不到原始籌碼頁面的原因
 
-使用者回看正式站後確認沒有看到原先要求的籌碼資料與分點頁。這是合理的驗收落差：本輪實際上線的只有市場商品摘要（固定台指期、自動五大標籤、管理員自訂）和即時行情；頁面沒有法人、資券、借券、分點／主力、持股結構或期貨籌碼歷史分頁。來源研究及畫面規格曾被記錄，但未完成資料模型、排程收集、回補 API 和圖表，所以不能視為已交付。
+使用者回看正式站時確認只有市場摘要和即時行情，沒有原先要求的歷史籌碼頁。這是當時的驗收落差：來源研究及畫面規格已有紀錄，但籌碼歷史資料模型、排程、API 和圖表尚未交付。以下記錄那次檢討時的缺口；後續狀態以 2026-10-14 本文件末尾更新及部署證據為準。
 
-「分點」最初需求尤其未完成。本輪雖查看富邦 TOP15 頁面，但只確認頁面聚合資訊及後端請求 403；沒有把個別券商分點資料成功擷取、正規化、儲存並呈現在本站，也沒有確認 OKE 上的正常瀏覽器收集可行。不能將 TOP15 網頁樣本或本輪「排除」決定誤當成已實作分點功能。下個 session 應優先查清可用且合規的來源與欄位，若免費官方資料無法提供逐分點買賣資料，清楚說明因此無法完成逐分點排行，而不是拿聚合 TOP15 或自創主力公式代替。
+「分點」功能仍未完成。TWSE Data E-Shop 有逐分點日報，2012-10-25 起，外部使用 NT$80,000/月；TPEx Data E-Shop 也有「買賣日報表-全部(不含權證)」，2014-12-01 起、每日 EXE/CSV、外部使用 NT$50,000/月。TPEx 官方 S32 格式 PDF 已確認欄位為證券代號、券商代號／名稱、成交價格、買進股數、賣出股數，單位元／股，因此也能按買進／賣出分別計算股數加權均價。兩邊都有排除權證的付費商品，符合使用者不看權證的偏好；但尚未購買或接入，本站目前仍無逐分點資料。仍需確認訂購、對外傳輸授權與日檔取得／解壓流程。富邦 TOP15 網頁僅為頁面來源，後端 HTTP 403，不能當成本系統的合規 API。未授權前不要抓富邦網站或冒稱已交付。
 
 下一輪先完成來源關卡，不可再由摘要功能直接跳到部署驗收：
 
 | 缺少資料／功能 | 目前狀態 | 下一步需要取得的證據或實作 |
 | --- | --- | --- |
-| 上市個股法人買賣超歷史 | T86 樣本與欄位 mapping 已驗；collector、DB、migration、日增量及 92 日回補已實作，尚未在正式 DB 執行／未部署 | production migration 後回補登入後自動及 custom 股票；驗 DB/API 三個月覆蓋並完成法人圖表、表格正式站驗收 |
-| 上櫃個股法人買賣超歷史 | dailyTrade 指定日期樣本與 25 欄 grouping 已驗；collector、DB、migration、日增量及 92 日回補已實作，尚未 production 執行 | production migration 後回補並核對 TPEx 日期／休市與多檔 UI；法人每日及 5/10/20 日累計仍未實作 |
-| 外資持股（上市／上櫃） | TWSE MI_QFIIS 欄位、股數／比例／上限已映射並納入 collector；TPEx 尚未取得可按日期查詢的逐檔外資持股端點 | 驗證並接入 TPEx 歷史來源；顯示持股存量，不與法人買賣超混淆 |
-| 融資融券（上市／上櫃） | TWSE MI_MARGN 與 TPEx `margin/balance` 欄位均已用 2026-10-12 樣本映射；上市融資融券單位為張 | production 回補後核對逐日歷史與券資比欄位； UI 尚未驗收 |
-| 借券、借券賣出 | TWSE TWT93U 與 TPEx `margin/sbl` 均已映射；TWSE 報表欄位為股，包含融券餘額、借券賣出、還券及借券賣出餘額 | `https://www.twse.com.tw/rwd/zh/marginTrading/TWT93U?date=20261012&response=json` 回 2330 與 `單位：股`；每日日期查詢。TWSE 產品商店另列訂購檔案有月費，本站使用公開報表 endpoint，不下載訂閱檔 |
-| 分點買進／賣出及排行（使用者特別關注） | 富邦頁面曾檢視，但個別分點資料沒有進本系統；沒有 OKE 收集或 DB | 先確認合法可用端點/欄位能否提供個別分點買進、賣出、淨額、張數及日期；用上市/上櫃、多日期驗證。若來源只提供 TOP15 聚合，明列限制，不能稱為逐分點資料 |
+| 上市個股法人買賣超歷史 | TWSE T86 collector、coverage、API 與圖表已部署；選中上市股票有 63 個交易日，圖表 hover 顯示外資／投信淨股數，沒有資料表 | 例行日增量持續監控；依使用者要求維持 hover 呈現 |
+| 上櫃個股法人買賣超歷史 | TPEx dailyTrade collector、coverage、API 與圖表已部署；選中上櫃股票有 63 個交易日，日期及單位由 API/圖表顯示 | 例行日增量持續監控；法人累計週期沒有另行實作或宣稱 |
+| 外資持股（上市／上櫃） | TWSE 與 TPEx 外資持股來源已映射、收集並接入 Ownership 圖；外資持股比例、股數、法定上限 hover 顯示，無資料表 | 正式 API/API coverage 例行監控；TDCC 為獨立週持股級距，不與外資持股混用 |
+| 融資融券（上市／上櫃） | TWSE MI_MARGN 與 TPEx margin/balance 已收集及部署；每日餘額、增減圖已顯示在圖表 hover，無資料表 | 正式 API/API coverage 例行監控 |
+| 借券、借券賣出 | TWSE TWT93U 與 TPEx margin/sbl 已映射、收集及部署；每日餘額／流量圖 hover 顯示，無資料表 | 正式 API/API coverage 例行監控；與融券餘額分開 |
+| 分點買進／賣出及排行（使用者特別關注） | TWSE 官方商品「買賣日報表(全部不含權證)」每日、2012-10-25 起，外部 NT$80,000/月；TPEx 官方「買賣日報表-全部(不含權證)」每日 EXE/CSV、2014-12-01 起，外部 NT$50,000/月。TPEx S32 格式 PDF 確認代號、券商代號／名稱、成交價、買進股數、賣出股數 | 兩市場皆有官方排除權證付費來源，欄位足以計算分點買賣量與買賣加權均價；均未購買／接入，本站仍無資料。仍需確認日檔交付、EXE 解壓與對外傳輸授權 |
 | 分點均價與券商「主力」 | 逐分點均價及主力定義未核實、未實作 | 必須得到買進與賣出逐分點成交金額/張數才能計算均價；主力公式需先定義，並標示涵蓋家數，不能冒稱券商相同指標 |
-| TDCC 集保級距歷史 | 官方逐檔歷史查詢已實測並新增 GET token/date 解析、POST parser、92 日週回補與 ownership API/UI；尚未在 production DB 執行或驗正式站 | 以官方下拉日期為準；2026-07-09 2330 成功回傳 15 級距並 parser 正確抽出股數／人數／比例；正式站需核對全部回補週及表格 |
+| TDCC 集保級距歷史 | 官方逐檔歷史 GET token/date 解析、POST parser、週回補、ownership API/UI 已部署；選中股票有 13 週，TDCC 級距可選，週圖 hover 顯示股數／人數／比例，無資料表 | 例行週增量監控；各檔歷史週數依已入庫資料顯示 |
 | 董監持股、質押、轉讓 | 只找到 MOPS 分類入口；端點、歷史、欄位未查證且未實作 | 找可重複查詢的正式端點/檔案，確認公告日、持股、質押與轉讓數量和修正公告規則 |
-| 台指期法人及大額交易人 | 只有 TXF 單日樣本/Swagger 線索；沒有日歷史或圖表 | 對期貨法人多空交易與未平倉、大額交易人分別查明品種範圍、交易日覆蓋、淨額公式與可回補期 |
-| 個股期貨法人籌碼 | 商品涵蓋仍未證明，未實作 | 查詢個股期貨是否有可用法人/未平倉官方資料；不能以 TXF 大盤期貨資料代替 |
-| 三個月 K 線與成交量 | TWSE／TPEx 股票日 OHLCV 已映射並接入 collector/API/首頁圖表；期貨三個月 K 線仍未回補 | production DB migration 後核對股票三月資料；另以既有 Shioaji 權限實作期貨選定合約回補、日增量、補洞與來源時間；禁止以即時 snapshots 補造舊日期 |
-| 統一 DB／排程／覆蓋狀態 | 新增 market daily history 與 source/code/date coverage 表、SQL migration、92 日選股回補、每日排程與跨 pod advisory lock；尚未部署 | Apply migration，驗證正式 DB 筆數、不同來源覆蓋狀態、初次回補時長、日增量與失敗重試 |
-| 籌碼分頁、圖表、表格 | 首頁已新增股票行情、法人與資券／借券圖表和日表；分點、持股結構、期貨籌碼尚未建置 | 完成來源回補後正式站驗收已建 UI；其他每個來源先完成 schema/API 後再增分頁，逐商品只顯示適用內容 |
-| 手機及完整互動驗收 | 本輪沒有正式站手機視窗實測；新增/移除設定、摘要展開、各分頁未逐項驗 | 桌面與手機驗證搜尋新增/移除、五格上限、重複限制、重新整理、展開/切換、深淺色與返回/語系狀態 |
+| 台指期法人及大額交易人 | TAIFEX 類別法人交易／未平倉來源已接入；目前 TXF 只有 17/66 個工作日 coverage 成功，餘 49 日 HTTP 429。此資料為商品類別彙總，不是個別合約部位；大額交易人未實作 | 驗證 #91 的 5 分鐘錯誤重試及回補到完整有效交易日；大額交易人來源另查證 |
+| 個股期貨法人籌碼 | TAIFEX `STF` 類別法人彙總已接入並映射到股票期貨商品；QFFJ6 對應仍為股票期貨類別彙總，非 QFFJ6 個別合約部位，現有 coverage 僅 17/66 成功、49 日 429 | #91 後續回補驗證；個別合約部位若官方不提供，維持明確標示類別彙總 |
+| 三個月 K 線與成交量 | 股票日 OHLCV 有 63 個交易日；期貨價量日資料已收集。依使用者要求 QFFJ6 圖表以現貨 2330 ticker 顯示 63 個現貨交易日；OHLCV hover、點日固定、拖曳區間顯示報酬，沒有常駐表格 | 持續監控來源日期及缺口；正式站及本機頁已驗證圖表資料 |
+| 統一 DB／排程／覆蓋狀態 | Market daily history 與 source/code/date coverage、migration、92 日回補、每日排程與跨 pod advisory lock 已部署；股票 sources 有約 63 交易日，TAIFEX 仍在回補。錯誤重試修正 `798a906` 已推送，Jenkins #91 待上線 | 驗 #91 建置與 rollout，確認 coverage 會重試錯誤日並往後推進 |
+| 籌碼圖表及 hover | 行情、法人、融資融券、借券、外資持股、TDCC ownership 圖均已上線；指標值在 hover/readout，不用 OHLC／法人／資券／借券／持股表，也移除重複大型即時報價卡 | 正式頁已驗證價格圖與持股類圖；法人 hover 需在本輪完成正式頁再驗 |
+| 手機及互動驗收 | 390px 正式頁 document scroll width = viewport；圖表使用窄側留白；桌面及手機無水平溢位。單日定位與拖曳區間 handler 及 range 百分比在正式頁驗證過 | 仍需在已部署最新 UI 的正式頁補做完整 view 重驗；權限保護的 custom 管理編輯因沒有有效 token 未驗 |
 
-下一次部署完成標準應以正式站實際呈現至少一個已入庫的多日籌碼圖表及其資料表格為門檻；分點功能若未取得足夠合法逐分點來源，不可用「市場摘要已部署」結案。部署前再次用登入後正式站逐一確認每個已納入的資料分頁有真實值、來源日期和單位，並對照 DB/API；缺少項目保留明確未完成狀態。
+下一階段收尾標準為：#91 部署後持續確認 TAIFEX 無錯誤的回補覆蓋，正式站複核法人 hover 與來源日期、行動版及現有圖表；付費分點資料、MOPS 董監歷史與個別股票期貨法人部位若沒有合法可用來源則維持未完成，不能以市場摘要或類別彙總冒稱完成。圖表資料依使用者要求只在 hover/readout 顯示，不新增重複表格。管理員 custom 編輯需有效權限才能驗，未使用假 token。
 
 ### Telegram bot 查證狀態（2026-10-13）
 
@@ -157,7 +157,7 @@
 - TWSE `TWT93U` 公開日期端點 `https://www.twse.com.tw/rwd/zh/marginTrading/TWT93U?date=20261012&response=json` 實測返回 2026-10-12、`hints: 單位：股`、2330 列及融券與借券賣出分開欄位。官方商品商店另有 TWT93U 訂閱檔並標價月費；本站只使用免登入報表端點，不使用訂閱檔。已加 `twse:borrow-short` collector、parser 和借券圖表來源，增加 parser fixture。
 - TDCC `/v1/opendata/1-5` 實際免登入返回 2026-10-08 的全市場每檔 15 級距資料；官方 `qryStock` 頁 GET 可取得 session cookie、同步 token、最新/歷史日期，下行一般 POST 帶代碼與日期可查單檔。已實測 2330 最新週 2026-10-08 與三個月前 2026-07-09，均回傳正確日期、15 級距及股數/人數/比例；parser 亦對 2026-07-09 真實 HTML 完整抽取 15 級。已接入逐週 collector、coverage、ownership view API 及持股結構表，按官方真實週日期保存，只有選定股票才查詢及入庫。官方頁說歷史保存一年。
 - TAIFEX 官方 OpenAPI `DailyMarketReportFut` 及 `MarketDataOfMajorInstitutionalTradersDetailsOfFuturesContractsBytheDate` 可匿名讀當日全集；2026-10-13 樣本的法人資料依「臺股期貨／股票期貨」商品種類 × 自營商/投信/外資分組，沒有將個股期貨細分到 2330/QFF。官方網頁日期查詢可查 2026-10-12，且說明僅提供交易日前三年。故市場商品種類法人可做為單獨市場頁，個股期貨逐合約法人仍不納入；本輪尚未接 collector/API/UI。
-- 首頁 ownership tab 顯示最新週級距及所有已回補日期的股數/比例比較；單位及日期來自來源，沒有將級距繪成總和必須為 100% 的圖。此週資料仍待 production migration、回補和正式站驗收。
+- 首頁 ownership tab 的 TDCC 展示已按最新要求改為選級距週線圖，hover 顯示日期、人數、股數與比例，不顯示表格；目前 production 資料只有 2337、3081 各 13 週，2330 尚無資料，待修 collector 選取／回補並驗收。
 - TAIFEX 當日 OpenAPI 樣本沒有 date 參數；官方日期查詢頁雖可查舊日，但個股商品粒度仍是類別彙總，不可當 QFF 等個別合約法人。TXF/個股期貨歷史價量與期貨籌碼 UI 仍未完成，未將即時 TXF quote 當日 K 線。
 - 驗證：`poetry run pytest tests/test_market_history_collector.py tests/test_shioaji_market.py tests/test_market_dashboard.py -q` 36 passed；TDCC 公開表單真實 2026-07-09 樣本解析 15 級通過；後端 compileall 通過。Astro production build 通過（有既有背景圖解析及 sitemap `site` 設定警告）；兩 repo `git diff --check` 通過。production migration/deploy/UI 均未執行。
 
@@ -286,13 +286,13 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 
 | 尚缺原需求 | 最新證據與結論 | 本輪處理 |
 | --- | --- | --- |
-| 個股逐分點、主力 TOP15 | 富邦 TOP15 是彙總家數，不是逐分點資料；後端直接 HTTP 403。沒有核實可部署且允許使用的官方逐分點歷史端點 | 排除本輪，不繞過存取控制；不偽稱已完成 |
+| 個股逐分點、主力 TOP15 | TWSE Data E-Shop 有官方逐分點原始日報；不含權證商品 NT$80,000/月外部使用；富邦頁面仍為 HTTP 403、不可拿它當資料 API | 付費來源雖可行但未授權採購，所以本輪不接入；官方欄位足夠時可按日計算排行／加權均價。主力公式仍需使用者定義 |
 | MOPS 董監持股、質押、轉讓 | 官方 `https://mops.twse.com.tw/mops/web/t100sb02_1` 回導向頁；匿名請求 `ajax_t100sb02_1` 回傳「因安全性考量無法呈現」拒絕頁（錯誤碼 7641438222288617879）。公開分類頁不足以確認歷史查詢欄位和重現流程 | 本輪不自動抓取，不以未驗證資料呈現 |
 | TAIFEX 個別契約法人歷史、大額交易人 | 日期下載可取得近三年三大法人 CSV；個股期貨資料為 `股票期貨` 類別彙總，不是特定 2330/QFF 契約。大額交易人另為不同來源 | 已收集 TXF 與股票期貨類別彙總的三法人交易／未平倉歷史，UI 清楚標示彙總類別；個別契約法人與大額交易人不冒充完成 |
 | 期貨法人籌碼 UI | TAIFEX 類別 CSV 欄位及歷史已實測，解析與歷史 panel 已實作 | 固定 TXF 與自訂期貨可看相應 TAIFEX 類別彙總；不將未平倉口數冒充法人多空明細 |
 | 券商主力成交力 | 沒有可驗證的逐券商原始資料與公式定義 | 排除，不自創指標 |
 
-因此，**目前沒有計畫中每一項資料的已確認可用來源**：上市櫃行情與籌碼、TDCC、TAIFEX 契約日行情有官方免費可用來源；逐分點資料、MOPS 匿名歷史查詢及個別股票期貨法人歷史尚不具備可重現的免費官方來源證據。來源可用也不代表功能已正式交付，需以本文件最新驗收狀態為準。
+因此，**目前並非所有資料都有免費可部署來源**：上市櫃行情與多項籌碼、TDCC、TAIFEX 契約日行情有官方免費端點；逐分點有 TWSE 官方付費日報（外部 NT$80,000/月）及 TPEx 官方付費日報（外部 NT$50,000/月），均尚未購買／接入；MOPS 匿名歷史查詢及個別股票期貨法人歷史仍缺可重現來源證據。來源可用也不代表功能已正式交付，需以本文件最新驗收狀態為準。
 
 
 ### 本輪變更與部署狀態補記
@@ -303,3 +303,56 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - 後續需在已開啟的 Chrome Jenkins 分頁由使用者完成正常 SSO 登入；登入後立即觸發 `vinskao/ty-multiverse-frontend-deploy` 與 `vinskao/ty-multiverse-backend-deploy`，確認新 image／rollout，檢查三個月覆蓋及真正 DB 行數，再以登入正式站驗行情、法人、資券借券、持股週級距、期貨行情／類別法人 panel、搜尋 Mini TSMC Futures 且結果排除權證。
 
 - 後續補強：行情 panel 已從收盤折線升級為 OHLC 蠟燭與成交量柱，上市櫃用股數、期貨用口數，並有日期與價格軸；Astro build 再次通過。正式站未登入狀態仍由 Jenkins SSO 阻擋，待正常登入後才可發佈。
+
+
+### 2026-10-14 正式站增量驗證（本次 session）
+
+- Jenkins `vinskao/ty-multiverse-frontend-deploy` #247 成功，正式 Deployment image 為 `papakao/ty-multiverse-frontend:247`；Maya `vinskao/maya` #81 已確認 checkout `7c9bf98e3428420beb463d42371335167d1d8378`，Kubernetes 已 rollout `papakao/maya-sawa:81` 且 Pod 1/1 Ready。工作樹乾淨，程式 commit 已推送。
+- 已以正式瀏覽器登入首頁確認有 TXF 與 `QFFJ6 · 小型台積電期貨10 · 202610` 即時報價，QFFJ6 展開 panel 有 Price／Institutional、報價 OHLC／量；權證排除篩選由原有搜尋邏輯處理。候選歷史 API 需登入，匿名請求回 401；本次瀏覽器未帶有效市場 token，因此 custom 編輯按鈕隱藏，無法登入後驗收候選名單內容。
+- 正式首頁掛載於 `/tymultiverse/`；歷史 API `GET /tymultiverse/api/market/dashboard/history/QFFJ6` 回 200，但本次查看仍為 `points: []`。panel 顯示「No stored history yet」。因此 UI 上線不等於歷史管線驗收完成。
+- PostgreSQL 已見 `maya_sawa_market_daily_history` 與 `maya_sawa_market_history_coverage`，股票已至少累積 30 個交易日到 2026-08-24（選擇項有 TWSE／TPEx，現階段仍在回補，不足三個曆月）。`twse:borrow-short` 在上市標的回 `no_data`，須維持與融券餘額分開；不可將 no_data 解讀成來源整體不可用。當前尚未見 TDCC 或 TAIFEX 覆蓋資料。
+- 部署修正已處理先前 `await` 同步方法及 HTTP IncompleteRead 導致排程中止的問題。曾經在人工診斷中短暫占用 PostgreSQL session advisory lock，已手動釋放；本次確認收集繼續寫入股票日期。TAIFEX collector 需再針對正式選擇清單確認啟動與持續回補，不能將該項勾為完成。
+- 部署後正式 UI 尚未完成歷史圖表與籌碼實數驗收，TDCC、期貨回補、分點、MOPS 限制、三個月覆蓋、手機與互動狀態均仍未完成；原清單的相應驗收方框保持未勾。
+
+
+### 2026-10-14 collector 修正追蹤（本輪）
+
+- 從正式 DB 覆蓋狀態查到三個交易月回補確實持續寫入：上市櫃股至 2026-09-08 約 41 個交易日，TAIFEX 仍只有 QFFJ6 2026-10-13 一日；固定 TXF 及其餘選擇期貨尚未有紀錄。此前用 API 查 QFFJ6 一度空白，是 collector 仍持有 advisory lock；diagnostic session 曾錯誤持鎖，已在 2026-10-14 06:21 UTC 釋放。之後資料查到 QFFJ6 有 2026-10-13 價格及法人類別彙總。
+- 正式 DB 的 TDCC 表單解析修正與 collector 來源優先回補已由 `c671e65` 部署 (`papakao/maya-sawa:82`)。部署後證實 parser 可寫入 TDCC 資料，但部分週次 no_data。進一步比較同一個 2337 的官方表單發現 token 一個新 session 可查多週；已改以每週/股票刷新 session 與 token，避免重複使用過期 token；本機對 2337 七個歷史週次 POST 均成功取得 15 級距。新增 token 更新測試，`poetry run pytest -q tests/test_market_history_collector.py` 18 passed。修正已推送 commit `db2c5e8` 並部署成 `:83`；正式 pod 獨立 POST 確認可解析 15 級，但 DB 舊 no_data 狀態不會自動重試。已修改覆蓋查詢只把 status=ok 視為已完成，讓 no_data/error 可以重試；修正 `2ce3be7` 已推送，Jenkins #84 部署與正式 DB 成功週數驗證待完成。
+- 目前回補會對每檔股票逐交易日連續呼叫十個來源，且 TDCC 各週另逐股呼叫，導致工作時間很長。需調整成來源批次日期優先／縮短並重入回補區塊，確保股票、TDCC 與所有期貨皆能收完 92 日，而非把較早日期永遠留在佇列末端；程式與部署尚待處理。
+
+### 2026-10-14 接續開發與 UI 指示
+
+- 使用者取消「十個清單」範圍限制；候選清單沿用 Shioaji 搜尋過的商品並永久保留。仍不宣稱有十份 scanner/list ingestion。
+- 使用者指定 Holdings 在左、選中商品圖表在右；窄螢幕清單在前、圖表在後且幾乎填滿左右寬度，減少手機左右留白。
+- 行情圖表不用常駐 OHLC table。滑鼠／觸控 hover 顯示日期、OHLC、成交量；點擊固定單日，按住拖曳至另一日顯示起訖收盤價與百分比變化。實作已在前端工作樹，build 待最新互動修改後重跑。
+- Source availability 問題的目前答案是「多數免費官方籌碼可完成，但逐分點原始資料需付費訂閱」：TWSE／TPEx 歷史行情、三法人、外資持股、融資融券及借券賣出；TDCC 個股週持股級距；TAIFEX 個別月份日行情和 TXF／股票期貨類別法人彙總有端點與樣本。TWSE 不含權證分點日報外部 NT$80,000/月、TPEx 同類商品外部 NT$50,000/月，兩者皆未購買故本站沒有分點資料；MOPS 董監持股歷史、個別股票期貨法人部位和大額交易人仍缺可重現免費部署來源證據。不能把 TOP15 聚合頁當本站逐分點資料。
+- 正式 DB 在 `:84` 運行後，已見股票日期覆蓋到 2026-10-13（約 63 個交易日；選中股票目前為 TPEx 股票，因此 TWSE no_data 是市場分類差異），TDCC 成功週資料由 3 筆增至 26 筆。TAIFEX 仍只有 2026-10-13 一日；排查發現期貨回補與股票回補共用 advisory lock，先啟動的長回補可能使另一支工作錯過當日執行。此外自動持倉沒有儲存 delivery month，不能從 Shioaji code 後綴猜月份。後端工作樹已加 advisory lock retry、避免舊 exchange-holiday no_data 每輪反覆請求，並在 futures collector 啟動時由既有 Shioaji 報價取得實際 delivery month；後端測試因新增 service mock 正在修正，尚未重跑通過。
+- 以上最新前端與後端修改尚未提交／部署；部署後需確認 TAIFEX 多日回補、QFFJ6 的 202610 對應、前端手機左右留白與 range selection 實際行為，再更新最終驗收狀態。
+
+### 2026-10-14 圖表改用期貨標的現貨代碼
+
+- 使用者要求 Market Overview 的 Price 與 Institutional 歷史圖表一律以標的現貨 ticker 查資料。例如 Shioaji metadata 的 QFFJ6 `underlying_kind=S`, `underlying_code=2330`，因此圖表使用 2330 的股票行情與三大法人歷史，而非 TAIFEX 個股期貨類別彙總。持倉列表及即時報價卡仍以期貨代碼和期貨即時報價呈現；明示 `2330 spot charts`／`2330 現貨資料` 避免誤認。
+- 後端 dashboard quote/search payload 帶出 Shioaji underlyingCode；quote cache key 升版以免舊快取缺少 metadata。每日股票歷史收集把所選股票期貨的標的 ticker 納入收集集合，確保即使未另持有現貨也會回補其官方行情與法人歷史。
+- 沒有股票標的的指數期貨（如 TXF）沒有可對應的單一現貨 ticker；保留現有 TAIFEX 指數期貨來源及明確類別標籤，不虛構個股映射。
+- 前後端已分別推送：frontend `3c43d53`（Jenkins #249，`papakao/ty-multiverse-frontend:249`），backend `f69ecfe` + cache 修正 `df5011b`（Jenkins #86/#87；最終 deployment 應確認為 `papakao/maya-sawa:87`）。部署完成後，匿名正式站頁面可見 QFFJ6 即時報價卡仍以期貨單位顯示 `2,505`、口數 `18,345`；Price 圖標題為 `QFFJ6 · 小型台積電期貨10 · 2330 spot charts`，狀態為 `2330 spot data · 63 daily records · 2026-07-14 — 2026-10-13`。因此映射、現貨價格歷史與合約報價分開顯示已在正式站驗證。
+- 初次檢查時 Institutional 表格較新日期顯示 `—`，但正式 history API 與資料庫繼續回補後再以忽略快取的頁面重載驗證：2330 價格、法人、外資持股、融資融券皆有 63 個交易日，2026-07-14 至 2026-10-13；Institutional 表格 10/13 顯示外資 -25,641,224 股、投信 +3,005,324 股、自營商 +2,491,739 股，合計 -20,144,161 股。先前的空值是舊頁面歷史回應，非當前資料庫覆蓋缺口。
+- 借券目前仍未進入 2330 歷史 API。查官方 TWSE TWT93U 可在 JSON 根層取得 `fields/data` 且含 2330；舊 parser 僅讀 `tables`，因此不能解析。已在 backend `9276179` 修正根層結構解析、將無該代碼的 coverage 標為 `no_data`，並讓舊 `no_data` 借券日期重試；Jenkins #88 已啟動，待部署後核對新資料列。此修正也避免全市場有回應時把沒有該代碼資料誤標成該代碼 `ok`。
+- 正式站手機寬度 390px 模擬曾見市場卡左右各約 20px 留白。已把 <=480px 的市場區加寬至螢幕全寬並縮至 0.35rem 內距，commit `61403ab` 已推送；Astro Node 22 build 與 Jenkins 前端 #250 成功，Deployment `papakao/ty-multiverse-frontend:250` 1/1 Ready。正式站忽略快取重載後市場卡邊界為 0–390px，`scrollWidth=390` 無整頁水平溢位；窄螢幕已實際展開 QFFJ6 並驗到 2330 現貨價格圖、63 筆歷史、法人圖及 10/13 實值表格。表格在自己的容器內可橫向捲動。
+- Jenkins #87 已部署 backend cache key 修正，Deployment `papakao/maya-sawa:87` 為 1/1 Ready；#88 是本輪借券 parser 修正。覆核正式資料庫發現 Shioaji 連續代碼 TXF 被直接當 TAIFEX root 查詢，官方 CSV 實際使用 TX；已於 backend `5831d40` 修正日行情 root 映射，同時保留法人下載參數 `TXF`，待下一次 Jenkins 建置部署後重試 TAIFEX 日期。QFFJ6 現有價格只確認 2026-10-13 一筆，另有 2026-07-14 至 2026-10-13 的 29 筆股票期貨類別法人彙總；TAIFEX 三月價仍未完成。指數期貨使用自身類別資料。分點、MOPS 及個別股票期貨法人來源限制仍依前述證據列為未完成。
+- 後續查驗 backend `:88` 起初因 OKE 節點 DiskPressure 啟動延遲，當時 history API 暫回 502；Pod 之後 Ready 1/1，正式 API 恢復 200，2330 回傳 63 筆、2026-07-14 至 2026-10-13。仍需確認 `:88` 的正式資料庫借券列與 `5831d40` TXF 根代碼修正的部署／回補結果。
+- 使用者最新 UI 指示：Institutional、Margin & lending、Ownership 都不顯示表格，逐日資料改由各圖表 hover；Institutional 柱圖顯示日期、Foreign net shares、Trust net shares。資券買賣與借券賣還另有柱圖，餘額／外資持股比率等折線以 hover 顯示精確值；TDCC 可選級距，hover 顯示日期、人數、股數與比例。明細頁移除與 OHLC 圖重複的大型即時報價卡，左側商品摘要保留即時報價，OHLC/成交量由圖表 hover 查看。
+- 圖表去重修改與對應 Astro build 已通過、`git diff --check` 通過；首次子集（Institutional hover + quote card removal）已 commit/push `86652c5`，完整 Margin/Ownership 純圖表修改尚未 commit/deploy。正式站尚未驗證 hover、無表格、無重複報價卡及窄螢幕版面。
+- TWSE E-Shop 官方商品頁補證：不含權證的「買賣日報表(全部)」每日欄位為證券代號、證券商、成交單價、買進股數、賣出股數，資料自 2012-10-25 起，外部使用每月 NT$80,000。TPEx 同類商品含券商代號／名稱、成交價格、買進股數、賣出股數，2014-12-01 起、外部 NT$50,000/月。兩商品欄位可計算逐券商分點排行與方向別加權均價；計畫禁止未授權新增付費資料，因此均未購買且本站仍無分點收集資料。TPEx 日檔交付與外部傳輸授權仍須確認。
+
+### 2026-10-14 正式站重驗與 TAIFEX 回補修正
+
+- Frontend Jenkins #252 `SUCCESS`，Deployment `papakao/ty-multiverse-frontend:252` 1/1 Ready；backend #89 仍為 `papakao/maya-sawa:89`。正式站 API 在前端 pod 輪替時短暫回 503，rollout Ready 後恢復 200，非目前持續故障。
+- 手機 390px 正式站重載：viewport 與 document scroll width 同為 390px。QFFJ6 價格圖標為 `2330 spot charts`，API 有 63 個現貨交易日（2026-07-14 至 2026-10-13）；即時報價仍留在左側摘要，明細區無重複大型 quote card。Institutional 圖為 2330 現貨股數資料，圖上 SVG hover title 有日期、外資及投信淨額，沒有明細 table。
+- 正式站 2337 Margin & lending 四張餘額／流量圖均有逐日 SVG title，沒有 table；Ownership 顯示外資持股比例、持有股數、法定上限及可選 15 級 TDCC 週圖，hover title 帶日期與值，無 table。2337 TDCC 有 13 週（2026-07-17 至 2026-10-08）。手機頁展開上述面板仍無水平溢位。OHLC 圖點選 readout 有單日 O/H/L/C/量；拖曳區間顯示起訖收盤與百分比變化。
+- Production API 現在 2330、2337 皆有 63 個股票交易日。TAIFEX `TXF` 價格已有 60 個有效交易日；`QFFJ6` 月合約價格已有 51 日，前段 no_data 符合 202610 月合約於 2026-08-20 起有成交的期間。部署 #90 後回補只推進至 QFFJ6 18 日（TXF 仍 17 日），coverage 仍有 49 個 error，錯誤細節為 HTTP 429。確認背景排程在一輪（即使失敗）後會睡到隔日，無法接續重試。
+- 官方 TAIFEX 法人下載 POST 以 `commodityId=TXF`、`STF` 及 2026-07-14 至 2026-10-13 日期區間實測，各回 189 筆（63 日 × 3 法人）；確認可按商品類別一次回補整段日期。TAIFEX 日行情端點只接受單日範圍，跨日回傳「日期時間錯誤」HTML，因此新增 CSV header 驗證、429／timeout 重試，並將逐日行情請求間隔提高至至少 0.5 秒。
+- Backend `2f32d23` 部署為 Jenkins #90 `SUCCESS`，production API 已由 503 恢復 200。因 429 coverage 不會在部署後持續重試，另改 collector 在價格或法人回補仍有 error 時每 5 分鐘重跑；本機 market-history collector + dashboard 測試 22 passed、compileall 與 `git diff --check` 通過。修正 commit `798a906` 已推送 `main`，Jenkins #91 與其 TAIFEX 回補效果待驗證。這份計畫文件維持使用者要求的未提交狀態。
+- 2026-10-14 17:18 再讀 production coverage：`TXF` 與 `QFFJ6` 法人各 17 日 `ok`、49 日 `error`，最後成功日期 2026-08-05，error 仍為 HTTP 429。#91 尚在建置，因此 5 分鐘重試行為還未部署驗證。
+- 本機以 Node 22+ 執行 `npm run dev -- --host 0.0.0.0` 可正常打開 Astro 頁面；但市場 Astro API route 預設指向容器內 DNS `http://maya-sawa/maya-sawa`，在筆電直接呼叫回 502。設 `MAYA_SAWA_INTERNAL_URL=https://peoplesystem.tatdvsonorth.com/maya-sawa` 可讓本機 route 指向正式服務，但本次正式 API 正逢 backend #90 部署而回 503，故本機頁面只能驗證啟動與版面，行情／歷史圖表的資料驗證需待服務恢復後補做。權限 API 仍未驗證，未使用或偽造管理 token。
+- 分點來源再查證：[TWSE 不含權證買賣日報商品](https://eshop.twse.com.tw/zh/product/detail/34e615c34c4e4ca3b23fc732bd736f94) 外部 NT$80,000/月；[TPEx 不含權證買賣日報商品](https://eshop.tpex.org.tw/zh/product/detail/E982FB3B7484B8AD66AF83E6F31F0CDB) 每日 EXE/CSV、資料自 2014-12-01、外部 NT$50,000/月。已下載並讀取 TPEx 官方 S32 格式 PDF：代號、券商代號／名稱、價格、買進股數、賣出股數，足以計算分別的買賣加權均價。兩來源均未購買或接入，因此本站目前仍無分點資料；TPEx 日檔存取與外部傳輸條款仍待確認。

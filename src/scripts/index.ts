@@ -243,7 +243,13 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         if (!hasSpotTicker) {
             const emptyMessage = marketI18n('marketHistoryNoSpotTicker', 'No spot ticker is available for this futures contract.');
             if (status) status.textContent = emptyMessage;
-            for (const id of ['market-history-price-chart', 'market-history-institutional-chart', 'market-history-margin-chart', 'market-history-borrow-chart']) {
+            for (const id of [
+                'market-history-price-chart', 'market-history-institutional-chart',
+                'market-history-margin-chart', 'market-history-margin-flow-chart',
+                'market-history-borrow-chart', 'market-history-borrow-flow-chart',
+                'market-history-foreign-holding-chart', 'market-history-foreign-holding-shares-chart',
+                'market-history-foreign-limit-chart', 'market-history-ownership',
+            ]) {
                 const target = document.getElementById(id); if (target) target.textContent = emptyMessage;
             }
             return;
@@ -364,7 +370,9 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
             ? `${underlyingCode} ${marketI18n('marketHistorySpotInstitutionalDescription', 'spot ticker institutional net trading · shares')}`
             : marketI18n('marketHistoryNoSpotTicker', 'No spot ticker is available for this futures contract; chart history is unavailable.'))
         : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
-    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = instrument.productType === 'futures' && !['price', 'institutional'].includes(tab.dataset.marketTab || ''); });
+    // All instruments expose the same four tabs. Futures use their underlying
+    // stock ticker for every chart, including margin/lending and ownership.
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
     selectMarketDetailTab('price'); void loadMarketHistory(instrument, 'price');
 }
 
@@ -396,9 +404,8 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         change.textContent = quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable';
         change.classList.toggle('up', Boolean(quote && quote.change >= 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
         price.append(last, change);
-        const volume = document.createElement('span'); volume.textContent = quote?.volume?.toLocaleString() ?? '--';
         const timestamp = document.createElement('span'); timestamp.className = 'market-updated'; timestamp.textContent = quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--';
-        row.append(item, price, volume, timestamp);
+        row.append(item, price, timestamp);
         row.addEventListener('click', () => {
             document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', String(item === row && row.getAttribute('aria-expanded') !== 'true')));
             const detail = document.getElementById('market-instrument-detail');
@@ -1109,7 +1116,6 @@ function renderTxfQuote(quote: TxfQuote, offline = false) {
     section.classList.toggle('is-offline', offline);
     setText('txf-price', formatNumber(quote.close));
     setText('txf-change', `${quote.change >= 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
-    setText('txf-volume', quote.volume.toLocaleString());
     setText('txf-market-status', offline ? 'Offline' : '10m');
     setText(
         'txf-updated',

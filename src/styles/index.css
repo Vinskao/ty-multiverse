@@ -163,10 +163,10 @@
 	container-type: inline-size;
 }
 
-.market-watchlist { display: grid; gap: .5rem; }
-.market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(10rem, 1.5fr) minmax(9rem, 1fr) minmax(5rem, .5fr) minmax(9rem, 1fr); align-items: center; gap: 1rem; }
+.market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; }
+.market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: .75rem; }
 .market-watchlist-heading { padding: 0 .9rem; color: var(--gray-400); font-size: .72rem; text-transform: uppercase; }
-.market-watch-row { position: relative; width: 100%; padding: 1rem; text-align: left; color: inherit; border: 1px solid var(--gray-800); border-radius: .9rem; background: var(--gradient-subtle); cursor: pointer; }
+.market-watch-row { position: relative; box-sizing: border-box; min-width: 0; overflow-wrap: anywhere; width: 100%; padding: 1rem; text-align: left; color: inherit; border: 1px solid var(--gray-800); border-radius: .9rem; background: var(--gradient-subtle); cursor: pointer; }
 .market-watch-row[aria-expanded="true"] { border-color: color-mix(in srgb, #d8a43b 65%, transparent); border-radius: .9rem .9rem 0 0; }
 .market-watch-instrument, .market-watch-price { display: grid; gap: .2rem; }
 .market-watch-instrument strong, .market-watch-price strong { font-size: 1.1rem; }
