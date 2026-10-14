@@ -1,96 +1,142 @@
 ---
 // Server-rendered chip summary of the selected holdings. It is plain HTML on purpose: AI agents that
 // fetch the page without running JavaScript read this section directly. Codes only, never account values.
+// Every phrase is rendered in both languages (<span lang="zh"> / <span lang="en">); the inline script shows
+// the one matching the site language and follows the language toggle. Without JS, Chinese is shown.
 interface Props { brief: any | null }
 const { brief } = Astro.props;
+
+type Text = { zh: string; en: string };
+type Part = { text: string | Text; cls?: string };
+const both = (zh: string, en: string): Text => ({ zh, en });
 
 // Every signed number is its own <span>, coloured by the value *as displayed* (after rounding), so a cell
 // mixing a level and a change, or a 5-day total and an opposite latest-day move, never shows one colour
 // for two signs. Taiwan convention: red = up, green = down.
-type Part = { text: string; cls?: string };
 const round = (value: number, digits: number) => Number(value.toFixed(digits));
 const toneOf = (value: number) => value > 0 ? 'market-delta--up' : value < 0 ? 'market-delta--down' : '';
+const number = (value: number, digits: number) => value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const plain = (value: unknown, suffix = '', digits = 2): Part =>
-	({ text: typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}` : '—' });
+	({ text: typeof value === 'number' && Number.isFinite(value) ? `${number(value, digits)}${suffix}` : '—' });
 const signed = (value: unknown, suffix = '', digits = 2): Part => {
 	if (typeof value !== 'number' || !Number.isFinite(value)) return { text: '—' };
 	const shown = round(value, digits);
-	return { text: `${shown > 0 ? '+' : ''}${shown.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}`, cls: toneOf(shown) };
+	return { text: `${shown > 0 ? '+' : ''}${number(shown, digits)}${suffix}`, cls: toneOf(shown) };
 };
 const sep: Part = { text: ' · ' };
-// 5-day net, then what the latest run of days did. A run against the 5-day sign is a reversal ("轉買/轉賣").
+// 5-day net, then what the latest run of days did. A run against the 5-day sign is a reversal.
 const flowParts = (flow: any): Part[] => {
 	if (!flow) return [{ text: '—' }];
 	const parts = [signed(flow.net5dLots, '', 0)];
 	const days = flow.streakDays || 0;
 	if (!days) return parts;
-	const side = days > 0 ? '買' : '賣'; const cls = toneOf(days);
+	const buying = days > 0; const n = Math.abs(days); const cls = toneOf(days);
 	const reversal = Math.sign(days) !== Math.sign(flow.net5dLots);
-	if (Math.abs(days) >= 2) parts.push(sep, { text: reversal ? `近${Math.abs(days)}日轉${side}` : `連${side}${Math.abs(days)}日`, cls });
-	else if (reversal) parts.push(sep, { text: `今日轉${side} `, cls }, signed(flow.net1dLots, '', 0));
+	if (n >= 2) {
+		parts.push(sep, { cls, text: reversal
+			? both(`近${n}日轉${buying ? '買' : '賣'}`, `turned to ${buying ? 'buying' : 'selling'} ${n}d`)
+			: both(`連${buying ? '買' : '賣'}${n}日`, `${buying ? 'buying' : 'selling'} ${n}d straight`) });
+	} else if (reversal) {
+		parts.push(sep, { cls, text: both(`今日轉${buying ? '買' : '賣'} `, `turned to ${buying ? 'buying' : 'selling'} today `) }, signed(flow.net1dLots, '', 0));
+	}
 	return parts;
 };
-// Which selected instruments map to this stock, e.g. "持有 · QFFJ6 期貨" or "自選".
-const viaText = (via: any[] | undefined) => (via ?? []).map((item) =>
-	`${item.group === 'automatic' ? '持有' : '自選'}${item.productType === 'futures' ? ` · ${item.code} 期貨` : ''}`).join('、');
+// Low-frequency data (monthly revenue, quarterly statements, TDCC week) published since the previous weekday.
+const releaseBasis: Record<string, Text> = {
+	published: both('公布', 'published'), firstSeen: both('本站取得', 'first seen here'), dataDate: both('資料日', 'data date'),
+};
+const releaseText = (releases: any[]): Text => both(
+	releases.map((r) => `${r.label?.zh ?? r.label} ${r.period}（${String(r.date).slice(5)} ${releaseBasis[r.basis]?.zh ?? ''}）`).join('；'),
+	releases.map((r) => `${r.label?.en ?? r.label} ${r.period} (${String(r.date).slice(5)} ${releaseBasis[r.basis]?.en ?? ''})`).join('; '),
+);
+// Which selected instruments map to this stock, e.g. "持有 · QFFJ6 期貨" / "held · QFFJ6 futures".
+const viaText = (via: any[] | undefined): Text => both(
+	(via ?? []).map((item) => `${item.group === 'automatic' ? '持有' : '自選'}${item.productType === 'futures' ? ` · ${item.code} 期貨` : ''}`).join('、'),
+	(via ?? []).map((item) => `${item.group === 'automatic' ? 'held' : 'watchlist'}${item.productType === 'futures' ? ` · ${item.code} futures` : ''}`).join(', '),
+);
+const signalText = (signals: any[]): Text => both(
+	signals.map((signal) => signal?.zh ?? String(signal)).join('；'),
+	signals.map((signal) => signal?.en ?? String(signal)).join('; '),
+);
 
-const names: Record<string, string> = {};
-for (const item of brief?.instruments ?? []) if (item.spotCode && !names[item.spotCode]) names[item.spotCode] = item.name || '';
+const heldStockNames: Record<string, string> = {};
+for (const item of brief?.instruments ?? []) if (item.productType === 'stock') heldStockNames[String(item.code).toUpperCase()] = item.name || '';
 const stocks = Object.values(brief?.stocks ?? {}) as any[];
+// The stock's own name (台積電), never the futures contract that led to it (小型台積電期貨).
+const nameOf = (s: any) => s.name || heldStockNames[s.code] || '';
+
+const headers: Text[] = [
+	both('標的', 'Stock'), both('收盤 · 5日', 'Close · 5d'), both('外資 5日(張)', 'Foreign 5d (lots)'),
+	both('投信 5日(張)', 'Trust 5d (lots)'), both('融資 5日', 'Margin 5d'), both('大戶≥400張 週變化', '400+ lot holders · 1w'),
+	both('外資持股 20日', 'Foreign holding · 20d'), both('營收年增', 'Revenue YoY'), both('毛利率 季變化', 'Gross margin · QoQ'),
+];
 ---
-<section id="ai-brief" class="market-brief" aria-labelledby="ai-brief-title">
-	<div class="market-brief-head">
-		<h5 id="ai-brief-title">持股籌碼摘要 · Holdings chip summary</h5>
-		<p>
-			{brief ? <>產生於 <time datetime={brief.generatedAt}>{brief.generatedAt.replace('T', ' ').slice(0, 16)}</time>（台北）· </> : null}
-			<a href="/tymultiverse/brief.md">Markdown</a> · <a href="/tymultiverse/brief.json">JSON</a>
-		</p>
-	</div>
-	{!brief && <p class="market-updated">摘要暫時無法取得；請改讀 /tymultiverse/brief.md。</p>}
-	{brief && stocks.length === 0 && <p class="market-updated">目前沒有可摘要的股票持股。</p>}
-	{stocks.length > 0 && (
-		<div class="market-fin-table-wrap">
-			<table class="market-fin-table market-brief-table">
-				<thead>
-					<tr>
-						<th scope="col">標的</th>
-						<th scope="col">收盤 · 5日</th>
-						<th scope="col">外資 5日(張)</th>
-						<th scope="col">投信 5日(張)</th>
-						<th scope="col">融資 5日</th>
-						<th scope="col">大戶≥400張 週變化</th>
-						<th scope="col">外資持股 20日</th>
-						<th scope="col">營收年增</th>
-						<th scope="col">毛利率 季變化</th>
-					</tr>
-				</thead>
-				<tbody>
-					{stocks.map((s) => {
-						const foreign = s.institutional?.foreign; const trust = s.institutional?.trust;
-						return (
-							<tr>
-								<th scope="row">{s.code} {names[s.code]}<small class="market-brief-via">{viaText(s.via)}</small></th>
-								{[
-									[plain(s.price?.close), sep, signed(s.price?.change5dPct, '%')],
-									flowParts(foreign),
-									flowParts(trust),
-									[signed(s.margin?.marginBalanceChange5dPct, '%', 1)],
-									[plain(s.tdcc?.largeHolderPercent, '%'), sep, signed(s.tdcc?.largeHolderChange1wPp, ' pp')],
-									[plain(s.foreignHolding?.percent, '%'), sep, signed(s.foreignHolding?.change20dPp, ' pp')],
-									[signed(s.fundamentals?.latestMonth?.yoyPercent, '%', 1)],
-									[plain(s.fundamentals?.latestQuarter?.grossMargin, '%', 1), sep, signed(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp')],
-								].map((parts) => <td>{parts.map((part) => part.cls ? <span class={part.cls}>{part.text}</span> : part.text)}</td>)}
-							</tr>
-						);
-					})}
-				</tbody>
-			</table>
-		</div>
-	)}
-	{stocks.some((s) => s.signals?.length) && (
-		<ul class="market-brief-signals">
-			{stocks.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {names[s.code]}</strong>：{s.signals.join('；')}</li>)}
-		</ul>
-	)}
-	<p class="market-fin-note">只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現貨呈現。非投資建議。</p>
-</section>
+{(() => {
+	// Renders a bilingual phrase as two spans; plain strings (numbers) are language-neutral.
+	const T = (text: string | Text) => typeof text === 'string' ? text : <><span lang="zh">{text.zh}</span><span lang="en">{text.en}</span></>;
+	return (
+		<section id="ai-brief" class="market-brief" aria-labelledby="ai-brief-title" data-brief-lang="zh">
+			<div class="market-brief-head">
+				<h5 id="ai-brief-title">{T(both('持股籌碼摘要', 'Holdings chip summary'))}</h5>
+				<p>
+					{brief ? <>{T(both('產生於', 'Generated'))} <time datetime={brief.generatedAt}>{brief.generatedAt.replace('T', ' ').slice(0, 16)}</time> {T(both('（台北）', '(Taipei)'))} · </> : null}
+					<a href="/tymultiverse/brief.md" lang="zh">Markdown</a><a href="/tymultiverse/brief.md?lang=en" lang="en">Markdown</a> · <a href="/tymultiverse/brief.json">JSON</a>
+				</p>
+			</div>
+			{!brief && <p class="market-updated">{T(both('摘要暫時無法取得；請改讀 /tymultiverse/brief.md。', 'Summary temporarily unavailable; see /tymultiverse/brief.md.'))}</p>}
+			{brief && stocks.length === 0 && <p class="market-updated">{T(both('目前沒有可摘要的股票持股。', 'No stock holdings to summarise.'))}</p>}
+			{stocks.length > 0 && (
+				<div class="market-fin-table-wrap">
+					<table class="market-fin-table market-brief-table">
+						<thead><tr>{headers.map((header) => <th scope="col">{T(header)}</th>)}</tr></thead>
+						<tbody>
+							{stocks.map((s) => {
+								const foreign = s.institutional?.foreign; const trust = s.institutional?.trust;
+								const releases = s.recentReleases?.length ? releaseText(s.recentReleases) : null;
+								return (
+									<tr>
+										<th scope="row">
+											{s.code} {nameOf(s)}
+											{releases && <span class="market-brief-new" title={`${releases.zh}\n${releases.en}`}>{T(both('新公布', 'New'))}</span>}
+											<small class="market-brief-via">{T(viaText(s.via))}</small>
+											{releases && <small class="market-brief-release">{T(releases)}</small>}
+										</th>
+										{[
+											[plain(s.price?.close), sep, signed(s.price?.change5dPct, '%')],
+											flowParts(foreign),
+											flowParts(trust),
+											[signed(s.margin?.marginBalanceChange5dPct, '%', 1)],
+											[plain(s.tdcc?.largeHolderPercent, '%'), sep, signed(s.tdcc?.largeHolderChange1wPp, ' pp')],
+											[plain(s.foreignHolding?.percent, '%'), sep, signed(s.foreignHolding?.change20dPp, ' pp')],
+											[signed(s.fundamentals?.latestMonth?.yoyPercent, '%', 1)],
+											[plain(s.fundamentals?.latestQuarter?.grossMargin, '%', 1), sep, signed(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp')],
+										].map((parts) => <td>{parts.map((part) => part.cls ? <span class={part.cls}>{T(part.text)}</span> : T(part.text))}</td>)}
+									</tr>
+								);
+							})}
+						</tbody>
+					</table>
+				</div>
+			)}
+			{stocks.some((s) => s.signals?.length) && (
+				<ul class="market-brief-signals">
+					{stocks.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {nameOf(s)}</strong>: {T(signalText(s.signals))}</li>)}
+				</ul>
+			)}
+			<p class="market-fin-note">{T(both(
+				'只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現股呈現；紅漲綠跌。非投資建議。',
+				'Instrument codes only; no quantities, cost, P/L or account values. Lot = 1,000 shares; pp = percentage points; futures are shown through their underlying stock; red = up, green = down. Not investment advice.',
+			))}</p>
+		</section>
+	);
+})()}
+
+<script is:inline>
+	(() => {
+		const apply = (lang) => document.querySelectorAll('[data-brief-lang]').forEach((el) => el.setAttribute('data-brief-lang', lang === 'en' ? 'en' : 'zh'));
+		const current = () => (window.AppLang && window.AppLang.get()) || 'en';
+		apply(current());
+		window.addEventListener('site:language-change', (event) => apply(event.detail && event.detail.code));
+		document.addEventListener('astro:page-load', () => apply(current()));
+	})();
+</script>

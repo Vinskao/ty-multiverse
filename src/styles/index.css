@@ -54,7 +54,10 @@
 .market-fin-table .is-latest { color:var(--gray-0); font-weight:600; }
 .market-fin-note { margin:.35rem 0 1rem; color:var(--gray-400); font-size:.72rem; }
 /* TDCC tier small multiples */
-.market-tier-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(18rem, 1fr)); gap:.75rem; }
+.market-tier-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.75rem; }
+@media (max-width: 640px) { .market-tier-grid { grid-template-columns:1fr; } }
+.market-tier-stack { display:flex; height:.9rem; margin:.4rem 0 .2rem; overflow:hidden; border-radius:999px; background:var(--gray-800); }
+.market-tier-stack span { min-width:2px; }
 .market-tier-card { padding:.7rem .8rem 0; border:1px solid var(--gray-700); border-top:3px solid var(--tier-color); border-radius:.6rem; min-width:0; }
 .market-tier-card header { display:grid; grid-template-columns:1fr auto; align-items:baseline; gap:.1rem .6rem; margin-bottom:.2rem; }
 .market-tier-name { color:var(--gray-300); font-size:.8rem; }
@@ -1591,3 +1594,7 @@
 .market-brief-table td,.market-brief-table th { font-size:.76rem; }
 .market-brief-signals { margin:.5rem 0 0; padding-left:1.1rem; color:var(--gray-300); font-size:.78rem; line-height:1.6; }
 .market-brief-via { display:block; margin-top:.1rem; color:var(--gray-400); font-size:.68rem; font-weight:400; }
+.market-brief-new { display:inline-block; margin-left:.35rem; padding:.05rem .4rem; border-radius:999px; font-size:.65rem; font-weight:700; color:#1a1300; background:#d8a43b; vertical-align:middle; }
+.market-brief-release { display:block; margin-top:.1rem; color:#d8a43b; font-size:.68rem; font-weight:400; white-space:normal; }
+/* Bilingual brief: show only the active language (defaults to Chinese without JS). */
+.market-brief[data-brief-lang="zh"] [lang="en"], .market-brief[data-brief-lang="en"] [lang="zh"] { display:none; }

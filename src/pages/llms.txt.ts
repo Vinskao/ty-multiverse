@@ -13,6 +13,7 @@ export const GET: APIRoute = async ({ url }) => {
 
 - [持股籌碼摘要 (Markdown)](${base}/brief.md): prices, institutional net buying, margin, foreign holding, TDCC holder
   distribution, revenue growth and margin changes for each held stock. Regenerated every few minutes.
+- [Holdings chip summary (English Markdown)](${base}/brief.md?lang=en): the same summary in English.
 - [持股籌碼摘要 (JSON)](${base}/brief.json): same data, structured.
 - [Home page](${base}): the summary is server-rendered in the "籌碼摘要" section near the top.
 `;

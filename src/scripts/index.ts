@@ -10,6 +10,7 @@ import i18nData from '../storages/i18n.json';
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
+let _marketLangCleanup: (() => void) | null = null;
 let selectedMarketInstrument: DashboardInstrument | null = null;
 const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
 const MARKET_HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -54,6 +55,13 @@ function marketI18n(key: string, fallback: string) {
     const language = String((window as any).AppLang?.get?.() || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     return (i18nData as any).home?.[key]?.[language] || fallback;
 }
+
+// Inline bilingual text for composed phrases that do not warrant an i18n.json key.
+function marketText(en: string, zh: string) {
+    return marketLocale() === 'zh-TW' ? zh : en;
+}
+const vsQuarter = () => marketText('QoQ', '較上季');
+const vsYear = () => marketText('YoY', '較去年同期');
 
 function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: string): number | null {
     for (const source of sourceKeys) {
@@ -489,18 +497,18 @@ function renderMarketFundamentals(payload: any, state: { fetchedAt: number; refr
     renderProfitability(document.getElementById('market-fundamentals-statements'), metrics.quarterly ?? [], emptyText);
     renderRatioTable(document.getElementById('market-fundamentals-balance'), metrics.balance ?? [], [
         { label: marketI18n('marketFundamentalsDebtRatio', 'Debt ratio'), key: 'debtRatio', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} QoQ`, key: 'debtRatioQoQ', kind: 'pp' },
-        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} YoY`, key: 'debtRatioYoY', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} ${vsQuarter()}`, key: 'debtRatioQoQ', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} ${vsYear()}`, key: 'debtRatioYoY', kind: 'pp' },
         { label: marketI18n('marketFundamentalsCurrentRatio', 'Current ratio'), key: 'currentRatio', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCurrentRatio', 'Current ratio')} YoY`, key: 'currentRatioYoY', kind: 'pp' },
-        { label: `${marketI18n('marketFundamentalsEquity', 'Equity')} YoY`, key: 'equityYoY', kind: 'growth' },
+        { label: `${marketI18n('marketFundamentalsCurrentRatio', 'Current ratio')} ${vsYear()}`, key: 'currentRatioYoY', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsEquity', 'Equity')} ${vsYear()}`, key: 'equityYoY', kind: 'growth' },
     ], emptyText);
     renderRatioTable(document.getElementById('market-fundamentals-cash-flow'), metrics.cashFlow ?? [], [
-        { label: `${marketI18n('marketFundamentalsOperatingCashFlow', 'Operating cash flow')} YoY`, key: 'ocfYoY', kind: 'growth' },
+        { label: `${marketI18n('marketFundamentalsOperatingCashFlow', 'Operating cash flow')} ${vsYear()}`, key: 'ocfYoY', kind: 'growth' },
         { label: marketI18n('marketFundamentalsCashConversion', 'Operating cash flow ÷ pre-tax income'), key: 'cashConversion', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCashConversionShort', 'Cash conversion')} YoY`, key: 'cashConversionYoY', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsCashConversionShort', 'Cash conversion')} ${vsYear()}`, key: 'cashConversionYoY', kind: 'pp' },
         { label: marketI18n('marketFundamentalsCapexToOcf', 'Capex ÷ operating cash flow'), key: 'capexToOcf', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCapexShort', 'Capex share')} YoY`, key: 'capexToOcfYoY', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsCapexShort', 'Capex share')} ${vsYear()}`, key: 'capexToOcfYoY', kind: 'pp' },
     ], emptyText, marketI18n('marketFundamentalsCashFlowNote', 'Cash flow statements are year-to-date, so changes compare with the same period last year.'));
     const source = document.getElementById('market-fundamentals-source');
     if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source || '—'}${payload.errors?.length ? ` · ${payload.errors.join(' · ')}` : ''}`;
@@ -550,13 +558,13 @@ function renderProfitability(target: HTMLElement | null, rows: any[], emptyText:
     const margin = (key: string, fallback: string) => ({
         label: `${marketI18n(key, fallback)} · ${latest.period}`,
         value: typeof latest[`${MARGIN_KEYS[key]}`] === 'number' ? ratioFormat.percent(latest[MARGIN_KEYS[key]]) : '—',
-        sub: `QoQ ${formatPp(latest[`${MARGIN_KEYS[key]}QoQ`])} · YoY ${formatPp(latest[`${MARGIN_KEYS[key]}YoY`])}`,
+        sub: `${vsQuarter()} ${formatPp(latest[`${MARGIN_KEYS[key]}QoQ`])} · ${vsYear()} ${formatPp(latest[`${MARGIN_KEYS[key]}YoY`])}`,
     });
     target.append(buildMarketKpis([
         margin('marketFundamentalsGrossMargin', 'Gross margin'),
         margin('marketFundamentalsOperatingMargin', 'Operating margin'),
         margin('marketFundamentalsNetMargin', 'Net margin'),
-        { label: `EPS YoY · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), sub: `QoQ ${formatSignedPercent(latest.epsQoQ, 1)}` },
+        { label: `EPS ${vsYear()} · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), sub: `${vsQuarter()} ${formatSignedPercent(latest.epsQoQ, 1)}` },
     ]));
     const title = document.createElement('h6'); title.className = 'market-subheading';
     title.textContent = marketI18n('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
@@ -572,19 +580,19 @@ function renderProfitability(target: HTMLElement | null, rows: any[], emptyText:
     const net = marketI18n('marketFundamentalsNetMargin', 'Net margin');
     const revenue = marketI18n('marketFundamentalsRevenueLabel', 'Revenue');
     renderRatioTable(target, rows, [
-        { label: `${revenue} QoQ`, key: 'revenueQoQ', kind: 'growth' },
-        { label: `${revenue} YoY`, key: 'revenueYoY', kind: 'growth' },
+        { label: `${revenue} ${vsQuarter()}`, key: 'revenueQoQ', kind: 'growth' },
+        { label: `${revenue} ${vsYear()}`, key: 'revenueYoY', kind: 'growth' },
         { label: gross, key: 'grossMargin', kind: 'percent', group: true },
-        { label: `${gross} QoQ`, key: 'grossMarginQoQ', kind: 'pp' },
-        { label: `${gross} YoY`, key: 'grossMarginYoY', kind: 'pp' },
+        { label: `${gross} ${vsQuarter()}`, key: 'grossMarginQoQ', kind: 'pp' },
+        { label: `${gross} ${vsYear()}`, key: 'grossMarginYoY', kind: 'pp' },
         { label: operating, key: 'operatingMargin', kind: 'percent', group: true },
-        { label: `${operating} QoQ`, key: 'operatingMarginQoQ', kind: 'pp' },
-        { label: `${operating} YoY`, key: 'operatingMarginYoY', kind: 'pp' },
+        { label: `${operating} ${vsQuarter()}`, key: 'operatingMarginQoQ', kind: 'pp' },
+        { label: `${operating} ${vsYear()}`, key: 'operatingMarginYoY', kind: 'pp' },
         { label: net, key: 'netMargin', kind: 'percent', group: true },
-        { label: `${net} QoQ`, key: 'netMarginQoQ', kind: 'pp' },
-        { label: `${net} YoY`, key: 'netMarginYoY', kind: 'pp' },
-        { label: 'EPS QoQ', key: 'epsQoQ', kind: 'growth', group: true },
-        { label: 'EPS YoY', key: 'epsYoY', kind: 'growth' },
+        { label: `${net} ${vsQuarter()}`, key: 'netMarginQoQ', kind: 'pp' },
+        { label: `${net} ${vsYear()}`, key: 'netMarginYoY', kind: 'pp' },
+        { label: `EPS ${vsQuarter()}`, key: 'epsQoQ', kind: 'growth', group: true },
+        { label: `EPS ${vsYear()}`, key: 'epsYoY', kind: 'growth' },
     ], emptyText, marketI18n('marketFundamentalsRatioNote', 'pp = percentage-point change in the margin. Growth rates are blank when the base period is zero or negative.'), false);
 }
 
@@ -691,49 +699,73 @@ function renderOwnershipHistory(points: MarketHistoryPoint[]) {
     renderTdccOwnership(points);
 }
 
-// Each tier gets its own small chart and scale: the 1M+ tier holds ~80% while retail tiers sit under 5%,
-// so a shared axis flattens everything except the top tier.
+// All 15 TDCC tiers are folded into four contiguous buckets that together cover 100% of shares outstanding
+// (the "差異數調整" / "合計" rows have no numeric lower bound and are skipped). Each bucket keeps its own chart
+// scale: the 1,000+ lot bucket holds ~80% while retail sits at a few percent.
+const TDCC_BUCKETS = [
+    { id: 'retail', min: 1, max: 10_000, key: 'marketHistoryBucketRetail', fallback: 'Retail · up to 10 lots', color: '#55b8a8' },
+    { id: 'mid', min: 10_001, max: 100_000, key: 'marketHistoryBucketMid', fallback: 'Mid · 10–100 lots', color: '#7198df' },
+    { id: 'large', min: 100_001, max: 1_000_000, key: 'marketHistoryBucketLarge', fallback: 'Large · 100–1,000 lots', color: '#dc806f' },
+    { id: 'whale', min: 1_000_001, max: Infinity, key: 'marketHistoryBucketWhale', fallback: 'Over 1,000 lots', color: '#d5ae4b' },
+];
+
+function tdccTierLowerBound(tier: unknown): number | null {
+    const match = /^\s*([\d,]+)/.exec(String(tier ?? ''));
+    return match ? Number(match[1].replace(/,/g, '')) : null;
+}
+
+function tdccBuckets(tiers: any[]) {
+    const totals = TDCC_BUCKETS.map(() => ({ percent: 0, shares: 0, holders: 0, tiers: 0 }));
+    for (const row of tiers) {
+        const bound = tdccTierLowerBound(row.tier); if (bound === null) continue;
+        const index = TDCC_BUCKETS.findIndex((bucket) => bound >= bucket.min && bound <= bucket.max); if (index < 0) continue;
+        totals[index].percent += Number(row.percent) || 0; totals[index].shares += Number(row.shares) || 0;
+        totals[index].holders += Number(row.holders) || 0; totals[index].tiers += 1;
+    }
+    return totals.map((total) => ({ ...total, percent: Number(total.percent.toFixed(2)) }));
+}
+
 function renderTdccOwnership(points: MarketHistoryPoint[]) {
     const target = document.getElementById('market-history-ownership'); if (!target) return; target.replaceChildren();
     const snapshots = points.map((point) => ({ point, tiers: point.sources['tdcc:distribution-history']?.tiers as unknown as any[] | undefined }))
-        .filter((entry): entry is { point: MarketHistoryPoint; tiers: any[] } => Array.isArray(entry.tiers) && entry.tiers.length > 0);
-    if (!snapshots.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored weekly distribution yet.'); return; }
-    const latestTiers = snapshots[snapshots.length - 1].tiers;
-    const tiersToShow = [
-        { id: '1-999', label: marketI18n('marketHistoryTierSmall', '1–999 shares'), color: '#55b8a8' },
-        { id: '1,000-5,000', label: marketI18n('marketHistoryTierMedium', '1,000–5,000 shares'), color: '#7198df' },
-        { id: '5,001-10,000', label: marketI18n('marketHistoryTierLarge', '5,001–10,000 shares'), color: '#dc806f' },
-        { id: '1,000,001以上', label: marketI18n('marketHistoryTierMillionPlus', '1,000,001+ shares'), color: '#d5ae4b' },
-    ].filter((tier) => latestTiers.some((item) => String(item.tier) === tier.id));
+        .filter((entry): entry is { point: MarketHistoryPoint; tiers: any[] } => Array.isArray(entry.tiers) && entry.tiers.length > 0)
+        .map((entry) => ({ ...entry, buckets: tdccBuckets(entry.tiers) }));
+    if (!snapshots.length) { target.textContent = marketI18n('marketHistoryCollecting', 'Collecting history for this stock; the charts fill in automatically.'); return; }
+    const first = snapshots[0]; const latest = snapshots[snapshots.length - 1];
+    const label = (bucket: typeof TDCC_BUCKETS[number]) => marketI18n(bucket.key, bucket.fallback);
+
+    // Latest composition as one 100% bar, so it is visible at a glance that no tier is left out.
+    const bar = document.createElement('div'); bar.className = 'market-tier-stack'; bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', TDCC_BUCKETS.map((bucket, i) => `${label(bucket)} ${latest.buckets[i].percent}%`).join(', '));
+    TDCC_BUCKETS.forEach((bucket, i) => {
+        const segment = document.createElement('span'); segment.style.flexGrow = String(Math.max(latest.buckets[i].percent, 0.0001));
+        segment.style.background = bucket.color; segment.title = `${label(bucket)} · ${latest.buckets[i].percent}%`; bar.append(segment);
+    });
+    const legend = document.createElement('div'); legend.className = 'market-history-legend';
+    TDCC_BUCKETS.forEach((bucket, i) => { const item = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = bucket.color; item.append(dot, document.createTextNode(`${label(bucket)} ${latest.buckets[i].percent.toFixed(2)}%`)); legend.append(item); });
+    target.append(bar, legend);
+
     const grid = document.createElement('div'); grid.className = 'market-tier-grid'; target.append(grid);
-    const rowFor = (tiers: any[], id: string) => tiers.find((entry) => String(entry.tier) === id);
-    tiersToShow.forEach((tier, index) => {
-        const card = document.createElement('article'); card.className = 'market-tier-card'; card.style.setProperty('--tier-color', tier.color);
-        const first = rowFor(snapshots[0].tiers, tier.id); const latest = rowFor(latestTiers, tier.id);
+    TDCC_BUCKETS.forEach((bucket, index) => {
+        const now = latest.buckets[index]; const then = first.buckets[index];
+        const card = document.createElement('article'); card.className = 'market-tier-card'; card.style.setProperty('--tier-color', bucket.color);
         const header = document.createElement('header');
-        const name = document.createElement('span'); name.className = 'market-tier-name'; name.textContent = tier.label;
-        const value = document.createElement('strong'); value.textContent = latest ? `${Number(latest.percent).toFixed(2)}%` : '—';
+        const name = document.createElement('span'); name.className = 'market-tier-name'; name.textContent = label(bucket);
+        const value = document.createElement('strong'); value.textContent = `${now.percent.toFixed(2)}%`;
         const change = document.createElement('small');
-        if (first && latest && snapshots.length > 1) {
-            const pp = Number(latest.percent) - Number(first.percent);
-            change.textContent = `${pp > 0 ? '+' : ''}${pp.toFixed(2)} pp · ${marketI18n('marketHistorySinceFirstWeek', 'since')} ${snapshots[0].point.date.slice(5)}`;
-            const cls = deltaClass(Number(pp.toFixed(2))); if (cls) change.classList.add(cls);
-        }
+        if (snapshots.length > 1) appendSignedText(change, `${formatPp(now.percent - then.percent)} · ${marketI18n('marketHistorySinceFirstWeek', 'since')} ${first.point.date.slice(5)}`);
         const holders = document.createElement('small'); holders.className = 'market-tier-holders';
-        if (latest) holders.textContent = `${Number(latest.holders).toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}`;
+        const holderChange = now.holders - then.holders;
+        appendSignedText(holders, `${now.holders.toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}${snapshots.length > 1 ? ` (${holderChange > 0 ? '+' : ''}${holderChange.toLocaleString(marketLocale())})` : ''}`);
         header.append(name, value, change, holders);
         const chart = document.createElement('div'); chart.id = `market-history-tdcc-tier-${index}`;
         card.append(header, chart); grid.append(card);
-        const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
-            const row = rowFor(tiers, tier.id);
-            const values: MarketHistoryValues = row && Number.isFinite(Number(row.percent)) ? { percent: Number(row.percent) } : {};
-            return { ...point, sources: { 'tdcc:tier': values } };
-        });
+        const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, buckets }) => ({ ...point, sources: { 'tdcc:bucket': { percent: buckets[index].percent } } }));
         drawMarketHistoryChart(chart.id, chartPoints, [{
-            label: tier.label, color: tier.color, sourceKeys: ['tdcc:tier'], field: 'percent',
+            label: label(bucket), color: bucket.color, sourceKeys: ['tdcc:bucket'], field: 'percent',
             tooltip: (point, v) => {
-                const row = rowFor(snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers ?? [], tier.id);
-                return row ? `${v}% · ${compactNumber(Number(row.shares), 2)} ${marketI18n('marketHistorySharesUnit', 'shares')} · ${Number(row.holders).toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}` : '—';
+                const row = snapshots.find((snapshot) => snapshot.point.date === point.date)?.buckets[index];
+                return row ? `${v}% · ${compactNumber(row.shares, 2)} ${marketI18n('marketHistorySharesUnit', 'shares')} · ${row.holders.toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}` : '—';
             },
         }], { height: 170, format: (v) => `${v}%` });
     });
@@ -748,21 +780,30 @@ function selectMarketDetailTab(tabName: string) {
     if (selectedMarketInstrument && tabName !== 'price') void loadMarketHistory(selectedMarketInstrument, tabName);
 }
 
-function setMarketDetailInstrument(instrument: DashboardInstrument) {
-    selectedMarketInstrument = instrument;
-    const detail = document.getElementById('market-instrument-detail'); if (detail) detail.hidden = false;
-    const placeholder = document.getElementById('market-chart-placeholder'); if (placeholder) placeholder.hidden = true;
+function marketUnderlyingCode(instrument: DashboardInstrument) {
+    return instrument.productType === 'futures' ? (instrument.quote?.underlyingCode || instrument.underlyingCode || '') : '';
+}
+
+function renderMarketDetailHeader(instrument: DashboardInstrument) {
     const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-    const quote = instrument.quote;
-    const underlyingCode = instrument.productType === 'futures'
-        ? (quote?.underlyingCode || instrument.underlyingCode || '') : '';
-    setText('market-detail-title', `${instrument.code} · ${instrument.name}${instrument.productType === 'futures' ? ` · ${underlyingCode ? `${underlyingCode} spot charts` : 'TAIFEX futures charts'}` : ''}`);
+    const underlyingCode = marketUnderlyingCode(instrument);
+    const scope = instrument.productType !== 'futures' ? ''
+        : underlyingCode ? ` · ${marketText(`${underlyingCode} stock charts`, `${underlyingCode} 現股圖表`)}` : ` · ${marketText('TAIFEX futures charts', '期交所期貨圖表')}`;
+    setText('market-detail-title', `${instrument.code} · ${instrument.name}${scope}`);
     const institutionalDescription = document.getElementById('market-history-institutional-description');
     if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
         ? (underlyingCode
             ? `${underlyingCode} ${marketI18n('marketHistorySpotInstitutionalDescription', 'spot ticker institutional net trading · shares')}`
             : marketI18n('marketHistoryTaifexAggregateDescription', 'TAIFEX participant totals for the futures product category; not contract-specific positions.'))
         : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
+}
+
+function setMarketDetailInstrument(instrument: DashboardInstrument) {
+    selectedMarketInstrument = instrument;
+    const detail = document.getElementById('market-instrument-detail'); if (detail) detail.hidden = false;
+    const placeholder = document.getElementById('market-chart-placeholder'); if (placeholder) placeholder.hidden = true;
+    const underlyingCode = marketUnderlyingCode(instrument);
+    renderMarketDetailHeader(instrument);
     // Keep all four tabs available. Stock futures use their underlying stock;
     // index futures show TAIFEX price/category data and explain unsupported
     // stock-only margin, lending, and ownership panels.
@@ -792,12 +833,12 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const quote = instrument.quote;
         const item = document.createElement('span'); item.className = 'market-watch-instrument';
         const code = document.createElement('strong'); code.textContent = instrument.code;
-        const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? 'Stock' : 'Futures'}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
+        const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
         item.append(code, name);
         const price = document.createElement('span'); price.className = 'market-watch-price';
         const last = document.createElement('strong'); last.textContent = quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--';
         const change = document.createElement('small');
-        change.textContent = quote ? `${quote.change > 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable';
+        change.textContent = quote ? `${quote.change > 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : marketText('Quote unavailable', '暫無報價');
         // Unchanged (0) stays neutral; only real moves get red/green.
         change.classList.toggle('up', Boolean(quote && quote.change > 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
         price.append(last, change);
@@ -957,7 +998,7 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
         const tickY = y(value);
         svg.append(make('line', { x1: String(pad.left), x2: String(width - pad.right), y1: String(tickY), y2: String(tickY), class: 'portfolio-history-gridline' }));
         const label = make('text', { x: String(pad.left - 10), y: String(tickY + 4), 'text-anchor': 'end', class: 'portfolio-history-axis-label' });
-        label.textContent = `${(value / 10000).toFixed(0)}萬`;
+        label.textContent = compactNumber(value, 1);
         svg.append(label);
     }
 
@@ -1618,7 +1659,7 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
         return `${sign}NT$ ${amount}`;
     };
     setSummaryTooltip('portfolio-pnl', 'portfolio-pnl-tooltip',
-        `證券  ${nbCurrency(secPnl)}\n+ 期貨  ${nbCurrency(futPnl)}`
+        `${marketText('Securities', '證券')}  ${nbCurrency(secPnl)}\n+ ${marketText('Futures', '期貨')}  ${nbCurrency(futPnl)}`
     );
     // Region split sub-lines (台 Taiwan · 外 Overseas) under Cash / Total / Leverage.
     const regions = portfolio.regions;
@@ -1650,7 +1691,7 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
         const el = document.getElementById(id);
         if (!el) return;
         if (regions && hasOverseas) {
-            el.textContent = `台 ${fmt(regions.taiwan)} · 外 ${fmt(regions.overseas)}`;
+            el.textContent = `${marketText('TW', '台')} ${fmt(regions.taiwan)} · ${marketText('Overseas', '外')} ${fmt(regions.overseas)}`;
             el.hidden = false;
         } else {
             el.hidden = true;
@@ -1802,29 +1843,29 @@ function renderDonut(
     const showTip = (slice: DonutSlice, pct: number) => {
         const pos = slice.position;
         if (!pos) {
-            tooltipEl.innerHTML = `<strong>Cash · ${pct.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
+            tooltipEl.innerHTML = `<strong>${marketText('Cash', '現金')} · ${pct.toFixed(2)}%</strong><span>${currency(slice.value)}</span>`;
         } else if (slice.isOverseas && slice.overseas) {
             const o = slice.overseas;
             const nativeFmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 0 });
             tooltipEl.innerHTML = `<strong>${o.name || slice.code}</strong>
                <small>${slice.code} · ${o.assetClass} · ${pct.toFixed(2)}%</small>
-               <span>Qty ${o.quantity} · Cost ${nativeFmt(o.averagePrice)} · Last ${nativeFmt(o.lastPrice)}</span>
-               <span>Value ${o.currency} ${nativeFmt(o.marketValueNative)} · ${currency(slice.value)}</span>
-               <b class="${o.pnlTwd > 0 ? 'up' : o.pnlTwd < 0 ? 'down' : ''}">P/L ${o.pnlTwd > 0 ? '+' : ''}${currency(o.pnlTwd)}</b>`;
+               <span>${marketText('Qty', '數量')} ${o.quantity} · ${marketText('Cost', '成本')} ${nativeFmt(o.averagePrice)} · ${marketText('Last', '現價')} ${nativeFmt(o.lastPrice)}</span>
+               <span>${marketText('Value', '市值')} ${o.currency} ${nativeFmt(o.marketValueNative)} · ${currency(slice.value)}</span>
+               <b class="${o.pnlTwd > 0 ? 'up' : o.pnlTwd < 0 ? 'down' : ''}">${marketText('P/L', '損益')} ${o.pnlTwd > 0 ? '+' : ''}${currency(o.pnlTwd)}</b>`;
         } else if (slice.isFutures) {
             tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
                <small>${pos.code} · ${pct.toFixed(2)}%</small>
-               <span>${pos.direction} · Net ${pos.signedQuantity > 0 ? '+' : ''}${pos.signedQuantity}</span>
-               <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
-               <span>分子 ${currency(slice.value)} / 分母 ${currency(total)}</span>
-               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">P/L ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+               <span>${pos.direction} · ${marketText('Net', '淨口數')} ${pos.signedQuantity > 0 ? '+' : ''}${pos.signedQuantity}</span>
+               <span>${marketText('Cost', '成本')} ${pos.averagePrice.toLocaleString()} · ${marketText('Last', '現價')} ${pos.lastPrice.toLocaleString()}</span>
+               <span>${marketText('Exposure', '分子')} ${currency(slice.value)} / ${marketText('Total', '分母')} ${currency(total)}</span>
+               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">${marketText('P/L', '損益')} ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
         } else {
             tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
                <small>${pos.code} · ${pct.toFixed(2)}%</small>
-               <span>${pos.quantity} shares · YD ${pos.ydQuantity ?? 0}</span>
-               <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
+               <span>${pos.quantity} ${marketText('shares', '股')} · ${marketText('Prev. day', '昨日')} ${pos.ydQuantity ?? 0}</span>
+               <span>${marketText('Cost', '成本')} ${pos.averagePrice.toLocaleString()} · ${marketText('Last', '現價')} ${pos.lastPrice.toLocaleString()}</span>
                <span>Value ${currency(pos.marketValue)}</span>
-               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">P/L ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">${marketText('P/L', '損益')} ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
         }
         tooltipEl.classList.add('is-visible');
     };
@@ -2185,6 +2226,22 @@ function initIndexPage() {
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
     updateVisitCount();
+    if (_marketLangCleanup) _marketLangCleanup();
+    _marketLangCleanup = (window as any).AppLang?.onChange?.(refreshMarketLanguage) ?? null;
+}
+
+// Charts, tiles and tooltips are drawn by JS with the language at render time; redraw them on a switch.
+function refreshMarketLanguage() {
+    if (selectedMarketInstrument) {
+        renderMarketDetailHeader(selectedMarketInstrument);
+        const current = document.querySelector<HTMLButtonElement>('[data-market-tab][aria-selected="true"]')?.dataset.marketTab || 'price';
+        selectMarketDetailTab(current);
+        if (current === 'price') void loadMarketHistory(selectedMarketInstrument, current);
+    }
+    void fetchMarketDashboard();
+    fetchTxfQuote();
+    fetchMarketUsage();
+    fetchPortfolio();
 }
 
 // 監聽 View Transitions 事件

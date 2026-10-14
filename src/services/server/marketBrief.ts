@@ -7,20 +7,21 @@ const TIMEOUT_MS = 2_500;
 const lastGood = new Map<string, unknown>();
 const inflight = new Map<string, Promise<unknown>>();
 
-async function fetchBrief(format: 'json' | 'md') {
-  const response = await fetch(`${MAYA_SAWA_URL}/market/dashboard/brief?format=${format}`, {
+async function fetchBrief(format: 'json' | 'md', lang: 'zh' | 'en') {
+  const response = await fetch(`${MAYA_SAWA_URL}/market/dashboard/brief?format=${format}&lang=${lang}`, {
     headers: { Accept: format === 'md' ? 'text/markdown' : 'application/json' },
     signal: AbortSignal.timeout(TIMEOUT_MS * 4),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const value = format === 'md' ? await response.text() : await response.json();
-  lastGood.set(format, value);
+  lastGood.set(`${format}:${lang}`, value);
   return value;
 }
 
-export async function getMarketBrief<T = any>(format: 'json' | 'md' = 'json'): Promise<T | null> {
-  if (!inflight.has(format)) inflight.set(format, fetchBrief(format).finally(() => inflight.delete(format)));
-  const request = inflight.get(format)!;
+export async function getMarketBrief<T = any>(format: 'json' | 'md' = 'json', lang: 'zh' | 'en' = 'zh'): Promise<T | null> {
+  const key = `${format}:${lang}`;
+  if (!inflight.has(key)) inflight.set(key, fetchBrief(format, lang).finally(() => inflight.delete(key)));
+  const request = inflight.get(key)!;
   try {
     const value = await Promise.race([request, new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), TIMEOUT_MS))]);
     if (value !== undefined) return value as T;
@@ -28,5 +29,5 @@ export async function getMarketBrief<T = any>(format: 'json' | 'md' = 'json'): P
     console.error('Market brief unavailable:', error);
   }
   request.catch(() => undefined); // a late failure after the timeout is already handled by the fallback
-  return (lastGood.get(format) as T | undefined) ?? null;
+  return (lastGood.get(key) as T | undefined) ?? null;
 }
