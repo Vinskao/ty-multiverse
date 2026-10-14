@@ -22,6 +22,11 @@ import companyProductMapping from '../storages/companyProductMapping.json';
 import ContactCTA from '../components/ContactCTA.astro';
 import Skills from '../components/Skills.astro';
 import indexCssUrl from '../styles/index.css?url';
+import MarketBrief from '../components/MarketBrief.astro';
+import { getMarketBrief } from '../services/server/marketBrief';
+
+// Server-rendered so AI agents that read raw HTML (no JS) still see the holdings' chip summary.
+const marketBrief = await getMarketBrief();
 
 // 準備 Bubble Chart 資料 - 從 skillsData 計算每個類別的總分
 const shadeScores: { [key: string]: number } = {
@@ -83,6 +88,8 @@ const skillsCategories = skillsData.categories;
 <BaseLayout>
 	<Fragment slot="head">
 		<link rel="stylesheet" href={indexCssUrl} />
+		<link rel="alternate" type="text/markdown" href="/tymultiverse/brief.md" title="持股籌碼摘要" />
+		<link rel="alternate" type="application/json" href="/tymultiverse/brief.json" title="Holdings chip summary (JSON)" />
 	</Fragment>
 	<!-- Messenger Chat Plugin Code -->
 	<div id="fb-root"></div>
@@ -125,6 +132,7 @@ const skillsCategories = skillsData.categories;
 							</div>
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
+						<MarketBrief brief={marketBrief} />
 						<div class="market-overview-grid">
 							<section id="market-watchlist" class="market-watchlist market-quote-section" aria-label="Market watchlist">
 								<div class="market-watchlist-heading"><span>Instrument</span><span>Price / change</span><span>Data time</span></div>

@@ -1,0 +1,72 @@
+---
+// Server-rendered chip summary of the selected holdings. It is plain HTML on purpose: AI agents that
+// fetch the page without running JavaScript read this section directly. Codes only, never account values.
+interface Props { brief: any | null }
+const { brief } = Astro.props;
+
+const fmt = (value: unknown, suffix = '', signed = false, digits = 2) =>
+	typeof value === 'number' && Number.isFinite(value)
+		? `${signed && value > 0 ? '+' : ''}${value.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}`
+		: '—';
+const lots = (value: unknown) => typeof value === 'number' ? `${value > 0 ? '+' : ''}${value.toLocaleString('zh-TW')}` : '—';
+const tone = (value: unknown) => typeof value === 'number' && value !== 0 ? (value > 0 ? 'market-delta--up' : 'market-delta--down') : '';
+const streak = (days: number | undefined) => days ? `連${days > 0 ? '買' : '賣'}${Math.abs(days)}日` : '';
+
+const names: Record<string, string> = {};
+for (const item of brief?.instruments ?? []) if (item.spotCode && !names[item.spotCode]) names[item.spotCode] = item.name || '';
+const stocks = Object.values(brief?.stocks ?? {}) as any[];
+---
+<section id="ai-brief" class="market-brief" aria-labelledby="ai-brief-title">
+	<div class="market-brief-head">
+		<h5 id="ai-brief-title">持股籌碼摘要 · Holdings chip summary</h5>
+		<p>
+			{brief ? <>產生於 <time datetime={brief.generatedAt}>{brief.generatedAt.replace('T', ' ').slice(0, 16)}</time>（台北）· </> : null}
+			<a href="/tymultiverse/brief.md">Markdown</a> · <a href="/tymultiverse/brief.json">JSON</a>
+		</p>
+	</div>
+	{!brief && <p class="market-updated">摘要暫時無法取得；請改讀 /tymultiverse/brief.md。</p>}
+	{brief && stocks.length === 0 && <p class="market-updated">目前沒有可摘要的股票持股。</p>}
+	{stocks.length > 0 && (
+		<div class="market-fin-table-wrap">
+			<table class="market-fin-table market-brief-table">
+				<thead>
+					<tr>
+						<th scope="col">標的</th>
+						<th scope="col">收盤 · 5日</th>
+						<th scope="col">外資 5日(張)</th>
+						<th scope="col">投信 5日(張)</th>
+						<th scope="col">融資 5日</th>
+						<th scope="col">大戶≥400張 週變化</th>
+						<th scope="col">外資持股 20日</th>
+						<th scope="col">營收年增</th>
+						<th scope="col">毛利率 季變化</th>
+					</tr>
+				</thead>
+				<tbody>
+					{stocks.map((s) => {
+						const foreign = s.institutional?.foreign; const trust = s.institutional?.trust;
+						return (
+							<tr>
+								<th scope="row">{s.code} {names[s.code]}</th>
+								<td>{fmt(s.price?.close)} · <span class={tone(s.price?.change5dPct)}>{fmt(s.price?.change5dPct, '%', true)}</span></td>
+								<td class={tone(foreign?.net5dLots)}>{lots(foreign?.net5dLots)} {streak(foreign?.streakDays)}</td>
+								<td class={tone(trust?.net5dLots)}>{lots(trust?.net5dLots)} {streak(trust?.streakDays)}</td>
+								<td class={tone(s.margin?.marginBalanceChange5dPct)}>{fmt(s.margin?.marginBalanceChange5dPct, '%', true, 1)}</td>
+								<td class={tone(s.tdcc?.largeHolderChange1wPp)}>{fmt(s.tdcc?.largeHolderPercent, '%')} · {fmt(s.tdcc?.largeHolderChange1wPp, ' pp', true)}</td>
+								<td class={tone(s.foreignHolding?.change20dPp)}>{fmt(s.foreignHolding?.percent, '%')} · {fmt(s.foreignHolding?.change20dPp, ' pp', true)}</td>
+								<td class={tone(s.fundamentals?.latestMonth?.yoyPercent)}>{fmt(s.fundamentals?.latestMonth?.yoyPercent, '%', true, 1)}</td>
+								<td class={tone(s.fundamentals?.latestQuarter?.grossMarginQoQ)}>{fmt(s.fundamentals?.latestQuarter?.grossMargin, '%', false, 1)} · {fmt(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp', true)}</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		</div>
+	)}
+	{stocks.some((s) => s.signals?.length) && (
+		<ul class="market-brief-signals">
+			{stocks.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {names[s.code]}</strong>：{s.signals.join('；')}</li>)}
+		</ul>
+	)}
+	<p class="market-fin-note">只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現貨呈現。非投資建議。</p>
+</section>
