@@ -156,7 +156,9 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
         label.textContent = value.toLocaleString(undefined, { maximumFractionDigits: 1 }); svg.append(label);
     }
     const volumeLabel = document.createElementNS(ns, 'text'); volumeLabel.setAttribute('x', String(left)); volumeLabel.setAttribute('y', String(volumeTop - 5));
-    volumeLabel.classList.add('market-history-axis-label'); volumeLabel.textContent = marketI18n('marketHistoryVolume', 'Volume'); svg.append(volumeLabel);
+    volumeLabel.classList.add('market-history-axis-label');
+    volumeLabel.textContent = marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryVolumeContractsAxis' : 'marketHistoryVolumeSharesAxis', volumeField === 'volume_contracts' ? 'Volume (contracts)' : 'Volume (shares)');
+    svg.append(volumeLabel);
     const separator = document.createElementNS(ns, 'line'); separator.setAttribute('x1', String(left)); separator.setAttribute('x2', String(right));
     separator.setAttribute('y1', '244'); separator.setAttribute('y2', '244'); separator.classList.add('market-history-zero'); svg.append(separator);
     const tickCount = Math.min(5, candles.length);
@@ -224,7 +226,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     svg.addEventListener('pointercancel', () => { dragStart = -1; selection.hidden = true; });
     target.append(svg);
     const legend = document.createElement('div'); legend.className = 'market-history-legend';
-    legend.textContent = `${marketI18n('marketHistoryCandles', 'Daily OHLC')} · ${marketI18n('marketHistoryVolume', 'Volume')}${volumeField === 'volume_contracts' ? ` (${marketI18n('marketHistoryContracts', 'contracts')})` : ` (${marketI18n('marketHistoryShares', 'shares')})`}`;
+    legend.textContent = `${marketI18n('marketHistoryCandles', 'Daily OHLC')} · ${marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryVolumeContractsAxis' : 'marketHistoryVolumeSharesAxis', volumeField === 'volume_contracts' ? 'Volume (contracts)' : 'Volume (shares)')}`;
     target.append(legend, readout);
 }
 
@@ -232,28 +234,13 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
     const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     try {
-        // Price and institutional charts are always based on the spot ticker.
-        // Futures without a resolvable stock ticker (for example TXF) have no
-        // matching spot history, so never query the futures code as a fallback.
+        // Stock futures use their underlying stock. Index futures use the
+        // official TAIFEX history stored under their futures code.
         const spotCode = instrument.productType === 'futures'
             ? (instrument.quote?.underlyingCode || instrument.underlyingCode || '') : instrument.code;
-        const hasSpotTicker = Boolean(spotCode);
-        const historyCode = spotCode;
-        const historyProductType = 'stock';
-        if (!hasSpotTicker) {
-            const emptyMessage = marketI18n('marketHistoryNoSpotTicker', 'No spot ticker is available for this futures contract.');
-            if (status) status.textContent = emptyMessage;
-            for (const id of [
-                'market-history-price-chart', 'market-history-institutional-chart',
-                'market-history-margin-chart', 'market-history-margin-flow-chart',
-                'market-history-borrow-chart', 'market-history-borrow-flow-chart',
-                'market-history-foreign-holding-chart', 'market-history-foreign-holding-shares-chart',
-                'market-history-foreign-limit-chart', 'market-history-ownership',
-            ]) {
-                const target = document.getElementById(id); if (target) target.textContent = emptyMessage;
-            }
-            return;
-        }
+        const usesSpotHistory = instrument.productType === 'stock' || Boolean(spotCode);
+        const historyCode = usesSpotHistory ? spotCode : instrument.code;
+        const historyProductType = usesSpotHistory ? 'stock' : 'futures';
         const view = selectedTab === 'ownership' && historyProductType === 'stock' ? 'ownership' : 'daily';
         const cacheKey = `${historyCode.toUpperCase()}:${view}`;
         const cached = marketHistoryCache.get(cacheKey);
@@ -266,19 +253,40 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             payload = await response.json() as MarketHistoryPayload;
             marketHistoryCache.set(cacheKey, { payload, fetchedAt: Date.now() });
         }
+        const historyLabel = instrument.productType === 'futures'
+            ? `${historyCode} ${usesSpotHistory ? marketI18n('marketHistorySpotData', 'spot data') : marketI18n('marketHistoryFuturesData', 'TAIFEX futures data')} · ` : '';
         const points = payload.points ?? []; if (status) status.textContent = points.length
-            ? `${instrument.productType === 'futures' ? `${historyCode} ${marketI18n('marketHistorySpotData', 'spot data')} · ` : ''}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
-            : `${instrument.productType === 'futures' ? `${historyCode} ${marketI18n('marketHistorySpotData', 'spot data')} · ` : ''}${marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.')}`;
+            ? `${historyLabel}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
+            : `${historyLabel}${marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.')}`;
         const stockQuotes = ['twse:daily-price', 'tpex:daily-price']; const institutions = ['twse:institutional', 'tpex:institutional'];
-        const priceSources = stockQuotes;
-        const institutionalSources = institutions;
+        const priceSources = historyProductType === 'futures' ? ['taifex:daily-futures-price'] : stockQuotes;
+        const institutionalSources = historyProductType === 'futures' ? ['taifex:futures-institutional'] : institutions;
         const margin = ['twse:margin-balance', 'tpex:margin-balance']; const borrowed = ['twse:borrow-short', 'tpex:borrow-short'];
         if (view === 'ownership') { renderOwnershipHistory(points); return; }
         drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources,
             historyProductType === 'futures' ? 'volume_contracts' : 'volume_shares');
+        if (historyProductType === 'futures') {
+            drawMarketHistoryChart('market-history-institutional-chart', points, [
+                { label: marketI18n('marketHistoryForeignContractsNet', 'Foreign net (contracts)'), color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_trade_contracts' },
+                { label: marketI18n('marketHistoryTrustContractsNet', 'Trust net (contracts)'), color: '#7198df', sourceKeys: institutionalSources, field: 'trust_net_trade_contracts' },
+                { label: marketI18n('marketHistoryDealerContractsNet', 'Dealer net (contracts)'), color: '#dc806f', sourceKeys: institutionalSources, field: 'dealer_net_trade_contracts' },
+            ], true);
+            const institutionalDescription = document.getElementById('market-history-institutional-description');
+            if (institutionalDescription) institutionalDescription.textContent = marketI18n('marketHistoryTaifexAggregateDescription', 'TAIFEX participant totals for the futures product category; not contract-specific positions.');
+            const notAvailable = marketI18n('marketHistorySpotDataUnavailable', 'This panel requires an underlying stock ticker and is unavailable for index futures.');
+            for (const id of [
+                'market-history-margin-chart', 'market-history-margin-flow-chart',
+                'market-history-borrow-chart', 'market-history-borrow-flow-chart',
+                'market-history-foreign-holding-chart', 'market-history-foreign-holding-shares-chart',
+                'market-history-foreign-limit-chart', 'market-history-ownership',
+            ]) {
+                const target = document.getElementById(id); if (target) target.textContent = notAvailable;
+            }
+            return;
+        }
         drawMarketHistoryChart('market-history-institutional-chart', points, [
-            { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutions, field: 'foreign_net_shares' },
-            { label: marketI18n('marketHistoryTrust', 'Trust net'), color: '#7198df', sourceKeys: institutions, field: 'investment_trust_net_shares' },
+            { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_shares' },
+            { label: marketI18n('marketHistoryTrust', 'Trust net'), color: '#7198df', sourceKeys: institutionalSources, field: 'investment_trust_net_shares' },
         ], true);
         drawMarketHistoryChart('market-history-margin-chart', points, [
             { label: marketI18n('marketHistoryMarginBalance', 'Margin balance (lots)'), color: '#7198df', sourceKeys: margin, field: 'margin_balance_lots' },
@@ -363,15 +371,16 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     const quote = instrument.quote;
     const underlyingCode = instrument.productType === 'futures'
         ? (quote?.underlyingCode || instrument.underlyingCode || '') : '';
-    setText('market-detail-title', `${instrument.code} · ${instrument.name}${instrument.productType === 'futures' ? ` · ${underlyingCode ? `${underlyingCode} spot charts` : 'spot charts unavailable'}` : ''}`);
+    setText('market-detail-title', `${instrument.code} · ${instrument.name}${instrument.productType === 'futures' ? ` · ${underlyingCode ? `${underlyingCode} spot charts` : 'TAIFEX futures charts'}` : ''}`);
     const institutionalDescription = document.getElementById('market-history-institutional-description');
     if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
         ? (underlyingCode
             ? `${underlyingCode} ${marketI18n('marketHistorySpotInstitutionalDescription', 'spot ticker institutional net trading · shares')}`
-            : marketI18n('marketHistoryNoSpotTicker', 'No spot ticker is available for this futures contract; chart history is unavailable.'))
+            : marketI18n('marketHistoryTaifexAggregateDescription', 'TAIFEX participant totals for the futures product category; not contract-specific positions.'))
         : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
-    // All instruments expose the same four tabs. Futures use their underlying
-    // stock ticker for every chart, including margin/lending and ownership.
+    // Keep all four tabs available. Stock futures use their underlying stock;
+    // index futures show TAIFEX price/category data and explain unsupported
+    // stock-only margin, lending, and ownership panels.
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
     selectMarketDetailTab('price'); void loadMarketHistory(instrument, 'price');
 }

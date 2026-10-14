@@ -177,6 +177,7 @@
 .market-chart-section { min-width: 0; }
 .market-chart-section .market-instrument-detail { border-top: 1px solid color-mix(in srgb, #d8a43b 65%, transparent); border-radius: .9rem; }
 .market-chart-placeholder { min-height: 14rem; display: grid; place-items: center; padding: 2rem; border: 1px dashed var(--gray-700); border-radius: .9rem; color: var(--gray-400); text-align: center; }
+.market-chart-placeholder[hidden] { display: none; }
 .market-detail-toolbar { display: grid; gap: .8rem; margin-bottom: 1rem; }
 .market-detail-toolbar [role="tablist"] { display: flex; flex-wrap: wrap; gap: .4rem; }
 .market-detail-toolbar [role="tab"] { padding: .45rem .65rem; color: var(--gray-300); border: 1px solid var(--gray-700); border-radius: 999px; background: transparent; }
