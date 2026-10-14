@@ -301,3 +301,5 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - 正式 PostgreSQL 已由本輪前段執行 candidate identity 與 market history migrations；需部署後再確認兩張 market history 表及資料收集覆蓋量。
 - Jenkins frontend/backend deploy job 現行 SSO 保護要求已登入 PeopleSystem。無登入的 tokenized API requests 回 HTTP 403「Authentication required」，Jenkins job config 未設定匿名 remote trigger token。本機 Docker daemon 未啟動，不能以本機 build 代替既有發佈流程。程式推送不會自動部署；frontend 仍為 image `papakao/ty-multiverse-frontend:245`、Maya 為 `papakao/maya-sawa:78`，故本輪目前尚未上正式站。
 - 後續需在已開啟的 Chrome Jenkins 分頁由使用者完成正常 SSO 登入；登入後立即觸發 `vinskao/ty-multiverse-frontend-deploy` 與 `vinskao/ty-multiverse-backend-deploy`，確認新 image／rollout，檢查三個月覆蓋及真正 DB 行數，再以登入正式站驗行情、法人、資券借券、持股週級距、期貨行情／類別法人 panel、搜尋 Mini TSMC Futures 且結果排除權證。
+
+- 後續補強：行情 panel 已從收盤折線升級為 OHLC 蠟燭與成交量柱，上市櫃用股數、期貨用口數，並有日期與價格軸；Astro build 再次通過。正式站未登入狀態仍由 Jenkins SSO 阻擋，待正常登入後才可發佈。

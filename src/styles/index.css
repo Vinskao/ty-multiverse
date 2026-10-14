@@ -11,6 +11,8 @@
 .market-history-chart { display:block; width:100%; height:auto; min-height:9rem; overflow:visible; }
 .market-history-line { fill:none; stroke-width:2.2; vector-effect:non-scaling-stroke; }
 .market-history-zero { stroke:var(--gray-500); stroke-dasharray:4 4; stroke-width:1; }
+.market-history-grid { stroke:var(--gray-700); stroke-width:.7; opacity:.6; }
+.market-history-axis-label { fill:var(--gray-400); font-size:10px; }
 .market-history-legend { display:flex; flex-wrap:wrap; gap:.8rem; margin:.35rem 0 .75rem; color:var(--gray-300); font-size:.78rem; }
 .market-history-legend span { display:inline-flex; align-items:center; gap:.35rem; }
 .market-history-legend i { display:inline-block; width:.65rem; height:.65rem; border-radius:50%; }

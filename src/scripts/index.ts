@@ -94,6 +94,66 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     target.append(legend);
 }
 
+function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[], sourceKeys: string[], volumeField: string) {
+    const target = document.getElementById(targetId); if (!target) return;
+    target.replaceChildren();
+    const candles = points.map((point) => {
+        const values = sourceKeys.map((key) => point.sources[key]).find((item) =>
+            ['open', 'high', 'low', 'close'].every((field) => typeof item?.[field] === 'number'));
+        return values ? { date: point.date, open: values.open, high: values.high, low: values.low,
+            close: values.close, volume: values[volumeField] } : null;
+    });
+    if (!candles.some(Boolean)) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
+    const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 900 340'); svg.classList.add('market-history-chart');
+    const valid = candles.filter((item): item is NonNullable<typeof item> => item !== null);
+    let low = Math.min(...valid.map((item) => item.low)); let high = Math.max(...valid.map((item) => item.high));
+    const priceSpan = high - low || Math.max(Math.abs(high) * .05, 1); low -= priceSpan * .04; high += priceSpan * .04;
+    const maxVolume = Math.max(...valid.map((item) => item.volume || 0), 1);
+    const left = 48; const right = 890; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
+    const slot = (right - left) / Math.max(candles.length, 1); const candleWidth = Math.max(1.5, Math.min(9, slot * .64));
+    const yPrice = (value: number) => priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
+    candles.forEach((item, index) => {
+        if (!item) return;
+        const x = left + slot * (index + .5); const color = item.close >= item.open ? '#e45b5b' : '#46a77f';
+        const wick = document.createElementNS(ns, 'line'); wick.setAttribute('x1', String(x)); wick.setAttribute('x2', String(x));
+        wick.setAttribute('y1', String(yPrice(item.high))); wick.setAttribute('y2', String(yPrice(item.low))); wick.setAttribute('stroke', color); wick.setAttribute('stroke-width', '1.2'); svg.append(wick);
+        const body = document.createElementNS(ns, 'rect'); const yOpen = yPrice(item.open); const yClose = yPrice(item.close);
+        body.setAttribute('x', String(x - candleWidth / 2)); body.setAttribute('y', String(Math.min(yOpen, yClose)));
+        body.setAttribute('width', String(candleWidth)); body.setAttribute('height', String(Math.max(1, Math.abs(yOpen - yClose))));
+        body.setAttribute('fill', color); svg.append(body);
+        if (typeof item.volume === 'number') {
+            const volume = document.createElementNS(ns, 'rect'); const height = Math.max(1, (item.volume / maxVolume) * (volumeBottom - volumeTop));
+            volume.setAttribute('x', String(x - candleWidth / 2)); volume.setAttribute('y', String(volumeBottom - height));
+            volume.setAttribute('width', String(candleWidth)); volume.setAttribute('height', String(height)); volume.setAttribute('fill', color); volume.setAttribute('opacity', '.72'); svg.append(volume);
+        }
+    });
+    for (let tick = 0; tick <= 4; tick++) {
+        const value = high - ((high - low) * tick / 4); const y = yPrice(value);
+        const grid = document.createElementNS(ns, 'line'); grid.setAttribute('x1', String(left)); grid.setAttribute('x2', String(right));
+        grid.setAttribute('y1', String(y)); grid.setAttribute('y2', String(y)); grid.classList.add('market-history-grid'); svg.append(grid);
+        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(left - 6)); label.setAttribute('y', String(y + 3));
+        label.setAttribute('text-anchor', 'end'); label.classList.add('market-history-axis-label');
+        label.textContent = value.toLocaleString(undefined, { maximumFractionDigits: 1 }); svg.append(label);
+    }
+    const volumeLabel = document.createElementNS(ns, 'text'); volumeLabel.setAttribute('x', String(left)); volumeLabel.setAttribute('y', String(volumeTop - 5));
+    volumeLabel.classList.add('market-history-axis-label'); volumeLabel.textContent = marketI18n('marketHistoryVolume', 'Volume'); svg.append(volumeLabel);
+    const separator = document.createElementNS(ns, 'line'); separator.setAttribute('x1', String(left)); separator.setAttribute('x2', String(right));
+    separator.setAttribute('y1', '244'); separator.setAttribute('y2', '244'); separator.classList.add('market-history-zero'); svg.append(separator);
+    const tickCount = Math.min(5, candles.length);
+    for (let index = 0; index < tickCount; index++) {
+        const pointIndex = Math.round(index * (candles.length - 1) / Math.max(tickCount - 1, 1)); const item = candles[pointIndex];
+        if (!item) continue;
+        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(left + slot * (pointIndex + .5)));
+        label.setAttribute('y', '330'); label.setAttribute('text-anchor', 'middle'); label.classList.add('market-history-axis-label');
+        label.textContent = item.date.slice(5); svg.append(label);
+    }
+    target.append(svg);
+    const legend = document.createElement('div'); legend.className = 'market-history-legend';
+    legend.textContent = `${marketI18n('marketHistoryCandles', 'Daily OHLC')} · ${marketI18n('marketHistoryVolume', 'Volume')}${volumeField === 'volume_contracts' ? ` (${marketI18n('marketHistoryContracts', 'contracts')})` : ` (${marketI18n('marketHistoryShares', 'shares')})`}`;
+    target.append(legend);
+}
+
 function renderMarketHistoryTable(targetId: string, points: MarketHistoryPoint[], columns: { label: string; sources: string[]; field: string; unit?: string }[]) {
     const target = document.getElementById(targetId); if (!target) return; target.replaceChildren();
     if (!points.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored rows yet; first collection may take a few minutes.'); return; }
@@ -127,7 +187,8 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         const institutionalSources = instrument.productType === 'futures' ? ['taifex:futures-institutional'] : institutions;
         const margin = ['twse:margin-balance', 'tpex:margin-balance']; const borrowed = ['twse:borrow-short', 'tpex:borrow-short'];
         if (view === 'ownership') { renderOwnershipHistory(points); return; }
-        drawMarketHistoryChart('market-history-price-chart', points, [{ label: marketI18n('marketHistoryClose', 'Close'), color: '#e0ad42', sourceKeys: priceSources, field: 'close' }]);
+        drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources,
+            instrument.productType === 'futures' ? 'volume_contracts' : 'volume_shares');
         drawMarketHistoryChart('market-history-institutional-chart', points, [
             { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutions, field: 'foreign_net_shares' },
             { label: marketI18n('marketHistoryTrust', 'Investment trust net'), color: '#7198df', sourceKeys: institutions, field: 'investment_trust_net_shares' },
