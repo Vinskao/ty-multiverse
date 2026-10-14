@@ -15,6 +15,26 @@ let selectedMarketInstrument: DashboardInstrument | null = null;
 const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
 const MARKET_HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
+const marketChartLayouts = new Map<HTMLElement, { width: number; redraw: () => void }>();
+let marketChartResizeObserver: ResizeObserver | null = null;
+function observeMarketChart(target: HTMLElement, redraw: () => void) {
+    if (!marketChartResizeObserver) {
+        marketChartResizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const chart = marketChartLayouts.get(entry.target as HTMLElement);
+                const width = (entry.target as HTMLElement).clientWidth;
+                if (chart && width > 0 && Math.abs(width - chart.width) > 1) chart.redraw();
+            }
+        });
+    }
+    marketChartLayouts.set(target, { width: target.clientWidth, redraw });
+    marketChartResizeObserver.observe(target);
+}
+document.addEventListener('astro:before-swap', () => {
+    marketChartResizeObserver?.disconnect();
+    marketChartLayouts.clear();
+});
+
 function initMarketWatchlist() {
     const row = document.getElementById('txf-quote-section') as HTMLButtonElement | null;
     const detail = document.getElementById('market-instrument-detail');
@@ -106,6 +126,7 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: HistoryChartField[], options: HistoryChartOptions = {}) {
     const target = document.getElementById(targetId);
     if (!target) return;
+    observeMarketChart(target, () => drawMarketHistoryChart(targetId, points, fields, options));
     target.replaceChildren();
     const bars = Boolean(options.bars);
     const format = options.format ?? ((value: number) => compactNumber(value));
@@ -113,7 +134,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
     if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
 
-    const width = 900; const height = options.height ?? 260;
+    const width = Math.max(220, Math.min(900, target.clientWidth || 900)); const height = options.height ?? 260;
     const left = 58; const right = width - 14; const top = 12; const bottom = height - 30;
     let low = Math.min(...values); let high = Math.max(...values);
     if (bars) { low = Math.min(0, low); high = Math.max(0, high); }
@@ -132,7 +153,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
         label.textContent = format(tick); svg.append(label);
     }
     const sameYear = points[0].date.length > 7 && points[0].date.slice(0, 4) === points[points.length - 1].date.slice(0, 4);
-    const tickCount = Math.min(points.length, height < 200 ? 4 : 6);
+    const tickCount = Math.min(points.length, width < 480 ? 3 : height < 200 ? 4 : 6);
     for (let tick = 0; tick < tickCount; tick++) {
         const index = Math.round(tick * (points.length - 1) / Math.max(tickCount - 1, 1));
         const anchor = bars ? 'middle' : tick === 0 ? 'start' : tick === tickCount - 1 ? 'end' : 'middle';
@@ -224,12 +245,14 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     });
     if (!candles.some(Boolean)) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
     const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 900 370'); svg.classList.add('market-history-chart');
+    observeMarketChart(target, () => drawMarketOHLCVolumeChart(targetId, points, sourceKeys, volumeField));
+    const width = Math.max(220, Math.min(900, target.clientWidth || 900));
+    svg.setAttribute('viewBox', `0 0 ${width} 370`); svg.classList.add('market-history-chart');
     const valid = candles.filter((item): item is NonNullable<typeof item> => item !== null);
     let low = Math.min(...valid.map((item) => item.low)); let high = Math.max(...valid.map((item) => item.high));
     const priceSpan = high - low || Math.max(Math.abs(high) * .05, 1); low -= priceSpan * .04; high += priceSpan * .04;
     const maxVolume = Math.max(...valid.map((item) => item.volume || 0), 1);
-    const left = 48; const right = 890; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
+    const left = 68; const right = width - 12; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
     const slot = (right - left) / Math.max(candles.length, 1); const candleWidth = Math.max(1.5, Math.min(9, slot * .64));
     const yPrice = (value: number) => priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
     candles.forEach((item, index) => {
@@ -261,7 +284,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     svg.append(volumeLabel);
     const separator = document.createElementNS(ns, 'line'); separator.setAttribute('x1', String(left)); separator.setAttribute('x2', String(right));
     separator.setAttribute('y1', '244'); separator.setAttribute('y2', '244'); separator.classList.add('market-history-zero'); svg.append(separator);
-    const tickCount = Math.min(5, candles.length);
+    const tickCount = Math.min(width < 480 ? 3 : 5, candles.length);
     for (let index = 0; index < tickCount; index++) {
         const pointIndex = Math.round(index * (candles.length - 1) / Math.max(tickCount - 1, 1)); const item = candles[pointIndex];
         if (!item) continue;
@@ -289,7 +312,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
         return best;
     };
     const indexAt = (clientX: number) => {
-        const rect = svg.getBoundingClientRect(); const viewX = ((clientX - rect.left) / rect.width) * 900;
+        const rect = svg.getBoundingClientRect(); const viewX = ((clientX - rect.left) / rect.width) * width;
         return nearestValidIndex(Math.max(0, Math.min(candles.length - 1, Math.floor((viewX - left) / slot))));
     };
     const formatPrice = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
