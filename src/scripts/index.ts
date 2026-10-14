@@ -91,7 +91,8 @@ function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: st
     return null;
 }
 
-interface HistoryChartField { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }
+// negative: an outflow (sells, borrowed-stock sales) is drawn below the zero axis as a negative value.
+interface HistoryChartField { label: string; color: string; sourceKeys: string[]; field: string; negative?: boolean; tooltip?: (point: MarketHistoryPoint, value: number) => string }
 interface HistoryChartOptions { bars?: boolean; height?: number; format?: (value: number) => string; legend?: boolean; area?: boolean }
 
 function marketLocale() {
@@ -130,7 +131,10 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     target.replaceChildren();
     const bars = Boolean(options.bars);
     const format = options.format ?? ((value: number) => compactNumber(value));
-    const series = fields.map((field) => ({ ...field, values: points.map((point) => historyValue(point, field.sourceKeys, field.field)) }));
+    const series = fields.map((field) => ({ ...field, values: points.map((point) => {
+        const value = historyValue(point, field.sourceKeys, field.field);
+        return value !== null && field.negative ? -Math.abs(value) : value;
+    }) }));
     const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
     if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
 
@@ -438,14 +442,14 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         ]);
         drawMarketHistoryChart('market-history-margin-flow-chart', points, [
             { label: marketI18n('marketHistoryMarginBuy', 'Margin buy (lots)'), color: '#55b8a8', sourceKeys: margin, field: 'margin_buy_lots' },
-            { label: marketI18n('marketHistoryMarginSell', 'Margin sell (lots)'), color: '#dc806f', sourceKeys: margin, field: 'margin_sell_lots' },
-            { label: marketI18n('marketHistoryShortSell', 'Short sell (lots)'), color: '#7198df', sourceKeys: margin, field: 'short_sell_lots' },
+            { label: marketI18n('marketHistoryMarginSell', 'Margin sell (lots)'), color: '#dc806f', sourceKeys: margin, field: 'margin_sell_lots', negative: true },
+            { label: marketI18n('marketHistoryShortSell', 'Short sell (lots)'), color: '#7198df', sourceKeys: margin, field: 'short_sell_lots', negative: true },
         ], { bars: true });
         drawMarketHistoryChart('market-history-borrow-chart', points, [
             { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
         ]);
         drawMarketHistoryChart('market-history-borrow-flow-chart', points, [
-            { label: marketI18n('marketHistoryBorrowSell', 'Borrowed stock sold (shares)'), color: '#7198df', sourceKeys: borrowed, field: 'borrow_short_sell_shares' },
+            { label: marketI18n('marketHistoryBorrowSell', 'Borrowed stock sold (shares)'), color: '#7198df', sourceKeys: borrowed, field: 'borrow_short_sell_shares', negative: true },
             { label: marketI18n('marketHistoryReturned', 'Returned (shares)'), color: '#dc806f', sourceKeys: borrowed, field: 'borrow_short_return_shares' },
         ], { bars: true });
     } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
@@ -864,7 +868,11 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         // Unchanged (0) stays neutral; only real moves get red/green.
         change.classList.toggle('up', Boolean(quote && quote.change > 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
         price.append(last, change);
-        const timestamp = document.createElement('span'); timestamp.className = 'market-updated'; timestamp.textContent = quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--';
+        const timestamp = document.createElement('span'); timestamp.className = 'market-updated';
+        // Off-session or broker down: the backend serves the last saved price / last daily close; say so.
+        const lastKnown = quote && quote.quoteSource && quote.quoteSource !== 'live'
+            ? `${quote.quoteSource === 'dailyClose' ? marketText('Last close', '最後收盤') : marketText('Last price', '最後價格')} · ` : '';
+        timestamp.textContent = quote?.timestamp ? `${lastKnown}${new Date(quote.timestamp).toLocaleString()}` : '--';
         row.append(item, price, timestamp);
         row.addEventListener('click', () => {
             document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', String(item === row && row.getAttribute('aria-expanded') !== 'true')));
@@ -895,80 +903,141 @@ async function fetchMarketDashboard() {
     }
 }
 
+type CustomInstrument = { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string };
+const CUSTOM_LIMIT = 5;
+
 function initMarketCustomEditor() {
     const button = document.getElementById('market-custom-edit') as HTMLButtonElement | null;
     const dialog = document.getElementById('market-custom-dialog') as HTMLDialogElement | null;
     if (!button || !dialog || button.dataset.bound === 'true' || !hasMarketAuth()) return;
     button.dataset.bound = 'true';
-    let selected: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }[] = [];
-    const selectedBox = document.getElementById('market-custom-selected');
-    const resultsBox = document.getElementById('market-search-results');
+    let selected: CustomInstrument[] = [];
+    let saved = '';
+    let lastResults: CustomInstrument[] = [];
+    let searchSeq = 0;
+    let debounce: number | null = null;
+    const slots = document.getElementById('market-custom-selected');
+    const results = document.getElementById('market-search-results');
+    const heading = document.getElementById('market-search-heading');
+    const state = document.getElementById('market-search-state');
     const error = document.getElementById('market-custom-error');
-    const candidateBox = document.getElementById('market-candidate-results');
-    const identity = (value: { code: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) =>
-        value.code.toUpperCase();
-    const loadCandidates = async (query = '') => {
-        if (!candidateBox) return;
-        candidateBox.replaceChildren();
-        const response = await fetch(`${astroApiPath('/api/market/dashboard/candidates')}?q=${encodeURIComponent(query)}`, { headers: marketAuthHeaders() });
-        if (!response.ok) return;
+    const input = document.getElementById('market-symbol-search') as HTMLInputElement | null;
+    const saveButton = document.getElementById('market-custom-save') as HTMLButtonElement | null;
+    const key = (item: { code: string }) => item.code.toUpperCase();
+    const isSelected = (item: CustomInstrument) => selected.some((value) => key(value) === key(item));
+    const typeBadge = (item: CustomInstrument) => {
+        const badge = document.createElement('span');
+        badge.className = `mcd-badge${item.productType === 'futures' ? ' mcd-badge--futures' : ''}`;
+        badge.textContent = item.productType === 'futures'
+            ? `${marketText('Futures', '期貨')}${item.deliveryMonth ? ` ${item.deliveryMonth}` : ''}` : marketText('Stock', '股票');
+        return badge;
+    };
+    const label = (item: CustomInstrument, withBadge: boolean) => {
+        const text = document.createElement('span'); text.className = 'mcd-slot-text';
+        const code = document.createElement('strong'); code.className = 'mcd-code'; code.textContent = item.code;
+        const name = document.createElement('span'); name.className = 'mcd-name'; name.textContent = item.name; name.title = item.name;
+        text.append(code, name); if (withBadge) text.append(typeBadge(item));
+        return text;
+    };
+    const refresh = () => {
+        if (!slots) return;
+        slots.replaceChildren();
+        const count = document.getElementById('market-custom-count'); if (count) count.textContent = `${selected.length} / ${CUSTOM_LIMIT}`;
+        for (let index = 0; index < CUSTOM_LIMIT; index++) {
+            const slot = document.createElement('li');
+            const item = selected[index];
+            if (!item) { slot.className = 'mcd-slot mcd-slot--empty'; slot.textContent = marketText('Empty slot', '空位'); slots.append(slot); continue; }
+            slot.className = 'mcd-slot';
+            const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'mcd-remove'; remove.textContent = '×';
+            remove.setAttribute('aria-label', `${marketText('Remove', '移除')} ${item.code}`);
+            remove.addEventListener('click', () => { selected.splice(index, 1); refresh(); });
+            slot.append(label(item, false), remove); slots.append(slot);
+        }
+        if (saveButton) saveButton.disabled = JSON.stringify(selected.map(key)) === saved;
+        renderResults(lastResults);
+    };
+    const renderResults = (items: CustomInstrument[], emptyText?: string) => {
+        if (!results) return;
+        lastResults = items;
+        results.replaceChildren();
+        for (const item of items) {
+            const row = document.createElement('li'); row.className = 'mcd-result';
+            const add = document.createElement('button'); add.type = 'button'; add.className = 'mcd-add';
+            const added = isSelected(item);
+            add.textContent = added ? `✓ ${marketText('Added', '已加入')}` : `+ ${marketText('Add', '加入')}`;
+            add.classList.toggle('is-added', added);
+            add.disabled = added || selected.length >= CUSTOM_LIMIT;
+            if (!added && selected.length >= CUSTOM_LIMIT) add.title = marketText('Remove one first (limit 5)', '已滿 5 檔，請先移除');
+            add.addEventListener('click', () => { if (!isSelected(item) && selected.length < CUSTOM_LIMIT) { selected.push(item); refresh(); } });
+            row.append(label(item, true), add); results.append(row);
+        }
+        if (!items.length && emptyText) { const empty = document.createElement('li'); empty.className = 'mcd-empty'; empty.textContent = emptyText; results.append(empty); }
+    };
+    const showRecent = async () => {
+        if (heading) heading.textContent = marketText('Recently seen', '最近出現過');
+        if (state) state.textContent = '';
+        const response = await fetch(`${astroApiPath('/api/market/dashboard/candidates')}?q=`, { headers: marketAuthHeaders() }).catch(() => null);
+        const payload = response?.ok ? await response.json() : { results: [] };
+        if (input?.value.trim()) return; // the user started typing meanwhile
+        renderResults((payload.results ?? []).slice(0, 30), marketText('Type a code or name to search.', '輸入代號或名稱開始搜尋。'));
+    };
+    const search = async (query: string) => {
+        const seq = ++searchSeq;
+        if (heading) heading.textContent = marketText('Search results', '搜尋結果');
+        if (state) state.textContent = marketText('Searching…', '搜尋中…');
+        if (error) error.textContent = '';
+        const response = await fetch(`${astroApiPath('/api/market/dashboard/search')}?q=${encodeURIComponent(query)}`, { headers: marketAuthHeaders() }).catch(() => null);
+        if (seq !== searchSeq) return; // a newer keystroke superseded this request
+        if (!response?.ok) {
+            if (state) state.textContent = '';
+            renderResults([], marketText(`Search unavailable${response ? ` (HTTP ${response.status})` : ''}.`, `搜尋暫時無法使用${response ? `（HTTP ${response.status}）` : ''}。`));
+            return;
+        }
         const payload = await response.json();
-        (payload.results ?? []).forEach((item: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) => {
-            const row = document.createElement('div'); row.className = 'market-search-result';
-            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
-            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => identity(value) === identity(item)) ? 'Added' : 'Add';
-            add.disabled = add.textContent === 'Added' || selected.length >= 5;
-            add.addEventListener('click', () => { if (selected.length < 5) selected.push(item); renderSelected(); add.disabled = true; add.textContent = 'Added'; });
-            row.append(text, add); candidateBox.append(row);
-        });
-        if (!payload.results?.length) candidateBox.textContent = 'No historical candidates.';
+        const items: CustomInstrument[] = payload.results ?? [];
+        if (state) state.textContent = items.length ? marketText(`${items.length} found`, `${items.length} 筆`) : '';
+        renderResults(items, marketText('No matching stock or futures contract.', '找不到符合的股票或期貨。'));
     };
-    const renderSelected = () => {
-        if (!selectedBox) return;
-        selectedBox.replaceChildren();
-        const count = document.getElementById('market-custom-count'); if (count) count.textContent = `${selected.length} / 5`;
-        selected.forEach((item, index) => {
-            const row = document.createElement('div'); row.className = 'market-search-result';
-            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
-            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.addEventListener('click', () => { selected.splice(index, 1); renderSelected(); });
-            row.append(text, remove); selectedBox.append(row);
-        });
-    };
+    input?.addEventListener('input', () => {
+        if (debounce !== null) window.clearTimeout(debounce);
+        const query = input.value.trim();
+        if (!query) { searchSeq++; void showRecent(); return; }
+        debounce = window.setTimeout(() => { void search(query); }, 300);
+    });
+    input?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        if (debounce !== null) window.clearTimeout(debounce);
+        if (input.value.trim()) void search(input.value.trim());
+    });
     button.addEventListener('click', async () => {
         const response = await fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() });
         if (!response.ok) { button.hidden = true; return; }
-        const payload = await response.json(); selected = payload.symbols ?? [];
-        renderSelected(); if (error) error.textContent = ''; dialog.showModal(); void loadCandidates();
-    });
-    const search = async () => {
-        const input = document.getElementById('market-symbol-search') as HTMLInputElement | null;
-        if (!input || !resultsBox) return;
-        resultsBox.replaceChildren();
-        if (error) error.textContent = '';
-        const query = input.value.trim(); if (!query) return;
-        const response = await fetch(`${astroApiPath('/api/market/dashboard/search')}?q=${encodeURIComponent(query)}`, { headers: marketAuthHeaders() });
-        if (!response.ok) { if (error) error.textContent = `Search unavailable (HTTP ${response.status}).`; return; }
         const payload = await response.json();
-        (payload.results ?? []).forEach((item: { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) => {
-            const row = document.createElement('div'); row.className = 'market-search-result';
-            const text = document.createElement('span'); text.textContent = `${item.code} · ${item.name} · ${item.productType}${item.deliveryMonth ? ` · ${item.deliveryMonth}` : ''}`;
-            const add = document.createElement('button'); add.type = 'button'; add.textContent = selected.some((value) => identity(value) === identity(item)) ? 'Added' : 'Add';
-            add.disabled = add.textContent === 'Added' || selected.length >= 5;
-            add.addEventListener('click', () => { if (selected.length < 5) selected.push(item); renderSelected(); add.disabled = true; add.textContent = 'Added'; });
-            row.append(text, add); resultsBox.append(row);
-        });
-        if (!payload.results?.length) resultsBox.textContent = 'No matching stock or futures contract.';
-    };
-    document.getElementById('market-search-submit')?.addEventListener('click', () => { void search(); });
-    document.getElementById('market-candidate-search')?.addEventListener('input', (event) => { void loadCandidates((event.target as HTMLInputElement).value); });
-    document.getElementById('market-symbol-search')?.addEventListener('keydown', (event) => { if ((event as KeyboardEvent).key === 'Enter') { event.preventDefault(); void search(); } });
+        selected = payload.symbols ?? [];
+        saved = JSON.stringify(selected.map(key));
+        lastResults = [];
+        if (input) { input.value = ''; input.placeholder = marketText('Code or name, e.g. 2330 or TSMC', '代號或名稱，例如 2330 或 台積電'); }
+        if (error) error.textContent = '';
+        refresh();
+        dialog.showModal();
+        input?.focus();
+        void showRecent();
+    });
     document.getElementById('market-custom-cancel')?.addEventListener('click', () => dialog.close());
-    document.getElementById('market-custom-save')?.addEventListener('click', async () => {
+    // Clicking the dimmed backdrop closes the dialog like the × button.
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+    saveButton?.addEventListener('click', async () => {
+        saveButton.disabled = true;
         const response = await fetch(astroApiPath('/api/market/dashboard/custom'), {
             method: 'PUT', headers: { ...marketAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify({ symbols: selected }),
-        });
-        if (!response.ok) { if (error) error.textContent = `Save failed (HTTP ${response.status}).`; return; }
+        }).catch(() => null);
+        if (!response?.ok) {
+            if (error) error.textContent = marketText(`Save failed${response ? ` (HTTP ${response.status})` : ''}.`, `儲存失敗${response ? `（HTTP ${response.status}）` : ''}。`);
+            saveButton.disabled = false;
+            return;
+        }
         dialog.close(); await fetchMarketDashboard();
     });
     void fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() }).then((response) => { if (response.ok) button.hidden = false; }).catch(() => undefined);
@@ -1425,6 +1494,7 @@ async function fetchLeetCodeStats() {
 interface TxfQuote {
     symbol: string;
     underlyingCode?: string;
+    quoteSource?: 'live' | 'snapshot' | 'dailyClose';
     deliveryMonth?: string;
     close: number;
     open: number;

@@ -143,8 +143,33 @@ const skillsCategories = skillsData.categories;
 									<span id="txf-market-status" class="market-status">Loading</span>
 								</button>
 								<div class="market-watch-group"><h5>Automatic top five holdings <small id="market-auto-updated"></small></h5><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
-								<div class="market-watch-group"><h5>Custom instruments <button id="market-custom-edit" type="button" hidden>Edit</button></h5><div id="market-custom-list" class="market-watch-list"><p class="market-updated">Loading...</p></div></div>
-								<dialog id="market-custom-dialog" class="market-custom-dialog"><form method="dialog"><div class="market-dialog-heading"><h3>Custom instruments</h3><button value="cancel" aria-label="Close">×</button></div></form><label for="market-symbol-search">Search stock or futures code / name</label><div class="market-search-row"><input id="market-symbol-search" type="search" autocomplete="off" placeholder="2330 or TSMC"><button id="market-search-submit" type="button">Search</button></div><div id="market-search-results" class="market-search-results" aria-live="polite"></div><h4>Historical candidates</h4><label for="market-candidate-search">Filter previously seen contracts</label><input id="market-candidate-search" type="search" autocomplete="off" placeholder="code or name"><div id="market-candidate-results" class="market-search-results" aria-live="polite"></div><h4>Selected <span id="market-custom-count">0 / 5</span></h4><div id="market-custom-selected" class="market-search-results"></div><p id="market-custom-error" role="status"></p><div class="market-dialog-actions"><button id="market-custom-save" type="button">Save</button><button id="market-custom-cancel" type="button">Cancel</button></div></dialog>
+								<div class="market-watch-group"><h5>Custom instruments <button id="market-custom-edit" class="mcd-edit" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg><span data-i18n="home.marketCustomEdit">Edit</span></button></h5><div id="market-custom-list" class="market-watch-list"><p class="market-updated">Loading...</p></div></div>
+								<dialog id="market-custom-dialog" class="market-custom-dialog" aria-labelledby="market-custom-title">
+									<header class="mcd-head">
+										<div>
+											<h3 id="market-custom-title" data-i18n="home.marketCustomTitle">Custom instruments</h3>
+											<p data-i18n="home.marketCustomSubtitle">Up to five stocks or futures, shown under the holdings.</p>
+										</div>
+										<form method="dialog"><button class="mcd-icon" value="cancel" aria-label="Close">×</button></form>
+									</header>
+									<section class="mcd-section">
+										<div class="mcd-section-title"><span data-i18n="home.marketCustomSelected">Selected</span><span id="market-custom-count" class="mcd-count">0 / 5</span></div>
+										<ol id="market-custom-selected" class="mcd-slots"></ol>
+									</section>
+									<section class="mcd-section">
+										<label class="mcd-search" for="market-symbol-search">
+											<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+											<input id="market-symbol-search" type="search" autocomplete="off" placeholder="Code or name, e.g. 2330 or 台積電">
+										</label>
+										<div class="mcd-section-title"><span id="market-search-heading" data-i18n="home.marketCustomRecent">Recently seen</span><span id="market-search-state" class="mcd-count" aria-live="polite"></span></div>
+										<ul id="market-search-results" class="mcd-results" aria-live="polite"></ul>
+									</section>
+									<footer class="mcd-foot">
+										<p id="market-custom-error" role="status"></p>
+										<button id="market-custom-cancel" class="mcd-btn mcd-btn--ghost" type="button" data-i18n="home.marketCustomCancel">Cancel</button>
+										<button id="market-custom-save" class="mcd-btn mcd-btn--primary" type="button" data-i18n="home.marketCustomSave" disabled>Save</button>
+									</footer>
+								</dialog>
 							</section>
 							<section id="market-chart-section" class="market-chart-section" aria-label="Selected instrument charts">
 								<div id="market-instrument-detail" class="market-instrument-detail" hidden>
