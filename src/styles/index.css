@@ -49,8 +49,8 @@
 .market-fin-table tbody tr:last-child > * { border-bottom:none; }
 .market-fin-table tbody tr:hover > * { background:color-mix(in srgb, var(--gray-700) 30%, var(--gray-999)); }
 .market-fin-table tr.is-group > * { border-top:1px solid var(--gray-600); }
-.market-fin-table td.market-delta--up { color:#e45b5b; }
-.market-fin-table td.market-delta--down { color:#46a77f; }
+.market-fin-table td.market-delta--up, .market-fin-table td span.market-delta--up { color:#e45b5b; }
+.market-fin-table td.market-delta--down, .market-fin-table td span.market-delta--down { color:#46a77f; }
 .market-fin-table .is-latest { color:var(--gray-0); font-weight:600; }
 .market-fin-note { margin:.35rem 0 1rem; color:var(--gray-400); font-size:.72rem; }
 /* TDCC tier small multiples */

@@ -307,7 +307,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
             const first = candles[dragStart]; const last = candles[endIndex];
             if (first && last) {
                 const change = first.close ? (last.close - first.close) / first.close * 100 : 0;
-                readout.textContent = `${first.date} ${formatPrice(first.close)} → ${last.date} ${formatPrice(last.close)} · ${marketI18n('marketHistoryRangeChange', 'Close change')} ${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                readout.textContent = `${first.date} ${formatPrice(first.close)} → ${last.date} ${formatPrice(last.close)} · ${marketI18n('marketHistoryRangeChange', 'Close change')} ${Number(change.toFixed(2)) > 0 ? '+' : ''}${change.toFixed(2)}%`;
             }
         } else showCandle(index);
     });
@@ -330,7 +330,9 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     target.append(legend, readout);
 }
 
-async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price') {
+let marketHistoryRetryTimer: number | null = null;
+async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price', retries = 5) {
+    if (marketHistoryRetryTimer !== null) { window.clearTimeout(marketHistoryRetryTimer); marketHistoryRetryTimer = null; }
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
     const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     try {
@@ -355,13 +357,20 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(historyCode)}${query}`));
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             payload = await response.json() as MarketHistoryPayload;
-            marketHistoryCache.set(cacheKey, { payload, fetchedAt: Date.now() });
+            // Never cache an empty result: the backend starts a backfill for it and the next request should see the rows.
+            if (payload.points?.length) marketHistoryCache.set(cacheKey, { payload, fetchedAt: Date.now() });
         }
         const historyLabel = instrument.productType === 'futures'
             ? `${historyCode} ${usesSpotHistory ? marketI18n('marketHistorySpotData', 'spot data') : marketI18n('marketHistoryFuturesData', 'TAIFEX futures data')} · ` : '';
         const points = payload.points ?? []; if (status) status.textContent = points.length
             ? `${historyLabel}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
-            : `${historyLabel}${marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.')}`;
+            : `${historyLabel}${marketI18n('marketHistoryCollecting', 'Collecting history for this stock; the charts fill in automatically.')}`;
+        if (!points.length && retries > 0) {
+            marketHistoryRetryTimer = window.setTimeout(() => {
+                const tab = document.querySelector<HTMLButtonElement>(`[data-market-tab="${selectedTab}"]`);
+                if (selectedMarketInstrument === instrument && tab?.getAttribute('aria-selected') === 'true') void loadMarketHistory(instrument, selectedTab, retries - 1);
+            }, 45_000);
+        }
         const stockQuotes = ['twse:daily-price', 'tpex:daily-price']; const institutions = ['twse:institutional', 'tpex:institutional'];
         const priceSources = historyProductType === 'futures' ? ['taifex:daily-futures-price'] : stockQuotes;
         const institutionalSources = historyProductType === 'futures' ? ['taifex:futures-institutional'] : institutions;
@@ -526,10 +535,10 @@ function renderRevenueGrowth(target: HTMLElement | null, rows: any[], emptyText:
         { label: marketI18n('marketFundamentalsMoM', 'MoM'), color: '#7198df', sourceKeys: ['metrics'], field: 'momPercent', tooltip: (_, v) => ratioFormat.growth(v) },
     ], { height: 230, area: false, format: (v) => `${v}%` });
     target.prepend(buildMarketKpis([
-        { label: `${marketI18n('marketFundamentalsYoY', 'YoY')} · ${latest.period}`, value: formatSignedPercent(latest.yoyPercent, 1), delta: latest.yoyPercent },
-        { label: `${marketI18n('marketFundamentalsMoM', 'MoM')} · ${latest.period}`, value: formatSignedPercent(latest.momPercent, 1), delta: latest.momPercent },
-        { label: marketI18n('marketFundamentalsYtdYoY', 'Year-to-date YoY'), value: formatSignedPercent(latest.ytdYoyPercent, 1), delta: latest.ytdYoyPercent },
-        { label: marketI18n('marketFundamentals3mYoY', '3-month average YoY'), value: formatSignedPercent(recentAverage, 1), delta: recentAverage ?? undefined },
+        { label: `${marketI18n('marketFundamentalsYoY', 'YoY')} · ${latest.period}`, value: formatSignedPercent(latest.yoyPercent, 1) },
+        { label: `${marketI18n('marketFundamentalsMoM', 'MoM')} · ${latest.period}`, value: formatSignedPercent(latest.momPercent, 1) },
+        { label: marketI18n('marketFundamentalsYtdYoY', 'Year-to-date YoY'), value: formatSignedPercent(latest.ytdYoyPercent, 1) },
+        { label: marketI18n('marketFundamentals3mYoY', '3-month average YoY'), value: formatSignedPercent(recentAverage, 1) },
     ]));
 }
 
@@ -542,13 +551,12 @@ function renderProfitability(target: HTMLElement | null, rows: any[], emptyText:
         label: `${marketI18n(key, fallback)} · ${latest.period}`,
         value: typeof latest[`${MARGIN_KEYS[key]}`] === 'number' ? ratioFormat.percent(latest[MARGIN_KEYS[key]]) : '—',
         sub: `QoQ ${formatPp(latest[`${MARGIN_KEYS[key]}QoQ`])} · YoY ${formatPp(latest[`${MARGIN_KEYS[key]}YoY`])}`,
-        subDelta: latest[`${MARGIN_KEYS[key]}QoQ`],
     });
     target.append(buildMarketKpis([
         margin('marketFundamentalsGrossMargin', 'Gross margin'),
         margin('marketFundamentalsOperatingMargin', 'Operating margin'),
         margin('marketFundamentalsNetMargin', 'Net margin'),
-        { label: `EPS YoY · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), delta: latest.epsYoY, sub: `QoQ ${formatSignedPercent(latest.epsQoQ, 1)}`, subDelta: latest.epsQoQ },
+        { label: `EPS YoY · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), sub: `QoQ ${formatSignedPercent(latest.epsQoQ, 1)}` },
     ]));
     const title = document.createElement('h6'); title.className = 'market-subheading';
     title.textContent = marketI18n('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
@@ -600,19 +608,29 @@ function deltaClass(value: unknown): string {
     return value === null || value === undefined || !Number.isFinite(number) || number === 0 ? '' : number > 0 ? 'market-delta--up' : 'market-delta--down';
 }
 
-function buildMarketKpis(items: { label: string; value: string; delta?: unknown; sub?: string; subDelta?: unknown }[]): HTMLElement {
+// Colours each signed number by what is actually displayed ("+0.0%" after rounding is neutral), so a text
+// holding two changes — e.g. "QoQ +1.47 pp · YoY -0.30 pp" — gets one colour per number, not per element.
+function appendSignedText(target: HTMLElement, text: string) {
+    const pattern = /(^|\s)([+-]\d[\d,]*(?:\.\d+)?)/g;
+    let cursor = 0;
+    for (const match of text.matchAll(pattern)) {
+        const start = (match.index ?? 0) + match[1].length;
+        target.append(text.slice(cursor, start));
+        const span = document.createElement('span'); span.textContent = match[2];
+        const cls = deltaClass(Number(match[2].replace(/,/g, ''))); if (cls) span.className = cls;
+        target.append(span); cursor = start + match[2].length;
+    }
+    target.append(text.slice(cursor));
+}
+
+function buildMarketKpis(items: { label: string; value: string; sub?: string }[]): HTMLElement {
     const row = document.createElement('div'); row.className = 'market-kpi-row';
     for (const item of items) {
         const tile = document.createElement('div'); tile.className = 'market-kpi';
         const label = document.createElement('span'); label.textContent = item.label;
-        const value = document.createElement('strong'); value.textContent = item.value;
-        const valueClass = item.delta !== undefined ? deltaClass(item.delta) : ''; if (valueClass) value.classList.add(valueClass);
+        const value = document.createElement('strong'); appendSignedText(value, item.value);
         tile.append(label, value);
-        if (item.sub) {
-            const sub = document.createElement('small'); sub.textContent = item.sub;
-            const subClass = item.subDelta !== undefined ? deltaClass(item.subDelta) : ''; if (subClass) sub.classList.add(subClass);
-            tile.append(sub);
-        }
+        if (item.sub) { const sub = document.createElement('small'); appendSignedText(sub, item.sub); tile.append(sub); }
         row.append(tile);
     }
     return row;
@@ -635,8 +653,8 @@ function renderRatioTable(target: HTMLElement | null, rows: any[], spec: RatioRo
         const th = document.createElement('th'); th.scope = 'row'; th.textContent = line.label; tr.append(th);
         rows.forEach((row, i) => {
             const value = row[line.key]; const td = document.createElement('td');
-            td.textContent = typeof value === 'number' && Number.isFinite(value) ? ratioFormat[line.kind](value) : '—';
-            if (line.kind !== 'percent') { const cls = deltaClass(value); if (cls) td.classList.add(cls); }
+            const text = typeof value === 'number' && Number.isFinite(value) ? ratioFormat[line.kind](value) : '—';
+            if (line.kind === 'percent') td.textContent = text; else appendSignedText(td, text);
             if (i === rows.length - 1) td.classList.add('is-latest');
             tr.append(td);
         });
@@ -663,7 +681,7 @@ function renderOwnershipHistory(points: MarketHistoryPoint[]) {
         const change = latest - holding[0];
         chart.prepend(buildMarketKpis([
             { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), value: `${latest.toFixed(2)}%` },
-            { label: `${marketI18n('marketHistoryChangeSince', 'Change since')} ${points[0].date.slice(5)}`, value: formatPp(change), delta: Number(change.toFixed(2)) },
+            { label: `${marketI18n('marketHistoryChangeSince', 'Change since')} ${points[0].date.slice(5)}`, value: formatPp(change) },
             { label: marketI18n('marketHistoryForeignHeadroom', 'Headroom to legal limit'), value: limit !== undefined ? `${(limit - latest).toFixed(2)} pp` : '—', sub: limit !== undefined ? `${marketI18n('marketHistoryForeignLimit', 'Legal investment limit (%)')} ${limit}%` : undefined },
         ]));
     }
@@ -779,8 +797,9 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const price = document.createElement('span'); price.className = 'market-watch-price';
         const last = document.createElement('strong'); last.textContent = quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--';
         const change = document.createElement('small');
-        change.textContent = quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable';
-        change.classList.toggle('up', Boolean(quote && quote.change >= 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
+        change.textContent = quote ? `${quote.change > 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable';
+        // Unchanged (0) stays neutral; only real moves get red/green.
+        change.classList.toggle('up', Boolean(quote && quote.change > 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
         price.append(last, change);
         const timestamp = document.createElement('span'); timestamp.className = 'market-updated'; timestamp.textContent = quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--';
         row.append(item, price, timestamp);
@@ -1493,7 +1512,7 @@ function renderTxfQuote(quote: TxfQuote, offline = false) {
 
     section.classList.toggle('is-offline', offline);
     setText('txf-price', formatNumber(quote.close));
-    setText('txf-change', `${quote.change >= 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
+    setText('txf-change', `${quote.change > 0 ? '+' : ''}${formatNumber(quote.change)} (${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)`);
     setText('txf-market-status', offline ? 'Offline' : '10m');
     setText(
         'txf-updated',
@@ -1503,7 +1522,7 @@ function renderTxfQuote(quote: TxfQuote, offline = false) {
     );
 
     const change = document.getElementById('txf-change');
-    change?.classList.toggle('up', quote.change >= 0);
+    change?.classList.toggle('up', quote.change > 0);
     change?.classList.toggle('down', quote.change < 0);
 }
 
@@ -1594,7 +1613,7 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     const secPnl = secPos.reduce((s, p) => s + p.pnl, 0);
     const futPnl = futPos.reduce((s, p) => s + p.pnl, 0);
     const nbCurrency = (value: number) => {
-        const sign = value >= 0 ? '+' : '-';
+        const sign = value > 0 ? '+' : value < 0 ? '-' : '';
         const amount = Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
         return `${sign}NT$ ${amount}`;
     };
@@ -1791,21 +1810,21 @@ function renderDonut(
                <small>${slice.code} · ${o.assetClass} · ${pct.toFixed(2)}%</small>
                <span>Qty ${o.quantity} · Cost ${nativeFmt(o.averagePrice)} · Last ${nativeFmt(o.lastPrice)}</span>
                <span>Value ${o.currency} ${nativeFmt(o.marketValueNative)} · ${currency(slice.value)}</span>
-               <b class="${o.pnlTwd >= 0 ? 'up' : 'down'}">P/L ${o.pnlTwd >= 0 ? '+' : ''}${currency(o.pnlTwd)}</b>`;
+               <b class="${o.pnlTwd > 0 ? 'up' : o.pnlTwd < 0 ? 'down' : ''}">P/L ${o.pnlTwd > 0 ? '+' : ''}${currency(o.pnlTwd)}</b>`;
         } else if (slice.isFutures) {
             tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
                <small>${pos.code} · ${pct.toFixed(2)}%</small>
                <span>${pos.direction} · Net ${pos.signedQuantity > 0 ? '+' : ''}${pos.signedQuantity}</span>
                <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
                <span>分子 ${currency(slice.value)} / 分母 ${currency(total)}</span>
-               <b class="${pos.pnl >= 0 ? 'up' : 'down'}">P/L ${pos.pnl >= 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">P/L ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
         } else {
             tooltipEl.innerHTML = `<strong>${pos.name || pos.code}</strong>
                <small>${pos.code} · ${pct.toFixed(2)}%</small>
                <span>${pos.quantity} shares · YD ${pos.ydQuantity ?? 0}</span>
                <span>Cost ${pos.averagePrice.toLocaleString()} · Last ${pos.lastPrice.toLocaleString()}</span>
                <span>Value ${currency(pos.marketValue)}</span>
-               <b class="${pos.pnl >= 0 ? 'up' : 'down'}">P/L ${pos.pnl >= 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
+               <b class="${pos.pnl > 0 ? 'up' : pos.pnl < 0 ? 'down' : ''}">P/L ${pos.pnl > 0 ? '+' : ''}${currency(pos.pnl)}</b>`;
         }
         tooltipEl.classList.add('is-visible');
     };

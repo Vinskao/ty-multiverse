@@ -97,6 +97,7 @@
     "marketHistoryHolders": { "en": "Holders", "zh": "人數" },
     "marketHistoryShares": { "en": "Shares", "zh": "股數" },
     "marketHistoryPercent": { "en": "TDCC inventory %", "zh": "集保庫存比例" },
+    "marketHistoryCollecting": { "en": "Collecting history for this stock; the charts fill in automatically.", "zh": "這檔股票的歷史資料蒐集中，圖表會自動補上。" },
     "marketHistoryLatestSnapshot": { "en": "Latest snapshot", "zh": "最新資料日期" },
     "marketHistoryLoading": { "en": "Loading history…", "zh": "歷史資料載入中…" },
     "marketHistoryLoadedCount": { "en": "{count} daily records · {first} — {last}", "zh": "{count} 個交易日 · {first} 至 {last}" },

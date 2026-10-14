@@ -4,20 +4,31 @@
 interface Props { brief: any | null }
 const { brief } = Astro.props;
 
-const fmt = (value: unknown, suffix = '', signed = false, digits = 2) =>
-	typeof value === 'number' && Number.isFinite(value)
-		? `${signed && value > 0 ? '+' : ''}${value.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}`
-		: '—';
-const lots = (value: unknown) => typeof value === 'number' ? `${value > 0 ? '+' : ''}${value.toLocaleString('zh-TW')}` : '—';
-const tone = (value: unknown) => typeof value === 'number' && value !== 0 ? (value > 0 ? 'market-delta--up' : 'market-delta--down') : '';
-// 5-day net plus what the latest day did. A 1-day streak against the 5-day sign is a reversal, so say
-// "今日轉買 +x" rather than "連買1日" next to a negative total.
-const flowText = (flow: any) => {
-	if (!flow) return '—';
-	const total = lots(flow.net5dLots); const days = flow.streakDays || 0;
-	if (Math.abs(days) >= 2) return `${total} · 連${days > 0 ? '買' : '賣'}${Math.abs(days)}日`;
-	if (days && Math.sign(days) !== Math.sign(flow.net5dLots)) return `${total} · 今日轉${days > 0 ? '買' : '賣'} ${lots(flow.net1dLots)}`;
-	return total;
+// Every signed number is its own <span>, coloured by the value *as displayed* (after rounding), so a cell
+// mixing a level and a change, or a 5-day total and an opposite latest-day move, never shows one colour
+// for two signs. Taiwan convention: red = up, green = down.
+type Part = { text: string; cls?: string };
+const round = (value: number, digits: number) => Number(value.toFixed(digits));
+const toneOf = (value: number) => value > 0 ? 'market-delta--up' : value < 0 ? 'market-delta--down' : '';
+const plain = (value: unknown, suffix = '', digits = 2): Part =>
+	({ text: typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}` : '—' });
+const signed = (value: unknown, suffix = '', digits = 2): Part => {
+	if (typeof value !== 'number' || !Number.isFinite(value)) return { text: '—' };
+	const shown = round(value, digits);
+	return { text: `${shown > 0 ? '+' : ''}${shown.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits })}${suffix}`, cls: toneOf(shown) };
+};
+const sep: Part = { text: ' · ' };
+// 5-day net, then what the latest run of days did. A run against the 5-day sign is a reversal ("轉買/轉賣").
+const flowParts = (flow: any): Part[] => {
+	if (!flow) return [{ text: '—' }];
+	const parts = [signed(flow.net5dLots, '', 0)];
+	const days = flow.streakDays || 0;
+	if (!days) return parts;
+	const side = days > 0 ? '買' : '賣'; const cls = toneOf(days);
+	const reversal = Math.sign(days) !== Math.sign(flow.net5dLots);
+	if (Math.abs(days) >= 2) parts.push(sep, { text: reversal ? `近${Math.abs(days)}日轉${side}` : `連${side}${Math.abs(days)}日`, cls });
+	else if (reversal) parts.push(sep, { text: `今日轉${side} `, cls }, signed(flow.net1dLots, '', 0));
+	return parts;
 };
 // Which selected instruments map to this stock, e.g. "持有 · QFFJ6 期貨" or "自選".
 const viaText = (via: any[] | undefined) => (via ?? []).map((item) =>
@@ -59,14 +70,16 @@ const stocks = Object.values(brief?.stocks ?? {}) as any[];
 						return (
 							<tr>
 								<th scope="row">{s.code} {names[s.code]}<small class="market-brief-via">{viaText(s.via)}</small></th>
-								<td>{fmt(s.price?.close)} · <span class={tone(s.price?.change5dPct)}>{fmt(s.price?.change5dPct, '%', true)}</span></td>
-								<td class={tone(foreign?.net5dLots)}>{flowText(foreign)}</td>
-								<td class={tone(trust?.net5dLots)}>{flowText(trust)}</td>
-								<td class={tone(s.margin?.marginBalanceChange5dPct)}>{fmt(s.margin?.marginBalanceChange5dPct, '%', true, 1)}</td>
-								<td class={tone(s.tdcc?.largeHolderChange1wPp)}>{fmt(s.tdcc?.largeHolderPercent, '%')} · {fmt(s.tdcc?.largeHolderChange1wPp, ' pp', true)}</td>
-								<td class={tone(s.foreignHolding?.change20dPp)}>{fmt(s.foreignHolding?.percent, '%')} · {fmt(s.foreignHolding?.change20dPp, ' pp', true)}</td>
-								<td class={tone(s.fundamentals?.latestMonth?.yoyPercent)}>{fmt(s.fundamentals?.latestMonth?.yoyPercent, '%', true, 1)}</td>
-								<td class={tone(s.fundamentals?.latestQuarter?.grossMarginQoQ)}>{fmt(s.fundamentals?.latestQuarter?.grossMargin, '%', false, 1)} · {fmt(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp', true)}</td>
+								{[
+									[plain(s.price?.close), sep, signed(s.price?.change5dPct, '%')],
+									flowParts(foreign),
+									flowParts(trust),
+									[signed(s.margin?.marginBalanceChange5dPct, '%', 1)],
+									[plain(s.tdcc?.largeHolderPercent, '%'), sep, signed(s.tdcc?.largeHolderChange1wPp, ' pp')],
+									[plain(s.foreignHolding?.percent, '%'), sep, signed(s.foreignHolding?.change20dPp, ' pp')],
+									[signed(s.fundamentals?.latestMonth?.yoyPercent, '%', 1)],
+									[plain(s.fundamentals?.latestQuarter?.grossMargin, '%', 1), sep, signed(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp')],
+								].map((parts) => <td>{parts.map((part) => part.cls ? <span class={part.cls}>{part.text}</span> : part.text)}</td>)}
 							</tr>
 						);
 					})}
