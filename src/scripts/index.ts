@@ -522,7 +522,8 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // stock-only margin, lending, and ownership panels.
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
     const initialTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
-    selectMarketDetailTab(initialTab); void loadMarketHistory(instrument, initialTab);
+    selectMarketDetailTab(initialTab);
+    if (initialTab === 'price') void loadMarketHistory(instrument, initialTab);
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
