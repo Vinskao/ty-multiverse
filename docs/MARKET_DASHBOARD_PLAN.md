@@ -280,6 +280,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 | TPEx 日行情、法人、外資持股、資券、借券賣出 | TPEx `dailyQuotes`、`insti/dailyTrade`、`insti/qfii`、`margin/balance`、`margin/sbl`；2026-10-12 | 免登入 JSON。外資持股 `qfii` 使用 form POST；欄位 `發行股數(A)`、`持有股數(C)`、`持股比率(E=C/A)`、法令上限。 |
 | TDCC 集保持股級距 | 官方 `/portal/zh/smWeb/qryStock`；2330、2026-07-09 | 一般 GET/POST + 公布日期與 session token 可重現；15 級距，人數／股數／比例，官方歷史約一年。只保存自動／自訂名單中股票的週資料。 |
 | TAIFEX 契約日行情 | `https://www.taifex.com.tw/cht/3/futDataDown` POST；QFF、2026-10-12 | 免登入 Big5 CSV，欄位含契約、到期月、OHLC、成交量、結算價、未平倉口數與交易時段。collector 僅取「一般」時段，以契約代碼＋到期月映射 Shioaji 選定契約；固定 TXF 建近月連續日線（依第三個星期三到期日換月）。TAIFEX 的 `盤後` 不併入日 K。 |
+| TAIFEX 三大法人期貨彙總歷史 | `https://www.taifex.com.tw/cht/3/futContractsDateDown` POST；TXF、2026-10-12 | 免登入 CSV；欄位含自營商／投信／外資之多空交易口數、交易淨額與金額、未平倉多空／淨額與金額。股票期貨選 `commodityId=STF`，其資料是所有股票期貨契約彙總，不能當個別 QFF 籌碼。 |
 
 上述 collector 寫入 `maya_sawa_market_daily_history` 與逐來源／商品／日期覆蓋狀態表；股票首次選取回補 92 日，集保以官方已公布週日期回補；每日排程增量並重抓最近三日以吸收官方修正。匿名歷史 API `/market/dashboard/history/{code}` 只回市場資料。期貨目前提供官方日 K／成交量／結算價／未平倉合約，不等於 TAIFEX 法人分項籌碼。
 
@@ -287,8 +288,16 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 | --- | --- | --- |
 | 個股逐分點、主力 TOP15 | 富邦 TOP15 是彙總家數，不是逐分點資料；後端直接 HTTP 403。沒有核實可部署且允許使用的官方逐分點歷史端點 | 排除本輪，不繞過存取控制；不偽稱已完成 |
 | MOPS 董監持股、質押、轉讓 | 官方 `https://mops.twse.com.tw/mops/web/t100sb02_1` 回導向頁；匿名請求 `ajax_t100sb02_1` 回傳「因安全性考量無法呈現」拒絕頁（錯誤碼 7641438222288617879）。公開分類頁不足以確認歷史查詢欄位和重現流程 | 本輪不自動抓取，不以未驗證資料呈現 |
-| TAIFEX 法人歷史、大額交易人 | 已核實公開頁的日期查詢與商品類別，但其「股票期貨」是商品彙總，不是 2330/QFF 特定契約法人歷史；與逐契約行情端點分開 | 不宣稱個股期貨法人籌碼已實作；商品彙總仍需獨立日期 parser/畫面 |
-| 期貨權益籌碼 UI | TAIFEX 逐契約行情可取得未平倉口數，但法人交易與大額交易人的歷史來源不是該 CSV | 本輪 K 線可納入價格面；法人／大額持倉不以未平倉量替代 |
+| TAIFEX 個別契約法人歷史、大額交易人 | 日期下載可取得近三年三大法人 CSV；個股期貨資料為 `股票期貨` 類別彙總，不是特定 2330/QFF 契約。大額交易人另為不同來源 | 已收集 TXF 與股票期貨類別彙總的三法人交易／未平倉歷史，UI 清楚標示彙總類別；個別契約法人與大額交易人不冒充完成 |
+| 期貨法人籌碼 UI | TAIFEX 類別 CSV 欄位及歷史已實測，解析與歷史 panel 已實作 | 固定 TXF 與自訂期貨可看相應 TAIFEX 類別彙總；不將未平倉口數冒充法人多空明細 |
 | 券商主力成交力 | 沒有可驗證的逐券商原始資料與公式定義 | 排除，不自創指標 |
 
 因此，**目前沒有計畫中每一項資料的已確認可用來源**：上市櫃行情與籌碼、TDCC、TAIFEX 契約日行情有官方免費可用來源；逐分點資料、MOPS 匿名歷史查詢及個別股票期貨法人歷史尚不具備可重現的免費官方來源證據。來源可用也不代表功能已正式交付，需以本文件最新驗收狀態為準。
+
+
+### 本輪變更與部署狀態補記
+
+- backend commit `0b23b2d`、frontend commit `1e42222` 已推送至各自既有分支。後端相關測試 40 項通過、Python compileall 通過；Astro build 使用 Node 24 通過；兩 repo `git diff --check` 通過。現有 Astro build warnings 為背景圖 runtime 路徑及 sitemap 未設定 site。
+- 正式 PostgreSQL 已由本輪前段執行 candidate identity 與 market history migrations；需部署後再確認兩張 market history 表及資料收集覆蓋量。
+- Jenkins frontend/backend deploy job 現行 SSO 保護要求已登入 PeopleSystem。無登入的 tokenized API requests 回 HTTP 403「Authentication required」，Jenkins job config 未設定匿名 remote trigger token。本機 Docker daemon 未啟動，不能以本機 build 代替既有發佈流程。程式推送不會自動部署；frontend 仍為 image `papakao/ty-multiverse-frontend:245`、Maya 為 `papakao/maya-sawa:78`，故本輪目前尚未上正式站。
+- 後續需在已開啟的 Chrome Jenkins 分頁由使用者完成正常 SSO 登入；登入後立即觸發 `vinskao/ty-multiverse-frontend-deploy` 與 `vinskao/ty-multiverse-backend-deploy`，確認新 image／rollout，檢查三個月覆蓋及真正 DB 行數，再以登入正式站驗行情、法人、資券借券、持股週級距、期貨行情／類別法人 panel、搜尋 Mini TSMC Futures 且結果排除權證。
