@@ -241,6 +241,10 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         const usesSpotHistory = instrument.productType === 'stock' || Boolean(spotCode);
         const historyCode = usesSpotHistory ? spotCode : instrument.code;
         const historyProductType = usesSpotHistory ? 'stock' : 'futures';
+        if (selectedTab === 'fundamentals') {
+            await loadMarketFundamentals(historyCode, historyProductType);
+            return;
+        }
         const view = selectedTab === 'ownership' && historyProductType === 'stock' ? 'ownership' : 'daily';
         const cacheKey = `${historyCode.toUpperCase()}:${view}`;
         const cached = marketHistoryCache.get(cacheKey);
@@ -305,6 +309,112 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             { label: marketI18n('marketHistoryReturned', 'Returned (shares)'), color: '#dc806f', sourceKeys: borrowed, field: 'borrow_short_return_shares' },
         ], true);
     } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
+}
+
+const marketFundamentalsCache = new Map<string, { payload: any; fetchedAt: number }>();
+async function loadMarketFundamentals(code: string, productType: string) {
+    const status = document.getElementById('market-fundamentals-status');
+    const statementBox = document.getElementById('market-fundamentals-statements');
+    const balanceBox = document.getElementById('market-fundamentals-balance');
+    const cashFlowBox = document.getElementById('market-fundamentals-cash-flow');
+    const source = document.getElementById('market-fundamentals-source');
+    const noCompany = marketI18n('marketFundamentalsNoCompany', 'Company fundamentals are not available for index futures.');
+    if (productType !== 'stock' || !/^\d{4}$/.test(code)) {
+        if (status) status.textContent = noCompany;
+        const chart = document.getElementById('market-fundamentals-revenue-chart'); if (chart) chart.replaceChildren();
+        if (statementBox) statementBox.replaceChildren();
+        if (balanceBox) balanceBox.replaceChildren();
+        if (cashFlowBox) cashFlowBox.replaceChildren();
+        if (source) source.textContent = '';
+        return;
+    }
+    if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    try {
+        const cached = marketFundamentalsCache.get(code);
+        let payload = cached && Date.now() - cached.fetchedAt < 15 * 60_000 ? cached.payload : null;
+        if (!payload) {
+            const response = await fetch(astroApiPath(`/api/market/dashboard/fundamentals/${encodeURIComponent(code)}`));
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            payload = await response.json(); marketFundamentalsCache.set(code, { payload, fetchedAt: Date.now() });
+        }
+        const monthly = payload.monthlyRevenue ?? [];
+        const points: MarketHistoryPoint[] = monthly.map((row: any) => ({
+            date: String(row.period), code, name: row.name || code,
+            sources: { fundamentals: { revenue: Number(row.revenue), yoy: Number(row.yoyPercent), mom: Number(row.momPercent) } },
+        })).filter((row: MarketHistoryPoint) => Number.isFinite(row.sources.fundamentals.revenue));
+        drawMarketHistoryChart('market-fundamentals-revenue-chart', points, [{
+            label: marketI18n('marketFundamentalsRevenue', 'Monthly revenue · NT$ thousands'), color: '#55b8a8',
+            sourceKeys: ['fundamentals'], field: 'revenue',
+            tooltip: (point) => {
+                const values = point.sources.fundamentals;
+                return `${point.date} · ${Number(values.revenue).toLocaleString()} · ${marketI18n('marketFundamentalsYoY', 'YoY')} ${Number.isFinite(values.yoy) ? `${values.yoy}%` : '—'} · ${marketI18n('marketFundamentalsMoM', 'MoM')} ${Number.isFinite(values.mom) ? `${values.mom}%` : '—'}`;
+            },
+        }], true);
+        if (status) status.textContent = monthly.length ? `${code} · ${monthly[monthly.length - 1].period} · ${monthly[monthly.length - 1].publishedAt || '—'}` : marketI18n('marketFundamentalsNoRevenue', 'Monthly revenue is unavailable from the current official feed.');
+        if (statementBox) {
+            statementBox.replaceChildren();
+            const officialItems = (payload.incomeStatements ?? []).slice(-8);
+            const items: any[] = officialItems.length ? officialItems : finmindStatementGroups(payload.finmindIncomeStatements ?? []);
+            if (!items.length) statementBox.textContent = marketI18n('marketFundamentalsNoStatements', 'Quarterly statements are not available for this company in the current public feed.');
+            for (const item of items) {
+                const card = document.createElement('div'); card.className = 'market-fundamental-card';
+                const title = document.createElement('strong'); title.textContent = `${item.period} · ${item.publishedAt || ''}`;
+                const amount = item.singleQuarter || {};
+                const values = document.createElement('p');
+                values.textContent = item.singleQuarter
+                    ? `${marketI18n('marketFundamentalsRevenueLabel', 'Revenue')} ${formatFundamental(amount.revenue)} · ${marketI18n('marketFundamentalsGrossProfit', 'Gross profit')} ${formatFundamental(amount.grossProfit)} · ${marketI18n('marketFundamentalsOperatingIncome', 'Operating income')} ${formatFundamental(amount.operatingIncome)} · ${marketI18n('marketFundamentalsNetIncome', 'Net income')} ${formatFundamental(amount.netIncome)} · ${marketI18n('marketFundamentalsEps', 'EPS reported')} ${formatFundamental(item.epsReported)}`
+                    : item.displayValues;
+                const basis = document.createElement('small');
+                const hasQuarter = Object.values(amount).some((value) => typeof value === 'number');
+                if (officialItems.length) {
+                    const margin = typeof amount.grossProfit === 'number' && typeof amount.revenue === 'number' && amount.revenue !== 0
+                        ? ` · ${marketI18n('marketFundamentalsGrossMargin', 'Gross margin')} ${(amount.grossProfit / amount.revenue * 100).toFixed(2)}% (${marketI18n('marketFundamentalsGrossMarginFormula', 'gross profit ÷ revenue')})` : '';
+                    if (margin) values.textContent += margin;
+                    if (hasQuarter) basis.textContent = `${marketI18n('marketFundamentalsDerivedQuarter', 'Single quarter derived from official cumulative values; EPS stays as reported.')} ${item.unit}`;
+                    else { values.textContent = `${marketI18n('marketFundamentalsReportedCumulative', 'Reported cumulative values')} ${JSON.stringify(item.reportedCumulative)} · EPS ${formatFundamental(item.epsReported)}`; basis.textContent = `${marketI18n('marketFundamentalsNoPriorQuarter', 'Preceding quarter is unavailable; values remain cumulative.')} ${item.unit}`; }
+                } else basis.textContent = `Source: ${item.source || 'FinMind'} · values and item names shown as provided; units follow source metadata.`;
+                card.append(title, values, basis); statementBox.append(card);
+            }
+        }
+        const officialBalance = (payload.balanceSheets ?? []).slice(-8);
+        renderFundamentalCards(balanceBox, officialBalance.length ? officialBalance : finmindStatementGroups(payload.finmindBalanceSheets ?? []), 'reportedCumulative');
+        renderFundamentalCards(cashFlowBox, finmindStatementGroups(payload.cashFlows ?? []), '');
+        if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source}. ${payload.errors?.length ? payload.errors.join(' · ') : ''}`;
+    } catch (error) {
+        console.error('Market fundamentals unavailable:', error);
+        if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Fundamentals are temporarily unavailable.');
+    }
+}
+
+function formatFundamental(value: unknown): string {
+    return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—';
+}
+
+function finmindStatementGroups(rows: any[]): any[] {
+    const grouped = new Map<string, any[]>();
+    for (const row of rows) {
+        if (!grouped.has(row.period)) grouped.set(row.period, []);
+        grouped.get(row.period)!.push(row);
+    }
+    return [...grouped.entries()].slice(-8).map(([period, items]) => ({
+        period,
+        source: 'FinMind',
+        unit: items.map((row) => row.unit).filter(Boolean).join(', '),
+        displayValues: items.map((row) => `${row.item}: ${formatFundamental(row.value)}`).join(' · '),
+    }));
+}
+
+function renderFundamentalCards(target: HTMLElement | null, items: any[], valuesKey: string) {
+    if (!target) return;
+    target.replaceChildren();
+    for (const item of items) {
+        const card = document.createElement('div'); card.className = 'market-fundamental-card';
+        const title = document.createElement('strong'); title.textContent = `${item.period} · ${item.publishedAt || ''}`;
+        const values = document.createElement('p'); values.textContent = item.displayValues || JSON.stringify(item[valuesKey] || {});
+        const note = document.createElement('small'); note.textContent = `Source: ${item.source || 'FinMind'} · ${item.unit || 'source units'}`;
+        card.append(title, values, note); target.append(card);
+    }
+    if (!items.length) target.textContent = marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.');
 }
 
 function renderOwnershipHistory(points: MarketHistoryPoint[]) {
