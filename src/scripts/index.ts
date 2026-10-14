@@ -36,6 +36,7 @@ function initMarketWatchlist() {
 
 interface DashboardInstrument {
     code: string; name: string; productType: 'stock' | 'futures';
+    underlyingCode?: string;
     quote?: TxfQuote | null;
 }
 interface MarketDashboardPayload {
@@ -227,25 +228,30 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
     const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     try {
-        const view = selectedTab === 'ownership' && instrument.productType === 'stock' ? 'ownership' : 'daily';
-        const cacheKey = `${instrument.code.toUpperCase()}:${view}`;
+        const underlyingCode = instrument.productType === 'futures'
+            ? (instrument.quote?.underlyingCode || instrument.underlyingCode || '') : '';
+        const historyCode = underlyingCode || instrument.code;
+        const usesUnderlyingSpot = instrument.productType === 'futures' && Boolean(underlyingCode);
+        const historyProductType = usesUnderlyingSpot ? 'stock' : instrument.productType;
+        const view = selectedTab === 'ownership' && historyProductType === 'stock' ? 'ownership' : 'daily';
+        const cacheKey = `${historyCode.toUpperCase()}:${view}`;
         let payload = marketHistoryCache.get(cacheKey);
         if (!payload) {
             const query = view === 'ownership' ? '?view=ownership' : '';
-            const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(instrument.code)}${query}`));
+            const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(historyCode)}${query}`));
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             payload = await response.json() as MarketHistoryPayload; marketHistoryCache.set(cacheKey, payload);
         }
         const points = payload.points ?? []; if (status) status.textContent = points.length
-            ? marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)
-            : marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.');
+            ? `${usesUnderlyingSpot ? `${historyCode} ${marketI18n('marketHistorySpotData', 'spot data')} · ` : ''}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
+            : `${usesUnderlyingSpot ? `${historyCode} ${marketI18n('marketHistorySpotData', 'spot data')} · ` : ''}${marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.')}`;
         const stockQuotes = ['twse:daily-price', 'tpex:daily-price']; const institutions = ['twse:institutional', 'tpex:institutional'];
-        const priceSources = instrument.productType === 'futures' ? ['taifex:daily-futures-price'] : stockQuotes;
-        const institutionalSources = instrument.productType === 'futures' ? ['taifex:futures-institutional'] : institutions;
+        const priceSources = historyProductType === 'futures' ? ['taifex:daily-futures-price'] : stockQuotes;
+        const institutionalSources = historyProductType === 'futures' ? ['taifex:futures-institutional'] : institutions;
         const margin = ['twse:margin-balance', 'tpex:margin-balance']; const borrowed = ['twse:borrow-short', 'tpex:borrow-short'];
         if (view === 'ownership') { renderOwnershipHistory(points); return; }
         drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources,
-            instrument.productType === 'futures' ? 'volume_contracts' : 'volume_shares');
+            historyProductType === 'futures' ? 'volume_contracts' : 'volume_shares');
         drawMarketHistoryChart('market-history-institutional-chart', points, [
             { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutions, field: 'foreign_net_shares' },
             { label: marketI18n('marketHistoryTrust', 'Investment trust net'), color: '#7198df', sourceKeys: institutions, field: 'investment_trust_net_shares' },
@@ -258,7 +264,7 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         drawMarketHistoryChart('market-history-borrow-chart', points, [
             { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
         ]);
-        if (instrument.productType === 'futures') {
+        if (instrument.productType === 'futures' && !usesUnderlyingSpot) {
             drawMarketHistoryChart('market-history-institutional-chart', points, [
                 { label: 'Foreign net open interest (contracts)', color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_open_interest' },
                 { label: 'Trust net open interest (contracts)', color: '#7198df', sourceKeys: institutionalSources, field: 'trust_net_open_interest' },
@@ -340,7 +346,9 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     const placeholder = document.getElementById('market-chart-placeholder'); if (placeholder) placeholder.hidden = true;
     const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
     const quote = instrument.quote;
-    setText('market-detail-title', `${instrument.code} · ${instrument.name}`);
+    const underlyingCode = instrument.productType === 'futures'
+        ? (quote?.underlyingCode || instrument.underlyingCode || '') : '';
+    setText('market-detail-title', `${instrument.code} · ${instrument.name}${underlyingCode ? ` · ${underlyingCode} spot charts` : ''}`);
     setText('txf-contract', `${instrument.code}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
     setText('market-detail-price', quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--');
     setText('market-detail-change', quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable');
@@ -349,7 +357,9 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     setText('market-detail-time', quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--');
     const institutionalDescription = document.getElementById('market-history-institutional-description');
     if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
-        ? marketI18n('marketHistoryFuturesInstitutionalDescription', 'TAIFEX product category aggregate · not this individual contract · contracts')
+        ? (underlyingCode
+            ? `${underlyingCode} ${marketI18n('marketHistorySpotInstitutionalDescription', 'spot ticker institutional net trading · shares')}`
+            : marketI18n('marketHistoryFuturesInstitutionalDescription', 'TAIFEX product category aggregate · not this individual contract · contracts'))
         : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = instrument.productType === 'futures' && !['price', 'institutional'].includes(tab.dataset.marketTab || ''); });
     selectMarketDetailTab('price'); void loadMarketHistory(instrument, 'price');
@@ -961,6 +971,7 @@ async function fetchLeetCodeStats() {
 
 interface TxfQuote {
     symbol: string;
+    underlyingCode?: string;
     deliveryMonth?: string;
     close: number;
     open: number;

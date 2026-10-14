@@ -39,6 +39,8 @@
     "marketHistoryLatestSnapshot": { "en": "Latest snapshot", "zh": "最新資料日期" },
     "marketHistoryLoading": { "en": "Loading history…", "zh": "歷史資料載入中…" },
     "marketHistoryLoadedCount": { "en": "{count} daily records · {first} — {last}", "zh": "{count} 個交易日 · {first} 至 {last}" },
+    "marketHistorySpotData": { "en": "spot data", "zh": "現貨資料" },
+    "marketHistorySpotInstitutionalDescription": { "en": "spot ticker institutional net trading · shares", "zh": "現貨代號三大法人買賣超 · 股數" },
     "marketHistoryNoStored": { "en": "No stored history yet; first collection may take a few minutes.", "zh": "尚無已存歷史；首次回補可能需要幾分鐘。" },
     "marketHistoryUnavailable": { "en": "Historical data is temporarily unavailable.", "zh": "歷史資料暫時無法取得。" },
     "marketHistoryNoRows": { "en": "No historical rows are available yet.", "zh": "目前尚無歷史資料。" },
