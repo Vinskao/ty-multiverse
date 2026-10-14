@@ -63,7 +63,7 @@ function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: st
     return null;
 }
 
-function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string }[], bars = false) {
+function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }[], bars = false) {
     const target = document.getElementById(targetId);
     if (!target) return;
     target.replaceChildren();
@@ -90,7 +90,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
                 const tooltip = document.createElementNS(ns, 'title');
                 tooltip.textContent = `${points[i].date}\n${series.map((entry) => {
                     const value = entry.values[i];
-                    return `${entry.label}: ${value === null ? '—' : value.toLocaleString()} shares`;
+                    return `${entry.label}: ${value === null ? '—' : (entry.tooltip?.(points[i], value) || value.toLocaleString())}`;
                 }).join('\n')}`;
                 rect.append(tooltip); svg.append(rect); });
         } else {
@@ -102,7 +102,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
                 point.setAttribute('cy', String(y(value))); point.setAttribute('r', '5'); point.setAttribute('fill', 'transparent');
                 point.setAttribute('pointer-events', 'all');
                 const tooltip = document.createElementNS(ns, 'title');
-                tooltip.textContent = `${points[i].date}\n${item.label}: ${value.toLocaleString()}`;
+                tooltip.textContent = `${points[i].date}\n${item.label}: ${item.tooltip?.(points[i], value) || value.toLocaleString()}`;
                 point.append(tooltip); svg.append(point);
             });
         }
@@ -228,18 +228,6 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     target.append(legend, readout);
 }
 
-function renderMarketHistoryTable(targetId: string, points: MarketHistoryPoint[], columns: { label: string; sources: string[]; field: string; unit?: string }[]) {
-    const target = document.getElementById(targetId); if (!target) return; target.replaceChildren();
-    if (!points.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored rows yet; first collection may take a few minutes.'); return; }
-    const table = document.createElement('table'); table.className = 'market-history-table';
-    const head = document.createElement('thead'); const trh = document.createElement('tr');
-    [marketI18n('marketHistoryDate', 'Date'), ...columns.map((item) => marketI18n(item.label, item.label))].forEach((label) => { const th = document.createElement('th'); th.textContent = label; trh.append(th); }); head.append(trh); table.append(head);
-    const body = document.createElement('tbody');
-    [...points].reverse().forEach((point) => { const tr = document.createElement('tr'); const date = document.createElement('td'); date.textContent = point.date; tr.append(date);
-        columns.forEach((item) => { const td = document.createElement('td'); const value = historyValue(point, item.sources, item.field); td.textContent = value === null ? '—' : `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${item.unit ? ` ${item.unit}` : ''}`; tr.append(td); }); body.append(tr); });
-    table.append(body); target.append(table);
-}
-
 async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price') {
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
     const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
@@ -257,9 +245,6 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             if (status) status.textContent = emptyMessage;
             for (const id of ['market-history-price-chart', 'market-history-institutional-chart', 'market-history-margin-chart', 'market-history-borrow-chart']) {
                 const target = document.getElementById(id); if (target) target.textContent = emptyMessage;
-            }
-            for (const id of ['market-history-margin-table', 'market-history-borrow-table']) {
-                const target = document.getElementById(id); if (target) target.replaceChildren();
             }
             return;
         }
@@ -293,28 +278,31 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             { label: marketI18n('marketHistoryMarginBalance', 'Margin balance (lots)'), color: '#7198df', sourceKeys: margin, field: 'margin_balance_lots' },
             { label: marketI18n('marketHistoryShortBalance', 'Short balance (lots)'), color: '#dc806f', sourceKeys: margin, field: 'short_balance_lots' },
         ]);
+        drawMarketHistoryChart('market-history-margin-flow-chart', points, [
+            { label: marketI18n('marketHistoryMarginBuy', 'Margin buy (lots)'), color: '#55b8a8', sourceKeys: margin, field: 'margin_buy_lots' },
+            { label: marketI18n('marketHistoryMarginSell', 'Margin sell (lots)'), color: '#dc806f', sourceKeys: margin, field: 'margin_sell_lots' },
+            { label: marketI18n('marketHistoryShortSell', 'Short sell (lots)'), color: '#7198df', sourceKeys: margin, field: 'short_sell_lots' },
+        ], true);
         drawMarketHistoryChart('market-history-borrow-chart', points, [
             { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
         ]);
-        renderMarketHistoryTable('market-history-margin-table', points, [
-            { label: 'marketHistoryMarginBuy', sources: margin, field: 'margin_buy_lots' }, { label: 'marketHistoryMarginSell', sources: margin, field: 'margin_sell_lots' },
-            { label: 'marketHistoryShortSell', sources: margin, field: 'short_sell_lots' },
-        ]);
-        renderMarketHistoryTable('market-history-borrow-table', points, [
-            { label: 'marketHistoryBorrowSell', sources: borrowed, field: 'borrow_short_sell_shares' },
-            { label: 'marketHistoryReturned', sources: borrowed, field: 'borrow_short_return_shares' },
-        ]);
+        drawMarketHistoryChart('market-history-borrow-flow-chart', points, [
+            { label: marketI18n('marketHistoryBorrowSell', 'Borrowed stock sold (shares)'), color: '#7198df', sourceKeys: borrowed, field: 'borrow_short_sell_shares' },
+            { label: marketI18n('marketHistoryReturned', 'Returned (shares)'), color: '#dc806f', sourceKeys: borrowed, field: 'borrow_short_return_shares' },
+        ], true);
     } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
 }
 
 function renderOwnershipHistory(points: MarketHistoryPoint[]) {
     const holdingSources = ['twse:foreign-holding', 'tpex:foreign-holding'];
     drawMarketHistoryChart('market-history-foreign-holding-chart', points, [
-        { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), color: '#55b8a8', sourceKeys: holdingSources, field: 'foreign_holding_percent' },
+        { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), color: '#55b8a8', sourceKeys: holdingSources, field: 'foreign_holding_percent', tooltip: (_, value) => `${value}%` },
     ]);
-    renderMarketHistoryTable('market-history-foreign-holding-table', points, [
-        { label: 'marketHistoryForeignHoldingShares', sources: holdingSources, field: 'foreign_holding_shares' },
-        { label: 'marketHistoryForeignLimit', sources: holdingSources, field: 'foreign_limit_percent', unit: '%' },
+    drawMarketHistoryChart('market-history-foreign-holding-shares-chart', points, [
+        { label: marketI18n('marketHistoryForeignHoldingShares', 'Foreign holding shares'), color: '#7198df', sourceKeys: holdingSources, field: 'foreign_holding_shares', tooltip: (_, value) => `${value.toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')}` },
+    ]);
+    drawMarketHistoryChart('market-history-foreign-limit-chart', points, [
+        { label: marketI18n('marketHistoryForeignLimit', 'Foreign investment limit (%)'), color: '#dc806f', sourceKeys: holdingSources, field: 'foreign_limit_percent', tooltip: (_, value) => `${value}%` },
     ]);
     renderTdccOwnership(points);
 }
@@ -324,23 +312,35 @@ function renderTdccOwnership(points: MarketHistoryPoint[]) {
     const snapshots = points.map((point) => ({ point, tiers: point.sources['tdcc:distribution-history']?.tiers }))
         .filter((entry) => Array.isArray(entry.tiers) && entry.tiers.length);
     if (!snapshots.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored weekly distribution yet.'); return; }
-    const latest = snapshots[snapshots.length - 1];
-    const heading = document.createElement('p'); heading.className = 'market-updated'; heading.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${latest.point.date}`; target.append(heading);
-    const table = document.createElement('table'); table.className = 'market-history-table';
-    const head = document.createElement('thead'); const headingRow = document.createElement('tr');
-    ['marketHistoryTier', 'marketHistoryHolders', 'marketHistoryShares', 'marketHistoryPercent', ...snapshots.map(({ point }) => point.date)].forEach((label) => {
-        const th = document.createElement('th'); th.textContent = label.startsWith('marketHistory') ? marketI18n(label, label) : label; headingRow.append(th);
-    }); head.append(headingRow); table.append(head);
-    const body = document.createElement('tbody'); const latestTiers = latest.tiers as any[];
-    latestTiers.forEach((tier: any, index: number) => {
-        const row = document.createElement('tr');
-        [String(tier.tier), Number(tier.holders).toLocaleString(), Number(tier.shares).toLocaleString(), `${tier.percent}%`,
-            ...snapshots.map((snapshot) => {
-                const historic = (snapshot.tiers as any[]).find((item) => item.tier === tier.tier);
-                return historic ? `${Number(historic.shares).toLocaleString()} (${historic.percent}%)` : '—';
-            })].forEach((value) => { const cell = document.createElement('td'); cell.textContent = value; row.append(cell); });
-        body.append(row);
-    }); table.append(body); target.append(table);
+    const latestTiers = snapshots[snapshots.length - 1].tiers as any[];
+    const tierLabel = document.createElement('label'); tierLabel.htmlFor = 'market-history-tdcc-tier-select'; tierLabel.textContent = marketI18n('marketHistorySelectTier', 'Select shareholding tier');
+    const tierSelect = document.createElement('select'); tierSelect.id = 'market-history-tdcc-tier-select'; tierSelect.className = 'market-history-tier-select';
+    latestTiers.forEach((tier) => { const option = document.createElement('option'); option.value = String(tier.tier); option.textContent = `${marketI18n('marketHistoryTier', 'Tier')} ${tier.tier}`; tierSelect.append(option); });
+    const chart = document.createElement('div'); chart.id = 'market-history-tdcc-tier-chart'; chart.className = 'market-history-tdcc-chart'; target.append(tierLabel, tierSelect, chart);
+    const drawTier = () => {
+        const tierId = tierSelect.value;
+        const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
+            const tier = (tiers as any[]).find((item) => String(item.tier) === tierId);
+            return { ...point, sources: { 'tdcc:selected-tier': tier ? {
+                shares: Number(tier.shares), holders: Number(tier.holders), percent: Number(tier.percent),
+            } : {} } };
+        });
+        drawMarketHistoryChart(chart.id, chartPoints, [{
+            label: `${marketI18n('marketHistoryTier', 'Tier')} ${tierId} · ${marketI18n('marketHistoryShares', 'Shares')}`,
+            color: '#55b8a8', sourceKeys: ['tdcc:selected-tier'], field: 'shares',
+            tooltip: (point) => {
+                const tier = (snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers as any[] | undefined)
+                    ?.find((item) => String(item.tier) === tierId);
+                return tier ? `${Number(tier.shares).toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')} · ${Number(tier.holders).toLocaleString()} ${marketI18n('marketHistoryHolders', 'holders')} · ${tier.percent}%` : '—';
+            },
+        }]);
+        const latestNote = document.createElement('p'); latestNote.className = 'market-updated';
+        latestNote.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${snapshots[snapshots.length - 1].point.date} · ${marketI18n('marketHistoryTier', 'Tier')} ${tierId}`;
+        const existingNote = target.querySelector('.market-history-tdcc-latest');
+        if (!existingNote) { latestNote.classList.add('market-history-tdcc-latest'); target.append(latestNote); }
+        else existingNote.replaceWith(latestNote);
+    };
+    tierSelect.addEventListener('change', drawTier); drawTier();
 }
 
 function selectMarketDetailTab(tabName: string) {
