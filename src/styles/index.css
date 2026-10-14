@@ -1590,3 +1590,4 @@
 .market-brief-head p { margin:0; color:var(--gray-400); font-size:.72rem; }
 .market-brief-table td,.market-brief-table th { font-size:.76rem; }
 .market-brief-signals { margin:.5rem 0 0; padding-left:1.1rem; color:var(--gray-300); font-size:.78rem; line-height:1.6; }
+.market-brief-via { display:block; margin-top:.1rem; color:var(--gray-400); font-size:.68rem; font-weight:400; }
