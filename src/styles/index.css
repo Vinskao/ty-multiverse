@@ -1697,3 +1697,8 @@
 	.mcd-search input { font-size:16px; }
 	.mcd-btn, .mcd-add { min-height:44px; }
 }
+
+/* Accordion (phones): the chart panel sits under the tapped row and reads as one card with it. */
+.market-instrument-detail--inline { margin-top:-.5rem; border-top:0; border-radius:0 0 .9rem .9rem; scroll-margin-top:4rem; }
+.market-watch-list > .market-instrument-detail--inline { margin-top:-.35rem; }
+.market-watch-row { scroll-margin-top:4.5rem; }

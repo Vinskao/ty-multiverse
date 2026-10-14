@@ -35,6 +35,30 @@ document.addEventListener('astro:before-swap', () => {
     marketChartLayouts.clear();
 });
 
+// Phones: the chart panel opens directly under the tapped row (accordion) instead of at the bottom of the
+// whole watchlist. Wider screens keep it in the right-hand column.
+const MARKET_ACCORDION_QUERY = '(max-width: 768px)';
+let marketDetailRow: HTMLElement | null = null;
+// The tab the user last picked; kept when switching to another instrument.
+let preferredMarketTab: string | null = null;
+
+function placeMarketDetail(row: HTMLElement | null, scroll = true) {
+    const detail = document.getElementById('market-instrument-detail');
+    const section = document.getElementById('market-chart-section');
+    if (!detail || !section) return;
+    marketDetailRow = row;
+    const accordion = window.matchMedia(MARKET_ACCORDION_QUERY).matches;
+    if (accordion && row) {
+        if (row.nextElementSibling !== detail) row.after(detail);
+        detail.classList.add('market-instrument-detail--inline');
+        const top = row.getBoundingClientRect().top;
+        if (scroll && (top < 0 || top > window.innerHeight * 0.35)) row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (detail.parentElement !== section) {
+        section.prepend(detail);
+        detail.classList.remove('market-instrument-detail--inline');
+    }
+}
+
 function initMarketWatchlist() {
     const row = document.getElementById('txf-quote-section') as HTMLButtonElement | null;
     const detail = document.getElementById('market-instrument-detail');
@@ -49,10 +73,20 @@ function initMarketWatchlist() {
         if (placeholder) placeholder.hidden = !expanded;
         if (!expanded) {
             setMarketDetailInstrument({ code: 'TXF', name: 'TAIEX Futures', productType: 'futures' });
+            placeMarketDetail(row);
         }
     });
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => {
-        tab.addEventListener('click', () => { if (!tab.disabled) selectMarketDetailTab(tab.dataset.marketTab || 'price'); });
+        tab.addEventListener('click', () => {
+            if (tab.disabled) return;
+            preferredMarketTab = tab.dataset.marketTab || 'price';
+            selectMarketDetailTab(preferredMarketTab);
+        });
+    });
+    // Rotating the phone or resizing across the breakpoint moves the open panel to the right place.
+    window.matchMedia(MARKET_ACCORDION_QUERY).addEventListener('change', () => {
+        const panel = document.getElementById('market-instrument-detail');
+        if (panel && !panel.hidden) placeMarketDetail(marketDetailRow, false);
     });
 }
 
@@ -835,13 +869,16 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // index futures show TAIFEX price/category data and explain unsupported
     // stock-only margin, lending, and ownership panels.
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
-    const initialTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
-    selectMarketDetailTab(initialTab);
+    const defaultTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
+    selectMarketDetailTab(preferredMarketTab ?? defaultTab);
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
     const target = document.getElementById(targetId);
     if (!target) return;
+    const detail = document.getElementById('market-instrument-detail');
+    const openCode = detail && !detail.hidden && marketDetailRow && target.contains(marketDetailRow) ? marketDetailRow.dataset.marketCode : undefined;
+    if (detail && target.contains(detail)) document.getElementById('market-chart-section')?.prepend(detail);
     target.replaceChildren();
     if (!instruments.length) {
         const empty = document.createElement('p');
@@ -881,10 +918,13 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             if (detail) detail.hidden = !expanded;
             const placeholder = document.getElementById('market-chart-placeholder');
             if (placeholder) placeholder.hidden = expanded;
-            if (expanded) setMarketDetailInstrument(instrument);
+            if (expanded) { setMarketDetailInstrument(instrument); placeMarketDetail(row); }
         });
         target.append(row);
     }
+    // Restore the open instrument after the rebuild, without scrolling the page.
+    const reopened = openCode ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((row) => row.dataset.marketCode === openCode) : undefined;
+    if (reopened) { reopened.setAttribute('aria-expanded', 'true'); placeMarketDetail(reopened, false); }
 }
 
 async function fetchMarketDashboard() {
