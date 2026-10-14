@@ -63,7 +63,7 @@ function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: st
     return null;
 }
 
-function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }[], bars = false) {
+function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }[], bars = false, axes: { x?: string; y?: string } = {}) {
     const target = document.getElementById(targetId);
     if (!target) return;
     target.replaceChildren();
@@ -71,16 +71,39 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
     if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
     const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 900 230'); svg.classList.add('market-history-chart');
+    svg.setAttribute('viewBox', '0 0 900 280'); svg.classList.add('market-history-chart');
     let low = bars ? Math.min(0, ...values) : Math.min(...values); let high = bars ? Math.max(0, ...values) : Math.max(...values);
     const span = high - low || Math.max(Math.abs(high) * .05, 1);
     if (!bars) { low -= span * .08; high += span * .08; }
     else if (high === low) high = low + 1;
-    const padX = 48; const padY = 16;
-    const x = (i: number) => padX + (points.length < 2 ? 0 : i / (points.length - 1)) * (900 - padX - 12);
-    const y = (v: number) => padY + ((high - v) / (high - low)) * (230 - padY - 25);
-    const zero = document.createElementNS(ns, 'line'); zero.setAttribute('x1', String(padX)); zero.setAttribute('x2', '888');
-    zero.setAttribute('y1', String(y(0))); zero.setAttribute('y2', String(y(0))); zero.classList.add('market-history-zero'); svg.append(zero);
+    const padX = 64; const right = 888; const plotTop = 24; const plotBottom = 226;
+    const x = (i: number) => padX + (points.length < 2 ? 0 : i / (points.length - 1)) * (right - padX);
+    const y = (v: number) => plotTop + ((high - v) / (high - low)) * (plotBottom - plotTop);
+    for (let tick = 0; tick <= 4; tick++) {
+        const value = high - ((high - low) * tick / 4); const tickY = y(value);
+        const grid = document.createElementNS(ns, 'line'); grid.setAttribute('x1', String(padX)); grid.setAttribute('x2', String(right));
+        grid.setAttribute('y1', String(tickY)); grid.setAttribute('y2', String(tickY)); grid.classList.add('market-history-grid'); svg.append(grid);
+        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(padX - 8)); label.setAttribute('y', String(tickY + 4));
+        label.setAttribute('text-anchor', 'end'); label.classList.add('market-history-axis-label');
+        label.textContent = value.toLocaleString(undefined, { maximumFractionDigits: 1 }); svg.append(label);
+    }
+    const tickCount = Math.min(6, points.length);
+    for (let tick = 0; tick < tickCount; tick++) {
+        const index = Math.round(tick * (points.length - 1) / Math.max(tickCount - 1, 1));
+        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(x(index))); label.setAttribute('y', '248');
+        label.setAttribute('text-anchor', tick === 0 ? 'start' : tick === tickCount - 1 ? 'end' : 'middle'); label.classList.add('market-history-axis-label');
+        label.textContent = points[index].date; svg.append(label);
+    }
+    const xTitle = document.createElementNS(ns, 'text'); xTitle.setAttribute('x', String((padX + right) / 2)); xTitle.setAttribute('y', '274');
+    xTitle.setAttribute('text-anchor', 'middle'); xTitle.classList.add('market-history-axis-title');
+    xTitle.textContent = axes.x || marketI18n('marketHistoryDate', 'Date'); svg.append(xTitle);
+    const yTitle = document.createElementNS(ns, 'text'); yTitle.setAttribute('x', '14'); yTitle.setAttribute('y', String((plotTop + plotBottom) / 2));
+    yTitle.setAttribute('text-anchor', 'middle'); yTitle.setAttribute('transform', `rotate(-90 14 ${(plotTop + plotBottom) / 2})`);
+    yTitle.classList.add('market-history-axis-title'); yTitle.textContent = axes.y || fields.map((field) => field.label).join(' / '); svg.append(yTitle);
+    if (low <= 0 && high >= 0) {
+        const zero = document.createElementNS(ns, 'line'); zero.setAttribute('x1', String(padX)); zero.setAttribute('x2', String(right));
+        zero.setAttribute('y1', String(y(0))); zero.setAttribute('y2', String(y(0))); zero.classList.add('market-history-zero'); svg.append(zero);
+    }
     series.forEach((item, si) => {
         if (bars) {
             const step = (900 - padX - 12) / Math.max(points.length, 1); const w = Math.max(1, Math.min(7, step / (series.length + 1)));
@@ -124,7 +147,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     });
     if (!candles.some(Boolean)) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
     const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 900 340'); svg.classList.add('market-history-chart');
+    svg.setAttribute('viewBox', '0 0 900 370'); svg.classList.add('market-history-chart');
     const valid = candles.filter((item): item is NonNullable<typeof item> => item !== null);
     let low = Math.min(...valid.map((item) => item.low)); let high = Math.max(...valid.map((item) => item.high));
     const priceSpan = high - low || Math.max(Math.abs(high) * .05, 1); low -= priceSpan * .04; high += priceSpan * .04;
@@ -169,6 +192,14 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
         label.setAttribute('y', '330'); label.setAttribute('text-anchor', 'middle'); label.classList.add('market-history-axis-label');
         label.textContent = item.date.slice(5); svg.append(label);
     }
+    const dateAxis = document.createElementNS(ns, 'text'); dateAxis.setAttribute('x', String((left + right) / 2)); dateAxis.setAttribute('y', '355');
+    dateAxis.setAttribute('text-anchor', 'middle'); dateAxis.classList.add('market-history-axis-title');
+    dateAxis.textContent = marketI18n('marketHistoryDate', 'Date'); svg.append(dateAxis);
+    const priceAxis = document.createElementNS(ns, 'text'); priceAxis.setAttribute('x', '13'); priceAxis.setAttribute('y', String((priceTop + priceBottom) / 2));
+    priceAxis.setAttribute('text-anchor', 'middle'); priceAxis.setAttribute('transform', `rotate(-90 13 ${(priceTop + priceBottom) / 2})`);
+    priceAxis.classList.add('market-history-axis-title');
+    priceAxis.textContent = marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryPricePointsAxis' : 'marketHistoryPriceTwdAxis', volumeField === 'volume_contracts' ? 'Price (points)' : 'Price (TWD)');
+    svg.append(priceAxis);
     const selection = document.createElementNS(ns, 'rect'); selection.setAttribute('y', String(priceTop));
     selection.setAttribute('height', String(volumeBottom - priceTop)); selection.setAttribute('fill', '#d8a43b');
     selection.setAttribute('opacity', '.16'); selection.setAttribute('pointer-events', 'none'); selection.hidden = true; svg.append(selection);
@@ -437,34 +468,32 @@ function renderTdccOwnership(points: MarketHistoryPoint[]) {
         .filter((entry) => Array.isArray(entry.tiers) && entry.tiers.length);
     if (!snapshots.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored weekly distribution yet.'); return; }
     const latestTiers = snapshots[snapshots.length - 1].tiers as any[];
-    const tierLabel = document.createElement('label'); tierLabel.htmlFor = 'market-history-tdcc-tier-select'; tierLabel.textContent = marketI18n('marketHistorySelectTier', 'Select shareholding tier');
-    const tierSelect = document.createElement('select'); tierSelect.id = 'market-history-tdcc-tier-select'; tierSelect.className = 'market-history-tier-select';
-    latestTiers.forEach((tier) => { const option = document.createElement('option'); option.value = String(tier.tier); option.textContent = `${marketI18n('marketHistoryTier', 'Tier')} ${tier.tier}`; tierSelect.append(option); });
-    const chart = document.createElement('div'); chart.id = 'market-history-tdcc-tier-chart'; chart.className = 'market-history-tdcc-chart'; target.append(tierLabel, tierSelect, chart);
-    const drawTier = () => {
-        const tierId = tierSelect.value;
-        const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
-            const tier = (tiers as any[]).find((item) => String(item.tier) === tierId);
-            return { ...point, sources: { 'tdcc:selected-tier': tier ? {
-                shares: Number(tier.shares), holders: Number(tier.holders), percent: Number(tier.percent),
-            } : {} } };
-        });
-        drawMarketHistoryChart(chart.id, chartPoints, [{
-            label: `${marketI18n('marketHistoryTier', 'Tier')} ${tierId} · ${marketI18n('marketHistoryShares', 'Shares')}`,
-            color: '#55b8a8', sourceKeys: ['tdcc:selected-tier'], field: 'shares',
-            tooltip: (point) => {
-                const tier = (snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers as any[] | undefined)
-                    ?.find((item) => String(item.tier) === tierId);
-                return tier ? `${Number(tier.shares).toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')} · ${Number(tier.holders).toLocaleString()} ${marketI18n('marketHistoryHolders', 'holders')} · ${tier.percent}%` : '—';
-            },
-        }]);
-        const latestNote = document.createElement('p'); latestNote.className = 'market-updated';
-        latestNote.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${snapshots[snapshots.length - 1].point.date} · ${marketI18n('marketHistoryTier', 'Tier')} ${tierId}`;
-        const existingNote = target.querySelector('.market-history-tdcc-latest');
-        if (!existingNote) { latestNote.classList.add('market-history-tdcc-latest'); target.append(latestNote); }
-        else existingNote.replaceWith(latestNote);
-    };
-    tierSelect.addEventListener('change', drawTier); drawTier();
+    const tiersToShow = [
+        { id: '1-999', label: marketI18n('marketHistoryTierSmall', '1–999 shares'), color: '#55b8a8' },
+        { id: '1,000-5,000', label: marketI18n('marketHistoryTierMedium', '1,000–5,000 shares'), color: '#7198df' },
+        { id: '5,001-10,000', label: marketI18n('marketHistoryTierLarge', '5,001–10,000 shares'), color: '#dc806f' },
+        { id: '1,000,001以上', label: marketI18n('marketHistoryTierMillionPlus', '1,000,001+ shares'), color: '#d5ae4b' },
+    ].filter((tier) => latestTiers.some((item) => String(item.tier) === tier.id));
+    const chart = document.createElement('div'); chart.id = 'market-history-tdcc-tier-chart'; chart.className = 'market-history-tdcc-chart'; target.append(chart);
+    const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
+        const values: MarketHistoryValues = {};
+        for (const item of tiersToShow) {
+            const tier = (tiers as any[]).find((entry) => String(entry.tier) === item.id);
+            if (tier && Number.isFinite(Number(tier.percent))) values[`tier-${item.id}`] = Number(tier.percent);
+        }
+        return { ...point, sources: { 'tdcc:tiers': values } };
+    });
+    drawMarketHistoryChart(chart.id, chartPoints, tiersToShow.map((tier) => ({
+        label: tier.label, color: tier.color, sourceKeys: ['tdcc:tiers'], field: `tier-${tier.id}`,
+        tooltip: (point, value) => {
+            const row = (snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers as any[] | undefined)
+                ?.find((item) => String(item.tier) === tier.id);
+            return row ? `${value}% · ${Number(row.shares).toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')} · ${Number(row.holders).toLocaleString()} ${marketI18n('marketHistoryHolders', 'holders')}` : '—';
+        },
+    })), false, { x: marketI18n('marketHistoryDate', 'Date'), y: marketI18n('marketHistoryTierPercentAxis', 'Shareholding tier · shares outstanding (%)') });
+    const latestNote = document.createElement('p'); latestNote.className = 'market-updated market-history-tdcc-latest';
+    latestNote.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${snapshots[snapshots.length - 1].point.date}`;
+    target.append(latestNote);
 }
 
 function selectMarketDetailTab(tabName: string) {
@@ -492,7 +521,8 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // index futures show TAIFEX price/category data and explain unsupported
     // stock-only margin, lending, and ownership panels.
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
-    selectMarketDetailTab('price'); void loadMarketHistory(instrument, 'price');
+    const initialTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
+    selectMarketDetailTab(initialTab); void loadMarketHistory(instrument, initialTab);
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
