@@ -10,6 +10,8 @@ import i18nData from '../storages/i18n.json';
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
+let selectedMarketInstrument: DashboardInstrument | null = null;
+const marketHistoryCache = new Map<string, MarketHistoryPayload>();
 
 function initMarketWatchlist() {
     const row = document.getElementById('txf-quote-section') as HTMLButtonElement | null;
@@ -22,15 +24,11 @@ function initMarketWatchlist() {
         document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', 'false'));
         detail.hidden = expanded;
         if (!expanded) {
-            const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-            setText('market-detail-title', 'TXF · TAIEX Futures');
+            setMarketDetailInstrument({ code: 'TXF', name: 'TAIEX Futures', productType: 'futures' });
         }
     });
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            if (tab.disabled) return;
-            document.querySelectorAll('[data-market-tab]').forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
-        });
+        tab.addEventListener('click', () => { if (!tab.disabled) selectMarketDetailTab(tab.dataset.marketTab || 'price'); });
     });
 }
 
@@ -42,6 +40,204 @@ interface MarketDashboardPayload {
     fixed: DashboardInstrument;
     automatic: { snapshotAt: string | null; positions: DashboardInstrument[] };
     custom: DashboardInstrument[];
+}
+
+type MarketHistoryValues = Record<string, number>;
+interface MarketHistoryPoint { date: string; code: string; name: string; sources: Record<string, MarketHistoryValues> }
+interface MarketHistoryPayload { code: string; points: MarketHistoryPoint[] }
+
+function marketI18n(key: string, fallback: string) {
+    const language = String((window as any).AppLang?.get?.() || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    return (i18nData as any).home?.[key]?.[language] || fallback;
+}
+
+function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: string): number | null {
+    for (const source of sourceKeys) {
+        const value = point.sources[source]?.[field];
+        if (typeof value === 'number') return value;
+    }
+    return null;
+}
+
+function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string }[], bars = false) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.replaceChildren();
+    const series = fields.map((field) => ({ ...field, values: points.map((point) => historyValue(point, field.sourceKeys, field.field)) }));
+    const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
+    if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
+    const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 900 230'); svg.classList.add('market-history-chart');
+    let low = bars ? Math.min(0, ...values) : Math.min(...values); let high = bars ? Math.max(0, ...values) : Math.max(...values);
+    const span = high - low || Math.max(Math.abs(high) * .05, 1);
+    if (!bars) { low -= span * .08; high += span * .08; }
+    else if (high === low) high = low + 1;
+    const padX = 48; const padY = 16;
+    const x = (i: number) => padX + (points.length < 2 ? 0 : i / (points.length - 1)) * (900 - padX - 12);
+    const y = (v: number) => padY + ((high - v) / (high - low)) * (230 - padY - 25);
+    const zero = document.createElementNS(ns, 'line'); zero.setAttribute('x1', String(padX)); zero.setAttribute('x2', '888');
+    zero.setAttribute('y1', String(y(0))); zero.setAttribute('y2', String(y(0))); zero.classList.add('market-history-zero'); svg.append(zero);
+    series.forEach((item, si) => {
+        if (bars) {
+            const step = (900 - padX - 12) / Math.max(points.length, 1); const w = Math.max(1, Math.min(7, step / (series.length + 1)));
+            item.values.forEach((v, i) => { if (v === null) return; const rect = document.createElementNS(ns, 'rect');
+                rect.setAttribute('x', String(x(i) - w * series.length / 2 + si * w)); rect.setAttribute('y', String(Math.min(y(0), y(v))));
+                rect.setAttribute('width', String(w * .8)); rect.setAttribute('height', String(Math.max(1, Math.abs(y(0) - y(v))))); rect.setAttribute('fill', item.color); svg.append(rect); });
+        } else {
+            let d = ''; item.values.forEach((v, i) => { if (v !== null) d += `${d ? ' L' : 'M'} ${x(i)} ${y(v)}`; });
+            if (d) { const path = document.createElementNS(ns, 'path'); path.setAttribute('d', d); path.setAttribute('stroke', item.color); path.classList.add('market-history-line'); svg.append(path); }
+        }
+    });
+    target.append(svg);
+    const legend = document.createElement('div'); legend.className = 'market-history-legend';
+    series.forEach((item) => { const label = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color; label.append(dot, document.createTextNode(item.label)); legend.append(label); });
+    target.append(legend);
+}
+
+function renderMarketHistoryTable(targetId: string, points: MarketHistoryPoint[], columns: { label: string; sources: string[]; field: string; unit?: string }[]) {
+    const target = document.getElementById(targetId); if (!target) return; target.replaceChildren();
+    if (!points.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored rows yet; first collection may take a few minutes.'); return; }
+    const table = document.createElement('table'); table.className = 'market-history-table';
+    const head = document.createElement('thead'); const trh = document.createElement('tr');
+    [marketI18n('marketHistoryDate', 'Date'), ...columns.map((item) => marketI18n(item.label, item.label))].forEach((label) => { const th = document.createElement('th'); th.textContent = label; trh.append(th); }); head.append(trh); table.append(head);
+    const body = document.createElement('tbody');
+    [...points].reverse().forEach((point) => { const tr = document.createElement('tr'); const date = document.createElement('td'); date.textContent = point.date; tr.append(date);
+        columns.forEach((item) => { const td = document.createElement('td'); const value = historyValue(point, item.sources, item.field); td.textContent = value === null ? '—' : `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${item.unit ? ` ${item.unit}` : ''}`; tr.append(td); }); body.append(tr); });
+    table.append(body); target.append(table);
+}
+
+async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price') {
+    if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
+    const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    try {
+        const view = selectedTab === 'ownership' && instrument.productType === 'stock' ? 'ownership' : 'daily';
+        const cacheKey = `${instrument.code.toUpperCase()}:${view}`;
+        let payload = marketHistoryCache.get(cacheKey);
+        if (!payload) {
+            const query = view === 'ownership' ? '?view=ownership' : '';
+            const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(instrument.code)}${query}`));
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            payload = await response.json() as MarketHistoryPayload; marketHistoryCache.set(cacheKey, payload);
+        }
+        const points = payload.points ?? []; if (status) status.textContent = points.length
+            ? marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)
+            : marketI18n('marketHistoryNoStored', 'No stored history yet; initial collection may take a few minutes.');
+        const stockQuotes = ['twse:daily-price', 'tpex:daily-price']; const institutions = ['twse:institutional', 'tpex:institutional'];
+        const priceSources = instrument.productType === 'futures' ? ['taifex:daily-futures-price'] : stockQuotes;
+        const institutionalSources = instrument.productType === 'futures' ? ['taifex:futures-institutional'] : institutions;
+        const margin = ['twse:margin-balance', 'tpex:margin-balance']; const borrowed = ['twse:borrow-short', 'tpex:borrow-short'];
+        if (view === 'ownership') { renderOwnershipHistory(points); return; }
+        drawMarketHistoryChart('market-history-price-chart', points, [{ label: marketI18n('marketHistoryClose', 'Close'), color: '#e0ad42', sourceKeys: priceSources, field: 'close' }]);
+        drawMarketHistoryChart('market-history-institutional-chart', points, [
+            { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutions, field: 'foreign_net_shares' },
+            { label: marketI18n('marketHistoryTrust', 'Investment trust net'), color: '#7198df', sourceKeys: institutions, field: 'investment_trust_net_shares' },
+            { label: marketI18n('marketHistoryDealer', 'Dealer net'), color: '#dc806f', sourceKeys: institutions, field: 'dealer_net_shares' },
+        ], true);
+        drawMarketHistoryChart('market-history-margin-chart', points, [
+            { label: marketI18n('marketHistoryMarginBalance', 'Margin balance (lots)'), color: '#7198df', sourceKeys: margin, field: 'margin_balance_lots' },
+            { label: marketI18n('marketHistoryShortBalance', 'Short balance (lots)'), color: '#dc806f', sourceKeys: margin, field: 'short_balance_lots' },
+        ]);
+        drawMarketHistoryChart('market-history-borrow-chart', points, [
+            { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
+        ]);
+        renderMarketHistoryTable('market-history-price-table', points, [
+            { label: 'marketHistoryOpen', sources: priceSources, field: 'open' }, { label: 'marketHistoryHigh', sources: priceSources, field: 'high' },
+            { label: 'marketHistoryLow', sources: priceSources, field: 'low' }, { label: 'marketHistoryClose', sources: priceSources, field: 'close' },
+            { label: 'marketHistoryVolume', sources: priceSources, field: instrument.productType === 'futures' ? 'volume_contracts' : 'volume_shares' },
+        ]);
+        if (instrument.productType === 'futures') {
+            drawMarketHistoryChart('market-history-institutional-chart', points, [
+                { label: 'Foreign net open interest (contracts)', color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_open_interest' },
+                { label: 'Trust net open interest (contracts)', color: '#7198df', sourceKeys: institutionalSources, field: 'trust_net_open_interest' },
+                { label: 'Dealer net open interest (contracts)', color: '#dc806f', sourceKeys: institutionalSources, field: 'dealer_net_open_interest' },
+            ]);
+            renderMarketHistoryTable('market-history-institutional-table', points, [
+                { label: 'Foreign net trade (contracts)', sources: institutionalSources, field: 'foreign_net_trade_contracts' },
+                { label: 'Foreign net open interest (contracts)', sources: institutionalSources, field: 'foreign_net_open_interest' },
+                { label: 'Trust net open interest (contracts)', sources: institutionalSources, field: 'trust_net_open_interest' },
+                { label: 'Dealer net open interest (contracts)', sources: institutionalSources, field: 'dealer_net_open_interest' },
+            ]);
+            return;
+        }
+        renderMarketHistoryTable('market-history-institutional-table', points, [
+            { label: 'marketHistoryForeign', sources: institutions, field: 'foreign_net_shares' },
+            { label: 'marketHistoryTrust', sources: institutions, field: 'investment_trust_net_shares' },
+            { label: 'marketHistoryDealer', sources: institutions, field: 'dealer_net_shares' },
+            { label: 'marketHistoryTotal', sources: institutions, field: 'all_institutions_net_shares' },
+        ]);
+        renderMarketHistoryTable('market-history-margin-table', points, [
+            { label: 'marketHistoryMarginBuy', sources: margin, field: 'margin_buy_lots' }, { label: 'marketHistoryMarginSell', sources: margin, field: 'margin_sell_lots' },
+            { label: 'marketHistoryMarginBalance', sources: margin, field: 'margin_balance_lots' }, { label: 'marketHistoryShortSell', sources: margin, field: 'short_sell_lots' },
+            { label: 'marketHistoryShortBalance', sources: margin, field: 'short_balance_lots' },
+        ]);
+        renderMarketHistoryTable('market-history-borrow-table', points, [
+            { label: 'marketHistoryBorrowSell', sources: borrowed, field: 'borrow_short_sell_shares' },
+            { label: 'marketHistoryReturned', sources: borrowed, field: 'borrow_short_return_shares' },
+            { label: 'marketHistoryBorrowBalance', sources: borrowed, field: 'borrow_short_balance_shares' },
+        ]);
+    } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
+}
+
+function renderOwnershipHistory(points: MarketHistoryPoint[]) {
+    const holdingSources = ['twse:foreign-holding', 'tpex:foreign-holding'];
+    drawMarketHistoryChart('market-history-foreign-holding-chart', points, [
+        { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), color: '#55b8a8', sourceKeys: holdingSources, field: 'foreign_holding_percent' },
+    ]);
+    renderMarketHistoryTable('market-history-foreign-holding-table', points, [
+        { label: 'marketHistoryForeignHoldingShares', sources: holdingSources, field: 'foreign_holding_shares' },
+        { label: 'marketHistoryForeignHoldingPercent', sources: holdingSources, field: 'foreign_holding_percent', unit: '%' },
+        { label: 'marketHistoryForeignLimit', sources: holdingSources, field: 'foreign_limit_percent', unit: '%' },
+    ]);
+    renderTdccOwnership(points);
+}
+
+function renderTdccOwnership(points: MarketHistoryPoint[]) {
+    const target = document.getElementById('market-history-ownership'); if (!target) return; target.replaceChildren();
+    const snapshots = points.map((point) => ({ point, tiers: point.sources['tdcc:distribution-history']?.tiers }))
+        .filter((entry) => Array.isArray(entry.tiers) && entry.tiers.length);
+    if (!snapshots.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored weekly distribution yet.'); return; }
+    const latest = snapshots[snapshots.length - 1];
+    const heading = document.createElement('p'); heading.className = 'market-updated'; heading.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${latest.point.date}`; target.append(heading);
+    const table = document.createElement('table'); table.className = 'market-history-table';
+    const head = document.createElement('thead'); const headingRow = document.createElement('tr');
+    ['marketHistoryTier', 'marketHistoryHolders', 'marketHistoryShares', 'marketHistoryPercent', ...snapshots.map(({ point }) => point.date)].forEach((label) => {
+        const th = document.createElement('th'); th.textContent = label.startsWith('marketHistory') ? marketI18n(label, label) : label; headingRow.append(th);
+    }); head.append(headingRow); table.append(head);
+    const body = document.createElement('tbody'); const latestTiers = latest.tiers as any[];
+    latestTiers.forEach((tier: any, index: number) => {
+        const row = document.createElement('tr');
+        [String(tier.tier), Number(tier.holders).toLocaleString(), Number(tier.shares).toLocaleString(), `${tier.percent}%`,
+            ...snapshots.map((snapshot) => {
+                const historic = (snapshot.tiers as any[]).find((item) => item.tier === tier.tier);
+                return historic ? `${Number(historic.shares).toLocaleString()} (${historic.percent}%)` : '—';
+            })].forEach((value) => { const cell = document.createElement('td'); cell.textContent = value; row.append(cell); });
+        body.append(row);
+    }); table.append(body); target.append(table);
+}
+
+function selectMarketDetailTab(tabName: string) {
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.marketTab === tabName)));
+    document.querySelectorAll<HTMLElement>('[data-market-panel]').forEach((panel) => { panel.hidden = panel.dataset.marketPanel !== tabName; });
+    if (selectedMarketInstrument && tabName !== 'price') void loadMarketHistory(selectedMarketInstrument, tabName);
+}
+
+function setMarketDetailInstrument(instrument: DashboardInstrument) {
+    selectedMarketInstrument = instrument;
+    const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+    const quote = instrument.quote;
+    setText('market-detail-title', `${instrument.code} · ${instrument.name}`);
+    setText('txf-contract', `${instrument.code}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
+    setText('market-detail-price', quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--');
+    setText('market-detail-change', quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable');
+    setText('txf-open', quote?.open?.toLocaleString() ?? '--'); setText('txf-high', quote?.high?.toLocaleString() ?? '--');
+    setText('txf-low', quote?.low?.toLocaleString() ?? '--'); setText('market-detail-volume', quote?.volume?.toLocaleString() ?? '--');
+    setText('market-detail-time', quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--');
+    const institutionalDescription = document.getElementById('market-history-institutional-description');
+    if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
+        ? marketI18n('marketHistoryFuturesInstitutionalDescription', 'TAIFEX product category aggregate · not this individual contract · contracts')
+        : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = instrument.productType === 'futures' && !['price', 'institutional'].includes(tab.dataset.marketTab || ''); });
+    selectMarketDetailTab('price'); void loadMarketHistory(instrument, 'price');
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
@@ -80,14 +276,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             const detail = document.getElementById('market-instrument-detail');
             const expanded = row.getAttribute('aria-expanded') === 'true';
             if (detail) detail.hidden = !expanded;
-            const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
-            setText('market-detail-title', `${instrument.code} · ${instrument.name}`);
-            setText('txf-contract', `${instrument.code}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`);
-            setText('market-detail-price', quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--');
-            setText('market-detail-change', quote ? `${quote.change >= 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent.toFixed(2)}%)` : 'Quote unavailable');
-            setText('txf-open', quote?.open?.toLocaleString() ?? '--'); setText('txf-high', quote?.high?.toLocaleString() ?? '--');
-            setText('txf-low', quote?.low?.toLocaleString() ?? '--'); setText('market-detail-volume', quote?.volume?.toLocaleString() ?? '--');
-            setText('market-detail-time', quote?.timestamp ? new Date(quote.timestamp).toLocaleString() : '--');
+            if (expanded) setMarketDetailInstrument(instrument);
         });
         target.append(row);
     }
@@ -120,7 +309,7 @@ function initMarketCustomEditor() {
     const error = document.getElementById('market-custom-error');
     const candidateBox = document.getElementById('market-candidate-results');
     const identity = (value: { code: string; productType: 'stock' | 'futures'; deliveryMonth?: string }) =>
-        `${value.productType}:${value.code.toUpperCase()}:${value.productType === 'futures' ? value.deliveryMonth ?? '' : ''}`;
+        value.code.toUpperCase();
     const loadCandidates = async (query = '') => {
         if (!candidateBox) return;
         candidateBox.replaceChildren();

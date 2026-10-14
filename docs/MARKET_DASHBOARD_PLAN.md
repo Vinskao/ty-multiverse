@@ -1,6 +1,6 @@
 # 首頁市場儀表板與 About 語系修正計畫
 
-規格日期：2026-10-13。以下納入同日晚間使用者最新指示，優先於本文件舊規則及 `PLAN_TO_PRODUCTION_WORKFLOW.md` 的歷史紀錄。
+規格日期：2026-10-14。以下納入最新使用者指示，優先於本文件先前紀錄及 `PLAN_TO_PRODUCTION_WORKFLOW.md` 的歷史紀錄。
 
 ## 執行授權與完成標準（最新決議）
 
@@ -48,7 +48,7 @@
 | 2 | TPEX dailyTrade | 範例請求免登入、無付款步驟 | 已取得 2026/07/13 上櫃法人明細；外資持股與資券其他介面仍待逐項驗證 |
 | 3 | TAIFEX 公開法人及未平倉 | 公開頁免登入、無付款步驟 | 已取得 2026/07/13 TXF；公開下載有近三年範圍，不能與付費申購混淆；個股期貨範圍待驗證 |
 | 4 | Shioaji 報價／歷史／合約／私有持倉 | 使用既有券商 API key 與帳戶，非匿名 API | 已有專案整合；部署前確認既有權限與額度，不要求另辦新帳號 |
-| 5 | TDCC、MOPS | 有公開查詢入口；不可先保證所有介面免登入且自動化可用 | 尚待實際端點、三個月歷史及部署環境查證；舊 MOPS URL 已導向錯誤頁，需找新入口 |
+| 5 | TDCC、MOPS | 有公開查詢入口；不可先保證所有介面免登入且自動化可用 | TDCC 最新週 OpenAPI 可免登入讀取；官方歷史查詢表單 GET 公布日期選項與同步 token、一般 POST 可查指定股票／日期，已實測最新及三個月前資料。MOPS 董監相關端點仍待核實 |
 | 6 | 富邦公開籌碼頁 | 已讀頁面免登入、無付款步驟 | 分點最新與 2026/07/01 皆在瀏覽器取得；後端直接 HTTP 回 403。需驗證正常瀏覽器收集工作在 OKE 可用；不能說已完成 API 化 |
 | 排除 | 三竹 SDK | 有免費部分試用，但完整額度不明且未取得資料 URL | 依使用者決定排除 |
 | 備援線索 | SITCA、FinMind、TEJ | SITCA 有公開週期報表；FinMind／TEJ 特定資料可能需帳號或付費 | 不偷偷引入帳號或付費依賴。SITCA 月前十大不能取代每日全部投信持股 |
@@ -62,8 +62,8 @@
 | TWSE 外資持股每日資料 | 資料源納入後續收集；本輪尚未實作歷史圖表 | MI_QFIIS，`date=20261012`，stat=OK | 持有股數、持股比例、法定上限；日報 | 官方免登入 JSON；尚未完成歷史 upsert |
 | TWSE 融資融券每日資料 | 資料源納入後續收集；本輪尚未實作歷史圖表 | MI_MARGN，`date=20261012`，stat=OK | 信用交易欄位；來源單位／索引仍須按官方欄名映射 | 官方免登入 JSON；未完成明確 mapping 前不展示 |
 | TPEx 三大法人每日買賣超 | 資料源納入後續收集；本輪尚未實作歷史圖表 | `dailyTrade?date=2026%2F10%2F12&type=Daily&sect=EW&response=json`，回應日期 115/10/12 | 25 欄含法人買進、賣出、淨額；重複名稱依欄群標頭解讀 | 官方免登入 JSON；上市櫃欄位結構不可共用索引 |
-| TAIFEX 法人與大額交易人 | 延後，本輪不顯示 | 官方 OpenAPI Swagger 列有相關資源；既有 TXF 樣本為 2026/07/13 | 公開下載；未驗證個股期貨涵蓋、休市及近三月逐日回補 | 不從 TXF 單一樣本推廣至全部期貨 |
-| TDCC 集保級距 | 納入每週最新資料源；本輪尚未實作 | `/v1/opendata/1-5`，樣本日期 2026-10-08 | 15 個持股級距、股數、人數、占集保庫存比例；週報 | 公開 OpenAPI 免登入；此 endpoint 樣本只證明最新週，不證明三月歷史可自動讀取 |
+| TAIFEX 法人與大額交易人 | 法人日期資料源納入後續；大額交易人延後 | Official OpenAPI `MarketDataOfMajorInstitutionalTradersDetailsOfFuturesContractsBytheDate` 現行樣本日期 2026-10-13；官方日期查詢頁可指定 `2026/10/12` | 每日按指數類／股票期貨「商品種類」×法人，含交易及未平倉口數／契約金額；「股票期貨」不是個別 2330/QFF 契約 | 公開免登入；日期查詢範圍官方頁稱近三年。API 無日期參數，需以歷史網頁端點實測後才納入三月 collector；不可宣稱個股期貨法人資料 |
+| TDCC 集保級距 | 納入選定股票逐週回補及增量 | `/v1/opendata/1-5` 最新全市場樣本 2026-10-08；官方表單 `https://www.tdcc.com.tw/portal/zh/smWeb/qryStock` POST 可查 2330、2026-07-09 | 15 級距，人數／股數／比例；按來源日期保存週報 | 匿名官方頁面，無登入／付款；歷史保存一年。已確認表單 token/date/POST，可接入選定標的回補 |
 | MOPS 董監持股／質押／轉讓 | 延後，不展示 | 官方 MOPS 有相關分類；本輪未驗證可重現端點及日期 | 欄位、頻率及歷史範圍未核實 | 未查證不等同缺資料；完成端點驗證後再納入 |
 | 分點、主力與逐分點均價 | 排除本輪 | 富邦既有網頁樣本列 TOP15 聚合數；後端 HTTP 回 403 | 非逐分點買進／賣出均價；本站未定義券商「主力」對應公式 | 不繞過存取控制；未證明可部署使用的官方免費 API |
 | Shioaji 三個月 K 線歷史 | 延後，本輪不回補 | [官方歷史行情文件](https://sinotrade.github.io/zh/tutor/market_data/historical/) | 文件描述單次區間上限與 API 頻寬使用 | 尚未實作分段回補及額度監控，不能用即時 snapshots 冒充歷史行情 |
@@ -81,20 +81,20 @@
 
 | 缺少資料／功能 | 目前狀態 | 下一步需要取得的證據或實作 |
 | --- | --- | --- |
-| 上市個股法人買賣超歷史 | TWSE T86 單日樣本已驗；沒有 collector、DB、三月回補及畫面 | 確認欄位及股數換算、日期/股票查詢；建立日增量與選股後回補，呈現外資／投信／自營商每日及 5/10/20 日累計 |
-| 上櫃個股法人買賣超歷史 | TPEx dailyTrade 單日樣本已驗；沒有 collector 或呈現 | 解讀重複欄名群組、逐檔驗證日期與休市日、統一上市櫃內部 schema 但保留來源欄位 |
-| 外資持股（上市／上櫃） | TWSE MI_QFIIS 單日樣本；TPEx 尚未完成端點證據 | 驗證持股數、比率、上限及頻率；顯示持股存量，不與法人買賣超混淆 |
-| 融資融券（上市／上櫃） | TWSE MI_MARGN 有回應但欄位 mapping 未確認；TPEx 未查清 | 依官方欄名／欄位位置核實融資買賣與餘額、融券及券資比；檢查單位與逐日歷史 |
-| 借券、借券賣出 | 尚未完成來源及歷史查證，未實作 | 找上市及上櫃正式端點，分辨借券餘額、借券賣出及還券，不混為一個數值 |
+| 上市個股法人買賣超歷史 | T86 樣本與欄位 mapping 已驗；collector、DB、migration、日增量及 92 日回補已實作，尚未在正式 DB 執行／未部署 | production migration 後回補登入後自動及 custom 股票；驗 DB/API 三個月覆蓋並完成法人圖表、表格正式站驗收 |
+| 上櫃個股法人買賣超歷史 | dailyTrade 指定日期樣本與 25 欄 grouping 已驗；collector、DB、migration、日增量及 92 日回補已實作，尚未 production 執行 | production migration 後回補並核對 TPEx 日期／休市與多檔 UI；法人每日及 5/10/20 日累計仍未實作 |
+| 外資持股（上市／上櫃） | TWSE MI_QFIIS 欄位、股數／比例／上限已映射並納入 collector；TPEx 尚未取得可按日期查詢的逐檔外資持股端點 | 驗證並接入 TPEx 歷史來源；顯示持股存量，不與法人買賣超混淆 |
+| 融資融券（上市／上櫃） | TWSE MI_MARGN 與 TPEx `margin/balance` 欄位均已用 2026-10-12 樣本映射；上市融資融券單位為張 | production 回補後核對逐日歷史與券資比欄位； UI 尚未驗收 |
+| 借券、借券賣出 | TWSE TWT93U 與 TPEx `margin/sbl` 均已映射；TWSE 報表欄位為股，包含融券餘額、借券賣出、還券及借券賣出餘額 | `https://www.twse.com.tw/rwd/zh/marginTrading/TWT93U?date=20261012&response=json` 回 2330 與 `單位：股`；每日日期查詢。TWSE 產品商店另列訂購檔案有月費，本站使用公開報表 endpoint，不下載訂閱檔 |
 | 分點買進／賣出及排行（使用者特別關注） | 富邦頁面曾檢視，但個別分點資料沒有進本系統；沒有 OKE 收集或 DB | 先確認合法可用端點/欄位能否提供個別分點買進、賣出、淨額、張數及日期；用上市/上櫃、多日期驗證。若來源只提供 TOP15 聚合，明列限制，不能稱為逐分點資料 |
 | 分點均價與券商「主力」 | 逐分點均價及主力定義未核實、未實作 | 必須得到買進與賣出逐分點成交金額/張數才能計算均價；主力公式需先定義，並標示涵蓋家數，不能冒稱券商相同指標 |
-| TDCC 集保級距歷史 | `/v1/opendata/1-5` 最新週樣本；三月週資料回補能力未證明，未實作 | 找可依日期取歷史的正式資料集或下載檔；保存每週各級距股數、人數、比例及來源日期 |
+| TDCC 集保級距歷史 | 官方逐檔歷史查詢已實測並新增 GET token/date 解析、POST parser、92 日週回補與 ownership API/UI；尚未在 production DB 執行或驗正式站 | 以官方下拉日期為準；2026-07-09 2330 成功回傳 15 級距並 parser 正確抽出股數／人數／比例；正式站需核對全部回補週及表格 |
 | 董監持股、質押、轉讓 | 只找到 MOPS 分類入口；端點、歷史、欄位未查證且未實作 | 找可重複查詢的正式端點/檔案，確認公告日、持股、質押與轉讓數量和修正公告規則 |
 | 台指期法人及大額交易人 | 只有 TXF 單日樣本/Swagger 線索；沒有日歷史或圖表 | 對期貨法人多空交易與未平倉、大額交易人分別查明品種範圍、交易日覆蓋、淨額公式與可回補期 |
 | 個股期貨法人籌碼 | 商品涵蓋仍未證明，未實作 | 查詢個股期貨是否有可用法人/未平倉官方資料；不能以 TXF 大盤期貨資料代替 |
-| 三個月 K 線與成交量 | Shioaji 單次歷史限制已查，沒有分段下載、儲存或歷史圖 | 依現有合約/API 額度實作選定商品回補、日增量、補洞、來源時間與覆蓋狀態；禁止即時行情補造舊日期 |
-| 統一 DB／排程／覆蓋狀態 | 只有 selection/settings 兩表；無籌碼日資料 schema 或 collector | 依已定案資料源建可重跑 migration、唯一鍵/upsert、來源及抓取時間、單位、失敗/休市/未公布狀態與排程；新增商品觸發三月回補 |
-| 籌碼分頁、圖表、表格 | 正式站目前完全沒有原規格籌碼明細 UI | 在至少完成一輪真實歷史資料入庫後，才建行情、法人、資券借券、分點主力、持股結構、期貨籌碼 tabs；逐商品只顯示適用內容 |
+| 三個月 K 線與成交量 | TWSE／TPEx 股票日 OHLCV 已映射並接入 collector/API/首頁圖表；期貨三個月 K 線仍未回補 | production DB migration 後核對股票三月資料；另以既有 Shioaji 權限實作期貨選定合約回補、日增量、補洞與來源時間；禁止以即時 snapshots 補造舊日期 |
+| 統一 DB／排程／覆蓋狀態 | 新增 market daily history 與 source/code/date coverage 表、SQL migration、92 日選股回補、每日排程與跨 pod advisory lock；尚未部署 | Apply migration，驗證正式 DB 筆數、不同來源覆蓋狀態、初次回補時長、日增量與失敗重試 |
+| 籌碼分頁、圖表、表格 | 首頁已新增股票行情、法人與資券／借券圖表和日表；分點、持股結構、期貨籌碼尚未建置 | 完成來源回補後正式站驗收已建 UI；其他每個來源先完成 schema/API 後再增分頁，逐商品只顯示適用內容 |
 | 手機及完整互動驗收 | 本輪沒有正式站手機視窗實測；新增/移除設定、摘要展開、各分頁未逐項驗 | 桌面與手機驗證搜尋新增/移除、五格上限、重複限制、重新整理、展開/切換、深淺色與返回/語系狀態 |
 
 下一次部署完成標準應以正式站實際呈現至少一個已入庫的多日籌碼圖表及其資料表格為門檻；分點功能若未取得足夠合法逐分點來源，不可用「市場摘要已部署」結案。部署前再次用登入後正式站逐一確認每個已納入的資料分頁有真實值、來源日期和單位，並對照 DB/API；缺少項目保留明確未完成狀態。
@@ -105,9 +105,9 @@
 
 | 問題 | 本機 repo 已確認 | 尚不能確認／後續需問 bot |
 | --- | --- | --- |
-| 搜尋台積電為何沒出現小型台積電期貨 | `maya_sawa/services/shioaji_market.py` `_search_contracts` 會在 Futures 目錄中遞迴走訪，以 `code`、`name` 子字串比對；`product_type=futures` 時仍搜尋 futures。結果先按代碼排序，再全域截前 20 筆。合約僅在當前 Shioaji `api.Contracts.Futures` 目錄內可見時才可能被回傳。`tests/test_shioaji_market.py` 的 QFFR1「小型台積電期貨06」只證明測試假資料覆蓋；`get_mini_tsmc_futures_quote`/cache 以 QFFR1 查即時行情也不證明正式搜尋目錄包含該到期合約。 | 未取得正式站當時的 Shioaji 合約目錄快照、搜尋 query / productType、原始搜尋結果及搜尋時間，不能斷定是商品類別篩選、Taiwan 中文名稱比對、20 筆上限，或目錄/到期月份造成。請 bot 明確確認當時 Futures.QFF 分組與近月合約 code、name、delivery_month 是否存在，以及各類別 filter 的實際行為。 |
-| 排除權證但讓期貨出現 | 搜尋目前把 Stocks 與 Futures 目錄各自走訪，依明確 productType 選目錄；stock code/name 匹配沒有權證類別排除，未指定 productType 時兩類候選合併後按代碼截 20 筆。因此若結果列表前段被股票／權證佔滿，可能使期貨排不到前 20，但尚無正式結果快照證明這就是根因。`productType=futures` 目前是僅搜 Futures 的路徑。 | 尚未確認 Shioaji 股票合約物件中哪個正式欄位可穩定識別權證、權證標的代碼形式，以及目前正式 UI 是否有把正確類別送到後端。建議不要只靠名稱或代碼前綴猜；向 bot 確認 contract type/category 欄位並以真實目錄樣本制定排除條件，同時獨立保留 futures 結果/分類分頁。 |
-| 十個清單候選商品保留在 table | 目前資料庫只有有效自動五大快照與管理員 custom symbols；沒有十個來源清單、候選歷史 table 或到期/停用保留策略。 | 「十個清單」具體是哪十個來源/頁面、各清單是否能取得完整商品集合和日期、是否只取當日 Top N、候選 key 是否需 `productType+code+deliveryMonth`、期貨換月後要保留幾久、股票下市/代碼更名處理與重複規則，都沒有 bot 確認。初步建議用來源命名空間 + canonical `productType` + code +（期貨必填）deliveryMonth 作唯一身份；source-membership 另存 observed_at/last_seen，不覆寫來源；同一標的可有多來源關聯；候選去重用 canonical identity，來源別名另外保留；不因單次缺席刪除，採明確過期政策並保留 custom 所需歷史。但這只是待確認設計建議，並未代表十個清單資料已證明可取得或功能已實作。 |
+| 搜尋台積電為何沒出現小型台積電期貨 | repo 原搜尋是部分比對 code/name；混合搜尋的股票權證曾可能佔滿 20 筆。測試 QFFR1 不是正式目錄證據。 | Bot 以 Shioaji 1.7.8 模擬目錄查到 QFF：`api.contracts.futures("QFF")` 可取月份合約，例如 `code=QFFJ6`、`name="小型台積電期貨 202610"`、`delivery_month="202610"`；近月別名 QFFR1 的 `target_code=QFFJ6`、名稱為「小型台積電期貨 近月」，並有 `underlying_code="2330"`。名稱部分比對「台積電」應命中；搜尋、filter 與 20 筆上限是應用端邏輯，Shioaji 沒有搜尋 API。仍沒有正式站當時目錄快照，不能回溯證明當時具體漏掉原因。 |
+| 排除權證但讓期貨出現 | 原實作曾錯用 category/name 推測權證。 | Bot 確認合約欄位 `security_type`：股票／ETF=`STK`、權證=`WRT`、期貨=`FUT`；排除 `WRT`。股票和期貨分開查、分開排序即可避免互相擠掉。 |
+| 十個清單候選商品保留在 table | repo 已有候選 table 雛形，但只記錄搜尋結果，來源是 `shioaji-search`，未接十個清單 batch ingestion。 | Bot 指出「十個清單」由產品方自行定義，並稱六種 scanner 僅當下排行、無歷史成員；但[Shioaji 官方 scanner 文件](https://sinotrade.github.io/tutor/market_data/scanners/)的 `api.scanners` 有 `date` 交易日期參數，預設今日。是否可穩定查回過去日期、最長回溯深度與資料是否完整，文件尚未說清，需實測，暫不採 bot 的「無歷史」作最終定論。六種 scanner 為成交量、成交值、漲跌幅、漲跌價、振幅、成交筆數。候選身份以合約 `code` 為準，期貨月份已在 code；R1/R2 是會換月的別名，不適合作為歷史 key，應解析 `target_code` 後記錄實際月份合約。每次來源觀測另存 source membership / first_seen / last_seen；bot 未指定過期政策。產品方仍須明確列出十份清單，並決定是否以六種 scanner 加四個自有清單構成。 |
 
 #### 實際詢問結果（2026-10-13 23:38 Asia/Taipei）
 
@@ -118,14 +118,48 @@
 
 本輪只做查證、對外提問與文件紀錄，沒有修改搜尋程式、資料表或部署，也未提交。等待 Telegram 值班回覆及 Discord thread 回覆後，再補錄 bot/社群原文重點、結論與仍未確認項目；不要把 repo 推論當成對方確認。
 
-#### 2026-10-13 晚間先行實作（等待 bot 明日技術回覆）
+#### 2026-10-13 晚間先行實作（10/14 客服答覆前的暫定版本）
 
 依使用者指示，先完成不依賴 bot 技術答案的搜尋改善與候選表雛形，整體籌碼歷史 collector／圖表及部署等工作留待明日再決定。
 
-- 搜尋現在明確排除 Shioaji `category == "W"` 的股票合約，另排除名稱明示「權證／認購／認售」者；未指定商品類別的搜尋分開保留最多 10 筆股票與 10 筆期貨，避免股票結果擠掉期貨。明確選 `futures` 時仍只搜尋 Futures 目錄，最多 20 筆。新增單元測試覆蓋 QFFR1 可在混合搜尋中出現，以及權證不出現。`category == W` 的正式目錄語意仍待 bot 確認；名稱詞判斷作為缺少類別 metadata 時的保守補充。
-- 新增 PostgreSQL 歷史候選與來源 membership 表，身份鍵為商品類別＋代碼＋期貨交割月份（股票交割月份固定空字串），每個來源另有來源鍵，跨清單可去重且保留各清單 first/last seen。每次重新觀察刷新 90 天過期時間；候選 API 排除已過期列，重現時恢復有效。Custom 搜尋結果會被記為 `shioaji-search` 來源，管理員可在 Custom 編輯 dialog 查詢歷史候選並加入名單。
-- **範圍限制：**「十個清單」尚未列出實際十來源，故本版只會累積 Shioaji 搜尋實際回傳的商品，並非完整抓取十張清單；尚無來源清單 batch ingestion，也沒有把未曾搜尋到的完整合約目錄自動加進 table。待 Telegram／Discord 回覆後補上來源定義、資料可得性及各來源同步策略。90 天也是暫定保留期；若來源只提供每日 Top N，需確認缺席與期貨月份換倉語意後才視為定案。Custom 已選商品的持久化不受候選 90 天顯示期限影響。
+- **上面兩項為當時假設，已由 2026-10-14 客服答覆修正**：權證改看 `security_type == "WRT"`；期貨 alias 改解析 `target_code`；唯一鍵改以商品類別＋合約 code；候選永久保留，不採 90 天 expiry。更新內容見下方「2026-10-14 客服答覆與結論」。
+- **範圍限制：**「十個清單」仍未列出實際十來源，故候選 table 目前只累積 Shioaji 搜尋實際回傳的商品，並非完整抓取十張清單；尚無來源清單 batch ingestion，也沒有把未曾搜尋到的完整合約目錄自動加進 table。客服答覆已確認 Shioaji scanner 不提供歷史成員。
 - 驗證：前端使用 workspace Node v24.19.0 執行 `npm run build` 通過；後端 Python `compileall` 及兩 repo `git diff --check` 通過。後端 pytest 未能執行，因系統 Python 沒有 pytest。未部署、未提交。既有未提交的本文件與 `docs/PLAN_TO_PRODUCTION_WORKFLOW.md` 均保留。
+
+#### 2026-10-14 客服答覆與結論
+
+- 使用者開啟已登入的 Telegram 與 Discord 頁面後，透過正常 UI 檢查並在 Telegram 跟進原提問；10/14 10:39 `@ShioajiSupportBot` 回覆下列技術內容。Discord 指定 thread「台股與期貨完整籌碼資料來源確認」仍未見後續訊息。
+- Bot 原文重點：`api.contracts.futures("QFF")` 可列出 QFF 月份合約；模擬目錄範例為 `QFFJ6` /「小型台積電期貨 202610」/ `delivery_month="202610"`。近月 alias `QFFR1` 的 `target_code="QFFJ6"`、`underlying_code="2330"`。搜尋是應用邏輯；API 沒有搜尋端點。
+- Bot 原文重點：依合約 `security_type` 辨別 `STK`、`WRT`、`FUT`，排除權證應用 `WRT`；股票和期貨各自搜尋、排序。
+- Bot 原文重點：Shioaji scanner 有六種排行（成交量、成交值、漲跌幅、漲跌價、振幅、成交筆數），bot 稱只有當下排行、沒有歷史成員；「十個清單」需由產品方自行定義。唯一身份用合約 code；月份已含在期貨 code，R1/R2 會換月，應解析到 `target_code`，不能以 alias 作歷史 key。
+- 官方文件交叉核對：`api.scanners(scanner_type, date=None, ...)` 和 HTTP scanner endpoint 都有交易日期參數，日期預設今日，並列明六種 scanner 類型。這代表可以指定日期查詢的介面存在，但文件沒有給回溯期限，也未保證舊日期一定可查；與 bot 的歷史可得性說法有落差。實際查詢過去交易日、休市日和較早日期並記錄回傳日期/空結果前，資料可得性維持「待實測」。
+- 官方合約文件也說明 1.7.0 仍相容舊式 `api.Contracts` 存取；回傳物件改為包含 `security_type` 的 `StockInfo`／`FuturesInfo` 等。因此現行舊式目錄遍歷不應單因 1.7 升版就失效；仍須以正式執行環境目錄實測確認。
+- 結論及未確認：目前未取得原搜尋當下的正式站合約目錄，故不能判定 10/13 正式站實際漏列根因。十個來源的確切名稱仍要由產品方定義；若採六種 scanner，還要指定另外四個清單及每份清單的公開/授權來源。Bot 未提供股票代碼變更、下市後保留期限的規則；本計畫決定曾觀察到的候選永久保留、下市狀態另作後續 metadata，不因當日排行缺席刪除，讓「曾出現即可隨時加入」成立。過去 scanner 成員能否由 Shioaji 日期查詢回補，待官方端點實測後決定。
+- **使用者 2026-10-14 最新決議：**使用者表示「不管十個清單了，繼續開發完成」。因此不做 Shioaji 六種 scanner 加四個來源的十清單匯集，也不再要求使用者定義來源。已經要求的歷史候選 table 仍保留，收錄本站實際搜尋或觀察到的商品，供管理員之後加入 custom；不把它描述成已涵蓋十個來源。
+- 已依答覆修正實作：用 `security_type == "WRT"` 排除權證；R1/R2 alias 解析 `target_code`，候選唯一鍵為合約 `code`（月份已含在 code，`delivery_month` 僅供顯示）；移除 90 天候選期限，並新增 migration 合併同 code 重複列、調整唯一鍵和清除 expiry。已知歷史候選可在合約目錄缺席時仍加入 custom，但即時報價可能為空。
+- 候選 ingestion 目前記錄實際搜尋回傳的合約；依使用者最新決議，不新增 scanner 或十來源批次匯集需求。
+- 驗證：`poetry run pytest tests/test_shioaji_market.py tests/test_market_dashboard.py -q` 通過（27 passed）；後端 compileall、前後端 `git diff --check` 通過；workspace Node v24.19.0 下 Astro production build 完成。未執行 migration、未部署、未提交。Build 有既有背景圖片解析與 sitemap `site` 設定警告，build 本身成功。
+
+#### 2026-10-14 持續開發：第一批股票歷史資料管線
+
+使用者要求繼續完成計畫，並詢問是否已具備全部資料來源。答案是否；但已具備足夠證據先交付一批正式免費來源，其他來源同步查證，不因來源不齊停止已可完成部分。
+
+- TWSE 樣本日 `2026-10-12`：`MI_INDEX` 個股日收盤行情、T86 法人、MI_QFIIS 外資持股、MI_MARGN 資券均返回 `stat=OK`。已用 2330 實際回應驗證代碼、行情、單位及欄位 mapping；T86／MI_QFIIS／MI_MARGN 都接受日期參數。
+- TPEx 同日樣本：官方日期 API `afterTrading/dailyQuotes`、`insti/dailyTrade`、`margin/balance`、`margin/sbl` 均返回 `stat=ok` 及所請日期。已用 6488 真實回應核對行情、法人、資券欄位與借券賣出餘額。法人 JSON 重複通用欄名依官方開放資料欄位順序對應，淨買賣欄位確認為外資及陸資合計 index 10、投信 index 13、自營商 index 22、總計 index 23。
+- 新增 `maya_sawa_market_daily_history` 與 `maya_sawa_market_history_coverage`：依 source/code/trading date 保存原始單位明確的 normalized JSON、來源 URL、抓取時間，以及 `ok`／`no_data`／`error` 覆蓋狀態。新增 SQL migration `maya-sawa/scripts/sql/20261014_market_history.sql`。
+- 新增每日 collector：自動／custom 選股中的股票首次回補近 92 個曆日、之後每日更新；最近數日重新抓取以吸收來源修正；以 PostgreSQL advisory lock 避免多 pod 重複下載。選擇新的 custom 股票時排入背景回補。新增公開且只回傳公開交易資料的 `/market/dashboard/history/{code}`，Maya Sawa 關閉時取消排程。
+- 前端新增行情、法人、資券與借券分頁、圖表和每日表格；借券股數與融資融券張數分開標示。歷史候選維持搜尋來源，不再追十清單批次匯集。
+- 本輪驗證：真實 API 樣本八種 parser 全數命中目標商品；`poetry run pytest tests/test_market_history_collector.py tests/test_shioaji_market.py tests/test_market_dashboard.py -q` 通過（32 passed）；Astro build 以 Node 22.12.0 通過；前後端 `git diff --check` 通過。build 仍有既有背景圖解析與 sitemap `site` 設定警告。
+- 尚未執行 production migration、尚未部署或正式站 UI 驗收。這批資料管線目前涵蓋股票價量、三大法人、TWSE 外資持股、兩市場資券及 TPEx 借券賣出餘額，不涵蓋 TWSE 逐檔借券餘額、分點逐券商交易、TDCC 歷史級距、MOPS 董監事件、TAIFEX 歷史籌碼、個股期貨歷史 K 線與上述各項 UI。這些仍是後續工作，來源不足的欄位須逐項查證並附證據。
+
+#### 2026-10-14 持續開發：TWSE 借券及 TDCC 歷史來源
+
+- TWSE `TWT93U` 公開日期端點 `https://www.twse.com.tw/rwd/zh/marginTrading/TWT93U?date=20261012&response=json` 實測返回 2026-10-12、`hints: 單位：股`、2330 列及融券與借券賣出分開欄位。官方商品商店另有 TWT93U 訂閱檔並標價月費；本站只使用免登入報表端點，不使用訂閱檔。已加 `twse:borrow-short` collector、parser 和借券圖表來源，增加 parser fixture。
+- TDCC `/v1/opendata/1-5` 實際免登入返回 2026-10-08 的全市場每檔 15 級距資料；官方 `qryStock` 頁 GET 可取得 session cookie、同步 token、最新/歷史日期，下行一般 POST 帶代碼與日期可查單檔。已實測 2330 最新週 2026-10-08 與三個月前 2026-07-09，均回傳正確日期、15 級距及股數/人數/比例；parser 亦對 2026-07-09 真實 HTML 完整抽取 15 級。已接入逐週 collector、coverage、ownership view API 及持股結構表，按官方真實週日期保存，只有選定股票才查詢及入庫。官方頁說歷史保存一年。
+- TAIFEX 官方 OpenAPI `DailyMarketReportFut` 及 `MarketDataOfMajorInstitutionalTradersDetailsOfFuturesContractsBytheDate` 可匿名讀當日全集；2026-10-13 樣本的法人資料依「臺股期貨／股票期貨」商品種類 × 自營商/投信/外資分組，沒有將個股期貨細分到 2330/QFF。官方網頁日期查詢可查 2026-10-12，且說明僅提供交易日前三年。故市場商品種類法人可做為單獨市場頁，個股期貨逐合約法人仍不納入；本輪尚未接 collector/API/UI。
+- 首頁 ownership tab 顯示最新週級距及所有已回補日期的股數/比例比較；單位及日期來自來源，沒有將級距繪成總和必須為 100% 的圖。此週資料仍待 production migration、回補和正式站驗收。
+- TAIFEX 當日 OpenAPI 樣本沒有 date 參數；官方日期查詢頁雖可查舊日，但個股商品粒度仍是類別彙總，不可當 QFF 等個別合約法人。TXF/個股期貨歷史價量與期貨籌碼 UI 仍未完成，未將即時 TXF quote 當日 K 線。
+- 驗證：`poetry run pytest tests/test_market_history_collector.py tests/test_shioaji_market.py tests/test_market_dashboard.py -q` 36 passed；TDCC 公開表單真實 2026-07-09 樣本解析 15 級通過；後端 compileall 通過。Astro production build 通過（有既有背景圖解析及 sitemap `site` 設定警告）；兩 repo `git diff --check` 通過。production migration/deploy/UI 均未執行。
 
 已驗證 URL：
 
@@ -232,3 +266,29 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - 使用者希望簡單環節用 Luna、複雜環節用較強模型。互動 CLI 以 `/model` 選擇，需要使用者切換時給明確提示；不聲稱主對話模型已自動切換。若使用者授權將明確簡單工作交給獨立 CLI，可指定 `--model gpt-6-luna` 執行並檢查成果。
 - Computer Use 禁止控制 Codex app，不能用 Terminal／其他 UI 自動化繞過；正常 CLI 模型參數是可用替代方式。
 - VS Code shell 原位置 `/Users/vinskao/001-project/ty-multiverse` 是聚合目錄；先 `cd ty-multiverse-frontend` 再啟動 Codex。後端 sibling 的可寫範圍可在啟動時用 `--add-dir ../maya-sawa` 加入，保留正常授權流程。
+
+
+## 2026-10-14 接續實作進度（本節優先於前述舊狀態）
+
+使用者已取消「十個清單」候選來源範圍限制，並明確要求繼續完成計畫。候選歷史目前保留 Shioaji 合約目錄搜尋過的商品；沒有假設十份外部清單或做十份 list ingestion。台積電查詢排除 security_type=WRT 權證，並將 rolling alias R1/R2 正規化到 Shioaji 當前正式契約月；歷史候選以契約代碼去重且不因到期自動刪除，仍可被加回自訂名單。
+
+目前已驗證並已實作的官方免費歷史來源：
+
+| 資料 | 官方端點／日期樣本 | 實作範圍與限制 |
+| --- | --- | --- |
+| TWSE 日行情、法人、外資持股、資券、借券賣出 | TWSE `MI_INDEX`、`T86`、`MI_QFIIS`、`MI_MARGN`、`TWT93U`；2026-10-12 | 免登入 JSON；依上市股票代碼收集。借券餘額與融券餘額分開儲存，避免相互冒充。 |
+| TPEx 日行情、法人、外資持股、資券、借券賣出 | TPEx `dailyQuotes`、`insti/dailyTrade`、`insti/qfii`、`margin/balance`、`margin/sbl`；2026-10-12 | 免登入 JSON。外資持股 `qfii` 使用 form POST；欄位 `發行股數(A)`、`持有股數(C)`、`持股比率(E=C/A)`、法令上限。 |
+| TDCC 集保持股級距 | 官方 `/portal/zh/smWeb/qryStock`；2330、2026-07-09 | 一般 GET/POST + 公布日期與 session token 可重現；15 級距，人數／股數／比例，官方歷史約一年。只保存自動／自訂名單中股票的週資料。 |
+| TAIFEX 契約日行情 | `https://www.taifex.com.tw/cht/3/futDataDown` POST；QFF、2026-10-12 | 免登入 Big5 CSV，欄位含契約、到期月、OHLC、成交量、結算價、未平倉口數與交易時段。collector 僅取「一般」時段，以契約代碼＋到期月映射 Shioaji 選定契約；固定 TXF 建近月連續日線（依第三個星期三到期日換月）。TAIFEX 的 `盤後` 不併入日 K。 |
+
+上述 collector 寫入 `maya_sawa_market_daily_history` 與逐來源／商品／日期覆蓋狀態表；股票首次選取回補 92 日，集保以官方已公布週日期回補；每日排程增量並重抓最近三日以吸收官方修正。匿名歷史 API `/market/dashboard/history/{code}` 只回市場資料。期貨目前提供官方日 K／成交量／結算價／未平倉合約，不等於 TAIFEX 法人分項籌碼。
+
+| 尚缺原需求 | 最新證據與結論 | 本輪處理 |
+| --- | --- | --- |
+| 個股逐分點、主力 TOP15 | 富邦 TOP15 是彙總家數，不是逐分點資料；後端直接 HTTP 403。沒有核實可部署且允許使用的官方逐分點歷史端點 | 排除本輪，不繞過存取控制；不偽稱已完成 |
+| MOPS 董監持股、質押、轉讓 | 官方 `https://mops.twse.com.tw/mops/web/t100sb02_1` 回導向頁；匿名請求 `ajax_t100sb02_1` 回傳「因安全性考量無法呈現」拒絕頁（錯誤碼 7641438222288617879）。公開分類頁不足以確認歷史查詢欄位和重現流程 | 本輪不自動抓取，不以未驗證資料呈現 |
+| TAIFEX 法人歷史、大額交易人 | 已核實公開頁的日期查詢與商品類別，但其「股票期貨」是商品彙總，不是 2330/QFF 特定契約法人歷史；與逐契約行情端點分開 | 不宣稱個股期貨法人籌碼已實作；商品彙總仍需獨立日期 parser/畫面 |
+| 期貨權益籌碼 UI | TAIFEX 逐契約行情可取得未平倉口數，但法人交易與大額交易人的歷史來源不是該 CSV | 本輪 K 線可納入價格面；法人／大額持倉不以未平倉量替代 |
+| 券商主力成交力 | 沒有可驗證的逐券商原始資料與公式定義 | 排除，不自創指標 |
+
+因此，**目前沒有計畫中每一項資料的已確認可用來源**：上市櫃行情與籌碼、TDCC、TAIFEX 契約日行情有官方免費可用來源；逐分點資料、MOPS 匿名歷史查詢及個別股票期貨法人歷史尚不具備可重現的免費官方來源證據。來源可用也不代表功能已正式交付，需以本文件最新驗收狀態為準。
