@@ -356,3 +356,49 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - 2026-10-14 17:18 再讀 production coverage：`TXF` 與 `QFFJ6` 法人各 17 日 `ok`、49 日 `error`，最後成功日期 2026-08-05，error 仍為 HTTP 429。#91 尚在建置，因此 5 分鐘重試行為還未部署驗證。
 - 本機以 Node 22+ 執行 `npm run dev -- --host 0.0.0.0` 可正常打開 Astro 頁面；但市場 Astro API route 預設指向容器內 DNS `http://maya-sawa/maya-sawa`，在筆電直接呼叫回 502。設 `MAYA_SAWA_INTERNAL_URL=https://peoplesystem.tatdvsonorth.com/maya-sawa` 可讓本機 route 指向正式服務，但本次正式 API 正逢 backend #90 部署而回 503，故本機頁面只能驗證啟動與版面，行情／歷史圖表的資料驗證需待服務恢復後補做。權限 API 仍未驗證，未使用或偽造管理 token。
 - 分點來源再查證：[TWSE 不含權證買賣日報商品](https://eshop.twse.com.tw/zh/product/detail/34e615c34c4e4ca3b23fc732bd736f94) 外部 NT$80,000/月；[TPEx 不含權證買賣日報商品](https://eshop.tpex.org.tw/zh/product/detail/E982FB3B7484B8AD66AF83E6F31F0CDB) 每日 EXE/CSV、資料自 2014-12-01、外部 NT$50,000/月。已下載並讀取 TPEx 官方 S32 格式 PDF：代號、券商代號／名稱、價格、買進股數、賣出股數，足以計算分別的買賣加權均價。兩來源均未購買或接入，因此本站目前仍無分點資料；TPEx 日檔存取與外部傳輸條款仍待確認。
+
+
+### 2026-10-14 統一證券 / MoneyDJ 分點來源實測
+
+- 結論：已確認可取得真實個股券商分點排行及指定分點逐日歷史，技術上足以支援「主力分點排行 + 選取分點歷史圖」。不是全市場所有分點完整日檔，也沒有投資人法人身分標籤；公開網頁可讀取不代表已取得本站再發布授權。尚未整合到本站。
+- 統一主力進出頁 iframe：`https://pscnetsecrwd.moneydj.com/agent/gopage.aspx?api=%24chip%240002&sym=2330.TW`。實際 JSON 位於 `/b2brwdCommon/jsondata/{x}/twStockData.xdjjson`。
+- 最新排行：`x=stock-chip0002-4&a=2330&f=1`，免登入 HTTP 讀取成功，StatusCode=0；2026-10-13 買超、賣超各 15 筆，包含日期、券商分點代碼、名稱、買進股數、賣出股數、LotSize、期間總成交股數。例：凱基-台北 9268 買進 980974 股、賣出 617270 股，淨買 363704 股。6488 上櫃商品也成功回傳各 15 筆。
+- 區間排行：`x=stock-chip0002-5&a=2330&c=2026-10-01&d=2026-10-13` 成功，買超、賣超仍各 15 筆，數量為區間彙總。
+- 單分點歷史：`x=stock-chip0002-7&a=2330&b=9268&d=2026-09-01&e=2026-10-13` 成功回 28 筆逐日資料（2026-09-01 至 2026-10-13）；改查 2025-10-01 至 2025-10-31 也成功回 20 筆。欄位為日期、買進股數、賣出股數、買進金額、賣出金額、LotSize，可計算淨買賣與買賣均價。MoneyDJ 前端均價公式為金額 ×1000 / 股數，數量換算張數為股數 / LotSize。
+- 限制：排行僅 TOP15，單分點歷史需已知分點代碼；未驗證完整分點名冊、最早歷史日期、請求頻率上限與正式資料供應/再發布條款。下一步接入前先確認授權，產品應標明「券商分點」及 TOP15 範圍，不把分點當作可辨識外資/投信/自營商交易身分的資料。
+
+
+### 本次告一段落：後續執行計畫與 session 接續（2026-10-14）
+
+目前暫停開發，以下是下一次的執行順序；所有部署與 coverage 數字都是前次觀測，接續時須重新查證，不能當作當前狀態。
+
+1. **盤點工作樹與部署狀態**
+   - 先讀本文件和相關子專案 AGENTS.md，檢查 frontend/backend git status、近期 commit 與 diff，保留使用者原有變更。此刻 frontend `git status --short` 僅有本計畫文件變更；先前四 tab 修正是否已提交或部署，須由 git log 與正式頁面確認。
+   - 重新確認 backend Jenkins #91 / commit `798a906`、目前 image、Ready 狀態及 TAIFEX coverage；若 error 仍未消退，讀 collector logs 確認 5 分鐘重試及 429 限流原因。避免與進行中的 pipeline 同時部署。
+2. **完成期貨四 tab 與現貨映射驗收**
+   - 以 QFFJ6 → 2330 及另一組股票期貨驗證 Price、Institutional、Margin & lending、Ownership 四 tab 全部可見且可切換，四類 API/圖表皆使用 underlying spot ticker。
+   - 無現貨映射時明確顯示缺資料原因，不能靜默隱藏 tab 或混用期貨籌碼。保留四 tab 架構，分點功能優先納入 Institutional 內。
+   - 桌機與 390px 手機驗證：holdings 左、圖表右；手機堆疊、極小側邊留白、無水平溢位；OHLC/法人/資券/借券/持股都透過 chart hover/readout 顯示，無重複資訊大卡及資料 table；價格點日期、拖曳區間顯示收盤變化百分比。
+3. **把統一 / MoneyDJ 分點來源確認到可接入程度**
+   - 目前已實測 TOP15 最新/區間排行及指定分點歷史成功；沿用上節記錄的真實端點與欄位。
+   - 查明使用/再發布條款、是否有正式 API、歷史可查範圍、上市上櫃涵蓋及缺值行為；確認資料取得與使用範圍後再正式接入。尚無授權結論前，可完成本地資料格式與 adapter 設計，但不得把「可讀取」寫成「已授權供應」。不得自行購買付費方案。
+4. **實作券商分點資料與 UI**
+   - Backend adapter 正規化 ticker、branch_code/name、交易日期或區間、buy/sell/net shares、買賣均價、來源與更新時間；保留原始單位，零股數均價為 null。排行和單分點逐日資料分別儲存，避免把區間彙總當每日資料。
+   - 以 ticker + 分點 + 日期去重，按查詢需求快取/收集，限流與重試；失敗保留上次成功資料並標示日期。回傳 TOP15 範圍與 coverage，不能宣稱所有分點完整覆蓋。
+   - Institutional 內顯示買超/賣超分點排行圖，可選分點切換每日買賣/淨額與成本圖；hover 顯示數值，無明細 table。期貨一律使用 underlying spot ticker；稱為「券商分點」，不能推斷外資/投信/自營商身分。
+5. **收尾既有清單與資料缺口**
+   - 重驗 custom 搜尋「台積電」能找到小型台積電期貨；搜尋結果排除權證，期貨不能被誤過濾。須有實際商品主檔/搜尋結果證據。
+   - 保留歷史候選功能：曾出現在目前系統清單上的商品持久化為可加入 custom 的候選者；不再要求使用者先列出「十個清單」。確認既有候選儲存、去重、最後出現時間及權證過濾是否完整。
+   - 依計畫逐項核對完成度；MOPS、全部分點日檔、個別期貨合約法人持倉等未有資料者仍明列限制，不得以其他資料代稱完成。
+6. **驗證、部署與交接**
+   - 執行與修改相符的檢查及 build；非權限流程以本機 dev 驗證，設定 `MAYA_SAWA_INTERNAL_URL=https://peoplesystem.tatdvsonorth.com/maya-sawa`，Node >=22.12。
+   - 部署前讀 infra guide，可評估本機建置配合既有 k apply/scp 流程；確認 ARM64、映像/產物版本與既有 pipeline 相容後使用。部署後再驗正式 API、圖表與手機畫面，不以 build 成功代替正式驗收。
+   - 更新本文件的完成/未完成證據與剩餘工作；本計畫文件繼續維持未提交，除非使用者另有指示。
+
+下一個 session 可直接貼上：
+
+```text
+繼續 Market Dashboard 開發。先讀 ty-multiverse-frontend/docs/MARKET_DASHBOARD_PLAN.md 最後的「後續執行計畫與 session 接續」，依 repo root routing 只讀需要的 AGENTS.md。先盤點 git 工作樹與目前部署，不覆蓋既有變更，計畫文件維持未提交。
+優先驗收股票/期貨四 tab 全部使用現貨 ticker（QFFJ6→2330），再確認統一證券/MoneyDJ 分點來源的使用範圍與接入條件。已實測最新/區間買賣超各 TOP15，以及單分點逐日歷史；端點、欄位、限制都在文件。接入後放在 Institutional 內，使用圖表與 hover，不加明細 table，不把分點等同法人身分。
+接著核對 custom 台積電能搜到小型台積電期貨、排除權證、歷史候選持久化；查 backend #91 / 798a906 的部署與 TAIFEX 429 coverage。可用本機 npm run dev 驗非權限 API，注意 Node 版本與 MAYA_SAWA_INTERNAL_URL。完成必要檢查、部署及正式桌機/手機驗收，逐項更新文件，不把未接入或未驗證項目宣稱完成。
+```
