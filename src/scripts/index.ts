@@ -11,7 +11,8 @@ let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
 let selectedMarketInstrument: DashboardInstrument | null = null;
-const marketHistoryCache = new Map<string, MarketHistoryPayload>();
+const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
+const MARKET_HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function initMarketWatchlist() {
     const row = document.getElementById('txf-quote-section') as HTMLButtonElement | null;
@@ -235,12 +236,15 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         const historyProductType = usesUnderlyingSpot ? 'stock' : instrument.productType;
         const view = selectedTab === 'ownership' && historyProductType === 'stock' ? 'ownership' : 'daily';
         const cacheKey = `${historyCode.toUpperCase()}:${view}`;
-        let payload = marketHistoryCache.get(cacheKey);
+        const cached = marketHistoryCache.get(cacheKey);
+        let payload = cached && Date.now() - cached.fetchedAt < MARKET_HISTORY_CACHE_TTL_MS
+            ? cached.payload : undefined;
         if (!payload) {
             const query = view === 'ownership' ? '?view=ownership' : '';
             const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(historyCode)}${query}`));
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            payload = await response.json() as MarketHistoryPayload; marketHistoryCache.set(cacheKey, payload);
+            payload = await response.json() as MarketHistoryPayload;
+            marketHistoryCache.set(cacheKey, { payload, fetchedAt: Date.now() });
         }
         const points = payload.points ?? []; if (status) status.textContent = points.length
             ? `${usesUnderlyingSpot ? `${historyCode} ${marketI18n('marketHistorySpotData', 'spot data')} · ` : ''}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
