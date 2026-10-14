@@ -411,77 +411,181 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
     } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
 }
 
-const marketFundamentalsCache = new Map<string, { payload: any; fetchedAt: number }>();
-async function loadMarketFundamentals(code: string, productType: string) {
+// Stale-while-revalidate: paint the last payload from localStorage immediately, then always fetch fresh.
+const FUNDAMENTALS_STORAGE_PREFIX = 'market-fundamentals:v2:';
+const FUNDAMENTALS_HISTORY_RETRY_MS = 45_000;
+let fundamentalsRequestSeq = 0;
+let fundamentalsRetryTimer: number | null = null;
+
+function readStoredFundamentals(code: string): { payload: any; fetchedAt: number } | null {
+    try { const raw = localStorage.getItem(FUNDAMENTALS_STORAGE_PREFIX + code); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+function storeFundamentals(code: string, payload: any) {
+    const { metrics, historyPending, source, staleSources, errors } = payload;
+    try { localStorage.setItem(FUNDAMENTALS_STORAGE_PREFIX + code, JSON.stringify({ payload: { code, metrics, historyPending, source, staleSources, errors }, fetchedAt: Date.now() })); } catch { /* storage full or blocked */ }
+}
+
+async function loadMarketFundamentals(code: string, productType: string, retries = 4) {
     const status = document.getElementById('market-fundamentals-status');
-    const statementBox = document.getElementById('market-fundamentals-statements');
-    const balanceBox = document.getElementById('market-fundamentals-balance');
-    const cashFlowBox = document.getElementById('market-fundamentals-cash-flow');
+    const boxes = ['market-fundamentals-revenue-chart', 'market-fundamentals-statements', 'market-fundamentals-balance', 'market-fundamentals-cash-flow']
+        .map((id) => document.getElementById(id));
     const source = document.getElementById('market-fundamentals-source');
-    const noCompany = marketI18n('marketFundamentalsNoCompany', 'Company fundamentals are not available for index futures.');
+    if (fundamentalsRetryTimer !== null) { window.clearTimeout(fundamentalsRetryTimer); fundamentalsRetryTimer = null; }
+    const seq = ++fundamentalsRequestSeq;
     if (productType !== 'stock' || !/^\d{4}$/.test(code)) {
-        if (status) status.textContent = noCompany;
-        const chart = document.getElementById('market-fundamentals-revenue-chart'); if (chart) chart.replaceChildren();
-        if (statementBox) statementBox.replaceChildren();
-        if (balanceBox) balanceBox.replaceChildren();
-        if (cashFlowBox) cashFlowBox.replaceChildren();
+        if (status) status.textContent = marketI18n('marketFundamentalsNoCompany', 'Company fundamentals are not available for index futures.');
+        boxes.forEach((box) => box?.replaceChildren());
         if (source) source.textContent = '';
         return;
     }
-    if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    const stored = readStoredFundamentals(code);
+    if (stored) renderMarketFundamentals(stored.payload, { fetchedAt: stored.fetchedAt, refreshing: true });
+    else if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     try {
-        const cached = marketFundamentalsCache.get(code);
-        let payload = cached && Date.now() - cached.fetchedAt < 15 * 60_000 ? cached.payload : null;
-        if (!payload) {
-            const response = await fetch(astroApiPath(`/api/market/dashboard/fundamentals/${encodeURIComponent(code)}`));
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            payload = await response.json(); marketFundamentalsCache.set(code, { payload, fetchedAt: Date.now() });
+        const response = await fetch(astroApiPath(`/api/market/dashboard/fundamentals/${encodeURIComponent(code)}`));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (seq !== fundamentalsRequestSeq) return; // another stock was selected meanwhile
+        storeFundamentals(code, payload);
+        renderMarketFundamentals(payload, { fetchedAt: Date.now(), refreshing: false });
+        // History for a stock nobody opened before is collected in the background; check back shortly.
+        if (payload.historyPending && retries > 0) {
+            fundamentalsRetryTimer = window.setTimeout(() => {
+                const panel = document.querySelector<HTMLElement>('[data-market-panel="fundamentals"]');
+                if (seq === fundamentalsRequestSeq && panel && !panel.hidden) void loadMarketFundamentals(code, productType, retries - 1);
+            }, FUNDAMENTALS_HISTORY_RETRY_MS);
         }
-        const monthly = payload.monthlyRevenue ?? [];
-        // Official monthly revenue is in NT$ thousands; scale to NT$ so compact labels (億 / B) read correctly.
-        const points: MarketHistoryPoint[] = monthly.map((row: any) => ({
-            date: String(row.period), code, name: row.name || code,
-            sources: { fundamentals: { revenue: Number(row.revenue) * 1000, yoy: Number(row.yoyPercent), mom: Number(row.momPercent) } },
-        })).filter((row: MarketHistoryPoint) => Number.isFinite(row.sources.fundamentals.revenue));
-        const revenueChart = document.getElementById('market-fundamentals-revenue-chart');
-        drawMarketHistoryChart('market-fundamentals-revenue-chart', points, [{
-            label: marketI18n('marketFundamentalsRevenueLabel', 'Revenue'), color: '#55b8a8',
-            sourceKeys: ['fundamentals'], field: 'revenue',
-            tooltip: (point) => {
-                const values = point.sources.fundamentals;
-                return `NT$ ${compactNumber(values.revenue, 2)} · ${marketI18n('marketFundamentalsYoY', 'YoY')} ${formatSignedPercent(values.yoy)} · ${marketI18n('marketFundamentalsMoM', 'MoM')} ${formatSignedPercent(values.mom)}`;
-            },
-        }], { bars: true, height: 230 });
-        const latestMonth = monthly[monthly.length - 1];
-        if (revenueChart && latestMonth) revenueChart.prepend(buildMarketKpis([
-            { label: `${marketI18n('marketFundamentalsRevenueLabel', 'Revenue')} · ${latestMonth.period}`, value: `NT$ ${compactNumber(Number(latestMonth.revenue) * 1000, 2)}` },
-            { label: marketI18n('marketFundamentalsYoY', 'YoY'), value: formatSignedPercent(latestMonth.yoyPercent), delta: latestMonth.yoyPercent },
-            { label: marketI18n('marketFundamentalsMoM', 'MoM'), value: formatSignedPercent(latestMonth.momPercent), delta: latestMonth.momPercent },
-            { label: marketI18n('marketFundamentalsYtdRevenue', 'Year-to-date revenue'), value: Number.isFinite(Number(latestMonth.ytdRevenue)) && latestMonth.ytdRevenue !== null ? `NT$ ${compactNumber(Number(latestMonth.ytdRevenue) * 1000, 2)}` : '—' },
-        ]));
-        if (status) status.textContent = monthly.length ? `${code} · ${latestMonth.period} · ${marketI18n('marketFundamentalsPublished', 'published')} ${latestMonth.publishedAt || '—'}` : marketI18n('marketFundamentalsNoRevenue', 'Monthly revenue is unavailable from the current official feed.');
-        if (statementBox) {
-            statementBox.replaceChildren();
-            const officialItems: any[] = (payload.incomeStatements ?? []).slice(-8);
-            if (officialItems.length) renderIncomeStatements(statementBox, officialItems);
-            else renderFinmindTable(statementBox, payload.finmindIncomeStatements ?? [], marketI18n('marketFundamentalsNoStatements', 'Quarterly statements are not available for this company in the current public feed.'));
-        }
-        if (balanceBox) {
-            balanceBox.replaceChildren();
-            const officialBalance: any[] = (payload.balanceSheets ?? []).slice(-8);
-            if (officialBalance.length) renderBalanceSheets(balanceBox, officialBalance);
-            else renderFinmindTable(balanceBox, payload.finmindBalanceSheets ?? []);
-        }
-        if (cashFlowBox) { cashFlowBox.replaceChildren(); renderFinmindTable(cashFlowBox, payload.cashFlows ?? []); }
-        if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source}. ${payload.errors?.length ? payload.errors.join(' · ') : ''}`;
     } catch (error) {
         console.error('Market fundamentals unavailable:', error);
-        if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Fundamentals are temporarily unavailable.');
+        if (seq !== fundamentalsRequestSeq) return;
+        if (stored) renderMarketFundamentals(stored.payload, { fetchedAt: stored.fetchedAt, refreshing: false, failed: true });
+        else if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Fundamentals are temporarily unavailable.');
     }
 }
 
-function formatFundamental(value: unknown): string {
-    return typeof value === 'number' && Number.isFinite(value) ? compactNumber(value, 2) : '—';
+function renderMarketFundamentals(payload: any, state: { fetchedAt: number; refreshing: boolean; failed?: boolean }) {
+    const metrics = payload.metrics ?? {};
+    const pending = Boolean(payload.historyPending);
+    const status = document.getElementById('market-fundamentals-status');
+    if (status) {
+        const time = new Date(state.fetchedAt).toLocaleString(marketLocale(), { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const parts = [`${payload.code} · ${marketI18n('marketFundamentalsUpdatedAt', 'updated')} ${time}`];
+        if (state.refreshing) parts.push(marketI18n('marketFundamentalsRefreshing', 'refreshing…'));
+        if (state.failed) parts.push(marketI18n('marketFundamentalsRefreshFailed', 'refresh failed; showing cached data'));
+        if (pending) parts.push(marketI18n('marketFundamentalsHistoryPending', 'collecting history; this updates automatically'));
+        status.textContent = parts.join(' · ');
+    }
+    const emptyText = pending ? marketI18n('marketFundamentalsHistoryPending', 'collecting history; this updates automatically') : marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.');
+    renderRevenueGrowth(document.getElementById('market-fundamentals-revenue-chart'), metrics.monthly ?? [], emptyText);
+    renderProfitability(document.getElementById('market-fundamentals-statements'), metrics.quarterly ?? [], emptyText);
+    renderRatioTable(document.getElementById('market-fundamentals-balance'), metrics.balance ?? [], [
+        { label: marketI18n('marketFundamentalsDebtRatio', 'Debt ratio'), key: 'debtRatio', kind: 'percent' },
+        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} QoQ`, key: 'debtRatioQoQ', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} YoY`, key: 'debtRatioYoY', kind: 'pp' },
+        { label: marketI18n('marketFundamentalsCurrentRatio', 'Current ratio'), key: 'currentRatio', kind: 'percent' },
+        { label: `${marketI18n('marketFundamentalsCurrentRatio', 'Current ratio')} YoY`, key: 'currentRatioYoY', kind: 'pp' },
+        { label: `${marketI18n('marketFundamentalsEquity', 'Equity')} YoY`, key: 'equityYoY', kind: 'growth' },
+    ], emptyText);
+    renderRatioTable(document.getElementById('market-fundamentals-cash-flow'), metrics.cashFlow ?? [], [
+        { label: `${marketI18n('marketFundamentalsOperatingCashFlow', 'Operating cash flow')} YoY`, key: 'ocfYoY', kind: 'growth' },
+        { label: marketI18n('marketFundamentalsCashConversion', 'Operating cash flow ÷ pre-tax income'), key: 'cashConversion', kind: 'percent' },
+        { label: `${marketI18n('marketFundamentalsCashConversionShort', 'Cash conversion')} YoY`, key: 'cashConversionYoY', kind: 'pp' },
+        { label: marketI18n('marketFundamentalsCapexToOcf', 'Capex ÷ operating cash flow'), key: 'capexToOcf', kind: 'percent' },
+        { label: `${marketI18n('marketFundamentalsCapexShort', 'Capex share')} YoY`, key: 'capexToOcfYoY', kind: 'pp' },
+    ], emptyText, marketI18n('marketFundamentalsCashFlowNote', 'Cash flow statements are year-to-date, so changes compare with the same period last year.'));
+    const source = document.getElementById('market-fundamentals-source');
+    if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source || '—'}${payload.errors?.length ? ` · ${payload.errors.join(' · ')}` : ''}`;
+}
+
+type RatioKind = 'percent' | 'growth' | 'pp';
+const ratioFormat: Record<RatioKind, (value: number) => string> = {
+    percent: (value) => `${value.toFixed(1)}%`,
+    growth: (value) => formatSignedPercent(value, 1),
+    pp: (value) => `${value > 0 ? '+' : ''}${value.toFixed(2)} pp`,
+};
+
+function metricPoints(rows: any[], keys: string[]): MarketHistoryPoint[] {
+    return rows.map((row) => {
+        const values: MarketHistoryValues = {};
+        for (const key of keys) if (typeof row[key] === 'number') values[key] = row[key];
+        return { date: String(row.period), code: '', name: '', sources: { metrics: values } };
+    });
+}
+
+function renderRevenueGrowth(target: HTMLElement | null, rows: any[], emptyText: string) {
+    if (!target) return;
+    target.replaceChildren();
+    if (!rows.length) { target.textContent = emptyText; return; }
+    const latest = rows[rows.length - 1];
+    const recent = rows.slice(-3).map((row) => row.yoyPercent).filter((value): value is number => typeof value === 'number');
+    const recentAverage = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+    const chartId = `${target.id}-plot`; const chart = document.createElement('div'); chart.id = chartId;
+    target.append(chart);
+    drawMarketHistoryChart(chartId, metricPoints(rows, ['yoyPercent', 'momPercent']), [
+        { label: marketI18n('marketFundamentalsYoY', 'YoY'), color: '#55b8a8', sourceKeys: ['metrics'], field: 'yoyPercent', tooltip: (_, v) => ratioFormat.growth(v) },
+        { label: marketI18n('marketFundamentalsMoM', 'MoM'), color: '#7198df', sourceKeys: ['metrics'], field: 'momPercent', tooltip: (_, v) => ratioFormat.growth(v) },
+    ], { height: 230, area: false, format: (v) => `${v}%` });
+    target.prepend(buildMarketKpis([
+        { label: `${marketI18n('marketFundamentalsYoY', 'YoY')} · ${latest.period}`, value: formatSignedPercent(latest.yoyPercent, 1), delta: latest.yoyPercent },
+        { label: `${marketI18n('marketFundamentalsMoM', 'MoM')} · ${latest.period}`, value: formatSignedPercent(latest.momPercent, 1), delta: latest.momPercent },
+        { label: marketI18n('marketFundamentalsYtdYoY', 'Year-to-date YoY'), value: formatSignedPercent(latest.ytdYoyPercent, 1), delta: latest.ytdYoyPercent },
+        { label: marketI18n('marketFundamentals3mYoY', '3-month average YoY'), value: formatSignedPercent(recentAverage, 1), delta: recentAverage ?? undefined },
+    ]));
+}
+
+function renderProfitability(target: HTMLElement | null, rows: any[], emptyText: string) {
+    if (!target) return;
+    target.replaceChildren();
+    if (!rows.length) { target.textContent = emptyText; return; }
+    const latest = rows[rows.length - 1];
+    const margin = (key: string, fallback: string) => ({
+        label: `${marketI18n(key, fallback)} · ${latest.period}`,
+        value: typeof latest[`${MARGIN_KEYS[key]}`] === 'number' ? ratioFormat.percent(latest[MARGIN_KEYS[key]]) : '—',
+        sub: `QoQ ${formatPp(latest[`${MARGIN_KEYS[key]}QoQ`])} · YoY ${formatPp(latest[`${MARGIN_KEYS[key]}YoY`])}`,
+        subDelta: latest[`${MARGIN_KEYS[key]}QoQ`],
+    });
+    target.append(buildMarketKpis([
+        margin('marketFundamentalsGrossMargin', 'Gross margin'),
+        margin('marketFundamentalsOperatingMargin', 'Operating margin'),
+        margin('marketFundamentalsNetMargin', 'Net margin'),
+        { label: `EPS YoY · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), delta: latest.epsYoY, sub: `QoQ ${formatSignedPercent(latest.epsQoQ, 1)}`, subDelta: latest.epsQoQ },
+    ]));
+    const title = document.createElement('h6'); title.className = 'market-subheading';
+    title.textContent = marketI18n('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
+    const chart = document.createElement('div'); chart.id = 'market-fundamentals-margin-chart';
+    target.append(title, chart);
+    drawMarketHistoryChart(chart.id, metricPoints(rows, ['grossMargin', 'operatingMargin', 'netMargin']), [
+        { label: marketI18n('marketFundamentalsGrossMargin', 'Gross margin'), color: '#55b8a8', sourceKeys: ['metrics'], field: 'grossMargin', tooltip: (_, v) => ratioFormat.percent(v) },
+        { label: marketI18n('marketFundamentalsOperatingMargin', 'Operating margin'), color: '#7198df', sourceKeys: ['metrics'], field: 'operatingMargin', tooltip: (_, v) => ratioFormat.percent(v) },
+        { label: marketI18n('marketFundamentalsNetMargin', 'Net margin'), color: '#d5ae4b', sourceKeys: ['metrics'], field: 'netMargin', tooltip: (_, v) => ratioFormat.percent(v) },
+    ], { height: 210, area: false, format: (v) => `${v}%` });
+    const gross = marketI18n('marketFundamentalsGrossMargin', 'Gross margin');
+    const operating = marketI18n('marketFundamentalsOperatingMargin', 'Operating margin');
+    const net = marketI18n('marketFundamentalsNetMargin', 'Net margin');
+    const revenue = marketI18n('marketFundamentalsRevenueLabel', 'Revenue');
+    renderRatioTable(target, rows, [
+        { label: `${revenue} QoQ`, key: 'revenueQoQ', kind: 'growth' },
+        { label: `${revenue} YoY`, key: 'revenueYoY', kind: 'growth' },
+        { label: gross, key: 'grossMargin', kind: 'percent', group: true },
+        { label: `${gross} QoQ`, key: 'grossMarginQoQ', kind: 'pp' },
+        { label: `${gross} YoY`, key: 'grossMarginYoY', kind: 'pp' },
+        { label: operating, key: 'operatingMargin', kind: 'percent', group: true },
+        { label: `${operating} QoQ`, key: 'operatingMarginQoQ', kind: 'pp' },
+        { label: `${operating} YoY`, key: 'operatingMarginYoY', kind: 'pp' },
+        { label: net, key: 'netMargin', kind: 'percent', group: true },
+        { label: `${net} QoQ`, key: 'netMarginQoQ', kind: 'pp' },
+        { label: `${net} YoY`, key: 'netMarginYoY', kind: 'pp' },
+        { label: 'EPS QoQ', key: 'epsQoQ', kind: 'growth', group: true },
+        { label: 'EPS YoY', key: 'epsYoY', kind: 'growth' },
+    ], emptyText, marketI18n('marketFundamentalsRatioNote', 'pp = percentage-point change in the margin. Growth rates are blank when the base period is zero or negative.'), false);
+}
+
+const MARGIN_KEYS: Record<string, string> = {
+    marketFundamentalsGrossMargin: 'grossMargin', marketFundamentalsOperatingMargin: 'operatingMargin', marketFundamentalsNetMargin: 'netMargin',
+};
+
+function formatPp(value: unknown): string {
+    return typeof value === 'number' && Number.isFinite(value) ? ratioFormat.pp(value) : '—';
 }
 
 function formatSignedPercent(value: unknown, digits = 2): string {
@@ -490,135 +594,79 @@ function formatSignedPercent(value: unknown, digits = 2): string {
     return `${number > 0 ? '+' : ''}${number.toFixed(digits)}%`;
 }
 
-function ratioPercent(numerator: unknown, denominator: unknown): number | null {
-    return typeof numerator === 'number' && typeof denominator === 'number' && denominator !== 0 ? numerator / denominator * 100 : null;
-}
-
 // Taiwan market convention: red rises, green falls (matches the candle colors).
 function deltaClass(value: unknown): string {
     const number = Number(value);
     return value === null || value === undefined || !Number.isFinite(number) || number === 0 ? '' : number > 0 ? 'market-delta--up' : 'market-delta--down';
 }
 
-function buildMarketKpis(items: { label: string; value: string; delta?: unknown; sub?: string }[]): HTMLElement {
+function buildMarketKpis(items: { label: string; value: string; delta?: unknown; sub?: string; subDelta?: unknown }[]): HTMLElement {
     const row = document.createElement('div'); row.className = 'market-kpi-row';
     for (const item of items) {
         const tile = document.createElement('div'); tile.className = 'market-kpi';
         const label = document.createElement('span'); label.textContent = item.label;
         const value = document.createElement('strong'); value.textContent = item.value;
-        if (item.delta !== undefined) { const cls = deltaClass(item.delta); if (cls) value.classList.add(cls); }
+        const valueClass = item.delta !== undefined ? deltaClass(item.delta) : ''; if (valueClass) value.classList.add(valueClass);
         tile.append(label, value);
-        if (item.sub) { const sub = document.createElement('small'); sub.textContent = item.sub; tile.append(sub); }
+        if (item.sub) {
+            const sub = document.createElement('small'); sub.textContent = item.sub;
+            const subClass = item.subDelta !== undefined ? deltaClass(item.subDelta) : ''; if (subClass) sub.classList.add(subClass);
+            tile.append(sub);
+        }
         row.append(tile);
     }
     return row;
 }
 
-interface FinTableRow { label: string; values: (number | null)[]; format?: (value: number) => string; ratio?: boolean }
-function buildFinTable(columns: string[], rows: FinTableRow[], note?: string): HTMLElement {
+interface RatioRow { label: string; key: string; kind: RatioKind; group?: boolean }
+function renderRatioTable(target: HTMLElement | null, rows: any[], spec: RatioRow[], emptyText: string, note?: string, clear = true) {
+    if (!target) return;
+    if (clear) target.replaceChildren();
+    if (!rows.length) { target.textContent = emptyText; return; }
     const wrap = document.createElement('div'); wrap.className = 'market-fin-table-wrap';
     const table = document.createElement('table'); table.className = 'market-fin-table';
     const head = document.createElement('tr');
     const corner = document.createElement('th'); corner.scope = 'col'; corner.textContent = marketI18n('marketFundamentalsItem', 'Item'); head.append(corner);
-    columns.forEach((column, i) => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = column; if (i === columns.length - 1) th.className = 'is-latest'; head.append(th); });
+    rows.forEach((row, i) => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = String(row.period); if (i === rows.length - 1) th.className = 'is-latest'; head.append(th); });
     const thead = document.createElement('thead'); thead.append(head);
     const tbody = document.createElement('tbody');
-    for (const row of rows) {
-        const tr = document.createElement('tr'); if (row.ratio) tr.className = 'is-ratio';
-        const th = document.createElement('th'); th.scope = 'row'; th.textContent = row.label; tr.append(th);
-        row.values.forEach((value, i) => {
-            const td = document.createElement('td');
-            td.textContent = value === null || !Number.isFinite(value) ? '—' : (row.format ?? ((v: number) => compactNumber(v, 2)))(value);
-            if (value !== null && value < 0) td.classList.add('is-negative');
-            if (i === row.values.length - 1) td.classList.add('is-latest');
+    for (const line of spec) {
+        const tr = document.createElement('tr'); if (line.group) tr.className = 'is-group';
+        const th = document.createElement('th'); th.scope = 'row'; th.textContent = line.label; tr.append(th);
+        rows.forEach((row, i) => {
+            const value = row[line.key]; const td = document.createElement('td');
+            td.textContent = typeof value === 'number' && Number.isFinite(value) ? ratioFormat[line.kind](value) : '—';
+            if (line.kind !== 'percent') { const cls = deltaClass(value); if (cls) td.classList.add(cls); }
+            if (i === rows.length - 1) td.classList.add('is-latest');
             tr.append(td);
         });
         tbody.append(tr);
     }
-    table.append(thead, tbody); wrap.append(table);
-    // Newest quarter sits on the right; start scrolled there on narrow screens.
+    table.append(thead, tbody); wrap.append(table); target.append(wrap);
+    // Newest period sits on the right; start scrolled there on narrow screens.
     requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
-    const container = document.createElement('div'); container.append(wrap);
-    if (note) { const small = document.createElement('p'); small.className = 'market-fin-note'; small.textContent = note; container.append(small); }
-    return container;
-}
-
-function renderIncomeStatements(target: HTMLElement, items: any[]) {
-    const label = (key: string, fallback: string) => marketI18n(key, fallback);
-    const amounts = items.map((item) => {
-        const single = item.singleQuarter || {};
-        const derived = Object.values(single).some((value) => typeof value === 'number');
-        return { derived, values: derived ? single : (item.reportedCumulative || {}) };
-    });
-    const columns = items.map((item, i) => `${item.period}${amounts[i].derived ? '' : '*'}`);
-    const pick = (key: string) => amounts.map(({ values }) => typeof values[key] === 'number' ? values[key] : null);
-    const percent = (value: number) => `${value.toFixed(1)}%`;
-    const margins = (key: string) => amounts.map(({ values }) => ratioPercent(values[key], values.revenue));
-
-    const chartId = 'market-fundamentals-margin-chart';
-    const chartTitle = document.createElement('h6'); chartTitle.className = 'market-subheading'; chartTitle.textContent = label('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
-    const chart = document.createElement('div'); chart.id = chartId;
-    target.append(chartTitle, chart);
-    const marginPoints: MarketHistoryPoint[] = items.map((item, i) => {
-        const values: MarketHistoryValues = {};
-        if (amounts[i].derived) for (const key of ['grossProfit', 'operatingIncome', 'netIncome']) {
-            const margin = ratioPercent(amounts[i].values[key], amounts[i].values.revenue); if (margin !== null) values[key] = margin;
-        }
-        return { date: item.period, code: '', name: '', sources: { margins: values } };
-    });
-    drawMarketHistoryChart(chartId, marginPoints, [
-        { label: label('marketFundamentalsGrossMargin', 'Gross margin'), color: '#55b8a8', sourceKeys: ['margins'], field: 'grossProfit', tooltip: (_, v) => percent(v) },
-        { label: label('marketFundamentalsOperatingMargin', 'Operating margin'), color: '#7198df', sourceKeys: ['margins'], field: 'operatingIncome', tooltip: (_, v) => percent(v) },
-        { label: label('marketFundamentalsNetMargin', 'Net margin'), color: '#d5ae4b', sourceKeys: ['margins'], field: 'netIncome', tooltip: (_, v) => percent(v) },
-    ], { height: 200, area: false, format: (v) => `${v}%` });
-
-    const notes = [`${label('marketFundamentalsDerivedQuarter', 'Single quarter derived from official cumulative values; EPS stays as reported.')} ${items[0]?.unit || ''}`];
-    if (amounts.some((entry) => !entry.derived)) notes.push(`* ${label('marketFundamentalsNoPriorQuarter', 'Preceding quarter is unavailable; values remain cumulative.')}`);
-    target.append(buildFinTable(columns, [
-        { label: label('marketFundamentalsRevenueLabel', 'Revenue'), values: pick('revenue') },
-        { label: label('marketFundamentalsGrossProfit', 'Gross profit'), values: pick('grossProfit') },
-        { label: label('marketFundamentalsOperatingIncome', 'Operating income'), values: pick('operatingIncome') },
-        { label: label('marketFundamentalsNetIncome', 'Net income'), values: pick('netIncome') },
-        { label: label('marketFundamentalsGrossMargin', 'Gross margin'), values: margins('grossProfit'), format: percent, ratio: true },
-        { label: label('marketFundamentalsOperatingMargin', 'Operating margin'), values: margins('operatingIncome'), format: percent, ratio: true },
-        { label: label('marketFundamentalsNetMargin', 'Net margin'), values: margins('netIncome'), format: percent, ratio: true },
-        { label: label('marketFundamentalsEps', 'EPS reported'), values: items.map((item) => typeof item.epsReported === 'number' ? item.epsReported : null), format: (v) => v.toFixed(2), ratio: true },
-    ], notes.join(' ')));
-}
-
-function renderBalanceSheets(target: HTMLElement, items: any[]) {
-    const pick = (key: string) => items.map((item) => typeof item.reportedCumulative?.[key] === 'number' ? item.reportedCumulative[key] : null);
-    target.append(buildFinTable(items.map((item) => item.period), [
-        { label: marketI18n('marketFundamentalsAssets', 'Total assets'), values: pick('assets') },
-        { label: marketI18n('marketFundamentalsLiabilities', 'Total liabilities'), values: pick('liabilities') },
-        { label: marketI18n('marketFundamentalsEquity', 'Total equity'), values: pick('equity') },
-        { label: marketI18n('marketFundamentalsDebtRatio', 'Debt ratio'), values: items.map((item) => ratioPercent(item.reportedCumulative?.liabilities, item.reportedCumulative?.assets)), format: (v) => `${v.toFixed(1)}%`, ratio: true },
-        { label: marketI18n('marketFundamentalsBookValue', 'Book value / share'), values: pick('bookValuePerShare'), format: (v) => v.toFixed(2), ratio: true },
-    ], `${marketI18n('marketFundamentalsBalanceNote', 'Quarter-end amounts.')} ${items[0]?.unit || ''}`));
-}
-
-// FinMind rows are long-format (period, item, value); pivot to item × period with the newest 8 periods.
-function renderFinmindTable(target: HTMLElement, rows: any[], emptyText?: string) {
-    const periods = [...new Set(rows.map((row) => String(row.period)))].sort().slice(-8);
-    if (!periods.length) { target.textContent = emptyText || marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.'); return; }
-    const byItem = new Map<string, (number | null)[]>();
-    for (const row of rows) {
-        const column = periods.indexOf(String(row.period)); if (column < 0) continue;
-        if (!byItem.has(row.item)) byItem.set(row.item, periods.map(() => null));
-        const value = Number(row.value); byItem.get(row.item)![column] = typeof row.value === 'number' || (row.value !== '' && Number.isFinite(value)) ? value : null;
-    }
-    const units = [...new Set(rows.map((row) => row.unit).filter(Boolean))].join(', ');
-    target.append(buildFinTable(periods, [...byItem.entries()].map(([label, values]) => ({ label, values })),
-        `${marketI18n('marketFundamentalsSource', 'Source')}: FinMind${units ? ` · ${units}` : ''}`));
+    if (note) { const small = document.createElement('p'); small.className = 'market-fin-note'; small.textContent = note; target.append(small); }
 }
 
 function renderOwnershipHistory(points: MarketHistoryPoint[]) {
     const holdingSources = ['twse:foreign-holding', 'tpex:foreign-holding'];
-    const percent = (v: number) => `${v}%`;
+    // Holding % gets its own zoomed scale; the legal limit is a near-constant 100%, so it is shown as headroom
+    // in the tiles instead of as a second line that would flatten the holding series.
     drawMarketHistoryChart('market-history-foreign-holding-chart', points, [
         { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), color: '#55b8a8', sourceKeys: holdingSources, field: 'foreign_holding_percent', tooltip: (_, value) => `${value}%` },
-        { label: marketI18n('marketHistoryForeignLimit', 'Foreign investment limit (%)'), color: '#dc806f', sourceKeys: holdingSources, field: 'foreign_limit_percent', tooltip: (_, value) => `${value}%` },
-    ], { height: 220, area: false, format: percent });
+    ], { height: 220, format: (v) => `${v}%` });
+    const holding = points.map((point) => historyValue(point, holdingSources, 'foreign_holding_percent')).filter((v): v is number => v !== null);
+    const limits = points.map((point) => historyValue(point, holdingSources, 'foreign_limit_percent')).filter((v): v is number => v !== null);
+    const chart = document.getElementById('market-history-foreign-holding-chart');
+    if (chart && holding.length) {
+        const latest = holding[holding.length - 1]; const limit = limits[limits.length - 1];
+        const change = latest - holding[0];
+        chart.prepend(buildMarketKpis([
+            { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), value: `${latest.toFixed(2)}%` },
+            { label: `${marketI18n('marketHistoryChangeSince', 'Change since')} ${points[0].date.slice(5)}`, value: formatPp(change), delta: Number(change.toFixed(2)) },
+            { label: marketI18n('marketHistoryForeignHeadroom', 'Headroom to legal limit'), value: limit !== undefined ? `${(limit - latest).toFixed(2)} pp` : '—', sub: limit !== undefined ? `${marketI18n('marketHistoryForeignLimit', 'Legal investment limit (%)')} ${limit}%` : undefined },
+        ]));
+    }
     drawMarketHistoryChart('market-history-foreign-holding-shares-chart', points, [
         { label: marketI18n('marketHistoryForeignHoldingShares', 'Foreign holding shares'), color: '#7198df', sourceKeys: holdingSources, field: 'foreign_holding_shares', tooltip: (_, value) => `${compactNumber(value, 2)} ${marketI18n('marketHistorySharesUnit', 'shares')}` },
     ], { height: 200 });
