@@ -187,7 +187,6 @@
 .market-detail-toolbar [role="tab"] { padding: .45rem .65rem; color: var(--gray-300); border: 1px solid var(--gray-700); border-radius: 999px; background: transparent; }
 .market-detail-toolbar [role="tab"][aria-selected="true"] { color: #111; background: #d8a43b; border-color: #d8a43b; }
 .market-detail-toolbar [role="tab"]:disabled { opacity: .45; cursor: not-allowed; }
-.market-watch-detail-card { margin: 0; }
 .ai-usage-home-section--fullwidth { width: 100%; margin-top: 1rem; }
 
 .market-quote-heading {
