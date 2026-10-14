@@ -23,6 +23,8 @@ function initMarketWatchlist() {
         row.setAttribute('aria-expanded', String(!expanded));
         document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', 'false'));
         detail.hidden = expanded;
+        const placeholder = document.getElementById('market-chart-placeholder');
+        if (placeholder) placeholder.hidden = !expanded;
         if (!expanded) {
             setMarketDetailInstrument({ code: 'TXF', name: 'TAIEX Futures', productType: 'futures' });
         }
@@ -148,10 +150,65 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
         label.setAttribute('y', '330'); label.setAttribute('text-anchor', 'middle'); label.classList.add('market-history-axis-label');
         label.textContent = item.date.slice(5); svg.append(label);
     }
+    const selection = document.createElementNS(ns, 'rect'); selection.setAttribute('y', String(priceTop));
+    selection.setAttribute('height', String(volumeBottom - priceTop)); selection.setAttribute('fill', '#d8a43b');
+    selection.setAttribute('opacity', '.16'); selection.setAttribute('pointer-events', 'none'); selection.hidden = true; svg.append(selection);
+    const readout = document.createElement('div'); readout.className = 'market-chart-readout';
+    readout.setAttribute('aria-live', 'polite');
+    readout.textContent = marketI18n('marketHistoryChartGuide', 'Move over a candle for daily OHLC. Click to pin a date; drag to compare closing prices.');
+    const nearestValidIndex = (index: number) => {
+        let best = -1; let distance = Infinity;
+        candles.forEach((item, candidate) => { if (item && Math.abs(candidate - index) < distance) { best = candidate; distance = Math.abs(candidate - index); } });
+        return best;
+    };
+    const indexAt = (clientX: number) => {
+        const rect = svg.getBoundingClientRect(); const viewX = ((clientX - rect.left) / rect.width) * 900;
+        return nearestValidIndex(Math.max(0, Math.min(candles.length - 1, Math.floor((viewX - left) / slot))));
+    };
+    const formatPrice = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const showCandle = (index: number) => {
+        const item = candles[index]; if (!item) return;
+        const volumeUnit = volumeField === 'volume_contracts' ? marketI18n('marketHistoryContracts', 'contracts') : marketI18n('marketHistorySharesUnit', 'shares');
+        readout.textContent = `${item.date} · O ${formatPrice(item.open)} · H ${formatPrice(item.high)} · L ${formatPrice(item.low)} · C ${formatPrice(item.close)} · ${marketI18n('marketHistoryVolumeShort', 'Volume')} ${item.volume?.toLocaleString() ?? '—'} ${volumeUnit}`;
+    };
+    let dragStart = -1; let pinnedIndex = -1; let dragMoved = false; let dragStartX = 0;
+    svg.style.touchAction = 'pan-y';
+    svg.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 && event.pointerType !== 'touch') return;
+        dragStart = pinnedIndex >= 0 ? pinnedIndex : indexAt(event.clientX); dragStartX = event.clientX; dragMoved = false;
+        if (dragStart >= 0) svg.setPointerCapture(event.pointerId);
+    });
+    svg.addEventListener('pointermove', (event) => {
+        const index = indexAt(event.clientX); if (index < 0) return;
+        if (dragStart >= 0 && svg.hasPointerCapture(event.pointerId)) {
+            const endIndex = index; dragMoved ||= Math.abs(event.clientX - dragStartX) > 4;
+            const x1 = left + slot * (Math.min(dragStart, endIndex) + .5);
+            const x2 = left + slot * (Math.max(dragStart, endIndex) + .5);
+            selection.setAttribute('x', String(x1)); selection.setAttribute('width', String(Math.max(slot, x2 - x1))); selection.hidden = false;
+            const first = candles[dragStart]; const last = candles[endIndex];
+            if (first && last) {
+                const change = first.close ? (last.close - first.close) / first.close * 100 : 0;
+                readout.textContent = `${first.date} ${formatPrice(first.close)} → ${last.date} ${formatPrice(last.close)} · ${marketI18n('marketHistoryRangeChange', 'Close change')} ${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+            }
+        } else showCandle(index);
+    });
+    const finishRange = (event: PointerEvent) => {
+        if (dragStart < 0) return;
+        dragStart = -1;
+        const endIndex = indexAt(event.clientX);
+        if (endIndex >= 0) pinnedIndex = endIndex;
+        if (!dragMoved) {
+            const index = endIndex;
+            selection.setAttribute('x', String(left + slot * index)); selection.setAttribute('width', String(slot)); selection.hidden = false;
+            showCandle(index);
+        }
+    };
+    svg.addEventListener('pointerup', finishRange);
+    svg.addEventListener('pointercancel', () => { dragStart = -1; selection.hidden = true; });
     target.append(svg);
     const legend = document.createElement('div'); legend.className = 'market-history-legend';
     legend.textContent = `${marketI18n('marketHistoryCandles', 'Daily OHLC')} · ${marketI18n('marketHistoryVolume', 'Volume')}${volumeField === 'volume_contracts' ? ` (${marketI18n('marketHistoryContracts', 'contracts')})` : ` (${marketI18n('marketHistoryShares', 'shares')})`}`;
-    target.append(legend);
+    target.append(legend, readout);
 }
 
 function renderMarketHistoryTable(targetId: string, points: MarketHistoryPoint[], columns: { label: string; sources: string[]; field: string; unit?: string }[]) {
@@ -200,11 +257,6 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         ]);
         drawMarketHistoryChart('market-history-borrow-chart', points, [
             { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
-        ]);
-        renderMarketHistoryTable('market-history-price-table', points, [
-            { label: 'marketHistoryOpen', sources: priceSources, field: 'open' }, { label: 'marketHistoryHigh', sources: priceSources, field: 'high' },
-            { label: 'marketHistoryLow', sources: priceSources, field: 'low' }, { label: 'marketHistoryClose', sources: priceSources, field: 'close' },
-            { label: 'marketHistoryVolume', sources: priceSources, field: instrument.productType === 'futures' ? 'volume_contracts' : 'volume_shares' },
         ]);
         if (instrument.productType === 'futures') {
             drawMarketHistoryChart('market-history-institutional-chart', points, [
@@ -284,6 +336,8 @@ function selectMarketDetailTab(tabName: string) {
 
 function setMarketDetailInstrument(instrument: DashboardInstrument) {
     selectedMarketInstrument = instrument;
+    const detail = document.getElementById('market-instrument-detail'); if (detail) detail.hidden = false;
+    const placeholder = document.getElementById('market-chart-placeholder'); if (placeholder) placeholder.hidden = true;
     const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
     const quote = instrument.quote;
     setText('market-detail-title', `${instrument.code} · ${instrument.name}`);
@@ -337,6 +391,8 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             const detail = document.getElementById('market-instrument-detail');
             const expanded = row.getAttribute('aria-expanded') === 'true';
             if (detail) detail.hidden = !expanded;
+            const placeholder = document.getElementById('market-chart-placeholder');
+            if (placeholder) placeholder.hidden = expanded;
             if (expanded) setMarketDetailInstrument(instrument);
         });
         target.append(row);
