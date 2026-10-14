@@ -1,4 +1,4 @@
-# 首頁市場儀表板與 About 語系修正計畫
+﻿# 首頁市場儀表板與 About 語系修正計畫
 
 規格日期：2026-10-14。以下納入最新使用者指示，優先於本文件先前紀錄及 `PLAN_TO_PRODUCTION_WORKFLOW.md` 的歷史紀錄。
 
@@ -402,3 +402,150 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 優先驗收股票/期貨四 tab 全部使用現貨 ticker（QFFJ6→2330），再確認統一證券/MoneyDJ 分點來源的使用範圍與接入條件。已實測最新/區間買賣超各 TOP15，以及單分點逐日歷史；端點、欄位、限制都在文件。接入後放在 Institutional 內，使用圖表與 hover，不加明細 table，不把分點等同法人身分。
 接著核對 custom 台積電能搜到小型台積電期貨、排除權證、歷史候選持久化；查 backend #91 / 798a906 的部署與 TAIFEX 429 coverage。可用本機 npm run dev 驗非權限 API，注意 Node 版本與 MAYA_SAWA_INTERNAL_URL。完成必要檢查、部署及正式桌機/手機驗收，逐項更新文件，不把未接入或未驗證項目宣稱完成。
 ```
+
+
+### 2026-10-14 本次接續執行狀態（優先於上方舊 session 摘要）
+
+- OKE 重新查證：`papakao/ty-multiverse-frontend:254` 與 `papakao/maya-sawa:91` 均為 1/1 Ready；backend `main` 工作樹乾淨。Frontend `dev` 的四 tab TXF 修正已提交並推送 commit `5febeb6`；本文件依規則保持未提交。
+- 本機 Node 22.12.0 執行 `npm run build` 成功；`git diff --check` 通過。全量 Vitest：1 suite 通過、2 suites 失敗；失敗的 auth/authApi 測試都引用不存在的 `src/services/auth`，與本次 market-history 修改無關。未新增或修改測試。
+- 本機 dev 頁面已連正式公開 market API 驗收 TXF：Price 載入 64 個交易日（2026-07-14 至 2026-10-14），讀取 TAIFEX futures data，成交量座標軸與圖例標示 contracts。TXF 四 tab 保留；Price/Institutional 使用 TAIFEX 資料，Institutional 標明是商品類別彙總而非個別契約部位；Margin & lending、Ownership 提示指數期貨沒有對應個股資料。此前正式站 QFFJ6→2330 四 tab 的驗收紀錄仍有效；TXF 變更尚未正式上線，故不得算正式 UI 驗收完成。
+- 依 `PLAN_TO_PRODUCTION_WORKFLOW.md` 核對發布條件：必須由 Dockerfile 建立並推送新的 immutable image，再驗證 rollout、Pod image/digest 與正式 UI。這台工作機 Docker daemon 不可用；infra `AGENTS.md` 記載的 `.env.jenkins` 在工作區找不到。推送 `dev` 後正式仍為 `:254`，未觀察到新 rollout。Jenkins deploy URL 已開啟並停在 PeopleSystem SSO 登入頁；沒有登入 session，不能建立 image 或把本機 build 冒充部署。需登入 Jenkins 才能觸發/檢查 pipeline，完成後再核對 job branch、build 與 rollout。
+- MoneyDJ 官方條款限制未經書面許可的自動化擷取、資料庫建立及重製；因此不接入分點擷取/儲存/公開功能。TWSE/TPEx 分點商品尚未購買；MOPS、個別股票期貨法人持倉及大額交易人也仍缺已核准且可重現的來源證據。這些依計畫列為未完成，不以其他彙總數據替代。
+- 收尾狀態：TXF 修正已完成開發、build 與本機公開 API 驗證；正式部署與桌機/390px 正式 UI 驗收待 Jenkins SSO 後完成。Custom「台積電」搜尋及歷史候選儲存尚未在有效管理權限下重驗。全量 auth 測試修復與以上資料源缺口亦未完成。
+### 2026-10-14 重新驗收、基本面擴充及用量規則（最新；優先於以上 session 狀態）
+
+使用者新增要求：擴充上市櫃月營收與財報，優先使用 TWSE OpenAPI／MOPS；FinMind 已有免費註冊帳號，每小時 600 次，只收低頻資料，必須持久化與 cache。永豐每日只有 500MB，不能由訪客現場重抓歷史或因部署／重啟重複下載。本節是實查結果與接續計畫；新基本面 collector、DB、API、UI 尚未實作。
+
+#### 最下方六項接續工作的驗收結果
+
+| 原清單項目 | 本次判定 | 本次證據／缺口 |
+| --- | --- | --- |
+| 1. 工作樹與部署盤點 | 完成盤點 | frontend `dev` 已推送 `5febeb6`；只有本計畫文件未提交，backend `main` 乾淨。Frontend pipeline #255 已產生新 image 並 rollout 成功：`papakao/ty-multiverse-frontend:255` Ready 1；backend `:91` Ready 1。先前「仍為 :254、必須先登入才能發布」已過時。 |
+| 2. 期貨四 tab 與現貨映射 | 部分完成 | 正式頁重載已看到 TXF TAIFEX futures charts、64 日價格及三法人淨口數；QFFJ6→2330 價格、Margin & lending、Ownership 切換成功，法人現貨映射亦有既有證據。另一組股票期貨及本次完整桌機／390px、點選／拖曳互動仍待驗，不能沿用舊截圖宣稱全部重驗。 |
+| 3. MoneyDJ 可接入條件 | 未完成接入條件 | 真實 TOP15／單分點端點已有樣本，使用條款限制尚未解除。TWSE／TPEx 分點付費商品未購買。 |
+| 4. 券商分點 adapter／DB／UI | 未完成 | 未有正式分點 collector、排行／逐日資料表與選分點圖表；FinMind 免費方案也不含股票分點。 |
+| 5. 搜尋及歷史候選 | 程式有、正式驗收未過 | 程式有 WRT 排除、股票／期貨分桶及候選 upsert。正式 DB `maya_sawa_market_candidate` 與 `maya_sawa_market_candidate_source` 都是 0 筆；不能稱候選持久化已交付。管理搜尋仍需有效權限，未以假 token 驗證。 |
+| 6. 測試、部署與交接 | 部分完成 | 本輪 frontend build／diff check 成功，:255 rollout 已成功。全量 Vitest 仍有 2 個既有 auth suites 無法解析 `src/services/auth`。完整正式手機與權限驗收尚未完成。 |
+
+Frontend :255 實際 image digest：`sha256:bf04b9b6ba3329b33cf13ada917193c215535e54380a194b7d8b082795c3a4e4`。公開頁已實際顯示新增 TXF 圖表，故不是僅套用舊 image。這次只做讀取驗收與文件擴充，沒有另觸發部署或變更 DB 資料。
+
+#### PostgreSQL／Redis 持久化實查
+
+由正式 Maya pod 以其既有 DB 設定執行只讀查詢，不輸出連線字串、帳戶金額或 token：
+
+| 資料表／儲存 | 實查 | 判定 |
+| --- | --- | --- |
+| `maya_sawa_market_daily_history` | 2,322 筆，13 個來源；唯一鍵 source/product_type/code/trading_date 重複組數為 0 | 股票價量、法人、外資、資券／借券、TAIFEX、TDCC 已有 PostgreSQL 實際資料；history API 直接讀 DB，不在請求內 crawl |
+| `maya_sawa_market_history_coverage` | 4,768 筆 | 有持久化進度，但成功狀態準確性未過，見下述 680 筆不一致 |
+| `maya_sawa_market_dashboard_snapshot` | 37 筆 | 自動市場清單快照已持久化 |
+| `maya_sawa_market_dashboard_setting` | 1 筆 | 自訂清單設定已持久化 |
+| `maya_sawa_portfolio_history` | 39 筆 | 有持久化；未輸出私有內容 |
+| `maya_sawa_taiwan_portfolio_history`／`maya_sawa_taiwan_portfolio_daily_history` | 71／3 筆 | 有持久化；不是已有三個月私有帳務歷史 |
+| `maya_sawa_market_candidate`／`maya_sawa_market_candidate_source` | 0／0 筆 | 未通過「清單曾出現商品持久化」要求 |
+| Redis | AOF 已開啟；RDB 最近儲存狀態 ok | 有持久化機制，但選中商品報價 cache TTL=300 秒，不能代替 PostgreSQL 長期保存 |
+| 基本面資料表 | 未找到 revenue／financial／fundamental 表；也未有對應 collector | 月營收／財報尚未接入或入庫 |
+
+History 來源實存筆數：TWSE 價格 256、法人 256、外資 252、資券 252、借券 252；TPEx 價格／法人／外資各 128、資券／借券各 126；TDCC 78；TAIFEX 價格 212、法人 128。日期依來源為 2026-07-14 至 2026-10-14，部分日資料至 10/13；TDCC 為 2026-07-17 至 10/08。不能把整包 points 的 64 日當成每個 source 都有 64 日。
+
+新增驗收缺口：
+
+- `coverage.status='ok'` 左連接 history 後沒有對應列，共 680 筆：TPEx daily-price 對上市股票 2330／2337／3008／3017 各 48 筆；TWSE daily-price／foreign-holding／institutional／margin-balance 對上櫃股票 3081／3105 各 61 筆。必須釐清舊 coverage 與市場分類寫入，修復狀態後再驗；不得用這些 ok 宣稱資料完整，也不要因修狀態而向永豐回抓。
+- 正式 coverage 共 201 筆 error：`taifex:futures-institutional` 的 OLFJ6、QIFJ6、UHFJ6 各 67 筆，訊息為 non-CSV response。TXF／QFFJ6 已無 error，價格／商品類別法人各有有效日期，但不能代表其他期貨皆已成功。股票期貨四 tab 使用現貨；個別股票期貨法人部位沒有來源，須停止無效個別代碼查詢或正確共用已確認的 STF 類別資料並明示類別。
+- `ShioajiMarketService.get_dashboard_quotes()` 在 Redis cache 未命中或 Redis 出錯時仍直接 `_run_with_relogin(_fetch_dashboard_quotes)`，請求路徑會觸發券商 snapshots；目前沒有這批最新報價的 PostgreSQL 保底。這不符合使用者新增的「不可現場慢慢抓、必須持久化」要求。
+
+#### 月營收／財報的官方來源與實測
+
+已閱讀使用者指定的 Telegram Shioaji 群（6/5 月營收討論）與 Discord Shioaji 伺服器搜尋結果（5/29、6/7、6/8、8/22 基本面討論）。Bot 均指向 MOPS／TWSE，表示 Shioaji 不提供月營收與財報；只作線索，以下另以官方 HTTP 實測核對。
+
+| 資料 | 官方來源 | 本次證據與納入方式 |
+| --- | --- | --- |
+| 上市月營收 | `https://openapi.twse.com.tw/v1/opendata/t187ap05_L` | 免 token GET 成功，1,072 列；2330 的資料年月 11509、出表日期 1151013，有當月／上月／去年同月、MoM／YoY、年累計及備註。Swagger 無日期參數，不能當歷史任意區間 API。 |
+| 上櫃月營收 | `https://mopsfin.twse.com.tw/opendata/t187ap05_O.csv`，政府資料集 56510 | 官方 CSV 資源已確認；接入前完成 UTF-8／CSV parser 與指定上櫃公司樣本核對。 |
+| 月營收歷史 | `https://mopsov.twse.com.tw/nas/t21/{sii或otc}/t21sc03_{民國年}_{月}_0.html` | 實測 sii/115/9、sii/114/9、otc/115/9 均 HTTP 200；上市頁含 2330，上櫃頁含 3081，頁面明示「單位：千元」。這是年月整批歷史頁，適合背景按市場／年月收一次；最早可用年、所有月份與缺值仍待系統驗證。 |
+| 上市綜合損益 | `/v1/opendata/t187ap06_L_ci` | 1,049 列；2330 為 115 年第 2 季，含營收、毛利、營業利益、稅後淨利、EPS。一般業與金融／金控／保險等 schema 分開；不能直接假設全為單季或同一單位。 |
+| 上市資產負債 | `/v1/opendata/t187ap07_L_ci` | 1,049 列；2330 115Q2，含資產、負債、權益、每股淨值。 |
+| 本益比／殖利率／股價淨值比 | `/v1/exchangeReport/BWIBBU_ALL`、`BWIBBU_d` | 官方 Swagger 有列；可補估值，尚未做 payload／歷史深度實測。 |
+| 股利／營益分析 | `/v1/opendata/t187ap45_L`、`t187ap17_L` | 官方 Swagger 有列，候選納入，先核對欄位與日期。 |
+| 額外籌碼 | `/v1/exchangeReport/MI_MARGN`、`/v1/SBL/TWT96U` 等 | 官方 Swagger 有列。MI_QFIIS_cat／sort_20 為類股或前20彙總，不能代替逐檔完整持股；TWT96U 為可借券賣出股數，不能混作借券成交／餘額。既有 T86／MI_QFIIS／TWT93U 歷史仍保留原官方日期來源。 |
+
+來源文件：[TWSE OpenAPI](https://openapi.twse.com.tw/#/)、[Swagger](https://openapi.twse.com.tw/v1/swagger.json)、[上市月營收授權／欄位](https://data.gov.tw/dataset/18420)、[上櫃月營收](https://data.gov.tw/dataset/56510)、[一般業損益](https://data.gov.tw/dataset/91998)、[一般業資產負債](https://data.gov.tw/dataset/94831)。上述政府開放資料集標示免費及政府資料開放授權條款第1版；公開顯示須保留來源標示。MOPS 查詢頁能查到不代表所有查詢介面、全文財報或附註都已完成自動化。月營收歷史 HTML 本次可取，現金流量、歷史完整三表／附註及特殊業別仍需逐項核對。
+
+#### FinMind 免費帳號的補缺定位
+
+帳號頁已讀取到每小時上限 600；沒有輸出 token，也沒有為本次研究發出 FinMind dataset API 試打。可用性以下以目前官方 Free 文件為準，實際資料樣本／帳號授權仍待小量驗證。
+
+| 優先 | Dataset | 對本站的用途／限制 |
+| --- | --- | --- |
+| 高 | `TaiwanStockCashFlowsStatement` | 補目前缺少的歷史現金流量資料；Free 有列 |
+| 高 | `TaiwanStockFinancialStatements`、`TaiwanStockBalanceSheet` | 補季財報歷史、上櫃及標準化項目；不與官方最新資料靜默混寫 |
+| 高 | `TaiwanStockMonthRevenue` | 月營收歷史備援與交叉核對，官方來源優先；create_time 不是公司正式公告時間 |
+| 中 | `TaiwanStockDividend`、`TaiwanStockDividendResult` | 股利政策、除權息事件，利於解釋 EPS／價格變化 |
+| 中 | `TaiwanStockMarginShortSaleSuspension`、`TaiwanStockSecuritiesLending`、`TaiwanDailyShortSaleBalances` | 融券回補／借券成交等目前較缺的細項；日資料僅每日增量，不輪詢 |
+| 備援 | 法人／外資持股／資券資料 | 既有官方來源已入庫，以缺日補缺和資料核對為主，避免重抓已成功的同一資料 |
+| 不納入免費交付 | `TaiwanStockTradingDailyReport`、主力集中度、八大行庫等 | 官方文件要求 Sponsor，免費600次不是資料集全開 |
+| 不納入免費交付 | `TaiwanStockHoldingSharesPer`、大額交易人等 | 需 Backer；TDCC 已有官方週資料，不為相同資料升級付費 |
+
+文件：[Free／付費資料集](https://finmind.github.io/Pricing/)、[基本面](https://finmind.github.io/tutor/TaiwanMarket/Fundamental/)、[籌碼面](https://finmind.github.io/tutor/TaiwanMarket/Chip/)、[用量查詢](https://finmind.github.io/api_usage_count/)、[資料授權](https://finmind.github.io/Disclaimer/)。Free 為非商業方案，對外提供資料還受原來源授權與來源標示限制；按資料集核對，不將 API 回應作整包公開 proxy。本站公開內容優先從已確認開放授權的官方來源取得。FinMind 財報 EPS 可能因配股／分割具有跨季股數基準差異，不能直接把各季原始 EPS 相加冒充財報累計 EPS。
+
+#### 接續設計：DB 先寫、cache 加速、訪客不抓來源
+
+1. **先修持久化與額度缺口**：最新券商 quote 加 PostgreSQL 保底（代碼／市場／合約月份／時間／來源），由單一背景工作更新；所有公開頁只讀 cache／DB。Redis miss 或失效時回 DB 的上次成功資料與 stale 時間，並去重排程更新；不得同步呼叫永豐。Portfolio 私有資料仍保持原權限。候選清單在有效自動／自訂清單快照時寫入，不依賴有人按搜尋才有歷史；補入既有清單可確認的商品。
+2. **永豐500MB規則**：所有用量共用同一身份額度；新增持久化用量／請求紀錄及預留額度，低於保留額度停止非必要下載。歷史價量／籌碼／基本面優先交易所官方來源；成功歷史不因重啟或切換 tab 重抓。合約目錄及 metadata 也持久化，以免只為取得現貨 ticker／月份而反覆 snapshots。串流是否計量依官方定義核對，不能自行假定可無限使用。
+3. **新基本面 schema**：月營收按來源＋市場＋ticker＋資料年月＋報表範圍唯一；財報按來源＋ticker＋會計年度／季度＋合併/個別＋報表類型＋項目＋期間唯一。另存 currency/unit、期間起訖、累計/單季、原始值與欄名、原始公告時間（未知為 null）、來源觀察時間、抓取時間、來源URL、payload hash／修訂版本。研究樣本不算 collector 已入庫。
+4. **收集範圍與排程**：沿用所選股票及股票期貨 underlying ticker 去重集合；月營收先規劃24個月、季財報8季，保留已存歷史。官方整批按市場／年月抓一次供多檔使用；月資料在申報期每日檢查，季資料在申報期每日檢查更正，其餘降頻；已成功不全量重抓。股利／除權息及其他日資料每日一次增量；不在網頁請求內收集。
+5. **FinMind600次共用限流**：server端 token，只放環境／Secret，Authorization header 傳送。全 pod 以帳號共用限流及任務鎖，本站保守上限120次／小時（最多1次／30秒、concurrency=1），為其他使用預留額度；定時讀官方 user_count／api_request_limit，剩餘低於120即暫停非必要工作，不能只相信本機計數。HTTP402／429停止並退避，所有重試也計量；權限不足不重試付費 dataset。用量ledger／checkpoint存DB，重啟不清零；一次按股票／dataset取得區間，不能拆成逐日查詢。
+6. **cache與資料失敗**：API讀cache→DB；collector成功交易提交後才更新cache。月／季資料cache可設24小時，key含來源、ticker、期間、版本；cache過期仍可回DB成功資料。來源失敗保留舊資料，顯示資料期別與 stale；no_data、尚未公告、來源錯誤分開，不造零值。
+7. **UI與驗收**：在既有四tab之外新增基本面區，月營收柱圖、YoY/MoM及季財報切換，數值以hover/readout呈現；股票期貨明示underlying股票，TXF沒有公司財報。驗證單位、累計／單季、修訂、EPS調整、上市櫃映射、唯一鍵及可追溯來源。以阻擋外部來源的cache miss、服務重啟、重複訪客測試證明仍能由DB讀取且券商／FinMind下載次數不增加。
+8. **完成門檻**：修正680筆coverage不一致、201筆期貨法人錯誤、候選0筆、request-path券商查詢；新基本面需migration、真正入庫數／期間、API、正式圖表、新image rollout與權限／390px驗收。以上全完成前整份plan保持「部分完成」。
+### 2026-10-14 來源存取規則修訂（使用者最新指示，優先於上節統一DB設計）
+
+使用者確認 TWSE OpenAPI 是免費官方來源，此來源資料不強制持久化，畫面需要時可直接 call。以上「所有公開頁只能讀DB／所有基本面必須先入庫」改為依供應商區分：
+
+- **TWSE OpenAPI**：允許按需直接呼叫官方API，不強制寫PostgreSQL。可由Astro/Maya server proxy處理格式與錯誤，並共用短期cache去重以改善速度；無需為最新月營收／季財報先做完整歷史入庫。回應仍標示來源、出表日期、資料年月／年度季別及原始單位。官方端點無歷史參數時不能用當前資料冒充歷史；歷史圖另用可查年月的MOPS頁或已存資料，持久化需求按實際歷史功能處理。
+- **永豐Shioaji**：500MB額度保護、持久化與cache要求不變；公開請求不可因cache miss同步抓券商，成功歷史不得重複下載。
+- **FinMind**：600次／小時限制、只取低頻資料、PostgreSQL持久化、cache與共用限流要求不變。僅補官方缺的歷史／現金流等，不重複消耗配額抓官方可直接取得的最新資料。
+
+TWSE已驗證欄位與端點：
+
+| 需要的資料 | GET端點 | 已確認 |
+| --- | --- | --- |
+| 最新月營收／月增年增／年累計 | `https://openapi.twse.com.tw/v1/opendata/t187ap05_L` | 2330資料年月11509，當月／上月／去年同月營收、MoM／YoY、累計營收 |
+| 季別財報營收／毛利／營業利益／淨利／EPS | `https://openapi.twse.com.tw/v1/opendata/t187ap06_L_ci` | 2330年度115、季別2；欄位有營業收入、營業成本、營業毛利（毛損）、營業毛利（毛損）淨額、營業利益（損失）、本期淨利（淨損）、基本每股盈餘（元） |
+| 季別資產／負債／權益／每股淨值 | `https://openapi.twse.com.tw/v1/opendata/t187ap07_L_ci` | 2330年度115、季別2，主要資產負債與每股參考淨值 |
+
+`ci`為一般業；金融、金控、保險及其他業別使用各自官方schema。財報的季別不保證各欄位都是單季值；先核對報表期間，若為年初至今累計，單季營收／毛利需以前季同口徑累計相減，缺前季時顯示累計並註明，不直接把累計標成單季。毛利率可按同期間毛利／營收計算並標示公式；營收為0或缺值時不算。TWSE OpenAPI最新快照無日期參數，歷史財報及完整現金流仍有FinMind／MOPS補缺價值。
+
+以上是實作前的來源與存取規則；以下記錄本次完成的程式切片與尚待部署／憑證的部分。
+
+### 2026-10-14 基本面與報價持久化實作進度（本次）
+
+已新增實作，前後端工作樹已建置與測試，尚未發布：
+
+- Maya 公開路由 GET /market/dashboard/fundamentals/{code}：TWSE 最新上市月營收與一般業季損益／資產負債按需讀取；上櫃月營收使用 MOPS 官方 CSV；官方回應只留在 Maya process 15 分鐘共用 cache，不寫 PostgreSQL。每筆回應保留資料年月、出表日、來源與原單位。正式樣本 2330 與 3081 都回傳 2026-09 月營收（新台幣千元），2330 最新季損益／資產負債有資料，3081 的上市季報端點無公司列，待 FinMind 憑證後供上櫃季財報補缺。
+- 季損益的 TWSE 一般業 feed 以年初累計金額做差導出單季營收、毛利、營業利益、淨利；前季缺列時回退顯示累計值。EPS 不跨季相減，避免股數基準變動誤算。毛利率依同季毛利÷營收計算。
+- 首頁新增基本面 tab：股票期貨沿用 underlying 股票，指數期貨顯示無公司財報；月營收圖可 hover 查看月份、營收、YoY／MoM；季損益、資產負債與 FinMind 現金流有來源／單位提示。歷史月營收尚未接 MOPS 歷史月 HTML，因此圖上目前只保證官方最新可得月份，不冒充24個月歷史。
+- 新增 PostgreSQL migration maya-sawa/sql/create_market_fundamentals_tables.sql 與唯一鍵模型：FinMind fundamentals、usage ledger、每日同步 checkpoint、Shioaji quote snapshot。FinMind 限流以 PostgreSQL advisory transaction lock 共用，每帳號每滑動一小時最多120次且至少間隔30秒；每代碼／資料集每日checkpoint；HTTP402／429停止；沒有 token 時不發請求。Maya K8s manifest 已預留 optional finmind-market Secret reference。
+- Shioaji 公開 dashboard cache miss 已不再同步呼叫 snapshots；固定／選取商品由既有10分鐘背景 refresh 寫 Redis 與 PostgreSQL 最新 snapshot，公開頁讀 Redis 或 PostgreSQL stale snapshot。保留券商資料不因訪客或 tab 重抓；selected quotes 的低頻背景 refresh 仍使用 Shioaji 流量，需以正式 usage 觀察。
+- 真實來源驗收：2330 列營收 511,857,399 千元；3081 列營收 540,492 千元，兩筆 period 均 2026-09，錯誤欄空。四個本次涉及 market／Shioaji suites 共50測試全過；Python compileall 與前端 Node22 npm run build 成功。Build 有原有未解析背景圖與 sitemap site 警告，沒有阻擋建置。
+
+尚待完成且不能標記整份 plan 完成：
+
+- OKE 沒有 finmind-market Secret，正式 Maya FINMIND_TOKEN 為空。此輪未取得或傳送帳號 API token，也沒有消耗 FinMind quota；所以 FinMind 資料表已定義，但目前沒有任何FinMind新資料列，OTC季財報／歷史現金流未交付。由使用者建立 Secret 後才能驗證註冊帳號 dataset 權限與資料量。
+- 新 image、正式 migration／rollout、API source status、桌機及390px互動驗收尚未完成。
+- 舊驗收仍未修：680筆coverage與history不一致、201筆股票期貨個別 TAIFEX institutional errors、正式候選表0筆，以及其他自訂搜尋／權限驗收。MoneyDJ限制與官方／付費分點來源仍未解；不得把本次基本面切片描述為完成整份 Market Dashboard。
+
+### 2026-10-14 後續完成情況（追加）
+
+- Backend 修補提交 `932a6e7`：成功持久化公開自動觀察清單後，同步寫入 `portfolio-auto` 候選及來源歷史，避免候選表持續為空。
+- TAIFEX 個股期貨的法人籌碼無單一契約官方資料；改將個別契約記錄為 `no_data`，不再錯誤地把整體小型股票期貨（STF）籌碼複製到每一契約，也避免送出不合法 root 查詢。
+- 修補相關 pytest：26 passed；舊測試預期 STF 聚合被套用於 QFFJ6，已更新測試驗證不錯配資料。
+- 前端已部署 `:256`。後端 `:92` 已建立新 pod，但 readiness 尚未通過；endpoint 驗證尚未成功。`932a6e7` 的後端 build 尚在 Jenkins queue。
+- 本次 plan 檔保持未提交。
+
+
+### 2026-10-14 基本面顯示與集保圖表 UX 修正（進行中）
+
+- 股票與有 underlying 的個股期貨選取後，預設直接開基本面分頁，降低使用者找不到已上線營收與季報內容的機率。
+- 市場折線/長條與 K 線圖補 X 軸日期、Y 軸單位/指標說明。
+- 移除單一級距選擇器；同圖顯示 1–999、1,000–5,000、5,001–10,000、1,000,001 股以上四條持股比例線，hover 顯示股數與人數。正式 API 已核對級距 ID 格式。
+- Frontend build 通過；待推送 Jenkins 部署及正式頁驗收。此 plan 檔不提交。

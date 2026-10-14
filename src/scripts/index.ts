@@ -63,77 +63,146 @@ function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: st
     return null;
 }
 
-function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }[], bars = false, axes: { x?: string; y?: string } = {}) {
+interface HistoryChartField { label: string; color: string; sourceKeys: string[]; field: string; tooltip?: (point: MarketHistoryPoint, value: number) => string }
+interface HistoryChartOptions { bars?: boolean; height?: number; format?: (value: number) => string; legend?: boolean; area?: boolean }
+
+function marketLocale() {
+    return String((window as any).AppLang?.get?.() || 'en').toLowerCase().startsWith('zh') ? 'zh-TW' : 'en-US';
+}
+
+function compactNumber(value: number, digits = 1): string {
+    if (!Number.isFinite(value)) return '—';
+    return Math.abs(value) >= 10_000
+        ? new Intl.NumberFormat(marketLocale(), { notation: 'compact', maximumFractionDigits: digits }).format(value)
+        : value.toLocaleString(marketLocale(), { maximumFractionDigits: 2 });
+}
+
+// Rounds the value range outward to 1/2/2.5/5×10ⁿ steps so axis labels read 0, 25, 50…
+function niceScale(low: number, high: number, count = 4) {
+    if (low === high) { const pad = Math.abs(low) * .05 || 1; low -= pad; high += pad; }
+    const raw = (high - low) / count; const magnitude = 10 ** Math.floor(Math.log10(raw));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((candidate) => candidate >= raw) ?? raw;
+    const niceLow = Math.floor(low / step) * step; const niceHigh = Math.ceil(high / step) * step;
+    const ticks: number[] = [];
+    for (let value = niceLow; value <= niceHigh + step / 2; value += step) ticks.push(Number(value.toPrecision(12)));
+    return { low: niceLow, high: niceHigh, ticks };
+}
+
+function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number> = {}, className?: string): SVGElementTagNameMap[K] {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [key, value] of Object.entries(attrs)) element.setAttribute(key, String(value));
+    if (className) element.setAttribute('class', className);
+    return element;
+}
+
+function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: HistoryChartField[], options: HistoryChartOptions = {}) {
     const target = document.getElementById(targetId);
     if (!target) return;
     target.replaceChildren();
+    const bars = Boolean(options.bars);
+    const format = options.format ?? ((value: number) => compactNumber(value));
     const series = fields.map((field) => ({ ...field, values: points.map((point) => historyValue(point, field.sourceKeys, field.field)) }));
     const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
     if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
-    const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
-    svg.setAttribute('viewBox', '0 0 900 280'); svg.classList.add('market-history-chart');
-    let low = bars ? Math.min(0, ...values) : Math.min(...values); let high = bars ? Math.max(0, ...values) : Math.max(...values);
-    const span = high - low || Math.max(Math.abs(high) * .05, 1);
-    if (!bars) { low -= span * .08; high += span * .08; }
-    else if (high === low) high = low + 1;
-    const padX = 64; const right = 888; const plotTop = 24; const plotBottom = 226;
-    const x = (i: number) => padX + (points.length < 2 ? 0 : i / (points.length - 1)) * (right - padX);
-    const y = (v: number) => plotTop + ((high - v) / (high - low)) * (plotBottom - plotTop);
-    for (let tick = 0; tick <= 4; tick++) {
-        const value = high - ((high - low) * tick / 4); const tickY = y(value);
-        const grid = document.createElementNS(ns, 'line'); grid.setAttribute('x1', String(padX)); grid.setAttribute('x2', String(right));
-        grid.setAttribute('y1', String(tickY)); grid.setAttribute('y2', String(tickY)); grid.classList.add('market-history-grid'); svg.append(grid);
-        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(padX - 8)); label.setAttribute('y', String(tickY + 4));
-        label.setAttribute('text-anchor', 'end'); label.classList.add('market-history-axis-label');
-        label.textContent = value.toLocaleString(undefined, { maximumFractionDigits: 1 }); svg.append(label);
+
+    const width = 900; const height = options.height ?? 260;
+    const left = 58; const right = width - 14; const top = 12; const bottom = height - 30;
+    let low = Math.min(...values); let high = Math.max(...values);
+    if (bars) { low = Math.min(0, low); high = Math.max(0, high); }
+    else { const pad = (high - low) * .1; low -= pad; high += pad; }
+    const scale = niceScale(low, high, height < 200 ? 3 : 4);
+    const slot = (right - left) / Math.max(points.length, 1);
+    const x = (i: number) => bars ? left + slot * (i + .5) : left + (points.length < 2 ? (right - left) / 2 : i / (points.length - 1) * (right - left));
+    const y = (v: number) => top + ((scale.high - v) / (scale.high - scale.low)) * (bottom - top);
+
+    const svg = svgEl('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img' }, 'market-history-chart');
+    svg.setAttribute('aria-label', fields.map((field) => field.label).join(' / '));
+    const band = svgEl('rect', { y: top, height: bottom - top, width: slot }, 'market-history-band'); band.style.display = 'none'; svg.append(band);
+    for (const tick of scale.ticks) {
+        svg.append(svgEl('line', { x1: left, x2: right, y1: y(tick), y2: y(tick) }, tick === 0 && scale.low < 0 ? 'market-history-zero' : 'market-history-grid'));
+        const label = svgEl('text', { x: left - 10, y: y(tick) + 4, 'text-anchor': 'end' }, 'market-history-axis-label');
+        label.textContent = format(tick); svg.append(label);
     }
-    const tickCount = Math.min(6, points.length);
+    const sameYear = points[0].date.length > 7 && points[0].date.slice(0, 4) === points[points.length - 1].date.slice(0, 4);
+    const tickCount = Math.min(points.length, height < 200 ? 4 : 6);
     for (let tick = 0; tick < tickCount; tick++) {
         const index = Math.round(tick * (points.length - 1) / Math.max(tickCount - 1, 1));
-        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(x(index))); label.setAttribute('y', '248');
-        label.setAttribute('text-anchor', tick === 0 ? 'start' : tick === tickCount - 1 ? 'end' : 'middle'); label.classList.add('market-history-axis-label');
-        label.textContent = points[index].date; svg.append(label);
+        const anchor = bars ? 'middle' : tick === 0 ? 'start' : tick === tickCount - 1 ? 'end' : 'middle';
+        const label = svgEl('text', { x: x(index), y: height - 8, 'text-anchor': anchor }, 'market-history-axis-label');
+        label.textContent = sameYear ? points[index].date.slice(5) : points[index].date; svg.append(label);
     }
-    const xTitle = document.createElementNS(ns, 'text'); xTitle.setAttribute('x', String((padX + right) / 2)); xTitle.setAttribute('y', '274');
-    xTitle.setAttribute('text-anchor', 'middle'); xTitle.classList.add('market-history-axis-title');
-    xTitle.textContent = axes.x || marketI18n('marketHistoryDate', 'Date'); svg.append(xTitle);
-    const yTitle = document.createElementNS(ns, 'text'); yTitle.setAttribute('x', '14'); yTitle.setAttribute('y', String((plotTop + plotBottom) / 2));
-    yTitle.setAttribute('text-anchor', 'middle'); yTitle.setAttribute('transform', `rotate(-90 14 ${(plotTop + plotBottom) / 2})`);
-    yTitle.classList.add('market-history-axis-title'); yTitle.textContent = axes.y || fields.map((field) => field.label).join(' / '); svg.append(yTitle);
-    if (low <= 0 && high >= 0) {
-        const zero = document.createElementNS(ns, 'line'); zero.setAttribute('x1', String(padX)); zero.setAttribute('x2', String(right));
-        zero.setAttribute('y1', String(y(0))); zero.setAttribute('y2', String(y(0))); zero.classList.add('market-history-zero'); svg.append(zero);
-    }
+
+    const hoverDots: (SVGCircleElement | null)[] = [];
     series.forEach((item, si) => {
         if (bars) {
-            const step = (900 - padX - 12) / Math.max(points.length, 1); const w = Math.max(1, Math.min(7, step / (series.length + 1)));
-            item.values.forEach((v, i) => { if (v === null) return; const rect = document.createElementNS(ns, 'rect');
-                rect.setAttribute('x', String(x(i) - w * series.length / 2 + si * w)); rect.setAttribute('y', String(Math.min(y(0), y(v))));
-                rect.setAttribute('width', String(w * .8)); rect.setAttribute('height', String(Math.max(1, Math.abs(y(0) - y(v))))); rect.setAttribute('fill', item.color);
-                const tooltip = document.createElementNS(ns, 'title');
-                tooltip.textContent = `${points[i].date}\n${series.map((entry) => {
-                    const value = entry.values[i];
-                    return `${entry.label}: ${value === null ? '—' : (entry.tooltip?.(points[i], value) || value.toLocaleString())}`;
-                }).join('\n')}`;
-                rect.append(tooltip); svg.append(rect); });
-        } else {
-            let d = ''; item.values.forEach((v, i) => { if (v !== null) d += `${d ? ' L' : 'M'} ${x(i)} ${y(v)}`; });
-            if (d) { const path = document.createElementNS(ns, 'path'); path.setAttribute('d', d); path.setAttribute('stroke', item.color); path.classList.add('market-history-line'); svg.append(path); }
-            item.values.forEach((value, i) => {
-                if (value === null) return;
-                const point = document.createElementNS(ns, 'circle'); point.setAttribute('cx', String(x(i)));
-                point.setAttribute('cy', String(y(value))); point.setAttribute('r', '5'); point.setAttribute('fill', 'transparent');
-                point.setAttribute('pointer-events', 'all');
-                const tooltip = document.createElementNS(ns, 'title');
-                tooltip.textContent = `${points[i].date}\n${item.label}: ${item.tooltip?.(points[i], value) || value.toLocaleString()}`;
-                point.append(tooltip); svg.append(point);
+            const w = Math.max(1.5, Math.min(18, slot * .78 / series.length));
+            item.values.forEach((v, i) => {
+                if (v === null) return;
+                svg.append(svgEl('rect', { x: x(i) - w * series.length / 2 + si * w + w * .06, y: Math.min(y(0), y(v)), width: w * .88,
+                    height: Math.max(1, Math.abs(y(0) - y(v))), rx: Math.min(2, w / 4), fill: item.color }, 'market-history-bar'));
             });
+            hoverDots.push(null);
+            return;
         }
+        const coords = item.values.map((v, i) => v === null ? null : [x(i), y(v)] as const).filter((c): c is readonly [number, number] => c !== null);
+        if (!coords.length) { hoverDots.push(null); return; }
+        const line = coords.map((c, n) => `${n ? 'L' : 'M'} ${c[0]} ${c[1]}`).join(' ');
+        if (options.area ?? series.length === 1) {
+            const gradientId = `${targetId}-fill-${si}`;
+            const gradient = svgEl('linearGradient', { id: gradientId, x1: 0, x2: 0, y1: 0, y2: 1 });
+            gradient.append(svgEl('stop', { offset: '0%', 'stop-color': item.color, 'stop-opacity': .28 }), svgEl('stop', { offset: '100%', 'stop-color': item.color, 'stop-opacity': 0 }));
+            const defs = svgEl('defs'); defs.append(gradient); svg.append(defs);
+            svg.append(svgEl('path', { d: `${line} L ${coords[coords.length - 1][0]} ${bottom} L ${coords[0][0]} ${bottom} Z`, fill: `url(#${gradientId})` }));
+        }
+        svg.append(svgEl('path', { d: line, stroke: item.color }, 'market-history-line'));
+        const last = coords[coords.length - 1];
+        svg.append(svgEl('circle', { cx: last[0], cy: last[1], r: 3.5, fill: item.color }, 'market-history-last'));
+        const hover = svgEl('circle', { r: 4.5, fill: item.color }, 'market-history-hover-dot');
+        hover.style.display = 'none'; svg.append(hover); hoverDots.push(hover);
     });
+    const guide = svgEl('line', { y1: top, y2: bottom }, 'market-history-guide'); guide.style.display = 'none'; svg.append(guide);
     target.append(svg);
-    const legend = document.createElement('div'); legend.className = 'market-history-legend';
-    series.forEach((item) => { const label = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color; label.append(dot, document.createTextNode(item.label)); legend.append(label); });
-    target.append(legend);
+
+    if (options.legend ?? series.length > 1) {
+        const legend = document.createElement('div'); legend.className = 'market-history-legend';
+        series.forEach((item) => { const label = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color; label.append(dot, document.createTextNode(item.label)); legend.append(label); });
+        target.append(legend);
+    }
+    // Readout replaces native <title> tooltips: shows the latest point at rest, the hovered point on move.
+    const readout = document.createElement('div'); readout.className = 'market-chart-readout market-chart-readout--compact'; readout.setAttribute('aria-live', 'polite');
+    let latestIndex = points.length - 1;
+    while (latestIndex > 0 && series.every((item) => item.values[latestIndex] === null)) latestIndex--;
+    const describe = (i: number, isLatest: boolean) => {
+        readout.replaceChildren();
+        const date = document.createElement('strong');
+        date.textContent = isLatest ? `${points[i].date} · ${marketI18n('marketHistoryLatestShort', 'latest')}` : points[i].date; readout.append(date);
+        series.forEach((item) => {
+            const value = item.values[i]; const chip = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color;
+            chip.append(dot, document.createTextNode(`${series.length > 1 ? `${item.label} ` : ''}${value === null ? '—' : (item.tooltip?.(points[i], value) || value.toLocaleString(marketLocale()))}`));
+            readout.append(chip);
+        });
+    };
+    describe(latestIndex, true);
+    target.append(readout);
+
+    svg.addEventListener('pointermove', (event) => {
+        const rect = svg.getBoundingClientRect(); const viewX = (event.clientX - rect.left) / rect.width * width;
+        const raw = bars ? Math.floor((viewX - left) / slot) : Math.round((viewX - left) / Math.max(right - left, 1) * (points.length - 1));
+        const i = Math.max(0, Math.min(points.length - 1, raw));
+        guide.setAttribute('x1', String(x(i))); guide.setAttribute('x2', String(x(i))); guide.style.display = bars ? 'none' : '';
+        band.setAttribute('x', String(left + slot * i)); band.style.display = bars ? '' : 'none';
+        series.forEach((item, si) => {
+            const dot = hoverDots[si]; if (!dot) return; const value = item.values[i];
+            if (value === null) { dot.style.display = 'none'; return; }
+            dot.setAttribute('cx', String(x(i))); dot.setAttribute('cy', String(y(value))); dot.style.display = '';
+        });
+        describe(i, false);
+    });
+    svg.addEventListener('pointerleave', () => {
+        guide.style.display = 'none'; band.style.display = 'none';
+        hoverDots.forEach((dot) => { if (dot) dot.style.display = 'none'; });
+        describe(latestIndex, true);
+    });
 }
 
 function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[], sourceKeys: string[], volumeField: string) {
@@ -305,7 +374,7 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
                 { label: marketI18n('marketHistoryForeignContractsNet', 'Foreign net (contracts)'), color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_trade_contracts' },
                 { label: marketI18n('marketHistoryTrustContractsNet', 'Trust net (contracts)'), color: '#7198df', sourceKeys: institutionalSources, field: 'trust_net_trade_contracts' },
                 { label: marketI18n('marketHistoryDealerContractsNet', 'Dealer net (contracts)'), color: '#dc806f', sourceKeys: institutionalSources, field: 'dealer_net_trade_contracts' },
-            ], true);
+            ], { bars: true });
             const institutionalDescription = document.getElementById('market-history-institutional-description');
             if (institutionalDescription) institutionalDescription.textContent = marketI18n('marketHistoryTaifexAggregateDescription', 'TAIFEX participant totals for the futures product category; not contract-specific positions.');
             const notAvailable = marketI18n('marketHistorySpotDataUnavailable', 'This panel requires an underlying stock ticker and is unavailable for index futures.');
@@ -322,7 +391,7 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         drawMarketHistoryChart('market-history-institutional-chart', points, [
             { label: marketI18n('marketHistoryForeign', 'Foreign net'), color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_shares' },
             { label: marketI18n('marketHistoryTrust', 'Trust net'), color: '#7198df', sourceKeys: institutionalSources, field: 'investment_trust_net_shares' },
-        ], true);
+        ], { bars: true });
         drawMarketHistoryChart('market-history-margin-chart', points, [
             { label: marketI18n('marketHistoryMarginBalance', 'Margin balance (lots)'), color: '#7198df', sourceKeys: margin, field: 'margin_balance_lots' },
             { label: marketI18n('marketHistoryShortBalance', 'Short balance (lots)'), color: '#dc806f', sourceKeys: margin, field: 'short_balance_lots' },
@@ -331,14 +400,14 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             { label: marketI18n('marketHistoryMarginBuy', 'Margin buy (lots)'), color: '#55b8a8', sourceKeys: margin, field: 'margin_buy_lots' },
             { label: marketI18n('marketHistoryMarginSell', 'Margin sell (lots)'), color: '#dc806f', sourceKeys: margin, field: 'margin_sell_lots' },
             { label: marketI18n('marketHistoryShortSell', 'Short sell (lots)'), color: '#7198df', sourceKeys: margin, field: 'short_sell_lots' },
-        ], true);
+        ], { bars: true });
         drawMarketHistoryChart('market-history-borrow-chart', points, [
             { label: marketI18n('marketHistoryBorrowBalance', 'Borrowed stock sold balance (shares)'), color: '#55b8a8', sourceKeys: borrowed, field: 'borrow_short_balance_shares' },
         ]);
         drawMarketHistoryChart('market-history-borrow-flow-chart', points, [
             { label: marketI18n('marketHistoryBorrowSell', 'Borrowed stock sold (shares)'), color: '#7198df', sourceKeys: borrowed, field: 'borrow_short_sell_shares' },
             { label: marketI18n('marketHistoryReturned', 'Returned (shares)'), color: '#dc806f', sourceKeys: borrowed, field: 'borrow_short_return_shares' },
-        ], true);
+        ], { bars: true });
     } catch (error) { console.error('Market instrument history unavailable:', error); if (status) status.textContent = marketI18n('marketHistoryUnavailable', 'Historical data is temporarily unavailable.'); }
 }
 
@@ -369,47 +438,41 @@ async function loadMarketFundamentals(code: string, productType: string) {
             payload = await response.json(); marketFundamentalsCache.set(code, { payload, fetchedAt: Date.now() });
         }
         const monthly = payload.monthlyRevenue ?? [];
+        // Official monthly revenue is in NT$ thousands; scale to NT$ so compact labels (億 / B) read correctly.
         const points: MarketHistoryPoint[] = monthly.map((row: any) => ({
             date: String(row.period), code, name: row.name || code,
-            sources: { fundamentals: { revenue: Number(row.revenue), yoy: Number(row.yoyPercent), mom: Number(row.momPercent) } },
+            sources: { fundamentals: { revenue: Number(row.revenue) * 1000, yoy: Number(row.yoyPercent), mom: Number(row.momPercent) } },
         })).filter((row: MarketHistoryPoint) => Number.isFinite(row.sources.fundamentals.revenue));
+        const revenueChart = document.getElementById('market-fundamentals-revenue-chart');
         drawMarketHistoryChart('market-fundamentals-revenue-chart', points, [{
-            label: marketI18n('marketFundamentalsRevenue', 'Monthly revenue · NT$ thousands'), color: '#55b8a8',
+            label: marketI18n('marketFundamentalsRevenueLabel', 'Revenue'), color: '#55b8a8',
             sourceKeys: ['fundamentals'], field: 'revenue',
             tooltip: (point) => {
                 const values = point.sources.fundamentals;
-                return `${point.date} · ${Number(values.revenue).toLocaleString()} · ${marketI18n('marketFundamentalsYoY', 'YoY')} ${Number.isFinite(values.yoy) ? `${values.yoy}%` : '—'} · ${marketI18n('marketFundamentalsMoM', 'MoM')} ${Number.isFinite(values.mom) ? `${values.mom}%` : '—'}`;
+                return `NT$ ${compactNumber(values.revenue, 2)} · ${marketI18n('marketFundamentalsYoY', 'YoY')} ${formatSignedPercent(values.yoy)} · ${marketI18n('marketFundamentalsMoM', 'MoM')} ${formatSignedPercent(values.mom)}`;
             },
-        }], true);
-        if (status) status.textContent = monthly.length ? `${code} · ${monthly[monthly.length - 1].period} · ${monthly[monthly.length - 1].publishedAt || '—'}` : marketI18n('marketFundamentalsNoRevenue', 'Monthly revenue is unavailable from the current official feed.');
+        }], { bars: true, height: 230 });
+        const latestMonth = monthly[monthly.length - 1];
+        if (revenueChart && latestMonth) revenueChart.prepend(buildMarketKpis([
+            { label: `${marketI18n('marketFundamentalsRevenueLabel', 'Revenue')} · ${latestMonth.period}`, value: `NT$ ${compactNumber(Number(latestMonth.revenue) * 1000, 2)}` },
+            { label: marketI18n('marketFundamentalsYoY', 'YoY'), value: formatSignedPercent(latestMonth.yoyPercent), delta: latestMonth.yoyPercent },
+            { label: marketI18n('marketFundamentalsMoM', 'MoM'), value: formatSignedPercent(latestMonth.momPercent), delta: latestMonth.momPercent },
+            { label: marketI18n('marketFundamentalsYtdRevenue', 'Year-to-date revenue'), value: Number.isFinite(Number(latestMonth.ytdRevenue)) && latestMonth.ytdRevenue !== null ? `NT$ ${compactNumber(Number(latestMonth.ytdRevenue) * 1000, 2)}` : '—' },
+        ]));
+        if (status) status.textContent = monthly.length ? `${code} · ${latestMonth.period} · ${marketI18n('marketFundamentalsPublished', 'published')} ${latestMonth.publishedAt || '—'}` : marketI18n('marketFundamentalsNoRevenue', 'Monthly revenue is unavailable from the current official feed.');
         if (statementBox) {
             statementBox.replaceChildren();
-            const officialItems = (payload.incomeStatements ?? []).slice(-8);
-            const items: any[] = officialItems.length ? officialItems : finmindStatementGroups(payload.finmindIncomeStatements ?? []);
-            if (!items.length) statementBox.textContent = marketI18n('marketFundamentalsNoStatements', 'Quarterly statements are not available for this company in the current public feed.');
-            for (const item of items) {
-                const card = document.createElement('div'); card.className = 'market-fundamental-card';
-                const title = document.createElement('strong'); title.textContent = `${item.period} · ${item.publishedAt || ''}`;
-                const amount = item.singleQuarter || {};
-                const values = document.createElement('p');
-                values.textContent = item.singleQuarter
-                    ? `${marketI18n('marketFundamentalsRevenueLabel', 'Revenue')} ${formatFundamental(amount.revenue)} · ${marketI18n('marketFundamentalsGrossProfit', 'Gross profit')} ${formatFundamental(amount.grossProfit)} · ${marketI18n('marketFundamentalsOperatingIncome', 'Operating income')} ${formatFundamental(amount.operatingIncome)} · ${marketI18n('marketFundamentalsNetIncome', 'Net income')} ${formatFundamental(amount.netIncome)} · ${marketI18n('marketFundamentalsEps', 'EPS reported')} ${formatFundamental(item.epsReported)}`
-                    : item.displayValues;
-                const basis = document.createElement('small');
-                const hasQuarter = Object.values(amount).some((value) => typeof value === 'number');
-                if (officialItems.length) {
-                    const margin = typeof amount.grossProfit === 'number' && typeof amount.revenue === 'number' && amount.revenue !== 0
-                        ? ` · ${marketI18n('marketFundamentalsGrossMargin', 'Gross margin')} ${(amount.grossProfit / amount.revenue * 100).toFixed(2)}% (${marketI18n('marketFundamentalsGrossMarginFormula', 'gross profit ÷ revenue')})` : '';
-                    if (margin) values.textContent += margin;
-                    if (hasQuarter) basis.textContent = `${marketI18n('marketFundamentalsDerivedQuarter', 'Single quarter derived from official cumulative values; EPS stays as reported.')} ${item.unit}`;
-                    else { values.textContent = `${marketI18n('marketFundamentalsReportedCumulative', 'Reported cumulative values')} ${JSON.stringify(item.reportedCumulative)} · EPS ${formatFundamental(item.epsReported)}`; basis.textContent = `${marketI18n('marketFundamentalsNoPriorQuarter', 'Preceding quarter is unavailable; values remain cumulative.')} ${item.unit}`; }
-                } else basis.textContent = `Source: ${item.source || 'FinMind'} · values and item names shown as provided; units follow source metadata.`;
-                card.append(title, values, basis); statementBox.append(card);
-            }
+            const officialItems: any[] = (payload.incomeStatements ?? []).slice(-8);
+            if (officialItems.length) renderIncomeStatements(statementBox, officialItems);
+            else renderFinmindTable(statementBox, payload.finmindIncomeStatements ?? [], marketI18n('marketFundamentalsNoStatements', 'Quarterly statements are not available for this company in the current public feed.'));
         }
-        const officialBalance = (payload.balanceSheets ?? []).slice(-8);
-        renderFundamentalCards(balanceBox, officialBalance.length ? officialBalance : finmindStatementGroups(payload.finmindBalanceSheets ?? []), 'reportedCumulative');
-        renderFundamentalCards(cashFlowBox, finmindStatementGroups(payload.cashFlows ?? []), '');
+        if (balanceBox) {
+            balanceBox.replaceChildren();
+            const officialBalance: any[] = (payload.balanceSheets ?? []).slice(-8);
+            if (officialBalance.length) renderBalanceSheets(balanceBox, officialBalance);
+            else renderFinmindTable(balanceBox, payload.finmindBalanceSheets ?? []);
+        }
+        if (cashFlowBox) { cashFlowBox.replaceChildren(); renderFinmindTable(cashFlowBox, payload.cashFlows ?? []); }
         if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source}. ${payload.errors?.length ? payload.errors.join(' · ') : ''}`;
     } catch (error) {
         console.error('Market fundamentals unavailable:', error);
@@ -418,79 +481,196 @@ async function loadMarketFundamentals(code: string, productType: string) {
 }
 
 function formatFundamental(value: unknown): string {
-    return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—';
+    return typeof value === 'number' && Number.isFinite(value) ? compactNumber(value, 2) : '—';
 }
 
-function finmindStatementGroups(rows: any[]): any[] {
-    const grouped = new Map<string, any[]>();
-    for (const row of rows) {
-        if (!grouped.has(row.period)) grouped.set(row.period, []);
-        grouped.get(row.period)!.push(row);
-    }
-    return [...grouped.entries()].slice(-8).map(([period, items]) => ({
-        period,
-        source: 'FinMind',
-        unit: items.map((row) => row.unit).filter(Boolean).join(', '),
-        displayValues: items.map((row) => `${row.item}: ${formatFundamental(row.value)}`).join(' · '),
-    }));
+function formatSignedPercent(value: unknown, digits = 2): string {
+    const number = Number(value);
+    if (value === null || value === undefined || !Number.isFinite(number)) return '—';
+    return `${number > 0 ? '+' : ''}${number.toFixed(digits)}%`;
 }
 
-function renderFundamentalCards(target: HTMLElement | null, items: any[], valuesKey: string) {
-    if (!target) return;
-    target.replaceChildren();
+function ratioPercent(numerator: unknown, denominator: unknown): number | null {
+    return typeof numerator === 'number' && typeof denominator === 'number' && denominator !== 0 ? numerator / denominator * 100 : null;
+}
+
+// Taiwan market convention: red rises, green falls (matches the candle colors).
+function deltaClass(value: unknown): string {
+    const number = Number(value);
+    return value === null || value === undefined || !Number.isFinite(number) || number === 0 ? '' : number > 0 ? 'market-delta--up' : 'market-delta--down';
+}
+
+function buildMarketKpis(items: { label: string; value: string; delta?: unknown; sub?: string }[]): HTMLElement {
+    const row = document.createElement('div'); row.className = 'market-kpi-row';
     for (const item of items) {
-        const card = document.createElement('div'); card.className = 'market-fundamental-card';
-        const title = document.createElement('strong'); title.textContent = `${item.period} · ${item.publishedAt || ''}`;
-        const values = document.createElement('p'); values.textContent = item.displayValues || JSON.stringify(item[valuesKey] || {});
-        const note = document.createElement('small'); note.textContent = `Source: ${item.source || 'FinMind'} · ${item.unit || 'source units'}`;
-        card.append(title, values, note); target.append(card);
+        const tile = document.createElement('div'); tile.className = 'market-kpi';
+        const label = document.createElement('span'); label.textContent = item.label;
+        const value = document.createElement('strong'); value.textContent = item.value;
+        if (item.delta !== undefined) { const cls = deltaClass(item.delta); if (cls) value.classList.add(cls); }
+        tile.append(label, value);
+        if (item.sub) { const sub = document.createElement('small'); sub.textContent = item.sub; tile.append(sub); }
+        row.append(tile);
     }
-    if (!items.length) target.textContent = marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.');
+    return row;
+}
+
+interface FinTableRow { label: string; values: (number | null)[]; format?: (value: number) => string; ratio?: boolean }
+function buildFinTable(columns: string[], rows: FinTableRow[], note?: string): HTMLElement {
+    const wrap = document.createElement('div'); wrap.className = 'market-fin-table-wrap';
+    const table = document.createElement('table'); table.className = 'market-fin-table';
+    const head = document.createElement('tr');
+    const corner = document.createElement('th'); corner.scope = 'col'; corner.textContent = marketI18n('marketFundamentalsItem', 'Item'); head.append(corner);
+    columns.forEach((column, i) => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = column; if (i === columns.length - 1) th.className = 'is-latest'; head.append(th); });
+    const thead = document.createElement('thead'); thead.append(head);
+    const tbody = document.createElement('tbody');
+    for (const row of rows) {
+        const tr = document.createElement('tr'); if (row.ratio) tr.className = 'is-ratio';
+        const th = document.createElement('th'); th.scope = 'row'; th.textContent = row.label; tr.append(th);
+        row.values.forEach((value, i) => {
+            const td = document.createElement('td');
+            td.textContent = value === null || !Number.isFinite(value) ? '—' : (row.format ?? ((v: number) => compactNumber(v, 2)))(value);
+            if (value !== null && value < 0) td.classList.add('is-negative');
+            if (i === row.values.length - 1) td.classList.add('is-latest');
+            tr.append(td);
+        });
+        tbody.append(tr);
+    }
+    table.append(thead, tbody); wrap.append(table);
+    // Newest quarter sits on the right; start scrolled there on narrow screens.
+    requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
+    const container = document.createElement('div'); container.append(wrap);
+    if (note) { const small = document.createElement('p'); small.className = 'market-fin-note'; small.textContent = note; container.append(small); }
+    return container;
+}
+
+function renderIncomeStatements(target: HTMLElement, items: any[]) {
+    const label = (key: string, fallback: string) => marketI18n(key, fallback);
+    const amounts = items.map((item) => {
+        const single = item.singleQuarter || {};
+        const derived = Object.values(single).some((value) => typeof value === 'number');
+        return { derived, values: derived ? single : (item.reportedCumulative || {}) };
+    });
+    const columns = items.map((item, i) => `${item.period}${amounts[i].derived ? '' : '*'}`);
+    const pick = (key: string) => amounts.map(({ values }) => typeof values[key] === 'number' ? values[key] : null);
+    const percent = (value: number) => `${value.toFixed(1)}%`;
+    const margins = (key: string) => amounts.map(({ values }) => ratioPercent(values[key], values.revenue));
+
+    const chartId = 'market-fundamentals-margin-chart';
+    const chartTitle = document.createElement('h6'); chartTitle.className = 'market-subheading'; chartTitle.textContent = label('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
+    const chart = document.createElement('div'); chart.id = chartId;
+    target.append(chartTitle, chart);
+    const marginPoints: MarketHistoryPoint[] = items.map((item, i) => {
+        const values: MarketHistoryValues = {};
+        if (amounts[i].derived) for (const key of ['grossProfit', 'operatingIncome', 'netIncome']) {
+            const margin = ratioPercent(amounts[i].values[key], amounts[i].values.revenue); if (margin !== null) values[key] = margin;
+        }
+        return { date: item.period, code: '', name: '', sources: { margins: values } };
+    });
+    drawMarketHistoryChart(chartId, marginPoints, [
+        { label: label('marketFundamentalsGrossMargin', 'Gross margin'), color: '#55b8a8', sourceKeys: ['margins'], field: 'grossProfit', tooltip: (_, v) => percent(v) },
+        { label: label('marketFundamentalsOperatingMargin', 'Operating margin'), color: '#7198df', sourceKeys: ['margins'], field: 'operatingIncome', tooltip: (_, v) => percent(v) },
+        { label: label('marketFundamentalsNetMargin', 'Net margin'), color: '#d5ae4b', sourceKeys: ['margins'], field: 'netIncome', tooltip: (_, v) => percent(v) },
+    ], { height: 200, area: false, format: (v) => `${v}%` });
+
+    const notes = [`${label('marketFundamentalsDerivedQuarter', 'Single quarter derived from official cumulative values; EPS stays as reported.')} ${items[0]?.unit || ''}`];
+    if (amounts.some((entry) => !entry.derived)) notes.push(`* ${label('marketFundamentalsNoPriorQuarter', 'Preceding quarter is unavailable; values remain cumulative.')}`);
+    target.append(buildFinTable(columns, [
+        { label: label('marketFundamentalsRevenueLabel', 'Revenue'), values: pick('revenue') },
+        { label: label('marketFundamentalsGrossProfit', 'Gross profit'), values: pick('grossProfit') },
+        { label: label('marketFundamentalsOperatingIncome', 'Operating income'), values: pick('operatingIncome') },
+        { label: label('marketFundamentalsNetIncome', 'Net income'), values: pick('netIncome') },
+        { label: label('marketFundamentalsGrossMargin', 'Gross margin'), values: margins('grossProfit'), format: percent, ratio: true },
+        { label: label('marketFundamentalsOperatingMargin', 'Operating margin'), values: margins('operatingIncome'), format: percent, ratio: true },
+        { label: label('marketFundamentalsNetMargin', 'Net margin'), values: margins('netIncome'), format: percent, ratio: true },
+        { label: label('marketFundamentalsEps', 'EPS reported'), values: items.map((item) => typeof item.epsReported === 'number' ? item.epsReported : null), format: (v) => v.toFixed(2), ratio: true },
+    ], notes.join(' ')));
+}
+
+function renderBalanceSheets(target: HTMLElement, items: any[]) {
+    const pick = (key: string) => items.map((item) => typeof item.reportedCumulative?.[key] === 'number' ? item.reportedCumulative[key] : null);
+    target.append(buildFinTable(items.map((item) => item.period), [
+        { label: marketI18n('marketFundamentalsAssets', 'Total assets'), values: pick('assets') },
+        { label: marketI18n('marketFundamentalsLiabilities', 'Total liabilities'), values: pick('liabilities') },
+        { label: marketI18n('marketFundamentalsEquity', 'Total equity'), values: pick('equity') },
+        { label: marketI18n('marketFundamentalsDebtRatio', 'Debt ratio'), values: items.map((item) => ratioPercent(item.reportedCumulative?.liabilities, item.reportedCumulative?.assets)), format: (v) => `${v.toFixed(1)}%`, ratio: true },
+        { label: marketI18n('marketFundamentalsBookValue', 'Book value / share'), values: pick('bookValuePerShare'), format: (v) => v.toFixed(2), ratio: true },
+    ], `${marketI18n('marketFundamentalsBalanceNote', 'Quarter-end amounts.')} ${items[0]?.unit || ''}`));
+}
+
+// FinMind rows are long-format (period, item, value); pivot to item × period with the newest 8 periods.
+function renderFinmindTable(target: HTMLElement, rows: any[], emptyText?: string) {
+    const periods = [...new Set(rows.map((row) => String(row.period)))].sort().slice(-8);
+    if (!periods.length) { target.textContent = emptyText || marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.'); return; }
+    const byItem = new Map<string, (number | null)[]>();
+    for (const row of rows) {
+        const column = periods.indexOf(String(row.period)); if (column < 0) continue;
+        if (!byItem.has(row.item)) byItem.set(row.item, periods.map(() => null));
+        const value = Number(row.value); byItem.get(row.item)![column] = typeof row.value === 'number' || (row.value !== '' && Number.isFinite(value)) ? value : null;
+    }
+    const units = [...new Set(rows.map((row) => row.unit).filter(Boolean))].join(', ');
+    target.append(buildFinTable(periods, [...byItem.entries()].map(([label, values]) => ({ label, values })),
+        `${marketI18n('marketFundamentalsSource', 'Source')}: FinMind${units ? ` · ${units}` : ''}`));
 }
 
 function renderOwnershipHistory(points: MarketHistoryPoint[]) {
     const holdingSources = ['twse:foreign-holding', 'tpex:foreign-holding'];
+    const percent = (v: number) => `${v}%`;
     drawMarketHistoryChart('market-history-foreign-holding-chart', points, [
         { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), color: '#55b8a8', sourceKeys: holdingSources, field: 'foreign_holding_percent', tooltip: (_, value) => `${value}%` },
-    ]);
-    drawMarketHistoryChart('market-history-foreign-holding-shares-chart', points, [
-        { label: marketI18n('marketHistoryForeignHoldingShares', 'Foreign holding shares'), color: '#7198df', sourceKeys: holdingSources, field: 'foreign_holding_shares', tooltip: (_, value) => `${value.toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')}` },
-    ]);
-    drawMarketHistoryChart('market-history-foreign-limit-chart', points, [
         { label: marketI18n('marketHistoryForeignLimit', 'Foreign investment limit (%)'), color: '#dc806f', sourceKeys: holdingSources, field: 'foreign_limit_percent', tooltip: (_, value) => `${value}%` },
-    ]);
+    ], { height: 220, area: false, format: percent });
+    drawMarketHistoryChart('market-history-foreign-holding-shares-chart', points, [
+        { label: marketI18n('marketHistoryForeignHoldingShares', 'Foreign holding shares'), color: '#7198df', sourceKeys: holdingSources, field: 'foreign_holding_shares', tooltip: (_, value) => `${compactNumber(value, 2)} ${marketI18n('marketHistorySharesUnit', 'shares')}` },
+    ], { height: 200 });
     renderTdccOwnership(points);
 }
 
+// Each tier gets its own small chart and scale: the 1M+ tier holds ~80% while retail tiers sit under 5%,
+// so a shared axis flattens everything except the top tier.
 function renderTdccOwnership(points: MarketHistoryPoint[]) {
     const target = document.getElementById('market-history-ownership'); if (!target) return; target.replaceChildren();
-    const snapshots = points.map((point) => ({ point, tiers: point.sources['tdcc:distribution-history']?.tiers }))
-        .filter((entry) => Array.isArray(entry.tiers) && entry.tiers.length);
+    const snapshots = points.map((point) => ({ point, tiers: point.sources['tdcc:distribution-history']?.tiers as unknown as any[] | undefined }))
+        .filter((entry): entry is { point: MarketHistoryPoint; tiers: any[] } => Array.isArray(entry.tiers) && entry.tiers.length > 0);
     if (!snapshots.length) { target.textContent = marketI18n('marketHistoryNoStored', 'No stored weekly distribution yet.'); return; }
-    const latestTiers = snapshots[snapshots.length - 1].tiers as any[];
+    const latestTiers = snapshots[snapshots.length - 1].tiers;
     const tiersToShow = [
         { id: '1-999', label: marketI18n('marketHistoryTierSmall', '1–999 shares'), color: '#55b8a8' },
         { id: '1,000-5,000', label: marketI18n('marketHistoryTierMedium', '1,000–5,000 shares'), color: '#7198df' },
         { id: '5,001-10,000', label: marketI18n('marketHistoryTierLarge', '5,001–10,000 shares'), color: '#dc806f' },
         { id: '1,000,001以上', label: marketI18n('marketHistoryTierMillionPlus', '1,000,001+ shares'), color: '#d5ae4b' },
     ].filter((tier) => latestTiers.some((item) => String(item.tier) === tier.id));
-    const chart = document.createElement('div'); chart.id = 'market-history-tdcc-tier-chart'; chart.className = 'market-history-tdcc-chart'; target.append(chart);
-    const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
-        const values: MarketHistoryValues = {};
-        for (const item of tiersToShow) {
-            const tier = (tiers as any[]).find((entry) => String(entry.tier) === item.id);
-            if (tier && Number.isFinite(Number(tier.percent))) values[`tier-${item.id}`] = Number(tier.percent);
+    const grid = document.createElement('div'); grid.className = 'market-tier-grid'; target.append(grid);
+    const rowFor = (tiers: any[], id: string) => tiers.find((entry) => String(entry.tier) === id);
+    tiersToShow.forEach((tier, index) => {
+        const card = document.createElement('article'); card.className = 'market-tier-card'; card.style.setProperty('--tier-color', tier.color);
+        const first = rowFor(snapshots[0].tiers, tier.id); const latest = rowFor(latestTiers, tier.id);
+        const header = document.createElement('header');
+        const name = document.createElement('span'); name.className = 'market-tier-name'; name.textContent = tier.label;
+        const value = document.createElement('strong'); value.textContent = latest ? `${Number(latest.percent).toFixed(2)}%` : '—';
+        const change = document.createElement('small');
+        if (first && latest && snapshots.length > 1) {
+            const pp = Number(latest.percent) - Number(first.percent);
+            change.textContent = `${pp > 0 ? '+' : ''}${pp.toFixed(2)} pp · ${marketI18n('marketHistorySinceFirstWeek', 'since')} ${snapshots[0].point.date.slice(5)}`;
+            const cls = deltaClass(Number(pp.toFixed(2))); if (cls) change.classList.add(cls);
         }
-        return { ...point, sources: { 'tdcc:tiers': values } };
+        const holders = document.createElement('small'); holders.className = 'market-tier-holders';
+        if (latest) holders.textContent = `${Number(latest.holders).toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}`;
+        header.append(name, value, change, holders);
+        const chart = document.createElement('div'); chart.id = `market-history-tdcc-tier-${index}`;
+        card.append(header, chart); grid.append(card);
+        const chartPoints: MarketHistoryPoint[] = snapshots.map(({ point, tiers }) => {
+            const row = rowFor(tiers, tier.id);
+            const values: MarketHistoryValues = row && Number.isFinite(Number(row.percent)) ? { percent: Number(row.percent) } : {};
+            return { ...point, sources: { 'tdcc:tier': values } };
+        });
+        drawMarketHistoryChart(chart.id, chartPoints, [{
+            label: tier.label, color: tier.color, sourceKeys: ['tdcc:tier'], field: 'percent',
+            tooltip: (point, v) => {
+                const row = rowFor(snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers ?? [], tier.id);
+                return row ? `${v}% · ${compactNumber(Number(row.shares), 2)} ${marketI18n('marketHistorySharesUnit', 'shares')} · ${Number(row.holders).toLocaleString(marketLocale())} ${marketI18n('marketHistoryHolders', 'holders')}` : '—';
+            },
+        }], { height: 170, format: (v) => `${v}%` });
     });
-    drawMarketHistoryChart(chart.id, chartPoints, tiersToShow.map((tier) => ({
-        label: tier.label, color: tier.color, sourceKeys: ['tdcc:tiers'], field: `tier-${tier.id}`,
-        tooltip: (point, value) => {
-            const row = (snapshots.find((snapshot) => snapshot.point.date === point.date)?.tiers as any[] | undefined)
-                ?.find((item) => String(item.tier) === tier.id);
-            return row ? `${value}% · ${Number(row.shares).toLocaleString()} ${marketI18n('marketHistoryShares', 'shares')} · ${Number(row.holders).toLocaleString()} ${marketI18n('marketHistoryHolders', 'holders')}` : '—';
-        },
-    })), false, { x: marketI18n('marketHistoryDate', 'Date'), y: marketI18n('marketHistoryTierPercentAxis', 'Shareholding tier · shares outstanding (%)') });
     const latestNote = document.createElement('p'); latestNote.className = 'market-updated market-history-tdcc-latest';
     latestNote.textContent = `${marketI18n('marketHistoryLatestSnapshot', 'Latest snapshot')}: ${snapshots[snapshots.length - 1].point.date}`;
     target.append(latestNote);
