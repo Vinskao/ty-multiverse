@@ -800,7 +800,7 @@ function renderTdccOwnership(points: MarketHistoryPoint[]) {
 function selectMarketDetailTab(tabName: string) {
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.marketTab === tabName)));
     document.querySelectorAll<HTMLElement>('[data-market-panel]').forEach((panel) => { panel.hidden = panel.dataset.marketPanel !== tabName; });
-    if (selectedMarketInstrument && tabName !== 'price') void loadMarketHistory(selectedMarketInstrument, tabName);
+    if (selectedMarketInstrument) void loadMarketHistory(selectedMarketInstrument, tabName);
 }
 
 function marketUnderlyingCode(instrument: DashboardInstrument) {
@@ -833,7 +833,6 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
     const initialTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
     selectMarketDetailTab(initialTab);
-    if (initialTab === 'price') void loadMarketHistory(instrument, initialTab);
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
@@ -2259,7 +2258,6 @@ function refreshMarketLanguage() {
         renderMarketDetailHeader(selectedMarketInstrument);
         const current = document.querySelector<HTMLButtonElement>('[data-market-tab][aria-selected="true"]')?.dataset.marketTab || 'price';
         selectMarketDetailTab(current);
-        if (current === 'price') void loadMarketHistory(selectedMarketInstrument, current);
     }
     void fetchMarketDashboard();
     fetchTxfQuote();
