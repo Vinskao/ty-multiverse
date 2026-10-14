@@ -894,7 +894,7 @@
 }
 
 @media (max-width: 480px) {
-	.market-overview { width: calc(100% + 2.5rem); margin-inline: -1.25rem; padding: .35rem; border-radius: .55rem; }
+	.market-overview { width: calc(100% + 5rem); margin-inline: -2.5rem; padding: .35rem; border-radius: .4rem; }
 	.market-history-panel { padding-top: .45rem; }
 	.market-chart-readout { padding: .45rem; font-size: .75rem; overflow-wrap: anywhere; }
 	.market-history-legend { gap: .45rem; font-size: .7rem; }
@@ -945,7 +945,9 @@
 	}
 
 	.market-overview {
-		padding: 1rem;
+		width: calc(100% + 5rem);
+		margin-inline: -2.5rem;
+		padding: .35rem;
 	}
 
 	.market-overview-header {
