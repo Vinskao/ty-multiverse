@@ -2437,6 +2437,9 @@ function initIndexPage() {
                         window.location.pathname.endsWith('/index.html');
 
     if (!isIndexPage) return;
+    const marketRoot = document.getElementById('market-overview');
+    if (!marketRoot || marketRoot.dataset.marketInitialized === 'true') return;
+    marketRoot.dataset.marketInitialized = 'true';
 
     // 登記各服務的健康檢查端點（idempotent）
     const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
@@ -2491,3 +2494,7 @@ function refreshMarketLanguage() {
 
 // 監聽 View Transitions 事件
 document.addEventListener('astro:page-load', initIndexPage);
+// Initialize the market as soon as its DOM exists; slow third-party images or
+// iframes must not keep the watchlist/editor waiting for the page-load event.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initIndexPage, { once: true });
+else initIndexPage();
