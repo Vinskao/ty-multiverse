@@ -1735,3 +1735,24 @@
 @media (max-width:400px) {
   .market-detail-toolbar [role="tab"]:last-child { grid-column:auto; }
 }
+.market-company-events { margin:.8rem 0 1rem; padding:.85rem 1rem; border:1px solid var(--gray-800); border-radius:.85rem; background:var(--gray-999_40); }
+.market-company-events-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:.65rem; }
+.market-company-events-heading h4 { margin:0; font-size:.95rem; }
+.market-company-events-heading p { margin:.2rem 0 0; color:var(--gray-400); font-size:.78rem; }
+.market-company-events-sources { margin:.45rem 0 0; color:var(--gray-400); font-size:.7rem; }
+.market-company-events-sources a { color:inherit; }
+.market-company-events-scroll { overflow-x:auto; }
+.market-company-events-table { width:100%; min-width:34rem; border-collapse:collapse; font-size:.8rem; }
+.market-company-events-table th,.market-company-events-table td { padding:.5rem .6rem; border-bottom:1px solid var(--gray-800); text-align:left; }
+.market-company-events-table th { color:var(--gray-400); font-size:.7rem; font-weight:600; }
+.market-company-events-table tbody tr:last-child td { border-bottom:0; }
+.market-company-event-link { padding:0; border:0; color:inherit; background:none; text-align:left; font:inherit; cursor:pointer; }
+.market-company-event-link:hover { color:#f0c66a; text-decoration:underline; }
+.market-event-badges { display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem; }
+.market-event-badge { display:inline-flex; align-items:center; border:1px solid color-mix(in srgb,#e1ae4b 55%,transparent); border-radius:999px; padding:.1rem .42rem; color:#f0c66a; background:color-mix(in srgb,#e1ae4b 12%,transparent); font-size:.65rem; line-height:1.4; white-space:nowrap; }
+.market-watch-row--event { border-color:color-mix(in srgb,#e1ae4b 65%,transparent); box-shadow:inset 3px 0 #e1ae4b; }
+.market-watch-row--event[aria-expanded="true"] { border-color:#e1ae4b; }
+@media (max-width:768px) {
+  .market-company-events { padding:.7rem; }
+  .market-company-events-heading { display:grid; gap:.25rem; }
+}

@@ -10,6 +10,7 @@ import i18nData from '../storages/i18n.json';
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
+let _marketEventsTimer: number | null = null;
 let _marketLangCleanup: (() => void) | null = null;
 let selectedMarketInstrument: DashboardInstrument | null = null;
 const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
@@ -41,6 +42,11 @@ const MARKET_ACCORDION_QUERY = '(max-width: 768px)';
 let marketDetailRow: HTMLElement | null = null;
 // The tab the user last picked; kept when switching to another instrument.
 let preferredMarketTab: string | null = null;
+type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming'; highlight: boolean; source?: string; sourceUrl?: string };
+let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
+let marketEventInstruments = new Map<string, DashboardInstrument>();
+let marketAutoInstruments: DashboardInstrument[] = [];
+let marketCustomInstruments: DashboardInstrument[] = [];
 
 function placeMarketDetail(row: HTMLElement | null, scroll = true) {
     const detail = document.getElementById('market-instrument-detail');
@@ -1022,6 +1028,16 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const code = document.createElement('strong'); code.textContent = instrument.code;
         const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
         item.append(code, name);
+        const instrumentEvents = marketEventsByCode.get(instrument.code) || [];
+        if (instrumentEvents.length) {
+            row.classList.add('market-watch-row--event');
+            const badges = document.createElement('span'); badges.className = 'market-event-badges';
+            for (const event of instrumentEvents.slice(0, 3)) {
+                const badge = document.createElement('span'); badge.className = 'market-event-badge';
+                badge.textContent = `${marketEventLabel(event.type)} \u00b7 ${event.date.slice(5)}`; badges.append(badge);
+            }
+            item.append(badges);
+        }
         const price = document.createElement('span'); price.className = 'market-watch-price';
         const last = document.createElement('strong'); last.textContent = quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--';
         const change = document.createElement('small');
@@ -1056,14 +1072,79 @@ async function fetchMarketDashboard() {
         const response = await fetch(astroApiPath('/api/market/dashboard'));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json() as MarketDashboardPayload;
-        renderDashboardRows('market-auto-list', data.automatic?.positions ?? [], 'No complete valid holdings snapshot is available yet.');
-        renderDashboardRows('market-custom-list', data.custom ?? [], 'No custom instruments selected.');
+        marketAutoInstruments = data.automatic?.positions ?? [];
+        marketCustomInstruments = data.custom ?? [];
+        renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
+        renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
+        await fetchMarketCompanyEvents();
     } catch (error) {
         console.error('Market dashboard unavailable:', error);
         renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
         renderDashboardRows('market-custom-list', [], 'Custom selections are temporarily unavailable.');
+    }
+}
+
+
+function marketEventLabel(type: MarketCompanyEvent['type']) {
+    return type === 'monthly_revenue' ? marketI18n('marketEventRevenue', 'Revenue released')
+        : type === 'financial_report' ? marketI18n('marketEventFinancialReport', 'Financial report')
+            : marketI18n('marketEventConference', 'Investor conference');
+}
+
+async function fetchMarketCompanyEvents() {
+    const body = document.getElementById('market-company-events-rows');
+    const updated = document.getElementById('market-company-events-updated');
+    if (!body) return;
+    try {
+        const response = await fetch(astroApiPath('/api/market/dashboard/events'));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { events?: MarketCompanyEvent[]; checkedAt?: string };
+        const events = payload.events || [];
+        marketEventsByCode = new Map();
+        for (const event of events) {
+            const group = marketEventsByCode.get(event.code) || [];
+            group.push(event); marketEventsByCode.set(event.code, group);
+        }
+        marketEventInstruments.clear();
+        for (const instrument of [...marketAutoInstruments, ...marketCustomInstruments]) marketEventInstruments.set(instrument.code, instrument);
+        renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
+        renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
+        body.replaceChildren();
+        if (!events.length) {
+            const row = document.createElement('tr'); const cell = document.createElement('td');
+            cell.colSpan = 4; cell.className = 'market-updated';
+            cell.textContent = marketI18n('marketEventsEmpty', 'No recent releases or upcoming conferences for selected targets.');
+            row.append(cell); body.append(row);
+        }
+        for (const event of events) {
+            const row = document.createElement('tr');
+            const dateCell = document.createElement('td'); dateCell.textContent = event.dateTime || event.date;
+            const typeCell = document.createElement('td'); typeCell.textContent = marketEventLabel(event.type);
+            const codeCell = document.createElement('td');
+            const target = document.createElement('button'); target.type = 'button'; target.className = 'market-company-event-link';
+            target.textContent = `${event.code} ${event.name}`;
+            target.addEventListener('click', () => {
+                const instrument = marketEventInstruments.get(event.code);
+                if (!instrument) return;
+                const marketRow = Array.from(document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected'))
+                    .find((item) => item.dataset.marketCode === event.code);
+                if (marketRow) marketRow.click();
+                else { setMarketDetailInstrument(instrument); document.getElementById('market-instrument-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            });
+            codeCell.append(target);
+            const periodCell = document.createElement('td'); periodCell.textContent = event.period || (event.status === 'upcoming' ? marketI18n('marketEventsScheduled', 'Scheduled') : marketI18n('marketEventsReleased', 'Released'));
+            row.append(dateCell, typeCell, codeCell, periodCell);
+            if (event.sourceUrl) row.title = `${event.source || ''} ? ${event.sourceUrl}`;
+            body.append(row);
+        }
+        if (updated) updated.textContent = payload.checkedAt ? `${marketI18n('marketEventsUpdated', 'Updated')} ${new Date(payload.checkedAt).toLocaleString()}` : '';
+    } catch (error) {
+        console.error('Market company events unavailable:', error);
+        const row = document.createElement('tr'); const cell = document.createElement('td');
+        cell.colSpan = 4; cell.className = 'market-updated'; cell.textContent = marketI18n('marketEventsUnavailable', 'Company events are temporarily unavailable.');
+        body.replaceChildren(row); row.append(cell);
     }
 }
 
@@ -2483,6 +2564,8 @@ function initIndexPage() {
         fetchTxfQuote();
         fetchMarketUsage();
     }, 600_000);
+    if (_marketEventsTimer !== null) window.clearInterval(_marketEventsTimer);
+    _marketEventsTimer = window.setInterval(() => { void fetchMarketCompanyEvents(); }, 600_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
     updateVisitCount();

@@ -34,3 +34,6 @@ Update JSON:
 ```
 
 Use the revision returned by GET; **0 is only for an absent record**. Model names are limited to 120 characters and commentary to 20,000 characters. On `409`, GET again and reconcile your draft. On `401`, sign in again. On `503`, keep the draft and retry later; do not report that it was saved. Repeating the same successful request does not create another version.
+
+
+研究時一併檢視首頁「近期公司事件」表，將月營收／財報實際公布日與法說會預定日期放入時間線；清楚區分已公布和預定事件，不猜測未公告日期。

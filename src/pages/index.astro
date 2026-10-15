@@ -133,6 +133,11 @@ const skillsCategories = skillsData.categories;
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
 						<MarketBrief brief={marketBrief} />
+						<section id="market-company-events" class="market-company-events" aria-labelledby="market-company-events-title">
+							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
+							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
+							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
+						</section>
 						<div class="market-overview-grid">
 							<section id="market-watchlist" class="market-watchlist market-quote-section" aria-label="Market watchlist">
 								<div class="market-watchlist-heading"><span>Instrument</span><span>Price / change</span><span>Data time</span></div>
@@ -193,7 +198,8 @@ const skillsCategories = skillsData.categories;
 2. 技術面：用最新日線和即時行情，清楚標出資料時間及「盤中／收盤」；評估趨勢、成交量、支撐壓力、近期高低點、5/10/20/60日均線，並在資料足夠時核算 RSI、MACD 等動能。說明價格目前在趨勢中的位置、是否過熱／轉弱、關鍵位階失守的風險。盤中值不可假裝是收盤確認。
 3. 基本面：核對最新月營收及年增／月增、季度營收、毛利率／營益率／淨利率、EPS、現金流與資產負債；分清公告期間和公布日期，評估成長是否延續、基期／季節性／一次性因素、獲利品質及公司展望。估值只在資料可信且口徑一致時比較；沒有可靠估值就明說，不可把高成長等同低估。
 4. 籌碼面：交叉看外資、投信、自營商近 5/20 日買賣超與持股變化、融資融券、借券，以及 TDCC 大戶與散戶級距週變化。說明訊號一致或分歧、可能的供需含意與限制；不要把單週變化當成趨勢定論。
-5. 把公司營運焦點與基本面、技術位階、籌碼放在一起，回答：目前位置風險高不高？現在是有足夠安全邊際的買點、等待區，還是應降低曝險？列出支持與反對主要判斷的證據，並寫出至少一個會推翻結論的條件。
+5. 檢視「近期公司事件」表：把月營收／財報實際公布日和法說會預定日期放進分析時間線，說明公布內容、價格與籌碼反應是否一致；明確區分已公布與預定事件，不得把預定法說會寫成已發生，也不可推測未公告的日期。
+6. 把公司營運焦點與基本面、技術位階、籌碼放在一起，回答：目前位置風險高不高？現在是有足夠安全邊際的買點、等待區，還是應降低曝險？列出支持與反對主要判斷的證據，並寫出至少一個會推翻結論的條件。
 
 輸出格式
 • 標題：標的｜資料截點｜研究期間（例如未來 2–8 週）
