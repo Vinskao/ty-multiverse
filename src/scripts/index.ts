@@ -838,7 +838,120 @@ function renderTdccOwnership(points: MarketHistoryPoint[]) {
 function selectMarketDetailTab(tabName: string) {
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.marketTab === tabName)));
     document.querySelectorAll<HTMLElement>('[data-market-panel]').forEach((panel) => { panel.hidden = panel.dataset.marketPanel !== tabName; });
-    if (selectedMarketInstrument) void loadMarketHistory(selectedMarketInstrument, tabName);
+    if (selectedMarketInstrument) {
+        if (tabName === 'ai-analysis') void loadMarketAiAnalysis(selectedMarketInstrument);
+        else void loadMarketHistory(selectedMarketInstrument, tabName);
+    }
+}
+
+interface MarketAiComment { code: string; productType: string; model: string; content: string; revision: number; updatedAt: string }
+const marketAiDrafts = new Map<string, { model: string; content: string; revision: number }>();
+let marketAiLoadSequence = 0;
+
+function renderMarketAiTable(targetId: string, rows: MarketAiComment[]) {
+    const target = document.getElementById(targetId); if (!target) return;
+    target.replaceChildren();
+    if (!rows.length) { target.textContent = marketI18n('marketAiEmpty', 'No saved analysis yet.'); return; }
+    const wrap = document.createElement('div'); wrap.className = 'market-fin-table-wrap';
+    const table = document.createElement('table'); table.className = 'market-fin-table market-ai-table';
+    const head = table.createTHead().insertRow();
+    for (const label of [marketI18n('marketAiRevision', 'Revision'), marketI18n('marketAiTime', 'Updated'), marketI18n('marketAiModel', 'AI / model'), marketI18n('marketAiComment', 'Commentary')]) {
+        const th = document.createElement('th'); th.scope = 'col'; th.textContent = label; head.append(th);
+    }
+    const body = table.createTBody();
+    for (const row of rows) {
+        const tr = body.insertRow();
+        for (const value of [String(row.revision), new Date(row.updatedAt).toLocaleString(marketLocale()), row.model, row.content]) {
+            const td = tr.insertCell(); td.textContent = value;
+        }
+    }
+    wrap.append(table); target.append(wrap);
+}
+
+async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
+    const form = document.getElementById('market-ai-form') as HTMLFormElement | null;
+    const fields = document.getElementById('market-ai-fields') as HTMLFieldSetElement | null;
+    const status = document.getElementById('market-ai-status');
+    if (!form || !fields || !status) return;
+    const code = marketUnderlyingCode(instrument) || instrument.code;
+    const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
+    const key = `${kind}:${code}`; const sequence = ++marketAiLoadSequence;
+    const endpoint = astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=${kind}`);
+    form.dataset.key = key; form.dataset.endpoint = endpoint; form.dataset.loaded = 'false'; fields.disabled = true;
+    const model = document.getElementById('market-ai-model') as HTMLInputElement;
+    const content = document.getElementById('market-ai-content') as HTMLTextAreaElement;
+    const revision = document.getElementById('market-ai-revision') as HTMLInputElement;
+    const save = document.getElementById('market-ai-save') as HTMLButtonElement;
+    const draft = marketAiDrafts.get(key);
+    model.value = draft?.model ?? ''; content.value = draft?.content ?? ''; revision.value = String(draft?.revision ?? 0);
+    document.getElementById('market-ai-target')!.textContent = `${code} · ${kind}`;
+    document.getElementById('market-ai-endpoint')!.textContent = new URL(endpoint, location.origin).href;
+    document.getElementById('market-ai-current')!.replaceChildren();
+    document.getElementById('market-ai-history')!.replaceChildren();
+    status.textContent = marketI18n('marketAiLoading', 'Loading saved analysis…');
+    try {
+        const response = await fetch(endpoint, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { analysis: MarketAiComment | null; history: MarketAiComment[] };
+        if (sequence !== marketAiLoadSequence || form.dataset.key !== key) return;
+        renderMarketAiTable('market-ai-current', payload.analysis ? [payload.analysis] : []);
+        renderMarketAiTable('market-ai-history', payload.history.filter((row) => row.revision !== payload.analysis?.revision));
+        model.value = draft?.model ?? payload.analysis?.model ?? '';
+        content.value = draft?.content ?? payload.analysis?.content ?? '';
+        revision.value = String(draft?.revision ?? payload.analysis?.revision ?? 0);
+        form.dataset.loaded = 'true'; save.disabled = false;
+        document.getElementById('market-ai-api-example')!.textContent = JSON.stringify({ model: 'Your AI/model name', content: 'Your updated analysis', expectedRevision: payload.analysis?.revision ?? 0 }, null, 2);
+        status.textContent = payload.analysis
+            ? marketI18n('marketAiSavedStatus', 'Saved · revision {revision}').replace('{revision}', String(payload.analysis.revision))
+            : marketI18n('marketAiEmpty', 'No saved analysis yet.');
+    } catch {
+        if (sequence !== marketAiLoadSequence || form.dataset.key !== key) return;
+        save.disabled = true; status.textContent = marketI18n('marketAiLoadError', 'Analysis could not be loaded. Reload before editing.');
+    } finally { if (sequence === marketAiLoadSequence) fields.disabled = false; }
+}
+
+function initMarketAiAnalysis() {
+    const form = document.getElementById('market-ai-form') as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    const draft = () => ({ model: (document.getElementById('market-ai-model') as HTMLInputElement).value,
+        content: (document.getElementById('market-ai-content') as HTMLTextAreaElement).value,
+        revision: Number((document.getElementById('market-ai-revision') as HTMLInputElement).value) });
+    form.addEventListener('input', () => { if (form.dataset.key && form.dataset.loaded === 'true') marketAiDrafts.set(form.dataset.key, draft()); });
+    document.getElementById('market-ai-reload')?.addEventListener('click', () => {
+        if (form.dataset.key) marketAiDrafts.delete(form.dataset.key);
+        if (selectedMarketInstrument) void loadMarketAiAnalysis(selectedMarketInstrument);
+    });
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); if (form.dataset.loaded !== 'true' || !form.dataset.key) return;
+        const key = form.dataset.key; const endpoint = form.dataset.endpoint!; const value = draft();
+        const status = document.getElementById('market-ai-status')!;
+        const fields = document.getElementById('market-ai-fields') as HTMLFieldSetElement;
+        marketAiDrafts.set(key, value);
+        if (!hasMarketAuth()) { status.textContent = marketI18n('marketAiSignIn', 'Sign in before saving.'); return; }
+        fields.disabled = true; status.textContent = marketI18n('marketAiSaving', 'Saving analysis…');
+        try {
+            const response = await fetch(endpoint, { method: 'PUT', headers: { ...marketAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: value.model, content: value.content, expectedRevision: value.revision }) });
+            if (!response.ok) {
+                const message = response.status === 409 ? 'marketAiConflict' : response.status === 401 || response.status === 403 ? 'marketAiSignIn' : 'marketAiSaveError';
+                throw new Error(message);
+            }
+            const payload = await response.json() as { analysis: MarketAiComment; saved: boolean };
+            if (!payload.saved || !payload.analysis?.revision) throw new Error('marketAiSaveError');
+            marketAiDrafts.delete(key);
+            if (form.dataset.key === key && selectedMarketInstrument) {
+                await loadMarketAiAnalysis(selectedMarketInstrument);
+                if (form.dataset.key === key) {
+                    renderMarketAiTable('market-ai-current', [payload.analysis]);
+                    (document.getElementById('market-ai-revision') as HTMLInputElement).value = String(payload.analysis.revision);
+                    status.textContent = marketI18n('marketAiSavedStatus', 'Saved · revision {revision}').replace('{revision}', String(payload.analysis.revision));
+                }
+            }
+        } catch (error) {
+            if (form.dataset.key === key) status.textContent = marketI18n(error instanceof Error ? error.message : 'marketAiSaveError', marketI18n('marketAiSaveError', 'Save failed; your draft is preserved.'));
+        } finally { if (form.dataset.key === key) fields.disabled = false; }
+    });
 }
 
 function marketUnderlyingCode(instrument: DashboardInstrument) {
@@ -2344,6 +2457,7 @@ function initIndexPage() {
 
     // Always retry on page load so stale local availability state cannot keep this section hidden.
     initMarketWatchlist();
+    initMarketAiAnalysis();
     initMarketCustomEditor();
     void fetchMarketDashboard();
     fetchLeetCodeStats();

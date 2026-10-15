@@ -1702,3 +1702,30 @@
 .market-instrument-detail--inline { margin-top:-.5rem; border-top:0; border-radius:0 0 .9rem .9rem; scroll-margin-top:4rem; }
 .market-watch-list > .market-instrument-detail--inline { margin-top:-.35rem; }
 .market-watch-row { scroll-margin-top:4.5rem; }
+
+.market-ai-panel p { font-size:.85rem; line-height:1.65; overflow-wrap:anywhere; }
+.market-ai-panel fieldset { display:grid; gap:.5rem; min-width:0; margin:1rem 0; padding:0; border:0; }
+.market-ai-panel label { font-size:.85rem; font-weight:600; }
+.market-ai-panel input[type="text"], .market-ai-panel textarea { width:100%; min-width:0; padding:.7rem; border:1px solid var(--gray-600); border-radius:.5rem; background:var(--gray-999); color:var(--gray-100); font:inherit; }
+.market-ai-panel textarea { resize:vertical; min-height:14rem; line-height:1.6; }
+.market-ai-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
+.market-ai-actions button { min-height:44px; padding:.55rem .85rem; border:1px solid var(--gray-600); border-radius:.5rem; background:transparent; color:var(--gray-100); cursor:pointer; }
+#market-ai-save { background:#d8a43b; color:#171000; border-color:#d8a43b; font-weight:600; }
+.market-ai-actions button:disabled { opacity:.5; cursor:wait; }
+.market-ai-panel details { margin:1rem 0; }
+.market-ai-panel summary { cursor:pointer; font-size:.85rem; padding:.65rem 0; }
+.market-ai-panel code { display:block; overflow-wrap:anywhere; white-space:normal; }
+.market-ai-table { white-space:normal; table-layout:fixed; }
+.market-ai-table th, .market-ai-table td { text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+.market-ai-table th:first-child { width:3.5rem; }
+.market-ai-table th:nth-child(2) { width:8rem; }
+.market-ai-table th:nth-child(3) { width:6rem; }
+.market-ai-table td:last-child { white-space:pre-wrap; line-height:1.65; }
+@media (max-width:768px) {
+  .market-ai-panel input[type="text"], .market-ai-panel textarea { font-size:16px; }
+  .market-ai-table { min-width:34rem; }
+  .market-ai-panel pre { font-size:.75rem; }
+}
+@media (max-width:400px) {
+  .market-detail-toolbar [role="tab"]:last-child { grid-column:auto; }
+}
