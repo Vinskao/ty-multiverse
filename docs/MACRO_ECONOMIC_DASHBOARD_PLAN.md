@@ -1,4 +1,4 @@
-# 總體經濟資料與公布提醒完整計畫
+﻿# 總體經濟資料與公布提醒完整計畫
 
 規格及來源查證日期：2026-10-15（Asia/Taipei）。
 
@@ -320,3 +320,19 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 1. 排程固定節點後，確認 FRED `release/dates`、`series/observations` 均成功，且 `maya_sawa_macro_observations` 有 `DFEDTARL`、`DFEDTARU` 歷史列；API indicators 顯示利率上下界，FRED release dates 留在 DB。
 2. 重新讀取正式頁面確認 macro indicators、FOMC／非農／CPI 日期與台北時區時間皆可見，及 API 讀取不觸發上游同步。
 3. 觀察 Finance Calendar consensus 欄位後續是否提供值；若仍空，保留明確「尚無共識資料」狀態，不標示 beat/miss。
+
+## 17. 最新正式環境驗收（2026-10-15）
+
+- Maya build #108 已部署 `papakao/maya-sawa:108`，pod 在 `10.0.158.183` 為 Ready，rollout 成功。修正 build #107 暴露的 ARM64 wheel 相容性，將 Shioaji 升至可安裝的 1.5.8。
+- 前端 build #277 已部署 `papakao/ty-multiverse-frontend:277`，Deployment 為 1/1 Ready；正式 `/tymultiverse` 回 HTTP 200，頁面含總經事件與指標面板。
+- 正式 macro API 回 HTTP 200，回傳 6 個 BLS 指標與 6 個近期事件。直接查詢 PostgreSQL 確認 `maya_sawa_macro_observations` 486 列、`maya_sawa_macro_events` 6 列、`maya_sawa_macro_fetch_runs` 17 列及 `maya_sawa_macro_event_revisions` 6 列；GET 取用既有 DB snapshot，不以頁面請求現場抓取。
+- 最近同步時 FinanceCalendar、FederalReserve 日曆與 BLS 回報 success；事件日期／時間已供總經面板顯示。尚無共識值的事件繼續顯示「尚無共識資料」，不產生超預期／低於預期標籤。
+- **FRED 尚未驗收成功**：正式 API source health 為 `TimeoutError`，資料庫目前沒有 FRED 利率觀察值；FRED release dates 亦未確認寫入。已在 Maya pod 內確認 FRED 網域 DNS、TCP 443 與 TLS 握手可通，但 keyed API 請求仍逾時。不可將 FRED 利率與 FRED release dates 標示完成，需再查上游回應／執行環境出口並於 API 成功後重驗 DB。
+- `ssh oke-node` 檢查時，除已完成的 CronJob pod（Succeeded）外，沒有 Pending pod；Maya、前端及其餘服務 pod 均為 Running/Ready。`cert-manager-webhook` 目前 Ready，但既有 26 次重啟仍需持續觀察。Metrics API 不可用，無法讀取 `kubectl top` 即時資源數據。
+
+### 剩餘驗收條件
+
+1. 查明正式環境 FRED keyed API 請求逾時的原因，取得 FRED release dates 與 `DFEDTARL`／`DFEDTARU` 歷史值，確認寫入 PostgreSQL 且 API 回傳利率指標。
+2. 瀏覽器已確認面板顯示 6 個總經指標與 6 筆事件、台北時區日期及時間；FRED 逾時時頁面清楚顯示來源資料部分過期。近期事件距公布日超過 7 天，因此本次沒有事件進入 highlight 期限，需在進入 7 天內再次驗證提醒樣式。
+3. 觀察共識來源後續能否提供 consensus 與 actual；取得兩者後才顯示超預期、符合預期或低於預期。
+
