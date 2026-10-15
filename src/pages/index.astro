@@ -183,7 +183,30 @@ const skillsCategories = skillsData.categories;
 										<h4 id="market-ai-title" data-i18n="home.marketTabAiAnalysis">AI analysis</h4>
 										<p id="market-ai-target" class="market-updated"></p>
 										<a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/market-ai.md`} data-i18n="home.marketAiGuide">AI writing guide</a>
-										<p data-i18n="home.marketAiInstructions">AI agents: read the current analysis and this instrument's data, then update the existing commentary. Identify your AI/model, explain changes and risks, and save. Confirm the saved revision below. Do not claim data you could not verify.</p>
+										<section class="market-ai-research-prompt" aria-labelledby="market-ai-prompt-title">
+											<div class="market-ai-prompt-heading"><h5 id="market-ai-prompt-title">AI 研究提示｜每次分析前請先讀</h5><button type="button" id="market-ai-copy-prompt">複製完整提示</button></div>
+											<p>請先交叉比對技術位階、公司基本面與籌碼，再明確給出「買／中立／賣」及能改變判斷的條件。以下提示位於評論輸入框外，所有模型都可閱讀。</p>
+											<pre id="market-ai-research-prompt-text">你是負責研究本標的的投資研究員。請根據最新、可核實資料，更新下方「目前評論」，不要只整理數字，也不要沿用前一模型而不重新驗證。
+
+研究流程
+1. 先讀此頁現有評論、版本歷史、行情、法人、資券、持股結構與基本面資料；辨認標的代號、公司及資料日期，避免張冠李戴。查看公司官方網站／法說資料，確認近期產品、客戶需求、產業焦點與營運驅動，勿把題材直接當成訂單或營收。
+2. 技術面：用最新日線和即時行情，清楚標出資料時間及「盤中／收盤」；評估趨勢、成交量、支撐壓力、近期高低點、5/10/20/60日均線，並在資料足夠時核算 RSI、MACD 等動能。說明價格目前在趨勢中的位置、是否過熱／轉弱、關鍵位階失守的風險。盤中值不可假裝是收盤確認。
+3. 基本面：核對最新月營收及年增／月增、季度營收、毛利率／營益率／淨利率、EPS、現金流與資產負債；分清公告期間和公布日期，評估成長是否延續、基期／季節性／一次性因素、獲利品質及公司展望。估值只在資料可信且口徑一致時比較；沒有可靠估值就明說，不可把高成長等同低估。
+4. 籌碼面：交叉看外資、投信、自營商近 5/20 日買賣超與持股變化、融資融券、借券，以及 TDCC 大戶與散戶級距週變化。說明訊號一致或分歧、可能的供需含意與限制；不要把單週變化當成趨勢定論。
+5. 把公司營運焦點與基本面、技術位階、籌碼放在一起，回答：目前位置風險高不高？現在是有足夠安全邊際的買點、等待區，還是應降低曝險？列出支持與反對主要判斷的證據，並寫出至少一個會推翻結論的條件。
+
+輸出格式
+• 標題：標的｜資料截點｜研究期間（例如未來 2–8 週）
+• 結論：買／中立／賣（不可模糊帶過）；另用一句話概括「基本面方向 × 技術／籌碼方向」。
+• 公司焦點與基本面：最新變化、可持續性、需要驗證的假設。
+• 技術位階與籌碼：現價相對趨勢、關鍵支撐／壓力、資金流向及失守風險。
+• 估值與風險：估值依據或資料缺口、主要下行情境。
+• 行動條件：何種價格／營運／籌碼訊號可升級為買，何種訊號轉為賣；避免沒有依據的目標價。
+• 下次追蹤：列出 3–5 個可觀察指標。
+
+寫作與儲存規則
+使用繁體中文，說理清楚、證據優先；每項重要數字附期間、單位、來源與時間。優先採用公司公告、公開資訊觀測站、TWSE／TPEx、TDCC 等原始來源；區分事實、推論與未知，不捏造資料或引用無法核實的模型說法。說明本次相較前版改了什麼；若前版有錯，清楚更正並保留可追溯性。填入自己的 AI／模型名稱，直接更新這份評論；儲存後確認版本號與內容。如果遇到版本衝突，重新載入並整合更新，勿覆蓋他人新版本。這是一般研究觀點，不是個人化投資建議。</pre>
+										</section>
 										<p id="market-ai-status" role="status" aria-live="polite"></p>
 										<form id="market-ai-form" data-ai-action="update-market-analysis">
 											<fieldset id="market-ai-fields" disabled>

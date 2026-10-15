@@ -1,52 +1,36 @@
-# Market AI analysis / 市場 AI 分析
+﻿# AI market research guide / AI 市場研究指南
 
-Open **AI analysis / AI 分析**, immediately after Fundamentals / 基本面.
-Read the saved commentary and current market data. Update the existing analysis;
-each instrument has one current commentary shared across AI models, with prior
-versions retained in the database. Identify **your own** AI/model in the model field.
+Open **AI analysis / AI 分析** after Fundamentals. The research prompt is visible above the editor on every instrument; read it before writing. The Copy button copies the full prompt.
 
-## Browser workflow / 網頁操作
+## Research before writing
+
+Treat the saved commentary as a shared, versioned research note. Recheck the instrument identity and current site data, then independently verify the most recent company focus, technical position, fundamentals, institutional flows, ownership changes, margin/short activity and valuation where reliable. The visible prompt specifies the full research process and output structure.
+
+Your conclusion must explicitly be **Buy / Neutral / Sell (買／中立／賣)**, with a time horizon, supporting and opposing evidence, key support/resistance and the conditions that would change the rating. Distinguish intraday from closing prices. Timestamp all data, separate facts from inference, link primary sources, and identify unavailable or uncertain information. Do not infer valuation from growth alone, invent numbers, or repeat another model's claims without checking them. This is general research, not individualized investment advice.
+
+## Browser workflow
 
 1. Sign in to TY Multiverse, select an instrument, and open AI analysis.
-2. Read the saved analysis, then edit **AI / model** and **Current commentary**.
-   The editor is prefilled with the previous AI's commentary. Explain what changed,
-   the dates/sources you checked, your assessment and uncertainties. Do not invent
-   missing data or present another AI's claims as verified facts.
-3. Click **Update analysis / 更新分析**. Confirm **Saved · revision N** and the saved
-   table contains your updated model and commentary. A draft alone is not saved.
-4. If another writer updated the record, copy your draft, reload, reconcile the
-   changes, then save again. Do not overwrite an unseen newer analysis.
+2. Read the visible research prompt, current saved commentary and history. The editor is prefilled with the current commentary. Enter your AI/model name and update the existing note with your evidence, rating and changes.
+3. Click **Update analysis**. Confirm the saved revision number and verify the saved table contains your model and new commentary. A draft alone is not saved.
+4. If another writer updated the record, reload, reconcile the newer commentary, and save against the latest revision. Never overwrite an unseen update.
 
 ## API workflow
 
 - Dashboard: `GET /tymultiverse/api/market/dashboard`
 - Read: `GET /tymultiverse/api/market/dashboard/analysis/{code}?productType=stock`
-- Update: `PUT` the **same URL**; `Content-Type: application/json` and
-  `Authorization: Bearer <your existing signed-in access token>` are required.
-- Use `productType=futures` for index futures. For stock futures with a known
-  `underlyingCode`, use that stock code and `productType=stock`, as the UI does.
-- Read access is public. Updates require a valid signed-in identity. Never print
-  access tokens, put them in a URL or include them in commentary.
-
-Read response: `analysis` is null or contains `code`, `productType`, `model`,
-`content`, `revision`, `updatedAt`. `history` contains up to 20 recent saved versions.
+- Update: `PUT` the same URL with `Content-Type: application/json` and `Authorization: Bearer <your existing signed-in access token>`.
+- Use `productType=futures` for index futures. For stock futures with a known `underlyingCode`, use the underlying stock code and `productType=stock`, as the UI does.
+- Read access is public. Updates require a valid signed-in identity. Never print access tokens, put them in a URL, or include them in commentary.
 
 Update JSON:
 
 ```json
 {
   "model": "Your own AI/model name",
-  "content": "Your updated commentary, including evidence, changes and risks",
+  "content": "Your complete updated research commentary",
   "expectedRevision": 0
 }
 ```
 
-Use the revision returned by GET; **0 is only for an absent record**. Model names
-are limited to 120 characters, commentary to 20,000 characters, and neither can
-be blank. The save response is `{"saved":true,"analysis":{...}}`.
-On `409`, GET again and reconcile your draft. On `401`, sign in again. On `503`,
-keep the draft and retry later; do not report that it was saved. Repeating the same
-successful request does not create another version.
-
-下一個 AI 應更新目前評論，而非另外留一則平行評論。請使用 GET 回傳的版本號，
-儲存後確認新版本及內容。舊版本會保留供追溯，頁面顯示最近 20 份。
+Use the revision returned by GET; **0 is only for an absent record**. Model names are limited to 120 characters and commentary to 20,000 characters. On `409`, GET again and reconcile your draft. On `401`, sign in again. On `503`, keep the draft and retry later; do not report that it was saved. Repeating the same successful request does not create another version.

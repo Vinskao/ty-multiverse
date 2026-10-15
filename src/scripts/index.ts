@@ -914,6 +914,17 @@ function initMarketAiAnalysis() {
     const form = document.getElementById('market-ai-form') as HTMLFormElement | null;
     if (!form || form.dataset.bound) return;
     form.dataset.bound = 'true';
+    document.getElementById('market-ai-copy-prompt')?.addEventListener('click', async () => {
+        const prompt = document.getElementById('market-ai-research-prompt-text')?.textContent?.trim();
+        const status = document.getElementById('market-ai-status');
+        if (!prompt || !status) return;
+        try {
+            await navigator.clipboard.writeText(prompt);
+            status.textContent = marketI18n('marketAiPromptCopied', '研究提示已複製。');
+        } catch {
+            status.textContent = marketI18n('marketAiPromptCopyFailed', '無法存取剪貼簿，請選取提示文字後複製。');
+        }
+    });
     const draft = () => ({ model: (document.getElementById('market-ai-model') as HTMLInputElement).value,
         content: (document.getElementById('market-ai-content') as HTMLTextAreaElement).value,
         revision: Number((document.getElementById('market-ai-revision') as HTMLInputElement).value) });
