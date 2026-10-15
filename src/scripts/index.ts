@@ -975,6 +975,11 @@ function marketUnderlyingCode(instrument: DashboardInstrument) {
     return instrument.productType === 'futures' ? (instrument.quote?.underlyingCode || instrument.underlyingCode || '') : '';
 }
 
+function marketEventsForInstrument(instrument: DashboardInstrument) {
+    const underlyingCode = marketUnderlyingCode(instrument);
+    return marketEventsByCode.get(instrument.code) || (underlyingCode ? marketEventsByCode.get(underlyingCode) : undefined) || [];
+}
+
 function renderMarketDetailHeader(instrument: DashboardInstrument) {
     const setText = (id: string, value: string) => { const element = document.getElementById(id); if (element) element.textContent = value; };
     const underlyingCode = marketUnderlyingCode(instrument);
@@ -1028,7 +1033,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const code = document.createElement('strong'); code.textContent = instrument.code;
         const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
         item.append(code, name);
-        const instrumentEvents = marketEventsByCode.get(instrument.code) || [];
+        const instrumentEvents = marketEventsForInstrument(instrument);
         if (instrumentEvents.length) {
             row.classList.add('market-watch-row--event');
             const badges = document.createElement('span'); badges.className = 'market-event-badges';
@@ -1108,7 +1113,11 @@ async function fetchMarketCompanyEvents() {
             group.push(event); marketEventsByCode.set(event.code, group);
         }
         marketEventInstruments.clear();
-        for (const instrument of [...marketAutoInstruments, ...marketCustomInstruments]) marketEventInstruments.set(instrument.code, instrument);
+        for (const instrument of [...marketAutoInstruments, ...marketCustomInstruments]) {
+            marketEventInstruments.set(instrument.code, instrument);
+            const underlyingCode = marketUnderlyingCode(instrument);
+            if (underlyingCode) marketEventInstruments.set(underlyingCode, instrument);
+        }
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
         body.replaceChildren();
@@ -1129,7 +1138,10 @@ async function fetchMarketCompanyEvents() {
                 const instrument = marketEventInstruments.get(event.code);
                 if (!instrument) return;
                 const marketRow = Array.from(document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected'))
-                    .find((item) => item.dataset.marketCode === event.code);
+                    .find((item) => {
+                        const instrument = [...marketAutoInstruments, ...marketCustomInstruments].find((candidate) => candidate.code === item.dataset.marketCode);
+                        return item.dataset.marketCode === event.code || Boolean(instrument && marketUnderlyingCode(instrument) === event.code);
+                    });
                 if (marketRow) marketRow.click();
                 else { setMarketDetailInstrument(instrument); document.getElementById('market-instrument-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
             });
