@@ -558,3 +558,20 @@ TWSE已驗證欄位與端點：
 - 修復基本面首次切換至行情未載入 K 線；價格 Y 軸標題與數值刻度增加間距。
 - Chrome 實際 CSS viewport 320px、390px 無整頁橫向溢出，390px 持股圖沒有超出畫面元素；1536px 桌機布局維持正常。Node 22.12 build 通過。
 - 提交 835ef50、8f89f1d、9132d6b 已推送 origin/dev，等待 Jenkins 部署後正式站驗收。此 plan 保持本機不提交。
+
+### 2026-10-15 全部持倉與 AI 分析（部署驗收中）
+
+- 自動清單移除五檔截斷，保留依市值／期貨絕對曝險由大到小排序。同時間快照可更新為完整標的清單；DB 候選及收集器沿用完整清單。
+- 正式環境驗證：券商持倉快取 14 筆，舊公開清單 5 筆；驗收將只讀既有快取，不額外查券商。
+- 基本面後新增 AI 分析頁籤，表單帶出上一份評論供下一個 AI 更新；評論存 PostgreSQL，另存不可覆寫的歷次版本。
+- GET/PUT /api/market/dashboard/analysis/{code}?productType=stock|futures。GET 公開；PUT 需登入，model/content/expectedRevision 必填，過期版本回 409，相同請求重送不重複建立版本。
+- 頁面提供 AI 寫入指南及 API 格式；個股期貨以 underlying 現股共用分析。評論以 textContent 呈現，手機表格內捲動。
+- pytest 6 passed；前端 build 通過。部署遇 Poetry 平行系統套件更新競態，改為單一 worker 後已通過映像建置。
+- 待正式 DB／API 與畫面驗收完成。此 plan 檔維持本機不提交。
+
+### 2026-10-15 deployment acceptance
+- Backend image maya-sawa:102 and frontend image ty-multiverse-frontend:271 are READY 1/1; Jenkins frontend #271 SUCCESS.
+- Production browser confirms 14 automatic holdings, descending position order, and AI analysis tab directly after Fundamentals; editor handlers initialized.
+- PostgreSQL transaction verification passed current update, revision history, idempotent retry and stale revision rejection; transaction rolled back without publishing QA commentary.
+- AI writing guide: /tymultiverse/market-ai.md. Existing analysis is loaded for replacement by the next AI, with revision history retained.
+
