@@ -18,6 +18,7 @@
     "githubTitle": { "en": "Github Contributions", "zh": "Github 貢獻度" },
     "leetcodeTitle": { "en": "LeetCode Stats", "zh": "LeetCode 統計" },
     "marketOverviewTitle": { "en": "Market Overview", "zh": "市場總覽" },
+    "marketAutomaticHoldings": { "en": "All holdings · largest positions first", "zh": "全部持倉 · 依部位由大到小" },
     "marketOverviewNote": { "en": "Refreshed every 10 minutes", "zh": "每 10 分鐘更新一次" },
     "marketTitle": { "en": "TAIEX Futures", "zh": "臺股期貨近月" },
     "marketTabPrice": { "en": "Price", "zh": "行情" },
