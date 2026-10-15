@@ -16,6 +16,12 @@
 .macro-surprise--above { color:#80d7a4; background:color-mix(in srgb,#258b50 24%,transparent); }
 .macro-surprise--below { color:#ff9d91; background:color-mix(in srgb,#a63b31 24%,transparent); }
 .macro-surprise--in_line { color:#e8c878; background:color-mix(in srgb,#a67b1e 22%,transparent); }
+.macro-event--urgent,.macro-event--soon,.macro-event--upcoming { background:linear-gradient(120deg,color-mix(in srgb,#a66f12 22%,var(--surface-primary,#111827)),color-mix(in srgb,#e1ae4b 12%,transparent)); }
+.macro-event--upcoming { border:2px solid #e1ae4b; box-shadow:0 0 0 2px color-mix(in srgb,#e1ae4b 20%,transparent),0 0 18px color-mix(in srgb,#e1ae4b 26%,transparent); }
+.macro-event--urgent,.macro-event--soon { border-width:2px; box-shadow:0 0 18px color-mix(in srgb,#ef8b71 28%,transparent); }
+.macro-event--upcoming>small,.macro-event--soon>small,.macro-event--urgent>small { width:max-content; padding:.15rem .45rem; border-radius:999px; color:#1b1304; background:#f2c45d; }
+@media(prefers-reduced-motion:no-preference) { .macro-event--upcoming { animation:macro-week-pulse 2.8s ease-in-out infinite; } }
+@keyframes macro-week-pulse { 50% { box-shadow:0 0 0 3px color-mix(in srgb,#e1ae4b 26%,transparent),0 0 24px color-mix(in srgb,#e1ae4b 38%,transparent); } }
 .macro-indicator-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.5rem; }
 .macro-indicator-card { display:grid; align-content:start; gap:.2rem; min-width:0; padding:.65rem; border-radius:.65rem; background:color-mix(in srgb,var(--gray-800) 28%,transparent); }
 .macro-indicator-card>span { color:var(--gray-400); font-size:.7rem; line-height:1.3; }

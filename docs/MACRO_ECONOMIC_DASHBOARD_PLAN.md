@@ -336,3 +336,15 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 2. 瀏覽器已確認面板顯示 6 個總經指標與 6 筆事件、台北時區日期及時間；FRED 逾時時頁面清楚顯示來源資料部分過期。近期事件距公布日超過 7 天，因此本次沒有事件進入 highlight 期限，需在進入 7 天內再次驗證提醒樣式。
 3. 觀察共識來源後續能否提供 consensus 與 actual；取得兩者後才顯示超預期、符合預期或低於預期。
 
+
+## 18. 最新可用期、零售銷售與公債殖利率（2026-10-15）
+
+依正式 API 檢視，BLS 指標已保存到 2026-09 與 2026-08 兩期；零售銷售及美國公債殖利率則尚未接入。新增規格如下：
+
+- FRED series `RSAFS`：Census Advance Monthly Sales for Retail and Food Services，月頻、季調、百萬美元；FRED release `9` 提供零售銷售公布日。來源說明：[FRED RSAFS](https://fred.stlouisfed.org/series/RSAFS)、[Census 2026 發布日曆](https://www.census.gov/retail/release_schedule.html)。
+- FRED series `DGS10`：美國 10 年期公債 constant maturity 市場殖利率，日頻、百分比；這是市場殖利率，不等同 Fed funds target。來源：[FRED DGS10](https://fred.stlouisfed.org/series/DGS10)，原始來源為 Federal Reserve Board H.15。
+- 每張指標卡顯示統計期；有保存前一期時顯示前期數值與期間。CPI 成長率找不到精確比較期時，使用已保存前一筆計算月變化；年比較期缺失時明確顯示最新指數值，不留空白或捏造成長率。
+- 公布日進入七天內時使用高對比琥珀色底、外框及柔和呼吸提示；尊重作業系統的減少動態效果設定。
+- FRED 每次同步預計最多 3 個 release dates 加 4 個 series observations 請求；四次／日約 28 次，低於配置的 FRED 每日 100 次上限。
+
+**正式資料仍未完成驗收**：目前 production snapshot 的 FRED source 仍回 `TimeoutError`，資料庫尚無 `RSAFS`、`DGS10` 或 FRED retail release dates。程式接好後，必須先恢復 FRED Pod 出口，再確認最新一期與前一期都進 DB、API 回傳兩序列，並於本週公布資料進入七天窗口時驗證高亮。頁面 GET 繼續只讀 DB，不觸發現場抓取。

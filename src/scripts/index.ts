@@ -1161,7 +1161,7 @@ async function fetchMarketCompanyEvents() {
     }
 }
 
-type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string };
+type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string };
 type MacroEvent = { id:string; groupId:string; type:string; title:string; scheduledDate:string; scheduledAt?:string|null; timePrecision:string; scheduleVerification:string; highlightLevel:string; source:string; sourceUrl:string; consensusValue?:string|null; actualValue?:string|null; surpriseValue?:string|null; surpriseStatus?:'above'|'below'|'in_line'|null; expectationSource?:string|null };
 type MacroSnapshot = { status:string; enabled?:boolean; asOf?:string; indicators?:MacroIndicator[]; events?:MacroEvent[]; sources?:Array<{source:string;availability:string;stale:boolean}>; configuration?:Record<string,string> };
 
@@ -1224,6 +1224,8 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         ['CUUR0000SA0L1E', marketI18n('macroCoreCpiAnnual','Core CPI · annual'), 'yoy'],
         ['DFEDTARL', marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
         ['DFEDTARU', marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
+        ['RSAFS', marketI18n('macroRetailSales','Retail sales and food services'), 'sales'],
+        ['DGS10', marketI18n('macroTreasuryYield10','10-year Treasury yield'), 'percent'],
     ] as const;
     for (const [code, label, format] of cards) {
         const indicator = byCode.get(code); if (!indicator) continue;
@@ -1231,14 +1233,23 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         const heading = document.createElement('span'); heading.textContent = label;
         const value = document.createElement('strong');
         let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
+        let fallbackLabel = '';
         let suffix = indicator.unit === 'percent' ? '%' : '';
         if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
         if (format === 'mom' || format === 'yoy') {
             const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
             const previous = months.find((point) => point.period === shiftMacroPeriod(indicator.referencePeriod, -offset));
-            if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; }
-            else current = NaN;
-            suffix = '%';
+            if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; suffix = '%'; }
+            else if (format === 'mom' && indicator.previousValue !== null && indicator.previousValue !== undefined && Number(indicator.previousValue) !== 0) {
+                current = (Number(indicator.value) / Number(indicator.previousValue) - 1) * 100;
+                change = current;
+                suffix = '%';
+                fallbackLabel = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}`;
+            } else {
+                current = Number(indicator.value);
+                suffix = '';
+                fallbackLabel = marketI18n('macroLatestIndex','Latest index level');
+            }
         } else if (format === 'percent') current = Number(indicator.value);
         else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
         else current = Number(indicator.value);
@@ -1247,8 +1258,27 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
         if (format === 'percent' && change !== null) delta.textContent = `${change > 0 ? '+' : ''}${macroNumber(change,2)} pp`;
         if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
-        if (format === 'mom' || format === 'yoy') delta.textContent = format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year');
-        card.append(heading, value, meta, delta); grid.append(card);
+        if (format === 'mom' || format === 'yoy') delta.textContent = fallbackLabel || (format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year'));
+        if (format === 'sales') {
+            value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
+            delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
+                ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 0)} M USD`
+                : marketI18n('macroLatestObservation','Latest stored observation');
+        } else if (format === 'percent' && code === 'DGS10') {
+            delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
+                ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 2)}%`
+                : marketI18n('macroLatestObservation','Latest stored observation');
+        }
+        if (indicator.previousValue !== null && indicator.previousValue !== undefined && format !== 'sales' && code !== 'DGS10') {
+            const prior = document.createElement('small');
+            const priorValue = format === 'jobs'
+                ? `${macroNumber(Number(indicator.previousValue) * 1000, 0)} ${marketI18n('macroJobs','jobs')}`
+                : `${macroNumber(indicator.previousValue, 2)}${format === 'percent' ? '%' : ''}`;
+            prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${priorValue}`;
+            card.append(heading, value, meta, delta, prior); grid.append(card);
+        } else {
+            card.append(heading, value, meta, delta); grid.append(card);
+        }
     }
     if (status) {
         const stale = (snapshot.sources || []).some((source) => source.stale);
