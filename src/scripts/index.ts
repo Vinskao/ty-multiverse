@@ -1171,129 +1171,206 @@ function macroNumber(value: string | number | null | undefined, digits = 1) {
     return Number.isFinite(number) ? number.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits }) : '—';
 }
 
+type MacroMetricFormat = 'jobs' | 'percent' | 'mom' | 'yoy' | 'sales';
+type MacroMetricSpec = readonly [code: string, label: () => string, format: MacroMetricFormat];
+
+// Each theme pairs the indicators it reports with the calendar group that announces them,
+// so the latest reading and the next release sit in the same card.
+const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; title: () => string; metrics: readonly MacroMetricSpec[] }> = [
+    { id: 'employment', eventGroups: ['employment'], title: () => marketText('Labor market', '就業'), metrics: [
+        ['CES0000000001', () => marketI18n('macroPayrolls','Nonfarm payrolls'), 'jobs'],
+        ['LNS14000000', () => marketI18n('macroUnemployment','Unemployment rate'), 'percent'],
+    ] },
+    { id: 'inflation', eventGroups: ['cpi'], title: () => marketText('Inflation', '通膨'), metrics: [
+        ['CUSR0000SA0', () => marketI18n('macroCpiMonthly','CPI · monthly'), 'mom'],
+        ['CUUR0000SA0', () => marketI18n('macroCpiAnnual','CPI · annual'), 'yoy'],
+        ['CUSR0000SA0L1E', () => marketI18n('macroCoreCpiMonthly','Core CPI · monthly'), 'mom'],
+        ['CUUR0000SA0L1E', () => marketI18n('macroCoreCpiAnnual','Core CPI · annual'), 'yoy'],
+    ] },
+    { id: 'rates', eventGroups: ['fed'], title: () => marketText('Interest rates', '利率'), metrics: [
+        ['DFEDTARL', () => marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
+        ['DFEDTARU', () => marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
+        ['DGS10', () => marketI18n('macroTreasuryYield10','10-year Treasury yield'), 'percent'],
+    ] },
+    { id: 'consumption', eventGroups: ['retail_sales'], title: () => marketText('Consumption', '消費'), metrics: [
+        ['RSAFS', () => marketI18n('macroRetailSales','Retail sales and food services'), 'sales'],
+    ] },
+];
+
+const MACRO_FOREIGN_EVENT = /^(UK|EU|Euro(zone|pe)?|ECB|BoE|BoJ|Japan|China|Germany|Canada|Australia)\b/i;
+
+function macroEventInstant(event: MacroEvent) {
+    return event.scheduledAt ? new Date(event.scheduledAt) : new Date(`${event.scheduledDate}T12:00:00Z`);
+}
+
+function macroEventDate(event: MacroEvent, withTime = true) {
+    const instant = macroEventInstant(event);
+    const time = withTime && event.scheduledAt ? ` · ${instant.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Taipei' })}` : '';
+    return `${instant.toLocaleDateString(undefined, { timeZone: 'Asia/Taipei', month: 'short', day: 'numeric' })}${time}`;
+}
+
+function macroHighlightLabel(level: string) {
+    return level === 'urgent' ? marketI18n('macroWithin24','Within 24 hours') : level === 'soon' ? marketI18n('macroWithin72','Within 72 hours') : level === 'upcoming' ? marketI18n('macroWithinWeek','Within 7 days') : level === 'published' ? marketI18n('macroPublished','Just published') : level === 'waiting' ? marketI18n('macroWaiting','Awaiting publication') : '';
+}
+
+// FinanceCalendar and FRED often list the same release; keep one per group and day,
+// preferring the copy that carries consensus or actual figures.
+function dedupeMacroEvents(events: MacroEvent[]) {
+    const hasFigures = (item: MacroEvent) => item.consensusValue != null || item.actualValue != null;
+    const byKey = new Map<string, MacroEvent>();
+    for (const event of events) {
+        const key = `${event.groupId}|${event.scheduledDate}|${MACRO_FOREIGN_EVENT.test(event.title) ? event.title : ''}`;
+        const existing = byKey.get(key);
+        if (!existing || (!hasFigures(existing) && hasFigures(event))) byKey.set(key, event);
+    }
+    return [...byKey.values()].sort((a, b) => macroEventInstant(a).getTime() - macroEventInstant(b).getTime());
+}
+
+function buildMacroRelease(event: MacroEvent) {
+    const card = document.createElement('a'); card.className = `macro-event macro-event--${event.highlightLevel || 'none'}`;
+    card.href = event.sourceUrl; card.target = '_blank'; card.rel = 'noopener noreferrer'; card.title = event.title;
+    const label = document.createElement('span'); label.className = 'macro-event-label';
+    label.textContent = event.highlightLevel === 'waiting' || event.highlightLevel === 'published' ? marketText('This release', '本期公布') : marketText('Next release', '下次公布');
+    const when = document.createElement('strong');
+    const verification = event.scheduleVerification === 'confirmed' ? '' : ` · ${event.scheduleVerification === 'date_only' ? marketI18n('macroDateOnly','Date only') : marketI18n('macroExpected','Expected')}`;
+    when.textContent = `${macroEventDate(event)}${verification}`;
+    card.append(label, when);
+    const badgeText = macroHighlightLabel(event.highlightLevel);
+    if (badgeText) { const badge = document.createElement('small'); badge.textContent = badgeText; card.append(badge); }
+    if (event.consensusValue != null || event.actualValue != null) {
+        const expectation = document.createElement('span');
+        expectation.className = 'macro-surprise-values';
+        expectation.textContent = `${event.consensusValue == null ? marketI18n('macroNoConsensus','Consensus data unavailable') : `${marketI18n('macroConsensus','Consensus')} ${event.consensusValue}`}${event.actualValue == null ? '' : ` · ${marketI18n('macroActual','Actual')} ${event.actualValue}`}`;
+        card.append(expectation);
+        if (event.surpriseStatus) {
+            const surprise = document.createElement('small');
+            surprise.className = `macro-surprise macro-surprise--${event.surpriseStatus}`;
+            surprise.textContent = event.surpriseStatus === 'above' ? marketI18n('macroAboveConsensus','Above expectations') : event.surpriseStatus === 'below' ? marketI18n('macroBelowConsensus','Below expectations') : marketI18n('macroInLineConsensus','In line with expectations');
+            card.append(surprise);
+        }
+    }
+    return card;
+}
+
+function buildMacroMetric(indicator: MacroIndicator, code: string, label: string, format: MacroMetricFormat): HTMLElement {
+    const card = document.createElement('article'); card.className = 'macro-indicator-card';
+    const heading = document.createElement('span'); heading.textContent = label;
+    const value = document.createElement('strong');
+    let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
+    let fallbackLabel = '';
+    let suffix = indicator.unit === 'percent' ? '%' : '';
+    if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
+    if (format === 'mom' || format === 'yoy') {
+        const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
+        const previous = months.find((point) => point.period === shiftMacroPeriod(indicator.referencePeriod, -offset));
+        if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; suffix = '%'; }
+        else if (format === 'mom' && indicator.previousValue !== null && indicator.previousValue !== undefined && Number(indicator.previousValue) !== 0) {
+            current = (Number(indicator.value) / Number(indicator.previousValue) - 1) * 100;
+            change = current;
+            suffix = '%';
+            fallbackLabel = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}`;
+        } else {
+            current = Number(indicator.value);
+            suffix = '';
+            fallbackLabel = marketI18n('macroLatestIndex','Latest index level');
+        }
+    } else if (format === 'percent') current = Number(indicator.value);
+    else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
+    else current = Number(indicator.value);
+    value.textContent = `${macroNumber(current, format === 'jobs' ? 0 : 2)}${suffix}`;
+    const meta = document.createElement('small'); meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}`;
+    const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
+    if (format === 'percent' && change !== null) delta.textContent = `${change > 0 ? '+' : ''}${macroNumber(change,2)} pp`;
+    if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
+    if (format === 'mom' || format === 'yoy') delta.textContent = fallbackLabel || (format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year'));
+    if (format === 'sales') {
+        const previousSales = indicator.previousValue !== null && indicator.previousValue !== undefined
+            ? Number(indicator.previousValue)
+            : NaN;
+        if (Number.isFinite(previousSales) && previousSales !== 0) {
+            const monthChange = (Number(indicator.value) / previousSales - 1) * 100;
+            value.textContent = `${monthChange > 0 ? '+' : ''}${macroNumber(monthChange, 2)}%`;
+            delta.textContent = `${marketI18n('macroMonthOverMonth','Month over month')} · ${macroNumber(indicator.value, 0)} M USD`;
+            const prior = document.createElement('small');
+            prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(previousSales, 0)} M USD`;
+            card.append(heading, value, meta, delta, prior);
+            return card;
+        }
+        value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
+        delta.textContent = marketI18n('macroLatestObservation','Latest stored observation');
+    } else if (format === 'percent' && code === 'DGS10') {
+        delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
+            ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 2)}%`
+            : marketI18n('macroLatestObservation','Latest stored observation');
+    }
+    if (indicator.previousValue !== null && indicator.previousValue !== undefined && format !== 'sales' && code !== 'DGS10') {
+        const prior = document.createElement('small');
+        const previousMetric = indicator.previousPeriod
+            ? macroMetricForPeriod(indicator, format, indicator.previousPeriod)
+            : null;
+        const priorValue = previousMetric !== null
+            ? `${macroNumber(previousMetric, format === 'jobs' ? 0 : 2)}${format === 'jobs' ? ` ${marketI18n('macroJobs','jobs')}` : format === 'mom' || format === 'yoy' ? '%' : format === 'percent' ? '%' : ''}`
+            : format === 'jobs'
+                ? `${macroNumber(Number(indicator.previousValue), 0)} ${marketI18n('macroLatestObservation','Latest stored observation')}`
+                : `${macroNumber(indicator.previousValue, 2)}${format === 'percent' ? '%' : ''}${format === 'mom' || format === 'yoy' ? ` · ${marketI18n('macroLatestIndex','Latest index level')}` : ''}`;
+        prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${priorValue}`;
+        card.append(heading, value, meta, delta, prior);
+    } else {
+        card.append(heading, value, meta, delta);
+    }
+    return card;
+}
+
 function renderMacroDashboard(snapshot: MacroSnapshot) {
-    const list = document.getElementById('macro-event-list');
     const grid = document.getElementById('macro-indicator-grid');
+    const list = document.getElementById('macro-event-list');
     const status = document.getElementById('macro-dashboard-status');
     if (!list || !grid) return;
-    list.replaceChildren(); grid.replaceChildren();
-    const events = snapshot.events || [];
-    for (const event of events) {
-        const card = document.createElement('a'); card.className = `macro-event macro-event--${event.highlightLevel || 'none'}`;
-        card.href = event.sourceUrl; card.target = '_blank'; card.rel = 'noopener noreferrer';
-        const title = document.createElement('strong'); title.textContent = event.title;
-        const when = document.createElement('span');
-        const instant = event.scheduledAt ? new Date(event.scheduledAt) : new Date(`${event.scheduledDate}T12:00:00Z`);
-        const time = event.scheduledAt ? ` · ${instant.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Taipei' })}` : '';
-        when.textContent = `${instant.toLocaleDateString(undefined, { timeZone: 'Asia/Taipei', year: 'numeric', month: 'short', day: 'numeric' })}${time} · ${event.scheduleVerification === 'confirmed' ? marketI18n('macroConfirmed','Confirmed time') : event.scheduleVerification === 'date_only' ? marketI18n('macroDateOnly','Date only') : marketI18n('macroExpected','Expected')}`;
-        const badge = document.createElement('small');
-        badge.textContent = event.highlightLevel === 'urgent' ? marketI18n('macroWithin24','Within 24 hours') : event.highlightLevel === 'soon' ? marketI18n('macroWithin72','Within 72 hours') : event.highlightLevel === 'upcoming' ? marketI18n('macroWithinWeek','Within 7 days') : event.highlightLevel === 'published' ? marketI18n('macroPublished','Just published') : event.highlightLevel === 'waiting' ? marketI18n('macroWaiting','Awaiting publication') : '';
-        card.append(title, when); if (badge.textContent) card.append(badge);
-        if ((event.consensusValue !== null && event.consensusValue !== undefined) || (event.actualValue !== null && event.actualValue !== undefined)) {
-            const expectation = document.createElement('span');
-            expectation.className = 'macro-surprise-values';
-            expectation.textContent = `${event.consensusValue === null || event.consensusValue === undefined ? marketI18n('macroNoConsensus','Consensus data unavailable') : `${marketI18n('macroConsensus','Consensus')} ${event.consensusValue}`}${event.actualValue === null || event.actualValue === undefined ? '' : ` · ${marketI18n('macroActual','Actual')} ${event.actualValue}`}`;
-            card.append(expectation);
-            if (event.surpriseStatus) {
-                const surprise = document.createElement('small');
-                surprise.className = `macro-surprise macro-surprise--${event.surpriseStatus}`;
-                surprise.textContent = event.surpriseStatus === 'above' ? marketI18n('macroAboveConsensus','Above expectations') : event.surpriseStatus === 'below' ? marketI18n('macroBelowConsensus','Below expectations') : marketI18n('macroInLineConsensus','In line with expectations');
-                card.append(surprise);
-            }
-        } else {
-            const expectation = document.createElement('span');
-            expectation.className = 'macro-surprise-values';
-            expectation.textContent = marketI18n('macroNoConsensus','Consensus data unavailable');
-            card.append(expectation);
+    grid.replaceChildren(); list.replaceChildren();
+    const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
+    const events = dedupeMacroEvents(snapshot.events || []);
+    const claimed = new Set<MacroEvent>();
+    for (const group of MACRO_GROUPS) {
+        const groupEvents = events.filter((event) => group.eventGroups.includes(event.groupId) && !MACRO_FOREIGN_EVENT.test(event.title));
+        groupEvents.forEach((event) => claimed.add(event));
+        const metrics = group.metrics.flatMap(([code, label, format]) => {
+            const indicator = byCode.get(code);
+            return indicator ? [buildMacroMetric(indicator, code, label(), format)] : [];
+        });
+        if (!metrics.length && !groupEvents.length) continue;
+        const card = document.createElement('article'); card.className = `macro-group macro-group--${group.id}`;
+        const header = document.createElement('header'); header.className = 'macro-group-header';
+        const title = document.createElement('h5'); title.textContent = group.title();
+        header.append(title);
+        const [next, ...later] = groupEvents;
+        if (next) header.append(buildMacroRelease(next));
+        const metricGrid = document.createElement('div'); metricGrid.className = 'macro-metric-grid';
+        metricGrid.style.setProperty('--macro-cols', String(metrics.length === 4 ? 2 : Math.max(metrics.length, 1)));
+        metricGrid.append(...metrics);
+        card.append(header, metricGrid);
+        if (later.length) {
+            const upcoming = document.createElement('p'); upcoming.className = 'macro-later';
+            upcoming.textContent = `${marketText('Then', '之後')}: ${later.slice(0, 3).map((event) => macroEventDate(event, false)).join(' · ')}`;
+            card.append(upcoming);
         }
-        list.append(card);
+        grid.append(card);
     }
-    if (!events.length) {
+    if (!grid.childElementCount) {
         const empty = document.createElement('p'); empty.className = 'market-updated';
         empty.textContent = snapshot.status === 'disabled' ? marketI18n('macroNotConfigured','Macro data collection is not enabled yet.') : marketI18n('macroNoEvents','No upcoming macro releases in the calendar.');
-        list.append(empty);
+        grid.append(empty);
     }
-    const indicators = snapshot.indicators || [];
-    const byCode = new Map(indicators.map((item) => [item.code, item]));
-    const cards = [
-        ['CES0000000001', marketI18n('macroPayrolls','Nonfarm payrolls'), 'jobs'],
-        ['LNS14000000', marketI18n('macroUnemployment','Unemployment rate'), 'percent'],
-        ['CUSR0000SA0', marketI18n('macroCpiMonthly','CPI · monthly'), 'mom'],
-        ['CUUR0000SA0', marketI18n('macroCpiAnnual','CPI · annual'), 'yoy'],
-        ['CUSR0000SA0L1E', marketI18n('macroCoreCpiMonthly','Core CPI · monthly'), 'mom'],
-        ['CUUR0000SA0L1E', marketI18n('macroCoreCpiAnnual','Core CPI · annual'), 'yoy'],
-        ['DFEDTARL', marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
-        ['DFEDTARU', marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
-        ['RSAFS', marketI18n('macroRetailSales','Retail sales and food services'), 'sales'],
-        ['DGS10', marketI18n('macroTreasuryYield10','10-year Treasury yield'), 'percent'],
-    ] as const;
-    for (const [code, label, format] of cards) {
-        const indicator = byCode.get(code); if (!indicator) continue;
-        const card = document.createElement('article'); card.className = 'macro-indicator-card';
-        const heading = document.createElement('span'); heading.textContent = label;
-        const value = document.createElement('strong');
-        let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
-        let fallbackLabel = '';
-        let suffix = indicator.unit === 'percent' ? '%' : '';
-        if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
-        if (format === 'mom' || format === 'yoy') {
-            const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
-            const previous = months.find((point) => point.period === shiftMacroPeriod(indicator.referencePeriod, -offset));
-            if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; suffix = '%'; }
-            else if (format === 'mom' && indicator.previousValue !== null && indicator.previousValue !== undefined && Number(indicator.previousValue) !== 0) {
-                current = (Number(indicator.value) / Number(indicator.previousValue) - 1) * 100;
-                change = current;
-                suffix = '%';
-                fallbackLabel = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}`;
-            } else {
-                current = Number(indicator.value);
-                suffix = '';
-                fallbackLabel = marketI18n('macroLatestIndex','Latest index level');
-            }
-        } else if (format === 'percent') current = Number(indicator.value);
-        else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
-        else current = Number(indicator.value);
-        value.textContent = `${macroNumber(current, format === 'jobs' ? 0 : 2)}${suffix}`;
-        const meta = document.createElement('small'); meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}`;
-        const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
-        if (format === 'percent' && change !== null) delta.textContent = `${change > 0 ? '+' : ''}${macroNumber(change,2)} pp`;
-        if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
-        if (format === 'mom' || format === 'yoy') delta.textContent = fallbackLabel || (format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year'));
-        if (format === 'sales') {
-            const previousSales = indicator.previousValue !== null && indicator.previousValue !== undefined
-                ? Number(indicator.previousValue)
-                : NaN;
-            if (Number.isFinite(previousSales) && previousSales !== 0) {
-                const monthChange = (Number(indicator.value) / previousSales - 1) * 100;
-                value.textContent = `${monthChange > 0 ? '+' : ''}${macroNumber(monthChange, 2)}%`;
-                delta.textContent = `${marketI18n('macroMonthOverMonth','Month over month')} · ${macroNumber(indicator.value, 0)} M USD`;
-                const prior = document.createElement('small');
-                prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(previousSales, 0)} M USD`;
-                card.append(heading, value, meta, delta, prior);
-                grid.append(card);
-                continue;
-            }
-            value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
-            delta.textContent = marketI18n('macroLatestObservation','Latest stored observation');
-        } else if (format === 'percent' && code === 'DGS10') {
-            delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
-                ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 2)}%`
-                : marketI18n('macroLatestObservation','Latest stored observation');
-        }
-        if (indicator.previousValue !== null && indicator.previousValue !== undefined && format !== 'sales' && code !== 'DGS10') {
-            const prior = document.createElement('small');
-            const previousMetric = indicator.previousPeriod
-                ? macroMetricForPeriod(indicator, format, indicator.previousPeriod)
-                : null;
-            const priorValue = previousMetric !== null
-                ? `${macroNumber(previousMetric, format === 'jobs' ? 0 : 2)}${format === 'jobs' ? ` ${marketI18n('macroJobs','jobs')}` : format === 'mom' || format === 'yoy' ? '%' : format === 'percent' ? '%' : ''}`
-                : format === 'jobs'
-                    ? `${macroNumber(Number(indicator.previousValue), 0)} ${marketI18n('macroLatestObservation','Latest stored observation')}`
-                    : `${macroNumber(indicator.previousValue, 2)}${format === 'percent' ? '%' : ''}${format === 'mom' || format === 'yoy' ? ` · ${marketI18n('macroLatestIndex','Latest index level')}` : ''}`;
-            prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${priorValue}`;
-            card.append(heading, value, meta, delta, prior); grid.append(card);
-        } else {
-            card.append(heading, value, meta, delta); grid.append(card);
+    const others = events.filter((event) => !claimed.has(event));
+    list.hidden = !others.length;
+    if (others.length) {
+        const heading = document.createElement('span'); heading.className = 'macro-other-title';
+        heading.textContent = marketText('Other releases', '其他經濟事件');
+        list.append(heading);
+        for (const event of others.slice(0, 6)) {
+            const item = document.createElement('a'); item.className = 'macro-other-event';
+            item.href = event.sourceUrl; item.target = '_blank'; item.rel = 'noopener noreferrer';
+            item.textContent = `${macroEventDate(event, false)} ${event.title}`;
+            list.append(item);
         }
     }
     if (status) {

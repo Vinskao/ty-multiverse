@@ -2,7 +2,18 @@
 .macro-dashboard-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:.7rem; }
 .macro-dashboard-heading h4 { margin:0; font-size:1rem; }
 .macro-dashboard-heading p { margin:.25rem 0 0; color:var(--gray-400); font-size:.8rem; }
-.macro-event-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap:.5rem; margin-bottom:.75rem; }
+.macro-group-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; }
+.macro-group { display:flex; flex-direction:column; gap:.6rem; min-width:0; padding:.75rem; border:1px solid var(--gray-700); border-radius:.85rem; background:color-mix(in srgb,var(--gray-800) 22%,transparent); }
+.macro-group-header { display:flex; align-items:flex-start; justify-content:space-between; gap:.6rem; }
+.macro-group-header h5 { margin:.15rem 0 0; font-size:.95rem; white-space:nowrap; }
+.macro-group-header .macro-event { flex:0 1 auto; min-width:min(100%,11rem); text-align:right; justify-items:end; padding:.4rem .6rem; }
+.macro-event-label { color:var(--gray-400); font-size:.68rem; }
+.macro-later { margin:auto 0 0; text-align:left; color:var(--gray-400); font-size:.7rem; }
+.macro-other-list { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .75rem; margin-top:.65rem; font-size:.72rem; }
+.macro-other-list[hidden] { display:none; }
+.macro-other-title { color:var(--gray-400); font-weight:650; }
+.macro-other-event { color:var(--text-secondary,var(--gray-400)); text-decoration:none; }
+.macro-other-event:hover { text-decoration:underline; }
 .macro-event { display:grid; gap:.2rem; min-width:0; padding:.65rem .75rem; border:1px solid var(--gray-700); border-radius:.7rem; color:var(--text-primary); text-decoration:none; background:color-mix(in srgb,var(--gray-800) 35%,transparent); }
 .macro-event strong { font-size:.83rem; }
 .macro-event span,.macro-event small { color:var(--gray-400); font-size:.72rem; }
@@ -23,7 +34,7 @@
 @media(prefers-reduced-motion:no-preference) { .macro-event--upcoming { animation:macro-week-pulse 2.8s ease-in-out infinite; } .macro-event--waiting { animation:macro-wait-pulse 2.2s ease-in-out infinite; } }
 @keyframes macro-week-pulse { 50% { box-shadow:0 0 0 3px color-mix(in srgb,#e1ae4b 26%,transparent),0 0 24px color-mix(in srgb,#e1ae4b 38%,transparent); } }
 @keyframes macro-wait-pulse { 50% { box-shadow:0 0 0 3px color-mix(in srgb,#ef8b71 28%,transparent),0 0 24px color-mix(in srgb,#ef8b71 42%,transparent); } }
-.macro-indicator-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.5rem; }
+.macro-metric-grid { display:grid; grid-template-columns:repeat(var(--macro-cols,3),minmax(0,1fr)); gap:.45rem; }
 .macro-indicator-card { display:grid; align-content:start; gap:.2rem; min-width:0; padding:.65rem; border-radius:.65rem; background:color-mix(in srgb,var(--gray-800) 28%,transparent); }
 .macro-indicator-card>span { color:var(--gray-400); font-size:.7rem; line-height:1.3; }
 .macro-indicator-card>strong { font-size:1.05rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
@@ -31,5 +42,5 @@
 .macro-indicator-card>.macro-indicator-change { color:var(--text-primary); }
 .macro-source-note { margin:.65rem 0 0; color:var(--gray-400); font-size:.68rem; }
 .macro-source-note a { color:inherit; }
-@media(max-width:900px) { .macro-indicator-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-@media(max-width:520px) { .macro-dashboard { padding:.7rem; } .macro-indicator-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.35rem; } .macro-dashboard-heading { display:grid; gap:.2rem; } .macro-indicator-card { padding:.55rem; } }
+@media(max-width:900px) { .macro-group-grid { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:520px) { .macro-dashboard { padding:.7rem; } .macro-group { padding:.6rem; } .macro-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.35rem; } .macro-group-header { flex-direction:column; } .macro-group-header .macro-event { width:100%; text-align:left; justify-items:start; } .macro-dashboard-heading { display:grid; gap:.2rem; } .macro-indicator-card { padding:.55rem; } }
