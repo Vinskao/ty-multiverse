@@ -1271,9 +1271,14 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         }
         if (indicator.previousValue !== null && indicator.previousValue !== undefined && format !== 'sales' && code !== 'DGS10') {
             const prior = document.createElement('small');
-            const priorValue = format === 'jobs'
-                ? `${macroNumber(Number(indicator.previousValue) * 1000, 0)} ${marketI18n('macroJobs','jobs')}`
-                : `${macroNumber(indicator.previousValue, 2)}${format === 'percent' ? '%' : ''}`;
+            const previousMetric = indicator.previousPeriod
+                ? macroMetricForPeriod(indicator, format, indicator.previousPeriod)
+                : null;
+            const priorValue = previousMetric !== null
+                ? `${macroNumber(previousMetric, format === 'jobs' ? 0 : 2)}${format === 'jobs' ? ` ${marketI18n('macroJobs','jobs')}` : format === 'mom' || format === 'yoy' ? '%' : format === 'percent' ? '%' : ''}`
+                : format === 'jobs'
+                    ? `${macroNumber(Number(indicator.previousValue), 0)} ${marketI18n('macroLatestObservation','Latest stored observation')}`
+                    : `${macroNumber(indicator.previousValue, 2)}${format === 'percent' ? '%' : ''}${format === 'mom' || format === 'yoy' ? ` · ${marketI18n('macroLatestIndex','Latest index level')}` : ''}`;
             prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${priorValue}`;
             card.append(heading, value, meta, delta, prior); grid.append(card);
         } else {
@@ -1291,6 +1296,23 @@ function shiftMacroPeriod(period: string, offset: number) {
     const [year, month] = period.split('-').map(Number);
     const point = new Date(Date.UTC(year, month - 1 + offset, 1));
     return `${point.getUTCFullYear()}-${String(point.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function macroMetricForPeriod(indicator: MacroIndicator, format: string, period: string): number | null {
+    const history = indicator.history || [];
+    const point = history.find((item) => item.period === period);
+    if (!point) return null;
+    const value = Number(point.value);
+    if (!Number.isFinite(value)) return null;
+    if (format === 'jobs' || format === 'mom' || format === 'yoy') {
+        const offset = format === 'yoy' ? 12 : 1;
+        const base = history.find((item) => item.period === shiftMacroPeriod(period, -offset));
+        if (!base) return null;
+        const baseValue = Number(base.value);
+        if (!Number.isFinite(baseValue) || baseValue === 0) return null;
+        return format === 'jobs' ? (value - baseValue) * 1000 : (value / baseValue - 1) * 100;
+    }
+    return value;
 }
 
 async function fetchMacroDashboard() {
