@@ -304,3 +304,19 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 這次為正式網路環境中的來源連線驗證；key 僅存在探測行程記憶體，未安裝到目前運行的 Pod 環境，未宣稱排程或 DB 持久化已驗收。下一次以 `ENABLE_MACRO_COLLECTION=true` 執行修改後 pipeline 時，`Configure Macro Collection` stage 會從兩筆 Jenkins credentials 建立／更新 `macro-data-credentials`，deployment 透過 `secretKeyRef` 注入 runtime 環境。仍須完成正式 DB 初始化、資料寫入、排程／快取和 UI 部署驗收。
 
 保存證據位於 workspace 的 `.local-evidence/fred-jenkins-credential.png`，只含 credential 描述，沒有 key 值。
+
+## 16. 正式部署實測與待完成項（2026-10-15）
+
+- 前端 build #276 已成功部署，總經卡片位於市場總覽頂端、持股摘要上方。
+- Maya build #104 因 agent 容器重複執行 `poetry install`、無法解析 `shioaji==1.5.3` 而失敗；該階段不產生正式映像，已在 `d26bfc0` 移除。映像建置仍由 Dockerfile 執行鎖定依賴安裝。Maya build #105 成功部署 schema；build #106 帶 `ENABLE_MACRO_COLLECTION=true` 成功部署並建立 `macro-data-credentials` Secret。
+- 正式 DB 已確認 6 張 `maya_sawa_macro_*` 表存在。首輪 BLS 同步成功：六序列各 81 筆、共 486 筆，期間 2020-01 至 2026-09；資料已寫入 DB，API GET 只讀持久化資料。
+- Finance Calendar 首輪成功寫入 6 筆未來事件（FOMC、非農、CPI）；Federal Reserve HTML parser 本輪成功 HTTP 200 但解析 0 筆。Finance Calendar 目前六筆 consensus/actual 均為空，所以不能產生高於／符合／低於預期標籤；前端將明確顯示「尚無共識資料」，不推算也不以 previous 代替 consensus。待來源回傳 consensus 與 actual 後才分類。
+- FRED runtime 首輪因 `TimeoutError` 失敗，尚未寫入目標利率序列或 FRED release dates。從 Maya pod 所在節點 `10.0.159.167` 直接呼叫 FRED hosts 逾時，但在節點 `10.0.158.183` 的 Jenkins pod 中可以連線；已更新 `k8s/deployment.yaml` 將 Maya 排程固定至可用節點，並準備重新部署後重試。FRED credentials 在 Kubernetes Secret 中已存在；不能在 FRED API 成功前宣稱利率／release data 完成。
+- 建置期間曾出現 Maya 与 cert-manager readiness/liveness timeout。完成前端 #276 與 Maya #106 後未觀察到新的 timeout；目前 app pods 為 Ready。`cert-manager-webhook` 曾累積 26 次重啟且上一個 container exit code 137，探針 timeout 事件橫跨既有叢集生命週期；這是既有叢集健康項目，與 macro tables 無關，仍需維運者另行觀察。Metrics API 未啟用，因此本次無法用 `kubectl top` 取得即時 CPU／記憶體數據。
+- Jenkins pipeline 的 `ENABLE_MACRO_COLLECTION` 預設已改為 true（兩組憑證與 schema 已驗證）；`DEPLOY_IBKR_GATEWAY=false` 時會略過 IBKR image build stage，避免不相關映像推送。
+
+### 收尾驗收條件
+
+1. 排程固定節點後，確認 FRED `release/dates`、`series/observations` 均成功，且 `maya_sawa_macro_observations` 有 `DFEDTARL`、`DFEDTARU` 歷史列；API indicators 顯示利率上下界，FRED release dates 留在 DB。
+2. 重新讀取正式頁面確認 macro indicators、FOMC／非農／CPI 日期與台北時區時間皆可見，及 API 讀取不觸發上游同步。
+3. 觀察 Finance Calendar consensus 欄位後續是否提供值；若仍空，保留明確「尚無共識資料」狀態，不標示 beat/miss。

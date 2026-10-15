@@ -1192,7 +1192,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         if ((event.consensusValue !== null && event.consensusValue !== undefined) || (event.actualValue !== null && event.actualValue !== undefined)) {
             const expectation = document.createElement('span');
             expectation.className = 'macro-surprise-values';
-            expectation.textContent = `${marketI18n('macroConsensus','Consensus')} ${event.consensusValue ?? '—'}${event.actualValue === null || event.actualValue === undefined ? '' : ` · ${marketI18n('macroActual','Actual')} ${event.actualValue}`}`;
+            expectation.textContent = `${event.consensusValue === null || event.consensusValue === undefined ? marketI18n('macroNoConsensus','Consensus data unavailable') : `${marketI18n('macroConsensus','Consensus')} ${event.consensusValue}`}${event.actualValue === null || event.actualValue === undefined ? '' : ` · ${marketI18n('macroActual','Actual')} ${event.actualValue}`}`;
             card.append(expectation);
             if (event.surpriseStatus) {
                 const surprise = document.createElement('small');
@@ -1200,6 +1200,11 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
                 surprise.textContent = event.surpriseStatus === 'above' ? marketI18n('macroAboveConsensus','Above expectations') : event.surpriseStatus === 'below' ? marketI18n('macroBelowConsensus','Below expectations') : marketI18n('macroInLineConsensus','In line with expectations');
                 card.append(surprise);
             }
+        } else {
+            const expectation = document.createElement('span');
+            expectation.className = 'macro-surprise-values';
+            expectation.textContent = marketI18n('macroNoConsensus','Consensus data unavailable');
+            card.append(expectation);
         }
         list.append(card);
     }

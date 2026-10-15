@@ -28,6 +28,7 @@
     "macroDateOnly": { "en": "Date only", "zh": "\u50c5\u78ba\u8a8d\u65e5\u671f" },
     "macroExpected": { "en": "Expected", "zh": "\u9810\u671f\u6642\u9593" },
     "macroConsensus": { "en": "Consensus", "zh": "市場共識" },
+    "macroNoConsensus": { "en": "Consensus data unavailable", "zh": "尚無共識資料" },
     "macroActual": { "en": "Actual", "zh": "實際公布" },
     "macroAboveConsensus": { "en": "Above expectations", "zh": "高於預期" },
     "macroBelowConsensus": { "en": "Below expectations", "zh": "低於預期" },
