@@ -132,6 +132,12 @@ const skillsCategories = skillsData.categories;
 							</div>
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
+						<section id="macro-dashboard" class="macro-dashboard" aria-labelledby="macro-dashboard-title" aria-live="polite">
+							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">US macro releases</h4><p data-i18n="home.macroDescription">Key labor, inflation and Federal Reserve data, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
+							<div id="macro-event-list" class="macro-event-list"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
+							<div id="macro-indicator-grid" class="macro-indicator-grid"></div>
+							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
+						</section>
 						<MarketBrief brief={marketBrief} />
 						<section id="market-company-events" class="market-company-events" aria-labelledby="market-company-events-title">
 							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>

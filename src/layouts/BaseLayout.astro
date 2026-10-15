@@ -21,6 +21,7 @@ import tableAjaxCssUrl from '../styles/table-ajax.css?url';
 import themeToggleCssUrl from '../styles/theme-toggle.css?url';
 import researchZoneCssUrl from '../styles/research-zone.css?url';
 import learnCssUrl from '../styles/learn.css?url';
+import marketMacroCssUrl from '../styles/market-macro.css?url';
 
 // Component Imports
 import MainHead from '../components/MainHead.astro';
@@ -192,6 +193,7 @@ const { title, description } = Astro.props;
 		<link rel="stylesheet" href={tableAjaxCssUrl} />
 		<link rel="stylesheet" href={researchZoneCssUrl} />
 		<link rel="stylesheet" href={learnCssUrl} />
+		<link rel="stylesheet" href={marketMacroCssUrl} />
 		<slot name="head" />
 		<MainHead title={title} description={description} />
 		<ClientRouter />

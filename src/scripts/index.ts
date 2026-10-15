@@ -11,6 +11,7 @@ let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
 let _portfolioTimer: number | null = null;
 let _marketEventsTimer: number | null = null;
+let _macroRefreshTimer: number | null = null;
 let _marketLangCleanup: (() => void) | null = null;
 let selectedMarketInstrument: DashboardInstrument | null = null;
 const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
@@ -1157,6 +1158,115 @@ async function fetchMarketCompanyEvents() {
         const row = document.createElement('tr'); const cell = document.createElement('td');
         cell.colSpan = 4; cell.className = 'market-updated'; cell.textContent = marketI18n('marketEventsUnavailable', 'Company events are temporarily unavailable.');
         body.replaceChildren(row); row.append(cell);
+    }
+}
+
+type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string };
+type MacroEvent = { id:string; groupId:string; type:string; title:string; scheduledDate:string; scheduledAt?:string|null; timePrecision:string; scheduleVerification:string; highlightLevel:string; source:string; sourceUrl:string; consensusValue?:string|null; actualValue?:string|null; surpriseValue?:string|null; surpriseStatus?:'above'|'below'|'in_line'|null; expectationSource?:string|null };
+type MacroSnapshot = { status:string; enabled?:boolean; asOf?:string; indicators?:MacroIndicator[]; events?:MacroEvent[]; sources?:Array<{source:string;availability:string;stale:boolean}>; configuration?:Record<string,string> };
+
+function macroNumber(value: string | number | null | undefined, digits = 1) {
+    if (value === null || value === undefined || value === '') return '—';
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits }) : '—';
+}
+
+function renderMacroDashboard(snapshot: MacroSnapshot) {
+    const list = document.getElementById('macro-event-list');
+    const grid = document.getElementById('macro-indicator-grid');
+    const status = document.getElementById('macro-dashboard-status');
+    if (!list || !grid) return;
+    list.replaceChildren(); grid.replaceChildren();
+    const events = snapshot.events || [];
+    for (const event of events) {
+        const card = document.createElement('a'); card.className = `macro-event macro-event--${event.highlightLevel || 'none'}`;
+        card.href = event.sourceUrl; card.target = '_blank'; card.rel = 'noopener noreferrer';
+        const title = document.createElement('strong'); title.textContent = event.title;
+        const when = document.createElement('span');
+        const instant = event.scheduledAt ? new Date(event.scheduledAt) : new Date(`${event.scheduledDate}T12:00:00Z`);
+        const time = event.scheduledAt ? ` · ${instant.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Taipei' })}` : '';
+        when.textContent = `${instant.toLocaleDateString(undefined, { timeZone: 'Asia/Taipei', year: 'numeric', month: 'short', day: 'numeric' })}${time} · ${event.scheduleVerification === 'confirmed' ? marketI18n('macroConfirmed','Confirmed time') : event.scheduleVerification === 'date_only' ? marketI18n('macroDateOnly','Date only') : marketI18n('macroExpected','Expected')}`;
+        const badge = document.createElement('small');
+        badge.textContent = event.highlightLevel === 'urgent' ? marketI18n('macroWithin24','Within 24 hours') : event.highlightLevel === 'soon' ? marketI18n('macroWithin72','Within 72 hours') : event.highlightLevel === 'upcoming' ? marketI18n('macroWithinWeek','Within 7 days') : event.highlightLevel === 'published' ? marketI18n('macroPublished','Just published') : event.highlightLevel === 'waiting' ? marketI18n('macroWaiting','Awaiting publication') : '';
+        card.append(title, when); if (badge.textContent) card.append(badge);
+        if ((event.consensusValue !== null && event.consensusValue !== undefined) || (event.actualValue !== null && event.actualValue !== undefined)) {
+            const expectation = document.createElement('span');
+            expectation.className = 'macro-surprise-values';
+            expectation.textContent = `${marketI18n('macroConsensus','Consensus')} ${event.consensusValue ?? '—'}${event.actualValue === null || event.actualValue === undefined ? '' : ` · ${marketI18n('macroActual','Actual')} ${event.actualValue}`}`;
+            card.append(expectation);
+            if (event.surpriseStatus) {
+                const surprise = document.createElement('small');
+                surprise.className = `macro-surprise macro-surprise--${event.surpriseStatus}`;
+                surprise.textContent = event.surpriseStatus === 'above' ? marketI18n('macroAboveConsensus','Above expectations') : event.surpriseStatus === 'below' ? marketI18n('macroBelowConsensus','Below expectations') : marketI18n('macroInLineConsensus','In line with expectations');
+                card.append(surprise);
+            }
+        }
+        list.append(card);
+    }
+    if (!events.length) {
+        const empty = document.createElement('p'); empty.className = 'market-updated';
+        empty.textContent = snapshot.status === 'disabled' ? marketI18n('macroNotConfigured','Macro data collection is not enabled yet.') : marketI18n('macroNoEvents','No upcoming macro releases in the calendar.');
+        list.append(empty);
+    }
+    const indicators = snapshot.indicators || [];
+    const byCode = new Map(indicators.map((item) => [item.code, item]));
+    const cards = [
+        ['CES0000000001', marketI18n('macroPayrolls','Nonfarm payrolls'), 'jobs'],
+        ['LNS14000000', marketI18n('macroUnemployment','Unemployment rate'), 'percent'],
+        ['CUSR0000SA0', marketI18n('macroCpiMonthly','CPI · monthly'), 'mom'],
+        ['CUUR0000SA0', marketI18n('macroCpiAnnual','CPI · annual'), 'yoy'],
+        ['CUSR0000SA0L1E', marketI18n('macroCoreCpiMonthly','Core CPI · monthly'), 'mom'],
+        ['CUUR0000SA0L1E', marketI18n('macroCoreCpiAnnual','Core CPI · annual'), 'yoy'],
+        ['DFEDTARL', marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
+        ['DFEDTARU', marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
+    ] as const;
+    for (const [code, label, format] of cards) {
+        const indicator = byCode.get(code); if (!indicator) continue;
+        const card = document.createElement('article'); card.className = 'macro-indicator-card';
+        const heading = document.createElement('span'); heading.textContent = label;
+        const value = document.createElement('strong');
+        let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
+        let suffix = indicator.unit === 'percent' ? '%' : '';
+        if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
+        if (format === 'mom' || format === 'yoy') {
+            const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
+            const previous = months.find((point) => point.period === shiftMacroPeriod(indicator.referencePeriod, -offset));
+            if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; }
+            else current = NaN;
+            suffix = '%';
+        } else if (format === 'percent') current = Number(indicator.value);
+        else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
+        else current = Number(indicator.value);
+        value.textContent = `${macroNumber(current, format === 'jobs' ? 0 : 2)}${suffix}`;
+        const meta = document.createElement('small'); meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}`;
+        const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
+        if (format === 'percent' && change !== null) delta.textContent = `${change > 0 ? '+' : ''}${macroNumber(change,2)} pp`;
+        if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
+        if (format === 'mom' || format === 'yoy') delta.textContent = format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year');
+        card.append(heading, value, meta, delta); grid.append(card);
+    }
+    if (status) {
+        const stale = (snapshot.sources || []).some((source) => source.stale);
+        status.textContent = snapshot.status === 'disabled' ? marketI18n('macroNotConfigured','Macro data collection is not enabled yet.')
+            : `${stale ? marketI18n('macroStale','Some data sources are stale') : marketI18n('macroUpdated','Updated')} · ${snapshot.asOf ? new Date(snapshot.asOf).toLocaleString() : ''}`;
+    }
+}
+
+function shiftMacroPeriod(period: string, offset: number) {
+    const [year, month] = period.split('-').map(Number);
+    const point = new Date(Date.UTC(year, month - 1 + offset, 1));
+    return `${point.getUTCFullYear()}-${String(point.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+async function fetchMacroDashboard() {
+    const section = document.getElementById('macro-dashboard'); if (!section) return;
+    try {
+        const response = await fetch(astroApiPath('/api/market/dashboard/macro?historyMonths=24'));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderMacroDashboard(await response.json() as MacroSnapshot);
+    } catch (error) {
+        console.error('Macro dashboard unavailable:', error);
+        renderMacroDashboard({ status: 'unavailable', indicators: [], events: [] });
     }
 }
 
@@ -2567,6 +2677,7 @@ function initIndexPage() {
     initMarketAiAnalysis();
     initMarketCustomEditor();
     void fetchMarketDashboard();
+    void fetchMacroDashboard();
     fetchLeetCodeStats();
     fetchTxfQuote();
     fetchMarketUsage();
@@ -2578,6 +2689,8 @@ function initIndexPage() {
     }, 600_000);
     if (_marketEventsTimer !== null) window.clearInterval(_marketEventsTimer);
     _marketEventsTimer = window.setInterval(() => { void fetchMarketCompanyEvents(); }, 600_000);
+    if (_macroRefreshTimer !== null) window.clearInterval(_macroRefreshTimer);
+    _macroRefreshTimer = window.setInterval(() => { void fetchMacroDashboard(); }, 900_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
     updateVisitCount();
@@ -2593,6 +2706,7 @@ function refreshMarketLanguage() {
         selectMarketDetailTab(current);
     }
     void fetchMarketDashboard();
+    void fetchMacroDashboard();
     fetchTxfQuote();
     fetchMarketUsage();
     fetchPortfolio();

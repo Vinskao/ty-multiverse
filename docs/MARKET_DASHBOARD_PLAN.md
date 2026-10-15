@@ -2,6 +2,8 @@
 
 規格日期：2026-10-14。以下納入最新使用者指示，優先於本文件先前紀錄及 `PLAN_TO_PRODUCTION_WORKFLOW.md` 的歷史紀錄。
 
+> 2026-10-15 總體經濟功能開始實作：完整規格與進度見 [MACRO_ECONOMIC_DASHBOARD_PLAN.md](MACRO_ECONOMIC_DASHBOARD_PLAN.md) v4。使用者已授權實作至正式驗收；正式環境須使用獨立的`BLS_API_KEY`與`FRED_API_KEY`。BLS已存Jenkins並已加入runtime注入程式碼，FRED key尚未取得，因此正式收集維持停用，待keyed API驗證後啟用。
+
 ## 執行授權與完成標準（最新決議）
 
 - 使用者已授權從來源查證、定案、開發、migration、建置一路做到正式部署與 UI 驗證，不需再次等待「開始開發」指示，也不能在畫面骨架或 build 後結束任務。
