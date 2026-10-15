@@ -182,6 +182,7 @@ const skillsCategories = skillsData.categories;
 									<section data-market-panel="ai-analysis" class="market-history-panel market-ai-panel" hidden aria-labelledby="market-ai-title">
 										<h4 id="market-ai-title" data-i18n="home.marketTabAiAnalysis">AI analysis</h4>
 										<p id="market-ai-target" class="market-updated"></p>
+										<a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/market-ai.md`} data-i18n="home.marketAiGuide">AI writing guide</a>
 										<p data-i18n="home.marketAiInstructions">AI agents: read the current analysis and this instrument's data, then update the existing commentary. Identify your AI/model, explain changes and risks, and save. Confirm the saved revision below. Do not claim data you could not verify.</p>
 										<p id="market-ai-status" role="status" aria-live="polite"></p>
 										<form id="market-ai-form" data-ai-action="update-market-analysis">
