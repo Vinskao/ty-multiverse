@@ -1260,10 +1260,21 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
         if (format === 'mom' || format === 'yoy') delta.textContent = fallbackLabel || (format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year'));
         if (format === 'sales') {
+            const previousSales = indicator.previousValue !== null && indicator.previousValue !== undefined
+                ? Number(indicator.previousValue)
+                : NaN;
+            if (Number.isFinite(previousSales) && previousSales !== 0) {
+                const monthChange = (Number(indicator.value) / previousSales - 1) * 100;
+                value.textContent = `${monthChange > 0 ? '+' : ''}${macroNumber(monthChange, 2)}%`;
+                delta.textContent = `${marketI18n('macroMonthOverMonth','Month over month')} · ${macroNumber(indicator.value, 0)} M USD`;
+                const prior = document.createElement('small');
+                prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(previousSales, 0)} M USD`;
+                card.append(heading, value, meta, delta, prior);
+                grid.append(card);
+                continue;
+            }
             value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
-            delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
-                ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 0)} M USD`
-                : marketI18n('macroLatestObservation','Latest stored observation');
+            delta.textContent = marketI18n('macroLatestObservation','Latest stored observation');
         } else if (format === 'percent' && code === 'DGS10') {
             delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
                 ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(indicator.previousValue, 2)}%`
