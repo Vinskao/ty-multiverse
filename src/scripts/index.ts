@@ -1668,7 +1668,8 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
     for (const group of MACRO_GROUPS) {
-        const inGroup = events.filter((event) => group.eventGroups.includes(event.groupId) && !MACRO_FOREIGN_EVENT.test(event.title));
+        const inGroup = events.filter((event) => group.eventGroups.includes(event.groupId)
+            && (group.id === 'consumption' || !MACRO_FOREIGN_EVENT.test(event.title)));
         inGroup.forEach((event) => claimed.add(event));
         // Past releases stay visible only while flagged (awaiting data or just published).
         const now = Date.now();
