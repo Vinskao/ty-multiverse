@@ -56,7 +56,8 @@ temp/
 Jenkinsfile
 
 # Test files
-tests/
+tests/*
+!tests/homepage-ssr.mjs
 test-*.sh
 test-*.js
 test-*.ts
