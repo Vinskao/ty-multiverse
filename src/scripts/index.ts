@@ -3087,60 +3087,6 @@ async function fetchPortfolio() {
     await fetchMarketDashboard();
 }
 
-// Visit Counter Functionality
-async function updateVisitCount() {
-    try {
-        // Check if we have a session cookie
-        const sessionCookie = getCookie('visit_session');
-        
-        if (!sessionCookie) {
-            // If no session cookie exists, increment the counter
-            await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/increment/`, {
-                method: 'POST'
-            });
-            
-            // Set a session cookie that expires in 30 minutes
-            setCookie('visit_session', 'true', 30);
-        }
-
-        // Get the current count regardless of whether we incremented
-        const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/voyeur/count/`);
-        const data = await response.json();
-        
-        // Update the counter in the DOM
-        const visitCountElement = document.getElementById('visit-count');
-        if (visitCountElement) {
-            visitCountElement.textContent = data.count;
-        }
-    } catch (error) {
-        console.error('Error updating visit count:', error);
-        const visitCountElement = document.getElementById('visit-count');
-        if (visitCountElement) {
-            visitCountElement.textContent = '?';
-        }
-    }
-}
-
-// Cookie helper functions
-function setCookie(name: string, value: string, minutes: number) {
-    const date = new Date();
-    date.setTime(date.getTime() + (minutes * 60 * 1000));
-    const expires = "expires=" + date.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function getCookie(name: string): string {
-    const cookieName = name + "=";
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i].trim();
-        if (cookie.indexOf(cookieName) === 0) {
-            return cookie.substring(cookieName.length, cookie.length);
-        }
-    }
-    return "";
-}
-
 // Call the function when the page loads - 支援 View Transitions
 function initIndexPage() {
     // 檢查是否在首頁，避免在其他頁面執行
@@ -3194,7 +3140,6 @@ function initIndexPage() {
     _macroRefreshTimer = window.setInterval(() => { void fetchMacroDashboard(); }, 900_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
-    updateVisitCount();
     if (_marketLangCleanup) _marketLangCleanup();
     _marketLangCleanup = (window as any).AppLang?.onChange?.(refreshMarketLanguage) ?? null;
 }
