@@ -1291,6 +1291,7 @@ const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; 
         ['CBC_SHORT_TERM_LOAN', () => marketText('Taiwan CBC short-term loan rate', '台灣央行短期融通利率'), 'percent'],
     ] },
     { id: 'commodities', eventGroups: [], title: () => marketText('Commodities', '商品價格'), metrics: [
+        ['COMEX_GOLD_USD', () => marketText('COMEX gold futures', '美國 COMEX 黃金期貨'), 'raw'],
         ['TPEx_GOLD_TWD', () => marketText('Taiwan gold spot', '台灣黃金現貨'), 'raw'],
         ['WORLD_GOLD_USD', () => marketText('World gold monthly average', '國際黃金月均價'), 'raw'],
         ['DCOILWTICO', () => marketText('WTI crude oil', 'WTI 原油'), 'raw'],
@@ -1325,6 +1326,9 @@ const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]> = {
     'taiwan-trade': [['TW_EXPORTS', 'TW_IMPORTS']],
     'taiwan-employment': [['TW_EMPLOYED', 'TW_UNEMPLOYED']],
     pmi: [['TW_PMI', 'TW_NMI']],
+    // TPEx publishes only the latest Taiwan spot quote, so gold's trend comes from COMEX futures
+    // (World Bank monthly average if COMEX is unavailable); "a|b" means the first code that has data.
+    commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD'], ['DCOILWTICO']],
 };
 
 const MACRO_FOREIGN_EVENT = /^(UK|EU|Euro(zone|pe)?|ECB|BoE|BoJ|Japan|China|Germany|Canada|Australia)\b/i;
@@ -1469,12 +1473,17 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     return card;
 }
 
+// Daily series (YYYY-MM-DD periods) keep about six months of sessions; monthly series keep four years.
+function macroHistoryLimit(indicator: MacroIndicator) {
+    return (indicator.history || []).some((item) => item.period.length === 10) ? 130 : 48;
+}
+
 function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = []): HTMLElement {
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
     const baseSeriesLabel = indicatorLabel;
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-        .filter((item) => Number.isFinite(item.value)).slice(-48);
+        .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(indicator));
     const offset = format === 'yoy' ? 12 : ['mom', 'sales', 'jobs'].includes(format) ? 1 : 0;
     const points = raw.flatMap((item) => {
         if (!offset) return [{ period: item.period, value: item.value }];
@@ -1486,7 +1495,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     });
     const comparisonLines = comparisons.map((comparison) => {
         const data = (comparison.indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-            .filter((item) => Number.isFinite(item.value)).slice(-48);
+            .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(comparison.indicator));
         const amount = comparison.format === 'yoy' ? 12 : ['mom', 'sales', 'jobs'].includes(comparison.format) ? 1 : 0;
         const values = data.flatMap((item) => {
             if (!amount) return [{ period: item.period, value: item.value }];
@@ -1569,8 +1578,11 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
         dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
         dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
     };
-    points.forEach((point) => addAccessiblePoint(point));
-    comparisonLines.forEach((line, index) => line.values.forEach((point) => {
+    // Daily series (~130 sessions) would turn per-point dots into a solid bar and 130 tab stops; they draw the line
+    // only and rely on the snapping guide, the readout and ←/→ on the focused chart.
+    const dense = periods.length > 60;
+    if (!dense) points.forEach((point) => addAccessiblePoint(point));
+    if (!dense) comparisonLines.forEach((line, index) => line.values.forEach((point) => {
         const dot = add('circle', { cx: String(x(point.period)), cy: String(y(point.value)), r: '3', class: `macro-trend-point macro-trend-point--series-${index + 1}`, tabindex: '0', role: 'button', 'aria-label': `${line.label} ${point.period} ${point.value.toFixed(2)}%` });
         dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
         dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
@@ -1708,7 +1720,8 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         } else if (MACRO_MERGED_CHARTS[group.id]) {
             const spec = new Map(group.metrics.map(([code, label, format]) => [code, { label, format }]));
             for (const codes of MACRO_MERGED_CHARTS[group.id]) {
-                const [base, ...rest] = codes.flatMap((code) => {
+                const [base, ...rest] = codes.flatMap((choice) => {
+                    const code = choice.split('|').find((candidate) => byCode.has(candidate)) || choice;
                     const indicator = byCode.get(code); const meta = spec.get(code);
                     return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
                 });
@@ -1728,7 +1741,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         }
         if (later.length) {
             const upcoming = document.createElement('p'); upcoming.className = 'macro-later';
-            upcoming.textContent = `${marketText('Then', '之後')}: ${later.slice(0, 3).map((event) => macroEventDate(event, false)).join(' · ')}`;
+            upcoming.textContent = `${marketText('Then', '之後')}: ${later.map((event) => macroEventDate(event, false)).join(' · ')}`;
             card.append(upcoming);
         }
         grid.append(card);
