@@ -424,7 +424,7 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 
 ### 21.3 英國零售銷售與其他經濟事件
 
-- 消費趨勢圖在美國零售銷售月增、年增上，加入英國零售銷售量月增及年增兩條比較線。英國歷史值使用 OECD 月度、季調零售銷售量增幅系列 `GBRSLRTTO01GPSAM`（MoM）與 `GBRSLRTTO01GYSAM`（YoY），經 FRED API 取值；兩條序列只留在 Python 行程 TTL 快取，不增加 PostgreSQL observation rows。圖例、軸單位及 hover readout 會明確區分美國／英國與 MoM／YoY。
+- The consumption chart has a MoM/YoY toggle and compares matching frequencies only: U.S. retail sales MoM vs. UK retail sales volume MoM, or U.S. YoY vs. UK YoY. UK history uses OECD seasonally adjusted monthly volume growth series `GBRSLRTTO01GPSAM` (MoM) and `GBRSLRTTO01GYSAM` (YoY), via FRED; both remain in Python process-local TTL cache and do not add PostgreSQL observation rows. Each view shows only the two same-frequency country lines in its legend, axis, and hover readout. The native buttons support keyboard and screen-reader use.
 - UK Retail Sales 公布日（例如 2026-10-23、2026-11-20、2026-12-18）沿 Finance Calendar 事件接入 consumption 群組，保留與美國同日公布事件不同的身份，不會被事件去重覆蓋。英國實際資料更新後，趨勢依該月份實際觀察值延伸；未發布的月份不補值。
 - Finance Calendar 另保留美國中、高影響的 GDP、PCE／個人所得與支出、耐久財、工業生產、房屋開工／許可／銷售、消費者信心、貿易、庫存、工廠訂單、消費信貸、領先指標等事件。其他事件以各自名稱和日期列示，套用既有公布日前高亮；同日多事件使用標題雜湊識別，避免互相覆寫。低影響和非美國的一般事件不灌入「其他美國經濟事件」清單。
 - ISM 事件僅顯示公布日與標題，不保存或重刊其 PMI 共識／實際數據，以遵守 ISM 未授權再發布限制。

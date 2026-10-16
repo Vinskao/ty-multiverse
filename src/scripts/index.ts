@@ -1680,11 +1680,35 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
             if (sales) {
                 const ukMom = byCode.get('GBRSLRTTO01GPSAM');
                 const ukYoy = byCode.get('GBRSLRTTO01GYSAM');
-                const comparisons = [
-                    ukMom && { indicator: ukMom, format: 'raw' as const, label: marketText('UK month over month', '英國月增率') },
-                    ukYoy && { indicator: ukYoy, format: 'raw' as const, label: marketText('UK year over year', '英國年增率') },
-                ].filter((item): item is { indicator: MacroIndicator; format: MacroMetricFormat; label: string } => Boolean(item));
-                card.append(buildMacroTrendChart(sales, 'sales', marketText('U.S. retail sales · month over month', '美國零售銷售 · 月增率'), comparisons));
+                const chartSwitcher = document.createElement('section');
+                chartSwitcher.className = 'macro-comparison-switcher';
+                chartSwitcher.setAttribute('aria-label', marketText('Retail sales comparison frequency', '\u96f6\u552e\u92b7\u552e\u6bd4\u8f03\u983b\u7387'));
+                const controls = document.createElement('div');
+                controls.className = 'macro-comparison-switcher-controls';
+                controls.setAttribute('role', 'group');
+                controls.setAttribute('aria-label', marketText('Compare matching growth rates', '\u6bd4\u8f03\u76f8\u540c\u589e\u9577\u983b\u7387'));
+                const chartHost = document.createElement('div');
+                let activeFrequency: 'mom' | 'yoy' = 'mom';
+                const buttons = (['mom', 'yoy'] as const).map((frequency) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'macro-comparison-switcher-button';
+                    button.textContent = frequency === 'mom' ? marketText('Month over month', '\u6708\u589e\u7387\u6bd4\u8f03') : marketText('Year over year', '\u5e74\u589e\u7387\u6bd4\u8f03');
+                    button.addEventListener('click', () => { activeFrequency = frequency; renderComparison(); });
+                    controls.append(button);
+                    return { frequency, button };
+                });
+                const renderComparison = () => {
+                    for (const { frequency, button } of buttons) button.setAttribute('aria-pressed', String(frequency === activeFrequency));
+                    const isMom = activeFrequency === 'mom';
+                    const uk = isMom ? ukMom : ukYoy;
+                    const frequencyLabel = isMom ? marketText('month over month', '\u6708\u589e\u7387') : marketText('year over year', '\u5e74\u589e\u7387');
+                    const comparisons = uk ? [{ indicator: uk, format: 'raw' as const, label: `UK ${frequencyLabel}` }] : [];
+                    chartHost.replaceChildren(buildMacroTrendChart(sales, activeFrequency, `U.S. retail sales \u00b7 ${frequencyLabel}`, comparisons));
+                };
+                chartSwitcher.append(controls, chartHost);
+                card.append(chartSwitcher);
+                renderComparison();
             }
         }
         if (later.length) {
