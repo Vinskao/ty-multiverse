@@ -1398,8 +1398,11 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
     for (const group of MACRO_GROUPS) {
-        const groupEvents = events.filter((event) => group.eventGroups.includes(event.groupId) && !MACRO_FOREIGN_EVENT.test(event.title));
-        groupEvents.forEach((event) => claimed.add(event));
+        const inGroup = events.filter((event) => group.eventGroups.includes(event.groupId) && !MACRO_FOREIGN_EVENT.test(event.title));
+        inGroup.forEach((event) => claimed.add(event));
+        // Past releases stay visible only while flagged (awaiting data or just published).
+        const now = Date.now();
+        const groupEvents = inGroup.filter((event) => macroEventInstant(event).getTime() >= now || event.highlightLevel === 'waiting' || event.highlightLevel === 'published');
         const metrics = group.metrics.flatMap(([code, label, format]) => {
             const indicator = byCode.get(code);
             return indicator ? [buildMacroMetric(indicator, code, label(), format)] : [];
