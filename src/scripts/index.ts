@@ -9,6 +9,7 @@ import i18nData from '../storages/i18n.json';
 import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, type MacroSeriesTone } from './market/macroSeries';
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
+import { analysisRating } from './market/analysisRating';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
 
@@ -841,6 +842,16 @@ interface MarketAiComment { code: string; productType: string; model: string; co
 const marketAiDrafts = new Map<string, { model: string; content: string; revision: number }>();
 let marketAiLoadSequence = 0;
 
+// Colored 買／中立／賣 badge from an analysis' conclusion line (Taiwan convention: red buy, green sell).
+function buildAnalysisRatingBadge(content: string): HTMLElement | null {
+    const rating = analysisRating(content);
+    if (!rating) return null;
+    const badge = document.createElement('span');
+    badge.className = `market-ai-rating market-ai-rating--${rating}`;
+    badge.textContent = rating === 'buy' ? marketText('Buy', '買') : rating === 'sell' ? marketText('Sell', '賣') : marketText('Neutral', '中立');
+    return badge;
+}
+
 function renderMarketAiTable(targetId: string, rows: MarketAiComment[]) {
     const target = document.getElementById(targetId); if (!target) return;
     target.replaceChildren();
@@ -848,15 +859,18 @@ function renderMarketAiTable(targetId: string, rows: MarketAiComment[]) {
     const wrap = document.createElement('div'); wrap.className = 'market-fin-table-wrap';
     const table = document.createElement('table'); table.className = 'market-fin-table market-ai-table';
     const head = table.createTHead().insertRow();
-    for (const label of [marketI18n('marketAiRevision', 'Revision'), marketI18n('marketAiTime', 'Updated'), marketI18n('marketAiModel', 'AI / model'), marketI18n('marketAiComment', 'Commentary')]) {
+    for (const label of [marketI18n('marketAiRevision', 'Revision'), marketI18n('marketAiTime', 'Updated'), marketI18n('marketAiModel', 'AI / model'), marketText('Conclusion', '結論'), marketI18n('marketAiComment', 'Commentary')]) {
         const th = document.createElement('th'); th.scope = 'col'; th.textContent = label; head.append(th);
     }
     const body = table.createTBody();
     for (const row of rows) {
         const tr = body.insertRow();
-        for (const value of [String(row.revision), new Date(row.updatedAt).toLocaleString(marketLocale()), row.model, row.content]) {
+        for (const value of [String(row.revision), new Date(row.updatedAt).toLocaleString(marketLocale()), row.model]) {
             const td = tr.insertCell(); td.textContent = value;
         }
+        const rating = tr.insertCell(); const badge = buildAnalysisRatingBadge(row.content);
+        if (badge) rating.append(badge); else rating.textContent = '—';
+        const content = tr.insertCell(); content.textContent = row.content;
     }
     wrap.append(table); target.append(wrap);
 }
@@ -889,6 +903,10 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
         if (sequence !== marketAiLoadSequence || form.dataset.key !== key) return;
         renderMarketAiTable('market-ai-current', payload.analysis ? [payload.analysis] : []);
         renderMarketAiTable('market-ai-history', payload.history.filter((row) => row.revision !== payload.analysis?.revision));
+        const targetLabel = document.getElementById('market-ai-target')!;
+        targetLabel.textContent = `${code} · ${kind}`;
+        const headerBadge = payload.analysis ? buildAnalysisRatingBadge(payload.analysis.content) : null;
+        if (headerBadge) targetLabel.append(' ', headerBadge);
         model.value = draft?.model ?? payload.analysis?.model ?? '';
         content.value = draft?.content ?? payload.analysis?.content ?? '';
         revision.value = String(draft?.revision ?? payload.analysis?.revision ?? 0);
