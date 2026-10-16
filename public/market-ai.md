@@ -4,6 +4,16 @@ Open **AI analysis / AI 分析** after Fundamentals. The research prompt is visi
 
 ## Research before writing
 
+## Always discover new data / 每次重新發現新數據
+
+Start every run by GETting the current dashboard, `/api/market/dashboard/brief`, macro and events JSON with a fresh request. Enumerate **all** automatic + custom instruments and the fixed index future; do not reuse an old code list. Read each current analysis and revision, compare its stated data cutoff with the latest **reference period / trading date / publication date**, then update missing or outdated records. A newer `fetchedAt` alone does not prove a new publication. Revised values for the same period also require review. Record the periods checked, source timestamps, remaining gaps and what changed in the commentary.
+
+Overseas instruments must use code + market and their own stored IBKR data:
+`GET https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/overseas/{code}?market=US|JP|KR`.
+This DB-only endpoint includes company/exchange identity, quote availability, normalized daily OHLCV, 5/10/20/60-session moving averages, RSI(14, Wilder), collection coverage and gaps. Read `datasets.*.fetchedAt`, `technical.asOf`, and the latest bar date separately; broker snapshot capture time is not necessarily trade time. Inspect `availability` for live/delayed/frozen/not subscribed status. Do not label an IB position valuation as a real-time exchange print. Do not fabricate unavailable volume/change/financials. Snapshot fundamental tags (EPS, PE, market cap, dividend yield, beta) were deprecated by IBKR on 2026-01-06; obtain financial statements from company filings or other verified sources, not Taiwan endpoints.
+
+For overseas AI records use `6857-JP`, `6524-JP`, `META-US`, `LITE-US`, `000660-KR`; never request Taiwan fundamentals/history for those codes. For Taiwan stock futures use the underlying stock's record. Update shared macro commentary first, cite its saved revision in each instrument note, and verify every target has a saved conclusion after the run. Start each instrument note with exactly one of `【結論】買`, `【結論】中立`, `【結論】賣` so the UI can show a distinct rating badge. Distinguish a current rating from a conditional future upgrade/downgrade.
+
 Treat the saved commentary as a shared, versioned research note. Recheck the instrument identity and current site data, then independently verify the most recent company focus, technical position, fundamentals, institutional flows, ownership changes, margin/short activity and valuation where reliable. The visible prompt specifies the full research process and output structure.
 
 Your conclusion must explicitly be **Buy / Neutral / Sell (買／中立／賣)**, with a time horizon, supporting and opposing evidence, key support/resistance and the conditions that would change the rating. Distinguish intraday from closing prices. Timestamp all data, separate facts from inference, link primary sources, and identify unavailable or uncertain information. Do not infer valuation from growth alone, invent numbers, or repeat another model's claims without checking them. This is general research, not individualized investment advice.

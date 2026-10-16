@@ -11,6 +11,7 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
+import { buildResearchContext } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
 
@@ -850,6 +851,37 @@ interface MarketAiComment { code: string; productType: string; model: string; co
 const marketAiDrafts = new Map<string, { model: string; content: string; revision: number }>();
 let marketAiLoadSequence = 0;
 
+async function loadLiveResearchContext(instrument: DashboardInstrument, sequence: number) {
+    const target = document.getElementById('market-ai-live-context');
+    if (!target) return;
+    target.textContent = marketText('Checking current data…', '正在檢查本次資料…');
+    const paths = ['/api/market/dashboard/brief', '/api/market/dashboard/macro', '/api/market/dashboard/events'];
+    if (!isTaiwanInstrument(instrument)) paths.push(`/api/market/dashboard/overseas/${encodeURIComponent(instrument.code)}?market=${encodeURIComponent(instrument.market || '')}`);
+    const results = await Promise.allSettled(paths.map(async (path) => {
+        const response = await fetch(astroApiPath(path), { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    }));
+    if (sequence !== marketAiLoadSequence) return;
+    const values = results.map((result) => result.status === 'fulfilled' ? result.value : null);
+    const context = buildResearchContext(instrument, values[0], values[1], values[2], new Date().toISOString(), values[3]);
+    target.textContent = JSON.stringify({ ...context,
+        unavailableEndpoints: paths.filter((_, i) => results[i].status === 'rejected') }, null, 2);
+}
+
+async function loadRowAnalysisBadge(target: HTMLElement, instrument: DashboardInstrument) {
+    const code = marketUnderlyingCode(instrument) || analysisRecordCode(instrument);
+    const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
+    try {
+        const response = await fetch(astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=${kind}`), { cache: 'no-store' });
+        if (!response.ok) throw new Error('Analysis unavailable');
+        const payload = await response.json();
+        const badge = payload.analysis ? buildAnalysisRatingBadge(payload.analysis.content) : null;
+        if (badge) target.replaceChildren(badge);
+        else target.textContent = payload.analysis ? marketText('No rating', '未標結論') : marketText('Analysis missing', '待分析');
+    } catch { target.textContent = marketText('Analysis unavailable', '分析暫不可讀'); }
+}
+
 // Colored 買／中立／賣 badge from an analysis' conclusion line (Taiwan convention: red buy, green sell).
 function buildAnalysisRatingBadge(content: string): HTMLElement | null {
     const rating = analysisRating(content);
@@ -891,6 +923,7 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
     const code = marketUnderlyingCode(instrument) || analysisRecordCode(instrument);
     const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
     const key = `${kind}:${code}`; const sequence = ++marketAiLoadSequence;
+    void loadLiveResearchContext(instrument, sequence);
     const endpoint = astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=${kind}`);
     form.dataset.key = key; form.dataset.endpoint = endpoint; form.dataset.loaded = 'false'; fields.disabled = true;
     const model = document.getElementById('market-ai-model') as HTMLInputElement;
@@ -1019,7 +1052,8 @@ function initMarketAiAnalysis() {
     if (!form || form.dataset.bound) return;
     form.dataset.bound = 'true';
     document.getElementById('market-ai-copy-prompt')?.addEventListener('click', async () => {
-        const prompt = document.getElementById('market-ai-research-prompt-text')?.textContent?.trim();
+        const prompt = [document.getElementById('market-ai-research-prompt-text')?.textContent?.trim(),
+            document.getElementById('market-ai-live-context')?.textContent?.trim()].filter(Boolean).join('\n\n');
         const status = document.getElementById('market-ai-status');
         if (!prompt || !status) return;
         try {
@@ -1134,6 +1168,12 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const code = document.createElement('strong'); code.textContent = instrument.code;
         const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
         item.append(code, name);
+        const marketLabel = instrumentMarketLabel(instrument, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+        if (marketLabel) name.append(` · ${marketLabel}`);
+        const analysisLabel = document.createElement('span'); analysisLabel.className = 'market-row-analysis';
+        analysisLabel.textContent = marketText('Checking analysis…', '檢查評論…');
+        item.append(analysisLabel);
+        void loadRowAnalysisBadge(analysisLabel, instrument);
         const instrumentEvents = marketEventsForInstrument(instrument);
         if (instrumentEvents.length) {
             row.classList.add('market-watch-row--event');

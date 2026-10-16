@@ -1710,7 +1710,8 @@
 .market-ai-rating { display:inline-block; min-width:2.6em; padding:.1rem .5rem; border:1px solid transparent; border-radius:999px; font-size:.75rem; font-weight:700; line-height:1.4; text-align:center; white-space:nowrap; vertical-align:middle; }
 .market-ai-rating--buy { color:#ffd9d9; background:color-mix(in srgb,#e45b5b 30%,transparent); border-color:#e45b5b; }
 .market-ai-rating--sell { color:#d6f5e3; background:color-mix(in srgb,#3fb37f 30%,transparent); border-color:#3fb37f; }
-.market-ai-rating--neutral { color:var(--gray-200,#e5e7eb); background:color-mix(in srgb,var(--gray-500,#6b7280) 30%,transparent); border-color:var(--gray-500,#6b7280); }
+.market-ai-rating--neutral { color:#ffe4a3; background:color-mix(in srgb,#d8a43b 22%,transparent); border-color:#d8a43b; }
+.market-row-analysis { display:block; margin-top:.3rem; font-size:.7rem; color:var(--gray-400); }
 .market-ai-research-prompt { margin:.6rem 0; padding:.5rem .65rem; border:1px solid var(--gray-700); border-left:3px solid #d8a43b; border-radius:.5rem; background:var(--gray-900); }
 .market-ai-panel .market-ai-research-prompt p { margin:.25rem 0; font-size:.7rem; line-height:1.5; color:var(--gray-400); }
 .market-ai-prompt-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
