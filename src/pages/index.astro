@@ -130,7 +130,7 @@ const skillsCategories = skillsData.categories;
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
 						<section id="macro-dashboard" class="macro-dashboard" aria-labelledby="macro-dashboard-title" aria-live="polite">
-							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">US macro releases</h4><p data-i18n="home.macroDescription">Key labor, inflation and Federal Reserve data, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
+							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
 							<div id="macro-indicator-grid" class="macro-group-grid"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
 							<div id="macro-event-list" class="macro-other-list" hidden></div>
 							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
@@ -143,7 +143,7 @@ const skillsCategories = skillsData.categories;
 										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
 
 研究流程
-1. 讀本區「美國重要總體經濟資料」與 API（GET /tymultiverse/api/market/dashboard/macro）：就業、CPI／核心 CPI、聯邦基金利率、10 年期殖利率、零售銷售的最新值、前期、市場共識與實際值、下次公布日。
+1. 讀本區「多國重要總體經濟資料」與 API（GET /tymultiverse/api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
 2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
 3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
 4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
