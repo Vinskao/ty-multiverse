@@ -15,6 +15,18 @@
 - Parallel groups of the same unit also share one chart, one line each: the four TDCC holder groups, Taiwan exports/imports, employed/unemployed, PMI/NMI. If their levels are too far apart for one axis (TDCC: retail ~5% vs. 1,000+ lots ~85%), plot each group's change since the first period (pp) and keep the level in the tiles and readout. Do not go back to one chart per group.
 - Separate charts are right only when the shapes differ in a way the reader needs: stock vs. flow (balance vs. daily buy/sell), different measures or units (payrolls vs. unemployment rate, TWD gold vs. USD gold vs. oil), or a near-constant reference that would flatten the series (show it as a KPI tile, like the foreign-ownership legal limit).
 - When you merge charts, also remove the old container from `index.astro` and every list that references its id (e.g. the futures "not available" list in `loadMarketHistory`).
+- **Color-match every multi-line chart.** Each series has one color, used by its line, its hover marker, its y-axis labels and its readout entry (a colored dot plus the value), so a reader can tell whose number is whose. Colors come from `MACRO_SERIES_TONES` in `src/scripts/market/macroSeries.ts` and must stay distinct; pass them as the `--tone` CSS variable, because CSS class rules override SVG `stroke`/`fill` attributes. Never render a multi-series readout as one plain text string.
+- **Different units, one comparison: shared x-axis, separate y-axes.** When the user wants related series in different units together (USD/TWD, JPY/USD, dollar index), use `buildMacroTrendChart(..., { separateAxes: true })` (via `MACRO_SEPARATE_AXIS_GROUPS`): up to three y-axes (left, right, outer right), each in its series' color. Daily series on different trading calendars show the latest close on or before the hovered date, with its own date (`macroValueAtOrBefore`).
+
+## TDD / 測試驅動開發
+
+Follow the workspace TDD rules (`../AGENTS.md`, "Test-driven development"): failing test first for bugs, test first for new logic, and backfill tests for any untested code you touch, without waiting to be asked.
+
+- Run: `npx vitest run` (or `npx vitest run tests/market`). Tests live in `tests/<area>/*.test.ts`, mirroring `src/`.
+- Pure logic does not belong in `src/scripts/index.ts`. Put it in a module under `src/scripts/<area>/` (e.g. `src/scripts/market/macroSeries.ts`, `tdcc.ts`), import it into `index.ts`, and test the module. When you edit a calculation that still lives in `index.ts`, move it out and cover it first.
+- Covered so far: macro MoM/YoY/job-change math, history window, `a|b` chart code fallback, release dedupe and ordering (`tests/market/macroSeries.test.ts`); TDCC bucket folding and change series (`tests/market/tdcc.test.ts`); Taiwan portfolio projection.
+- Known gaps (backfill when touched): metric tile values in `buildMacroMetric` / `macroMetricForPeriod`, readout formatting per format/unit, foreign-holding composite readout, macro commentary load/save state, market history field mapping.
+- Pre-existing failures: `tests/services/auth.test.ts` and `authApi.test.ts` import `src/services/auth`, which moved to `src/services/api/auth.ts`. They need rewriting against the current API, not deleting.
 
 ## 1. Internationalization (i18n) / 多國語系
 
