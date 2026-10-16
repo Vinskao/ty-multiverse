@@ -1728,7 +1728,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         }
         if (later.length) {
             const upcoming = document.createElement('p'); upcoming.className = 'macro-later';
-            upcoming.textContent = `${marketText('Then', '之後')}: ${later.slice(0, 3).map((event) => ${macroEventDate(event, false)} ).join(' · ')}`;
+            upcoming.textContent = `${marketText('Then', '之後')}: ${later.slice(0, 3).map((event) => macroEventDate(event, false)).join(' · ')}`;
             card.append(upcoming);
         }
         grid.append(card);
