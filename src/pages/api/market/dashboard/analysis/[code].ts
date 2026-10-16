@@ -5,7 +5,7 @@ const MAYA_SAWA_URL = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA
 async function forward(request: Request, code: string | undefined, method: 'GET' | 'PUT') {
   if (!code || !/^[A-Z0-9-]{1,24}$/i.test(code)) return Response.json({ detail: 'Invalid instrument code' }, { status: 422 });
   const kind = new URL(request.url).searchParams.get('productType') || 'stock';
-  if (!['stock', 'futures'].includes(kind)) return Response.json({ detail: 'Invalid productType' }, { status: 422 });
+  if (!['stock', 'futures', 'macro'].includes(kind)) return Response.json({ detail: 'Invalid productType' }, { status: 422 });
   const authorization = request.headers.get('authorization');
   if (method === 'PUT' && !authorization?.toLowerCase().startsWith('bearer ')) {
     return Response.json({ detail: 'Sign in to update AI analysis' }, { status: 401 });

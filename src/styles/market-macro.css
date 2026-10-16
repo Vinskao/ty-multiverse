@@ -48,10 +48,23 @@
 .macro-trend-axis-label { fill:var(--gray-400); font-size:9px; }
 .macro-trend-axis-title { fill:var(--text-secondary,var(--gray-300)); font-size:8px; }
 .macro-trend-line { fill:none; stroke:#70b7f0; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
-.macro-trend-point { fill:#70b7f0; stroke:var(--surface-primary,#111827); stroke-width:1; vector-effect:non-scaling-stroke; cursor:pointer; }
-.macro-trend-point:hover,.macro-trend-point:focus { r:5; stroke:#f2c45d; stroke-width:2; outline:none; }
+.macro-trend-line--expected { stroke:#f2c45d; stroke-dasharray:5 4; }
+.macro-trend-line--consensus { stroke:#d98ff5; stroke-dasharray:2 4; }
+.macro-trend-chart svg { cursor:crosshair; }
+.macro-trend-chart svg:focus-visible { outline:1px solid #70b7f0; outline-offset:2px; }
+.macro-trend-point { fill:#70b7f0; stroke:var(--surface-primary,#111827); stroke-width:1; vector-effect:non-scaling-stroke; pointer-events:none; }
+.macro-trend-point--expected { fill:#f2c45d; }
+.macro-trend-point--consensus { fill:#d98ff5; }
+.macro-trend-legend { display:block; margin:.2rem 0 0; color:var(--gray-400); font-size:.62rem; }
+.macro-trend-guide { stroke:var(--gray-300); stroke-width:1; stroke-dasharray:3 3; opacity:.75; pointer-events:none; vector-effect:non-scaling-stroke; }
+.macro-trend-marker { fill:#f2c45d; stroke:var(--surface-primary,#111827); stroke-width:2; pointer-events:none; vector-effect:non-scaling-stroke; }
 .macro-trend-readout { margin:.35rem 0 0; min-height:1.8rem; }
 .macro-source-note { margin:.65rem 0 0; color:var(--gray-400); font-size:.68rem; }
 .macro-source-note a { color:inherit; }
 @media(max-width:900px) { .macro-group-grid { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:520px) { .macro-dashboard { padding:.7rem; } .macro-group { padding:.6rem; } .macro-metric-grid { grid-template-columns:minmax(0,1fr); gap:.35rem; } .macro-group-header { flex-direction:column; } .macro-group-header .macro-event { width:100%; text-align:left; justify-items:start; } .macro-dashboard-heading { display:grid; gap:.2rem; } .macro-indicator-card { padding:.55rem; } }
+.macro-commentary { text-align:left; margin-top:.9rem; padding:.75rem .85rem; border:1px solid var(--gray-700); border-left:3px solid #70b7f0; border-radius:.6rem; background:var(--gray-900); }
+.macro-commentary-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.25rem .75rem; }
+.macro-commentary-heading h5 { margin:0; font-size:.9rem; }
+.macro-commentary-body .macro-commentary-text { margin:.5rem 0 0; white-space:pre-wrap; font-size:.82rem; line-height:1.65; max-height:22rem; overflow:auto; }
+.macro-commentary details { margin:.6rem 0 0; }

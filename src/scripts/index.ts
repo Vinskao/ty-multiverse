@@ -917,6 +917,91 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
     } finally { if (sequence === marketAiLoadSequence) fields.disabled = false; }
 }
 
+// Shared macro commentary: one record that every instrument analysis cites instead of restating macro data.
+const MACRO_COMMENTARY_ENDPOINT = () => astroApiPath('/api/market/dashboard/analysis/US?productType=macro');
+let macroCommentaryDraft: { model: string; content: string; revision: number } | null = null;
+
+async function loadMacroCommentary() {
+    const body = document.getElementById('macro-commentary-body');
+    const meta = document.getElementById('macro-commentary-meta');
+    const fields = document.getElementById('macro-ai-fields') as HTMLFieldSetElement | null;
+    const status = document.getElementById('macro-ai-status');
+    const form = document.getElementById('macro-ai-form') as HTMLFormElement | null;
+    if (!body || !meta || !fields || !status || !form) return;
+    const endpoint = MACRO_COMMENTARY_ENDPOINT();
+    document.getElementById('macro-ai-endpoint')!.textContent = new URL(endpoint, location.origin).href;
+    form.dataset.loaded = 'false'; fields.disabled = true;
+    try {
+        const response = await fetch(endpoint, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { analysis: MarketAiComment | null; history: MarketAiComment[] };
+        const current = payload.analysis;
+        body.replaceChildren();
+        const text = document.createElement('p'); text.className = 'macro-commentary-text';
+        text.textContent = current?.content || marketText('No shared macro commentary yet.', '尚未建立總經評論。');
+        body.append(text);
+        meta.textContent = current
+            ? `${marketText('Revision', '版本')} ${current.revision} · ${current.model} · ${new Date(current.updatedAt).toLocaleString(marketLocale())}`
+            : '';
+        renderMarketAiTable('macro-ai-history', payload.history.filter((row) => row.revision !== current?.revision));
+        (document.getElementById('macro-ai-model') as HTMLInputElement).value = macroCommentaryDraft?.model ?? current?.model ?? '';
+        (document.getElementById('macro-ai-content') as HTMLTextAreaElement).value = macroCommentaryDraft?.content ?? current?.content ?? '';
+        (document.getElementById('macro-ai-revision') as HTMLInputElement).value = String(macroCommentaryDraft?.revision ?? current?.revision ?? 0);
+        form.dataset.loaded = 'true';
+        status.textContent = current
+            ? marketI18n('marketAiSavedStatus', 'Saved · revision {revision}').replace('{revision}', String(current.revision))
+            : marketI18n('marketAiEmpty', 'No saved analysis yet.');
+    } catch {
+        body.replaceChildren();
+        const error = document.createElement('p'); error.className = 'market-updated';
+        error.textContent = marketText('Macro commentary could not be loaded.', '總經評論載入失敗。');
+        body.append(error);
+        status.textContent = marketI18n('marketAiLoadError', 'Analysis could not be loaded. Reload before editing.');
+    } finally { fields.disabled = false; }
+}
+
+function initMacroCommentary() {
+    const form = document.getElementById('macro-ai-form') as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    const status = () => document.getElementById('macro-ai-status')!;
+    const draft = () => ({ model: (document.getElementById('macro-ai-model') as HTMLInputElement).value,
+        content: (document.getElementById('macro-ai-content') as HTMLTextAreaElement).value,
+        revision: Number((document.getElementById('macro-ai-revision') as HTMLInputElement).value) });
+    document.getElementById('macro-ai-copy-prompt')?.addEventListener('click', async () => {
+        const prompt = document.getElementById('macro-ai-prompt-text')?.textContent?.trim();
+        if (!prompt) return;
+        try {
+            await navigator.clipboard.writeText(prompt);
+            status().textContent = marketI18n('marketAiPromptCopied', '研究提示已複製。');
+        } catch {
+            status().textContent = marketI18n('marketAiPromptCopyFailed', '無法存取剪貼簿，請選取提示文字後複製。');
+        }
+    });
+    form.addEventListener('input', () => { if (form.dataset.loaded === 'true') macroCommentaryDraft = draft(); });
+    document.getElementById('macro-ai-reload')?.addEventListener('click', () => { macroCommentaryDraft = null; void loadMacroCommentary(); });
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); if (form.dataset.loaded !== 'true') return;
+        const value = draft(); macroCommentaryDraft = value;
+        if (!hasMarketAuth()) { status().textContent = marketI18n('marketAiSignIn', 'Sign in before saving.'); return; }
+        const fields = document.getElementById('macro-ai-fields') as HTMLFieldSetElement;
+        fields.disabled = true; status().textContent = marketI18n('marketAiSaving', 'Saving analysis…');
+        try {
+            const response = await fetch(MACRO_COMMENTARY_ENDPOINT(), { method: 'PUT', headers: { ...marketAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: value.model, content: value.content, expectedRevision: value.revision }) });
+            if (!response.ok) {
+                throw new Error(response.status === 409 ? 'marketAiConflict' : response.status === 401 || response.status === 403 ? 'marketAiSignIn' : 'marketAiSaveError');
+            }
+            const payload = await response.json() as { analysis: MarketAiComment; saved: boolean };
+            if (!payload.saved || !payload.analysis?.revision) throw new Error('marketAiSaveError');
+            macroCommentaryDraft = null;
+            await loadMacroCommentary();
+        } catch (error) {
+            status().textContent = marketI18n(error instanceof Error ? error.message : 'marketAiSaveError', marketI18n('marketAiSaveError', 'Save failed; your draft is preserved.'));
+        } finally { fields.disabled = false; }
+    });
+}
+
 function initMarketAiAnalysis() {
     const form = document.getElementById('market-ai-form') as HTMLFormElement | null;
     if (!form || form.dataset.bound) return;
@@ -1161,7 +1246,7 @@ async function fetchMarketCompanyEvents() {
     }
 }
 
-type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string; source?: string; sourceUrl?: string; cacheStale?: boolean };
+type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; expectationHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; consensusHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; fetchedAt?: string; source?: string; sourceUrl?: string; cacheStale?: boolean };
 type MacroEvent = { id:string; groupId:string; type:string; title:string; scheduledDate:string; scheduledAt?:string|null; timePrecision:string; scheduleVerification:string; highlightLevel:string; source:string; sourceUrl:string; consensusValue?:string|null; actualValue?:string|null; surpriseValue?:string|null; surpriseStatus?:'above'|'below'|'in_line'|null; expectationSource?:string|null };
 type MacroSnapshot = { status:string; enabled?:boolean; asOf?:string; indicators?:MacroIndicator[]; events?:MacroEvent[]; sources?:Array<{source:string;availability:string;stale:boolean}>; configuration?:Record<string,string> };
 
@@ -1368,6 +1453,12 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
         const value = format === 'jobs' ? (item.value - base.value) * 1000 : (item.value / base.value - 1) * 100;
         return Number.isFinite(value) ? [{ period: item.period, value }] : [];
     });
+    const expected = (indicator.expectationHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+        .filter((item) => Number.isFinite(item.value));
+    const consensus = (indicator.consensusHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+        .filter((item) => Number.isFinite(item.value));
+    const periods = [...new Set([...points.map((point) => point.period), ...expected.map((point) => point.period), ...consensus.map((point) => point.period)])].sort();
+    const periodIndex = new Map(periods.map((period, index) => [period, index]));
     const unitLabel = format === 'jobs' ? marketText('Monthly change (jobs)', '月增人數')
         : format === 'yoy' ? marketText('Year-over-year (%)', '年增率 (%)')
             : ['mom', 'sales'].includes(format) ? marketText('Month-over-month (%)', '月增率 (%)')
@@ -1383,12 +1474,12 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     }
     const width = 340, height = 152, left = 48, right = 10, top = 8, bottom = 34;
     const plotWidth = width - left - right, plotHeight = height - top - bottom;
-    const minValue = Math.min(...points.map((point) => point.value));
-    const maxValue = Math.max(...points.map((point) => point.value));
+    const minValue = Math.min(...points.map((point) => point.value), ...expected.map((point) => point.value), ...consensus.map((point) => point.value));
+    const maxValue = Math.max(...points.map((point) => point.value), ...expected.map((point) => point.value), ...consensus.map((point) => point.value));
     const span = Math.max(maxValue - minValue, 0.1);
     const low = Math.floor((minValue - span * 0.12) * 10) / 10;
     const high = Math.ceil((maxValue + span * 0.12) * 10) / 10;
-    const x = (index: number) => left + (index / (points.length - 1)) * plotWidth;
+    const x = (period: string) => left + ((periodIndex.get(period) || 0) / Math.max(periods.length - 1, 1)) * plotWidth;
     const y = (value: number) => top + ((high - value) / (high - low)) * plotHeight;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`); svg.setAttribute('role', 'img');
@@ -1406,7 +1497,10 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     }
         add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, displayUnit);
     add('line', { x1: String(left), x2: String(width - right), y1: String(top + plotHeight), y2: String(top + plotHeight), class: 'macro-trend-axis' });
-    add('path', { d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' '), class: 'macro-trend-line' });
+    const pathFor = (series: Array<{period:string;value:number}>) => series.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.period).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' ');
+    add('path', { d: pathFor(points), class: 'macro-trend-line' });
+    if (expected.length) add('path', { d: pathFor(expected), class: 'macro-trend-line macro-trend-line--expected' });
+    if (consensus.length) add('path', { d: pathFor(consensus), class: 'macro-trend-line macro-trend-line--consensus' });
     const readout = document.createElement('div');
     readout.className = 'market-chart-readout market-chart-readout--compact macro-trend-readout';
     readout.setAttribute('aria-live', 'polite');
@@ -1414,25 +1508,73 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     const describeMacroPoint = (point: { period: string; value: number }) => format === 'jobs'
         ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}`
         : format === 'raw' ? `${macroNumber(point.value, 2)} ${displayUnit}` : `${point.value.toFixed(2)}%`;
-    const showPoint = (index: number) => {
-        const point = points[index];
-        readout.textContent = `${indicatorLabel} · ${point.period} · ${describeMacroPoint(point)}`;
+    let showPoint: (index: number, hovering: boolean) => void;
+    const addAccessiblePoint = (point: {period:string;value:number}, isExpected = false) => {
+        const dot = add('circle', { cx: String(x(point.period)), cy: String(y(point.value)), r: isExpected ? '4' : points.length > 36 ? '2' : '3', class: isExpected ? 'macro-trend-point macro-trend-point--expected' : 'macro-trend-point', tabindex: '0', role: 'button', 'aria-label': `${isExpected ? marketText('Consensus expectation', '市場預期') : indicatorLabel} ${point.period} ${describeMacroPoint(point)}` });
+        dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
+        dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
     };
-    showPoint(points.length - 1);
-    points.forEach((point, index) => {
-        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '3' : '4', class: 'macro-trend-point', tabindex: '0', role: 'button', 'aria-label': `${indicatorLabel}, ${point.period}: ${describeMacroPoint(point)}` });
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        title.textContent = `${point.period}: ${format === 'jobs' ? Math.round(point.value).toLocaleString() : `${point.value.toFixed(2)}%`}`;
-        circle.append(title);
-        circle.addEventListener('pointerenter', () => showPoint(index));
-        circle.addEventListener('focus', () => showPoint(index));
-        circle.addEventListener('click', () => showPoint(index));
+    points.forEach((point) => addAccessiblePoint(point));
+    expected.forEach((point) => addAccessiblePoint(point, true));
+    consensus.forEach((point) => {
+        const dot = add('circle', { cx: String(x(point.period)), cy: String(y(point.value)), r: '4', class: 'macro-trend-point macro-trend-point--consensus', tabindex: '0', role: 'button', 'aria-label': `CPI release consensus ${point.period} ${describeMacroPoint(point)}` });
+        dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
+        dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
     });
-    [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])].forEach((index) => {
-        add('text', { x: String(x(index)), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, points[index].period);
+    // Vertical guide snaps to the nearest period anywhere over the plot, so the pointer need not hit a dot.
+    const guide = add('line', { y1: String(top), y2: String(top + plotHeight), class: 'macro-trend-guide' });
+    const marker = add('circle', { r: '5', class: 'macro-trend-marker' });
+    let active = periods.length - 1;
+    showPoint = (index: number, hovering: boolean) => {
+        active = index;
+        const period = periods[index];
+        const point = points.find((item) => item.period === period);
+        const forecast = expected.find((item) => item.period === period);
+        const releaseConsensus = consensus.find((item) => item.period === period);
+        const values = [
+            point ? `${marketText('Actual', '實際')} ${describeMacroPoint(point)}` : '',
+            forecast ? `${marketText('One-year consumer expectation', '消費者一年期預期')} ${describeMacroPoint(forecast)}` : '',
+            releaseConsensus ? `${marketText('CPI release consensus', 'CPI 公布共識預期')} ${describeMacroPoint(releaseConsensus)}` : '',
+        ].filter(Boolean);
+        readout.textContent = `${period} · ${values.join(' · ')}`;
+        const markerValue = point?.value ?? forecast?.value ?? releaseConsensus?.value ?? 0;
+        guide.setAttribute('x1', String(x(period))); guide.setAttribute('x2', String(x(period)));
+        marker.setAttribute('cx', String(x(period))); marker.setAttribute('cy', String(y(markerValue)));
+        guide.style.display = hovering ? '' : 'none';
+        marker.style.display = hovering ? '' : 'none';
+    };
+    showPoint(active, false);
+    const indexAt = (event: PointerEvent) => {
+        const rect = svg.getBoundingClientRect();
+        const viewX = (event.clientX - rect.left) / rect.width * width;
+        return Math.max(0, Math.min(periods.length - 1, Math.round((viewX - left) / plotWidth * (periods.length - 1))));
+    };
+    svg.addEventListener('pointermove', (event) => showPoint(indexAt(event), true));
+    svg.addEventListener('pointerdown', (event) => showPoint(indexAt(event), true));
+    svg.addEventListener('pointerleave', () => showPoint(periods.length - 1, false));
+    svg.setAttribute('tabindex', '0');
+    svg.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+        if (!step) return;
+        event.preventDefault();
+        showPoint(Math.max(0, Math.min(periods.length - 1, active + step)), true);
+    });
+    svg.addEventListener('blur', () => showPoint(periods.length - 1, false));
+    [...new Set([0, Math.floor((periods.length - 1) / 2), periods.length - 1])].forEach((index) => {
+        add('text', { x: String(x(periods[index])), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === periods.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, periods[index]);
     });
     add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
-    wrap.append(svg, readout); return wrap;
+    wrap.append(svg, readout);
+    if (indicator.code === 'CUUR0000SA0') {
+        const legend = document.createElement('small'); legend.className = 'macro-trend-legend';
+        legend.textContent = marketText('Solid: CPI actual · Dashed: Michigan one-year consumer expectation · Dotted: release consensus when available', '實線：CPI 實際值 · 虛線：密西根大學一年期消費者預期 · 點線：日曆有提供時的公布共識');
+        const michiganLink = document.createElement('a'); michiganLink.href = 'https://fred.stlouisfed.org/series/MICH'; michiganLink.target = '_blank'; michiganLink.rel = 'noopener noreferrer';
+        michiganLink.textContent = marketText('Michigan expectation source', '密西根大學預期來源');
+        const calendarLink = document.createElement('a'); calendarLink.href = 'https://www.financecalendar.com/api/'; calendarLink.target = '_blank'; calendarLink.rel = 'noopener noreferrer';
+        calendarLink.textContent = marketText('Calendar consensus source', '經濟日曆共識來源');
+        wrap.append(legend, michiganLink, document.createTextNode(' · '), calendarLink);
+    }
+    return wrap;
 }
 
 function renderMacroDashboard(snapshot: MacroSnapshot) {
@@ -2937,9 +3079,11 @@ function initIndexPage() {
     // Always retry on page load so stale local availability state cannot keep this section hidden.
     initMarketWatchlist();
     initMarketAiAnalysis();
+    initMacroCommentary();
     initMarketCustomEditor();
     void fetchMarketDashboard();
     void fetchMacroDashboard();
+    void loadMacroCommentary();
     fetchLeetCodeStats();
     fetchTxfQuote();
     fetchMarketUsage();

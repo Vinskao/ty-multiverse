@@ -399,3 +399,16 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - CoreWeave 債券殖利率可作為 CDS 的**替代信用風險指標**，但不得標成 CDS。免費 FINRA Query API 公開資料集主要是交易聚合；FINRA 說明 TRACE API 不屬於該 Query API。若要用單一債券逐筆成交／殖利率，須先確認可免費查詢、可程式存取及網站展示條款；付費資料一律排除。[FINRA API 文件](https://developer.finra.org/docs)、[FINRA Fixed Income API 範圍](https://developer.finra.org/node/1171)
 
 前端應展示最新統計期、來源名稱與抓取時間；行程快取超過來源 freshness 時限便標示過期並保留最近值。免費序列已接入本機快取與 API snapshot，但尚未部署及 production 驗收；pod 重啟會清除快取，直到下一輪排程重新載入。付費資料源不接入。
+
+## 21. CPI 實際值與市場預期同圖（2026-10-16）
+
+- 美國 CPI 年增率趨勢圖需同時繪出官方實際值（BLS CPI 指數計算 YoY）和經濟日曆的市場共識預期；實際值為藍色實線，預期為琥珀色虛線，hover 同時讀取該期實際／預期值。
+- Finance Calendar 免費 API 的日期區間最長 92 日，文件說明 consensus 約在公布前兩日出現、actual 於公布後一小時內補入，並要求網站顯示來源連結。本服務每輪以兩次請求讀取過去 90 日及未來 90 日，Finance Calendar 預算上限調為每日 8 次（每 6 小時排程兩次請求），事件預期／實際欄位持久化於既有 macro event 表，以保留短暫出現的共識值；不持久化額外觀察序列。
+- 趨勢圖只把明確標示 YoY 的 CPI consensus 畫在 CPI 年增率序列上，避免把 MoM 共識錯當年增率。來源沒有提供預期值時，圖上明確說明預期尚未發布，不以 previous 或模型估算補值。
+- Finance Calendar 回應驗證顯示最近歷史 CPI event 有部分 actual 字串，但 consensus 為空；未來 CPI event 亦可能尚未提供 consensus。來源文件說共識約在發布前兩日提供，因此在實際填值前圖上只有實際線並顯示等待說明。未宣稱已可回填完整歷史市場預期序列。
+
+### 21.1 已加入免費前瞻預期序列
+
+- 為讓圖上在沒有短期公布共識值時也能比較「實際通膨與預期通膨」，新增密西根大學 Surveys of Consumers「Expected Changes in Inflation Rates / Next Year」月序列（`UMICH_CPI_EXPECTED_1Y`）。官方 CSV 現有近 13 個月值，程式從直接官方 CSV 讀取第四欄的一年期中位數，12 小時本機 TTL 快取，不寫觀察值到 PostgreSQL。
+- CPI 年增實際值維持 BLS `CUUR0000SA0`；同圖的藍色實線是實際年增率、琥珀虛線是一年期消費者預期、紫色點線則只在日曆提供明確 YoY 共識時才顯示。Hover／鍵盤 readout 逐期列出同一期間實際、消費者預期與公布共識，明確區分調查預期與專業市場共識。
+- 資料來源可見連結：[密西根大學 CPI 預期表與 CSV](https://www.sca.isr.umich.edu/tables.html)、[Finance Calendar 共識 API](https://www.financecalendar.com/api/)。

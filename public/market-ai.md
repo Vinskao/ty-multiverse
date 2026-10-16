@@ -41,3 +41,5 @@ Use the revision returned by GET; **0 is only for an absent record**. Model name
 撰寫前先決定敘事主軸：**top-down**（美國總經 → 資金與風險偏好 → 台股／產業 → 公司 → 價格與籌碼）或 **bottom-up**（公司營運 → 產業地位 → 總經順逆風 → 價格與籌碼是否已反映），寫成一條因果完整的敘事。總經資料來自首頁「美國重要總體經濟資料」與 `GET /tymultiverse/api/market/dashboard/macro`；只引用已公布數據，並把下次總經公布日放進事件時間線。
 
 **技術實力為必寫段落**：每次都要查公司最近一次法說簡報／逐字稿、技術論壇、年報與重大訊息，寫出最新公布的技術路線與量產時程、相對競爭者的位置，並區分已量產、驗證中、規劃中；剛公布的財報或法說必須納入。
+
+總經評論是獨立一層：首頁「總經評論」由 `GET/PUT /tymultiverse/api/market/dashboard/analysis/US?productType=macro` 讀寫（寫入需登入，版本規則與個股相同）。總經數據公布後先更新這份評論；個股與期貨分析只引用它的結論與版本號，再寫本標的的敏感度與傳導路徑，不重複總經數據。若總經評論早於最新總經公布，先更新它再寫個股。

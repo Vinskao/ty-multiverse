@@ -136,6 +136,50 @@ const skillsCategories = skillsData.categories;
 							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">US macro releases</h4><p data-i18n="home.macroDescription">Key labor, inflation and Federal Reserve data, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
 							<div id="macro-indicator-grid" class="macro-group-grid"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
 							<div id="macro-event-list" class="macro-other-list" hidden></div>
+							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
+								<div class="macro-commentary-heading"><h5 id="macro-commentary-title">總經評論｜所有個股分析共用</h5><span id="macro-commentary-meta" class="market-updated"></span></div>
+								<div id="macro-commentary-body" class="macro-commentary-body"><p class="market-updated">載入總經評論中…</p></div>
+								<details>
+									<summary>更新總經評論（AI 提示、編輯、版本歷史）</summary>
+									<section class="market-ai-research-prompt" aria-labelledby="macro-ai-prompt-title">
+										<div class="market-ai-prompt-heading"><h5 id="macro-ai-prompt-title">總經 AI 研究提示</h5><button type="button" id="macro-ai-copy-prompt">複製完整提示</button></div>
+										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
+
+研究流程
+1. 讀本區「美國重要總體經濟資料」與 API（GET /tymultiverse/api/market/dashboard/macro）：就業、CPI／核心 CPI、聯邦基金利率、10 年期殖利率、零售銷售的最新值、前期、市場共識與實際值、下次公布日。
+2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
+3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
+4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
+5. 事件時間線：未來 2–8 週總經公布日與 FOMC，寫出每個事件的上行／下行情境。
+
+輸出格式
+• 標題：總經評論｜資料截點｜研究期間
+• 結論：台股科技股總經環境「順風／中性／逆風」，一句話理由。
+• 利率與通膨：數據（期間、數值、來源）、方向判斷。
+• 就業與消費：數據、需求面含義。
+• 對台股傳導：需求面 vs. 評價面，哪些產業最敏感（高本益比、利率敏感、內需、出口）。
+• 事件時間線：日期（台北時間）、事件、可能衝擊。
+• 翻轉條件：哪些數據會讓結論轉為順風或逆風。
+
+寫作與儲存
+繁體中文，數字附期間、單位、來源。區分事實、推論、未知，不捏造。說明本次相較前版改了什麼。總經數據公布後要更新本評論，個股分析會引用版本號。填入自己的 AI／模型名稱；版本衝突就重新載入整合。這是一般研究觀點，不是個人化投資建議。</pre>
+									</section>
+									<p id="macro-ai-status" role="status" aria-live="polite"></p>
+									<form id="macro-ai-form" data-ai-action="update-macro-commentary">
+										<fieldset id="macro-ai-fields" disabled>
+											<label for="macro-ai-model" data-i18n="home.marketAiModel">AI / model</label>
+											<input id="macro-ai-model" name="model" type="text" maxlength="120" required autocomplete="off" placeholder="AI or model name" />
+											<label for="macro-ai-content">目前總經評論 · 編輯後更新</label>
+											<textarea id="macro-ai-content" name="content" rows="10" maxlength="20000" required></textarea>
+											<input id="macro-ai-revision" name="expectedRevision" type="hidden" value="0" />
+											<div class="market-ai-actions"><button type="submit" id="macro-ai-save">更新總經評論</button><button type="button" id="macro-ai-reload" data-i18n="home.marketAiReload">Reload saved version</button></div>
+										</fieldset>
+									</form>
+									<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
+									<p class="market-updated">API：GET／PUT <code id="macro-ai-endpoint"></code></p>
+									<h5 data-i18n="home.marketAiHistory">Revision history</h5><div id="macro-ai-history"></div>
+								</details>
+							</section>
 							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
 						</section>
 						<MarketBrief brief={marketBrief} />
@@ -207,7 +251,7 @@ const skillsCategories = skillsData.categories;
 研究流程
 1. 確認代號、公司、資料日期；先讀本頁現有評論、版本歷史、行情、法人、資券、持股結構、基本面。
 2. 公司技術實力（必做，不可省略）：查最近一次法說簡報／逐字稿、技術論壇、年報、重大訊息與官網新聞，寫出公司最新公布的技術路線與量產時程（製程節點、產品世代、規格、良率、產能擴充）、相對競爭者的技術位置與門檻、技術轉換對毛利率與資本支出的影響。區分「已量產」「驗證中」「規劃中」；法人或媒體推估要標明出處，題材不等於訂單或營收。若最新財報或法說剛公布，必須納入，不可沿用舊數字。
-3. 總經：讀首頁「美國重要總體經濟資料」各主題最新值、前期、下次公布日與市場共識／實際值。判斷利率與通膨方向、就業與消費強弱，對本標的估值、需求、匯率／資金流的傳導路徑；列出研究期間內即將公布的總經事件與可能衝擊。只用已公布數據，不預測未公布數字。
+3. 總經：先讀首頁「總經評論」（GET /tymultiverse/api/market/dashboard/analysis/US?productType=macro），把它當共同前提，不重寫利率、通膨、就業等總經數據。個股只寫本標的對該情境的敏感度與傳導路徑（估值、終端需求、匯率／資金流），以及研究期間內對本標的最關鍵的總經事件。若總經評論早於最新一次總經公布或與數據矛盾，先更新總經評論再寫個股。
 4. 價格技術面：最新日線與即時行情，標明時間及「盤中／收盤」；趨勢、量能、支撐壓力、近期高低點、5/10/20/60 日均線，資料足夠時算 RSI、MACD。盤中值不可當收盤確認。
 5. 基本面：最新月營收年增／月增、季營收、三率、EPS、現金流、資產負債；分清資料期間與公布日；評估成長延續性、基期／季節性／一次性因素與獲利品質。估值僅在口徑一致時比較，無可靠估值就明說，高成長不等於低估。
 6. 籌碼：外資、投信、自營商近 5/20 日買賣超與持股、融資融券、借券、TDCC 大戶／散戶週變化；說明一致或分歧及限制，單週變化不是趨勢。
@@ -218,7 +262,7 @@ const skillsCategories = skillsData.categories;
 • 標題：標的｜資料截點｜研究期間（例如未來 2–8 週）｜敘事主軸 top-down 或 bottom-up
 • 結論：買／中立／賣（不可模糊）；一句話「總經環境 × 基本面方向 × 技術／籌碼方向」。
 • 敘事：3–6 句因果鏈，由主軸起點一路推到目前價格位置。
-• 總經與產業：相關數據、傳導路徑、下一個總經事件。
+• 總經與產業：一句引用總經評論結論（註明版本號），加上本標的特有的傳導、敏感度與產業數據。
 • 技術實力與路線：最新公布的技術／產品進度、量產時程、競爭位置，附來源與日期。
 • 公司焦點與基本面：最新變化、可持續性、待驗證假設。
 • 技術位階與籌碼：現價相對趨勢、關鍵支撐／壓力、資金流向、失守風險。
