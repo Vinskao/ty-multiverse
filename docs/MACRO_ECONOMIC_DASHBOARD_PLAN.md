@@ -412,3 +412,20 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - 為讓圖上在沒有短期公布共識值時也能比較「實際通膨與預期通膨」，新增密西根大學 Surveys of Consumers「Expected Changes in Inflation Rates / Next Year」月序列（`UMICH_CPI_EXPECTED_1Y`）。官方 CSV 現有近 13 個月值，程式從直接官方 CSV 讀取第四欄的一年期中位數，12 小時本機 TTL 快取，不寫觀察值到 PostgreSQL。
 - CPI 年增實際值維持 BLS `CUUR0000SA0`；同圖的藍色實線是實際年增率、琥珀虛線是一年期消費者預期、紫色點線則只在日曆提供明確 YoY 共識時才顯示。Hover／鍵盤 readout 逐期列出同一期間實際、消費者預期與公布共識，明確區分調查預期與專業市場共識。
 - 資料來源可見連結：[密西根大學 CPI 預期表與 CSV](https://www.sca.isr.umich.edu/tables.html)、[Finance Calendar 共識 API](https://www.financecalendar.com/api/)。
+
+### 21.2 初領失業救濟、PPI、PMI 與比較圖
+
+- 美國初領失業救濟金人數使用 FRED `ICSA`（美國勞工部 ETA 來源、季節調整、週資料，週六結束）。透過既有 FRED API key 抓取最近兩年並存入既有觀察值表；快照取用的週資料點數上限為所選月份數的五倍。資料庫實際只增加每週一筆左右。FRED 發布日曆 release `180` 也接入就業事件，日期以單週為單位，不會被同月其他週覆寫。
+- 美國 PPI 使用 BLS `WPUFD4` Final Demand 未季調指數，年度變化以同月去年值計算；台灣 PPI 使用主計總處總體統計資料庫 `A030701015` 生產者物價基本分類指數中的總指數，年度變化同樣由指數計算。兩條 PPI 年增率放在同一張比較圖。台灣 PPI API 結果留在 Python process-local TTL cache，不寫入 PostgreSQL。
+- 台灣製造業 PMI 與非製造業 NMI 從中華經濟研究院官方趨勢頁的月資料表讀取，保留來源頁當下提供的歷史列，12 小時本機 TTL 快取，不寫入 PostgreSQL；各自以指數點趨勢圖呈現。
+- CPI 比較圖把整體與核心 CPI 的月增、年增放在同一圖，並保留密西根大學一年期消費者通膨預期與可取得時的公布共識。零售銷售圖將月增與年增放在同一圖，均由同一原始月序列計算，不把美元金額當成增幅。
+- 美國 ISM PMI 官方報告可免費閱讀，但 ISM 網站條款限制未取得書面授權前擷取、封存、複製與再發布其內容；因此不以爬取報告或付費資料供應商接入美國 ISM PMI。台灣 CIER PMI/NMI 仍按官方公開趨勢表提供。
+- 官方來源：[美國 DOL 每週失業救濟申請資料](https://oui.doleta.gov/unemploy/claims.asp/wkclaims/report.asp)、[FRED ICSA](https://fred.stlouisfed.org/series/ICSA)、[BLS PPI 資料指南](https://www.bls.gov/ppi/data-retrieval-guide/home.htm)、[主計總處 API 說明](https://nstatdb.dgbas.gov.tw/dgbasAll/download/API%E8%AA%AA%E6%98%8E%E6%96%87%E4%BB%B6.pdf)、[CIER PMI 趨勢頁](https://www.cier.edu.tw/pmi-trend/)、[ISM 使用條款](https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/)。
+
+### 21.3 英國零售銷售與其他經濟事件
+
+- 消費趨勢圖在美國零售銷售月增、年增上，加入英國零售銷售量月增及年增兩條比較線。英國歷史值使用 OECD 月度、季調零售銷售量增幅系列 `GBRSLRTTO01GPSAM`（MoM）與 `GBRSLRTTO01GYSAM`（YoY），經 FRED API 取值；兩條序列只留在 Python 行程 TTL 快取，不增加 PostgreSQL observation rows。圖例、軸單位及 hover readout 會明確區分美國／英國與 MoM／YoY。
+- UK Retail Sales 公布日（例如 2026-10-23、2026-11-20、2026-12-18）沿 Finance Calendar 事件接入 consumption 群組，保留與美國同日公布事件不同的身份，不會被事件去重覆蓋。英國實際資料更新後，趨勢依該月份實際觀察值延伸；未發布的月份不補值。
+- Finance Calendar 另保留美國中、高影響的 GDP、PCE／個人所得與支出、耐久財、工業生產、房屋開工／許可／銷售、消費者信心、貿易、庫存、工廠訂單、消費信貸、領先指標等事件。其他事件以各自名稱和日期列示，套用既有公布日前高亮；同日多事件使用標題雜湊識別，避免互相覆寫。低影響和非美國的一般事件不灌入「其他美國經濟事件」清單。
+- ISM 事件僅顯示公布日與標題，不保存或重刊其 PMI 共識／實際數據，以遵守 ISM 未授權再發布限制。
+- 來源：[ONS Retail Sales Index](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsales/current)（免費官方英國零售銷售量／值歷史資料及發布日程）、[OECD 英國零售銷售量 MoM](https://fred.stlouisfed.org/series/GBRSLRTTO01GPSAM)、[OECD 英國零售銷售量 YoY](https://fred.stlouisfed.org/series/GBRSLRTTO01GYSAM)、[Finance Calendar API](https://www.financecalendar.com/api/)。
