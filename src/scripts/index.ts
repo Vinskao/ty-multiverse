@@ -1312,8 +1312,8 @@ const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; 
         ['GBRSLRTTO01GYSAM', () => marketText('UK retail sales · year over year', '英國零售銷售 · 年增率'), 'raw'],
     ] },
     { id: 'pmi', eventGroups: [], title: () => marketText('Purchasing managers indexes', '採購經理人指數'), metrics: [
-        ['TW_PMI', () => marketText('Taiwan manufacturing PMI', '台灣製造業 PMI'), 'percent'],
-        ['TW_NMI', () => marketText('Taiwan non-manufacturing NMI', '台灣非製造業 NMI'), 'percent'],
+        ['TW_PMI', () => marketText('Taiwan manufacturing PMI', '台灣製造業 PMI'), 'raw'],
+        ['TW_NMI', () => marketText('Taiwan non-manufacturing NMI', '台灣非製造業 NMI'), 'raw'],
     ] },
 ];
 
