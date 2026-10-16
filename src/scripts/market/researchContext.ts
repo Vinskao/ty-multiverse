@@ -1,5 +1,14 @@
 import { analysisRecordCode, isTaiwanInstrument } from './instrumentIdentity';
 
+export function brokerAvailabilityLabel(availability: string | undefined, language: 'en' | 'zh'): string {
+    const states: Record<string, [string, string]> = {
+        R: ['Real-time', '即時行情'], D: ['Delayed', '延遲行情'], Z: ['Frozen', '凍結行情'],
+        Y: ['Frozen delayed', '延遲凍結行情'], N: ['Not subscribed', '未訂閱行情']
+    };
+    return states[availability?.[0] || '']?.[language === 'zh' ? 1 : 0]
+        ?? (language === 'zh' ? '行情狀態未知' : 'Availability unknown');
+}
+
 // Fetch time is kept distinct from reference/trading/publication dates.
 // Rebuild from current API results on every analysis opening, never from an old prompt.
 export function buildResearchContext(instrument: { code: string; market?: string | null; underlyingCode?: string },

@@ -11,7 +11,7 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { buildResearchContext } from './market/researchContext';
+import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
 
@@ -1197,6 +1197,9 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const lastKnown = quote && quote.quoteSource && quote.quoteSource !== 'live'
             ? `${quote.quoteSource === 'dailyClose' ? marketText('Last close', '最後收盤') : marketText('Last price', '最後價格')} · ` : '';
         timestamp.textContent = quote?.timestamp ? `${lastKnown}${new Date(quote.timestamp).toLocaleString()}` : '--';
+        if (!isTaiwanInstrument(instrument) && quote) {
+            timestamp.prepend(`${brokerAvailabilityLabel(quote.availability, marketLocale() === 'zh-TW' ? 'zh' : 'en')} · `);
+        }
         row.append(item, price, timestamp);
         row.addEventListener('click', () => {
             document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', String(item === row && row.getAttribute('aria-expanded') !== 'true')));
@@ -2412,7 +2415,8 @@ async function fetchLeetCodeStats() {
 interface TxfQuote {
     symbol: string;
     underlyingCode?: string;
-    quoteSource?: 'live' | 'snapshot' | 'dailyClose';
+    quoteSource?: string;
+    availability?: string;
     deliveryMonth?: string;
     close: number;
     open: number;
