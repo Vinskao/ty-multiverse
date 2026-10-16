@@ -1706,11 +1706,12 @@
 .market-watch-row { scroll-margin-top:4.5rem; }
 
 .market-ai-panel p { font-size:.85rem; line-height:1.65; overflow-wrap:anywhere; }
-.market-ai-research-prompt { margin:1rem 0; padding:1rem; border:1px solid var(--gray-600); border-left:4px solid #d8a43b; border-radius:.65rem; background:var(--gray-900); }
+.market-ai-research-prompt { margin:.6rem 0; padding:.5rem .65rem; border:1px solid var(--gray-700); border-left:3px solid #d8a43b; border-radius:.5rem; background:var(--gray-900); }
+.market-ai-panel .market-ai-research-prompt p { margin:.25rem 0; font-size:.7rem; line-height:1.5; color:var(--gray-400); }
 .market-ai-prompt-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; }
-.market-ai-prompt-heading h5 { margin:.1rem 0; }
-.market-ai-prompt-heading button { flex:0 0 auto; min-height:40px; padding:.45rem .75rem; border:1px solid var(--gray-600); border-radius:.5rem; background:transparent; color:var(--gray-100); cursor:pointer; }
-.market-ai-research-prompt pre { max-height:32rem; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.65; font: .82rem/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.market-ai-prompt-heading h5 { margin:.1rem 0; font-size:.75rem; }
+.market-ai-prompt-heading button { flex:0 0 auto; min-height:32px; padding:.25rem .6rem; font-size:.72rem; border:1px solid var(--gray-600); border-radius:.5rem; background:transparent; color:var(--gray-100); cursor:pointer; }
+.market-ai-research-prompt pre { max-height:9rem; margin:.25rem 0 0; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; color:var(--gray-400); font: .62rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .market-ai-panel fieldset { display:grid; gap:.5rem; min-width:0; margin:1rem 0; padding:0; border:0; }
 .market-ai-panel label { font-size:.85rem; font-weight:600; }
 .market-ai-panel input[type="text"], .market-ai-panel textarea { width:100%; min-width:0; padding:.7rem; border:1px solid var(--gray-600); border-radius:.5rem; background:var(--gray-999); color:var(--gray-100); font:inherit; }
@@ -1733,6 +1734,7 @@
   .market-ai-prompt-heading { align-items:flex-start; flex-direction:column; }
   .market-ai-table { min-width:34rem; }
   .market-ai-panel pre { font-size:.75rem; }
+  .market-ai-panel .market-ai-research-prompt pre { font-size:.62rem; }
 }
 @media (max-width:400px) {
   .market-detail-toolbar [role="tab"] { max-width: 9rem; }
