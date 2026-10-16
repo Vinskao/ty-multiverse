@@ -1161,7 +1161,7 @@ async function fetchMarketCompanyEvents() {
     }
 }
 
-type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string };
+type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; fetchedAt?: string; source?: string; sourceUrl?: string; cacheStale?: boolean };
 type MacroEvent = { id:string; groupId:string; type:string; title:string; scheduledDate:string; scheduledAt?:string|null; timePrecision:string; scheduleVerification:string; highlightLevel:string; source:string; sourceUrl:string; consensusValue?:string|null; actualValue?:string|null; surpriseValue?:string|null; surpriseStatus?:'above'|'below'|'in_line'|null; expectationSource?:string|null };
 type MacroSnapshot = { status:string; enabled?:boolean; asOf?:string; indicators?:MacroIndicator[]; events?:MacroEvent[]; sources?:Array<{source:string;availability:string;stale:boolean}>; configuration?:Record<string,string> };
 
@@ -1171,7 +1171,7 @@ function macroNumber(value: string | number | null | undefined, digits = 1) {
     return Number.isFinite(number) ? number.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits }) : '—';
 }
 
-type MacroMetricFormat = 'jobs' | 'percent' | 'mom' | 'yoy' | 'sales';
+type MacroMetricFormat = 'jobs' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw';
 type MacroMetricSpec = readonly [code: string, label: () => string, format: MacroMetricFormat];
 
 // Each theme pairs the indicators it reports with the calendar group that announces them,
@@ -1191,6 +1191,25 @@ const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; 
         ['DFEDTARL', () => marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
         ['DFEDTARU', () => marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
         ['DGS10', () => marketI18n('macroTreasuryYield10','10-year Treasury yield'), 'percent'],
+        ['CBC_REDISCOUNT', () => marketText('Taiwan CBC rediscount rate', '台灣央行重貼現率'), 'percent'],
+        ['CBC_SECURED_LOAN', () => marketText('Taiwan CBC secured loan rate', '台灣央行擔保放款利率'), 'percent'],
+        ['CBC_SHORT_TERM_LOAN', () => marketText('Taiwan CBC short-term loan rate', '台灣央行短期融通利率'), 'percent'],
+    ] },
+    { id: 'commodities', eventGroups: [], title: () => marketText('Commodities', '商品價格'), metrics: [
+        ['TPEx_GOLD_TWD', () => marketText('Taiwan gold spot', '台灣黃金現貨'), 'raw'],
+        ['WORLD_GOLD_USD', () => marketText('World gold monthly average', '國際黃金月均價'), 'raw'],
+        ['DCOILWTICO', () => marketText('WTI crude oil', 'WTI 原油'), 'raw'],
+    ] },
+    { id: 'taiwan-trade', eventGroups: [], title: () => marketText('Taiwan trade', '台灣進出口'), metrics: [
+        ['TW_EXPORTS', () => marketText('Exports', '出口總值'), 'yoy'],
+        ['TW_IMPORTS', () => marketText('Imports', '進口總值'), 'yoy'],
+    ] },
+    { id: 'taiwan-fx', eventGroups: [], title: () => marketText('Taiwan FX', '台灣匯率'), metrics: [
+        ['CBC_USD_TWD', () => marketText('Interbank USD/TWD close', '銀行間美元兌新台幣收盤'), 'raw'],
+    ] },
+    { id: 'taiwan-employment', eventGroups: [], title: () => marketText('Taiwan labor market', '台灣就業'), metrics: [
+        ['TW_EMPLOYED', () => marketText('Employed persons', '就業人數'), 'jobs'],
+        ['TW_UNEMPLOYED', () => marketText('Unemployed persons', '失業人數'), 'jobs'],
     ] },
     { id: 'consumption', eventGroups: ['retail_sales'], title: () => marketText('Consumption', '消費'), metrics: [
         ['RSAFS', () => marketI18n('macroRetailSales','Retail sales and food services'), 'sales'],
@@ -1258,7 +1277,7 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     const value = document.createElement('strong');
     let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
     let fallbackLabel = '';
-    let suffix = indicator.unit === 'percent' ? '%' : '';
+    let suffix = format === 'raw' ? ` ${indicator.unit}` : indicator.unit === 'percent' ? '%' : '';
     if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
     if (format === 'mom' || format === 'yoy') {
         const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
@@ -1277,8 +1296,20 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     } else if (format === 'percent') current = Number(indicator.value);
     else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
     else current = Number(indicator.value);
-    value.textContent = `${macroNumber(current, format === 'jobs' ? 0 : 2)}${suffix}`;
-    const meta = document.createElement('small'); meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}`;
+    if (format === 'raw' && (code === 'TW_EXPORTS' || code === 'TW_IMPORTS')) {
+        current /= 1_000_000;
+        suffix = ' NT$ B';
+    }
+    value.textContent = `${macroNumber(current, format === 'jobs' || format === 'raw' && (code === 'TW_EXPORTS' || code === 'TW_IMPORTS') ? 0 : 2)}${suffix}`;
+    const meta = document.createElement('small');
+    const sourceTime = indicator.fetchedAt ? new Date(indicator.fetchedAt).toLocaleString(marketLocale(), { timeZone: 'Asia/Taipei' }) : '';
+    meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}${sourceTime ? ` · ${sourceTime}` : ''}${indicator.cacheStale ? ` · ${marketText('cached data is stale','快取資料已過期')}` : ''}`;
+    if (indicator.sourceUrl) {
+        const sourceLink = document.createElement('a');
+        sourceLink.href = indicator.sourceUrl; sourceLink.target = '_blank'; sourceLink.rel = 'noopener noreferrer';
+        sourceLink.textContent = `${indicator.source || marketText('Source','來源')} ↗`;
+        meta.append(document.createTextNode(' · '), sourceLink);
+    } else if (indicator.source) meta.append(document.createTextNode(` · ${indicator.source}`));
     const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
     if (format === 'percent' && change !== null) delta.textContent = `${change > 0 ? '+' : ''}${macroNumber(change,2)} pp`;
     if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
@@ -1342,6 +1373,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
             : ['mom', 'sales'].includes(format) ? marketText('Month-over-month (%)', '月增率 (%)')
                 : indicator.code === 'DGS10' ? marketText('Yield (%)', '殖利率 (%)')
                     : marketText('Rate (%)', '百分比');
+    const displayUnit = format === 'raw' ? (indicator.code === 'TW_EXPORTS' || indicator.code === 'TW_IMPORTS' ? 'NT$ billion' : indicator.unit) : unitLabel;
     if (points.length < 2) {
         const empty = document.createElement('p'); empty.className = 'macro-trend-empty';
         empty.textContent = format === 'yoy'
@@ -1360,7 +1392,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     const y = (value: number) => top + ((high - value) / (high - low)) * plotHeight;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`); svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', `${marketI18n('macroTrend','Trend')}: ${unitLabel}`);
+    svg.setAttribute('aria-label', `${marketI18n('macroTrend','Trend')}: ${displayUnit}`);
     const add = (tag: string, attrs: Record<string, string>, text?: string) => {
         const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
         Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
@@ -1370,22 +1402,25 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     for (let tick = 0; tick <= 3; tick++) {
         const value = low + ((high - low) * tick) / 3, tickY = y(value);
         add('line', { x1: String(left), x2: String(width - right), y1: String(tickY), y2: String(tickY), class: 'macro-trend-gridline' });
-        add('text', { x: String(left - 6), y: String(tickY + 3), 'text-anchor': 'end', class: 'macro-trend-axis-label' }, format === 'jobs' ? Math.round(value).toLocaleString() : `${value.toFixed(1)}%`);
+        add('text', { x: String(left - 6), y: String(tickY + 3), 'text-anchor': 'end', class: 'macro-trend-axis-label' }, format === 'jobs' ? Math.round(value).toLocaleString() : format === 'raw' ? macroNumber(value, 1) : `${value.toFixed(1)}%`);
     }
-    add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, unitLabel);
+        add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, displayUnit);
     add('line', { x1: String(left), x2: String(width - right), y1: String(top + plotHeight), y2: String(top + plotHeight), class: 'macro-trend-axis' });
     add('path', { d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' '), class: 'macro-trend-line' });
     const readout = document.createElement('div');
     readout.className = 'market-chart-readout market-chart-readout--compact macro-trend-readout';
     readout.setAttribute('aria-live', 'polite');
     readout.setAttribute('role', 'status');
+    const describeMacroPoint = (point: { period: string; value: number }) => format === 'jobs'
+        ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}`
+        : format === 'raw' ? `${macroNumber(point.value, 2)} ${displayUnit}` : `${point.value.toFixed(2)}%`;
     const showPoint = (index: number) => {
         const point = points[index];
-        readout.textContent = `${indicatorLabel} · ${point.period} · ${format === 'jobs' ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}` : `${point.value.toFixed(2)}%`}`;
+        readout.textContent = `${indicatorLabel} · ${point.period} · ${describeMacroPoint(point)}`;
     };
     showPoint(points.length - 1);
     points.forEach((point, index) => {
-        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '3' : '4', class: 'macro-trend-point', tabindex: '0', role: 'button', 'aria-label': `${indicatorLabel}, ${point.period}: ${format === 'jobs' ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}` : `${point.value.toFixed(2)}%`}` });
+        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '3' : '4', class: 'macro-trend-point', tabindex: '0', role: 'button', 'aria-label': `${indicatorLabel}, ${point.period}: ${describeMacroPoint(point)}` });
         const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
         title.textContent = `${point.period}: ${format === 'jobs' ? Math.round(point.value).toLocaleString() : `${point.value.toFixed(2)}%`}`;
         circle.append(title);
@@ -1427,7 +1462,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         const [next, ...later] = groupEvents;
         if (next) header.append(buildMacroRelease(next));
         const metricGrid = document.createElement('div'); metricGrid.className = 'macro-metric-grid';
-        metricGrid.style.setProperty('--macro-cols', String(metrics.length === 4 ? 2 : Math.max(metrics.length, 1)));
+        metricGrid.style.setProperty('--macro-cols', String(metrics.length >= 4 ? 2 : Math.max(metrics.length, 1)));
         metricGrid.append(...metrics);
         card.append(header, metricGrid);
         if (later.length) {

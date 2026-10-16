@@ -355,3 +355,47 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - CPI 與核心 CPI 年增卡的趨勢以精確對齊 12 個月前的指數計算 YoY；月增卡與零售銷售趨勢以精確前月計算 MoM。若比較月份不存在，保留缺口，不可拿相鄰資料列冒充比較期。
 - 非農趨勢顯示每月新增人數（就業水位的月差）；失業率、Fed 目標利率上下限與 DGS10 顯示各期百分比水位。所有圖表保留日期標籤、百分比／人數刻度及點位 hover 資訊。
 - FRED DGS10 位於利率群組，直接使用 API 回傳並已寫入 DB 的歷史序列；零售與其他指標遵循相同圖表模式。
+
+## 20. 台灣央行、貿易、匯率與商品序列（2026-10-16）
+
+- 免費、低頻的央行利率／匯率、關務署月進出口、TPEx 黃金及 DGBAS 就業／失業序列放在 Python 行程內的有界 TTL 快取，不寫入 `maya_sawa_macro_observations`。快取有效 12 小時，過期後保留最多 30 日供上游故障時回退，卡片須標示快取過期；API snapshot 自身另快取 5 分鐘。
+- 央行利率來自 `EG28D01`；匯率來自 `FTDOpenData_Day`，近六年資料留在行程記憶體。關務署 6053 CSV 以精確去年同月計算出口／進口年增率。TPEx 黃金現貨以台幣／台兩顯示；World Bank Pink Sheet 補入黃金月均價（美元／金衡盎司），FRED WTI 沿用已持久化序列，避免破壞既有趨勢歷史。
+- DGBAS `A040101020` 以匿名 API 抓合計就業者與失業者月資料；其他 DGBAS dataset 需使用相應維度與統計週期查詢，並成功解析 observations 後才加入面板。
+- PostgreSQL 僅保留 BLS／FRED 需跨重啟使用的歷史觀察、事件及來源同步紀錄；新免費快取觀察不增加持久化資料列。多副本部署時 Python 本機快取不共享，各副本需各自啟動來源同步。
+- 日頻持久化序列 API 快照保留約 24 個月；FRED 日頻拉取窗口同步擴至 730 日。免費行程快取不保證 pod 重啟後仍有歷史趨勢，重新啟動後會由下一輪來源抓取重建。
+
+### 已驗證來源與尚缺資料
+
+| 指標 | 來源／頻率 | 目前限制 |
+|---|---|---|
+| 台灣央行三項政策利率 | [央行統計 API](https://cpx.cbc.gov.tw/Data/ExportToAPIInfo)，`EG28D01`，歷史日點／政策調整日 | 免費；尚待正式環境同步與 DB 驗收 |
+| 美元／新台幣銀行間收盤匯率 | [央行開放資料](https://data.gov.tw/dataset/7232)，日頻 | 免費；保存近六年 |
+| 台灣進出口 | [關務署資料集 6053](https://data.gov.tw/dataset/6053)，月頻 | 免費；總值單位為新台幣千元，年增率需有去年同月才可計算 |
+| 台灣黃金現貨 | [TPEx 開放資料](https://data.gov.tw/dataset/32443)，日頻 | 台幣／台兩；TPEx 最新值由 Python 本機快取保存。台銀免費歷史 CSV 在目前執行環境遇到反爬驗證，尚不可穩定自動回補；牌價口徑也不同。 |
+| 國際黃金月均價 | [World Bank Pink Sheet](https://www.worldbank.org/en/research/commodity-markets)，月頻 | 已驗證官方 XLSX 可免費下載及解析；美元／金衡盎司，僅行程快取 45 日。這是月均價，不是即時現貨。 |
+| WTI 原油 | [FRED／EIA DCOILWTICO](https://fred.stlouisfed.org/series/DCOILWTICO)，日頻 | FRED API key 為正式環境必要憑證；既有 FRED 網路逾時需先恢復並確認資料持久化 |
+| CoreWeave（CRWV）單一發行人 CDS／信用利差 | ICE 公開每日結算頁為候選：[ICE single-name CDS](https://status.ice.com/cds-settlement-prices/icc/single-name-instruments) | **尚未找到可確認涵蓋 CRWV、可自動擷取且允許網站快取／再展示的免費來源。** ICE 歷史／資料庫存取須授權。不可用市場整體 OAS 冒充 CoreWeave 個別 CDS。 |
+| 主計總處其他總體序列 | [DGBAS 統計資料庫 API 規格](https://nstatdb.dgbas.gov.tw/dgbasall/download/API%E8%AA%AA%E6%98%8E%E6%96%87%E4%BB%B6.pdf) | 免費匿名 API；查詢每個資料集必須帶維度篩選、頻率及起訖期。以下使用修正後代碼，並需在接入時按各資料集的維度結構選取合計序列。 |
+
+### 主計總處代碼核對（官方 API 附表）
+
+使用者提供的清單有數個代碼與名稱不符，接入時以官方附表為準：
+
+| 用途 | 正確資料集／代碼 | 備註 |
+|---|---|---|
+| 季 GDP（支出面，70 年以後） | 國內生產毛額依支出分－季 **A018102060** | A018102010 是 40–69 年歷史表；A018102020 是「國內生產及要素所得」。 |
+| CPI 分類與項目群 | 消費者物價基本分類暨項目群指數 **A030101025** | A030101015 是消費者物價基本分類指數。 |
+| 經季調綜合物價指標 | 各種物價總指數（含經季節調整）**A030601015** | A030502015 是營造工程物價指數（含查價項目）。 |
+| 家庭收支總覽 | 家庭收支重要指標 **A020001010** | 使用者列的 A018706010 是政府消費。 |
+| 五等分位所得／消費／儲蓄 | **A020003010** | A020002010 為所得總額按來源別。 |
+| 勞動力按教育程度 | **A040101020** | 代碼正確；但分類表較細，儀表板應只選總計系列，避免把多個教育分類誤當同一總體指標。 |
+
+已對 A040101020 的合計就業者維度查詢實際發出匿名 API 請求並收到 21 個月觀察值。程式接入合計就業者與失業者兩條序列，放入行程快取。其他資料集的 metadata 可讀，但其觀察值查詢尚未完成維度／週期驗證，不能標成已接入。
+
+### 免費來源邊界
+
+- Yahoo Finance 的 GC=F 是黃金期貨連續合約，不是現貨；Yahoo 官方說明將下載歷史資料列為 Gold 訂閱功能。現階段不把非官方 Yahoo API 當正式免費來源。
+- FRED 提供的 LBMA／ICE 黃金定價序列已因資料授權自 FRED 移除，不能以原 series ID 當成仍可用的免費歷史 API。[FRED 移除公告](https://fred.stlouisfed.org/news/2022/01/ice-benchmark-administration-ltd-iba-data-to-be-removed-from-fred)
+- CoreWeave 債券殖利率可作為 CDS 的**替代信用風險指標**，但不得標成 CDS。免費 FINRA Query API 公開資料集主要是交易聚合；FINRA 說明 TRACE API 不屬於該 Query API。若要用單一債券逐筆成交／殖利率，須先確認可免費查詢、可程式存取及網站展示條款；付費資料一律排除。[FINRA API 文件](https://developer.finra.org/docs)、[FINRA Fixed Income API 範圍](https://developer.finra.org/node/1171)
+
+前端應展示最新統計期、來源名稱與抓取時間；行程快取超過來源 freshness 時限便標示過期並保留最近值。免費序列已接入本機快取與 API snapshot，但尚未部署及 production 驗收；pod 重啟會清除快取，直到下一輪排程重新載入。付費資料源不接入。
