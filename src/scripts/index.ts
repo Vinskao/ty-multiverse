@@ -10,6 +10,7 @@ import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCod
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
+import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
 
@@ -105,6 +106,7 @@ function initMarketWatchlist() {
 
 interface DashboardInstrument {
     code: string; name: string; productType: 'stock' | 'futures';
+    market?: string;  // TW, US, JP, KR…; overseas codes can share digits with Taiwan codes (6857)
     underlyingCode?: string;
     quote?: TxfQuote | null;
 }
@@ -416,7 +418,13 @@ let marketHistoryRetryTimer: number | null = null;
 async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price', retries = 5) {
     if (marketHistoryRetryTimer !== null) { window.clearTimeout(marketHistoryRetryTimer); marketHistoryRetryTimer = null; }
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
-    const status = document.getElementById('market-history-status'); if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    const status = document.getElementById('market-history-status');
+    // History, chips and fundamentals come from Taiwan sources; never look up an overseas code there.
+    if (!isTaiwanInstrument(instrument)) {
+        if (status) status.textContent = marketText('No daily history for overseas holdings yet (Taiwan sources only).', '海外標的尚無本站日線（目前只接台灣資料來源）。');
+        return;
+    }
+    if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     try {
         // Stock futures use their underlying stock. Index futures use the
         // official TAIFEX history stored under their futures code.
@@ -880,7 +888,7 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
     const fields = document.getElementById('market-ai-fields') as HTMLFieldSetElement | null;
     const status = document.getElementById('market-ai-status');
     if (!form || !fields || !status) return;
-    const code = marketUnderlyingCode(instrument) || instrument.code;
+    const code = marketUnderlyingCode(instrument) || analysisRecordCode(instrument);
     const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
     const key = `${kind}:${code}`; const sequence = ++marketAiLoadSequence;
     const endpoint = astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=${kind}`);
@@ -1075,7 +1083,8 @@ function renderMarketDetailHeader(instrument: DashboardInstrument) {
     const underlyingCode = marketUnderlyingCode(instrument);
     const scope = instrument.productType !== 'futures' ? ''
         : underlyingCode ? ` · ${marketText(`${underlyingCode} stock charts`, `${underlyingCode} 現股圖表`)}` : ` · ${marketText('TAIFEX futures charts', '期交所期貨圖表')}`;
-    setText('market-detail-title', `${instrument.code} · ${instrument.name}${scope}`);
+    const marketLabel = instrumentMarketLabel(instrument, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    setText('market-detail-title', `${instrument.code} · ${instrument.name}${marketLabel ? ` · ${marketLabel}` : ''}${scope}`);
     const institutionalDescription = document.getElementById('market-history-institutional-description');
     if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
         ? (underlyingCode
@@ -1093,9 +1102,11 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // Keep all four tabs available. Stock futures use their underlying stock;
     // index futures show TAIFEX price/category data and explain unsupported
     // stock-only margin, lending, and ownership panels.
-    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = false; });
-    const defaultTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
-    selectMarketDetailTab(preferredMarketTab ?? defaultTab);
+    // Overseas holdings have no Taiwan-sourced charts; only the AI analysis tab applies.
+    const taiwan = isTaiwanInstrument(instrument);
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = !taiwan && tab.dataset.marketTab !== 'ai-analysis'; });
+    const defaultTab = !taiwan ? 'ai-analysis' : underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
+    selectMarketDetailTab(taiwan ? preferredMarketTab ?? defaultTab : defaultTab);
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
@@ -1134,9 +1145,10 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             item.append(badges);
         }
         const price = document.createElement('span'); price.className = 'market-watch-price';
-        const last = document.createElement('strong'); last.textContent = quote?.close ? quote.close.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--';
+        const last = document.createElement('strong'); last.textContent = quote?.close ? formatNumber(quote.close, 'price') : '--';
         const change = document.createElement('small');
-        change.textContent = quote ? `${quote.change > 0 ? '+' : ''}${quote.change.toLocaleString()} (${quote.changePercent > 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%)` : marketText('Quote unavailable', '暫無報價');
+        // IBKR position quotes carry no previous close, so their change is unknown (—), not zero.
+        change.textContent = quote ? `${formatNumber(quote.change, 'price', { signed: true })} (${formatNumber(quote.changePercent, 'percent', { signed: true })})` : marketText('Quote unavailable', '暫無報價');
         // Unchanged (0) stays neutral; only real moves get red/green.
         change.classList.toggle('up', Boolean(quote && quote.change > 0)); change.classList.toggle('down', Boolean(quote && quote.change < 0));
         price.append(last, change);

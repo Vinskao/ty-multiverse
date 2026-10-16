@@ -19,6 +19,10 @@
 - **Color-match every multi-line chart.** Each series has one color, used by its line, its hover marker, its y-axis labels and its readout entry (a colored dot plus the value), so a reader can tell whose number is whose. Colors come from `MACRO_SERIES_TONES` in `src/scripts/market/macroSeries.ts` and must stay distinct; pass them as the `--tone` CSS variable, because CSS class rules override SVG `stroke`/`fill` attributes. Never render a multi-series readout as one plain text string.
 - **Compare related histories in one chart; different units get separate y-axes automatically.** Put related series (gold and oil; USD/TWD, JPY/USD and the dollar index) in one chart via `MACRO_MERGED_CHARTS` in `src/scripts/market/macroLayout.ts` instead of one chart each. `macroChartNeedsSeparateAxes` compares the plotted units (growth formats count as %), and when they differ the chart shares the date axis with up to three colored y-axes (left, right, outer right); same-unit charts keep one axis. Do not keep a hand-written list of separate-axis charts. Daily series on different trading calendars show the latest close on or before the hovered date, with its own date (`macroValueAtOrBefore`).
 
+## Instrument identity / 標的身分
+
+An instrument is identified by code **and market** (`market`: TW, US, JP, KR…; missing = TW). Overseas IBKR holdings can share digits with Taiwan codes (Tokyo 6857 Advantest vs. Taiwan 6857 宏碁智醫), so never look one up by code alone. Use `src/scripts/market/instrumentIdentity.ts`: Taiwan-only data (history, chips, ownership, fundamentals) only for `isTaiwanInstrument`, and AI analysis records via `analysisRecordCode` (`6857-JP`). Backend: `market_for_currency` in `market_dashboard_db.py` sets the market; `stock_code` in `market_selection.py` keeps overseas codes out of the Taiwan collectors.
+
 ## Number display / 數字顯示
 
 Every number shown on a page goes through `src/scripts/format/numbers.ts`; do not hand-write `toFixed` / `toLocaleString` / `Intl.NumberFormat` for display values.

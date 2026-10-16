@@ -90,3 +90,13 @@ describe('publishedDigits', () => {
         expect(formatNumber(0.125, 'pp', { signed: true, digits: publishedDigits('2.375', '2.25') })).toBe('+0.125 pp');
     });
 });
+
+describe('price kind', () => {
+    it('shows quotes with up to two decimals and no trailing zeros', () => {
+        expect(formatNumber(2420, 'price')).toBe('2,420');
+        expect(formatNumber(447.5, 'price')).toBe('447.5');
+        expect(formatNumber(738.46002195, 'price')).toBe('738.46');
+        expect(formatNumber(-20, 'price', { signed: true })).toBe('-20');
+        expect(formatNumber(null, 'price')).toBe('—');
+    });
+});

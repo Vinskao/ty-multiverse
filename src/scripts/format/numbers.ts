@@ -2,10 +2,11 @@
 // Callers pass the kind of quantity (or let numberKindFor derive it from the series unit) instead of choosing
 // decimals themselves, so counts never show decimals and percentages always show two.
 
-export type NumberKind = 'count' | 'percent' | 'pp' | 'decimal' | 'millions';
+// price: market quotes, up to two decimals without trailing zeros (2,420 / 447.5 / 738.46).
+export type NumberKind = 'count' | 'percent' | 'pp' | 'decimal' | 'millions' | 'price';
 
-const DIGITS: Record<NumberKind, number> = { count: 0, percent: 2, pp: 2, decimal: 2, millions: 0 };
-const AXIS_DIGITS: Record<NumberKind, number> = { count: 0, percent: 1, pp: 1, decimal: 1, millions: 0 };
+const DIGITS: Record<NumberKind, number> = { count: 0, percent: 2, pp: 2, decimal: 2, millions: 0, price: 2 };
+const AXIS_DIGITS: Record<NumberKind, number> = { count: 0, percent: 1, pp: 1, decimal: 1, millions: 0, price: 1 };
 const COUNT_UNIT = /persons|jobs|shares|lots|contracts|holders|NTD thousand|people|人|股|張|口/i;
 
 // Kind from a series' unit and display format: growth formats are percent whatever the level's unit.
@@ -26,7 +27,7 @@ export function formatNumber(raw: number | string | null | undefined, kind: Numb
     if (value === null || value === undefined || !Number.isFinite(value)) return '—';
     const digits = options.digits ?? DIGITS[kind];
     const rounded = Number(value.toFixed(digits));
-    const text = Math.abs(rounded).toLocaleString(options.locale || 'en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    const text = Math.abs(rounded).toLocaleString(options.locale || 'en-US', { minimumFractionDigits: kind === 'price' ? 0 : digits, maximumFractionDigits: digits });
     // A value that rounds to zero is shown unsigned ("0.00%", not "+0.00%" or "-0.00%").
     const sign = rounded < 0 ? '-' : options.signed && rounded > 0 ? '+' : '';
     const suffix = kind === 'percent' ? '%' : kind === 'pp' ? ' pp' : '';

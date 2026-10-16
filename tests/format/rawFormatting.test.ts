@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 // Ratchet: display numbers go through src/scripts/format/numbers.ts. Hand-written toFixed / toLocaleString /
 // Intl.NumberFormat calls left in index.ts (quotes, portfolio, visit stats) may only be removed, never added.
 // When you migrate some, lower BASELINE to the new count. Dates and SVG coordinates are not display numbers.
-const BASELINE = 34;
+const BASELINE = 32;
 const NUMBER_CALL = /\.toFixed\(|\.toLocaleString\(|new Intl\.NumberFormat\(/;
 const NOT_A_DISPLAY_NUMBER = /new Date\(|Date\(|\bx\(|yOn\(|\by\(|hsl\(|cx:|cy:/;
 
