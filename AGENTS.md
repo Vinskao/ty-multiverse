@@ -7,6 +7,15 @@
 - Give axes clear titles and units, retain useful axis tick labels, and provide accessible names for the chart and individual points. Keep the interaction usable at mobile widths and do not obscure the chart with tooltips.
 - Apply this standard consistently to market, macroeconomic, and other dashboard charts; when adding a chart, document any meaningful exception in its feature plan.
 
+### One chart per shape (composite data points) / 同走勢只畫一張圖
+
+- Before adding a chart, check whether its series is derived from, or moves in lockstep with, a series already drawn. If so, do **not** add a second chart: draw one chart and show every related value in the same readout (a composite data point), e.g. `68.84% · 178.52億 股`.
+- Typical duplicates: a share and its count (`holding % = shares ÷ shares outstanding`); bounds of one range (Fed target lower/upper); policy rates that move together (CBC rediscount / secured loan / short-term loan); the same quantity in two units or currencies.
+- How: in `drawMarketHistoryChart`, plot the primary field and read the other fields in its `tooltip(point, value)` via `historyValue(point, sources, field)`; the TDCC tier charts (`% · shares · holders`) and foreign holding chart are the reference. For macro charts, pass the lockstep series as `comparisons` to `buildMacroTrendChart` and set the group's charts as combined in `renderMacroDashboard`.
+- Parallel groups of the same unit also share one chart, one line each: the four TDCC holder groups, Taiwan exports/imports, employed/unemployed, PMI/NMI. If their levels are too far apart for one axis (TDCC: retail ~5% vs. 1,000+ lots ~85%), plot each group's change since the first period (pp) and keep the level in the tiles and readout. Do not go back to one chart per group.
+- Separate charts are right only when the shapes differ in a way the reader needs: stock vs. flow (balance vs. daily buy/sell), different measures or units (payrolls vs. unemployment rate, TWD gold vs. USD gold vs. oil), or a near-constant reference that would flatten the series (show it as a KPI tile, like the foreign-ownership legal limit).
+- When you merge charts, also remove the old container from `index.astro` and every list that references its id (e.g. the futures "not available" list in `loadMarketHistory`).
+
 ## 1. Internationalization (i18n) / 多國語系
 
 ### Source of Truth / 單一來源

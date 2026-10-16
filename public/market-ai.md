@@ -15,6 +15,22 @@ Your conclusion must explicitly be **Buy / Neutral / Sell (買／中立／賣)**
 3. Click **Update analysis**. Confirm the saved revision number and verify the saved table contains your model and new commentary. A draft alone is not saved.
 4. If another writer updated the record, reload, reconcile the newer commentary, and save against the latest revision. Never overwrite an unseen update.
 
+## Phone chat apps (Claude / ChatGPT) / 手機 AI app
+
+The home page is rendered by JavaScript, so a chat app's web reader may only see "Loading…". Read these public JSON URLs instead (no sign-in needed):
+首頁由 JavaScript 載入，手機 AI 讀網頁可能只看到「載入中」，請直接讀以下公開 JSON：
+
+- Dashboard / 標的清單與報價: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard
+- Macro data / 總經數據: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/macro
+- Shared macro commentary / 總經評論: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/analysis/US?productType=macro
+- Company events / 公司事件: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/events
+- Daily history / 日線與籌碼: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/history/{code}
+- Fundamentals / 基本面: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/fundamentals/{code}
+- Current analysis and history / 目前評論與版本: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/analysis/{code}?productType=stock
+
+Chat apps cannot sign in, so they cannot save. Reply with the complete commentary as plain text, together with your model name and the revision you based it on. The user pastes it into the AI analysis editor while signed in and saves it there.
+手機 AI 無法登入，不能直接儲存：請把完整評論以純文字回覆，並附上模型名稱與依據的版本號，由使用者登入後貼到 AI 分析編輯框儲存。
+
 ## API workflow
 
 - Dashboard: `GET /tymultiverse/api/market/dashboard`
