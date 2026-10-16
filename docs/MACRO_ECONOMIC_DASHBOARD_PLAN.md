@@ -348,3 +348,10 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - FRED 每次同步預計最多 3 個 release dates 加 4 個 series observations 請求；四次／日約 28 次，低於配置的 FRED 每日 100 次上限。
 
 **正式資料仍未完成驗收**：目前 production snapshot 的 FRED source 仍回 `TimeoutError`，資料庫尚無 `RSAFS`、`DGS10` 或 FRED retail release dates。程式接好後，必須先恢復 FRED Pod 出口，再確認最新一期與前一期都進 DB、API 回傳兩序列，並於本週公布資料進入七天窗口時驗證高亮。頁面 GET 繼續只讀 DB，不觸發現場抓取。
+
+## 19. 指標趨勢圖呈現（2026-10-16）
+
+- 每個總經指標卡都應顯示以已持久化歷史資料繪製的折線趨勢圖，附日期 X 軸與含單位的 Y 軸；訪客頁面仍只讀 dashboard API，不向來源即時補抓。
+- CPI 與核心 CPI 年增卡的趨勢以精確對齊 12 個月前的指數計算 YoY；月增卡與零售銷售趨勢以精確前月計算 MoM。若比較月份不存在，保留缺口，不可拿相鄰資料列冒充比較期。
+- 非農趨勢顯示每月新增人數（就業水位的月差）；失業率、Fed 目標利率上下限與 DGS10 顯示各期百分比水位。所有圖表保留日期標籤、百分比／人數刻度及點位 hover 資訊。
+- FRED DGS10 位於利率群組，直接使用 API 回傳並已寫入 DB 的歷史序列；零售與其他指標遵循相同圖表模式。

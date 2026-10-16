@@ -1294,6 +1294,7 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
             const prior = document.createElement('small');
             prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(previousSales, 0)} M USD`;
             card.append(heading, value, meta, delta, prior);
+            card.append(buildMacroTrendChart(indicator, format));
             return card;
         }
         value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
@@ -1318,7 +1319,73 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     } else {
         card.append(heading, value, meta, delta);
     }
+    card.append(buildMacroTrendChart(indicator, format));
     return card;
+}
+
+function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat): HTMLElement {
+    const wrap = document.createElement('section');
+    wrap.className = 'macro-trend-chart';
+    const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+        .filter((item) => Number.isFinite(item.value)).slice(-48);
+    const offset = format === 'yoy' ? 12 : ['mom', 'sales', 'jobs'].includes(format) ? 1 : 0;
+    const points = raw.flatMap((item) => {
+        if (!offset) return [{ period: item.period, value: item.value }];
+        const basePeriod = shiftMacroPeriod(item.period, -offset);
+        const base = raw.find((candidate) => candidate.period === basePeriod);
+        if (!base || base.value === 0) return [];
+        const value = format === 'jobs' ? (item.value - base.value) * 1000 : (item.value / base.value - 1) * 100;
+        return Number.isFinite(value) ? [{ period: item.period, value }] : [];
+    });
+    const unitLabel = format === 'jobs' ? marketText('Monthly change (jobs)', '月增人數')
+        : format === 'yoy' ? marketText('Year-over-year (%)', '年增率 (%)')
+            : ['mom', 'sales'].includes(format) ? marketText('Month-over-month (%)', '月增率 (%)')
+                : indicator.code === 'DGS10' ? marketText('Yield (%)', '殖利率 (%)')
+                    : marketText('Rate (%)', '百分比');
+    if (points.length < 2) {
+        const empty = document.createElement('p'); empty.className = 'macro-trend-empty';
+        empty.textContent = format === 'yoy'
+            ? marketText('YoY trend needs at least 13 saved monthly observations.', '年增率趨勢至少需要 13 個月的已保存資料。')
+            : marketText('Not enough saved observations to draw a trend.', '已保存的觀察值不足，暫時無法繪圖。');
+        wrap.append(empty); return wrap;
+    }
+    const width = 340, height = 152, left = 48, right = 10, top = 8, bottom = 34;
+    const plotWidth = width - left - right, plotHeight = height - top - bottom;
+    const minValue = Math.min(...points.map((point) => point.value));
+    const maxValue = Math.max(...points.map((point) => point.value));
+    const span = Math.max(maxValue - minValue, 0.1);
+    const low = Math.floor((minValue - span * 0.12) * 10) / 10;
+    const high = Math.ceil((maxValue + span * 0.12) * 10) / 10;
+    const x = (index: number) => left + (index / (points.length - 1)) * plotWidth;
+    const y = (value: number) => top + ((high - value) / (high - low)) * plotHeight;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`); svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `${marketI18n('macroTrend','Trend')}: ${unitLabel}`);
+    const add = (tag: string, attrs: Record<string, string>, text?: string) => {
+        const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        if (text !== undefined) node.textContent = text;
+        svg.append(node); return node;
+    };
+    for (let tick = 0; tick <= 3; tick++) {
+        const value = low + ((high - low) * tick) / 3, tickY = y(value);
+        add('line', { x1: String(left), x2: String(width - right), y1: String(tickY), y2: String(tickY), class: 'macro-trend-gridline' });
+        add('text', { x: String(left - 6), y: String(tickY + 3), 'text-anchor': 'end', class: 'macro-trend-axis-label' }, format === 'jobs' ? Math.round(value).toLocaleString() : `${value.toFixed(1)}%`);
+    }
+    add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, unitLabel);
+    add('line', { x1: String(left), x2: String(width - right), y1: String(top + plotHeight), y2: String(top + plotHeight), class: 'macro-trend-axis' });
+    add('path', { d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' '), class: 'macro-trend-line' });
+    points.forEach((point, index) => {
+        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '1.8' : '2.5', class: 'macro-trend-point' });
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = `${point.period}: ${format === 'jobs' ? Math.round(point.value).toLocaleString() : `${point.value.toFixed(2)}%`}`;
+        circle.append(title);
+    });
+    [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])].forEach((index) => {
+        add('text', { x: String(x(index)), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, points[index].period);
+    });
+    add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
+    wrap.append(svg); return wrap;
 }
 
 function renderMacroDashboard(snapshot: MacroSnapshot) {

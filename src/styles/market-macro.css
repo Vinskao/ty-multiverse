@@ -40,7 +40,16 @@
 .macro-indicator-card>strong { font-size:1.05rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
 .macro-indicator-card>small { color:var(--gray-400); font-size:.65rem; }
 .macro-indicator-card>.macro-indicator-change { color:var(--text-primary); }
+.macro-trend-chart { min-width:0; margin-top:.25rem; padding-top:.25rem; border-top:1px solid color-mix(in srgb,var(--gray-700) 70%,transparent); }
+.macro-trend-chart svg { display:block; width:100%; height:auto; overflow:visible; }
+.macro-trend-empty { margin:.3rem 0 0; color:var(--gray-400); font-size:.65rem; }
+.macro-trend-gridline { stroke:color-mix(in srgb,var(--gray-600) 42%,transparent); stroke-width:1; stroke-dasharray:3 4; }
+.macro-trend-axis { stroke:var(--gray-500); stroke-width:1; }
+.macro-trend-axis-label { fill:var(--gray-400); font-size:9px; }
+.macro-trend-axis-title { fill:var(--text-secondary,var(--gray-300)); font-size:8px; }
+.macro-trend-line { fill:none; stroke:#70b7f0; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.macro-trend-point { fill:#70b7f0; stroke:var(--surface-primary,#111827); stroke-width:1; vector-effect:non-scaling-stroke; }
 .macro-source-note { margin:.65rem 0 0; color:var(--gray-400); font-size:.68rem; }
 .macro-source-note a { color:inherit; }
 @media(max-width:900px) { .macro-group-grid { grid-template-columns:minmax(0,1fr); } }
-@media(max-width:520px) { .macro-dashboard { padding:.7rem; } .macro-group { padding:.6rem; } .macro-metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.35rem; } .macro-group-header { flex-direction:column; } .macro-group-header .macro-event { width:100%; text-align:left; justify-items:start; } .macro-dashboard-heading { display:grid; gap:.2rem; } .macro-indicator-card { padding:.55rem; } }
+@media(max-width:520px) { .macro-dashboard { padding:.7rem; } .macro-group { padding:.6rem; } .macro-metric-grid { grid-template-columns:minmax(0,1fr); gap:.35rem; } .macro-group-header { flex-direction:column; } .macro-group-header .macro-event { width:100%; text-align:left; justify-items:start; } .macro-dashboard-heading { display:grid; gap:.2rem; } .macro-indicator-card { padding:.55rem; } }

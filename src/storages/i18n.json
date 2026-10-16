@@ -53,6 +53,7 @@
       "macroPreviousPeriod": { "en": "Previous", "zh": "前期" },
       "macroLatestObservation": { "en": "Latest stored observation", "zh": "最近一筆已存資料" },
       "macroLatestIndex": { "en": "Latest index level", "zh": "最新指數值" },
+      "macroTrend": { "en": "Trend", "zh": "\u8da8\u52e2" },
     "macroJobs": { "en": "jobs", "zh": "\u4eba" },
     "macroDataAsOf": { "en": "reported period", "zh": "\u7d71\u8a08\u671f\u9593" },
     "macroMonthlyChange": { "en": "Change from previous month", "zh": "\u8f03\u524d\u6708\u589e\u6e1b" },
