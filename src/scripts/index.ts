@@ -1294,7 +1294,7 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
             const prior = document.createElement('small');
             prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${macroNumber(previousSales, 0)} M USD`;
             card.append(heading, value, meta, delta, prior);
-            card.append(buildMacroTrendChart(indicator, format));
+            card.append(buildMacroTrendChart(indicator, format, label));
             return card;
         }
         value.textContent = `${macroNumber(indicator.value, 0)} M USD`;
@@ -1319,11 +1319,11 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     } else {
         card.append(heading, value, meta, delta);
     }
-    card.append(buildMacroTrendChart(indicator, format));
+    card.append(buildMacroTrendChart(indicator, format, label));
     return card;
 }
 
-function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat): HTMLElement {
+function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string): HTMLElement {
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
@@ -1375,17 +1375,29 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, unitLabel);
     add('line', { x1: String(left), x2: String(width - right), y1: String(top + plotHeight), y2: String(top + plotHeight), class: 'macro-trend-axis' });
     add('path', { d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' '), class: 'macro-trend-line' });
+    const readout = document.createElement('div');
+    readout.className = 'market-chart-readout market-chart-readout--compact macro-trend-readout';
+    readout.setAttribute('aria-live', 'polite');
+    readout.setAttribute('role', 'status');
+    const showPoint = (index: number) => {
+        const point = points[index];
+        readout.textContent = `${indicatorLabel} · ${point.period} · ${format === 'jobs' ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}` : `${point.value.toFixed(2)}%`}`;
+    };
+    showPoint(points.length - 1);
     points.forEach((point, index) => {
-        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '1.8' : '2.5', class: 'macro-trend-point' });
+        const circle = add('circle', { cx: String(x(index)), cy: String(y(point.value)), r: points.length > 36 ? '3' : '4', class: 'macro-trend-point', tabindex: '0', role: 'button', 'aria-label': `${indicatorLabel}, ${point.period}: ${format === 'jobs' ? `${Math.round(point.value).toLocaleString(marketLocale())} ${marketI18n('macroJobs','jobs')}` : `${point.value.toFixed(2)}%`}` });
         const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
         title.textContent = `${point.period}: ${format === 'jobs' ? Math.round(point.value).toLocaleString() : `${point.value.toFixed(2)}%`}`;
         circle.append(title);
+        circle.addEventListener('pointerenter', () => showPoint(index));
+        circle.addEventListener('focus', () => showPoint(index));
+        circle.addEventListener('click', () => showPoint(index));
     });
     [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])].forEach((index) => {
         add('text', { x: String(x(index)), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, points[index].period);
     });
     add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
-    wrap.append(svg); return wrap;
+    wrap.append(svg, readout); return wrap;
 }
 
 function renderMacroDashboard(snapshot: MacroSnapshot) {

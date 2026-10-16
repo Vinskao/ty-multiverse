@@ -48,7 +48,9 @@
 .macro-trend-axis-label { fill:var(--gray-400); font-size:9px; }
 .macro-trend-axis-title { fill:var(--text-secondary,var(--gray-300)); font-size:8px; }
 .macro-trend-line { fill:none; stroke:#70b7f0; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
-.macro-trend-point { fill:#70b7f0; stroke:var(--surface-primary,#111827); stroke-width:1; vector-effect:non-scaling-stroke; }
+.macro-trend-point { fill:#70b7f0; stroke:var(--surface-primary,#111827); stroke-width:1; vector-effect:non-scaling-stroke; cursor:pointer; }
+.macro-trend-point:hover,.macro-trend-point:focus { r:5; stroke:#f2c45d; stroke-width:2; outline:none; }
+.macro-trend-readout { margin:.35rem 0 0; min-height:1.8rem; }
 .macro-source-note { margin:.65rem 0 0; color:var(--gray-400); font-size:.68rem; }
 .macro-source-note a { color:inherit; }
 @media(max-width:900px) { .macro-group-grid { grid-template-columns:minmax(0,1fr); } }

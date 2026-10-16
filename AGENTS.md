@@ -1,5 +1,12 @@
 # TY Multiverse Development Guidelines (AGENTS.md)
 
+## Chart interaction standard
+
+- Every data chart must expose the exact value for each plotted point. Desktop users can hover; touch users can tap; keyboard users can focus point controls. Do not rely only on browser-native SVG `<title>` tooltips.
+- Keep a visible readout beside or below the chart. It must identify the date/period or category, series/indicator, formatted value, and unit. Multi-series charts show all series values for the selected x-axis position.
+- Give axes clear titles and units, retain useful axis tick labels, and provide accessible names for the chart and individual points. Keep the interaction usable at mobile widths and do not obscure the chart with tooltips.
+- Apply this standard consistently to market, macroeconomic, and other dashboard charts; when adding a chart, document any meaningful exception in its feature plan.
+
 ## 1. Internationalization (i18n) / 多國語系
 
 ### Source of Truth / 單一來源
