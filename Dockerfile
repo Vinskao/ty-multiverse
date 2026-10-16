@@ -41,6 +41,7 @@ RUN npm ci --prefer-offline --no-audit --legacy-peer-deps && \
 FROM build-deps AS build
 COPY . .
 RUN npm run build
+RUN node --test tests/homepage-ssr.mjs
 
 FROM base AS runtime
 COPY --from=prod-deps /app/node_modules ./node_modules

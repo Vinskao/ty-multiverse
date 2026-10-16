@@ -240,7 +240,7 @@ const skillsCategories = skillsData.categories;
 											<p>先選 top-down（總經→產業→公司）或 bottom-up（公司→產業→總經）寫成一條完整敘事；必查公司最新公布的技術實力與技術路線，再交叉驗證技術面、基本面、籌碼，明確給「買／中立／賣」與翻轉條件。提示位於輸入框外，所有模型都可讀。</p>
 											<pre id="market-ai-research-prompt-text">你是本標的的投資研究員。依最新、可核實資料更新下方「目前評論」：要寫出一條有因果的完整敘事，不是數字清單；不得沿用前一模型而不重新驗證。
 
-每次先重新 GET dashboard、brief、macro、events 與本標的資料，比對現有評論截點與最新資料期間／交易日／公布日，同期間修訂也要重新判讀。下方「本次資料檢查」於每次開啟時重新讀取；fetchedAt 只是抓取時間，不是公布日。海外用 code + market 與 /api/market/dashboard/overseas/{code}?market=US|JP|KR，不得查同號台股。輸出首行必須是【結論】買、【結論】中立、【結論】賣之一。
+每次先重新 GET dashboard、brief、macro、events 與本標的資料，比對現有評論截點與最新資料期間／交易日／公布日，同期間修訂也要重新判讀。下方「本次資料檢查」於每次開啟時重新讀取；fetchedAt 只是抓取時間，不是公布日。海外用 code + market 與 /api/market/dashboard/overseas/{'{code}'}?market=US|JP|KR，不得查同號台股。輸出首行必須是【結論】買、【結論】中立、【結論】賣之一。
 
 敘事主軸（擇一並寫明）
 • Top-down：美國總經（就業、通膨、聯準會利率、10 年期殖利率、零售消費）→ 資金與風險偏好 → 台股／產業景氣 → 公司營運 → 價格與籌碼。適用大型權值、景氣循環、指數期貨。
