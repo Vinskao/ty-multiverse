@@ -6,13 +6,14 @@ import { serviceAvailabilityManager } from '../services/core/serviceAvailability
 import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 import { config } from '../services/core/config';
 import i18nData from '../storages/i18n.json';
-import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, type MacroSeriesTone } from './market/macroSeries';
+import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, macroPeriodLabel, type MacroSeriesTone, type MacroSeriesFormat } from './market/macroSeries';
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
+import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
@@ -1305,67 +1306,19 @@ async function fetchMarketCompanyEvents() {
     }
 }
 
-type MacroIndicator = { code: string; name: string; unit: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; expectationHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; consensusHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; fetchedAt?: string; source?: string; sourceUrl?: string; cacheStale?: boolean };
+type MacroIndicator = { code: string; name: string; unit: string; frequency?: string; value: string; referencePeriod: string; previousValue?: string | null; previousPeriod?: string | null; change?: number | null; history?: Array<{period:string;value:string}>; expectationHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; consensusHistory?: Array<{period:string;value:string;source?:string;sourceUrl?:string}>; fetchedAt?: string; source?: string; sourceUrl?: string; cacheStale?: boolean };
 type MacroEvent = { id:string; groupId:string; type:string; title:string; scheduledDate:string; scheduledAt?:string|null; timePrecision:string; scheduleVerification:string; highlightLevel:string; source:string; sourceUrl:string; consensusValue?:string|null; actualValue?:string|null; surpriseValue?:string|null; surpriseStatus?:'above'|'below'|'in_line'|null; expectationSource?:string|null };
 type MacroSnapshot = { status:string; enabled?:boolean; asOf?:string; indicators?:MacroIndicator[]; events?:MacroEvent[]; sources?:Array<{source:string;availability:string;stale:boolean}>; configuration?:Record<string,string> };
 
 
-type MacroMetricFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw';
+type MacroMetricFormat = MacroSeriesFormat;
 type MacroMetricSpec = readonly [code: string, label: () => string, format: MacroMetricFormat];
 
-// Each theme pairs the indicators it reports with the calendar group that announces them,
-// so the latest reading and the next release sit in the same card.
-const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; title: () => string; metrics: readonly MacroMetricSpec[] }> = [
-    { id: 'employment', eventGroups: ['employment', 'claims'], title: () => marketText('Labor market', '就業'), metrics: [
-        ['CES0000000001', () => marketI18n('macroPayrolls','Nonfarm payrolls'), 'jobs'],
-        ['LNS14000000', () => marketI18n('macroUnemployment','Unemployment rate'), 'percent'],
-        ['TW_UNEMPLOYMENT_RATE', () => marketText('Taiwan unemployment rate', '台灣失業率'), 'percent'],
-        ['ICSA', () => marketText('Initial unemployment claims', '初領失業救濟金人數'), 'claims'],
-    ] },
-    { id: 'inflation', eventGroups: ['cpi', 'ppi'], title: () => marketText('Inflation', '通膨'), metrics: [
-        ['CUSR0000SA0', () => marketI18n('macroCpiMonthly','CPI · monthly'), 'mom'],
-        ['CUUR0000SA0', () => marketI18n('macroCpiAnnual','CPI · annual'), 'yoy'],
-        ['CUSR0000SA0L1E', () => marketI18n('macroCoreCpiMonthly','Core CPI · monthly'), 'mom'],
-        ['CUUR0000SA0L1E', () => marketI18n('macroCoreCpiAnnual','Core CPI · annual'), 'yoy'],
-        ['TW_CPI', () => marketText('Taiwan CPI · annual', '台灣 CPI 年增率'), 'yoy'],
-        ['WPUFD4', () => marketText('U.S. producer prices · final demand', '美國生產者物價指數 · 最終需求'), 'yoy'],
-        ['TW_PPI', () => marketText('Taiwan producer price index', '台灣生產者物價指數'), 'yoy'],
-    ] },
-    { id: 'rates', eventGroups: ['fed'], title: () => marketText('Interest rates', '利率'), metrics: [
-        ['DFEDTARL', () => marketI18n('macroFedTargetLower','Fed target · lower'), 'percent'],
-        ['DFEDTARU', () => marketI18n('macroFedTargetUpper','Fed target · upper'), 'percent'],
-        ['DGS10', () => marketI18n('macroTreasuryYield10','10-year Treasury yield'), 'percent'],
-        ['CBC_REDISCOUNT', () => marketText('Taiwan CBC rediscount rate', '台灣央行重貼現率'), 'percent'],
-        ['CBC_SECURED_LOAN', () => marketText('Taiwan CBC secured loan rate', '台灣央行擔保放款利率'), 'percent'],
-        ['CBC_SHORT_TERM_LOAN', () => marketText('Taiwan CBC short-term loan rate', '台灣央行短期融通利率'), 'percent'],
-    ] },
-    { id: 'commodities', eventGroups: [], title: () => marketText('Commodities', '商品價格'), metrics: [
-        ['COMEX_GOLD_USD', () => marketText('COMEX gold futures', '美國 COMEX 黃金期貨'), 'raw'],
-        ['TPEx_GOLD_TWD', () => marketText('Taiwan gold spot', '台灣黃金現貨'), 'raw'],
-        ['WORLD_GOLD_USD', () => marketText('World gold monthly average', '國際黃金月均價'), 'raw'],
-        ['DCOILWTICO', () => marketText('WTI crude oil', 'WTI 原油'), 'raw'],
-    ] },
-    { id: 'fx-trade', eventGroups: [], title: () => marketText('Exchange rates and Taiwan trade', '匯率與台灣進出口'), metrics: [
-        ['CBC_USD_TWD', () => marketText('Interbank USD/TWD close', '銀行間美元兌新台幣收盤'), 'raw'],
-        ['USD_JPY', () => marketText('USD/JPY (yen per dollar)', '美元兌日圓'), 'raw'],
-        ['US_DOLLAR_INDEX', () => marketText('U.S. Dollar Index (DXY)', '美元指數 (DXY)'), 'raw'],
-        ['TW_EXPORTS', () => marketText('Exports', '出口總值'), 'yoy'],
-        ['TW_IMPORTS', () => marketText('Imports', '進口總值'), 'yoy'],
-    ] },
-    { id: 'taiwan-employment', eventGroups: [], title: () => marketText('Taiwan labor market', '台灣就業'), metrics: [
-        ['TW_EMPLOYED', () => marketText('Employed persons', '就業人數'), 'jobs'],
-        ['TW_UNEMPLOYED', () => marketText('Unemployed persons', '失業人數'), 'jobs'],
-    ] },
-    { id: 'consumption', eventGroups: ['retail_sales'], title: () => marketText('Consumption', '消費'), metrics: [
-        ['RSAFS', () => marketI18n('macroRetailSales','Retail sales and food services'), 'sales'],
-        ['GBRSLRTTO01GPSAM', () => marketText('UK retail sales · month over month', '英國零售銷售 · 月增率'), 'raw'],
-        ['GBRSLRTTO01GYSAM', () => marketText('UK retail sales · year over year', '英國零售銷售 · 年增率'), 'raw'],
-    ] },
-    { id: 'pmi', eventGroups: [], title: () => marketText('Purchasing managers indexes', '採購經理人指數'), metrics: [
-        ['TW_PMI', () => marketText('Taiwan manufacturing PMI', '台灣製造業 PMI'), 'raw'],
-        ['TW_NMI', () => marketText('Taiwan non-manufacturing NMI', '台灣非製造業 NMI'), 'raw'],
-    ] },
-];
+// Card and tile definitions live in ./market/macroGroups.ts; this only resolves their labels in the page language.
+const macroText = (text: MacroText) => 'key' in text ? marketI18n(text.key, text.en) : marketText(text.en, text.zh);
+const MACRO_GROUPS: ReadonlyArray<{ id: string; eventGroups: readonly string[]; title: () => string; metrics: readonly MacroMetricSpec[] }> =
+    MACRO_GROUP_SPECS.map((group) => ({ id: group.id, eventGroups: group.eventGroups, title: () => macroText(group.title),
+        metrics: group.metrics.map((metric) => [metric.code, () => macroText(metric.label), metric.format] as const) }));
 
 // Chart layout per card lives in ./market/macroLayout.ts (MACRO_MERGED_CHARTS).
 
@@ -1441,7 +1394,7 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
     value.textContent = `${formatNumber(current, valueKind, { locale: marketLocale(), digits: valueDigits })}${valueKind === 'percent' ? '' : suffix}`;
     const meta = document.createElement('small');
     const sourceTime = indicator.fetchedAt ? new Date(indicator.fetchedAt).toLocaleString(marketLocale(), { timeZone: 'Asia/Taipei' }) : '';
-    meta.textContent = `${indicator.referencePeriod} · ${marketI18n('macroDataAsOf','reported period')}${sourceTime ? ` · ${sourceTime}` : ''}${indicator.cacheStale ? ` · ${marketText('cached data is stale','快取資料已過期')}` : ''}`;
+    meta.textContent = `${macroPeriodLabel(indicator.referencePeriod, indicator.frequency)} · ${marketI18n('macroDataAsOf','reported period')}${sourceTime ? ` · ${sourceTime}` : ''}${indicator.cacheStale ? ` · ${marketText('cached data is stale','快取資料已過期')}` : ''}`;
     if (indicator.sourceUrl) {
         const sourceLink = document.createElement('a');
         sourceLink.href = indicator.sourceUrl; sourceLink.target = '_blank'; sourceLink.rel = 'noopener noreferrer';
@@ -1488,7 +1441,7 @@ function buildMacroMetric(indicator: MacroIndicator, code: string, label: string
                 : format === 'claims'
                     ? formatWithUnit(indicator.previousValue, indicator.unit, 'claims', marketText('persons', '人'), { locale })
                 : `${formatWithUnit(indicator.previousValue, indicator.unit, undefined, '', { locale })}${format === 'mom' || format === 'yoy' ? ` · ${marketI18n('macroLatestIndex','Latest index level')}` : ''}`;
-        prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${priorValue}`;
+        prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${macroPeriodLabel(indicator.previousPeriod || '', indicator.frequency)}: ${priorValue}`;
         card.append(heading, value, meta, delta, prior);
     } else {
         card.append(heading, value, meta, delta);
@@ -1622,7 +1575,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
         const period = periods[index];
         // One colored entry per series (same color as its line, marker and axis) so each value matches its line.
         readout.replaceChildren();
-        const date = document.createElement('strong'); date.textContent = period; readout.append(date);
+        const date = document.createElement('strong'); date.textContent = macroPeriodLabel(period, indicator.frequency); readout.append(date);
         series.forEach((item, index) => {
             const value = macroValueAtOrBefore(item.values, period);
             const marker = markers[index];
@@ -1657,7 +1610,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     });
     svg.addEventListener('blur', () => showPoint(periods.length - 1, false));
     [...new Set([0, Math.floor((periods.length - 1) / 2), periods.length - 1])].forEach((index) => {
-        add('text', { x: String(x(periods[index])), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === periods.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, periods[index]);
+        add('text', { x: String(x(periods[index])), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === periods.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, macroPeriodLabel(periods[index], indicator.frequency));
     });
     add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
     wrap.append(svg, readout);

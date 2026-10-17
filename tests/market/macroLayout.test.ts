@@ -31,6 +31,25 @@ describe('macro chart layout', () => {
         expect(MACRO_MERGED_CHARTS.commodities).toEqual([['COMEX_GOLD_USD|WORLD_GOLD_USD', 'DCOILWTICO']]);
     });
 
+    it('splits rates into policy, yield-curve, spread, real-yield and foreign-central-bank charts', () => {
+        expect(MACRO_MERGED_CHARTS.rates).toEqual([
+            ['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
+            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']]);
+    });
+
+    it('plots Fed liquidity components on one axis and keeps weekly and monthly balance sheets in separate charts', () => {
+        // Weekly (YYYY-MM-DD) and monthly (YYYY-MM) periods on one date axis would interleave out of order.
+        expect(MACRO_MERGED_CHARTS.liquidity).toEqual([['WALCL', 'US_NET_LIQUIDITY', 'WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']]);
+        expect(macroChartNeedsSeparateAxes(['WALCL', 'US_NET_LIQUIDITY', 'WTREGEN', 'RRPONTSYD'].map(() => ({ format: 'raw', unit: 'USD billion' })))).toBe(false);
+    });
+
+    it('groups credit spreads, quarterly bank delinquency and weekly stress indexes in their own charts', () => {
+        expect(MACRO_MERGED_CHARTS.credit).toEqual([
+            ['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y'],
+            ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'],
+            ['STLFSI4', 'NFCI']]);
+    });
+
     it('never draws a series in two charts and keeps multi-line charts to the three-axis maximum when units differ', () => {
         const all = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         expect(new Set(all).size).toBe(all.length);

@@ -429,3 +429,40 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - Finance Calendar 另保留美國中、高影響的 GDP、PCE／個人所得與支出、耐久財、工業生產、房屋開工／許可／銷售、消費者信心、貿易、庫存、工廠訂單、消費信貸、領先指標等事件。其他事件以各自名稱和日期列示，套用既有公布日前高亮；同日多事件使用標題雜湊識別，避免互相覆寫。低影響和非美國的一般事件不灌入「其他美國經濟事件」清單。
 - ISM 事件僅顯示公布日與標題，不保存或重刊其 PMI 共識／實際數據，以遵守 ISM 未授權再發布限制。
 - 來源：[ONS Retail Sales Index](https://www.ons.gov.uk/businessindustryandtrade/retailindustry/datasets/retailsales/current)（免費官方英國零售銷售量／值歷史資料及發布日程）、[OECD 英國零售銷售量 MoM](https://fred.stlouisfed.org/series/GBRSLRTTO01GPSAM)、[OECD 英國零售銷售量 YoY](https://fred.stlouisfed.org/series/GBRSLRTTO01GYSAM)、[Finance Calendar API](https://www.financecalendar.com/api/)。
+
+## 22. 貨幣供給、全球流動性、利率曲線與信用違約（2026-10-17）
+
+使用者要求首頁總經區補齊「世界金流、利率、違約率」。來源查證日期 2026-10-17；FRED 序列以公開 `fredgraph.csv` 核對最新觀察期，正式抓取走既有 keyed API。ECB、BoJ、CBC 三個 API 已從 OKE 節點實測 HTTP 200。
+
+### 22.1 新增序列與來源
+
+| 卡片 | 序列 | 來源／頻率 | 最新可得期（查證時） |
+|---|---|---|---|
+| 貨幣供給與流動性 | 美國 M2 `M2SL` | FRED（Fed H.6），月，USD billion | 2026-08 |
+| | 歐元區 M2 名目存量指數 `BSI.M.U2.Y.V.M20.X.I.U2.2300.Z01.E` → `EZ_M2_INDEX` | [ECB Data Portal](https://data.ecb.europa.eu/)，月，季調 | 2026-08；由指數算的年增 3.24% 與 ECB 公布 3.2415% 一致 |
+| | 日本 M2 平均餘額 `MAM1NAM2M2MO` → `JP_M2` | [BoJ 時系列 API](https://www.stat-search.boj.or.jp/)，月；1 億円換成兆円 | 2026-09 |
+| | 台灣 M1B、M2 日平均 `EF15M01` → `TW_M1B`、`TW_M2` | 央行統計 API，月，新台幣百萬元 | 2026-08；M2 70,677,981，年增 6.79% 與官方欄一致 |
+| | Fed 總資產 `WALCL`、TGA `WTREGEN`、隔夜逆回購 `RRPONTSYD` | FRED（H.4.1），週／日；百萬美元換成十億美元 | 2026-10-14／10-16 |
+| | Fed 淨流動性 `US_NET_LIQUIDITY` = WALCL − TGA − RRP | 由上列三序列計算，週三對齊；RRP 缺當日時往前最多 7 日 | 推導值 |
+| | 歐洲央行體系總資產 `ECBASSETSW`、日本央行總資產 `JPNASSETS` | FRED，週／月；換成十億歐元、兆円 | 2026-10-09／2026-09 |
+| 利率 | SOFR、3M／2Y 公債、10Y−2Y、10Y−3M、10Y TIPS 實質殖利率、10Y 損益兩平通膨 | FRED，日 | 2026-10-15／16 |
+| | ECB 存款利率 `ECBDFR`、英國 SONIA `IUDSOIA`、日本隔夜拆款 `IRSTCI01JPM156N` | FRED（後者為 OECD 月資料） | 2026-10-16／10-14／2026-09 |
+| 信用與違約風險 | ICE BofA 高收益／投資級 OAS、Moody's Baa − 10Y | FRED，日 | 2026-10-15 |
+| | 銀行逾期率（全部、企業、房貸、信用卡）、信用卡淨沖銷率 | FRED（Fed 季報），季 | 2026 Q2 |
+| | 聖路易 Fed 金融壓力 `STLFSI4`、芝加哥 Fed `NFCI` | FRED，週 | 2026-10-09 |
+
+### 22.2 規則與限制
+
+- 新序列全部放 Python 行程快取，不寫 PostgreSQL（`save_observations` 逐列 SELECT，postgres 只有 100m CPU）。Pod 重啟後由下一輪抓取重建。
+- FRED 每日預算 200：日頻 17 序列加 RSAFS／ICSA 與 5 個 release 每 6 小時一輪（約 96 次／日）；週／月／季頻 15 序列快取未滿 24 小時就跳過（約 15 次／日）。每次重啟會全抓 39 次。
+- 各國 M2 幣別不同，只比成長率（`money` 成長圖，月增／年增切換）；央行資產負債表以各自幣別水位呈現。週頻與月頻序列不畫在同一張圖，避免日期軸交錯。
+- 季頻期間以 FRED 首月表示（2026-04），畫面顯示為「2026 Q2」。
+- **沒有免費的企業違約率**：Moody's／S&P 違約率需付費。違約風險以市場利差（預期）和銀行逾期／沖銷率（已實現）呈現，不可標成「違約率」。
+- ICE BofA OAS 在 FRED 只開放近 3 年歷史，足夠 24 個月圖表。
+- FRED 上的 OECD 歐元區／日本／中國 M2（`MABMM301*`）停在 2023 年或更早，不使用；中國人民銀行沒有可程式存取的 API，中國 M2 暫不接入。
+- 尚未接入的候選：台灣本國銀行逾放比（央行／金管會）、中國社融。
+
+### 22.3 驗收
+
+- 測試：`maya-sawa/tests/test_market_macro_liquidity.py`（ECB／BoJ／CBC 真實回應 fixture 在 `tests/fixtures/macro/`）；前端 `tests/market/macroGroups.test.ts`、`macroLayout.test.ts`、`macroGrowth.test.ts`、`macroSeries.test.ts`。
+- 部署後須確認：dashboard API 回傳上表序列、淨流動性有週資料、各卡片圖表無日期交錯、FRED 呼叫次數未超出每日預算。

@@ -6,7 +6,13 @@
 export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]> = {
     // U.S. and Taiwan unemployment rates (both percent of the labour force) share one chart.
     employment: [['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE'], ['ICSA']],
-    rates: [['DFEDTARU', 'DFEDTARL'], ['DGS10'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']],
+    // Daily series only share a chart with daily series: monthly (YYYY-MM) periods would interleave out of order
+    // with dates, so Japan's monthly call rate and the BoJ balance sheet get their own charts.
+    rates: [['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
+        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']],
+    // Fed liquidity components are all USD billion on one axis; money supply growth is the "money" growth chart.
+    liquidity: [['WALCL', 'US_NET_LIQUIDITY', 'WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
+    credit: [['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y'], ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'], ['STLFSI4', 'NFCI']],
     'taiwan-employment': [['TW_EMPLOYED', 'TW_UNEMPLOYED']],
     pmi: [['TW_PMI', 'TW_NMI']],
     // Gold and oil histories in one chart. TPEx publishes only the latest Taiwan spot quote (tile only), so gold's

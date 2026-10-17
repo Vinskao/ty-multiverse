@@ -20,8 +20,15 @@ describe('MACRO_GROWTH_CHARTS', () => {
         }
     });
 
-    it('covers CPI, PPI, retail sales and Taiwan trade', () => {
-        expect(Object.keys(MACRO_GROWTH_CHARTS).sort()).toEqual(['cpi', 'ppi', 'retail', 'trade']);
+    it('compares U.S., euro-area, Japan and Taiwan money supply growth in the liquidity card', () => {
+        const money = MACRO_GROWTH_CHARTS.money;
+        expect(money.group).toBe('liquidity');
+        expect(money.lines.yoy.map((line) => line.code)).toEqual(['M2SL', 'EZ_M2_INDEX', 'JP_M2', 'TW_M2', 'TW_M1B']);
+        expect(money.lines.mom.map((line) => line.code)).toEqual(['M2SL', 'EZ_M2_INDEX', 'JP_M2', 'TW_M2', 'TW_M1B']);
+    });
+
+    it('covers CPI, PPI, retail sales, Taiwan trade and money supply', () => {
+        expect(Object.keys(MACRO_GROWTH_CHARTS).sort()).toEqual(['cpi', 'money', 'ppi', 'retail', 'trade']);
         expect(MACRO_GROWTH_CHARTS.cpi.lines.mom.map((line) => line.code)).toEqual(['CUSR0000SA0', 'CUSR0000SA0L1E', 'TW_CPI']);
         expect(MACRO_GROWTH_CHARTS.cpi.lines.yoy.map((line) => line.code)).toEqual(['CUUR0000SA0', 'CUUR0000SA0L1E', 'TW_CPI']);
         expect(MACRO_GROWTH_CHARTS.trade.group).toBe('fx-trade');

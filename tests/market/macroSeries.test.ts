@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore,
+    macroPeriodLabel,
 } from '../../src/scripts/market/macroSeries';
 
 const monthly = (values: Array<[string, string]>) => values.map(([period, value]) => ({ period, value }));
@@ -140,5 +141,19 @@ describe('macroValueAtOrBefore', () => {
 
     it('requires an exact match for monthly periods', () => {
         expect(macroValueAtOrBefore([{ period: '2026-08', value: 1 }], '2026-09')).toBeUndefined();
+    });
+});
+
+describe('macroPeriodLabel', () => {
+    it('shows quarterly series (FRED dates them by the first month) as calendar quarters', () => {
+        expect(macroPeriodLabel('2026-04', 'quarterly')).toBe('2026 Q2');
+        expect(macroPeriodLabel('2026-01', 'quarterly')).toBe('2026 Q1');
+        expect(macroPeriodLabel('2025-10', 'quarterly')).toBe('2025 Q4');
+    });
+
+    it('leaves monthly, daily and unknown-frequency periods unchanged', () => {
+        expect(macroPeriodLabel('2026-04', 'monthly')).toBe('2026-04');
+        expect(macroPeriodLabel('2026-10-14', 'weekly')).toBe('2026-10-14');
+        expect(macroPeriodLabel('2026-04', undefined)).toBe('2026-04');
     });
 });

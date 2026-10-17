@@ -12,6 +12,12 @@ export function shiftMacroPeriod(period: string, offset: number) {
     return `${point.getUTCFullYear()}-${String(point.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+// FRED dates a quarterly observation by its first month (2026-04 = Q2); show the quarter instead.
+export function macroPeriodLabel(period: string, frequency?: string) {
+    if (frequency !== 'quarterly' || !/^\d{4}-\d{2}$/.test(period)) return period;
+    return `${period.slice(0, 4)} Q${Math.floor((Number(period.slice(5)) - 1) / 3) + 1}`;
+}
+
 // Daily series (YYYY-MM-DD periods) keep about six months of sessions; monthly series keep four years.
 export function macroHistoryLimit(history: MacroHistoryRow[] | undefined) {
     return (history || []).some((item) => item.period.length === 10) ? 130 : 48;

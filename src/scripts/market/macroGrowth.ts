@@ -17,6 +17,14 @@ const usRetail = { en: 'U.S. retail sales', zh: '美國零售銷售' };
 const ukRetail = { en: 'UK retail sales volume', zh: '英國零售銷售量' };
 const exports = { en: 'Exports', zh: '出口總值' };
 const imports = { en: 'Imports', zh: '進口總值' };
+const usM2 = { en: 'U.S. M2', zh: '美國 M2' };
+const ezM2 = { en: 'Euro area M2', zh: '歐元區 M2' };
+const jpM2 = { en: 'Japan M2', zh: '日本 M2' };
+const twM2 = { en: 'Taiwan M2', zh: '台灣 M2' };
+const twM1b = { en: 'Taiwan M1B', zh: '台灣 M1B' };
+const money = (format: 'mom' | 'yoy'): MacroGrowthLine[] => [
+    { code: 'M2SL', format, label: usM2 }, { code: 'EZ_M2_INDEX', format, label: ezM2 }, { code: 'JP_M2', format, label: jpM2 },
+    { code: 'TW_M2', format, label: twM2 }, { code: 'TW_M1B', format, label: twM1b }];
 
 // Monthly CPI changes use the seasonally adjusted index (as BLS headlines do); annual changes use the
 // unadjusted index, which also carries the Michigan expectation and the release consensus. DGBAS publishes Taiwan's
@@ -34,6 +42,9 @@ export const MACRO_GROWTH_CHARTS: Record<string, MacroGrowthChart> = {
         mom: [{ code: 'RSAFS', format: 'mom', label: usRetail }, { code: 'GBRSLRTTO01GPSAM', format: 'raw', label: ukRetail }],
         yoy: [{ code: 'RSAFS', format: 'yoy', label: usRetail }, { code: 'GBRSLRTTO01GYSAM', format: 'raw', label: ukRetail }],
     } },
+    // Money stocks in four currencies are only comparable as growth rates. The euro-area line is the ECB index of
+    // notional stocks, whose growth matches the ECB's published rate (it excludes reclassifications).
+    money: { group: 'liquidity', lines: { mom: money('mom'), yoy: money('yoy') } },
     trade: { group: 'fx-trade', lines: {
         mom: [{ code: 'TW_EXPORTS', format: 'mom', label: exports }, { code: 'TW_IMPORTS', format: 'mom', label: imports }],
         yoy: [{ code: 'TW_EXPORTS', format: 'yoy', label: exports }, { code: 'TW_IMPORTS', format: 'yoy', label: imports }],
