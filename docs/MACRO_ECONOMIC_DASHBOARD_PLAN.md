@@ -466,3 +466,16 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 
 - 測試：`maya-sawa/tests/test_market_macro_liquidity.py`（ECB／BoJ／CBC 真實回應 fixture 在 `tests/fixtures/macro/`）；前端 `tests/market/macroGroups.test.ts`、`macroLayout.test.ts`、`macroGrowth.test.ts`、`macroSeries.test.ts`。
 - 部署後須確認：dashboard API 回傳上表序列、淨流動性有週資料、各卡片圖表無日期交錯、FRED 呼叫次數未超出每日預算。
+
+### 22.4 存量視圖與長歷史（2026-10-17）
+
+- 使用者回饋：M2 只看增速、Fed 圖線條太平，看不出故事。原因有三：
+  - 只保存 24 個月歷史，而這兩年剛好平淡。
+  - Fed 總資產（約 6,800B）和逆回購（約 0B）放在同一個軸上。
+  - 座標軸往 0 以下延伸，出現 −843.5 的刻度。
+- **長歷史：** M2、各國 M2、Fed／ECB／BoJ 資產、TGA、ON RRP、淨流動性改從 2019-01 起保存與回傳，涵蓋 2020 擴表、2022–23 M2 年減、逆回購 2.5T→0。
+  - 後端：`LONG_HISTORY_CODES`、`fred_observation_start`、`snapshot_history`；FRED `limit` 改為 10000。
+  - 前端：`MACRO_LONG_HISTORY_CODES` 不截斷這些序列。
+- **M2 存量：** `money` 圖新增「存量 (2020-01 = 100)」並設為預設。四地各自以 2020-01 為 100 換成指數，因此可以畫在同一個軸上；讀值會同時顯示當地幣別的兆元金額。歐元區用的是 ECB 名目存量指數，所以只顯示指數。
+- **Fed 圖拆成兩張：** 總資產＋淨流動性一張，TGA＋ON RRP 一張。全為非負值的序列，座標軸不再延伸到 0 以下。
+- **行程快取上限：** 從 64 筆提高到 128 筆（54 個序列加約 13 個原始回應，原本會擠掉序列）。

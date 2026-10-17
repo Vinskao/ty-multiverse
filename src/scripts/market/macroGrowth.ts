@@ -1,9 +1,10 @@
 // Growth-rate comparison charts with a month-over-month / year-over-year toggle; covered by
 // tests/market/macroGrowth.test.ts. Rule: a chart only compares MoM with MoM and YoY with YoY — never both on one axis.
+// The money chart also has a level view: each stock indexed to 100 in January 2020 (macroSeries MACRO_REBASE_PERIOD).
 
-export type MacroGrowthMode = 'mom' | 'yoy';
-export type MacroGrowthLine = { code: string; format: 'mom' | 'yoy' | 'raw'; label: { en: string; zh: string } };
-export type MacroGrowthChart = { group: string; lines: Record<MacroGrowthMode, MacroGrowthLine[]> };
+export type MacroGrowthMode = 'mom' | 'yoy' | 'level';
+export type MacroGrowthLine = { code: string; format: 'mom' | 'yoy' | 'raw' | 'rebased'; label: { en: string; zh: string } };
+export type MacroGrowthChart = { group: string; lines: Record<'mom' | 'yoy', MacroGrowthLine[]> & { level?: MacroGrowthLine[] } };
 
 // Series the source already publishes as a growth rate (plotted as-is) and which rate they are.
 const PUBLISHED_RATE: Record<string, MacroGrowthMode> = { GBRSLRTTO01GPSAM: 'mom', GBRSLRTTO01GYSAM: 'yoy' };
@@ -22,7 +23,7 @@ const ezM2 = { en: 'Euro area M2', zh: '歐元區 M2' };
 const jpM2 = { en: 'Japan M2', zh: '日本 M2' };
 const twM2 = { en: 'Taiwan M2', zh: '台灣 M2' };
 const twM1b = { en: 'Taiwan M1B', zh: '台灣 M1B' };
-const money = (format: 'mom' | 'yoy'): MacroGrowthLine[] => [
+const money = (format: 'mom' | 'yoy' | 'rebased'): MacroGrowthLine[] => [
     { code: 'M2SL', format, label: usM2 }, { code: 'EZ_M2_INDEX', format, label: ezM2 }, { code: 'JP_M2', format, label: jpM2 },
     { code: 'TW_M2', format, label: twM2 }, { code: 'TW_M1B', format, label: twM1b }];
 
@@ -42,9 +43,10 @@ export const MACRO_GROWTH_CHARTS: Record<string, MacroGrowthChart> = {
         mom: [{ code: 'RSAFS', format: 'mom', label: usRetail }, { code: 'GBRSLRTTO01GPSAM', format: 'raw', label: ukRetail }],
         yoy: [{ code: 'RSAFS', format: 'yoy', label: usRetail }, { code: 'GBRSLRTTO01GYSAM', format: 'raw', label: ukRetail }],
     } },
-    // Money stocks in four currencies are only comparable as growth rates. The euro-area line is the ECB index of
-    // notional stocks, whose growth matches the ECB's published rate (it excludes reclassifications).
-    money: { group: 'liquidity', lines: { mom: money('mom'), yoy: money('yoy') } },
+    // Money stocks in four currencies share an axis as growth rates, or as levels indexed to January 2020 (the
+    // readout shows each amount). The euro-area line is the ECB index of notional stocks, whose growth matches the
+    // ECB's published rate (it excludes reclassifications); it has no amount.
+    money: { group: 'liquidity', lines: { level: money('rebased'), yoy: money('yoy'), mom: money('mom') } },
     trade: { group: 'fx-trade', lines: {
         mom: [{ code: 'TW_EXPORTS', format: 'mom', label: exports }, { code: 'TW_IMPORTS', format: 'mom', label: imports }],
         yoy: [{ code: 'TW_EXPORTS', format: 'yoy', label: exports }, { code: 'TW_IMPORTS', format: 'yoy', label: imports }],
@@ -57,10 +59,26 @@ export function macroLineMeasure(line: { code: string; format: string }): MacroG
     return PUBLISHED_RATE[line.code] ?? null;
 }
 
-// The chosen mode survives the dashboard's periodic redraws; year over year is the default (less noisy).
+// Toggle buttons in order: the level view first where a chart has one.
+export function macroGrowthModes(chartId: string): MacroGrowthMode[] {
+    return MACRO_GROWTH_CHARTS[chartId]?.lines.level ? ['level', 'yoy', 'mom'] : ['mom', 'yoy'];
+}
+
+// Money stocks as trillions of their own currency for the level readout (units as maya-sawa stores them).
+const MONEY_STOCK_UNITS: Record<string, { currency: string; perTrillion: number }> = {
+    M2SL: { currency: 'USD', perTrillion: 1_000 }, JP_M2: { currency: 'JPY', perTrillion: 1 },
+    TW_M2: { currency: 'TWD', perTrillion: 1_000_000 }, TW_M1B: { currency: 'TWD', perTrillion: 1_000_000 },
+};
+export function macroMoneyStock(code: string, value: number) {
+    const unit = MONEY_STOCK_UNITS[code];
+    return unit ? { currency: unit.currency, trillions: value / unit.perTrillion } : null;
+}
+
+// The chosen mode survives the dashboard's periodic redraws. Default: the level view where a chart has one,
+// else year over year (less noisy than month over month).
 const chosenModes = new Map<string, MacroGrowthMode>();
 export function macroGrowthMode(chartId: string): MacroGrowthMode {
-    return chosenModes.get(chartId) ?? 'yoy';
+    return chosenModes.get(chartId) ?? (MACRO_GROWTH_CHARTS[chartId]?.lines.level ? 'level' : 'yoy');
 }
 export function setMacroGrowthMode(chartId: string, mode: MacroGrowthMode) {
     chosenModes.set(chartId, mode);

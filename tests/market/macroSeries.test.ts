@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore,
-    macroPeriodLabel,
+    macroPeriodLabel, MACRO_REBASE_PERIOD,
 } from '../../src/scripts/market/macroSeries';
 
 const monthly = (values: Array<[string, string]>) => values.map(([period, value]) => ({ period, value }));
@@ -155,5 +155,44 @@ describe('macroPeriodLabel', () => {
         expect(macroPeriodLabel('2026-04', 'monthly')).toBe('2026-04');
         expect(macroPeriodLabel('2026-10-14', 'weekly')).toBe('2026-10-14');
         expect(macroPeriodLabel('2026-04', undefined)).toBe('2026-04');
+    });
+});
+
+// Money and liquidity levels move slowly: the backend sends them since 2019 and the chart keeps all of it.
+describe('long liquidity history', () => {
+    it('keeps every observation of liquidity series and the usual window for others', () => {
+        const daily = monthly([['2026-10-15', '4']]);
+        expect(macroHistoryLimit(daily, 'RRPONTSYD')).toBe(Infinity);
+        expect(macroHistoryLimit(monthly([['2026-09', '4']]), 'M2SL')).toBe(Infinity);
+        expect(macroHistoryLimit(daily, 'SOFR')).toBe(130);
+        const weeks = Array.from({ length: 400 }, (_, index) => ({ period: new Date(Date.UTC(2019, 0, 2 + index * 7)).toISOString().slice(0, 10), value: '7000' }));
+        expect(macroSeriesPoints(weeks, 'raw', 'WALCL')).toHaveLength(400);
+        expect(macroSeriesPoints(weeks, 'raw')).toHaveLength(130);
+    });
+});
+
+describe('rebased money stocks', () => {
+    it('indexes each stock to 100 in January 2020 and keeps the amount for the readout', () => {
+        // Real U.S. M2 (USD billion): 15,410.3 in 2020-01 and 23,342.8 in 2026-08.
+        const points = macroSeriesPoints(monthly([['2019-12', '15322.4'], ['2020-01', '15410.3'], ['2026-08', '23342.8']]), 'rebased', 'M2SL');
+        expect(MACRO_REBASE_PERIOD).toBe('2020-01');
+        expect(points.map((point) => point.period)).toEqual(['2019-12', '2020-01', '2026-08']);
+        expect(points[1].value).toBe(100);
+        expect(points[2].value).toBeCloseTo(23342.8 / 15410.3 * 100, 6);
+        expect(points[2].raw).toBe(23342.8);
+    });
+
+    it('falls back to the first observation when January 2020 is missing', () => {
+        const points = macroSeriesPoints(monthly([['2021-03', '50'], ['2021-04', '55']]), 'rebased', 'TW_M2');
+        expect(points[0].value).toBe(100);
+        expect(points[1].value).toBeCloseTo(110, 9);
+    });
+});
+
+describe('macroAxisRange for non-negative levels', () => {
+    it('does not pad below zero when every value is zero or more (Fed balance sheet vs. drained reverse repo)', () => {
+        // Was -843.5 to 7873 for WALCL 7,029 and ON RRP 0.1.
+        expect(macroAxisRange([0.1, 7029.4]).low).toBe(0);
+        expect(macroAxisRange([-0.5, 1]).low).toBeLessThan(-0.5);
     });
 });

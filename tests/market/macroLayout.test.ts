@@ -37,10 +37,11 @@ describe('macro chart layout', () => {
             ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']]);
     });
 
-    it('plots Fed liquidity components on one axis and keeps weekly and monthly balance sheets in separate charts', () => {
+    it('splits the Fed balance sheet from its drains and keeps weekly and monthly balance sheets in separate charts', () => {
+        // Total assets (~6,800B) on one axis with ON RRP (~0B) flattened every line; the drains get their own scale.
         // Weekly (YYYY-MM-DD) and monthly (YYYY-MM) periods on one date axis would interleave out of order.
-        expect(MACRO_MERGED_CHARTS.liquidity).toEqual([['WALCL', 'US_NET_LIQUIDITY', 'WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']]);
-        expect(macroChartNeedsSeparateAxes(['WALCL', 'US_NET_LIQUIDITY', 'WTREGEN', 'RRPONTSYD'].map(() => ({ format: 'raw', unit: 'USD billion' })))).toBe(false);
+        expect(MACRO_MERGED_CHARTS.liquidity).toEqual([['WALCL', 'US_NET_LIQUIDITY'], ['WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']]);
+        expect(macroChartNeedsSeparateAxes(['WTREGEN', 'RRPONTSYD'].map(() => ({ format: 'raw', unit: 'USD billion' })))).toBe(false);
     });
 
     it('groups credit spreads, quarterly bank delinquency and weekly stress indexes in their own charts', () => {

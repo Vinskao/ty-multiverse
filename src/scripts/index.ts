@@ -11,10 +11,11 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
+import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
-import { MACRO_GROWTH_CHARTS, macroGrowthMode, setMacroGrowthMode, type MacroGrowthMode } from './market/macroGrowth';
+import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -421,9 +422,10 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
     if (marketHistoryRetryTimer !== null) { window.clearTimeout(marketHistoryRetryTimer); marketHistoryRetryTimer = null; }
     if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
     const status = document.getElementById('market-history-status');
-    // History, chips and fundamentals come from Taiwan sources; never look up an overseas code there.
+    // Overseas holdings never touch Taiwan sources (same digits can be a different company); they read the
+    // IBKR/SEC data maya-sawa has persisted, so the panels work while the IB gateway is logged out.
     if (!isTaiwanInstrument(instrument)) {
-        if (status) status.textContent = marketText('No daily history for overseas holdings yet (Taiwan sources only).', '海外標的尚無本站日線（目前只接台灣資料來源）。');
+        await loadOverseasPanel(instrument, selectedTab);
         return;
     }
     if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
@@ -524,6 +526,67 @@ function readStoredFundamentals(code: string): { payload: any; fetchedAt: number
 function storeFundamentals(code: string, payload: any) {
     const { metrics, historyPending, source, staleSources, errors } = payload;
     try { localStorage.setItem(FUNDAMENTALS_STORAGE_PREFIX + code, JSON.stringify({ payload: { code, metrics, historyPending, source, staleSources, errors }, fetchedAt: Date.now() })); } catch { /* storage full or blocked */ }
+}
+
+const overseasResearchCache = new Map<string, { payload: OverseasResearch & Record<string, any>; fetchedAt: number }>();
+async function fetchOverseasResearch(instrument: DashboardInstrument) {
+    const key = `${instrument.code}:${instrument.market}`;
+    const cached = overseasResearchCache.get(key);
+    if (cached && Date.now() - cached.fetchedAt < 60_000) return cached.payload;
+    const response = await fetch(astroApiPath(`/api/market/dashboard/overseas/${encodeURIComponent(instrument.code)}?market=${encodeURIComponent(instrument.market || '')}`));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    overseasResearchCache.set(key, { payload, fetchedAt: Date.now() });
+    return payload;
+}
+
+async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: string) {
+    const fundamentals = selectedTab === 'fundamentals';
+    const status = document.getElementById(fundamentals ? 'market-fundamentals-status' : 'market-history-status');
+    if (fundamentalsRetryTimer !== null) { window.clearTimeout(fundamentalsRetryTimer); fundamentalsRetryTimer = null; }
+    const seq = ++fundamentalsRequestSeq;
+    if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    let payload: OverseasResearch & Record<string, any>;
+    try { payload = await fetchOverseasResearch(instrument); }
+    catch (error) {
+        console.error('Overseas research unavailable:', error);
+        if (seq === fundamentalsRequestSeq && status) status.textContent = marketText('Stored overseas data is temporarily unavailable.', '本站保存的海外資料暫時無法讀取。');
+        return;
+    }
+    if (seq !== fundamentalsRequestSeq || selectedMarketInstrument !== instrument) return;
+    if (fundamentals) {
+        const fetched = Date.parse(payload.datasets?.financials?.fetchedAt || '') || Date.now();
+        renderMarketFundamentals(overseasFundamentalsPayload(payload), { fetchedAt: fetched, refreshing: false });
+        return;
+    }
+    const points = overseasHistoryPoints(payload.daily);
+    const technical = payload.technical || {};
+    const profile = payload.datasets?.profile?.payload || {};
+    // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
+    const brokerDown = payload.coverage?.history_raw?.status && payload.coverage.history_raw.status !== 'ok';
+    if (status) {
+        const parts = [points.length
+            ? marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)
+            : marketText('No IBKR daily bars stored yet; they fill in after the gateway is logged in.', '尚未保存 IB 日線；IB gateway 登入後會自動補上。'),
+            'Interactive Brokers · ' + marketText('stored in this site', '本站資料庫')];
+        if (brokerDown) parts.push(marketText('IB gateway offline: showing the last stored data', 'IB 未登入：顯示最後保存的資料'));
+        if (profile.industry) parts.push(`${profile.industry}${profile.category ? ` / ${profile.category}` : ''}`);
+        status.textContent = parts.join(' · ');
+    }
+    const chartId = 'market-history-price-chart';
+    drawMarketOHLCVolumeChart(chartId, points, [OVERSEAS_PRICE_SOURCE], 'volume_shares');
+    document.getElementById('market-overseas-kpis')?.remove();
+    if (points.length) {
+        const fmt = (value: unknown) => typeof value === 'number' ? formatNumber(value, 'price') : '—';
+        const kpis = buildMarketKpis([
+            { label: 'MA20 / MA60', value: `${fmt(technical.ma20)} / ${fmt(technical.ma60)}` },
+            { label: 'RSI14', value: typeof technical.rsi14Wilder === 'number' ? formatNumber(technical.rsi14Wilder, 'decimal') : '—' },
+            { label: marketText('5D / 20D change', '5 日 / 20 日漲跌'), value: `${formatSignedPercent(technical.change5dPercent, 1)} / ${formatSignedPercent(technical.change20dPercent, 1)}` },
+            { label: marketText('Range in stored history', '保存期間高低'), value: `${fmt(technical.rangeLow)} – ${fmt(technical.rangeHigh)}` },
+        ]);
+        kpis.id = 'market-overseas-kpis';
+        document.getElementById(chartId)?.before(kpis);
+    }
 }
 
 async function loadMarketFundamentals(code: string, productType: string, retries = 4) {
@@ -1137,11 +1200,18 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // Keep all four tabs available. Stock futures use their underlying stock;
     // index futures show TAIFEX price/category data and explain unsupported
     // stock-only margin, lending, and ownership panels.
-    // Overseas holdings have no Taiwan-sourced charts; only the AI analysis tab applies.
+    // Overseas holdings get price, fundamentals and AI analysis from persisted IBKR/SEC data; institutional,
+    // margin and ownership tabs are TWSE/TPEx/TDCC data with no overseas equivalent.
     const taiwan = isTaiwanInstrument(instrument);
-    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = !taiwan && tab.dataset.marketTab !== 'ai-analysis'; });
-    const defaultTab = !taiwan ? 'ai-analysis' : underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
-    selectMarketDetailTab(taiwan ? preferredMarketTab ?? defaultTab : defaultTab);
+    const overseasTabs = overseasDetailTabs();
+    document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = !taiwan && !overseasTabs.includes(tab.dataset.marketTab || ''); });
+    document.getElementById('market-overseas-kpis')?.remove();
+    if (taiwan) {
+        const defaultTab = underlyingCode || instrument.productType === 'stock' ? 'fundamentals' : 'price';
+        selectMarketDetailTab(preferredMarketTab ?? defaultTab);
+    } else {
+        selectMarketDetailTab(preferredMarketTab && overseasTabs.includes(preferredMarketTab) ? preferredMarketTab : 'price');
+    }
 }
 
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
@@ -1457,9 +1527,10 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     wrap.className = 'macro-trend-chart';
     const baseSeriesLabel = indicatorLabel;
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-        .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(indicator.history));
-    const points = macroSeriesPoints(indicator.history, format);
-    const comparisonLines = comparisons.map((comparison) => ({ label: comparison.label, values: macroSeriesPoints(comparison.indicator.history, comparison.format),
+        .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(indicator.history, indicator.code));
+    const points = macroSeriesPoints(indicator.history, format, indicator.code);
+    const comparisonLines = comparisons.map((comparison) => ({ label: comparison.label, code: comparison.indicator.code,
+        values: macroSeriesPoints(comparison.indicator.history, comparison.format, comparison.indicator.code),
         format: comparison.format, unit: comparison.indicator.unit }));
     const retailYear = format === 'sales' ? raw.flatMap((item) => {
         const previous = raw.find((candidate) => candidate.period === shiftMacroPeriod(item.period, -12));
@@ -1475,6 +1546,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     const unitLabel = format === 'jobs' ? marketText('Monthly change (jobs)', '月增人數')
         : format === 'claims' ? marketText('Initial claims (persons)', '初領失業救濟金人數')
         : format === 'yoy' ? marketText('Year-over-year (%)', '年增率 (%)')
+        : format === 'rebased' ? marketText('Index (Jan 2020 = 100)', '指數 (2020-01 = 100)')
             : ['mom', 'sales'].includes(format) ? marketText(format === 'sales' ? 'Change (%)' : 'Month-over-month (%)', format === 'sales' ? '變動率 (%)' : '月增率 (%)')
                 : indicator.code === 'DGS10' ? marketText('Yield (%)', '殖利率 (%)')
                     : marketText('Rate (%)', '百分比');
@@ -1487,12 +1559,12 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
             : marketText('Not enough saved observations to draw a trend.', '已保存的觀察值不足，暫時無法繪圖。');
         wrap.append(empty); return wrap;
     }
-    type ChartSeries = { tone: MacroSeriesTone; label: string; values: Array<{ period: string; value: number }>; format: MacroMetricFormat; unit: string; axis: number };
+    type ChartSeries = { tone: MacroSeriesTone; label: string; values: Array<{ period: string; value: number; raw?: number }>; format: MacroMetricFormat; unit: string; axis: number; code?: string };
     const separate = Boolean(options.separateAxes) && comparisonLines.length > 0;
     const series: ChartSeries[] = [
-        { tone: 'base' as MacroSeriesTone, label: baseSeriesLabel, values: points, format, unit: displayUnit, axis: 0 },
+        { tone: 'base' as MacroSeriesTone, label: baseSeriesLabel, values: points, format, unit: displayUnit, axis: 0, code: indicator.code },
         ...comparisonLines.map((line, index) => ({ tone: `series-${index + 1}` as MacroSeriesTone, label: line.label, values: line.values,
-            format: line.format, unit: line.unit, axis: separate ? Math.min(index + 1, 2) : 0 })),
+            format: line.format, unit: line.unit, axis: separate ? Math.min(index + 1, 2) : 0, code: line.code })),
         ...(retailYear.length ? [{ tone: 'series-3' as MacroSeriesTone, label: marketText('Year over year', '年增'), values: retailYear, format: 'yoy' as MacroMetricFormat, unit: '%', axis: 0 }] : []),
         ...(expected.length ? [{ tone: 'expected' as MacroSeriesTone, label: marketText('One-year consumer expectation', '消費者一年期預期'), values: expected, format, unit: displayUnit, axis: 0 }] : []),
         ...(consensus.length ? [{ tone: 'consensus' as MacroSeriesTone, label: marketText('CPI release consensus', 'CPI 公布共識預期'), values: consensus, format, unit: displayUnit, axis: 0 }] : []),
@@ -1534,10 +1606,17 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     readout.className = 'market-chart-readout market-chart-readout--compact macro-trend-readout';
     readout.setAttribute('aria-live', 'polite');
     readout.setAttribute('role', 'status');
-    const describeMacroPoint = (point: { period: string; value: number }, pointFormat = format, pointUnit = displayUnit) =>
-        formatWithUnit(point.value, pointFormat === 'raw' ? pointUnit : pointFormat === 'percent' ? 'percent' : pointUnit, pointFormat,
+    // A rebased money stock reads as its index plus the amount in its own currency (trillions).
+    const describeMacroPoint = (point: { period: string; value: number; raw?: number }, pointFormat = format, pointUnit = displayUnit, code = indicator.code) => {
+        if (pointFormat === 'rebased') {
+            const stock = point.raw === undefined ? null : macroMoneyStock(code, point.raw);
+            const index = formatNumber(point.value, 'decimal', { digits: 1, locale: marketLocale() });
+            return stock ? `${index} (${stock.currency} ${formatNumber(stock.trillions, 'decimal', { digits: 2, locale: marketLocale() })} ${marketText('trillion', '兆')})` : index;
+        }
+        return formatWithUnit(point.value, pointFormat === 'raw' ? pointUnit : pointFormat === 'percent' ? 'percent' : pointUnit, pointFormat,
             pointFormat === 'jobs' ? marketI18n('macroJobs','jobs') : pointFormat === 'claims' ? marketText('persons', '人') : undefined,
             { locale: marketLocale(), digits: pointFormat === 'percent' ? publishedDigits(point.value) : undefined });
+    };
     let showPoint: (index: number, hovering: boolean) => void;
     const addAccessiblePoint = (point: {period:string;value:number}, isExpected = false) => {
         const expectationLabel = marketText('One-year consumer expectation', '消費者一年期通膨預期');
@@ -1551,7 +1630,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     if (!dense) points.forEach((point) => addAccessiblePoint(point));
     if (!dense) comparisonLines.forEach((line, index) => line.values.forEach((point) => {
         const tone = `series-${index + 1}` as MacroSeriesTone;
-        const dot = add('circle', { cx: String(x(point.period)), cy: String(yOn(series.find((item) => item.tone === tone)?.axis ?? 0, point.value)), r: '3', class: `macro-trend-point macro-trend-point--${tone}`, style: `--tone:${toneColor(tone)}`, tabindex: '0', role: 'button', 'aria-label': `${line.label} ${point.period} ${describeMacroPoint(point, line.format, line.unit)}` });
+        const dot = add('circle', { cx: String(x(point.period)), cy: String(yOn(series.find((item) => item.tone === tone)?.axis ?? 0, point.value)), r: '3', class: `macro-trend-point macro-trend-point--${tone}`, style: `--tone:${toneColor(tone)}`, tabindex: '0', role: 'button', 'aria-label': `${line.label} ${point.period} ${describeMacroPoint(point, line.format, line.unit, line.code)}` });
         dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
         dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
     }));
@@ -1586,7 +1665,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
             entry.style.setProperty('--tone', toneColor(item.tone));
             const name = series.length > 1 || format === 'sales' ? item.label : marketText('Actual', '實際');
             // A carried-forward close (another market's calendar) shows its own date.
-            entry.textContent = `${name} ${describeMacroPoint(value, item.format, item.unit)}${value.period === period ? '' : ` (${value.period.slice(5)})`}`;
+            entry.textContent = `${name} ${describeMacroPoint(value, item.format, item.unit, item.code)}${value.period === period ? '' : ` (${value.period.slice(5)})`}`;
             readout.append(entry);
         });
         guide.setAttribute('x1', String(x(period))); guide.setAttribute('x2', String(x(period)));
@@ -1648,18 +1727,19 @@ function buildMacroGrowthChart(chartId: string, byCode: Map<string, MacroIndicat
     const render = () => {
         const mode = macroGrowthMode(chartId);
         buttons.forEach(({ value, button }) => button.setAttribute('aria-pressed', String(value === mode)));
-        const lines = chart.lines[mode].flatMap((line) => {
+        const lines = (chart.lines[mode] || []).flatMap((line) => {
             const indicator = byCode.get(line.code);
             return indicator ? [{ indicator, format: line.format as MacroMetricFormat, label: marketText(line.label.en, line.label.zh) }] : [];
         });
         const [base, ...rest] = lines;
         host.replaceChildren(...(base ? [buildMacroTrendChart(base.indicator, base.format, base.label, rest)] : []));
     };
-    const buttons = (['mom', 'yoy'] as MacroGrowthMode[]).map((value) => {
+    const buttons = macroGrowthModes(chartId).map((value) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'macro-comparison-switcher-button';
-        button.textContent = value === 'mom' ? marketText('Month over month', '月增率比較') : marketText('Year over year', '年增率比較');
+        button.textContent = value === 'level' ? marketText('Money stock (Jan 2020 = 100)', '存量 (2020-01 = 100)')
+            : value === 'mom' ? marketText('Month over month', '月增率比較') : marketText('Year over year', '年增率比較');
         button.addEventListener('click', () => { setMacroGrowthMode(chartId, value); render(); });
         controls.append(button);
         return { value, button };

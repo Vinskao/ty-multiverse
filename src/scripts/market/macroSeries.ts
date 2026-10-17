@@ -1,8 +1,15 @@
 // Pure macro-series math shared by the dashboard charts; covered by tests/market/macroSeries.test.ts.
 
-export type MacroSeriesFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw';
+// 'rebased': a level indexed to 100 in MACRO_REBASE_PERIOD, so stocks in different currencies share one axis.
+export type MacroSeriesFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw' | 'rebased';
 export type MacroHistoryRow = { period: string; value: string };
-export type MacroPoint = { period: string; value: number };
+export type MacroPoint = { period: string; value: number; raw?: number };
+
+// Money and liquidity levels move slowly; maya-sawa sends them since 2019 and charts keep all of it, so the 2020
+// expansion, the 2022-23 contraction and the reverse repo draining to zero stay visible.
+export const MACRO_LONG_HISTORY_CODES = new Set(['M2SL', 'EZ_M2_INDEX', 'JP_M2', 'TW_M2', 'TW_M1B', 'WALCL', 'US_NET_LIQUIDITY',
+    'WTREGEN', 'RRPONTSYD', 'ECBASSETSW', 'JPNASSETS']);
+export const MACRO_REBASE_PERIOD = '2020-01';
 
 export const MACRO_FOREIGN_EVENT = /^(UK|EU|Euro(zone|pe)?|ECB|BoE|BoJ|Japan|China|Germany|Canada|Australia)\b/i;
 
@@ -19,15 +26,22 @@ export function macroPeriodLabel(period: string, frequency?: string) {
 }
 
 // Daily series (YYYY-MM-DD periods) keep about six months of sessions; monthly series keep four years.
-export function macroHistoryLimit(history: MacroHistoryRow[] | undefined) {
+export function macroHistoryLimit(history: MacroHistoryRow[] | undefined, code?: string) {
+    if (code && MACRO_LONG_HISTORY_CODES.has(code)) return Infinity;
     return (history || []).some((item) => item.period.length === 10) ? 130 : 48;
 }
 
 // What a chart plots for a format: MoM/YoY percent, monthly job change (thousand-person levels × 1000), or the level.
 // Periods without a base observation, or with a zero base (an unpublished month stored as 0), are dropped.
-export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat): MacroPoint[] {
-    const raw = (history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-        .filter((item) => item.period && Number.isFinite(item.value)).slice(-macroHistoryLimit(history));
+export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat, code?: string): MacroPoint[] {
+    const limit = macroHistoryLimit(history, code);
+    const valid = (history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+        .filter((item) => item.period && Number.isFinite(item.value));
+    const raw = Number.isFinite(limit) ? valid.slice(-limit) : valid;
+    if (format === 'rebased') {
+        const base = (raw.find((item) => item.period === MACRO_REBASE_PERIOD) || raw[0])?.value;
+        return base ? raw.map((item) => ({ period: item.period, value: item.value / base * 100, raw: item.value })) : [];
+    }
     const offset = format === 'yoy' ? 12 : ['mom', 'sales', 'jobs'].includes(format) ? 1 : 0;
     if (!offset) return raw;
     const byPeriod = new Map(raw.map((item) => [item.period, item.value]));
@@ -65,10 +79,12 @@ export function dedupeMacroEvents<T extends DedupableEvent>(events: T[]): T[] {
 }
 
 // Y range for one axis: 12% padding on each side, rounded outward to one decimal (flat series still get a band).
+// Non-negative data never pads below zero (a -843.5 tick under balances that cannot be negative).
 export function macroAxisRange(values: number[]) {
     const min = Math.min(...values), max = Math.max(...values);
     const span = Math.max(max - min, 0.1);
-    return { low: Math.floor((min - span * 0.12) * 10) / 10, high: Math.ceil((max + span * 0.12) * 10) / 10 };
+    const low = Math.floor((min - span * 0.12) * 10) / 10;
+    return { low: min >= 0 ? Math.max(low, 0) : low, high: Math.ceil((max + span * 0.12) * 10) / 10 };
 }
 
 // One color per series slot. The line, hover marker, axis labels and readout entry of a series all use it,

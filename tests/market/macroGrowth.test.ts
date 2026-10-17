@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MACRO_GROWTH_CHARTS, macroLineMeasure, macroGrowthMode, setMacroGrowthMode } from '../../src/scripts/market/macroGrowth';
+import { MACRO_GROWTH_CHARTS, macroLineMeasure, macroGrowthMode, setMacroGrowthMode, macroGrowthModes, macroMoneyStock } from '../../src/scripts/market/macroGrowth';
 import { MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
 
 const modes = ['mom', 'yoy'] as const;
@@ -57,5 +57,23 @@ describe('macroGrowthMode', () => {
         setMacroGrowthMode('cpi', 'mom');
         expect(macroGrowthMode('cpi')).toBe('mom');
         expect(macroGrowthMode('ppi')).toBe('yoy');
+    });
+});
+
+describe('money supply levels', () => {
+    it('offers a level view (January 2020 = 100) of the same money stocks, shown first', () => {
+        const money = MACRO_GROWTH_CHARTS.money;
+        expect(money.lines.level!.map((line) => line.code)).toEqual(['M2SL', 'EZ_M2_INDEX', 'JP_M2', 'TW_M2', 'TW_M1B']);
+        expect(money.lines.level!.every((line) => line.format === 'rebased')).toBe(true);
+        expect(macroGrowthModes('money')).toEqual(['level', 'yoy', 'mom']);
+        expect(macroGrowthMode('money')).toBe('level');
+        expect(macroGrowthModes('cpi')).toEqual(['mom', 'yoy']);
+    });
+
+    it('converts each stock to trillions of its own currency; the euro index has no amount', () => {
+        expect(macroMoneyStock('M2SL', 23342.8)).toEqual({ currency: 'USD', trillions: 23.3428 });
+        expect(macroMoneyStock('JP_M2', 1295.6351)).toEqual({ currency: 'JPY', trillions: 1295.6351 });
+        expect(macroMoneyStock('TW_M2', 70677981)).toEqual({ currency: 'TWD', trillions: 70.677981 });
+        expect(macroMoneyStock('EZ_M2_INDEX', 189.67)).toBeNull();
     });
 });
