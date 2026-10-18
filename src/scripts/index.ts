@@ -11,7 +11,7 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS, industryResearchFor } from './market/researchMap';
+import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
 import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
@@ -837,6 +837,22 @@ async function renderResearchDiagrams(nodes: HTMLElement[]) {
     }
 }
 
+// Same-group stocks (族群) above the research map: each group's members with their role; the selected one marked.
+function renderIndustryPeers(target: HTMLElement, groups: IndustryGroup[], code: string) {
+    for (const group of industryPeers(groups, code)) {
+        const section = document.createElement('section'); section.className = 'market-research-group';
+        const title = document.createElement('h5'); title.textContent = `${marketText('Industry group', '族群')}：${marketText(group.name.en, group.name.zh)}`;
+        const list = document.createElement('ul'); list.className = 'market-research-peers';
+        for (const peer of group.peers) {
+            const item = document.createElement('li'); if (peer.current) item.className = 'is-current';
+            const name = document.createElement('strong'); name.textContent = `${peer.recordCode} ${peer.name}`;
+            const role = document.createElement('span'); role.textContent = peer.role;
+            item.append(name, role); list.append(item);
+        }
+        section.append(title, list); target.append(section);
+    }
+}
+
 let marketResearchSequence = 0;
 async function loadMarketResearch(instrument: DashboardInstrument) {
     const status = document.getElementById('market-research-status');
@@ -844,9 +860,12 @@ async function loadMarketResearch(instrument: DashboardInstrument) {
     if (!status || !target) return;
     const code = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
     const sequence = ++marketResearchSequence;
-    // Industry research only on the instruments it covers (e.g. the DC power rack on Delta / Lite-On).
+    // Industry diagrams only on members of the group that owns them (e.g. the DC power rack on Lite-On).
     const industry = document.getElementById('market-research-industry');
-    if (industry) industry.hidden = industryResearchFor(code).length === 0;
+    if (industry) industry.hidden = true;
+    const groupsRequest = fetch(astroApiPath(`/api/market/dashboard/industries?code=${encodeURIComponent(code)}`), { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : { groups: [] }).then((body) => (body.groups ?? []) as IndustryGroup[])
+        .catch(() => [] as IndustryGroup[]);
     status.textContent = marketText('Loading research…', '正在載入研究…');
     target.replaceChildren();
     let payload: { analysis: MarketAiComment | null; history: MarketAiComment[] };
@@ -860,6 +879,10 @@ async function loadMarketResearch(instrument: DashboardInstrument) {
         return;
     }
     if (sequence !== marketResearchSequence) return;
+    const groups = await groupsRequest;
+    if (sequence !== marketResearchSequence) return;
+    if (industry) industry.hidden = !industryDiagrams(groups).includes('power-rack');
+    renderIndustryPeers(target, groups, code);
     const saved = payload.analysis;
     const record = saved ? parseResearchRecord(saved.content) : null;
     if (!saved || !record) {

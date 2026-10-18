@@ -59,12 +59,16 @@ export function researchLeanTone(lean: string) {
     return lean === '買' ? 'up' : lean === '賣' ? 'down' : 'flat';
 }
 
-// Industry research (the Research Zone accordion, e.g. the datacenter DC power rack) belongs only to the
-// instruments it is about; record codes of the makers each item covers.
-export const INDUSTRY_RESEARCH: Record<string, readonly string[]> = {
-    'power-rack': ['2308', '2301'], // Delta Electronics, Lite-On Technology
-};
+// Industry groups (族群) from maya-sawa's stock / group / membership tables. A group may name an industry diagram
+// (e.g. the datacenter DC power rack), which the Research tab shows only for that group's members.
+export type IndustryMember = { recordCode: string; code?: string; market: string; name: string; role: string };
+export type IndustryGroup = { id: string; name: { zh: string; en: string }; diagram: string | null; members: IndustryMember[] };
 
-export function industryResearchFor(recordCode: string): string[] {
-    return Object.keys(INDUSTRY_RESEARCH).filter((id) => INDUSTRY_RESEARCH[id].includes(recordCode));
+export function industryDiagrams(groups: ReadonlyArray<IndustryGroup>): string[] {
+    return [...new Set(groups.flatMap((group) => group.diagram ? [group.diagram] : []))];
+}
+
+export function industryPeers(groups: ReadonlyArray<IndustryGroup>, recordCode: string) {
+    return groups.map((group) => ({ id: group.id, name: group.name, peers: group.members.map((member) => ({
+        recordCode: member.recordCode, name: member.name, market: member.market, role: member.role, current: member.recordCode === recordCode })) }));
 }

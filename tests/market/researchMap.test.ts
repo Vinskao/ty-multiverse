@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseResearchRecord, researchRecordCode, RESEARCH_DIMENSIONS, researchViewTone, researchLeanTone, industryResearchFor } from '../../src/scripts/market/researchMap';
+import { parseResearchRecord, researchRecordCode, RESEARCH_DIMENSIONS, researchViewTone, researchLeanTone, industryDiagrams, industryPeers } from '../../src/scripts/market/researchMap';
 import tsmc from '../fixtures/research-2330.json';
 
 // Seeded production record (maya-sawa/maya_sawa/data/market_research/2330.json), stored under productType=research.
@@ -41,12 +41,25 @@ describe('tones', () => {
     });
 });
 
-// Industry research (Research Zone) only appears on the instruments it is about, never on unrelated ones.
-describe('industryResearchFor', () => {
-    it('shows the datacenter power rack only for its listed makers (Delta, Lite-On)', () => {
-        expect(industryResearchFor('2308')).toEqual(['power-rack']);
-        expect(industryResearchFor('2301')).toEqual(['power-rack']);
-        expect(industryResearchFor('3008')).toEqual([]);
-        expect(industryResearchFor('6857-JP')).toEqual([]);
+// Industry groups (族群) come from maya-sawa's group / stock / membership tables (GET /market/dashboard/industries?code=).
+const groups = [
+    { id: 'ai-optics', name: { zh: 'AI 光通訊', en: 'AI optical interconnect' }, diagram: null, members: [
+        { recordCode: '3081', code: '3081', market: 'TW', name: '聯亞', role: 'InP 磊晶片' },
+        { recordCode: 'LITE-US', code: 'LITE', market: 'US', name: 'Lumentum', role: 'EML / CW 雷射與光模組' }] },
+    { id: 'dc-power-rack', name: { zh: '機房直流電源', en: 'Datacenter DC power' }, diagram: 'power-rack', members: [
+        { recordCode: '2301', code: '2301', market: 'TW', name: '光寶科', role: '電源架整流器與 BBU' }] },
+];
+
+describe('industry groups', () => {
+    it("shows an industry diagram only when one of the stock's groups names it", () => {
+        expect(industryDiagrams(groups)).toEqual(['power-rack']);
+        expect(industryDiagrams(groups.slice(0, 1))).toEqual([]);
+        expect(industryDiagrams([])).toEqual([]);
+    });
+
+    it('lists peers per group with the selected stock marked', () => {
+        expect(industryPeers(groups.slice(0, 1), '3081')).toEqual([{ id: 'ai-optics', name: { zh: 'AI 光通訊', en: 'AI optical interconnect' }, peers: [
+            { recordCode: '3081', name: '聯亞', market: 'TW', role: 'InP 磊晶片', current: true },
+            { recordCode: 'LITE-US', name: 'Lumentum', market: 'US', role: 'EML / CW 雷射與光模組', current: false }] }]);
     });
 });

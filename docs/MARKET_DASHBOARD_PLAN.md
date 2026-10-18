@@ -594,3 +594,16 @@ TWSE已驗證欄位與端點：
   - 後端：`tests/test_market_research.py`
   - 前端：`tests/market/researchMap.test.ts`、`overseasResearch.test.ts`
 - **尚未做：** 研究分頁還沒有編輯表單，目前只能透過 API PUT 更新。
+
+### 族群與股票實體（2026-10-18）
+
+- **後端三張表（maya-sawa）：**
+  - `maya_sawa_market_instrument`：股票實體，以 record code 為鍵（例如 2330、6857-JP），永不刪除。
+  - `maya_sawa_market_industry_group`：族群，可指定一張產業圖（diagram）。
+  - `maya_sawa_market_industry_member`：族群與股票的關聯，記錄該股在族群中的角色與排序。
+- **API：**
+  - `GET /market/dashboard/industries[?code=]`：列出全部族群；帶 `code` 時只列該股所屬的族群。
+  - `PUT /market/dashboard/industries/{id}`：更新族群（需登入，送出前驗證）。
+  - 初始資料在 `maya_sawa/data/market_industries.json`，只會新建尚不存在的族群，不覆蓋從 API 改過的內容。
+- **研究分頁：** 在研究圖上方列出同族群的股票（目前選取的標的會標示出來）。產業圖只在族群有指定時才顯示：機房直流電源圖只屬於「機房直流電源」族群，而這個族群目前只有光寶科（2301）。
+- **初始族群（只涵蓋目前持股）：** 先進封裝與測試、AI 光通訊、AI 液冷散熱、記憶體、AI PCB 與材料、手機光學、AI 資本支出需求端，另加一個只為收留機房直流電源圖的「機房直流電源」（光寶科）。
