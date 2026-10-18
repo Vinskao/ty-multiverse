@@ -34,7 +34,7 @@
 @media(prefers-reduced-motion:no-preference) { .macro-event--upcoming { animation:macro-week-pulse 2.8s ease-in-out infinite; } .macro-event--waiting { animation:macro-wait-pulse 2.2s ease-in-out infinite; } }
 @keyframes macro-week-pulse { 50% { box-shadow:0 0 0 3px color-mix(in srgb,#e1ae4b 26%,transparent),0 0 24px color-mix(in srgb,#e1ae4b 38%,transparent); } }
 @keyframes macro-wait-pulse { 50% { box-shadow:0 0 0 3px color-mix(in srgb,#ef8b71 28%,transparent),0 0 24px color-mix(in srgb,#ef8b71 42%,transparent); } }
-.macro-metric-grid { display:grid; grid-template-columns:repeat(var(--macro-cols,3),minmax(0,1fr)); gap:.45rem; }
+.macro-sources { margin:.35rem 0 0; font-size:.7rem; color:var(--gray-400); }
 .macro-indicator-card { display:grid; align-content:start; gap:.2rem; min-width:0; padding:.65rem; border-radius:.65rem; background:color-mix(in srgb,var(--gray-800) 28%,transparent); }
 .macro-indicator-card>span { color:var(--gray-400); font-size:.7rem; line-height:1.3; }
 .macro-indicator-card>strong { font-size:1.05rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }

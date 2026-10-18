@@ -77,7 +77,6 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
     ] },
     { id: 'commodities', eventGroups: [], title: { en: 'Commodities', zh: '商品價格' }, metrics: [
         m('COMEX_GOLD_USD', 'COMEX gold futures', '美國 COMEX 黃金期貨', 'raw'),
-        m('TPEx_GOLD_TWD', 'Taiwan gold spot', '台灣黃金現貨', 'raw'),
         m('WORLD_GOLD_USD', 'World gold monthly average', '國際黃金月均價', 'raw'),
         m('DCOILWTICO', 'WTI crude oil', 'WTI 原油', 'raw'),
     ] },

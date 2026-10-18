@@ -58,3 +58,17 @@ describe('MACRO_GROUP_SPECS', () => {
         expect(order.slice(order.indexOf('rates'), order.indexOf('rates') + 3)).toEqual(['rates', 'liquidity', 'credit']);
     });
 });
+
+// The dashboard shows line charts only (no one-number tiles), so every listed indicator must be drawn in a chart.
+describe('every macro indicator is charted', () => {
+    it('appears in a merged chart or a growth chart of its own card', () => {
+        for (const group of MACRO_GROUP_SPECS) {
+            const charted = new Set([
+                ...(MACRO_MERGED_CHARTS[group.id] || []).flat().flatMap((choice) => choice.split('|')),
+                ...Object.values(MACRO_GROWTH_CHARTS).filter((chart) => chart.group === group.id)
+                    .flatMap((chart) => [...chart.lines.mom, ...chart.lines.yoy, ...(chart.lines.level || [])].map((line) => line.code)),
+            ]);
+            for (const metric of group.metrics) expect(charted.has(metric.code), `${group.id} ${metric.code}`).toBe(true);
+        }
+    });
+});

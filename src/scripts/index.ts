@@ -562,7 +562,6 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
         return;
     }
     const points = overseasHistoryPoints(payload.daily);
-    const technical = payload.technical || {};
     const profile = payload.datasets?.profile?.payload || {};
     // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
     const brokerDown = payload.coverage?.history_raw?.status && payload.coverage.history_raw.status !== 'ok';
@@ -577,18 +576,6 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
     }
     const chartId = 'market-history-price-chart';
     drawMarketOHLCVolumeChart(chartId, points, [OVERSEAS_PRICE_SOURCE], 'volume_shares');
-    document.getElementById('market-overseas-kpis')?.remove();
-    if (points.length) {
-        const fmt = (value: unknown) => typeof value === 'number' ? formatNumber(value, 'price') : '—';
-        const kpis = buildMarketKpis([
-            { label: 'MA20 / MA60', value: `${fmt(technical.ma20)} / ${fmt(technical.ma60)}` },
-            { label: 'RSI14', value: typeof technical.rsi14Wilder === 'number' ? formatNumber(technical.rsi14Wilder, 'decimal') : '—' },
-            { label: marketText('5D / 20D change', '5 日 / 20 日漲跌'), value: `${formatSignedPercent(technical.change5dPercent, 1)} / ${formatSignedPercent(technical.change20dPercent, 1)}` },
-            { label: marketText('Range in stored history', '保存期間高低'), value: `${fmt(technical.rangeLow)} – ${fmt(technical.rangeHigh)}` },
-        ]);
-        kpis.id = 'market-overseas-kpis';
-        document.getElementById(chartId)?.before(kpis);
-    }
 }
 
 async function loadMarketFundamentals(code: string, productType: string, retries = 4) {
@@ -684,20 +671,12 @@ function renderRevenueGrowth(target: HTMLElement | null, rows: any[], emptyText:
     target.replaceChildren();
     if (!rows.length) { target.textContent = emptyText; return; }
     const latest = rows[rows.length - 1];
-    const recent = rows.slice(-3).map((row) => row.yoyPercent).filter((value): value is number => typeof value === 'number');
-    const recentAverage = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
     const chartId = `${target.id}-plot`; const chart = document.createElement('div'); chart.id = chartId;
     target.append(chart);
     drawMarketHistoryChart(chartId, metricPoints(rows, ['yoyPercent', 'momPercent']), [
         { label: marketI18n('marketFundamentalsYoY', 'YoY'), color: '#55b8a8', sourceKeys: ['metrics'], field: 'yoyPercent', tooltip: (_, v) => ratioFormat.growth(v) },
         { label: marketI18n('marketFundamentalsMoM', 'MoM'), color: '#7198df', sourceKeys: ['metrics'], field: 'momPercent', tooltip: (_, v) => ratioFormat.growth(v) },
     ], { height: 230, area: false, format: (v) => `${v}%` });
-    target.prepend(buildMarketKpis([
-        { label: `${marketI18n('marketFundamentalsYoY', 'YoY')} · ${latest.period}`, value: formatSignedPercent(latest.yoyPercent, 1) },
-        { label: `${marketI18n('marketFundamentalsMoM', 'MoM')} · ${latest.period}`, value: formatSignedPercent(latest.momPercent, 1) },
-        { label: marketI18n('marketFundamentalsYtdYoY', 'Year-to-date YoY'), value: formatSignedPercent(latest.ytdYoyPercent, 1) },
-        { label: marketI18n('marketFundamentals3mYoY', '3-month average YoY'), value: formatSignedPercent(recentAverage, 1) },
-    ]));
 }
 
 function renderProfitability(target: HTMLElement | null, rows: any[], emptyText: string) {
@@ -705,17 +684,6 @@ function renderProfitability(target: HTMLElement | null, rows: any[], emptyText:
     target.replaceChildren();
     if (!rows.length) { target.textContent = emptyText; return; }
     const latest = rows[rows.length - 1];
-    const margin = (key: string, fallback: string) => ({
-        label: `${marketI18n(key, fallback)} · ${latest.period}`,
-        value: typeof latest[`${MARGIN_KEYS[key]}`] === 'number' ? ratioFormat.percent(latest[MARGIN_KEYS[key]]) : '—',
-        sub: `${vsQuarter()} ${formatPp(latest[`${MARGIN_KEYS[key]}QoQ`])} · ${vsYear()} ${formatPp(latest[`${MARGIN_KEYS[key]}YoY`])}`,
-    });
-    target.append(buildMarketKpis([
-        margin('marketFundamentalsGrossMargin', 'Gross margin'),
-        margin('marketFundamentalsOperatingMargin', 'Operating margin'),
-        margin('marketFundamentalsNetMargin', 'Net margin'),
-        { label: `EPS ${vsYear()} · ${latest.period}`, value: formatSignedPercent(latest.epsYoY, 1), sub: `${vsQuarter()} ${formatSignedPercent(latest.epsQoQ, 1)}` },
-    ]));
     const title = document.createElement('h6'); title.className = 'market-subheading';
     title.textContent = marketI18n('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
     const chart = document.createElement('div'); chart.id = 'market-fundamentals-margin-chart';
@@ -779,19 +747,6 @@ function appendSignedText(target: HTMLElement, text: string) {
     target.append(text.slice(cursor));
 }
 
-function buildMarketKpis(items: { label: string; value: string; sub?: string }[]): HTMLElement {
-    const row = document.createElement('div'); row.className = 'market-kpi-row';
-    for (const item of items) {
-        const tile = document.createElement('div'); tile.className = 'market-kpi';
-        const label = document.createElement('span'); label.textContent = item.label;
-        const value = document.createElement('strong'); appendSignedText(value, item.value);
-        tile.append(label, value);
-        if (item.sub) { const sub = document.createElement('small'); appendSignedText(sub, item.sub); tile.append(sub); }
-        row.append(tile);
-    }
-    return row;
-}
-
 interface RatioRow { label: string; key: string; kind: RatioKind; group?: boolean }
 function renderRatioTable(target: HTMLElement | null, rows: any[], spec: RatioRow[], emptyText: string, note?: string, clear = true) {
     if (!target) return;
@@ -840,11 +795,6 @@ function renderOwnershipHistory(points: MarketHistoryPoint[]) {
     if (chart && holding.length) {
         const latest = holding[holding.length - 1]; const limit = limits[limits.length - 1];
         const change = latest - holding[0];
-        chart.prepend(buildMarketKpis([
-            { label: marketI18n('marketHistoryForeignHoldingPercent', 'Foreign holding (%)'), value: formatNumber(latest, 'percent') },
-            { label: `${marketI18n('marketHistoryChangeSince', 'Change since')} ${points[0].date.slice(5)}`, value: formatPp(change) },
-            { label: marketI18n('marketHistoryForeignHeadroom', 'Headroom to legal limit'), value: limit !== undefined ? formatNumber(limit - latest, 'pp') : '—', sub: limit !== undefined ? `${marketI18n('marketHistoryForeignLimit', 'Legal investment limit (%)')} ${limit}%` : undefined },
-        ]));
     }
     renderTdccOwnership(points);
 }
@@ -1523,98 +1473,6 @@ function buildMacroRelease(event: MacroEvent) {
     return card;
 }
 
-function buildMacroMetric(indicator: MacroIndicator, code: string, label: string, format: MacroMetricFormat, includeChart = true): HTMLElement {
-    const card = document.createElement('article'); card.className = 'macro-indicator-card';
-    const heading = document.createElement('span'); heading.textContent = label;
-    const value = document.createElement('strong');
-    let current = Number(indicator.value); let change: number | null = indicator.change ?? null;
-    let fallbackLabel = '';
-    let suffix = format === 'raw' ? ` ${indicator.unit}` : indicator.unit === 'percent' ? '%' : '';
-    if (format === 'jobs') { current = (Number(indicator.value) - Number(indicator.previousValue ?? indicator.value)) * 1000; suffix = ` ${marketI18n('macroJobs','jobs')}`; }
-    if (format === 'mom' || format === 'yoy') {
-        const months = indicator.history || []; const offset = format === 'mom' ? 1 : 12;
-        const previous = months.find((point) => point.period === shiftMacroPeriod(indicator.referencePeriod, -offset));
-        if (previous && Number(previous.value) !== 0) { change = (Number(indicator.value) / Number(previous.value) - 1) * 100; current = change; suffix = '%'; }
-        else if (format === 'mom' && indicator.previousValue !== null && indicator.previousValue !== undefined && Number(indicator.previousValue) !== 0) {
-            current = (Number(indicator.value) / Number(indicator.previousValue) - 1) * 100;
-            change = current;
-            suffix = '%';
-            fallbackLabel = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}`;
-        } else {
-            current = Number(indicator.value);
-            suffix = '';
-            fallbackLabel = marketI18n('macroLatestIndex','Latest index level');
-        }
-    } else if (format === 'claims') { current = Number(indicator.value); suffix = ` ${marketText('claims', '人')}`; }
-    else if (format === 'percent') current = Number(indicator.value);
-    else if (format === 'jobs') current = Number.isFinite(change) ? Number(change) * 1000 : NaN;
-    else current = Number(indicator.value);
-    if (format === 'raw' && (code === 'TW_EXPORTS' || code === 'TW_IMPORTS')) {
-        current /= 1_000_000;
-        suffix = ' NT$ B';
-    }
-    const tradeValue = format === 'raw' && (code === 'TW_EXPORTS' || code === 'TW_IMPORTS');
-    const valueKind: NumberKind = suffix === '%' ? 'percent' : tradeValue ? 'count' : numberKindFor(indicator.unit, format === 'mom' || format === 'yoy' ? undefined : format);
-    const valueDigits = format === 'percent' ? publishedDigits(indicator.value) : undefined;
-    value.textContent = `${formatNumber(current, valueKind, { locale: marketLocale(), digits: valueDigits })}${valueKind === 'percent' ? '' : suffix}`;
-    const meta = document.createElement('small');
-    const sourceTime = indicator.fetchedAt ? new Date(indicator.fetchedAt).toLocaleString(marketLocale(), { timeZone: 'Asia/Taipei' }) : '';
-    meta.textContent = `${macroPeriodLabel(indicator.referencePeriod, indicator.frequency)} · ${marketI18n('macroDataAsOf','reported period')}${sourceTime ? ` · ${sourceTime}` : ''}${indicator.cacheStale ? ` · ${marketText('cached data is stale','快取資料已過期')}` : ''}`;
-    if (indicator.sourceUrl) {
-        const sourceLink = document.createElement('a');
-        sourceLink.href = indicator.sourceUrl; sourceLink.target = '_blank'; sourceLink.rel = 'noopener noreferrer';
-        sourceLink.textContent = `${indicator.source || marketText('Source','來源')} ↗`;
-        meta.append(document.createTextNode(' · '), sourceLink);
-    } else if (indicator.source) meta.append(document.createTextNode(` · ${indicator.source}`));
-    const delta = document.createElement('small'); delta.className = 'macro-indicator-change';
-    if (format === 'percent' && change !== null) delta.textContent = formatNumber(change, 'pp', { signed: true, locale: marketLocale(), digits: publishedDigits(indicator.value, indicator.previousValue) });
-    if (format === 'jobs') delta.textContent = marketI18n('macroMonthlyChange','Change from previous month');
-    if (format === 'claims' && change !== null) delta.textContent = `${formatNumber(change, 'count', { signed: true, locale: marketLocale() })} ${marketText('from prior week', '較前週')} `;
-    if (format === 'mom' || format === 'yoy') delta.textContent = fallbackLabel || (format === 'mom' ? marketI18n('macroMonthOverMonth','Month over month') : marketI18n('macroYearOverYear','Year over year'));
-    if (format === 'sales') {
-        const previousSales = indicator.previousValue !== null && indicator.previousValue !== undefined
-            ? Number(indicator.previousValue)
-            : NaN;
-        if (Number.isFinite(previousSales) && previousSales !== 0) {
-            const monthChange = (Number(indicator.value) / previousSales - 1) * 100;
-            value.textContent = formatNumber(monthChange, 'percent', { signed: true, locale: marketLocale() });
-            delta.textContent = `${marketI18n('macroMonthOverMonth','Month over month')} · ${formatNumber(indicator.value, 'millions', { locale: marketLocale() })} M USD`;
-            const prior = document.createElement('small');
-            prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${formatNumber(previousSales, 'millions', { locale: marketLocale() })} M USD`;
-            card.append(heading, value, meta, delta, prior);
-            if (includeChart) card.append(buildMacroTrendChart(indicator, format, label));
-            return card;
-        }
-        value.textContent = `${formatNumber(indicator.value, 'millions', { locale: marketLocale() })} M USD`;
-        delta.textContent = marketI18n('macroLatestObservation','Latest stored observation');
-    } else if (format === 'percent' && code === 'DGS10') {
-        delta.textContent = indicator.previousValue !== null && indicator.previousValue !== undefined
-            ? `${marketI18n('macroPreviousPeriod','Previous')} ${indicator.previousPeriod || ''}: ${formatNumber(indicator.previousValue, 'percent', { locale: marketLocale() })}`
-            : marketI18n('macroLatestObservation','Latest stored observation');
-    }
-    if (indicator.previousValue !== null && indicator.previousValue !== undefined && format !== 'sales' && code !== 'DGS10') {
-        const prior = document.createElement('small');
-        const previousMetric = indicator.previousPeriod
-            ? macroMetricForPeriod(indicator, format, indicator.previousPeriod)
-            : null;
-        const locale = marketLocale();
-        const priorValue = previousMetric !== null
-            ? formatWithUnit(previousMetric, indicator.unit, format, format === 'jobs' ? marketI18n('macroJobs','jobs') : format === 'claims' ? marketText('persons', '人') : '',
-                { locale, digits: format === 'percent' ? publishedDigits(indicator.previousValue) : undefined })
-            : format === 'jobs'
-                ? `${formatNumber(indicator.previousValue, 'count', { locale })} ${marketI18n('macroLatestObservation','Latest stored observation')}`
-                : format === 'claims'
-                    ? formatWithUnit(indicator.previousValue, indicator.unit, 'claims', marketText('persons', '人'), { locale })
-                : `${formatWithUnit(indicator.previousValue, indicator.unit, undefined, '', { locale })}${format === 'mom' || format === 'yoy' ? ` · ${marketI18n('macroLatestIndex','Latest index level')}` : ''}`;
-        prior.textContent = `${marketI18n('macroPreviousPeriod','Previous')} ${macroPeriodLabel(indicator.previousPeriod || '', indicator.frequency)}: ${priorValue}`;
-        card.append(heading, value, meta, delta, prior);
-    } else {
-        card.append(heading, value, meta, delta);
-    }
-    if (includeChart) card.append(buildMacroTrendChart(indicator, format, label));
-    return card;
-}
-
 // separateAxes: series in different units (e.g. USD/TWD, JPY/USD, dollar index) share the date axis but each of the
 // first three gets its own y-axis (left, right, outer right) drawn in that series' color.
 function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean } = {}): HTMLElement {
@@ -1802,7 +1660,9 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
         michiganLink.textContent = marketText('Michigan expectation source', '密西根大學預期來源');
         const calendarLink = document.createElement('a'); calendarLink.href = 'https://www.financecalendar.com/api/'; calendarLink.target = '_blank'; calendarLink.rel = 'noopener noreferrer';
         calendarLink.textContent = marketText('Calendar consensus source', '經濟日曆共識來源');
-        wrap.append(michiganLink, document.createTextNode(' · '), calendarLink);
+        const links = document.createElement('p'); links.className = 'macro-sources';
+        links.append(michiganLink, document.createTextNode(' · '), calendarLink);
+        wrap.append(links);
     }
     return wrap;
 }
@@ -1860,25 +1720,17 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         // Past releases stay visible only while flagged (awaiting data or just published).
         const now = Date.now();
         const groupEvents = inGroup.filter((event) => macroEventInstant(event).getTime() >= now || event.highlightLevel === 'waiting' || event.highlightLevel === 'published');
-        const metricIndicators = group.metrics.flatMap(([code, label, format]) => {
-            const indicator = byCode.get(code);
-            return indicator ? [{ indicator, code, label: label(), format }] : [];
-        });
+        // Line charts only: every indicator of a card is drawn in one of its charts (no one-number tiles).
+        const indicators = group.metrics.flatMap(([code]) => byCode.get(code) ?? []);
         const growthCharts = Object.keys(MACRO_GROWTH_CHARTS).filter((id) => MACRO_GROWTH_CHARTS[id].group === group.id);
-        const combinedCharts = growthCharts.length > 0 || Boolean(MACRO_MERGED_CHARTS[group.id]);
-        const metrics = metricIndicators.map(({ indicator, code, label, format }) =>
-            buildMacroMetric(indicator, code, label, format, !combinedCharts));
-        if (!metrics.length && !groupEvents.length) continue;
+        if (!indicators.length && !groupEvents.length) continue;
         const card = document.createElement('article'); card.className = `macro-group macro-group--${group.id}`;
         const header = document.createElement('header'); header.className = 'macro-group-header';
         const title = document.createElement('h5'); title.textContent = group.title();
         header.append(title);
         const [next, ...later] = groupEvents;
         if (next) header.append(buildMacroRelease(next));
-        const metricGrid = document.createElement('div'); metricGrid.className = 'macro-metric-grid';
-        metricGrid.style.setProperty('--macro-cols', String(metrics.length >= 4 ? 2 : Math.max(metrics.length, 1)));
-        metricGrid.append(...metrics);
-        card.append(header, metricGrid);
+        card.append(header);
         if (MACRO_MERGED_CHARTS[group.id]) {
             const spec = new Map(group.metrics.map(([code, label, format]) => [code, { label, format }]));
             for (const codes of MACRO_MERGED_CHARTS[group.id]) {
@@ -1893,6 +1745,12 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         for (const id of growthCharts) {
             const growth = buildMacroGrowthChart(id, byCode);
             if (growth) card.append(growth);
+        }
+        const sources = [...new Set(indicators.map((indicator) => indicator.source).filter(Boolean))];
+        if (sources.length) {
+            const note = document.createElement('p'); note.className = 'macro-sources';
+            note.textContent = `${marketText('Sources', '來源')}: ${sources.join(' · ')}`;
+            card.append(note);
         }
         if (later.length) {
             const upcoming = document.createElement('p'); upcoming.className = 'macro-later';
