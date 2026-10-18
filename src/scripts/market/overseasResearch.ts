@@ -62,12 +62,23 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
     });
     const sheets = [...(financials?.balanceSheet || [])].sort((a, b) => a.end.localeCompare(b.end));
     const debt = (row?: SecRow) => row ? ratio(row.liabilities, row.assets) : null;
+    // Days of inventory: quarter-end InventoryNet ÷ that quarter's cost of revenue × 91.25 (same basis as maya-sawa).
+    const quarterOf = (sheet?: SecRow) => sheet ? findEnded(quarters, sheet.end, 0) : undefined;
+    const inventoryDays = (sheet?: SecRow) => {
+        const inventory = num(sheet?.inventory), cost = num(quarterOf(sheet)?.costOfRevenue);
+        return inventory !== null && cost !== null && cost > 0 ? inventory / cost * 91.25 : null;
+    };
     const balance = sheets.map((row) => {
         const previous = findEnded(sheets, row.end, 91);
         const yearAgo = findEnded(sheets, row.end, 365);
+        const inventoryYoY = growth(row.inventory, yearAgo?.inventory);
         // Current assets/liabilities are not in the collected SEC tag set, so the current ratio is unknown.
         return { period: quarterLabel(row.end), debtRatio: debt(row), debtRatioQoQ: diff(debt(row), debt(previous)),
-            debtRatioYoY: diff(debt(row), debt(yearAgo)), currentRatio: null, currentRatioYoY: null, equityYoY: growth(row.equity, yearAgo?.equity) };
+            debtRatioYoY: diff(debt(row), debt(yearAgo)), currentRatio: null, currentRatioYoY: null, equityYoY: growth(row.equity, yearAgo?.equity),
+            inventoryDays: inventoryDays(row), inventoryDaysQoQ: diff(inventoryDays(row), inventoryDays(previous)),
+            inventoryDaysYoY: diff(inventoryDays(row), inventoryDays(yearAgo)),
+            inventoryQoQ: growth(row.inventory, previous?.inventory), inventoryYoY,
+            inventoryVsRevenueYoY: diff(inventoryYoY, growth(quarterOf(row)?.revenue, quarterOf(yearAgo)?.revenue)) };
     });
     // Cash flow is year-to-date (6M, 9M, full year); compare with the same-length period a year earlier.
     const ytd = [...(financials?.cumulative || []), ...(financials?.annual || [])].sort((a, b) => a.end.localeCompare(b.end));

@@ -13,6 +13,7 @@ import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS } from './market/researchMap';
 import { getMermaidConfig } from './mermaid-theme';
+import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
@@ -630,22 +631,7 @@ function renderMarketFundamentals(payload: any, state: { fetchedAt: number; refr
     }
     const emptyText = pending ? marketI18n('marketFundamentalsHistoryPending', 'collecting history; this updates automatically') : marketI18n('marketFundamentalsNoRecords', 'No stored records are available for this statement.');
     renderRevenueGrowth(document.getElementById('market-fundamentals-revenue-chart'), metrics.monthly ?? [], emptyText);
-    renderProfitability(document.getElementById('market-fundamentals-statements'), metrics.quarterly ?? [], emptyText);
-    renderRatioTable(document.getElementById('market-fundamentals-balance'), metrics.balance ?? [], [
-        { label: marketI18n('marketFundamentalsDebtRatio', 'Debt ratio'), key: 'debtRatio', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} ${vsQuarter()}`, key: 'debtRatioQoQ', kind: 'pp' },
-        { label: `${marketI18n('marketFundamentalsDebtRatio', 'Debt ratio')} ${vsYear()}`, key: 'debtRatioYoY', kind: 'pp' },
-        { label: marketI18n('marketFundamentalsCurrentRatio', 'Current ratio'), key: 'currentRatio', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCurrentRatio', 'Current ratio')} ${vsYear()}`, key: 'currentRatioYoY', kind: 'pp' },
-        { label: `${marketI18n('marketFundamentalsEquity', 'Equity')} ${vsYear()}`, key: 'equityYoY', kind: 'growth' },
-    ], emptyText);
-    renderRatioTable(document.getElementById('market-fundamentals-cash-flow'), metrics.cashFlow ?? [], [
-        { label: `${marketI18n('marketFundamentalsOperatingCashFlow', 'Operating cash flow')} ${vsYear()}`, key: 'ocfYoY', kind: 'growth' },
-        { label: marketI18n('marketFundamentalsCashConversion', 'Operating cash flow ÷ pre-tax income'), key: 'cashConversion', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCashConversionShort', 'Cash conversion')} ${vsYear()}`, key: 'cashConversionYoY', kind: 'pp' },
-        { label: marketI18n('marketFundamentalsCapexToOcf', 'Capex ÷ operating cash flow'), key: 'capexToOcf', kind: 'percent' },
-        { label: `${marketI18n('marketFundamentalsCapexShort', 'Capex share')} ${vsYear()}`, key: 'capexToOcfYoY', kind: 'pp' },
-    ], emptyText, marketI18n('marketFundamentalsCashFlowNote', 'Cash flow statements are year-to-date, so changes compare with the same period last year.'));
+    renderFundamentalCharts(metrics, emptyText);
     const source = document.getElementById('market-fundamentals-source');
     if (source) source.textContent = `${marketI18n('marketFundamentalsSource', 'Source')}: ${payload.source || '—'}${payload.errors?.length ? ` · ${payload.errors.join(' · ')}` : ''}`;
 }
@@ -657,6 +643,37 @@ const ratioFormat: Record<RatioKind, (value: number) => string> = {
     growth: (value) => formatSignedPercent(value, 1),
     pp: (value) => formatNumber(value, 'pp', { signed: true, locale: marketLocale() }),
 };
+
+// Statement charts grouped by question (fundamentalsCharts.ts); inventory sits right after margins.
+const FUNDAMENTAL_CHART_TARGETS: Record<string, string> = {
+    growth: 'market-fundamentals-statements', margins: 'market-fundamentals-statements',
+    'inventory-days': 'market-fundamentals-inventory', 'inventory-growth': 'market-fundamentals-inventory',
+    structure: 'market-fundamentals-balance', cash: 'market-fundamentals-cash-flow',
+};
+const fundamentalValue = (unit: FundamentalUnit, value: number) => unit === 'days'
+    ? `${formatNumber(value, 'decimal', { digits: 0, locale: marketLocale() })} ${marketText('days', '天')}` : ratioFormat[unit](value);
+
+function renderFundamentalCharts(metrics: Record<string, any[]>, emptyText: string) {
+    const targets = [...new Set(Object.values(FUNDAMENTAL_CHART_TARGETS))].map((id) => document.getElementById(id));
+    targets.forEach((target) => target?.replaceChildren());
+    for (const chart of FUNDAMENTAL_CHARTS) {
+        const rows = metrics[chart.source] ?? [];
+        const lines = fundamentalChartLines(chart, rows);
+        const target = document.getElementById(FUNDAMENTAL_CHART_TARGETS[chart.id]);
+        if (!target || !lines.length) continue;
+        const title = document.createElement('h6'); title.className = 'market-subheading';
+        title.textContent = marketText(chart.title.en, chart.title.zh);
+        const plot = document.createElement('div'); plot.id = `market-fundamentals-chart-${chart.id}`;
+        target.append(title, plot);
+        const unit = lines[0].unit;
+        drawMarketHistoryChart(plot.id, metricPoints(rows, lines.map((item) => item.key)), lines.map((item) => ({
+            label: marketText(item.label.en, item.label.zh), color: item.color, sourceKeys: ['metrics'], field: item.key,
+            tooltip: (_: MarketHistoryPoint, value: number) => fundamentalValue(item.unit, value),
+        })), { height: 210, area: false, format: (value) => unit === 'days' ? `${value}` : `${value}%` });
+        if (chart.note) { const note = document.createElement('p'); note.className = 'market-fin-note'; note.textContent = marketText(chart.note.en, chart.note.zh); target.append(note); }
+    }
+    targets.forEach((target) => { if (target && !target.childElementCount) target.textContent = emptyText; });
+}
 
 function metricPoints(rows: any[], keys: string[]): MarketHistoryPoint[] {
     return rows.map((row) => {
@@ -678,45 +695,6 @@ function renderRevenueGrowth(target: HTMLElement | null, rows: any[], emptyText:
         { label: marketI18n('marketFundamentalsMoM', 'MoM'), color: '#7198df', sourceKeys: ['metrics'], field: 'momPercent', tooltip: (_, v) => ratioFormat.growth(v) },
     ], { height: 230, area: false, format: (v) => `${v}%` });
 }
-
-function renderProfitability(target: HTMLElement | null, rows: any[], emptyText: string) {
-    if (!target) return;
-    target.replaceChildren();
-    if (!rows.length) { target.textContent = emptyText; return; }
-    const latest = rows[rows.length - 1];
-    const title = document.createElement('h6'); title.className = 'market-subheading';
-    title.textContent = marketI18n('marketFundamentalsMarginTrend', 'Margin trend · single quarter');
-    const chart = document.createElement('div'); chart.id = 'market-fundamentals-margin-chart';
-    target.append(title, chart);
-    drawMarketHistoryChart(chart.id, metricPoints(rows, ['grossMargin', 'operatingMargin', 'netMargin']), [
-        { label: marketI18n('marketFundamentalsGrossMargin', 'Gross margin'), color: '#55b8a8', sourceKeys: ['metrics'], field: 'grossMargin', tooltip: (_, v) => ratioFormat.percent(v) },
-        { label: marketI18n('marketFundamentalsOperatingMargin', 'Operating margin'), color: '#7198df', sourceKeys: ['metrics'], field: 'operatingMargin', tooltip: (_, v) => ratioFormat.percent(v) },
-        { label: marketI18n('marketFundamentalsNetMargin', 'Net margin'), color: '#d5ae4b', sourceKeys: ['metrics'], field: 'netMargin', tooltip: (_, v) => ratioFormat.percent(v) },
-    ], { height: 210, area: false, format: (v) => `${v}%` });
-    const gross = marketI18n('marketFundamentalsGrossMargin', 'Gross margin');
-    const operating = marketI18n('marketFundamentalsOperatingMargin', 'Operating margin');
-    const net = marketI18n('marketFundamentalsNetMargin', 'Net margin');
-    const revenue = marketI18n('marketFundamentalsRevenueLabel', 'Revenue');
-    renderRatioTable(target, rows, [
-        { label: `${revenue} ${vsQuarter()}`, key: 'revenueQoQ', kind: 'growth' },
-        { label: `${revenue} ${vsYear()}`, key: 'revenueYoY', kind: 'growth' },
-        { label: gross, key: 'grossMargin', kind: 'percent', group: true },
-        { label: `${gross} ${vsQuarter()}`, key: 'grossMarginQoQ', kind: 'pp' },
-        { label: `${gross} ${vsYear()}`, key: 'grossMarginYoY', kind: 'pp' },
-        { label: operating, key: 'operatingMargin', kind: 'percent', group: true },
-        { label: `${operating} ${vsQuarter()}`, key: 'operatingMarginQoQ', kind: 'pp' },
-        { label: `${operating} ${vsYear()}`, key: 'operatingMarginYoY', kind: 'pp' },
-        { label: net, key: 'netMargin', kind: 'percent', group: true },
-        { label: `${net} ${vsQuarter()}`, key: 'netMarginQoQ', kind: 'pp' },
-        { label: `${net} ${vsYear()}`, key: 'netMarginYoY', kind: 'pp' },
-        { label: `EPS ${vsQuarter()}`, key: 'epsQoQ', kind: 'growth', group: true },
-        { label: `EPS ${vsYear()}`, key: 'epsYoY', kind: 'growth' },
-    ], emptyText, marketI18n('marketFundamentalsRatioNote', 'pp = percentage-point change in the margin. Growth rates are blank when the base period is zero or negative.'), false);
-}
-
-const MARGIN_KEYS: Record<string, string> = {
-    marketFundamentalsGrossMargin: 'grossMargin', marketFundamentalsOperatingMargin: 'operatingMargin', marketFundamentalsNetMargin: 'netMargin',
-};
 
 function formatPp(value: unknown): string {
     return typeof value === 'number' && Number.isFinite(value) ? ratioFormat.pp(value) : '—';
@@ -745,36 +723,6 @@ function appendSignedText(target: HTMLElement, text: string) {
         target.append(span); cursor = start + match[2].length;
     }
     target.append(text.slice(cursor));
-}
-
-interface RatioRow { label: string; key: string; kind: RatioKind; group?: boolean }
-function renderRatioTable(target: HTMLElement | null, rows: any[], spec: RatioRow[], emptyText: string, note?: string, clear = true) {
-    if (!target) return;
-    if (clear) target.replaceChildren();
-    if (!rows.length) { target.textContent = emptyText; return; }
-    const wrap = document.createElement('div'); wrap.className = 'market-fin-table-wrap';
-    const table = document.createElement('table'); table.className = 'market-fin-table';
-    const head = document.createElement('tr');
-    const corner = document.createElement('th'); corner.scope = 'col'; corner.textContent = marketI18n('marketFundamentalsItem', 'Item'); head.append(corner);
-    rows.forEach((row, i) => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = String(row.period); if (i === rows.length - 1) th.className = 'is-latest'; head.append(th); });
-    const thead = document.createElement('thead'); thead.append(head);
-    const tbody = document.createElement('tbody');
-    for (const line of spec) {
-        const tr = document.createElement('tr'); if (line.group) tr.className = 'is-group';
-        const th = document.createElement('th'); th.scope = 'row'; th.textContent = line.label; tr.append(th);
-        rows.forEach((row, i) => {
-            const value = row[line.key]; const td = document.createElement('td');
-            const text = typeof value === 'number' && Number.isFinite(value) ? ratioFormat[line.kind](value) : '—';
-            if (line.kind === 'percent') td.textContent = text; else appendSignedText(td, text);
-            if (i === rows.length - 1) td.classList.add('is-latest');
-            tr.append(td);
-        });
-        tbody.append(tr);
-    }
-    table.append(thead, tbody); wrap.append(table); target.append(wrap);
-    // Newest period sits on the right; start scrolled there on narrow screens.
-    requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
-    if (note) { const small = document.createElement('p'); small.className = 'market-fin-note'; small.textContent = note; target.append(small); }
 }
 
 function renderOwnershipHistory(points: MarketHistoryPoint[]) {
