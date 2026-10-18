@@ -1786,3 +1786,14 @@
 .market-research-watch { margin:.25rem 0 .75rem 1.1rem; font-size:.82rem; }
 .market-research-industry { margin-top:1.25rem; }
 .market-research-industry summary { cursor:pointer; font-weight:600; }
+
+/* Phones: the home page nests wrapper → hero → market overview → macro dashboard → card, each with its own
+   padding and border, which left charts ~74px from each edge on a 390px screen. Collapse the gutters so data
+   runs nearly edge to edge; the outer 6px clears rounded screen corners. */
+@media (max-width: 640px) {
+  .wrapper:has(> header.hero-layout) { padding-inline: max(6px, env(safe-area-inset-left, 0px)) max(6px, env(safe-area-inset-right, 0px)); }
+  header.hero.hero-layout { padding-inline: 0; }
+  section.market-overview { padding-inline: 4px; border-left-width: 0; border-right-width: 0; border-radius: 0; }
+  section.macro-dashboard { padding-inline: 0; border-left-width: 0; border-right-width: 0; border-radius: 0; }
+  article.macro-group { padding-inline: 6px; }
+}
