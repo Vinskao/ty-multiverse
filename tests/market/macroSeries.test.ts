@@ -139,8 +139,14 @@ describe('macroValueAtOrBefore', () => {
         expect(macroValueAtOrBefore(twd, '2026-10-01')).toBeUndefined();
     });
 
-    it('requires an exact match for monthly periods', () => {
-        expect(macroValueAtOrBefore([{ period: '2026-08', value: 1 }], '2026-09')).toBeUndefined();
+    // Money stocks publish on different lags (U.S. M2 for 2026-08 while Japan already has 2026-09); exact matching
+    // made the latest readout show Japan only, as if U.S. M2 were missing.
+    it('carries a monthly value up to two months forward (the readout labels its own month)', () => {
+        const m2 = [{ period: '2026-07', value: 1 }, { period: '2026-08', value: 2 }];
+        expect(macroValueAtOrBefore(m2, '2026-09')).toEqual({ period: '2026-08', value: 2 });
+        expect(macroValueAtOrBefore(m2, '2026-10')).toEqual({ period: '2026-08', value: 2 });
+        expect(macroValueAtOrBefore(m2, '2026-11')).toBeUndefined();
+        expect(macroValueAtOrBefore(m2, '2026-06')).toBeUndefined();
     });
 });
 

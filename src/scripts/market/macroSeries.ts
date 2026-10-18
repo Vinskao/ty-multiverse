@@ -101,10 +101,17 @@ export const MACRO_SERIES_TONES = {
 export type MacroSeriesTone = keyof typeof MACRO_SERIES_TONES;
 
 // Value shown for a series at a hovered date. Daily series trade on different calendars (Taiwan vs. U.S. vs. FX),
-// so carry the latest earlier close for up to 7 days; monthly periods must match exactly.
+// so carry the latest earlier close for up to 7 days. Monthly series publish on different lags (U.S. M2 a month
+// behind Japan), so carry the latest earlier month for up to two months; the readout labels its own month.
 export function macroValueAtOrBefore(values: MacroPoint[], period: string): MacroPoint | undefined {
     const exact = values.find((item) => item.period === period);
-    if (exact || period.length !== 10) return exact;
+    if (exact) return exact;
+    if (period.length === 7) {
+        const earliest = shiftMacroPeriod(period, -2);
+        return values.filter((item) => item.period.length === 7 && item.period < period && item.period >= earliest)
+            .reduce<MacroPoint | undefined>((best, item) => !best || item.period > best.period ? item : best, undefined);
+    }
+    if (period.length !== 10) return undefined;
     const limit = new Date(`${period}T00:00:00Z`).getTime() - 7 * 86_400_000;
     let found: MacroPoint | undefined;
     for (const item of values) {

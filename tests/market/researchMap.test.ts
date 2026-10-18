@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseResearchRecord, researchRecordCode, RESEARCH_DIMENSIONS, researchViewTone, researchLeanTone } from '../../src/scripts/market/researchMap';
+import { parseResearchRecord, researchRecordCode, RESEARCH_DIMENSIONS, researchViewTone, researchLeanTone, industryResearchFor } from '../../src/scripts/market/researchMap';
 import tsmc from '../fixtures/research-2330.json';
 
 // Seeded production record (maya-sawa/maya_sawa/data/market_research/2330.json), stored under productType=research.
@@ -38,5 +38,15 @@ describe('tones', () => {
     it('maps views and leans to badge tones', () => {
         expect(['順風', '中性', '逆風'].map(researchViewTone)).toEqual(['up', 'flat', 'down']);
         expect(['買', '中立', '賣'].map(researchLeanTone)).toEqual(['up', 'flat', 'down']);
+    });
+});
+
+// Industry research (Research Zone) only appears on the instruments it is about, never on unrelated ones.
+describe('industryResearchFor', () => {
+    it('shows the datacenter power rack only for its listed makers (Delta, Lite-On)', () => {
+        expect(industryResearchFor('2308')).toEqual(['power-rack']);
+        expect(industryResearchFor('2301')).toEqual(['power-rack']);
+        expect(industryResearchFor('3008')).toEqual([]);
+        expect(industryResearchFor('6857-JP')).toEqual([]);
     });
 });

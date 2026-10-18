@@ -11,7 +11,7 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS } from './market/researchMap';
+import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS, industryResearchFor } from './market/researchMap';
 import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
@@ -844,6 +844,9 @@ async function loadMarketResearch(instrument: DashboardInstrument) {
     if (!status || !target) return;
     const code = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
     const sequence = ++marketResearchSequence;
+    // Industry research only on the instruments it covers (e.g. the DC power rack on Delta / Lite-On).
+    const industry = document.getElementById('market-research-industry');
+    if (industry) industry.hidden = industryResearchFor(code).length === 0;
     status.textContent = marketText('Loading research…', '正在載入研究…');
     target.replaceChildren();
     let payload: { analysis: MarketAiComment | null; history: MarketAiComment[] };

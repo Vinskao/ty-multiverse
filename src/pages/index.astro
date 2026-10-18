@@ -235,7 +235,7 @@ const skillsCategories = skillsData.categories;
 										<h4 id="market-research-title" data-i18n="home.marketTabResearch">Research</h4>
 										<p id="market-research-status" class="market-updated" aria-live="polite">選擇標的後載入供應鏈與技術環節。</p>
 										<div id="market-research-content"></div>
-										<details class="market-research-industry">
+										<details id="market-research-industry" class="market-research-industry" hidden>
 											<summary data-i18n="home.researchZoneTitle">Research Zone</summary>
 											<ResearchZone client:visible mappingData={companyProductMapping} />
 										</details>

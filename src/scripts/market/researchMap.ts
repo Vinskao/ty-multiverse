@@ -58,3 +58,13 @@ export function researchViewTone(view: string) {
 export function researchLeanTone(lean: string) {
     return lean === '買' ? 'up' : lean === '賣' ? 'down' : 'flat';
 }
+
+// Industry research (the Research Zone accordion, e.g. the datacenter DC power rack) belongs only to the
+// instruments it is about; record codes of the makers each item covers.
+export const INDUSTRY_RESEARCH: Record<string, readonly string[]> = {
+    'power-rack': ['2308', '2301'], // Delta Electronics, Lite-On Technology
+};
+
+export function industryResearchFor(recordCode: string): string[] {
+    return Object.keys(INDUSTRY_RESEARCH).filter((id) => INDUSTRY_RESEARCH[id].includes(recordCode));
+}
