@@ -1766,3 +1766,23 @@
   .market-company-events { padding:.7rem; }
   .market-company-events-heading { display:grid; gap:.25rem; }
 }
+
+/* Research tab: per-instrument supply chain / technology maps and the cycle · technology · delivery view. */
+.market-research-head { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; margin:.5rem 0; }
+.market-research-lean { padding:.15rem .6rem; border-radius:999px; font-weight:700; font-size:.85rem; border:1px solid currentColor; }
+.market-research-tone--up { color:#4ade80; }
+.market-research-tone--flat { color:#facc15; }
+.market-research-tone--down { color:#f87171; }
+.market-research-summary, .market-research-reason { font-size:.85rem; line-height:1.65; overflow-wrap:anywhere; }
+.market-research-reason { color:var(--gray-300, #cbd5e1); }
+.market-research-dimensions { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.6rem; margin:.75rem 0; }
+.market-research-dimension { padding:.6rem .75rem; border:1px solid rgba(148,163,184,.3); border-radius:8px; min-width:0; }
+.market-research-dimension span { display:block; font-size:.75rem; color:var(--gray-400, #94a3b8); }
+.market-research-dimension strong { display:block; font-size:1.05rem; margin:.15rem 0; }
+.market-research-dimension p { margin:0; font-size:.78rem; line-height:1.55; overflow-wrap:anywhere; }
+.market-research-diagram { margin:1rem 0; overflow-x:auto; }
+.market-research-diagram pre.mermaid { background:transparent; margin:0; text-align:center; }
+.market-research-diagram--source { white-space:pre-wrap; text-align:left !important; font-size:.75rem; }
+.market-research-watch { margin:.25rem 0 .75rem 1.1rem; font-size:.82rem; }
+.market-research-industry { margin-top:1.25rem; }
+.market-research-industry summary { cursor:pointer; font-weight:600; }

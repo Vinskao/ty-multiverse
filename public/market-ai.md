@@ -16,6 +16,10 @@ For overseas AI records use `6857-JP`, `6524-JP`, `META-US`, `LITE-US`, `000660-
 
 Treat the saved commentary as a shared, versioned research note. Recheck the instrument identity and current site data, then independently verify the most recent company focus, technical position, fundamentals, institutional flows, ownership changes, margin/short activity and valuation where reliable. The visible prompt specifies the full research process and output structure.
 
+**How to decide / 判斷方式**: 判斷核心：買／中立／賣的方向只由三項決定——循環（產業與需求循環位置）、技術力（技術路線與競爭門檻）、交貨（出貨、營收、產能與交期的實際證據）。每項標順風／中性／逆風：≥2 項順風且無逆風＝買；≥2 項逆風＝賣；其餘＝中立。總經、價格、籌碼只用來決定進場時機與風險，不推翻三項判斷；若要偏離規則必須寫明理由。
+
+**Research maps / 研究圖**: before writing, read `GET /tymultiverse/api/market/dashboard/analysis/{code}?productType=research` (the Research tab, right before AI analysis). It holds the supply-chain and technology Mermaid flowcharts and the cycle / technology / delivery views. When new filings change a view, update the same record (JSON fields: name, market, asOf, summary, supplyChain, technology, assessment.cycle/technology/delivery {view: 順風|中性|逆風, note}, lean, leanReason, watch, sources with https URLs; Mermaid flowcharts only, no click/links). Records are kept permanently, also after an instrument leaves the holdings; `GET /tymultiverse/api/market/dashboard/research` lists them all.
+
 Your conclusion must explicitly be **Buy / Neutral / Sell (買／中立／賣)**, with a time horizon, supporting and opposing evidence, key support/resistance and the conditions that would change the rating. Distinguish intraday from closing prices. Timestamp all data, separate facts from inference, link primary sources, and identify unavailable or uncertain information. Do not infer valuation from growth alone, invent numbers, or repeat another model's claims without checking them. This is general research, not individualized investment advice.
 
 ## Browser workflow
@@ -37,6 +41,8 @@ The home page is rendered by JavaScript, so a chat app's web reader may only see
 - Daily history / 日線與籌碼: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/history/{code}
 - Fundamentals / 基本面: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/fundamentals/{code}
 - Current analysis and history / 目前評論與版本: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/analysis/{code}?productType=stock
+- Research map / 研究圖（供應鏈、技術、循環／技術力／交貨）: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/analysis/{code}?productType=research
+- All research maps / 全部研究紀錄: https://peoplesystem.tatdvsonorth.com/tymultiverse/api/market/dashboard/research
 
 Chat apps cannot sign in, so they cannot save. Reply with the complete commentary as plain text, together with your model name and the revision you based it on. The user pastes it into the AI analysis editor while signed in and saves it there.
 手機 AI 無法登入，不能直接儲存：請把完整評論以純文字回覆，並附上模型名稱與依據的版本號，由使用者登入後貼到 AI 分析編輯框儲存。

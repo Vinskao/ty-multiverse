@@ -577,3 +577,20 @@ TWSE已驗證欄位與端點：
 - PostgreSQL transaction verification passed current update, revision history, idempotent retry and stale revision rejection; transaction rolled back without publishing QA commentary.
 - AI writing guide: /tymultiverse/market-ai.md. Existing analysis is loaded for replacement by the next AI, with revision history retained.
 
+
+## 2026-10-18 研究分頁（研究圖）與三項判斷
+
+- **分頁位置：** 標的明細新增「研究」分頁，放在「AI 分析」前面。台股、海外、期貨都會顯示（海外分頁為：價格、基本面、研究、AI 分析）。原本首頁最下方的 Research Zone（機房直流電機櫃）移到這個分頁底部的「產業研究」摺疊區。
+- **儲存：** 用 AI 分析的版本表，`productType=research`，代碼與 AI 分析相同（台股用裸代號、海外用 `CODE-MARKET`、股票期貨用標的現股）。
+  - 紀錄不會刪除：標的從持股移除後仍然保留。
+  - 用 `GET /market/dashboard/research` 可以列出全部紀錄。
+- **內容（JSON，PUT 時會驗證）：**
+  - `supplyChain`、`technology` 必須是 Mermaid flowchart，不允許 click／連結／script。
+  - `assessment.cycle|technology|delivery` 各有 `{view: 順風|中性|逆風, note}`。
+  - 另有 `lean`（買／中立／賣）、`leanReason`、`watch`，以及 `sources`（只接受 https）。
+- **判斷規則：** 循環、技術力、交貨三項中，兩項以上順風且沒有逆風＝買；兩項以上逆風＝賣；其餘＝中立。價格、籌碼、總經只用來決定時機。AI 提示與 `public/market-ai.md` 已改成依這個規則下結論。
+- **初始內容：** `maya-sawa/maya_sawa/data/market_research/*.json` 收錄目前 20 檔的初始研究，啟動時寫入。寫入條件是紀錄不存在，或最後一次仍由 seed 寫入；有人編輯過的紀錄不會被覆蓋。
+- **測試：**
+  - 後端：`tests/test_market_research.py`
+  - 前端：`tests/market/researchMap.test.ts`、`overseasResearch.test.ts`
+- **尚未做：** 研究分頁還沒有編輯表單，目前只能透過 API PUT 更新。

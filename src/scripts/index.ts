@@ -11,6 +11,8 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
+import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS } from './market/researchMap';
+import { getMermaidConfig } from './mermaid-theme';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
@@ -907,8 +909,101 @@ function selectMarketDetailTab(tabName: string) {
     document.querySelectorAll<HTMLElement>('[data-market-panel]').forEach((panel) => { panel.hidden = panel.dataset.marketPanel !== tabName; });
     if (selectedMarketInstrument) {
         if (tabName === 'ai-analysis') void loadMarketAiAnalysis(selectedMarketInstrument);
+        else if (tabName === 'research') void loadMarketResearch(selectedMarketInstrument);
         else void loadMarketHistory(selectedMarketInstrument, tabName);
     }
+}
+
+// Mermaid from the same pinned CDN build as the About page; strict security keeps labels as text and drops links.
+let mermaidScript: Promise<any> | null = null;
+function loadMermaidLibrary() {
+    mermaidScript ??= new Promise((resolve, reject) => {
+        if ((window as any).mermaid) return resolve((window as any).mermaid);
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js';
+        script.onload = () => resolve((window as any).mermaid);
+        script.onerror = () => { mermaidScript = null; reject(new Error('Mermaid unavailable')); };
+        document.head.append(script);
+    });
+    return mermaidScript;
+}
+
+async function renderResearchDiagrams(nodes: HTMLElement[]) {
+    try {
+        const mermaid = await loadMermaidLibrary();
+        mermaid.initialize({ ...getMermaidConfig(document.documentElement.classList.contains('theme-dark')), startOnLoad: false, securityLevel: 'strict' });
+        await mermaid.run({ nodes });
+    } catch (error) {
+        console.error('Research diagram rendering failed:', error);
+        nodes.forEach((node) => node.classList.add('market-research-diagram--source'));
+    }
+}
+
+let marketResearchSequence = 0;
+async function loadMarketResearch(instrument: DashboardInstrument) {
+    const status = document.getElementById('market-research-status');
+    const target = document.getElementById('market-research-content');
+    if (!status || !target) return;
+    const code = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
+    const sequence = ++marketResearchSequence;
+    status.textContent = marketText('Loading research…', '正在載入研究…');
+    target.replaceChildren();
+    let payload: { analysis: MarketAiComment | null; history: MarketAiComment[] };
+    try {
+        const response = await fetch(astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=research`), { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        payload = await response.json();
+    } catch (error) {
+        console.error('Research unavailable:', error);
+        if (sequence === marketResearchSequence) status.textContent = marketText('Research is temporarily unavailable.', '研究資料暫時無法讀取。');
+        return;
+    }
+    if (sequence !== marketResearchSequence) return;
+    const saved = payload.analysis;
+    const record = saved ? parseResearchRecord(saved.content) : null;
+    if (!saved || !record) {
+        status.textContent = marketText(`No research map saved for ${code} yet.`, `${code} 尚未保存研究（productType=research）。`);
+        return;
+    }
+    status.textContent = `${code} · ${marketText('revision', '版本')} ${saved.revision} · ${saved.model} · ${new Date(saved.updatedAt).toLocaleString()} · ${marketText('as of', '資料截點')} ${record.asOf}`;
+    const el = (tag: string, className: string, text?: string) => { const node = document.createElement(tag); node.className = className; if (text !== undefined) node.textContent = text; return node; };
+    const head = el('div', 'market-research-head');
+    head.append(el('strong', '', record.name), el('span', `market-research-lean market-research-tone--${researchLeanTone(record.lean)}`, `${marketText('Lean', '偏向')}：${record.lean}`));
+    const grid = el('div', 'market-research-dimensions');
+    for (const dimension of RESEARCH_DIMENSIONS) {
+        const item = record.assessment[dimension.key];
+        const card = el('article', 'market-research-dimension');
+        card.append(el('span', '', marketText(dimension.label.en, dimension.label.zh)),
+            el('strong', `market-research-tone--${researchViewTone(item.view)}`, item.view), el('p', '', item.note));
+        grid.append(card);
+    }
+    const diagrams: HTMLElement[] = [];
+    const diagram = (title: string, source: string) => {
+        const section = el('section', 'market-research-diagram');
+        const pre = el('pre', 'mermaid', source);
+        diagrams.push(pre);
+        section.append(el('h5', '', title), pre);
+        return section;
+    };
+    target.append(head, el('p', 'market-research-summary', record.summary), grid,
+        el('p', 'market-research-reason', record.leanReason),
+        diagram(marketText('Supply chain', '供應鏈環節'), record.supplyChain),
+        diagram(marketText('Technology roadmap', '技術環節與量產狀態'), record.technology));
+    if (record.watch.length) {
+        const list = el('ul', 'market-research-watch');
+        record.watch.forEach((item) => list.append(el('li', '', item)));
+        target.append(el('h5', '', marketText('Watch next', '接下來觀察')), list);
+    }
+    if (record.sources.length) {
+        const links = el('p', 'market-updated');
+        record.sources.forEach((source, index) => {
+            const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = source.label;
+            links.append(...(index ? [document.createTextNode(' · '), link] : [link]));
+        });
+        target.append(links);
+    }
+    if (record.basis) target.append(el('p', 'market-updated', record.basis));
+    await renderResearchDiagrams(diagrams);
 }
 
 interface MarketAiComment { code: string; productType: string; model: string; content: string; revision: number; updatedAt: string }

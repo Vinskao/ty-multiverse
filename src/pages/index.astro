@@ -225,22 +225,34 @@ const skillsCategories = skillsData.categories;
 							</section>
 							<section id="market-chart-section" class="market-chart-section" aria-label="Selected instrument charts">
 								<div id="market-instrument-detail" class="market-instrument-detail" hidden>
-									<div class="market-detail-toolbar"><strong id="market-detail-title">TXF · TAIEX Futures</strong><div id="market-detail-tabs" role="tablist" aria-label="Market data"><button type="button" role="tab" aria-selected="true" data-market-tab="price" data-i18n="home.marketTabPrice">Price</button><button type="button" role="tab" aria-selected="false" data-market-tab="institutional" data-i18n="home.marketTabInstitutional">Institutional</button><button type="button" role="tab" aria-selected="false" data-market-tab="margin" data-i18n="home.marketTabMargin">Margin & lending</button><button type="button" role="tab" aria-selected="false" data-market-tab="ownership" data-i18n="home.marketTabOwnership">Ownership</button><button type="button" role="tab" aria-selected="false" data-market-tab="fundamentals" data-i18n="home.marketTabFundamentals">Fundamentals</button><button type="button" role="tab" aria-selected="false" data-market-tab="ai-analysis" data-i18n="home.marketTabAiAnalysis">AI analysis</button></div></div>
+									<div class="market-detail-toolbar"><strong id="market-detail-title">TXF · TAIEX Futures</strong><div id="market-detail-tabs" role="tablist" aria-label="Market data"><button type="button" role="tab" aria-selected="true" data-market-tab="price" data-i18n="home.marketTabPrice">Price</button><button type="button" role="tab" aria-selected="false" data-market-tab="institutional" data-i18n="home.marketTabInstitutional">Institutional</button><button type="button" role="tab" aria-selected="false" data-market-tab="margin" data-i18n="home.marketTabMargin">Margin & lending</button><button type="button" role="tab" aria-selected="false" data-market-tab="ownership" data-i18n="home.marketTabOwnership">Ownership</button><button type="button" role="tab" aria-selected="false" data-market-tab="fundamentals" data-i18n="home.marketTabFundamentals">Fundamentals</button><button type="button" role="tab" aria-selected="false" data-market-tab="research" data-i18n="home.marketTabResearch">Research</button><button type="button" role="tab" aria-selected="false" data-market-tab="ai-analysis" data-i18n="home.marketTabAiAnalysis">AI analysis</button></div></div>
 										<div data-market-panel="price" class="market-history-panel"><p id="market-history-status" class="market-updated" aria-live="polite" data-i18n="home.marketHistorySelectStock">Select a stock to load daily history.</p><div id="market-history-price-chart"></div></div>
 										<div data-market-panel="institutional" class="market-history-panel" hidden><h4 data-i18n="home.marketTabInstitutional">Institutional</h4><p id="market-history-institutional-description" class="market-updated" data-i18n="home.marketHistoryInstitutionalDescription">Foreign and investment trust net trading · shares; hover bars for date and values.</p><div id="market-history-institutional-chart"></div></div>
 										<div data-market-panel="margin" class="market-history-panel" hidden><h4 data-i18n="home.marketTabMargin">Margin & lending</h4><p class="market-updated" data-i18n="home.marketHistoryMarginDescription">Hover charts for daily figures. Margin and short balances use lots; borrowed stock sold uses shares.</p><h5 data-i18n="home.marketHistoryMarginBalance">Margin and short balances</h5><div id="market-history-margin-chart"></div><h5 data-i18n="home.marketHistoryMarginFlow">Margin and short activity</h5><div id="market-history-margin-flow-chart"></div><h5 data-i18n="home.marketHistoryBorrowBalance">Borrowed stock sold balance</h5><div id="market-history-borrow-chart"></div><h5 data-i18n="home.marketHistoryBorrowFlow">Borrow sales and returns</h5><div id="market-history-borrow-flow-chart"></div></div>
 										<div data-market-panel="ownership" class="market-history-panel" hidden><h4 data-i18n="home.marketTabOwnership">Ownership distribution</h4><h5 data-i18n="home.marketHistoryForeignHoldingTitle">Foreign shareholding</h5><p class="market-updated" data-i18n="home.marketHistoryOwnershipHoverGuide">Hover each chart for its date and value.</p><div id="market-history-foreign-holding-chart"></div><h5 data-i18n="home.marketHistoryOwnershipDescription">Select a TDCC tier and hover its weekly chart.</h5><div id="market-history-ownership"></div></div>
 										<div data-market-panel="fundamentals" class="market-history-panel" hidden><h4 data-i18n="home.marketTabFundamentals">Fundamentals</h4><p id="market-fundamentals-status" class="market-updated" aria-live="polite">Select a stock to load revenue and financial statements.</p><h5 data-i18n="home.marketFundamentalsRevenue">Monthly revenue growth · YoY / MoM</h5><div id="market-fundamentals-revenue-chart"></div><h5 data-i18n="home.marketFundamentalsStatements">Profitability · margins and their changes</h5><div id="market-fundamentals-statements"></div><h5 data-i18n="home.marketFundamentalsBalance">Financial structure ratios</h5><div id="market-fundamentals-balance"></div><h5 data-i18n="home.marketFundamentalsCashFlow">Cash flow ratios</h5><div id="market-fundamentals-cash-flow"></div><p id="market-fundamentals-source" class="market-updated"></p></div>
+									<section data-market-panel="research" class="market-history-panel market-research-panel" hidden aria-labelledby="market-research-title">
+										<h4 id="market-research-title" data-i18n="home.marketTabResearch">Research</h4>
+										<p id="market-research-status" class="market-updated" aria-live="polite">選擇標的後載入供應鏈與技術環節。</p>
+										<div id="market-research-content"></div>
+										<details class="market-research-industry">
+											<summary data-i18n="home.researchZoneTitle">Research Zone</summary>
+											<ResearchZone client:visible mappingData={companyProductMapping} />
+										</details>
+									</section>
 									<section data-market-panel="ai-analysis" class="market-history-panel market-ai-panel" hidden aria-labelledby="market-ai-title">
 										<h4 id="market-ai-title" data-i18n="home.marketTabAiAnalysis">AI analysis</h4>
 										<p id="market-ai-target" class="market-updated"></p>
 										<a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/market-ai.md`} data-i18n="home.marketAiGuide">AI writing guide</a>
 										<section class="market-ai-research-prompt" aria-labelledby="market-ai-prompt-title">
 											<div class="market-ai-prompt-heading"><h5 id="market-ai-prompt-title">AI 研究提示｜每次分析前請先讀</h5><button type="button" id="market-ai-copy-prompt">複製完整提示</button></div>
-											<p>先選 top-down（總經→產業→公司）或 bottom-up（公司→產業→總經）寫成一條完整敘事；必查公司最新公布的技術實力與技術路線，再交叉驗證技術面、基本面、籌碼，明確給「買／中立／賣」與翻轉條件。提示位於輸入框外，所有模型都可讀。</p>
+											<p>先讀「研究」分頁的供應鏈與技術環節圖，再依循環、技術力、交貨三項判斷方向，明確給「買／中立／賣」與翻轉條件；總經、價格、籌碼只決定時機。提示位於輸入框外，所有模型都可讀。</p>
 											<pre id="market-ai-research-prompt-text">你是本標的的投資研究員。依最新、可核實資料更新下方「目前評論」：要寫出一條有因果的完整敘事，不是數字清單；不得沿用前一模型而不重新驗證。
 
 每次先重新 GET dashboard、brief、macro、events 與本標的資料，比對現有評論截點與最新資料期間／交易日／公布日，同期間修訂也要重新判讀。下方「本次資料檢查」於每次開啟時重新讀取；fetchedAt 只是抓取時間，不是公布日。海外用 code + market 與 /api/market/dashboard/overseas/{'{code}'}?market=US|JP|KR，不得查同號台股。輸出首行必須是【結論】買、【結論】中立、【結論】賣之一。
+
+判斷核心：買／中立／賣的方向只由三項決定——循環（產業與需求循環位置）、技術力（技術路線與競爭門檻）、交貨（出貨、營收、產能與交期的實際證據）。每項標順風／中性／逆風：≥2 項順風且無逆風＝買；≥2 項逆風＝賣；其餘＝中立。總經、價格、籌碼只用來決定進場時機與風險，不推翻三項判斷；若要偏離規則必須寫明理由。
+研究圖：先 GET /tymultiverse/api/market/dashboard/analysis/{'{code}'}?productType=research（本頁「研究」分頁），讀供應鏈與技術環節 Mermaid 圖及三項判斷。若最新法說、財報或月營收改變了某一項，同步更新研究紀錄（同一筆、帶 expectedRevision，JSON 欄位：name、market、asOf、summary、supplyChain、technology、assessment.cycle/technology/delivery.view+note、lean、leanReason、watch、sources），研究紀錄永久保存、標的移除也不刪。
 
 敘事主軸（擇一並寫明）
 • Top-down：美國總經（就業、通膨、聯準會利率、10 年期殖利率、零售消費）→ 資金與風險偏好 → 台股／產業景氣 → 公司營運 → 價格與籌碼。適用大型權值、景氣循環、指數期貨。
@@ -255,11 +267,11 @@ const skillsCategories = skillsData.categories;
 5. 基本面：最新月營收年增／月增、季營收、三率、EPS、現金流、資產負債；分清資料期間與公布日；評估成長延續性、基期／季節性／一次性因素與獲利品質。估值僅在口徑一致時比較，無可靠估值就明說，高成長不等於低估。
 6. 籌碼：外資、投信、自營商近 5/20 日買賣超與持股、融資融券、借券、TDCC 大戶／散戶週變化；說明一致或分歧及限制，單週變化不是趨勢。
 7. 事件時間線：把「近期公司事件」（月營收／財報實際公布日、法說會預定日）與總經公布日排在同一時間線；區分已公布與預定，不推測未公告日期，檢查價格與籌碼對事件的反應。
-8. 結論：目前位置風險高低？是有安全邊際的買點、等待區，還是該降曝險？列支持與反對證據，至少一個會推翻結論的條件（含總經條件）。
+8. 結論：先寫循環／技術力／交貨三項各自的順風／中性／逆風與證據，依規則得出方向；再用價格、籌碼、總經說明時機（買點、等待區或降曝險）。列支持與反對證據，至少一個會推翻結論的條件。
 
 輸出格式
 • 標題：標的｜資料截點｜研究期間（例如未來 2–8 週）｜敘事主軸 top-down 或 bottom-up
-• 結論：買／中立／賣（不可模糊）；一句話「總經環境 × 基本面方向 × 技術／籌碼方向」。
+• 結論：買／中立／賣（不可模糊）；一句話「循環 × 技術力 × 交貨」，再一句時機（價格／籌碼／總經）。
 • 敘事：3–6 句因果鏈，由主軸起點一路推到目前價格位置。
 • 總經與產業：一句引用總經評論結論（註明版本號），加上本標的特有的傳導、敏感度與產業數據。
 • 技術實力與路線：最新公布的技術／產品進度、量產時程、競爭位置，附來源與日期。
@@ -553,12 +565,6 @@ const skillsCategories = skillsData.categories;
 			</div>
 
 			<Skills />
-
-			<!-- Research Zone: accordion of research components -->
-			<section class="research-zone-wrapper wrapper">
-				<h4 class="section-title" data-i18n="home.researchZoneTitle">Research Zone</h4>
-				<ResearchZone client:visible mappingData={companyProductMapping} />
-			</section>
 
 		</div>
 

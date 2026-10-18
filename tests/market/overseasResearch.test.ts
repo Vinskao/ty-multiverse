@@ -7,9 +7,9 @@ import meta from '../fixtures/overseas-meta.json';
 const financials = meta.datasets.financials.payload;
 
 describe('overseasDetailTabs', () => {
-    it('shows price, fundamentals and AI analysis; Taiwan-only exchange data tabs stay hidden', () => {
+    it('shows price, fundamentals, research and AI analysis; Taiwan-only exchange data tabs stay hidden', () => {
         // Institutional flows, margin/lending and TDCC ownership come from TWSE/TPEx/TDCC; IBKR has no equivalent.
-        expect(overseasDetailTabs()).toEqual(['price', 'fundamentals', 'ai-analysis']);
+        expect(overseasDetailTabs()).toEqual(['price', 'fundamentals', 'research', 'ai-analysis']);
     });
 });
 
