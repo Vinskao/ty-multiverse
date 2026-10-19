@@ -26,6 +26,7 @@ import marketMacroCssUrl from '../styles/market-macro.css?url';
 // Component Imports
 import MainHead from '../components/MainHead.astro';
 import Nav from '../components/Nav.astro';
+import DiaryReminder from '../components/DiaryReminder.astro';
 import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
 import QABot from '../components/QABot.astro';
@@ -201,6 +202,7 @@ const { title, description } = Astro.props;
 	<body>
 		<div class="stack backgrounds">
 			<Nav />
+			<DiaryReminder />
 			<!-- 頁面主要內容容器 - 用於 AI 分析 -->
 			<main class="page-content" data-page-type="content">
 				<slot />

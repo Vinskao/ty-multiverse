@@ -1,0 +1,39 @@
+---
+---
+<section class="diary-panel" id="private-diary" aria-labelledby="diary-heading">
+  <h2 id="diary-heading" data-i18n="diary.title">私人日記</h2>
+  <p data-i18n="diary.private">僅登入本人可讀取。依日期保存 MD，保留原話、觀察與未證實事項的區別。</p>
+  <p id="diary-status" role="status" aria-live="polite"></p>
+  <div id="diary-reminder" hidden>
+    <p data-i18n="diary.reminder">本期整理已到期。請到手機原對話產生 MD，再回來匯入。</p>
+    <button type="button" id="diary-copy-prompt" data-i18n="diary.copy">複製整理提示詞</button>
+    <button type="button" id="diary-dismiss" data-i18n="diary.dismiss">略過本期待辦</button>
+  </div>
+  <details>
+    <summary data-i18n="diary.import">匯入日記 MD</summary>
+    <form id="diary-import-form">
+      <label><span data-i18n="diary.date">日記日期</span><input id="diary-date" type="date" required /></label>
+      <label><span data-i18n="diary.category">分類</span><select id="diary-category"><option value="general" data-i18n="diary.general">一般</option><option value="relationship" data-i18n="diary.relationship">感情</option><option value="investment" data-i18n="diary.investment">投資</option><option value="wellbeing" data-i18n="diary.wellbeing">身心狀態</option></select></label>
+      <label><span data-i18n="diary.name">標題</span><input id="diary-title" maxlength="200" required /></label>
+      <label><span data-i18n="diary.file">選擇 MD 檔案</span><input id="diary-file" type="file" accept=".md,.markdown,text/markdown,text/plain" /></label>
+      <label><span data-i18n="diary.body">貼上或檢查完整 Markdown</span><textarea id="diary-markdown" rows="12" maxlength="200000" required></textarea></label>
+      <p data-i18n="diary.review">請確認日期與內容後匯入；每份 MD 保存為一篇日記，不會自動推測事件日期。</p>
+      <button type="submit" data-i18n="diary.save">確認匯入</button>
+    </form>
+  </details>
+  <form id="diary-filter-form" class="diary-filters">
+    <label><span data-i18n="diary.from">開始日期</span><input id="diary-from" type="date" required /></label>
+    <label><span data-i18n="diary.to">結束日期</span><input id="diary-to" type="date" required /></label>
+    <label><span data-i18n="diary.category">分類</span><select id="diary-filter-category"><option value="all" data-i18n="diary.all">全部</option><option value="relationship" data-i18n="diary.relationship">感情</option><option value="investment" data-i18n="diary.investment">投資</option><option value="wellbeing" data-i18n="diary.wellbeing">身心狀態</option><option value="general" data-i18n="diary.general">一般</option></select></label>
+    <label><span data-i18n="diary.undated">包含日期待確認事項</span><input id="diary-undated" type="checkbox" /></label>
+    <button type="submit" data-i18n="diary.search">查詢日記</button>
+  </form>
+  <ul id="diary-list"></ul>
+  <article id="diary-reader" hidden>
+    <h3 id="diary-reader-title"></h3>
+    <button type="button" id="diary-close" data-i18n="diary.close">關閉日記</button>
+    <button type="button" id="diary-download" data-i18n="diary.download">下載 MD</button>
+    <pre id="diary-reader-body"></pre>
+  </article>
+</section>
+<script>import '../scripts/diary/panel';</script>

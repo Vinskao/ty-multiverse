@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.astro";
+import DiaryPanel from "../components/DiaryPanel.astro";
+import diaryCssUrl from "../styles/diary.css?url";
 import palaisCssUrl from "../styles/palais.css?url";
 import galwallCssUrl from "../styles/galwall.css?url";
 
@@ -24,6 +26,7 @@ if (!isLoggedIn) {
   <Fragment slot="head">
     <link rel="stylesheet" href={palaisCssUrl} />
     <link rel="stylesheet" href={galwallCssUrl} />
+    <link rel="stylesheet" href={diaryCssUrl} />
   </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
@@ -77,6 +80,8 @@ if (!isLoggedIn) {
           class="module-button">Levels</a
         >
       </div>
+
+      <DiaryPanel />
 
       <div class="galwall-container">
         <Galwall />

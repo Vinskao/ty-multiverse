@@ -12,6 +12,8 @@ import briefingCssUrl from "../styles/briefing.css?url";
 
 // Import the JSON data
 import aboutData from "../storages/about.json";
+import { experienceMonths } from "../scripts/portfolio/experience";
+import { formatNumber } from "../scripts/format/numbers";
 import skillsData from "../storages/skills.json";
 
 type LangKey = "en" | "zh";
@@ -20,6 +22,7 @@ interface ExperienceItem {
   title: string;
   company: string;
   period: string;
+  durationMonths?: number;
   projectExperience?: LangText;
   responsibilities?: LangText;
 }
@@ -50,61 +53,14 @@ const softwareTitles = [
 const projectManagementTitles = ["Fintech PM, MA Program"];
 const financeTitles = ["Macro Associate", "Auditor"];
 
-function parsePeriodDate(s: string): Date {
-  if (s.trim().toLowerCase() === "present") return new Date();
-  const parts = s.trim().split("/");
-  return new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
-}
-
-// Absolute month index, so overlapping periods can be compared and merged
-function monthIndex(d: Date): number {
-  return d.getFullYear() * 12 + d.getMonth();
-}
-
-// Sum month ranges without counting an overlapping month twice
-function mergedMonths(ranges: [number, number][]): number {
-  const sorted = [...ranges].filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
-  let total = 0;
-  let curStart = -1;
-  let curEnd = -1;
-  for (const [start, end] of sorted) {
-    if (curEnd < 0) {
-      curStart = start;
-      curEnd = end;
-    } else if (start <= curEnd) {
-      curEnd = Math.max(curEnd, end);
-    } else {
-      total += curEnd - curStart;
-      curStart = start;
-      curEnd = end;
-    }
-  }
-  if (curEnd >= 0) total += curEnd - curStart;
-  return total;
-}
-
-const swRanges: [number, number][] = [];
-const pmRanges: [number, number][] = [];
-const financeRanges: [number, number][] = [];
-const allRanges: [number, number][] = [];
-for (const job of experienceData) {
-  const [startStr, endStr] = job.period.split("~");
-  const range: [number, number] = [
-    monthIndex(parsePeriodDate(startStr)),
-    monthIndex(parsePeriodDate(endStr)),
-  ];
-  allRanges.push(range);
-  if (softwareTitles.includes(job.title)) swRanges.push(range);
-  if (projectManagementTitles.includes(job.title)) pmRanges.push(range);
-  if (financeTitles.includes(job.title)) financeRanges.push(range);
-}
-const swMonths = mergedMonths(swRanges);
-const pmMonths = mergedMonths(pmRanges);
-const totalMonths = mergedMonths(allRanges);
-const swYears = (swMonths / 12).toFixed(1);
-const pmYears = (pmMonths / 12).toFixed(1);
-const financeYears = (mergedMonths(financeRanges) / 12).toFixed(1);
-const totalYears = (totalMonths / 12).toFixed(1);
+const swMonths = experienceMonths(experienceData.filter(job => softwareTitles.includes(job.title)));
+const pmMonths = experienceMonths(experienceData.filter(job => projectManagementTitles.includes(job.title)));
+const financeMonths = experienceMonths(experienceData.filter(job => financeTitles.includes(job.title)));
+const totalMonths = experienceMonths(experienceData);
+const swYears = formatNumber(swMonths / 12, "decimal", { digits: 1 });
+const pmYears = formatNumber(pmMonths / 12, "decimal", { digits: 1 });
+const financeYears = formatNumber(financeMonths / 12, "decimal", { digits: 1 });
+const totalYears = formatNumber(totalMonths / 12, "decimal", { digits: 1 });
 const gitCommitCommand = `{
   printf 'REPO: '
   git remote get-url origin
@@ -256,7 +212,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
             <span class="exp-badge-label">
               {lang === "zh" ? "金融經驗" : "Finance Experience"}
             </span>
-            <strong>{financeYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+            <strong>{financeYears}{lang === "zh" ? " 年" : " yrs"} ({formatNumber(financeMonths, "count")}{lang === "zh" ? " 個月" : " months"})</strong>
           </span>
           <span class="exp-badge exp-badge-total">
             <span class="exp-badge-label">

@@ -1,0 +1,16 @@
+.diary-panel { padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--gray-600, #777); border-radius: 1rem; display: grid; gap: 1rem; min-width: 0; scroll-margin-top: 5rem; }
+.diary-panel h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+.diary-panel form { display: grid; gap: 1rem; padding-block: 1rem; }
+.diary-panel label { display: grid; gap: .4rem; min-width: 0; }
+.diary-panel input, .diary-panel textarea, .diary-panel select { width: 100%; padding: .6rem; border: 1px solid #888; border-radius: .4rem; color: inherit; background: transparent; box-sizing: border-box; }
+.diary-panel option { color: #222; background: #fff; }
+.diary-panel input[type="checkbox"] { width: auto; justify-self: start; }
+.diary-panel textarea { resize: vertical; }
+.diary-panel button { padding: .6rem .9rem; border-radius: .5rem; border: 1px solid #888; cursor: pointer; color: inherit; background: transparent; }
+.diary-panel button:focus-visible, .diary-panel input:focus-visible, .diary-panel textarea:focus-visible { outline: 3px solid #6579ef; outline-offset: 3px; }
+.diary-panel [hidden] { display: none !important; }
+.diary-panel .diary-filters { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+#diary-reminder { padding: 1rem; border-left: 4px solid #9a86ff; background: #9681ee16; }
+#diary-list { display: grid; gap: .6rem; padding: 0; list-style: none; }
+#diary-list button { width: 100%; text-align: start; }
+#diary-reader-body { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; max-height: 70vh; overflow-y: auto; }
