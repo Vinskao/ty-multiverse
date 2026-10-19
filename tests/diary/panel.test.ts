@@ -31,11 +31,26 @@ describe('diary rendering and lifecycle', () => {
     let resolve!: (value: unknown) => void;
     const client = vi.fn().mockReturnValue(new Promise(r => { resolve = r; }));
     const cleanup = mountDiaryPanel(root, client);
-    cleanup(); resolve({ pending: true });
+    const issued = client.mock.calls.length;  // check-in and the recent list start together on open
+    cleanup(); resolve({ pending: true, entries: [{ id: 'late', entryDate: '2026-10-18', title: 'Late' }] });
     await Promise.resolve(); await Promise.resolve();
     expect((root.querySelector('#diary-reminder') as HTMLElement).hidden).toBe(true);
     expect(root.querySelector('#diary-list')?.textContent).toBe('');
-    expect(client).toHaveBeenCalledTimes(1);
+    expect(client).toHaveBeenCalledTimes(issued);
+  });
+  it('lists recent entries on open without a date range, even when check-in fails', async () => {
+    const root = fixture();
+    const client = vi.fn().mockImplementation(async (path: string) => {
+      if (path === '/check-in') throw new Error('Service unavailable');
+      return { entries: [{ id: 'old', entryDate: '2023-05-01', title: 'Old note' }], hasMore: false };
+    });
+    const cleanup = mountDiaryPanel(root, client);
+    await vi.waitFor(() => expect(root.querySelector('#diary-list')?.textContent).toContain('Old note'));
+    const listCall = client.mock.calls.find(([path]) => path.startsWith('/entries?'))![0] as string;
+    expect(listCall).toBe('/entries?category=all');
+    root.querySelector('#diary-filter-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await vi.waitFor(() => expect(client.mock.calls.at(-1)?.[0]).toMatch(/from=.*&to=/));
+    cleanup();
   });
   it('sends category and undated filters, and labels approximate dates', async () => {
     const root = fixture();

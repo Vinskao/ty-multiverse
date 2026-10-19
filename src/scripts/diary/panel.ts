@@ -23,13 +23,15 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
   const run = async (action: () => Promise<void>) => {
     try { await action(); } catch (error) { message(error instanceof Error ? error.message : '日記操作失敗，請重試。'); }
   };
-  const load = async () => {
+  // recent: the latest entries across all dates, shown on open so nothing has to be searched first.
+  const load = async (recent = false) => {
     if (!active) return;
     const sequence = ++requestId;
     const from = field('diary-from').value, to = field('diary-to').value;
     const category = get<HTMLSelectElement>('diary-filter-category').value;
     const includeUndated = String(field('diary-undated').checked);
-    const page = await client<{ entries: Entry[]; hasMore: boolean }>(`/entries?${new URLSearchParams({ from, to, category, includeUndated })}`);
+    const query = recent ? new URLSearchParams({ category }) : new URLSearchParams({ from, to, category, includeUndated });
+    const page = await client<{ entries: Entry[]; hasMore: boolean }>(`/entries?${query}`);
     if (!active || sequence !== requestId) return;
     close(); list.replaceChildren();
     for (const entry of page.entries) {
@@ -47,7 +49,8 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
       }), { signal: abort.signal });
       item.append(button); list.append(item);
     }
-    message(page.hasMore ? '結果超過 200 篇，請縮小日期範圍。' : page.entries.length ? '' : '這段日期還沒有日記。');
+    message(page.hasMore ? (recent ? '只列出最新 200 篇，更早的請用日期查詢。' : '結果超過 200 篇，請縮小日期範圍。')
+      : page.entries.length ? '' : recent ? '還沒有日記。' : '這段日期還沒有日記。');
   };
   const check = async () => {
     const result = await client<Reminder>('/check-in', {});
@@ -59,7 +62,7 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
   field('diary-date').max = taipeiDate();
   field('diary-from').value = `${taipeiDate().slice(0, 7)}-01`;
   field('diary-to').value = taipeiDate();
-  on('diary-filter-form', 'submit', e => { e.preventDefault(); void run(load); });
+  on('diary-filter-form', 'submit', e => { e.preventDefault(); void run(() => load()); });
   on('diary-close', 'click', close);
   on('diary-copy-prompt', 'click', () => void run(async () => {
     await navigator.clipboard.writeText(exportPrompt(taipeiDate())); message('已複製，請貼到手機的原對話。');
@@ -103,7 +106,9 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
     const link = document.createElement('a'); link.href = url; link.download = `diary-${selected.entryDate || 'undated'}.md`;
     link.click(); URL.revokeObjectURL(url);
   });
-  void run(async () => { await check(); if (active) await load(); });
+  // Independent: a failed check-in must not keep saved entries from showing.
+  void run(() => load(true));
+  void run(check);
   return () => { active = false; ++requestId; abort.abort(); close(); list.replaceChildren(); status.textContent = ''; get('diary-reminder').hidden = true; get<HTMLTextAreaElement>('diary-markdown').value = ''; };
 }
 
