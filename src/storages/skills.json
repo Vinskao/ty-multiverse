@@ -1582,6 +1582,51 @@
               ]
             }
           }
+        },
+        {
+          "name": "Claude Cloud Agents",
+          "skills": [
+            {
+              "name": "Claude Code Routines",
+              "level": "shade2"
+            },
+            {
+              "name": "Cron-Scheduled Cloud Agents",
+              "level": "shade2"
+            },
+            {
+              "name": "Cloud Environments",
+              "level": "shade3"
+            },
+            {
+              "name": "Network Secrets (Credential Proxy)",
+              "level": "shade3"
+            },
+            {
+              "name": "Network Access Allowlist",
+              "level": "shade3"
+            },
+            {
+              "name": "Scoped Agent Write Key",
+              "level": "shade3"
+            },
+            {
+              "name": "Subscription vs API Billing",
+              "level": "shade3"
+            }
+          ],
+          "descriptions": {
+            "Mercuries Life Insurance": {
+              "en": [
+                "For the TY Multiverse market dashboard, scheduled two Claude Code cloud routines (cron, Claude Sonnet 5.5 on the subscription) that refresh the buy/neutral/sell AI analyses after the Taiwan close and after the US close and macro releases, each run rediscovering holdings, comparing data cutoffs and skipping instruments without new data.",
+                "Gave the agents a scoped write key stored as a cloud-environment network secret, so the proxy injects the header outside the sandbox and the agent never sees it; the server keeps only the key's SHA-256, limits it to the analysis endpoint and rejects stale writes by revision. Chose subscription-run routines over Claude API billing after comparing cost and setup."
+              ],
+              "zh": [
+                "為 TY Multiverse 市場儀表板建立兩個 Claude Code 雲端排程（cron，以訂閱額度執行 Claude Sonnet 5.5），分別在台股收盤後、美股收盤與總經公布後更新買／中立／賣 AI 分析；每次重新列出持股、比對資料截點，沒有新資料就跳過。",
+                "以雲端環境的 network secret 保存限縮權限的寫入 key，由代理在沙箱外加上標頭，agent 本身看不到 key；伺服器只存 key 的 SHA-256，只開放分析寫入端點，並以 revision 擋下過期寫入。比較成本與設定後，選擇用訂閱額度跑排程而非 Claude API 計費。"
+              ]
+            }
+          }
         }
       ]
     }
