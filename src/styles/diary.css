@@ -14,3 +14,28 @@
 #diary-list { display: grid; gap: .6rem; padding: 0; list-style: none; }
 #diary-list button { width: 100%; text-align: start; }
 #diary-reader-body { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; max-height: 70vh; overflow-y: auto; }
+/* List on the left, storyline or entry on the right; stacked on narrow screens. */
+.diary-layout { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.diary-sidebar { display: grid; gap: 1rem; min-width: 0; position: sticky; top: 5rem; max-height: calc(100vh - 6rem); overflow-y: auto; }
+.diary-panel .diary-sidebar .diary-filters { grid-template-columns: 1fr 1fr; padding-block: 0; }
+.diary-panel .diary-sidebar .diary-filters > button, .diary-panel .diary-check { grid-column: 1 / -1; }
+.diary-panel .diary-check { display: flex; gap: .5rem; align-items: center; }
+#diary-list button { font-size: .9rem; line-height: 1.4; }
+.diary-content { min-width: 0; display: grid; gap: 1rem; }
+#diary-story h4 { margin: 1.25rem 0 .5rem; font-size: 1rem; opacity: .8; }
+#diary-story ol { list-style: none; margin: 0; padding: 0 0 0 1rem; border-left: 2px solid #9a86ff66; display: grid; gap: .5rem; }
+.diary-panel .diary-passage { display: grid; gap: .25rem; width: 100%; text-align: start; border: 0; border-radius: .4rem; padding: .5rem .75rem; }
+.diary-panel .diary-passage:hover { background: #9681ee16; }
+.diary-passage-date { font-size: .8rem; opacity: .7; font-variant-numeric: tabular-nums; }
+.diary-passage-text, .diary-detail-description { line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.diary-story-hint, .diary-detail-facts { font-size: .85rem; opacity: .75; }
+.diary-reader-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.diary-detail-notes { padding: .75rem 1rem; border-left: 3px solid #888; opacity: .85; white-space: pre-wrap; }
+.diary-detail-tags { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; padding: 0; margin: 0; }
+.diary-detail-tags li { padding: .15rem .6rem; border: 1px solid #888; border-radius: 999px; font-size: .8rem; }
+#diary-reader-raw summary { cursor: pointer; opacity: .8; }
+@media (max-width: 760px) {
+  .diary-layout { grid-template-columns: 1fr; }
+  .diary-sidebar { position: static; max-height: none; }
+  #diary-list { max-height: 40vh; overflow-y: auto; }
+}

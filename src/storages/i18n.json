@@ -22,7 +22,10 @@
     "from": { "en": "From", "zh": "開始日期" },
     "to": { "en": "To", "zh": "結束日期" },
     "search": { "en": "Find entries", "zh": "查詢日記" },
-    "close": { "en": "Close entry", "zh": "關閉日記" },
+    "close": { "en": "Back to storyline", "zh": "返回故事線" },
+    "story": { "en": "Storyline", "zh": "故事線" },
+    "storyHint": { "en": "The listed events in time order. Select a passage for the full record.", "zh": "依時間順序串起清單裡的事件，點任一段可看完整紀錄。" },
+    "raw": { "en": "Original Markdown", "zh": "原始 Markdown" },
     "download": { "en": "Download Markdown", "zh": "下載 MD" }
   },
   "nav": {

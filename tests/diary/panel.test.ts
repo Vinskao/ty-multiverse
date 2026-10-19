@@ -7,7 +7,7 @@ function fixture() {
     <form id="diary-import-form"><input id="diary-date"><select id="diary-category"><option value="general">General</option><option value="investment">Investment</option></select><input id="diary-title"><input id="diary-file" type="file"><textarea id="diary-markdown"></textarea><button type="submit">Save</button></form>
     <form id="diary-filter-form"><input id="diary-from"><input id="diary-to"><select id="diary-filter-category"><option value="all">All</option><option value="investment">Investment</option></select><input id="diary-undated" type="checkbox"></form>
     <button id="diary-copy-prompt"></button><button id="diary-dismiss"></button><button id="diary-close"></button><button id="diary-download"></button>
-    <ul id="diary-list"></ul><article id="diary-reader" hidden><h3 id="diary-reader-title"></h3><pre id="diary-reader-body"></pre></article>`;
+    <ul id="diary-list"></ul><section id="diary-story"><div id="diary-story-body"></div></section><article id="diary-reader" hidden><h3 id="diary-reader-title"></h3><div id="diary-reader-detail"></div><details id="diary-reader-raw"><pre id="diary-reader-body"></pre></details></article>`;
   document.body.append(root); return root;
 }
 afterEach(() => { document.body.replaceChildren(); });
@@ -51,6 +51,30 @@ describe('diary rendering and lifecycle', () => {
     root.querySelector('#diary-filter-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await vi.waitFor(() => expect(client.mock.calls.at(-1)?.[0]).toMatch(/from=.*&to=/));
     cleanup();
+  });
+  it('tells the listed events as a storyline and opens a passage as readable prose', async () => {
+    const root = fixture();
+    const summaries = [
+      { id: 'b', entryDate: '2026-10-18', title: 'Later', category: 'relationship', entryKind: 'event', description: 'Then this happened.' },
+      { id: 'a', entryDate: '2025-11-13', title: 'Start', category: 'investment', entryKind: 'event', description: 'It began here.' },
+    ];
+    const full = { id: 'b', entryDate: '2026-10-18', title: 'Later', category: 'relationship', entryKind: 'event', markdown: '# Later\n```json\n{}\n```',
+      metadataJson: JSON.stringify({ description: 'Then this happened.', notes: 'My side only.', confidence: 'high', tags: ['contact'] }) };
+    const client = vi.fn().mockImplementation(async (path: string) => path === '/check-in' ? { pending: false } : path.startsWith('/entries?') ? { entries: summaries, hasMore: false } : full);
+    const cleanup = mountDiaryPanel(root, client);
+    await vi.waitFor(() => expect(root.querySelector('#diary-story-body')?.textContent).toContain('It began here.'));
+    const story = root.querySelector('#diary-story-body')!.textContent!;
+    expect(story.indexOf('It began here.')).toBeLessThan(story.indexOf('Then this happened.'));
+    (Array.from(root.querySelectorAll('#diary-story-body button')).find((b) => b.textContent?.includes('Then this')) as HTMLButtonElement).click();
+    await vi.waitFor(() => expect((root.querySelector('#diary-reader') as HTMLElement).hidden).toBe(false));
+    expect((root.querySelector('#diary-story') as HTMLElement).hidden).toBe(true);
+    expect(root.querySelector('#diary-reader-detail')?.textContent).toContain('My side only.');
+    expect(root.querySelector('#diary-reader-detail')?.textContent).not.toContain('{');
+    expect((root.querySelector('#diary-reader-raw') as HTMLDetailsElement).open).toBe(false);
+    (root.querySelector('#diary-close') as HTMLButtonElement).click();
+    expect((root.querySelector('#diary-story') as HTMLElement).hidden).toBe(false);
+    cleanup();
+    expect(root.querySelector('#diary-story-body')?.textContent).toBe('');
   });
   it('sends category and undated filters, and labels approximate dates', async () => {
     const root = fixture();
