@@ -266,17 +266,6 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
           </span>
         </div>
         <div class="work-photo-wrapper" style="position:relative; width:100%;">
-          <!-- Mask overlay with slogan -->
-          <div class="work-photo-overlay" aria-hidden="true">
-            <div class="mask-text">To Make a Difference.</div>
-          </div>
-          <img
-            width="1553"
-            height="873"
-            src="/tymultiverse/assets/zen-landscape.svg"
-            alt="Zen landscape with mountains, clouds, and tai chi symbol representing contemplation and balance"
-            class="work-photo"
-          />
           <div class="git-commit-ingest" data-admin-git-commit hidden>
             <div class="git-commit-toolbar">
               <div>
@@ -1011,8 +1000,6 @@ less git-last-50-commits.txt`;
 
       function initGitCommitIngest() {
         const panel = document.querySelector<HTMLElement>("[data-admin-git-commit]");
-        const image = document.querySelector<HTMLElement>(".work-photo");
-        const overlay = document.querySelector<HTMLElement>(".work-photo-overlay");
         const commandEl = document.querySelector<HTMLElement>("[data-git-command]");
         const copyBtn = document.querySelector<HTMLButtonElement>("[data-copy-git-command]");
         const submitBtn = document.querySelector<HTMLButtonElement>("[data-submit-git-commits]");
@@ -1020,7 +1007,7 @@ less git-last-50-commits.txt`;
         const result = document.querySelector<HTMLElement>("[data-git-commit-result]");
         const embedding = document.querySelector<HTMLInputElement>("[data-git-embedding]");
 
-        if (!panel || !image || !commandEl || !copyBtn || !submitBtn || !textarea || !result || !embedding) return;
+        if (!panel || !commandEl || !copyBtn || !submitBtn || !textarea || !result || !embedding) return;
 
         // Only reveal once the visitor is actually logged in: a stale isAdmin
         // flag must not expose the panel without a live token.
@@ -1029,8 +1016,6 @@ less git-last-50-commits.txt`;
             !!localStorage.getItem("token") &&
             localStorage.getItem("isAdmin") === "true";
           panel.hidden = !visible;
-          image.style.display = visible ? "none" : "";
-          if (overlay) overlay.style.display = visible ? "none" : "";
         };
 
         applyVisibility();
