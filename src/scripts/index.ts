@@ -18,6 +18,7 @@ import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload,
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
+import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 
@@ -476,7 +477,18 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         if (view === 'ownership') { renderOwnershipHistory(points); return; }
         drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources,
             historyProductType === 'futures' ? 'volume_contracts' : 'volume_shares');
+        // Standing participant positions (e.g. 外資淨空單) exist for index futures only.
+        const openInterest = document.getElementById('market-history-open-interest');
+        if (openInterest) openInterest.hidden = historyProductType !== 'futures';
         if (historyProductType === 'futures') {
+            const [foreignField, trustField, dealerField] = OPEN_INTEREST_FIELDS;
+            drawMarketHistoryChart('market-history-open-interest-chart', points, [
+                { label: marketI18n('marketHistoryForeignOpenInterest', 'Foreign net open interest'), color: '#55b8a8', sourceKeys: [OPEN_INTEREST_SOURCE], field: foreignField },
+                { label: marketI18n('marketHistoryTrustOpenInterest', 'Trust net open interest'), color: '#7198df', sourceKeys: [OPEN_INTEREST_SOURCE], field: trustField },
+                { label: marketI18n('marketHistoryDealerOpenInterest', 'Dealer net open interest'), color: '#dc806f', sourceKeys: [OPEN_INTEREST_SOURCE], field: dealerField },
+            ]);
+            const summary = document.getElementById('market-history-open-interest-summary');
+            if (summary) summary.textContent = foreignPositionSummary(points, marketLocale() === 'zh-TW' ? 'zh' : 'en') ?? '';
             drawMarketHistoryChart('market-history-institutional-chart', points, [
                 { label: marketI18n('marketHistoryForeignContractsNet', 'Foreign net (contracts)'), color: '#55b8a8', sourceKeys: institutionalSources, field: 'foreign_net_trade_contracts' },
                 { label: marketI18n('marketHistoryTrustContractsNet', 'Trust net (contracts)'), color: '#7198df', sourceKeys: institutionalSources, field: 'trust_net_trade_contracts' },
