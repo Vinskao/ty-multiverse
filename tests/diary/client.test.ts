@@ -33,3 +33,14 @@ describe('private diary client', () => {
     expect(prompt).toContain('2026-10-19');
   });
 });
+
+describe('isoDate', () => {
+  it('normalizes ISO strings, Java date arrays and missing dates', async () => {
+    const { isoDate } = await import('../../src/scripts/diary/client');
+    expect(isoDate('2026-10-18')).toBe('2026-10-18');
+    expect(isoDate([2025, 11, 3])).toBe('2025-11-03');
+    expect(isoDate(null)).toBeNull();
+    expect(isoDate(['2025', 11, 3])).toBeNull();
+    expect(isoDate([2025, 11])).toBeNull();
+  });
+});

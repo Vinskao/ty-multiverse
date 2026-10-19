@@ -30,3 +30,13 @@ export function diaryEntryLabel(entry: { entryDate: string | null; title: string
 export function exportPrompt(date: string): string {
   return `請將本對話中可取得的私人日記資料整理成一份 Markdown，整理日為 ${date}。\n保留事件實際日期、重要對話、我的感受、待追蹤事項與資料來源；分開標示「實際原話」「我的觀察」「未證實猜測」。不知道的日期不要猜。僅在確實可取得逐字內容時標為原話。\n明確列出整理涵蓋期間，以及無法存取的其他對話或遺漏資料。不要聲稱這是完整聊天備份，不要使用記憶補造逐字紀錄。請輸出可供私人日記匯入的完整 MD 文字。`;
 }
+
+/** ISO date from either "2026-10-18" or the [2026, 10, 18] array an unconfigured Java ObjectMapper writes. */
+export function isoDate(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length >= 3 && value.slice(0, 3).every((part) => Number.isInteger(part))) {
+    const [year, month, day] = value as number[];
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+  return null;
+}

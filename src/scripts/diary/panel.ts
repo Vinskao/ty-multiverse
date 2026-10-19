@@ -1,4 +1,4 @@
-import { createDiaryClient, diaryEntryLabel, exportPrompt, taipeiDate } from './client';
+import { createDiaryClient, diaryEntryLabel, exportPrompt, isoDate, taipeiDate } from './client';
 import { buildNarrative, entryDetail, type Narratives } from './narrative';
 import { config } from '../../services/core/config';
 import { storageService } from '../../services/core/storageService';
@@ -42,8 +42,8 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
     const query = recent ? new URLSearchParams({ category }) : new URLSearchParams({ from, to, category, includeUndated });
     const page = await client<{ entries: Summary[]; hasMore: boolean }>(`/entries?${query}`);
     if (!active || sequence !== requestId) return;
-    close(); list.replaceChildren(); listed = page.entries; renderStory();
-    for (const entry of page.entries) {
+    close(); list.replaceChildren(); listed = page.entries.map((entry) => ({ ...entry, entryDate: isoDate(entry.entryDate) })); renderStory();
+    for (const entry of listed) {
       const item = document.createElement('li');
       const button = document.createElement('button');
       button.type = 'button'; button.textContent = diaryEntryLabel(entry, lang());
@@ -99,8 +99,9 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
   };
   const open = async (id: string) => {
     const selection = ++requestId;
-    const full = await client<Entry>(`/entries/${encodeURIComponent(id)}`);
+    const response = await client<Entry>(`/entries/${encodeURIComponent(id)}`);
     if (!active || selection !== requestId) return;
+    const full = { ...response, entryDate: isoDate(response.entryDate) };
     selected = full;
     get('diary-reader-title').textContent = diaryEntryLabel(full, lang());
     const detail = entryDetail(full, lang());

@@ -105,6 +105,24 @@ describe('diary rendering and lifecycle', () => {
     expect(root.querySelector('#diary-status')?.textContent).toBe('');
     cleanup();
   });
+  it('accepts dates serialized as [year, month, day] arrays, as the production backend sent them', async () => {
+    const root = fixture();
+    const entries = [
+      { id: 'b', entryDate: [2026, 10, 18], title: 'Later', category: 'relationship', entryKind: 'event', description: 'Then.' },
+      { id: 'a', entryDate: [2025, 11, 3], title: 'Start', category: 'investment', entryKind: 'event', description: 'First.' },
+    ];
+    const client = vi.fn().mockImplementation(async (path: string) => path === '/check-in' ? { pending: false }
+      : path.startsWith('/entries?') ? { entries, hasMore: false } : { ...entries[0], markdown: 'md', metadataJson: '{}' });
+    const cleanup = mountDiaryPanel(root, client);
+    await vi.waitFor(() => expect(root.querySelector('#diary-story-body')?.textContent).toContain('First.'));
+    expect(root.querySelector('#diary-status')?.textContent).toBe('');
+    expect(root.querySelector('#diary-list')?.textContent).toContain('2025-11-03');
+    const story = root.querySelector('#diary-story-body')!.textContent!;
+    expect(story.indexOf('First.')).toBeLessThan(story.indexOf('Then.'));
+    (root.querySelector('.diary-passage') as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(root.querySelector('#diary-reader-title')?.textContent).toContain('2026-10-18'));
+    cleanup();
+  });
   it('sends category and undated filters, and labels approximate dates', async () => {
     const root = fixture();
     const client = vi.fn().mockImplementation(async (path: string) => path === '/check-in' ? { pending: false } : { entries: [{ id: 'a', entryDate: '2026-10-18', title: 'Test', category: 'investment', datePrecision: 'approximate', entryKind: 'event' }] });
