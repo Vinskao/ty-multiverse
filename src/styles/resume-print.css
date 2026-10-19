@@ -1,0 +1,47 @@
+/* Standalone resume typography: independent of website theme and breakpoints. */
+@page { size: A4; margin: 14mm 15mm; }
+html { background: #e8ebef; }
+body { margin: 0; }
+.resume-document {
+  box-sizing: border-box;
+  width: 180mm;
+  margin: 20px auto;
+  padding: 15mm;
+  background: #fff;
+  color: #20252b;
+  font: 10pt/1.42 Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  text-align: left;
+}
+.resume-document *, .resume-document *::before, .resume-document *::after { box-sizing: border-box; }
+.resume-document h1 { font-size: 23pt; line-height: 1.15; margin: 0 0 5pt; letter-spacing: .3pt; font-weight: 700; }
+.resume-document h2 { font-size: 11pt; line-height: 1.3; margin: 13pt 0 7pt; padding-bottom: 4pt; border-bottom: 1px solid #919ba7; text-transform: uppercase; letter-spacing: .6pt; }
+.resume-document h3 { font-size: 10.5pt; line-height: 1.3; margin: 0 0 3pt; }
+.resume-document p { margin: 0 0 6pt; }
+.resume-document .email { color: #485462; margin-bottom: 7pt; }
+.resume-document .resume-experience-summary { font-size: 8.5pt; color: #485462; margin: 4pt 0 10pt; line-height: 1.5; }
+.resume-document section { margin: 0; padding: 0; }
+.resume-document .experience-item { margin: 0 0 11pt; padding: 0; border: 0; background: none; }
+.resume-document .job-header { margin-bottom: 4pt; }
+.resume-document .job-meta { display: flex; justify-content: space-between; gap: 12pt; font-size: 9pt; color: #485462; }
+.resume-document .company { font-weight: 600; }
+.resume-document .period, .resume-document .education-period { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.resume-document ul { padding-left: 13pt; margin: 4pt 0; }
+.resume-document li { margin: 0 0 5pt; padding-left: 1pt; }
+.resume-document ul ul { margin-top: 3pt; }
+.resume-document .date-highlight { font-weight: 600; }
+.resume-document .education-item { margin: 0 0 7pt; }
+.resume-document .education-header { display: flex; justify-content: space-between; gap: 12pt; }
+.resume-document .education-period { font-size: 9pt; color: #485462; }
+.resume-document .education-item ul { list-style: none; padding: 0; margin: 2pt 0; }
+.resume-document a { color: inherit; text-decoration: none; }
+.resume-document button { display: none !important; }
+@media print {
+  html, body { background: #fff !important; }
+  body.resume-printing > :not(.resume-document) { display: none !important; }
+  body.resume-printing .resume-document { display: block !important; }
+  .resume-document { width: auto; max-width: none; padding: 0; margin: 0; }
+  .resume-document section, .resume-document article { break-before: auto; break-after: auto; break-inside: auto; }
+  .resume-document h1, .resume-document h2, .resume-document h3, .resume-document .job-header { break-after: avoid; }
+  .resume-document li, .resume-document .education-item { break-inside: avoid; }
+  .resume-document p { orphans: 3; widows: 3; }
+}
