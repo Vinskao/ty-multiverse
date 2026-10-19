@@ -19,6 +19,7 @@ import { buildResearchContext, brokerAvailabilityLabel } from './market/research
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
+import { automationNotice, type AutomationStatus } from './market/automationStatus';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -1787,6 +1788,32 @@ async function fetchMacroDashboard() {
 type CustomInstrument = { code: string; name: string; productType: 'stock' | 'futures'; deliveryMonth?: string };
 const CUSTOM_LIMIT = 5;
 
+// Owner only: IB session reminder plus the AI-analysis routines maya-sawa fired once IBKR data arrived.
+async function loadMarketAutomation() {
+    const box = document.getElementById('market-automation');
+    if (!box || !hasMarketAuth()) return;
+    const response = await fetch(astroApiPath('/api/market/automation'), { method: 'POST', headers: marketAuthHeaders(), cache: 'no-store' }).catch(() => null);
+    if (!response?.ok) return;  // signed in without the owner role, or the service is down: show nothing
+    const notice = automationNotice(await response.json() as AutomationStatus, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    box.replaceChildren();
+    box.hidden = !notice;
+    if (!notice) return;
+    box.dataset.tone = notice.tone;
+    for (const line of notice.lines) { const p = document.createElement('p'); p.textContent = line; box.append(p); }
+    if (notice.loginUrl) {
+        const link = Object.assign(document.createElement('a'), { href: notice.loginUrl, target: '_blank', rel: 'noopener', className: 'market-automation-login' });
+        link.textContent = marketText('Sign in to IB', '登入 IB');
+        box.append(link);
+    } else if (notice.loginHint) {
+        const code = document.createElement('code'); code.textContent = notice.loginHint; box.append(code);
+    }
+    for (const item of notice.links) {
+        const link = Object.assign(document.createElement('a'), { href: item.url, target: '_blank', rel: 'noopener' });
+        link.textContent = marketText(`Open run: ${item.label}`, `查看執行：${item.label}`);
+        box.append(link);
+    }
+}
+
 function initMarketCustomEditor() {
     const button = document.getElementById('market-custom-edit') as HTMLButtonElement | null;
     const dialog = document.getElementById('market-custom-dialog') as HTMLDialogElement | null;
@@ -3138,6 +3165,7 @@ function initIndexPage() {
     initMarketAiAnalysis();
     initMacroCommentary();
     initMarketCustomEditor();
+    void loadMarketAutomation();
     void fetchMarketDashboard();
     void fetchMacroDashboard();
     void loadMacroCommentary();

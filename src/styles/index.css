@@ -1795,3 +1795,9 @@
 .market-research-peers li.is-current { border-color:#facc15; }
 .market-research-peers strong { font-size:.82rem; }
 .market-research-peers span { font-size:.72rem; color:var(--gray-400, #94a3b8); }
+.market-automation { display:grid; gap:.3rem; margin:.5rem 0 .75rem; padding:.6rem .8rem; border:1px solid rgba(148,163,184,.3); border-left:3px solid #22c55e; border-radius:8px; font-size:.82rem; }
+.market-automation[hidden] { display:none; }
+.market-automation[data-tone="warn"] { border-left-color:#facc15; }
+.market-automation p { margin:0; }
+.market-automation code { font-size:.72rem; overflow-wrap:anywhere; color:var(--gray-400, #94a3b8); }
+.market-automation a { color:#d8a43b; font-weight:600; }
