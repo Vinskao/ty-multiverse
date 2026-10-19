@@ -1,3 +1,4 @@
+import { palaisLinkDisplay } from './palais/modules';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
 
@@ -711,7 +712,7 @@ export class NavController {
 
     palaisLinks.forEach(palaisLink => {
       const shouldShowPalais = this.isLoggedIn && this.isAdmin;
-      palaisLink.style.display = shouldShowPalais ? 'block' : 'none';
+      palaisLink.style.display = palaisLinkDisplay(shouldShowPalais, palaisLink.hasAttribute('data-palais-module'));
 
       // 同時隱藏父元素（li）如果存在
       const parentLi = palaisLink.closest('li');

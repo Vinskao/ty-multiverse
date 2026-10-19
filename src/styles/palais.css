@@ -99,43 +99,84 @@
 }
 
 /* Navigation buttons for individual modules */
+/* Module entry cards: 3 x 2 on wide screens, 2 x 3 on phones. */
 .module-buttons {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--gap-m);
-  align-items: stretch;
   margin-block-end: var(--gap-l);
 }
 
 .module-button {
-  padding: 0.75rem 1.5rem;
-  background: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  --module-accent: #9a86ff;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr;
+  gap: 0.35rem 0.75rem;
+  min-height: 7.5rem;
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--module-accent) 14%, transparent), rgba(0, 0, 0, 0.04));
   color: #000;
   text-decoration: none;
-  font-size: 1rem;
-  transition: background 0.2s ease, transform 0.2s ease;
   pointer-events: auto;
-  width: 100%;
-  text-align: center;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Dark theme button styles */
+.module-button::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--module-accent);
+}
+
+.module-button--fight { --module-accent: #ef6a6a; }
+.module-button--group { --module-accent: #6aa7ef; }
+.module-button--dance { --module-accent: #e08ad8; }
+.module-button--party { --module-accent: #f2b45a; }
+.module-button--live { --module-accent: #5ccfa5; }
+.module-button--levels { --module-accent: #9a86ff; }
+
+.module-button-index { grid-column: 1; font-size: 0.75rem; letter-spacing: 0.08em; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.module-button-title { grid-column: 1; font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.module-button-desc { grid-column: 1; font-size: 0.85rem; opacity: 0.75; line-height: 1.4; }
+.module-button-arrow { grid-column: 2; grid-row: 1 / -1; align-self: center; font-size: 1.25rem; opacity: 0.5; transition: transform 0.2s ease, opacity 0.2s ease; }
+
 .theme-dark .module-button {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--module-accent) 22%, transparent), rgba(255, 255, 255, 0.04));
   color: #fff;
 }
 
-.module-button:hover {
-  background: rgba(0, 0, 0, 0.2);
+.module-button:hover,
+.module-button:focus-visible {
+  border-color: var(--module-accent);
   transform: translateY(-2px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--module-accent) 25%, transparent);
 }
 
-/* Dark theme hover styles */
-.theme-dark .module-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+.module-button:hover .module-button-arrow,
+.module-button:focus-visible .module-button-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+.module-button:focus-visible { outline: 3px solid var(--module-accent); outline-offset: 3px; }
+
+@media (max-width: 767px) {
+  .module-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .module-button { min-height: 6.5rem; padding: 0.85rem 1rem; }
+  .module-button-title { font-size: 1.15rem; }
+  .module-button-arrow { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .module-button, .module-button-arrow { transition: none; }
+  .module-button:hover, .module-button:focus-visible { transform: none; }
 }
 
 /* Gang Video Styles */

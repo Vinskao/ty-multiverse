@@ -28,6 +28,20 @@
     "raw": { "en": "Original Markdown", "zh": "原始 Markdown" },
     "download": { "en": "Download Markdown", "zh": "下載 MD" }
   },
+  "palaisModules": {
+    "fight": { "en": "Fight", "zh": "對戰" },
+    "fightDesc": { "en": "Battles and damage", "zh": "角色對戰與傷害計算" },
+    "group": { "en": "Group", "zh": "群像" },
+    "groupDesc": { "en": "Character gallery", "zh": "角色圖鑑與分組" },
+    "dance": { "en": "Dance", "zh": "舞蹈" },
+    "danceDesc": { "en": "Dance video collection", "zh": "舞蹈影片收藏" },
+    "party": { "en": "Party", "zh": "派對" },
+    "partyDesc": { "en": "Build a choir party", "zh": "組一場合唱派對" },
+    "live": { "en": "Live", "zh": "現場" },
+    "liveDesc": { "en": "Live video synthesis", "zh": "現場表演影像合成" },
+    "levels": { "en": "Levels", "zh": "等級" },
+    "levelsDesc": { "en": "Level rankings", "zh": "角色等級一覽" }
+  },
   "nav": {
     "home": { "en": "Home", "zh": "首頁" },
     "login": { "en": "Login", "zh": "登入" },

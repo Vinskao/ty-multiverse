@@ -3,6 +3,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import Galwall from "../components/Galwall.astro";
 import DiaryPanel from "../components/DiaryPanel.astro";
+import { palaisModules } from "../scripts/palais/modules";
+import i18n from "../storages/i18n.json";
+
+const moduleText = i18n.palaisModules as Record<string, { en: string; zh: string }>;
 import diaryCssUrl from "../styles/diary.css?url";
 import palaisCssUrl from "../styles/palais.css?url";
 import galwallCssUrl from "../styles/galwall.css?url";
@@ -54,31 +58,17 @@ if (!isLoggedIn) {
         }
       </div>
 
-      <div class="system-container module-buttons">
-        <a
-          href={`/tymultiverse/palais/fight?username=${username}`}
-          class="module-button">Fight</a
-        >
-        <a
-          href={`/tymultiverse/palais/group?username=${username}`}
-          class="module-button">Group</a
-        >
-        <a
-          href={`/tymultiverse/palais/dance?username=${username}`}
-          class="module-button">Dance</a
-        >
-        <a
-          href={`/tymultiverse/palais/party?username=${username}`}
-          class="module-button">Party</a
-        >
-        <a
-          href={`/tymultiverse/palais/live?username=${username}`}
-          class="module-button">Live</a
-        >
-        <a
-          href={`/tymultiverse/palais/levels?username=${username}`}
-          class="module-button">Levels</a
-        >
+      <div class="system-container module-buttons" role="navigation" aria-label="Palais modules">
+        {
+          palaisModules(username!).map(({ key, href }, index) => (
+            <a href={href} class={`module-button module-button--${key}`} data-palais-module={key}>
+              <span class="module-button-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <span class="module-button-title" data-i18n={`palaisModules.${key}`}>{moduleText[key].en}</span>
+              <span class="module-button-desc" data-i18n={`palaisModules.${key}Desc`}>{moduleText[`${key}Desc`].en}</span>
+              <span class="module-button-arrow" aria-hidden="true">→</span>
+            </a>
+          ))
+        }
       </div>
 
       <DiaryPanel />
