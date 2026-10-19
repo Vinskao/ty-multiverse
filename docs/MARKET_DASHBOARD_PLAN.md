@@ -618,14 +618,14 @@ flowchart LR
   C --> K{收盤後的資料都到了？<br/>今天還沒觸發？}
   W[擁有者開啟網站<br/>POST /market/automation/check] --> K
   K -- 是 --> F[以 API 觸發 Routine<br/>每檔市場每個交易日一次]
-  S[固定排程<br/>18:40／07:30] --> R
+  S[固定排程<br/>21:15／07:30] --> R
   F --> R[Claude Code Routine<br/>雲端代理讀資料、套三項規則]
   R -->|PUT，代理自動帶寫入 key| A[(AI 分析<br/>保留版本歷史)]
 ```
 
 | 環節 | 一般叫法 | 本站實作 |
 |---|---|---|
-| 固定時間執行 | 排程觸發（cron trigger） | 台股收盤後：週一至週五 18:40；美股與總經：週二至週六 07:30 |
+| 固定時間執行 | 排程觸發（cron trigger） | 台股收盤後：週一至週五 21:15（融資融券約 20:45 公布，2026-10-19 實測）；美股與總經：週二至週六 07:30 |
 | 資料到了就執行 | 事件驅動觸發（event-driven / webhook 式） | `services/market_automation.py`：在台北時間收盤後（台日韓 14:30、美股 05:30），所有海外持股的日線都收集完才觸發 |
 | 雲端執行的 Claude | 雲端代理（cloud agent），Claude Code **Routines** | 兩個 routine，Sonnet 5.5，使用訂閱額度，不另走 API 計費 |
 | 每天登入 IB | 人工介入關卡（human-in-the-loop） | 網站對擁有者顯示「IB 未登入」提醒；IB 沒有無人登入（headless login）可用 |
