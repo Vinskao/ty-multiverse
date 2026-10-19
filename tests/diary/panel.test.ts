@@ -76,6 +76,35 @@ describe('diary rendering and lifecycle', () => {
     cleanup();
     expect(root.querySelector('#diary-story-body')?.textContent).toBe('');
   });
+  it('shows AI narratives as labeled interpretation in the storyline and in the opened entry', async () => {
+    const root = fixture();
+    const summary = { id: 'b', entryDate: '2026-10-18', title: 'Later', category: 'relationship', entryKind: 'event', description: 'Then this happened.' };
+    const full = { ...summary, markdown: '# Later', metadataJson: JSON.stringify({ description: 'Then this happened.' }) };
+    const narratives = { entries: { b: { narrative: 'I felt relieved but unsure.', stale: true } }, months: [{ month: '2026-10', narrative: 'October was tense.', stale: false }] };
+    const client = vi.fn().mockImplementation(async (path: string) => path === '/check-in' ? { pending: false }
+      : path === '/narratives' ? narratives : path.startsWith('/entries?') ? { entries: [summary], hasMore: false } : full);
+    const cleanup = mountDiaryPanel(root, client);
+    await vi.waitFor(() => expect(root.querySelector('#diary-story-body')?.textContent).toContain('October was tense.'));
+    const story = root.querySelector('#diary-story-body')!;
+    expect(story.textContent).toContain('I felt relieved but unsure.');
+    expect(story.querySelectorAll('.diary-ai-label').length).toBeGreaterThanOrEqual(2);
+    (story.querySelector('.diary-passage') as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(root.querySelector('#diary-reader-detail')?.textContent).toContain('I felt relieved but unsure.'));
+    expect(root.querySelector('#diary-reader-detail')?.textContent).toContain('Then this happened.');
+    expect(root.querySelector('#diary-reader-detail .diary-ai-stale')).not.toBeNull();
+    cleanup();
+  });
+  it('still tells the story from descriptions when narratives cannot be loaded', async () => {
+    const root = fixture();
+    const client = vi.fn().mockImplementation(async (path: string) => {
+      if (path === '/narratives') throw new Error('not deployed');
+      return path === '/check-in' ? { pending: false } : { entries: [{ id: 'a', entryDate: '2025-11-13', title: 'Start', entryKind: 'event', description: 'It began here.' }], hasMore: false };
+    });
+    const cleanup = mountDiaryPanel(root, client);
+    await vi.waitFor(() => expect(root.querySelector('#diary-story-body')?.textContent).toContain('It began here.'));
+    expect(root.querySelector('#diary-status')?.textContent).toBe('');
+    cleanup();
+  });
   it('sends category and undated filters, and labels approximate dates', async () => {
     const root = fixture();
     const client = vi.fn().mockImplementation(async (path: string) => path === '/check-in' ? { pending: false } : { entries: [{ id: 'a', entryDate: '2026-10-18', title: 'Test', category: 'investment', datePrecision: 'approximate', entryKind: 'event' }] });

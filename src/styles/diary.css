@@ -39,3 +39,10 @@
   .diary-sidebar { position: static; max-height: none; }
   #diary-list { max-height: 40vh; overflow-y: auto; }
 }
+/* AI narratives: always labeled as interpretation, visually apart from the recorded events. */
+.diary-ai-label { justify-self: start; display: inline-block; margin-inline-end: .4rem; padding: .05rem .5rem; border-radius: 999px; font-size: .72rem; background: #9681ee2e; color: inherit; }
+.diary-ai-stale { display: inline-block; font-size: .72rem; opacity: .75; margin-inline-end: .4rem; }
+.diary-month-summary { margin: 0 0 .75rem; padding: .75rem 1rem; border-radius: .5rem; background: #9681ee12; line-height: 1.8; white-space: pre-wrap; }
+.diary-detail-narrative { padding: .75rem 1rem; border-radius: .5rem; background: #9681ee12; }
+.diary-detail-narrative h4 { display: inline; margin: 0 .5rem 0 0; font-size: 1rem; }
+.diary-detail-narrative p { margin: .5rem 0 0; line-height: 1.8; white-space: pre-wrap; }

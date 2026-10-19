@@ -1,5 +1,5 @@
 import { createDiaryClient, diaryEntryLabel, exportPrompt, taipeiDate } from './client';
-import { buildNarrative, entryDetail } from './narrative';
+import { buildNarrative, entryDetail, type Narratives } from './narrative';
 import { config } from '../../services/core/config';
 import { storageService } from '../../services/core/storageService';
 
@@ -19,6 +19,8 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
   let active = true;
   let selected: Entry | null = null;
   let reminder: Reminder | null = null;
+  let narratives: Narratives | undefined;  // AI interpretations; the story still reads from descriptions without them
+  let listed: Summary[] = [];
   let requestId = 0;
   const abort = new AbortController();
   const on = (id: string, event: string, handler: (e: Event) => void) => get(id).addEventListener(event, handler, { signal: abort.signal });
@@ -40,7 +42,7 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
     const query = recent ? new URLSearchParams({ category }) : new URLSearchParams({ from, to, category, includeUndated });
     const page = await client<{ entries: Summary[]; hasMore: boolean }>(`/entries?${query}`);
     if (!active || sequence !== requestId) return;
-    close(); list.replaceChildren(); renderStory(page.entries);
+    close(); list.replaceChildren(); listed = page.entries; renderStory();
     for (const entry of page.entries) {
       const item = document.createElement('li');
       const button = document.createElement('button');
@@ -51,12 +53,36 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
     message(page.hasMore ? (recent ? '只列出最新 200 篇，更早的請用日期查詢。' : '結果超過 200 篇，請縮小日期範圍。')
       : page.entries.length ? '' : recent ? '還沒有日記。' : '這段日期還沒有日記。');
   };
+  // AI text is always labeled as interpretation, and flagged when its source entry changed after it was written.
+  const aiLabel = (stale: boolean) => {
+    const label = document.createElement('span'); label.className = 'diary-ai-label';
+    label.textContent = lang() === 'en' ? 'AI interpretation' : 'AI 整理';
+    if (!stale) return [label];
+    const note = document.createElement('span'); note.className = 'diary-ai-stale';
+    note.textContent = lang() === 'en' ? 'source updated, awaiting rewrite' : '原始紀錄已更新，待重寫';
+    return [label, note];
+  };
+  const loadNarratives = async () => {
+    try {
+      const result = await client<Narratives>('/narratives');
+      if (!active) return;
+      narratives = { entries: result?.entries && typeof result.entries === 'object' && !Array.isArray(result.entries) ? result.entries : {}, months: Array.isArray(result?.months) ? result.months : [] };
+      renderStory();
+    } catch { /* Narratives are optional; the storyline falls back to the recorded descriptions. */ }
+  };
   // The storyline reads the listed events oldest to newest; text is set with textContent, never as HTML.
-  const renderStory = (entries: Summary[]) => {
+  const renderStory = () => {
     const body = get('diary-story-body');
     body.replaceChildren();
-    for (const chapter of buildNarrative(entries, lang())) {
+    for (const chapter of buildNarrative(listed, lang(), narratives)) {
       const heading = document.createElement('h4'); heading.textContent = chapter.heading;
+      body.append(heading);
+      if (chapter.summary) {
+        const summary = document.createElement('p'); summary.className = 'diary-month-summary';
+        const text = document.createElement('span'); text.textContent = chapter.summary.text;
+        summary.append(...aiLabel(chapter.summary.stale), text);
+        body.append(summary);
+      }
       const items = document.createElement('ol');
       for (const passage of chapter.items) {
         const li = document.createElement('li');
@@ -64,11 +90,11 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
         const when = document.createElement('span'); when.className = 'diary-passage-date'; when.textContent = passage.date;
         const title = document.createElement('strong'); title.textContent = passage.title;
         const text = document.createElement('span'); text.className = 'diary-passage-text'; text.textContent = passage.text;
-        button.append(...(passage.date ? [when] : []), title, text);
+        button.append(...(passage.date ? [when] : []), title, ...(passage.ai ? aiLabel(passage.stale) : []), text);
         button.addEventListener('click', () => void run(() => open(passage.id)), { signal: abort.signal });
         li.append(button); items.append(li);
       }
-      body.append(heading, items);
+      body.append(items);
     }
   };
   const open = async (id: string) => {
@@ -79,6 +105,14 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
     get('diary-reader-title').textContent = diaryEntryLabel(full, lang());
     const detail = entryDetail(full, lang());
     const parts: HTMLElement[] = [];
+    const written = narratives?.entries[full.id];
+    if (written?.narrative) {
+      const section = document.createElement('section'); section.className = 'diary-detail-narrative';
+      const heading = document.createElement('h4'); heading.textContent = lang() === 'en' ? 'Situation and thoughts' : '處境與想法';
+      const text = document.createElement('p'); text.textContent = written.narrative;
+      section.append(heading, ...aiLabel(written.stale), text);
+      parts.push(section);
+    }
     if (detail) {
       const description = document.createElement('p'); description.className = 'diary-detail-description'; description.textContent = detail.description;
       parts.push(description);
@@ -152,6 +186,7 @@ export function mountDiaryPanel(root: HTMLElement, client: Client) {
   });
   // Independent: a failed check-in must not keep saved entries from showing.
   void run(() => load(true));
+  void loadNarratives();
   void run(check);
   return () => { active = false; ++requestId; abort.abort(); close(); list.replaceChildren(); get('diary-story-body').replaceChildren(); status.textContent = ''; get('diary-reminder').hidden = true; get<HTMLTextAreaElement>('diary-markdown').value = ''; };
 }

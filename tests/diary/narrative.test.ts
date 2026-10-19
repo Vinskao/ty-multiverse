@@ -52,3 +52,28 @@ describe('entry detail', () => {
     expect(detail).toEqual({ description: 'x', notes: null, facts: [], tags: ['ok'] });
   });
 });
+
+describe('AI narratives in the storyline', () => {
+  const ai = {
+    entries: {
+      old: { narrative: 'I was unsure and kept watching the cycle.', stale: false },
+      new: { narrative: 'Written before the entry changed.', stale: true },
+    },
+    months: [{ month: '2025-11', narrative: 'November was about learning the market.', stale: false }],
+  };
+
+  it('prefers the AI narrative per event, marks it, and keeps the description where none exists', () => {
+    const chapters = buildNarrative(entries, 'zh', ai);
+    const november = chapters[0];
+    expect(november.items[1]).toMatchObject({ id: 'old', text: 'I was unsure and kept watching the cycle.', ai: true, stale: false });
+    expect(november.items[0]).toMatchObject({ id: 'same-month', text: 'Earlier that month', ai: false });
+    expect(chapters[1].items[0]).toMatchObject({ id: 'new', ai: true, stale: true });
+  });
+
+  it('opens each month with its AI summary when there is one', () => {
+    const chapters = buildNarrative(entries, 'zh', ai);
+    expect(chapters[0].summary).toEqual({ text: 'November was about learning the market.', stale: false });
+    expect(chapters[1].summary).toBeUndefined();
+    expect(buildNarrative(entries, 'zh')[0].summary).toBeUndefined();
+  });
+});

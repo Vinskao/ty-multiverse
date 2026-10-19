@@ -6,8 +6,13 @@ export type StoryEntry = {
   id: string; entryDate: string | null; title: string; category?: string;
   datePrecision?: string; entryKind?: string; description?: string | null;
 };
-export type StoryItem = { id: string; date: string; title: string; text: string; category?: string };
-export type StoryChapter = { heading: string; items: StoryItem[] };
+export type StoryItem = { id: string; date: string; title: string; text: string; category?: string; ai: boolean; stale: boolean };
+export type StoryChapter = { heading: string; summary?: { text: string; stale: boolean }; items: StoryItem[] };
+// GET /diary/narratives: AI-written situation-and-thoughts per event and per month (interpretations, not records).
+export type Narratives = {
+  entries: Record<string, { narrative: string; stale: boolean }>;
+  months: Array<{ month: string; narrative: string; stale: boolean }>;
+};
 export type EntryDetail = { description: string; notes: string | null; facts: string[]; tags: string[] };
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -17,14 +22,19 @@ function monthHeading(month: string, lang: Lang) {
   return lang === 'en' ? `${MONTHS[Number(number) - 1]} ${year}` : `${year} 年 ${Number(number)} 月`;
 }
 
-function item(entry: StoryEntry, lang: Lang): StoryItem {
+function item(entry: StoryEntry, lang: Lang, narratives?: Narratives): StoryItem {
   const day = entry.entryDate ? entry.entryDate.slice(5).replace('-', '/') : '';
   const approximate = entry.entryDate && entry.datePrecision === 'approximate' ? (lang === 'en' ? 'Approx. ' : '約 ') : '';
-  return { id: entry.id, date: `${approximate}${day}`, title: entry.title, text: entry.description?.trim() || entry.title, category: entry.category };
+  const written = narratives?.entries[entry.id];
+  return {
+    id: entry.id, date: `${approximate}${day}`, title: entry.title, category: entry.category,
+    text: written?.narrative || entry.description?.trim() || entry.title, ai: !!written?.narrative, stale: !!written?.stale,
+  };
 }
 
-/** Events oldest to newest, one chapter per month, undated events last. Source documents are not events. */
-export function buildNarrative(entries: StoryEntry[], lang: Lang): StoryChapter[] {
+/** Events oldest to newest, one chapter per month, undated events last. Source documents are not events.
+ * With AI narratives, each event reads as its situation-and-thoughts passage and each month opens with its summary. */
+export function buildNarrative(entries: StoryEntry[], lang: Lang, narratives?: Narratives): StoryChapter[] {
   const events = entries.filter((entry) => entry.entryKind !== 'document');
   const dated = events.filter((entry) => entry.entryDate)
     .sort((a, b) => a.entryDate!.localeCompare(b.entryDate!) || a.id.localeCompare(b.id));
@@ -33,12 +43,13 @@ export function buildNarrative(entries: StoryEntry[], lang: Lang): StoryChapter[
   for (const entry of dated) {
     if (entry.entryDate!.slice(0, 7) !== month) {
       month = entry.entryDate!.slice(0, 7);
-      chapters.push({ heading: monthHeading(month, lang), items: [] });
+      const summary = narratives?.months.find((m) => m.month === month);
+      chapters.push({ heading: monthHeading(month, lang), items: [], ...(summary?.narrative ? { summary: { text: summary.narrative, stale: summary.stale } } : {}) });
     }
-    chapters.at(-1)!.items.push(item(entry, lang));
+    chapters.at(-1)!.items.push(item(entry, lang, narratives));
   }
   const undated = events.filter((entry) => !entry.entryDate);
-  if (undated.length) chapters.push({ heading: lang === 'en' ? 'Date unconfirmed' : '日期待確認', items: undated.map((entry) => item(entry, lang)) });
+  if (undated.length) chapters.push({ heading: lang === 'en' ? 'Date unconfirmed' : '日期待確認', items: undated.map((entry) => item(entry, lang, narratives)) });
   return chapters;
 }
 
