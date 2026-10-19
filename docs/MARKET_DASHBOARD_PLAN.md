@@ -607,3 +607,35 @@ TWSE已驗證欄位與端點：
   - 初始資料在 `maya_sawa/data/market_industries.json`，只會新建尚不存在的族群，不覆蓋從 API 改過的內容。
 - **研究分頁：** 在研究圖上方列出同族群的股票（目前選取的標的會標示出來）。產業圖只在族群有指定時才顯示：機房直流電源圖只屬於「機房直流電源」族群，而這個族群目前只有光寶科（2301）。
 - **初始族群（只涵蓋目前持股）：** 先進封裝與測試、AI 光通訊、AI 液冷散熱、記憶體、AI PCB 與材料、手機光學、AI 資本支出需求端，另加一個只為收留機房直流電源圖的「機房直流電源」（光寶科）。
+
+## 2026-10-19 AI 分析自動化：排程＋事件驅動的雲端代理流程
+
+整條流程叫做「排程＋事件驅動的 AI 代理工作流程」（scheduled + event-driven agentic workflow），最前面有一個人工步驟（human-in-the-loop）：每天手動登入 IB。
+
+```mermaid
+flowchart LR
+  H[人工登入 IB Gateway<br/>帳密＋2FA，約每 24 小時一次] --> C[maya-sawa 每 4 分鐘<br/>收集日韓美日線與報價]
+  C --> K{收盤後的資料都到了？<br/>今天還沒觸發？}
+  W[擁有者開啟網站<br/>POST /market/automation/check] --> K
+  K -- 是 --> F[以 API 觸發 Routine<br/>每檔市場每個交易日一次]
+  S[固定排程<br/>18:40／07:30] --> R
+  F --> R[Claude Code Routine<br/>雲端代理讀資料、套三項規則]
+  R -->|PUT，代理自動帶寫入 key| A[(AI 分析<br/>保留版本歷史)]
+```
+
+| 環節 | 一般叫法 | 本站實作 |
+|---|---|---|
+| 固定時間執行 | 排程觸發（cron trigger） | 台股收盤後：週一至週五 18:40；美股與總經：週二至週六 07:30 |
+| 資料到了就執行 | 事件驅動觸發（event-driven / webhook 式） | `services/market_automation.py`：在台北時間收盤後（台日韓 14:30、美股 05:30），所有海外持股的日線都收集完才觸發 |
+| 雲端執行的 Claude | 雲端代理（cloud agent），Claude Code **Routines** | 兩個 routine，Sonnet 5.5，使用訂閱額度，不另走 API 計費 |
+| 每天登入 IB | 人工介入關卡（human-in-the-loop） | 網站對擁有者顯示「IB 未登入」提醒；IB 沒有無人登入（headless login）可用 |
+| 每天最多一次、失敗會重試 | 冪等觸發與重試 | 觸發紀錄表 `maya_sawa_market_routine_fire`：觸發失敗就釋放紀錄，下次檢查會重試 |
+| 寫入 key 由代理帶上 | 憑證代理（credential proxy）、無密碼代理（secretless agent） | 寫入 key 存成雲端環境的 network secret，agent 本身看不到 |
+| key 只能寫 AI 分析 | 最小權限、限縮權限的 token（scoped token） | 只能寫 stock／futures／macro 三種分析，research 回 403；伺服器只存 SHA-256 雜湊 |
+| 不覆蓋別人的更新 | 樂觀鎖（optimistic concurrency） | `expectedRevision` 對不上就回 409 |
+
+**還要手動設定的地方**
+- **觸發 token：** 兩個 routine 各加一個 API trigger，token 存到 Jenkins 的 `MARKET_ROUTINE_TAIWAN_TOKEN`、`MARKET_ROUTINE_US_TOKEN`。沒設之前只回報狀態，不會觸發。
+- **手機登入 IB：** 需要子網域 `ibkr.peoplesystem.tatdvsonorth.com`，因為 Keycloak 已經占用主網域的 `/sso`。在那之前只能用 `kubectl port-forward` 登入。
+
+**細節文件：** maya-sawa `docs/MARKET_AGENT_KEY.md`。
