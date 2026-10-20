@@ -644,7 +644,7 @@ export default function AiTokenUsageDashboard() {
         )}
         {weeklyTrendDaily.length === 0
           ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
-          : <svg ref={weeklyCostSvgRef} style={{ width: '100%', display: 'block' }} />
+          : <svg ref={weeklyCostSvgRef} aria-label="Weekly cost trend chart" role="img" style={{ width: '100%', display: 'block' }} />
         }
       </div>
 
@@ -655,7 +655,7 @@ export default function AiTokenUsageDashboard() {
           <div style={styles.panelLabel}>Daily Token Usage · {selectedRangeLabel}</div>
           {weeklyTrendDaily.length === 0
             ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
-            : <svg ref={svgRef} style={{ width: '100%', display: 'block' }} />
+            : <svg ref={svgRef} aria-label="Daily token usage chart" role="img" style={{ width: '100%', display: 'block' }} />
           }
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
             {Object.entries(PROVIDER_COLORS).map(([p, c]) => (

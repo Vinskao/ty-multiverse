@@ -4,6 +4,7 @@ import react from '@astrojs/react';
 
 export default defineConfig({
   plugins: [react()],
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
