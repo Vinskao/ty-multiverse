@@ -40,7 +40,7 @@
     "live": { "en": "Live", "zh": "現場" },
     "liveDesc": { "en": "Live video synthesis", "zh": "現場表演影像合成" },
     "levels": { "en": "Levels", "zh": "等級" },
-    "levelsDesc": { "en": "Level rankings", "zh": "角色等級一覽" }
+    "levelsDesc": { "en": "Level rankings and character wall", "zh": "角色等級一覽與角色牆" }
   },
   "nav": {
     "home": { "en": "Home", "zh": "首頁" },

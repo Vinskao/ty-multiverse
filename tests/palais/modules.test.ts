@@ -32,3 +32,14 @@ describe('palais link visibility', () => {
     expect(palaisLinkDisplay(true, false)).toBe('block');  // nav links unchanged
   });
 });
+
+describe('palais page placement', () => {
+  it('shows the character wall on the Levels page, not on the Palais landing page', async () => {
+    const { readFileSync } = await import('node:fs');
+    const palais = readFileSync('src/pages/palais.astro', 'utf8');
+    const levels = readFileSync('src/pages/palais/levels.astro', 'utf8');
+    expect(palais).not.toMatch(/<Galwall\b/);
+    expect(levels).toMatch(/<Galwall\b/);
+    expect(levels).toMatch(/galwall\.css\?url/);
+  });
+});

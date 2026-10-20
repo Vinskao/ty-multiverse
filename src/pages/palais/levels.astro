@@ -2,8 +2,10 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Hero from "../../components/Hero.astro";
 import Levellist from "../../components/Levellist.astro";
+import Galwall from "../../components/Galwall.astro";
 import palaisCssUrl from "../../styles/palais.css?url";
 import levellistCssUrl from "../../styles/levellist.css?url";
+import galwallCssUrl from "../../styles/galwall.css?url";
 
 const url = new URL(Astro.request.url);
 const username = url.searchParams.get('username');
@@ -17,12 +19,16 @@ if (!isLoggedIn) {
   <Fragment slot="head">
     <link rel="stylesheet" href={palaisCssUrl} />
     <link rel="stylesheet" href={levellistCssUrl} />
+    <link rel="stylesheet" href={galwallCssUrl} />
   </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
       <Hero title="Palais" tagline="Level List" align="start" />
       <div class="system-container">
         <Levellist />
+      </div>
+      <div class="galwall-container">
+        <Galwall />
       </div>
     </main>
   </div>

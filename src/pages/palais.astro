@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
-import Galwall from "../components/Galwall.astro";
 import DiaryPanel from "../components/DiaryPanel.astro";
 import { palaisModules } from "../scripts/palais/modules";
 import i18n from "../storages/i18n.json";
@@ -9,7 +8,6 @@ import i18n from "../storages/i18n.json";
 const moduleText = i18n.palaisModules as Record<string, { en: string; zh: string }>;
 import diaryCssUrl from "../styles/diary.css?url";
 import palaisCssUrl from "../styles/palais.css?url";
-import galwallCssUrl from "../styles/galwall.css?url";
 
 // 獲取 URL 參數
 const url = new URL(Astro.request.url);
@@ -29,7 +27,6 @@ if (!isLoggedIn) {
 <BaseLayout title="Palais | Wavo Yuropha" description="Learn about TY's palais">
   <Fragment slot="head">
     <link rel="stylesheet" href={palaisCssUrl} />
-    <link rel="stylesheet" href={galwallCssUrl} />
     <link rel="stylesheet" href={diaryCssUrl} />
   </Fragment>
   <div class="stack gap-20">
@@ -72,10 +69,6 @@ if (!isLoggedIn) {
       </div>
 
       <DiaryPanel />
-
-      <div class="galwall-container">
-        <Galwall />
-      </div>
     </main>
   </div>
 </BaseLayout>
