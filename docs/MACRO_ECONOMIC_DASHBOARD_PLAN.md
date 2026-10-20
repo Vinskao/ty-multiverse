@@ -359,6 +359,7 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 ## 20. 台灣央行、貿易、匯率與商品序列（2026-10-16）
 
 - 免費、低頻的央行利率／匯率、關務署月進出口、TPEx 黃金及 DGBAS 就業／失業序列放在 Python 行程內的有界 TTL 快取，不寫入 `maya_sawa_macro_observations`。快取有效 12 小時，過期後保留最多 30 日供上游故障時回退，卡片須標示快取過期；API snapshot 自身另快取 5 分鐘。
+- 2026-10-20 修正：重啟後總經卡片大量空白。快取只在行程記憶體，每次部署重啟都要重抓所有免費來源，而各來源的每日次數上限跨重啟計算；當天部署幾次後額度用完，新 pod 抓不回資料，API 只剩 14 個指標（其餘約 45 張卡空白），要到額度滾動才恢復。現在每個快取序列另存一列到 `maya_sawa_macro_cached_series`（每個代碼一列、覆寫，不是觀測值列）。pod 啟動時讀回記憶體並保留原本的 `fetchedAt`，所以仍新鮮的序列不會重抓、不耗額度，過期判斷照舊。超過 30 天的不讀回。測試：`maya-sawa/tests/test_market_macro_cache_restart.py`。
 - 央行利率來自 `EG28D01`；匯率來自 `FTDOpenData_Day`，近六年資料留在行程記憶體。關務署 6053 CSV 以精確去年同月計算出口／進口年增率。TPEx 黃金現貨以台幣／台兩顯示；World Bank Pink Sheet 補入黃金月均價（美元／金衡盎司），FRED WTI 沿用已持久化序列，避免破壞既有趨勢歷史。
 - DGBAS `A040101020` 以匿名 API 抓合計就業者與失業者月資料；其他 DGBAS dataset 需使用相應維度與統計週期查詢，並成功解析 observations 後才加入面板。
 - PostgreSQL 僅保留 BLS／FRED 需跨重啟使用的歷史觀察、事件及來源同步紀錄；新免費快取觀察不增加持久化資料列。多副本部署時 Python 本機快取不共享，各副本需各自啟動來源同步。
