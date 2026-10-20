@@ -110,6 +110,18 @@ describe('overseasFundamentalsPayload', () => {
         expect(second.revenueQoQ).toBeCloseTo(60);
     });
 
+    it('computes the current ratio when the filing reports current assets and liabilities (OpenDART does)', () => {
+        const sheets = [{ end: '2026-06-30', assets: 348862, liabilities: 86168, currentAssets: 156155954, currentLiabilities: 60257051 }];
+        expect(secFundamentalsMetrics({ balanceSheet: sheets }).balance[0].currentRatio).toBeCloseTo(259.15, 1);
+        expect(secFundamentalsMetrics({ balanceSheet: [{ end: '2026-06-30', assets: 1, liabilities: 1 }] }).balance[0].currentRatio).toBeNull();
+    });
+
+    it('labels Korea OpenDART results by their own source', () => {
+        const payload = overseasFundamentalsPayload({ code: '000660', market: 'KR', datasets: { financials: { payload: { source: 'OpenDART (Korea Financial Supervisory Service)', quarterly: [] } } } } as any);
+        expect(payload.source).toContain('OpenDART');
+        expect(payload.source).not.toContain('10-Q');
+    });
+
     it('uses basic EPS when a filer leaves diluted EPS blank, as Japanese companies without dilution do', () => {
         const rows = [{ end: '2026-03-31', epsBasic: 10, epsDiluted: null }, { end: '2026-06-30', epsBasic: 12, epsDiluted: null }];
         expect(secFundamentalsMetrics({ quarterly: rows }).quarterly[1].epsQoQ).toBeCloseTo(20);

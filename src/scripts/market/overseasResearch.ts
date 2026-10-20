@@ -74,9 +74,10 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
         const previous = findEnded(sheets, row.end, 91);
         const yearAgo = findEnded(sheets, row.end, 365);
         const inventoryYoY = growth(row.inventory, yearAgo?.inventory);
-        // Current assets/liabilities are not in the collected SEC tag set, so the current ratio is unknown.
+        // SEC's collected tag set has no current assets/liabilities (ratio unknown); OpenDART and TDnet report them.
+        const current = (sheet?: SecRow) => sheet ? ratio(sheet.currentAssets, sheet.currentLiabilities) : null;
         return { period: quarterLabel(row.end), debtRatio: debt(row), debtRatioQoQ: diff(debt(row), debt(previous)),
-            debtRatioYoY: diff(debt(row), debt(yearAgo)), currentRatio: null, currentRatioYoY: null, equityYoY: growth(row.equity, yearAgo?.equity),
+            debtRatioYoY: diff(debt(row), debt(yearAgo)), currentRatio: current(row), currentRatioYoY: diff(current(row), current(yearAgo)), equityYoY: growth(row.equity, yearAgo?.equity),
             inventoryDays: inventoryDays(row), inventoryDaysQoQ: diff(inventoryDays(row), inventoryDays(previous)),
             inventoryDaysYoY: diff(inventoryDays(row), inventoryDays(yearAgo)),
             inventoryQoQ: growth(row.inventory, previous?.inventory), inventoryYoY,
@@ -95,7 +96,7 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
 
 const FILINGS_GAP: Record<string, string> = {
     JP: 'Japan results come from TDnet 決算短信, collected from 2026-10; this company has no release stored yet. 日本財報來自 TDnet 決算短信（2026-10 起收集），此公司尚未有公布紀錄。',
-    KR: 'Korea filings (OpenDART) need an OpenDART API key; not connected yet. 韓國財報需 OpenDART API key，尚未接入。',
+    KR: 'Korea results come from OpenDART periodic reports; none stored for this company yet. 韓國財報來自 OpenDART 定期報告，此公司尚未有保存紀錄。',
 };
 
 export function overseasFundamentalsPayload(research: OverseasResearch) {

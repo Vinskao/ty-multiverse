@@ -44,4 +44,16 @@ Read the public endpoint after deployment; verify profile conid/company/exchange
   - 同一期間如果之後有訂正公告，以較晚的為準。
 - **限制**：TDnet 只保留約一個月，歷史從 2026-10 開始累積。Advantest（6857，IFRS，3 月制）和 Lasertec（6524，J-GAAP，6 月制）下一次公布後，網站才會出現數字。
 - **測試**：`maya-sawa/tests/test_tdnet_financials.py`。fixture 是 2026-10-15 到 10-20 真實下載的 J-GAAP 半期、IFRS 年度、預測修正 XBRL，以及一頁日列表。前端是 `tests/market/overseasResearch.test.ts`。
-- **韓國**：OpenDART key 已申請（2026-10-20 核准），待存入 Jenkins `OPENDART_API_KEY` 後再接。
+
+## 2026-10-20 韓國財報：OpenDART 定期報告
+
+- **Key**：Jenkins Secret text `OPENDART_API_KEY`（vinskao 資料夾）→ maya-sawa Jenkinsfile 的 `Configure Filings Keys` 階段建立 k8s secret `filings-credentials` → pod 環境變數。沒有 key 時收集器不啟動，部署也不會因此失敗。key 只放在請求參數裡：錯誤訊息不帶 URL，不寫進 log 或資料庫。
+- **收集**：maya-sawa `services/dart_financials.py`，背景每 12 小時跑一次，對象是曾經用 IB 收集過 profile 的韓國代碼。流程：`corpCode.xml` 找出 corp_code（之後存成 `dart_corp_code`）→ `list.json` 取近 3 年的定期報告（同一期有訂正版時以訂正版為準）→ 每份報告用 `fnlttSinglAcntAll.json` 抓一次，先試合併報表 CFS，沒有再改抓個別報表 OFS。每份報告存成 `dart_release`（period = 接收編號），不會重複抓。
+- **數字規則**：
+  - 金額為韓元（不是百萬）。
+  - 季報的損益表直接報單季（`thstrm_amount`）、年初至今（`thstrm_add_amount`），也附去年同季和去年同期累計，所以單季不用推算。
+  - 年報只有全年，第四季 = 年報 − 第三季累計，標示 `derivedFromYtd`。
+  - 同一季同時有申報值和推算值時，以申報值為準。這個合併邏輯和 TDnet 共用。
+  - 流動資產與流動負債有申報，前端的流動比率因此有值。
+- **核對**：SK 海力士 2025Q4 推算營收 32.83 兆韓元，和 Yahoo 另外公布的季營收一致。
+- **測試**：`maya-sawa/tests/test_dart_financials.py`。fixture 是 2026-10-20 在正式 pod 內抓的 SK 海力士真實回應（2025Q3、2025 年報、2026Q1、2026 半年報、申報清單），只保留用到的科目，裡面不含 key。
