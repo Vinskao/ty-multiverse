@@ -1739,14 +1739,16 @@
 .market-ai-panel code { display:block; overflow-wrap:anywhere; white-space:normal; }
 .market-ai-table { white-space:normal; table-layout:fixed; }
 .market-ai-table th, .market-ai-table td { text-align:left; vertical-align:top; overflow-wrap:anywhere; }
-.market-ai-table th:first-child { width:3.5rem; }
+.market-ai-table th:first-child { width:4.75rem; }
 .market-ai-table th:nth-child(2) { width:8rem; }
 .market-ai-table th:nth-child(3) { width:6rem; }
+/* Conclusion holds one badge; without a width the fixed layout splits the rest evenly with the commentary. */
+.market-ai-table th:nth-child(4) { width:5.5rem; }
 .market-ai-table td:last-child { white-space:pre-wrap; line-height:1.65; }
 @media (max-width:768px) {
   .market-ai-panel input[type="text"], .market-ai-panel textarea { font-size:16px; }
   .market-ai-prompt-heading { align-items:flex-start; flex-direction:column; }
-  .market-ai-table { min-width:34rem; }
+  .market-ai-table { min-width:46rem; }
   .market-ai-panel pre { font-size:.75rem; }
   .market-ai-panel .market-ai-research-prompt pre { font-size:.62rem; }
 }
