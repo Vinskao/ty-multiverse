@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from '../../src/scripts/market/macroLayout';
+import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 import i18n from '../../src/storages/i18n.json';
 
@@ -73,5 +73,20 @@ describe('macroChartNeedsSeparateAxes', () => {
 
     it('treats a percent-unit level and a percent growth rate as the same axis', () => {
         expect(macroChartNeedsSeparateAxes([{ format: 'sales', unit: 'millions of dollars' }, { format: 'raw', unit: 'percent' }])).toBe(false);
+    });
+});
+
+describe('macroChartTitle', () => {
+    it('names a one-series chart after its series', () => {
+        expect(macroChartTitle(['Nonfarm payrolls'])).toBe('Nonfarm payrolls');
+    });
+
+    it('names a comparison chart after every series it draws, once each', () => {
+        expect(macroChartTitle(['Unemployment rate', 'Taiwan unemployment rate'])).toBe('Unemployment rate vs Taiwan unemployment rate');
+        expect(macroChartTitle(['Fed target · upper', 'Fed target · lower', 'SOFR', 'SOFR'])).toBe('Fed target · upper / Fed target · lower / SOFR');
+    });
+
+    it('ignores blank labels', () => {
+        expect(macroChartTitle(['', ' ', 'ICSA'])).toBe('ICSA');
     });
 });

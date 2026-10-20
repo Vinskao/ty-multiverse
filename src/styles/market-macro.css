@@ -47,6 +47,7 @@
 .macro-comparison-switcher-button[aria-pressed="true"] { border-color:#70b7f0; color:var(--text-primary); background:color-mix(in srgb,#70b7f0 18%,var(--surface-primary,#111827)); }
 .macro-comparison-switcher-button:focus-visible { outline:2px solid #70b7f0; outline-offset:2px; }
 .macro-trend-chart svg { display:block; width:100%; height:auto; overflow:visible; }
+.macro-trend-title { margin:.35rem 0 .2rem; color:var(--gray-100); font-size:.78rem; font-weight:600; line-height:1.35; }
 .macro-trend-empty { margin:.3rem 0 0; color:var(--gray-400); font-size:.65rem; }
 .macro-trend-gridline { stroke:color-mix(in srgb,var(--gray-600) 42%,transparent); stroke-width:1; stroke-dasharray:3 4; }
 .macro-trend-axis { stroke:var(--gray-500); stroke-width:1; }

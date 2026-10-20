@@ -37,3 +37,9 @@ function plottedUnit(series: { format: string; unit: string }) {
 export function macroChartNeedsSeparateAxes(series: ReadonlyArray<{ format: string; unit: string }>) {
     return new Set(series.map(plottedUnit)).size > 1;
 }
+
+// Every chart carries a visible title naming what it draws: one series by its name, two as "A vs B", more as a list.
+export function macroChartTitle(labels: readonly string[]): string {
+    const names = [...new Set(labels.map((label) => label.trim()).filter(Boolean))];
+    return names.join(names.length === 2 ? ' vs ' : ' / ');
+}

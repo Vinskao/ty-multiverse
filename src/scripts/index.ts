@@ -16,7 +16,7 @@ import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
-import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes } from './market/macroLayout';
+import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
@@ -1506,6 +1506,9 @@ function buildMacroRelease(event: MacroEvent) {
 function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean } = {}): HTMLElement {
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
+    const heading = document.createElement('h6'); heading.className = 'macro-trend-title';
+    heading.textContent = macroChartTitle([indicatorLabel, ...comparisons.map((comparison) => comparison.label)]);
+    wrap.append(heading);
     const baseSeriesLabel = indicatorLabel;
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
         .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(indicator.history, indicator.code));
