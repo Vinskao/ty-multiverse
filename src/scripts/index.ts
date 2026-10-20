@@ -13,7 +13,7 @@ import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
 import { getMermaidConfig } from './mermaid-theme';
-import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit } from './market/fundamentalsCharts';
+import { FUNDAMENTAL_CHARTS, fundamentalChartLines, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
@@ -675,7 +675,7 @@ function renderFundamentalCharts(metrics: Record<string, any[]>, emptyText: stri
         const lines = fundamentalChartLines(chart, rows);
         const target = document.getElementById(FUNDAMENTAL_CHART_TARGETS[chart.id]);
         if (!target || !lines.length) continue;
-        const title = document.createElement('h6'); title.className = 'market-subheading';
+        const title = document.createElement('h6'); title.className = 'market-subheading market-chart-title';
         title.textContent = marketText(chart.title.en, chart.title.zh);
         const plot = document.createElement('div'); plot.id = `market-fundamentals-chart-${chart.id}`;
         target.append(title, plot);
@@ -702,8 +702,10 @@ function renderRevenueGrowth(target: HTMLElement | null, rows: any[], emptyText:
     target.replaceChildren();
     if (!rows.length) { target.textContent = emptyText; return; }
     const latest = rows[rows.length - 1];
+    const title = document.createElement('h6'); title.className = 'market-subheading market-chart-title';
+    title.textContent = marketText(REVENUE_CHART_TITLE.en, REVENUE_CHART_TITLE.zh);
     const chartId = `${target.id}-plot`; const chart = document.createElement('div'); chart.id = chartId;
-    target.append(chart);
+    target.append(title, chart);
     drawMarketHistoryChart(chartId, metricPoints(rows, ['yoyPercent', 'momPercent']), [
         { label: marketI18n('marketFundamentalsYoY', 'YoY'), color: '#55b8a8', sourceKeys: ['metrics'], field: 'yoyPercent', tooltip: (_, v) => ratioFormat.growth(v) },
         { label: marketI18n('marketFundamentalsMoM', 'MoM'), color: '#7198df', sourceKeys: ['metrics'], field: 'momPercent', tooltip: (_, v) => ratioFormat.growth(v) },

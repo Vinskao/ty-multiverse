@@ -52,3 +52,14 @@ describe('SEC inventory metrics', () => {
         expect(q2.inventoryVsRevenueYoY).toBeCloseTo((420 / 300 - 1) * 100 - (1000 / 400 - 1) * 100, 4);
     });
 });
+
+describe('fundamentals chart titles', () => {
+    it('gives the monthly revenue chart and every statement chart its own bilingual title', async () => {
+        const { REVENUE_CHART_TITLE } = await import('../../src/scripts/market/fundamentalsCharts');
+        for (const title of [REVENUE_CHART_TITLE, ...FUNDAMENTAL_CHARTS.map((chart) => chart.title)]) {
+            expect(title.en.trim()).not.toBe('');
+            expect(title.zh.trim()).not.toBe('');
+        }
+        expect(REVENUE_CHART_TITLE.zh).toContain('月營收');
+    });
+});

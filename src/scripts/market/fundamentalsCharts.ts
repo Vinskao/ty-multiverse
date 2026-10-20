@@ -45,3 +45,6 @@ export const FUNDAMENTAL_CHARTS: readonly FundamentalChart[] = [
 export function fundamentalChartLines(chart: FundamentalChart, rows: ReadonlyArray<Record<string, unknown>>) {
     return chart.lines.filter((item) => rows.some((row) => typeof row[item.key] === 'number' && Number.isFinite(row[item.key] as number)));
 }
+
+// The monthly revenue chart is drawn separately (renderRevenueGrowth) but is titled like the statement charts.
+export const REVENUE_CHART_TITLE = { en: 'Monthly revenue · YoY / MoM', zh: '月營收 · 年增 / 月增' };
