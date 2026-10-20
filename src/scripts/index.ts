@@ -21,6 +21,7 @@ import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
+import { canUploadReports, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -1039,6 +1040,7 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
         const payload = await response.json() as { analysis: MarketAiComment | null; history: MarketAiComment[] };
         if (sequence !== marketAiLoadSequence || form.dataset.key !== key) return;
         renderMarketAiTable('market-ai-current', payload.analysis ? [payload.analysis] : []);
+        void loadReportViewpoints(code, payload.analysis?.content || '');
         renderMarketAiTable('market-ai-history', payload.history.filter((row) => row.revision !== payload.analysis?.revision));
         const targetLabel = document.getElementById('market-ai-target')!;
         targetLabel.textContent = `${code} · ${kind}`;
@@ -1056,6 +1058,45 @@ async function loadMarketAiAnalysis(instrument: DashboardInstrument) {
         if (sequence !== marketAiLoadSequence || form.dataset.key !== key) return;
         save.disabled = true; status.textContent = marketI18n('marketAiLoadError', 'Analysis could not be loaded. Reload before editing.');
     } finally { if (sequence === marketAiLoadSequence) fields.disabled = false; }
+}
+
+async function loadReportViewpoints(code: string, analysis: string) {
+    const section = document.getElementById('market-ai-report-viewpoints');
+    const list = document.getElementById('market-ai-report-viewpoints-list');
+    if (!section || !list) return;
+    list.replaceChildren(); section.hidden = true;
+    type Claim = { report_id: string; title: string; publisher: string; published_at: string | null; page: number; segment: string; codes: string[]; direction: 'tailwind' | 'neutral' | 'headwind'; claim: string };
+    const claimEndpoint = astroApiPath(`/api/market/reports/claims?code=${encodeURIComponent(code)}`);
+    const [response, researchResponse] = await Promise.all([
+        fetch(claimEndpoint, { cache: 'no-store' }).catch(() => null),
+        fetch(astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=research`), { cache: 'no-store' }).catch(() => null),
+    ]);
+    if (!response?.ok) return;
+    const directPayload = await response.json() as { claims: Claim[] };
+    let industryClaims: Claim[] = [];
+    let industrySegment: string | null = null;
+    if (researchResponse?.ok) {
+        const saved = await researchResponse.json() as { analysis?: { content?: string } | null };
+        const research = saved.analysis?.content ? parseResearchRecord(saved.analysis.content) : null;
+        industrySegment = research ? reportSegmentForText(`${research.name} ${research.summary}`) : null;
+        if (industrySegment) {
+            const byIndustry = await fetch(astroApiPath(`/api/market/reports/claims?segment=${encodeURIComponent(industrySegment)}`), { cache: 'no-store' }).catch(() => null);
+            if (byIndustry?.ok) industryClaims = ((await byIndustry.json()) as { claims: Claim[] }).claims ?? [];
+        }
+    }
+    const claims = new Map<string, Claim>();
+    for (const claim of [...(directPayload.claims ?? []), ...industryClaims.filter((item) => reportClaimRelevant(item, code, industrySegment))]) {
+        claims.set(`${claim.report_id}:${claim.page}:${claim.claim}`, claim);
+    }
+    const lean = analysisRating(analysis);
+    for (const claim of claims.values()) {
+        const item = document.createElement('p');
+        item.className = `market-report-claim${reportClaimTone(claim.direction, lean) === 'opposed' ? ' market-report-claim--opposed' : ''}`;
+        const citation = `${claim.publisher} ${claim.published_at || ''}〈${claim.title}〉p.${claim.page}`.trim();
+        item.textContent = `${reportClaimTone(claim.direction, lean) === 'opposed' ? '方向相反｜' : ''}${claim.claim}（${citation}）`;
+        list.append(item);
+    }
+    section.hidden = claims.size === 0;
 }
 
 // Shared macro commentary: one record that every instrument analysis cites instead of restating macro data.
@@ -1961,6 +2002,111 @@ function initMarketCustomEditor() {
         dialog.close(); await fetchMarketDashboard();
     });
     void fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() }).then((response) => { if (response.ok) button.hidden = false; }).catch(() => undefined);
+}
+
+type ReportClaimsPayload = { reports: MarketReport[] };
+
+function renderMarketReports(reports: MarketReport[]) {
+    const list = document.getElementById('market-report-list');
+    if (!list) return;
+    list.replaceChildren();
+    if (!reports.length) {
+        const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = '目前沒有公開研究報告。'; list.append(empty); return;
+    }
+    for (const report of reports) {
+        const card = document.createElement('article'); card.className = 'market-report-card';
+        const title = document.createElement('h5'); title.textContent = report.title; card.append(title);
+        const meta = document.createElement('p');
+        meta.textContent = `${report.publisher || '出版者未填'} · ${report.published_at || '發布日未填'} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
+        card.append(meta);
+        const extractionNote = document.createElement('p'); extractionNote.textContent = '圖表內容未擷取；主張依報告文字敘述整理。'; card.append(extractionNote);
+        if (report.visibility === 'owner') { const privacy = document.createElement('p'); privacy.textContent = '只有你看得到'; card.append(privacy); }
+        if (report.claims?.length) {
+            const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = `報告主張（${report.claims.length}）`;
+            details.append(summary);
+            const groups = new Map<string, MarketReport['claims']>();
+            for (const claim of report.claims) groups.set(claim.segment, [...(groups.get(claim.segment) ?? []), claim]);
+            for (const [segment, claims] of groups) {
+                const groupTitle = document.createElement('h6'); groupTitle.textContent = segment; details.append(groupTitle);
+                for (const claim of claims) {
+                    const item = document.createElement('p'); item.className = 'market-report-claim';
+                    item.textContent = `${claim.direction === 'tailwind' ? '順風' : claim.direction === 'headwind' ? '逆風' : '中性'} · p.${claim.page}｜${claim.claim}`;
+                    details.append(item);
+                }
+            }
+            card.append(details);
+        }
+        if (report.can_download) {
+            const actions = document.createElement('div'); actions.className = 'market-report-actions';
+            const download = document.createElement('button'); download.type = 'button'; download.textContent = '下載原始 PDF';
+            download.addEventListener('click', () => void downloadMarketReport(report.id)); actions.append(download);
+            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '刪除報告';
+            remove.addEventListener('click', () => void deleteMarketReport(report.id)); actions.append(remove); card.append(actions);
+        }
+        list.append(card);
+    }
+}
+
+async function loadMarketReports() {
+    const status = document.getElementById('market-reports-status');
+    const form = document.getElementById('market-report-upload') as HTMLFormElement | null;
+    if (!status || !form) return;
+    const headers = marketAuthHeaders();
+    let owner = false;
+    if (Object.keys(headers).length) {
+        const auth = await fetch(astroApiPath('/api/market/auth-status'), { headers, cache: 'no-store' }).catch(() => null);
+        owner = Boolean(auth?.ok);
+    }
+    form.hidden = !canUploadReports(Object.keys(headers).length > 0, owner);
+    const response = await fetch(astroApiPath('/api/market/reports'), { headers, cache: 'no-store' }).catch(() => null);
+    if (!response?.ok) { status.textContent = '報告列表暫時無法載入。'; return; }
+    const payload = await response.json() as ReportClaimsPayload;
+    renderMarketReports(payload.reports ?? []);
+    status.textContent = `${payload.reports?.length ?? 0} 份報告`;
+}
+
+async function downloadMarketReport(id: string) {
+    const response = await fetch(astroApiPath(`/api/market/reports/${encodeURIComponent(id)}?download=true`), { headers: marketAuthHeaders() }).catch(() => null);
+    if (!response?.ok) { window.alert('PDF 下載失敗，請確認登入身分。'); return; }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const anchor = document.createElement('a'); anchor.href = objectUrl; anchor.download = `${id}.pdf`; anchor.click(); URL.revokeObjectURL(objectUrl);
+}
+
+async function deleteMarketReport(id: string) {
+    if (!window.confirm('確定刪除這份研究報告及其切塊與主張？')) return;
+    const response = await fetch(astroApiPath(`/api/market/reports/${encodeURIComponent(id)}`), { method: 'DELETE', headers: marketAuthHeaders() }).catch(() => null);
+    if (!response?.ok) { window.alert('刪除失敗。'); return; }
+    await loadMarketReports();
+}
+
+function initMarketReports() {
+    const form = document.getElementById('market-report-upload') as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    const fileInput = form.elements.namedItem('file') as HTMLInputElement;
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files?.[0]; const title = form.elements.namedItem('title') as HTMLInputElement;
+        if (file && !title.value) title.value = file.name.replace(/\.pdf$/i, '');
+    });
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const file = fileInput.files?.[0]; const status = document.getElementById('market-report-upload-status');
+        if (!file || !status) return;
+        if (!reportFileAllowed(file.size, file.type, file.name)) { status.textContent = '請選擇 40 MB 以下的 PDF。'; return; }
+        status.textContent = '正在抽取全文並建立向量…';
+        const headers = new Headers(marketAuthHeaders());
+        const data = new FormData(form);
+        if (!String(data.get('published_at') || '').trim()) data.delete('published_at');
+        const response = await fetch(astroApiPath('/api/market/reports'), { method: 'POST', headers, body: data }).catch(() => null);
+        if (!response?.ok) {
+            const error = response ? await response.json().catch(() => ({})) as { detail?: string } : {};
+            status.textContent = error.detail || '上傳失敗，請稍後重試。'; return;
+        }
+        const result = await response.json() as { duplicate: boolean; report: MarketReport | null };
+        status.textContent = result.duplicate ? '這份 PDF 已存在，已載入既有報告。' : reportStatusLabel(result.report?.status ?? 'claims_pending', result.report?.claim_count);
+        form.reset(); await loadMarketReports();
+    });
+    void loadMarketReports();
 }
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
@@ -3177,6 +3323,7 @@ function initIndexPage() {
     initMarketAiAnalysis();
     initMacroCommentary();
     initMarketCustomEditor();
+    initMarketReports();
     void loadMarketAutomation();
     void fetchMarketDashboard();
     void fetchMacroDashboard();

@@ -196,6 +196,24 @@
 	container-type: inline-size;
 }
 
+.market-reports { margin-top: 1rem; padding: 1rem; border: 1px solid var(--gray-800); border-radius: 1rem; background: var(--gray-999_40); }
+.market-reports-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.market-reports-heading h4 { margin: 0; }
+.market-reports-heading p { margin: .35rem 0 0; color: var(--gray-400); font-size: .85rem; }
+.market-report-upload { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin: 1rem 0; padding: 1rem; border-radius: .75rem; background: var(--gray-900_50); }
+.market-report-upload[hidden] { display: none; }
+.market-report-upload label { display: grid; gap: .3rem; color: var(--gray-300); font-size: .82rem; }
+.market-report-upload input, .market-report-upload select { min-width: 0; padding: .5rem; color: inherit; border: 1px solid var(--gray-700); border-radius: .4rem; background: var(--gray-999); }
+.market-report-upload button, .market-report-actions button { padding: .5rem .8rem; color: var(--gray-100); border: 1px solid var(--gray-700); border-radius: .45rem; background: var(--gray-800); cursor: pointer; }
+.market-report-list { display: grid; gap: .65rem; margin-top: .8rem; }
+.market-report-card { padding: .8rem; border: 1px solid var(--gray-800); border-radius: .7rem; }
+.market-report-card h5 { margin: 0; }
+.market-report-card p { margin: .3rem 0; color: var(--gray-400); font-size: .85rem; }
+.market-report-card details { margin-top: .5rem; }
+.market-report-claim { margin: .4rem 0; padding: .55rem; border-left: 3px solid var(--gray-600); background: var(--gray-900_50); }
+.market-report-claim--opposed { border-left-color: #e35d6a; color: #ff9ca4; }
+.market-report-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
+
 .market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; }
 .market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: .75rem; }
 .market-watchlist-heading { padding: 0 .9rem; color: var(--gray-400); font-size: .72rem; text-transform: uppercase; }

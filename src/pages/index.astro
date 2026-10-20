@@ -299,6 +299,9 @@ const skillsCategories = skillsData.categories;
 										</form>
 										<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
 										<h5 data-i18n="home.marketAiSaved">Saved analysis</h5><div id="market-ai-current"></div>
+						<section id="market-ai-report-viewpoints" class="market-ai-report-viewpoints" aria-labelledby="market-ai-report-viewpoints-title" hidden>
+							<h5 id="market-ai-report-viewpoints-title">報告觀點</h5><div id="market-ai-report-viewpoints-list"></div>
+						</section>
 										<details><summary data-i18n="home.marketAiHistory">Previous versions · latest 20</summary><div id="market-ai-history"></div></details>
 										<details><summary data-i18n="home.marketAiApi">API instructions for AI agents</summary><p data-i18n="home.marketAiApiHelp">GET this endpoint first. PUT JSON with model, content and expectedRevision using your signed-in Bearer token. Use revision 0 for the first analysis. On 409 reload and reconcile your draft. Never put a token in the URL.</p><code id="market-ai-endpoint"></code><pre id="market-ai-api-example"></pre></details>
 									</section>
@@ -448,6 +451,18 @@ const skillsCategories = skillsData.categories;
 							<p id="portfolio-history-empty" class="portfolio-history-empty" data-i18n="home.portfolioHistoryLoading">Loading daily history…</p>
 							<svg id="portfolio-history-svg" class="is-hidden" viewBox="0 0 900 280" role="img" aria-label="Daily Taiwan portfolio total asset trend"></svg>
 						</div>
+					</section>
+					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
+						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
+						<form id="market-report-upload" class="market-report-upload" hidden>
+							<label>PDF（最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" required /></label>
+							<label>標題<input name="title" maxlength="300" required /></label>
+							<label>出版者<input name="publisher" maxlength="200" /></label>
+							<label>發布日<input name="published_at" type="date" /></label>
+							<label>可見範圍<select name="visibility"><option value="public">公開</option><option value="owner">只有自己</option></select></label>
+							<button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p>
+						</form>
+						<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
 					</section>
 					</section>
 
