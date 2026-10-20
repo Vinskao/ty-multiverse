@@ -41,7 +41,9 @@
 
     const isDarkMode = document.documentElement.classList.contains("theme-dark");
     const mermaidCfg = getMermaidConfig(isDarkMode);
-    mermaidLib.initialize({ ...mermaidCfg, startOnLoad: true });
+    // Only the serialized queue may render; automatic page-load rendering
+    // can race with it and try to parse SVG markup as diagram source.
+    mermaidLib.initialize({ ...mermaidCfg, startOnLoad: false });
 
     await renderMermaid(mermaidLib);
 
@@ -51,7 +53,7 @@
           if (mutation.type !== "attributes" || mutation.attributeName !== "class") return;
 
           const isDark = document.documentElement.classList.contains("theme-dark");
-          mermaidLib.initialize({ ...getMermaidConfig(isDark), startOnLoad: true });
+          mermaidLib.initialize({ ...getMermaidConfig(isDark), startOnLoad: false });
 
           void renderMermaid(mermaidLib);
         });
@@ -64,6 +66,7 @@
     }
   }
 
+  document.addEventListener('tym:mermaid-refresh', loadMermaid);
   loadMermaid();
   document.addEventListener("astro:page-load", loadMermaid);
 </script>

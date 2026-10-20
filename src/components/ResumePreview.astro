@@ -324,10 +324,9 @@ const { lang = 'en' } = Astro.props;
         target.appendChild(wrapper);
       });
 
-    // Ask mermaid to render the freshly-created pre elements
-    if (window.mermaid && window.mermaid.run) {
-      window.mermaid.run({ querySelector: '.briefing-inline-content .mermaid' });
-    }
+    // Share the loader's queue so the cloned diagrams cannot race with
+    // initial rendering or a theme redraw.
+    document.dispatchEvent(new Event('tym:mermaid-refresh'));
   }
   document.addEventListener('astro:page-load', fillInlineBriefing);
   // Also run with a delay to catch mermaid.init() completing after initial load
