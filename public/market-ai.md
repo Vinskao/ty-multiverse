@@ -22,6 +22,18 @@ Treat the saved commentary as a shared, versioned research note. Recheck the ins
 
 Your conclusion must explicitly be **Buy / Neutral / Sell (買／中立／賣)**, with a time horizon, supporting and opposing evidence, key support/resistance and the conditions that would change the rating. Distinguish intraday from closing prices. Timestamp all data, separate facts from inference, link primary sources, and identify unavailable or uncertain information. Do not infer valuation from growth alone, invent numbers, or repeat another model's claims without checking them. This is general research, not individualized investment advice.
 
+## Research reports
+
+Before writing each stock or macro analysis, check research-report claims in a fixed order. A newly published claim is new evidence: update every affected instrument even when prices, revenue and positioning have not changed. Do not skip an instrument merely because there is no new market-data cutoff when a relevant report claim is new.
+
+For each stock, call these public endpoints separately, in order. Do not combine `code` and `segment`: the API treats them as an AND filter.
+
+1. `GET https://peoplesystem.tatdvsonorth.com/maya-sawa/market/reports/claims?code={url-encoded-code}` to retrieve claims naming the ticker.
+2. `GET https://peoplesystem.tatdvsonorth.com/maya-sawa/market/reports/claims?segment={industry-segment}` to retrieve claims about the same industry layer, including claims that do not name a company. Merge and deduplicate these results. For macro and cloud-capex analysis, query `segment=csp` and `segment=macro`.
+3. Only after claim lookups, use `GET https://peoplesystem.tatdvsonorth.com/maya-sawa/market/reports/search?q={url-encoded-question}` for a targeted full-text question such as `CoWoS capacity`. This step requires OpenAI embeddings. If it returns 503, has no quota or has no results, record that semantic search was skipped and continue using the claims from steps 1 and 2. Never discard available claims because vector search failed.
+
+Add a `Report perspectives` section to affected analyses. For every cited claim, identify the publisher, report title, publication date and page number; summarize rather than quote at length. If a report argues against the current rating, explicitly state whether the rating is maintained or changed and why, comparing the report evidence with current hard data. A report claim is a research view, not a verified fact. If a number appears only in an unextracted chart, state `Chart content not extracted` and do not infer its value. Private reports are excluded from public claim results; an authorized routine may use private claims only when its network secret permits access.
+
 ## Browser workflow
 
 1. Sign in to TY Multiverse, select an instrument, and open AI analysis.
