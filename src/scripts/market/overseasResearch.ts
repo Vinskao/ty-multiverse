@@ -37,13 +37,15 @@ const growth = (now: unknown, base: unknown) => {
     const a = num(now), b = num(base);
     return a !== null && b !== null && b !== 0 ? (a / b - 1) * 100 : null;
 };
+// Diluted EPS when reported; Japanese filers without dilutive shares leave it blank and report basic EPS only.
+const eps = (row?: SecRow) => row ? num(row.epsDiluted) ?? num(row.epsBasic) : null;
 const diff = (now: number | null, base: number | null) => now !== null && base !== null ? now - base : null;
 const ratio = (part: unknown, whole: unknown) => {
     const a = num(part), b = num(whole);
     return a !== null && b !== null && b !== 0 ? a / b * 100 : null;
 };
 
-// SEC companyfacts -> the Taiwan fundamentals metrics shape, so renderMarketFundamentals draws both.
+// SEC companyfacts (and TDnet results in the same shape) -> the Taiwan fundamentals metrics shape, so renderMarketFundamentals draws both.
 // QoQ needs the reported previous quarter: SEC files no single fourth quarter, so Q1 QoQ stays empty, never derived.
 export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
     const quarters = [...(financials?.quarterly || [])].sort((a, b) => a.end.localeCompare(b.end));
@@ -54,7 +56,7 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
         const marginChange = (key: string, base?: SecRow) => diff(margin(key), base ? num(base[key]) : null);
         return {
             period: quarterLabel(row.end), revenueQoQ: growth(row.revenue, previous?.revenue), revenueYoY: growth(row.revenue, yearAgo?.revenue),
-            epsQoQ: growth(row.epsDiluted, previous?.epsDiluted), epsYoY: growth(row.epsDiluted, yearAgo?.epsDiluted),
+            epsQoQ: growth(eps(row), eps(previous)), epsYoY: growth(eps(row), eps(yearAgo)),
             grossMargin: margin('grossMarginPercent'), grossMarginQoQ: marginChange('grossMarginPercent', previous), grossMarginYoY: marginChange('grossMarginPercent', yearAgo),
             operatingMargin: margin('operatingMarginPercent'), operatingMarginQoQ: marginChange('operatingMarginPercent', previous), operatingMarginYoY: marginChange('operatingMarginPercent', yearAgo),
             netMargin: margin('netMarginPercent'), netMarginQoQ: marginChange('netMarginPercent', previous), netMarginYoY: marginChange('netMarginPercent', yearAgo),
@@ -92,7 +94,7 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
 }
 
 const FILINGS_GAP: Record<string, string> = {
-    JP: 'Japan filings (EDINET) need an EDINET API key; not connected yet. 日本財報需 EDINET API key，尚未接入。',
+    JP: 'Japan results come from TDnet 決算短信, collected from 2026-10; this company has no release stored yet. 日本財報來自 TDnet 決算短信（2026-10 起收集），此公司尚未有公布紀錄。',
     KR: 'Korea filings (OpenDART) need an OpenDART API key; not connected yet. 韓國財報需 OpenDART API key，尚未接入。',
 };
 
@@ -103,6 +105,6 @@ export function overseasFundamentalsPayload(research: OverseasResearch) {
     return {
         code: research.code, historyPending: false, errors,
         metrics: financials ? secFundamentalsMetrics(financials) : { monthly: [], quarterly: [], balance: [], cashFlow: [] },
-        source: financials ? `${financials.source || 'SEC EDGAR companyfacts'} · ${financials.company || research.code} · 10-Q / 10-K` : 'Interactive Brokers CPAPI',
+        source: financials ? `${financials.source || 'SEC EDGAR companyfacts'} · ${financials.company || research.code}${research.market === 'US' ? ' · 10-Q / 10-K' : ''}` : 'Interactive Brokers CPAPI',
     };
 }

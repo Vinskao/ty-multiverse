@@ -90,10 +90,28 @@ describe('overseasFundamentalsPayload', () => {
         expect(payload.errors).toEqual([]);
     });
 
-    it('explains that Japan and Korea filings need EDINET / OpenDART instead of showing empty tables silently', () => {
+    it('explains where Japan (TDnet) and Korea (OpenDART) filings come from instead of showing empty tables silently', () => {
         const payload = overseasFundamentalsPayload({ code: '6857', market: 'JP', datasets: { financials: null } } as any);
         expect(payload.metrics.quarterly).toEqual([]);
-        expect(payload.errors.join(' ')).toMatch(/EDINET/);
+        expect(payload.errors.join(' ')).toMatch(/TDnet/);
         expect(overseasFundamentalsPayload({ code: '000660', market: 'KR', datasets: {} } as any).errors.join(' ')).toMatch(/OpenDART/);
+    });
+
+    it('labels Japan TDnet results by their own source, not as SEC 10-Q / 10-K', () => {
+        const financials = { source: 'TDnet 決算短信 (Tokyo Stock Exchange timely disclosure)', quarterly: [
+            { end: '2026-06-30', revenue: 100, operatingIncome: 20, operatingMarginPercent: 20, epsBasic: 5, epsDiluted: null },
+            { end: '2026-09-30', revenue: 160, operatingIncome: 30, operatingMarginPercent: 18.75, epsBasic: null, epsDiluted: null, derivedFromYtd: true },
+        ] };
+        const payload = overseasFundamentalsPayload({ code: '6857', market: 'JP', datasets: { financials: { payload: financials } } } as any);
+        expect(payload.source).toContain('TDnet');
+        expect(payload.source).not.toContain('10-Q');
+        const [first, second] = payload.metrics.quarterly;
+        expect(first.revenueQoQ).toBeNull();
+        expect(second.revenueQoQ).toBeCloseTo(60);
+    });
+
+    it('uses basic EPS when a filer leaves diluted EPS blank, as Japanese companies without dilution do', () => {
+        const rows = [{ end: '2026-03-31', epsBasic: 10, epsDiluted: null }, { end: '2026-06-30', epsBasic: 12, epsDiluted: null }];
+        expect(secFundamentalsMetrics({ quarterly: rows }).quarterly[1].epsQoQ).toBeCloseTo(20);
     });
 });
