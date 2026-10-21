@@ -94,6 +94,7 @@ describe('overseasFundamentalsPayload', () => {
         const payload = overseasFundamentalsPayload({ code: '6857', market: 'JP', datasets: { financials: null } } as any);
         expect(payload.metrics.quarterly).toEqual([]);
         expect(payload.errors.join(' ')).toMatch(/TDnet/);
+        expect(payload.errors.join(' ')).toMatch(/J-Quants/);  // two years of history, not only from 2026-10
         expect(overseasFundamentalsPayload({ code: '000660', market: 'KR', datasets: {} } as any).errors.join(' ')).toMatch(/OpenDART/);
     });
 

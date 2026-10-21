@@ -42,7 +42,7 @@ Read the public endpoint after deployment; verify profile conid/company/exchange
   - 業績予想の修正只取修正後的預測（`CurrentMember`），修正前的預測（`PreviousMember`）丟掉；上下限區間也不存。
   - 值為空（`xsi:nil`）的欄位是自我結束標籤，不能當成一般開關標籤解析，否則會吞掉後面的欄位。
   - 同一期間如果之後有訂正公告，以較晚的為準。
-- **限制**：TDnet 只保留約一個月，歷史從 2026-10 開始累積。Advantest（6857，IFRS，3 月制）和 Lasertec（6524，J-GAAP，6 月制）下一次公布後，網站才會出現數字。
+- **限制**：TDnet 只保留約一個月，所以過去的季度改由 J-Quants 補（見下節）。持股是 Advantest（6857，IFRS，3 月制）和湖北工業 Kohoku Kogyo（6524，J-GAAP，12 月制）。
 - **測試**：`maya-sawa/tests/test_tdnet_financials.py`。fixture 是 2026-10-15 到 10-20 真實下載的 J-GAAP 半期、IFRS 年度、預測修正 XBRL，以及一頁日列表。前端是 `tests/market/overseasResearch.test.ts`。
 
 ## 2026-10-20 韓國財報：OpenDART 定期報告
@@ -57,3 +57,29 @@ Read the public endpoint after deployment; verify profile conid/company/exchange
   - 流動資產與流動負債有申報，前端的流動比率因此有值。
 - **核對**：SK 海力士 2025Q4 推算營收 32.83 兆韓元，和 Yahoo 另外公布的季營收一致。
 - **測試**：`maya-sawa/tests/test_dart_financials.py`。fixture 是 2026-10-20 在正式 pod 內抓的 SK 海力士真實回應（2025Q3、2025 年報、2026Q1、2026 半年報、申報清單），只保留用到的科目，裡面不含 key。
+
+## 2026-10-21 日本歷史財報：J-Quants（JPX 官方）
+
+TDnet 只保留約一個月，新加入的日本持股會沒有歷史。改用 J-Quants，任何新的日本代碼第一次就會補齊兩年，不用逐家抓官網 PDF。
+
+- **Key**：Jenkins Secret text `JQUANTS_API_KEY`（vinskao 資料夾）→ maya-sawa Jenkinsfile 的 `Configure J-Quants Key` 階段建立 k8s secret `jquants-credentials` → pod 環境變數 `JQUANTS_API_KEY`（optional，沒有 key 時收集關閉）。key 放在 `x-api-key` header，不寫進 log、資料庫或回應。
+- **端點**：`GET https://api.jquants.com/v2/fins/summary?code=6857`，回傳 `data` 陣列，有 `pagination_key` 就繼續翻頁。所有欄位都是字串，`""` 代表沒有值。
+- **免費方案限制**：
+  - 只有兩年歷史，而且不含最近 12 週。
+  - 最近 12 週由 TDnet 補。新加入的持股，若最新一季是 1～3 個月前公布的，要等它滿 12 週後才會補進來。
+  - 每分鐘 5 次請求，所以每次請求間隔 13 秒。
+  - 只有決算短信摘要，沒有完整損益表／資產負債表（那是 Premium），所以沒有毛利。
+- **收集**：maya-sawa `services/jquants_financials.py`，背景每 24 小時跑一次，對象是曾經用 IB 收集過 profile 的日本代碼（`market_codes('JP')`）。
+  - 每筆摘要存成 `jquants_release`，period = `DiscNo`，同一筆不會重複處理。只有股利的公告和 REIT 公告存成空的，下次跳過。
+  - 存完後用 `tdnet_financials.rebuild_japan` 把 TDnet 和 J-Quants 合成 `financials`。
+- **數字規則**：
+  - 摘要是年初至今累計，Q1 是三個月。第二季以後的單季用相鄰兩次累計相減，標示 `derivedFromYtd`。
+  - `Eq` 在 J-GAAP 是純資產，含少數股權。自有資本改用 `TA × EqAR` 推算；`Eq` 與推算值差在 0.05% 總資產以內時（IFRS 通常如此）直接用 `Eq`。
+  - 預測取自三組欄位：當年度 `F*`、上半年 `F*2Q`、年度決算時的下年度 `NxF*`（下年度淨利欄位是 `NxFNp`）。業績予想の修正只有預測，沒有實績。
+- **兩個來源合併**（`build_financials`，TDnet、OpenDART 共用）：
+  - 同一期間按指標逐一合併，後面那份留空的指標不會蓋掉前面的值。
+  - 同一份決算短信同時有 TDnet 和 J-Quants 時，TDnet 優先（附件 XBRL 較完整、有毛利）。
+- **核對**：
+  - Advantest 共 9 季（2024Q1～2026Q1）。2025 年度第四季推算營收 = 1,128,610 − 800,537 = 328,073 百萬日圓。
+  - 6524 是湖北工業（Kohoku Kogyo，J-GAAP，12 月制），不是 Lasertec（Lasertec 是 6920）。
+- **測試**：`maya-sawa/tests/test_jquants_financials.py`。fixture 是 2026-10-21 在正式 pod 內抓的 6857、6524 真實回應，不含 key。

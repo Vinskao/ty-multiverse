@@ -95,7 +95,7 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
 }
 
 const FILINGS_GAP: Record<string, string> = {
-    JP: 'Japan results come from TDnet 決算短信, collected from 2026-10; this company has no release stored yet. 日本財報來自 TDnet 決算短信（2026-10 起收集），此公司尚未有公布紀錄。',
+    JP: 'Japan results come from J-Quants (two years, ending 12 weeks back) and TDnet 決算短信 (recent releases); nothing is stored for this company yet. 日本財報來自 J-Quants（兩年歷史，止於 12 週前）與 TDnet 決算短信（近期公布），此公司尚未有資料。',
     KR: 'Korea results come from OpenDART periodic reports; none stored for this company yet. 韓國財報來自 OpenDART 定期報告，此公司尚未有保存紀錄。',
 };
 
