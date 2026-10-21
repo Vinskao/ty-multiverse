@@ -74,6 +74,7 @@ TDnet 只保留約一個月，新加入的日本持股會沒有歷史。改用 J
   - 存完後用 `tdnet_financials.rebuild_japan` 把 TDnet 和 J-Quants 合成 `financials`。
 - **數字規則**：
   - 摘要是年初至今累計，Q1 是三個月。第二季以後的單季用相鄰兩次累計相減，標示 `derivedFromYtd`。
+  - 負債 = 總資產 `TA` − 純資產 `Eq`，所以負債比有歷史。J-GAAP 下是精確值；IFRS 的 `Eq` 若不含非控制權益，這部分會算進負債（Advantest 的差距很小）。
   - `Eq` 在 J-GAAP 是純資產，含少數股權。自有資本改用 `TA × EqAR` 推算；`Eq` 與推算值差在 0.05% 總資產以內時（IFRS 通常如此）直接用 `Eq`。
   - 預測取自三組欄位：當年度 `F*`、上半年 `F*2Q`、年度決算時的下年度 `NxF*`（下年度淨利欄位是 `NxFNp`）。業績予想の修正只有預測，沒有實績。
 - **兩個來源合併**（`build_financials`，TDnet、OpenDART 共用）：
