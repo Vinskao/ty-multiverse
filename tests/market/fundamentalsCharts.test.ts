@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FUNDAMENTAL_CHARTS, fundamentalChartLines } from '../../src/scripts/market/fundamentalsCharts';
+import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel } from '../../src/scripts/market/fundamentalsCharts';
 import { secFundamentalsMetrics } from '../../src/scripts/market/overseasResearch';
 
 // Nanya (2408) 2026Q2 as computed by maya-sawa from FinMind (tests/test_market_fundamentals.py in maya-sawa).
@@ -27,6 +27,14 @@ describe('fundamentalChartLines', () => {
         expect(fundamentalChartLines(structure, nanya).map((line) => line.key)).toEqual(['debtRatio', 'currentRatio']);
         expect(fundamentalChartLines(structure, [{ period: '2026Q2', debtRatio: 41.9, currentRatio: null }]).map((line) => line.key)).toEqual(['debtRatio']);
         expect(fundamentalChartLines(FUNDAMENTAL_CHARTS.find((chart) => chart.id === 'inventory-days')!, [{ period: '2026Q2', inventoryDays: null }])).toEqual([]);
+    });
+});
+
+describe('fundamental unit labels', () => {
+    it('names the displayed units for chart headings in both languages', () => {
+        expect(fundamentalUnitLabel('percent')).toEqual({ en: '%', zh: '%' });
+        expect(fundamentalUnitLabel('growth')).toEqual({ en: '%', zh: '%' });
+        expect(fundamentalUnitLabel('days')).toEqual({ en: 'days', zh: '天' });
     });
 });
 

@@ -3,6 +3,9 @@
 // secFundamentalsMetrics (US); index.ts only draws them.
 
 export type FundamentalUnit = 'percent' | 'growth' | 'days';
+export function fundamentalUnitLabel(unit: FundamentalUnit) {
+    return unit === 'days' ? { en: 'days', zh: '天' } : { en: '%', zh: '%' };
+}
 export type FundamentalLine = { key: string; label: { en: string; zh: string }; color: string; unit: FundamentalUnit };
 export type FundamentalChart = { id: string; source: 'quarterly' | 'balance' | 'cashFlow'; title: { en: string; zh: string }; note?: { en: string; zh: string }; lines: FundamentalLine[] };
 
