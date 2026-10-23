@@ -228,6 +228,18 @@
 .market-watch-row--unavailable { cursor: default; opacity: .72; }
 .market-instrument-detail { padding: 1rem; border: 1px solid color-mix(in srgb, #d8a43b 65%, transparent); border-top: 0; border-radius: 0 0 .9rem .9rem; background: var(--gray-999_40); }
 .market-chart-section { min-width: 0; }
+/* Keep the instrument picker beside long charts; each column scrolls independently. */
+@media (min-width: 769px) {
+  .market-watchlist, .market-chart-section {
+    position: sticky;
+    top: 5rem;
+    align-self: start;
+    max-height: calc(100dvh - 6rem);
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scroll-padding-block: .75rem;
+  }
+}
 .market-chart-section .market-instrument-detail { border-top: 1px solid color-mix(in srgb, #d8a43b 65%, transparent); border-radius: .9rem; }
 .market-chart-placeholder { min-height: 14rem; display: grid; place-items: center; padding: 2rem; border: 1px dashed var(--gray-700); border-radius: .9rem; color: var(--gray-400); text-align: center; }
 .market-chart-placeholder[hidden] { display: none; }
