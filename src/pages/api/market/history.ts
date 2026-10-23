@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': authResponse.headers.get('Content-Type') || 'application/json' },
       });
     }
-    const response = await fetch(`${MAYA_SAWA_URL}/market/internal/portfolio/history?limit=365`, {
+    const response = await fetch(`${MAYA_SAWA_URL}/market/internal/portfolio/history?limit=1830`, {
       headers: { 'X-Internal-Secret': INTERNAL_SECRET, Accept: 'application/json' },
     });
     return new Response(await response.text(), {

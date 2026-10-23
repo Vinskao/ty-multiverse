@@ -33,8 +33,8 @@ export function macroHistoryLimit(history: MacroHistoryRow[] | undefined, code?:
 
 // What a chart plots for a format: MoM/YoY percent, monthly job change (thousand-person levels × 1000), or the level.
 // Periods without a base observation, or with a zero base (an unpublished month stored as 0), are dropped.
-export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat, code?: string): MacroPoint[] {
-    const limit = macroHistoryLimit(history, code);
+export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat, code?: string, fullHistory = false): MacroPoint[] {
+    const limit = fullHistory ? Infinity : macroHistoryLimit(history, code);
     const valid = (history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
         .filter((item) => item.period && Number.isFinite(item.value));
     const raw = Number.isFinite(limit) ? valid.slice(-limit) : valid;

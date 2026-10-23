@@ -22,6 +22,9 @@ import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } fr
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { canUploadReports, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
+import { renderPriceChart } from './market/priceChart';
+import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
+import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -182,11 +185,16 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
     return element;
 }
 
-function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: HistoryChartField[], options: HistoryChartOptions = {}) {
+export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: HistoryChartField[], options: HistoryChartOptions = {}) {
     const target = document.getElementById(targetId);
     if (!target) return;
-    observeMarketChart(target, () => drawMarketHistoryChart(targetId, points, fields, options));
+    const allPoints = points;
+    const dates = allPoints.map(point => point.date);
+    const redraw = () => drawMarketHistoryChart(targetId, allPoints, fields, options);
+    observeMarketChart(target, redraw);
+    points = visibleRows(allPoints, point => point.date, chartView(targetId, dates).window);
     target.replaceChildren();
+    addChartControls(target, targetId, dates, redraw, marketLocale() === 'zh-TW');
     const bars = Boolean(options.bars);
     const format = options.format ?? ((value: number) => compactNumber(value));
     const series = fields.map((field) => ({ ...field, values: points.map((point) => {
@@ -194,7 +202,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
         return value !== null && field.negative ? -Math.abs(value) : value;
     }) }));
     const values = series.flatMap((item) => item.values.filter((value): value is number => value !== null));
-    if (!points.length || !values.length) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
+    if (!points.length || !values.length) { target.append(document.createTextNode(marketText('No observations in this range. Choose a wider range.', '此範圍沒有觀察值，請選更長的時間範圍。'))); return; }
 
     const width = Math.max(220, Math.min(900, target.clientWidth || 900)); const height = options.height ?? 260;
     const left = 58; const right = width - 14; const top = 12; const bottom = height - 30;
@@ -253,6 +261,7 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     });
     const guide = svgEl('line', { y1: top, y2: bottom }, 'market-history-guide'); guide.style.display = 'none'; svg.append(guide);
     target.append(svg);
+    bindChartZoom(svg, targetId, dates, redraw, { left: left / width, right: right / width });
 
     if (options.legend ?? series.length > 1) {
         const legend = document.createElement('div'); legend.className = 'market-history-legend';
@@ -275,8 +284,16 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     };
     describe(latestIndex, true);
     target.append(readout);
+    let activeIndex = latestIndex;
+    svg.setAttribute('tabindex', '0');
+    svg.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        activeIndex = event.key === 'Home' ? 0 : event.key === 'End' ? points.length - 1 : Math.max(0, Math.min(points.length - 1, activeIndex + (event.key === 'ArrowLeft' ? -1 : 1)));
+        describe(activeIndex, false);
+    });
 
-    svg.addEventListener('pointermove', (event) => {
+    const showHistoryPoint = (event: PointerEvent) => {
         const rect = svg.getBoundingClientRect(); const viewX = (event.clientX - rect.left) / rect.width * width;
         const raw = bars ? Math.floor((viewX - left) / slot) : Math.round((viewX - left) / Math.max(right - left, 1) * (points.length - 1));
         const i = Math.max(0, Math.min(points.length - 1, raw));
@@ -288,7 +305,10 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
             dot.setAttribute('cx', String(x(i))); dot.setAttribute('cy', String(y(value))); dot.style.display = '';
         });
         describe(i, false);
-    });
+        activeIndex = i;
+    };
+    svg.addEventListener('pointermove', showHistoryPoint);
+    svg.addEventListener('pointerdown', showHistoryPoint);
     svg.addEventListener('pointerleave', () => {
         guide.style.display = 'none'; band.style.display = 'none';
         hoverDots.forEach((dot) => { if (dot) dot.style.display = 'none'; });
@@ -296,131 +316,15 @@ function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], 
     });
 }
 
-function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[], sourceKeys: string[], volumeField: string) {
+function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[], sourceKeys: string[], volumeField: string, comparisons?: StatementComparisons, financialsLoading = false) {
     const target = document.getElementById(targetId); if (!target) return;
-    target.replaceChildren();
-    const candles = points.map((point) => {
-        const values = sourceKeys.map((key) => point.sources[key]).find((item) =>
-            ['open', 'high', 'low', 'close'].every((field) => typeof item?.[field] === 'number'));
-        return values ? { date: point.date, open: values.open, high: values.high, low: values.low,
-            close: values.close, volume: values[volumeField] } : null;
+    const redraw = () => drawMarketOHLCVolumeChart(targetId, points, sourceKeys, volumeField, comparisons, financialsLoading);
+    observeMarketChart(target, redraw);
+    const market = selectedMarketInstrument?.market || 'TW';
+    renderPriceChart(targetId, points, sourceKeys, volumeField, {
+        zh: marketLocale() === 'zh-TW', currency: volumeField === 'volume_contracts' ? marketText('points', '點') : ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW' }[market] || market),
+        comparisons, financialsLoading, futures: volumeField === 'volume_contracts',
     });
-    if (!candles.some(Boolean)) { target.textContent = marketI18n('marketHistoryNoRows', 'Historical data is not available yet.'); return; }
-    const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg');
-    observeMarketChart(target, () => drawMarketOHLCVolumeChart(targetId, points, sourceKeys, volumeField));
-    const width = Math.max(220, Math.min(900, target.clientWidth || 900));
-    svg.setAttribute('viewBox', `0 0 ${width} 370`); svg.classList.add('market-history-chart');
-    const valid = candles.filter((item): item is NonNullable<typeof item> => item !== null);
-    let low = Math.min(...valid.map((item) => item.low)); let high = Math.max(...valid.map((item) => item.high));
-    const priceSpan = high - low || Math.max(Math.abs(high) * .05, 1); low -= priceSpan * .04; high += priceSpan * .04;
-    const maxVolume = Math.max(...valid.map((item) => item.volume || 0), 1);
-    const left = 82; const right = width - 12; const priceTop = 16; const priceBottom = 230; const volumeTop = 258; const volumeBottom = 310;
-    const slot = (right - left) / Math.max(candles.length, 1); const candleWidth = Math.max(1.5, Math.min(9, slot * .64));
-    const yPrice = (value: number) => priceTop + ((high - value) / (high - low)) * (priceBottom - priceTop);
-    candles.forEach((item, index) => {
-        if (!item) return;
-        const x = left + slot * (index + .5); const color = item.close >= item.open ? '#e45b5b' : '#46a77f';
-        const wick = document.createElementNS(ns, 'line'); wick.setAttribute('x1', String(x)); wick.setAttribute('x2', String(x));
-        wick.setAttribute('y1', String(yPrice(item.high))); wick.setAttribute('y2', String(yPrice(item.low))); wick.setAttribute('stroke', color); wick.setAttribute('stroke-width', '1.2'); svg.append(wick);
-        const body = document.createElementNS(ns, 'rect'); const yOpen = yPrice(item.open); const yClose = yPrice(item.close);
-        body.setAttribute('x', String(x - candleWidth / 2)); body.setAttribute('y', String(Math.min(yOpen, yClose)));
-        body.setAttribute('width', String(candleWidth)); body.setAttribute('height', String(Math.max(1, Math.abs(yOpen - yClose))));
-        body.setAttribute('fill', color); svg.append(body);
-        if (typeof item.volume === 'number') {
-            const volume = document.createElementNS(ns, 'rect'); const height = Math.max(1, (item.volume / maxVolume) * (volumeBottom - volumeTop));
-            volume.setAttribute('x', String(x - candleWidth / 2)); volume.setAttribute('y', String(volumeBottom - height));
-            volume.setAttribute('width', String(candleWidth)); volume.setAttribute('height', String(height)); volume.setAttribute('fill', color); volume.setAttribute('opacity', '.72'); svg.append(volume);
-        }
-    });
-    for (let tick = 0; tick <= 4; tick++) {
-        const value = high - ((high - low) * tick / 4); const y = yPrice(value);
-        const grid = document.createElementNS(ns, 'line'); grid.setAttribute('x1', String(left)); grid.setAttribute('x2', String(right));
-        grid.setAttribute('y1', String(y)); grid.setAttribute('y2', String(y)); grid.classList.add('market-history-grid'); svg.append(grid);
-        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(left - 6)); label.setAttribute('y', String(y + 3));
-        label.setAttribute('text-anchor', 'end'); label.classList.add('market-history-axis-label');
-        label.textContent = value.toLocaleString(undefined, { maximumFractionDigits: 1 }); svg.append(label);
-    }
-    const volumeLabel = document.createElementNS(ns, 'text'); volumeLabel.setAttribute('x', String(left)); volumeLabel.setAttribute('y', String(volumeTop - 5));
-    volumeLabel.classList.add('market-history-axis-label');
-    volumeLabel.textContent = marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryVolumeContractsAxis' : 'marketHistoryVolumeSharesAxis', volumeField === 'volume_contracts' ? 'Volume (contracts)' : 'Volume (shares)');
-    svg.append(volumeLabel);
-    const separator = document.createElementNS(ns, 'line'); separator.setAttribute('x1', String(left)); separator.setAttribute('x2', String(right));
-    separator.setAttribute('y1', '244'); separator.setAttribute('y2', '244'); separator.classList.add('market-history-zero'); svg.append(separator);
-    const tickCount = Math.min(width < 480 ? 3 : 5, candles.length);
-    for (let index = 0; index < tickCount; index++) {
-        const pointIndex = Math.round(index * (candles.length - 1) / Math.max(tickCount - 1, 1)); const item = candles[pointIndex];
-        if (!item) continue;
-        const label = document.createElementNS(ns, 'text'); label.setAttribute('x', String(left + slot * (pointIndex + .5)));
-        label.setAttribute('y', '330'); label.setAttribute('text-anchor', 'middle'); label.classList.add('market-history-axis-label');
-        label.textContent = item.date.slice(5); svg.append(label);
-    }
-    const dateAxis = document.createElementNS(ns, 'text'); dateAxis.setAttribute('x', String((left + right) / 2)); dateAxis.setAttribute('y', '355');
-    dateAxis.setAttribute('text-anchor', 'middle'); dateAxis.classList.add('market-history-axis-title');
-    dateAxis.textContent = marketI18n('marketHistoryDate', 'Date'); svg.append(dateAxis);
-    const priceAxis = document.createElementNS(ns, 'text'); priceAxis.setAttribute('x', '13'); priceAxis.setAttribute('y', String((priceTop + priceBottom) / 2));
-    priceAxis.setAttribute('text-anchor', 'middle'); priceAxis.setAttribute('transform', `rotate(-90 13 ${(priceTop + priceBottom) / 2})`);
-    priceAxis.classList.add('market-history-axis-title');
-    priceAxis.textContent = marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryPricePointsAxis' : 'marketHistoryPriceTwdAxis', volumeField === 'volume_contracts' ? 'Price (points)' : 'Price (TWD)');
-    svg.append(priceAxis);
-    const selection = document.createElementNS(ns, 'rect'); selection.setAttribute('y', String(priceTop));
-    selection.setAttribute('height', String(volumeBottom - priceTop)); selection.setAttribute('fill', '#d8a43b');
-    selection.setAttribute('opacity', '.16'); selection.setAttribute('pointer-events', 'none'); selection.hidden = true; svg.append(selection);
-    const readout = document.createElement('div'); readout.className = 'market-chart-readout';
-    readout.setAttribute('aria-live', 'polite');
-    readout.textContent = marketI18n('marketHistoryChartGuide', 'Move over a candle for daily OHLC. Click to pin a date; drag to compare closing prices.');
-    const nearestValidIndex = (index: number) => {
-        let best = -1; let distance = Infinity;
-        candles.forEach((item, candidate) => { if (item && Math.abs(candidate - index) < distance) { best = candidate; distance = Math.abs(candidate - index); } });
-        return best;
-    };
-    const indexAt = (clientX: number) => {
-        const rect = svg.getBoundingClientRect(); const viewX = ((clientX - rect.left) / rect.width) * width;
-        return nearestValidIndex(Math.max(0, Math.min(candles.length - 1, Math.floor((viewX - left) / slot))));
-    };
-    const formatPrice = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    const showCandle = (index: number) => {
-        const item = candles[index]; if (!item) return;
-        const volumeUnit = volumeField === 'volume_contracts' ? marketI18n('marketHistoryContracts', 'contracts') : marketI18n('marketHistorySharesUnit', 'shares');
-        readout.textContent = `${item.date} · O ${formatPrice(item.open)} · H ${formatPrice(item.high)} · L ${formatPrice(item.low)} · C ${formatPrice(item.close)} · ${marketI18n('marketHistoryVolumeShort', 'Volume')} ${item.volume?.toLocaleString() ?? '—'} ${volumeUnit}`;
-    };
-    let dragStart = -1; let pinnedIndex = -1; let dragMoved = false; let dragStartX = 0;
-    svg.style.touchAction = 'pan-y';
-    svg.addEventListener('pointerdown', (event) => {
-        if (event.button !== 0 && event.pointerType !== 'touch') return;
-        dragStart = pinnedIndex >= 0 ? pinnedIndex : indexAt(event.clientX); dragStartX = event.clientX; dragMoved = false;
-        if (dragStart >= 0) svg.setPointerCapture(event.pointerId);
-    });
-    svg.addEventListener('pointermove', (event) => {
-        const index = indexAt(event.clientX); if (index < 0) return;
-        if (dragStart >= 0 && svg.hasPointerCapture(event.pointerId)) {
-            const endIndex = index; dragMoved ||= Math.abs(event.clientX - dragStartX) > 4;
-            const x1 = left + slot * (Math.min(dragStart, endIndex) + .5);
-            const x2 = left + slot * (Math.max(dragStart, endIndex) + .5);
-            selection.setAttribute('x', String(x1)); selection.setAttribute('width', String(Math.max(slot, x2 - x1))); selection.hidden = false;
-            const first = candles[dragStart]; const last = candles[endIndex];
-            if (first && last) {
-                const change = first.close ? (last.close - first.close) / first.close * 100 : 0;
-                readout.textContent = `${first.date} ${formatPrice(first.close)} → ${last.date} ${formatPrice(last.close)} · ${marketI18n('marketHistoryRangeChange', 'Close change')} ${Number(change.toFixed(2)) > 0 ? '+' : ''}${change.toFixed(2)}%`;
-            }
-        } else showCandle(index);
-    });
-    const finishRange = (event: PointerEvent) => {
-        if (dragStart < 0) return;
-        dragStart = -1;
-        const endIndex = indexAt(event.clientX);
-        if (endIndex >= 0) pinnedIndex = endIndex;
-        if (!dragMoved) {
-            const index = endIndex;
-            selection.setAttribute('x', String(left + slot * index)); selection.setAttribute('width', String(slot)); selection.hidden = false;
-            showCandle(index);
-        }
-    };
-    svg.addEventListener('pointerup', finishRange);
-    svg.addEventListener('pointercancel', () => { dragStart = -1; selection.hidden = true; });
-    target.append(svg);
-    const legend = document.createElement('div'); legend.className = 'market-history-legend';
-    legend.textContent = `${marketI18n('marketHistoryCandles', 'Daily OHLC')} · ${marketI18n(volumeField === 'volume_contracts' ? 'marketHistoryVolumeContractsAxis' : 'marketHistoryVolumeSharesAxis', volumeField === 'volume_contracts' ? 'Volume (contracts)' : 'Volume (shares)')}`;
-    target.append(legend, readout);
 }
 
 let marketHistoryRetryTimer: number | null = null;
@@ -448,12 +352,14 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
             return;
         }
         const view = selectedTab === 'ownership' && historyProductType === 'stock' ? 'ownership' : 'daily';
-        const cacheKey = `${historyCode.toUpperCase()}:${view}`;
+        const cacheKey = `${historyCode.toUpperCase()}:${view}:5y`;
         const cached = marketHistoryCache.get(cacheKey);
         let payload = cached && Date.now() - cached.fetchedAt < MARKET_HISTORY_CACHE_TTL_MS
             ? cached.payload : undefined;
         if (!payload) {
-            const query = view === 'ownership' ? '?view=ownership' : '';
+            const historyEnd = new Date();
+            const historyStart = new Date(historyEnd); historyStart.setUTCFullYear(historyStart.getUTCFullYear() - 5);
+            const query = `?start=${historyStart.toISOString().slice(0, 10)}&end=${historyEnd.toISOString().slice(0, 10)}&view=${view}`;
             const response = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(historyCode)}${query}`));
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             payload = await response.json() as MarketHistoryPayload;
@@ -478,6 +384,18 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         if (view === 'ownership') { renderOwnershipHistory(points); return; }
         drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources,
             historyProductType === 'futures' ? 'volume_contracts' : 'volume_shares');
+        if (historyProductType === 'stock' && selectedTab === 'price') {
+            const stored = readStoredFundamentals(historyCode);
+            const paint = (metrics?: Record<string, any[]>, loading = false) => {
+                if (selectedMarketInstrument !== instrument) return;
+                drawMarketOHLCVolumeChart('market-history-price-chart', points, priceSources, 'volume_shares', statementComparisons(metrics), loading);
+            };
+            paint(stored?.payload.metrics, !stored);
+            void fetch(astroApiPath(`/api/market/dashboard/fundamentals/${encodeURIComponent(historyCode)}`))
+                .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
+                .then(fundamentals => { storeFundamentals(historyCode, fundamentals); paint(fundamentals.metrics); })
+                .catch(() => paint(stored?.payload.metrics));
+        }
         // Standing participant positions (e.g. 外資淨空單) exist for index futures only.
         const openInterest = document.getElementById('market-history-open-interest');
         if (openInterest) openInterest.hidden = historyProductType !== 'futures';
@@ -577,6 +495,12 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
         return;
     }
     const points = overseasHistoryPoints(payload.daily);
+    const currency = { US: 'USD', JP: 'JPY', KR: 'KRW' }[instrument.market || ''] || '';
+    const peByDate = new Map(overseasPePoints(payload.daily ?? [], payload.datasets?.financials?.payload, currency).map(point => [point.date, point.value]));
+    for (const point of points) {
+        const pe = peByDate.get(point.date);
+        if (pe !== undefined) point.sources['financials:trailing-pe'] = { pe_ratio: pe };
+    }
     const profile = payload.datasets?.profile?.payload || {};
     // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
     const brokerDown = payload.coverage?.history_raw?.status && payload.coverage.history_raw.status !== 'ok';
@@ -590,7 +514,7 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
         status.textContent = parts.join(' · ');
     }
     const chartId = 'market-history-price-chart';
-    drawMarketOHLCVolumeChart(chartId, points, [OVERSEAS_PRICE_SOURCE], 'volume_shares');
+    drawMarketOHLCVolumeChart(chartId, points, [OVERSEAS_PRICE_SOURCE], 'volume_shares', statementComparisons(overseasFundamentalsPayload(payload).metrics, instrument.market));
 }
 
 async function loadMarketFundamentals(code: string, productType: string, retries = 4) {
@@ -1506,7 +1430,7 @@ function buildMacroRelease(event: MacroEvent) {
 
 // separateAxes: series in different units (e.g. USD/TWD, JPY/USD, dollar index) share the date axis but each of the
 // first three gets its own y-axis (left, right, outer right) drawn in that series' color.
-function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean } = {}): HTMLElement {
+export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean } = {}): HTMLElement {
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
     const heading = document.createElement('h6'); heading.className = 'macro-trend-title';
@@ -1514,20 +1438,29 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
     wrap.append(heading);
     const baseSeriesLabel = indicatorLabel;
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-        .filter((item) => Number.isFinite(item.value)).slice(-macroHistoryLimit(indicator.history, indicator.code));
-    const points = macroSeriesPoints(indicator.history, format, indicator.code);
-    const comparisonLines = comparisons.map((comparison) => ({ label: comparison.label, code: comparison.indicator.code,
-        values: macroSeriesPoints(comparison.indicator.history, comparison.format, comparison.indicator.code),
+        .filter((item) => Number.isFinite(item.value));
+    const allPoints = macroSeriesPoints(indicator.history, format, indicator.code, true);
+    const allComparisonLines = comparisons.map((comparison) => ({ label: comparison.label, code: comparison.indicator.code,
+        values: macroSeriesPoints(comparison.indicator.history, comparison.format, comparison.indicator.code, true),
         format: comparison.format, unit: comparison.indicator.unit }));
-    const retailYear = format === 'sales' ? raw.flatMap((item) => {
+    const allRetailYear = format === 'sales' ? raw.flatMap((item) => {
         const previous = raw.find((candidate) => candidate.period === shiftMacroPeriod(item.period, -12));
         return previous && previous.value !== 0 ? [{ period: item.period, value: (item.value / previous.value - 1) * 100 }] : [];
     }) : [];
     const expectationIndicator = comparisons.find((item) => item.indicator.code === 'CUUR0000SA0')?.indicator || indicator;
-    const expected = (expectationIndicator.expectationHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+    const allExpected = (expectationIndicator.expectationHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
         .filter((item) => Number.isFinite(item.value));
-    const consensus = (expectationIndicator.consensusHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
+    const allConsensus = (expectationIndicator.consensusHistory || []).map((item) => ({ period: item.period, value: Number(item.value) }))
         .filter((item) => Number.isFinite(item.value));
+    const chartKey = `macro:${indicator.code}:${format}:${comparisons.map(item => item.indicator.code).join(',')}`;
+    const dates = [...allPoints, ...allComparisonLines.flatMap(line => line.values), ...allRetailYear, ...allExpected, ...allConsensus].map(point => point.period);
+    const window = chartView(chartKey, dates).window;
+    const inView = <T extends { period: string }>(rows: T[]) => visibleRows(rows, point => point.period, window);
+    const points = inView(allPoints);
+    const comparisonLines = allComparisonLines.map(line => ({ ...line, values: inView(line.values) }));
+    const retailYear = inView(allRetailYear), expected = inView(allExpected), consensus = inView(allConsensus);
+    const redraw = () => wrap.replaceWith(buildMacroTrendChart(indicator, format, indicatorLabel, comparisons, options));
+    addChartControls(wrap, chartKey, dates, redraw, marketLocale() === 'zh-TW');
     const periods = [...new Set([...points.map((point) => point.period), ...comparisonLines.flatMap((line) => line.values.map((point) => point.period)), ...retailYear.map((point) => point.period), ...expected.map((point) => point.period), ...consensus.map((point) => point.period)])].sort();
     const periodIndex = new Map(periods.map((period, index) => [period, index]));
     const unitLabel = format === 'jobs' ? marketText('Monthly change (jobs)', '月增人數')
@@ -1539,7 +1472,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
                     : marketText('Rate (%)', '百分比');
     const displayUnit = format === 'raw' ? (indicator.code === 'TW_EXPORTS' || indicator.code === 'TW_IMPORTS' ? 'NT$ billion' : indicator.unit) : unitLabel;
     const allValues = [...points, ...comparisonLines.flatMap((line) => line.values), ...retailYear, ...expected, ...consensus];
-    if (allValues.length < 2) {
+    if (!allValues.length) {
         const empty = document.createElement('p'); empty.className = 'macro-trend-empty';
         empty.textContent = format === 'yoy'
             ? marketText('YoY trend needs at least 13 saved monthly observations.', '年增率趨勢至少需要 13 個月的已保存資料。')
@@ -1679,6 +1612,7 @@ function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricForm
         add('text', { x: String(x(periods[index])), y: String(height - 16), 'text-anchor': index === 0 ? 'start' : index === periods.length - 1 ? 'end' : 'middle', class: 'macro-trend-axis-label' }, macroPeriodLabel(periods[index], indicator.frequency));
     });
     add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
+    bindChartZoom(svg, chartKey, dates, redraw, { left: left / width, right: (width - right) / width });
     wrap.append(svg, readout);
     const legendItems: Array<{ label: string; tone: MacroSeriesTone }> = series.map((item) => ({ label: item.label, tone: item.tone }));
     if (legendItems.length > 1) {
@@ -2117,11 +2051,19 @@ function initMarketReports() {
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
 
-function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
+export function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
     const svg = document.getElementById('portfolio-history-svg') as SVGSVGElement | null;
     const empty = document.getElementById('portfolio-history-empty');
     const status = document.getElementById('portfolio-history-status');
     if (!svg || !empty || !status) return;
+    const allPoints = points;
+    const dates = allPoints.map(point => point.date);
+    const redraw = () => renderPortfolioHistory(allPoints);
+    points = visibleRows(allPoints, point => point.date, chartView('portfolio-history', dates).window);
+    svg.parentElement?.querySelector('.market-chart-controls')?.remove();
+    svg.parentElement?.querySelector('.market-chart-readout')?.remove();
+    if (svg.parentElement) addChartControls(svg.parentElement, 'portfolio-history', dates, redraw, marketLocale() === 'zh-TW');
+    svg.onwheel = null;
     svg.replaceChildren();
 
     if (points.length === 0) {
@@ -2141,6 +2083,7 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
         Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
         return node;
     };
+    bindChartZoom(svg, 'portfolio-history', dates, redraw);
     const width = 900;
     const height = 280;
     const pad = { top: 20, right: 28, bottom: 42, left: 92 };
@@ -2154,7 +2097,27 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
         ? (pad.left + width - pad.right) / 2
         : pad.left + (index / (points.length - 1)) * (width - pad.left - pad.right);
     const y = (value: number) => pad.top + ((high - value) / (high - low)) * (height - pad.top - pad.bottom);
-    const format = (value: number) => `NT$ ${Math.round(value).toLocaleString()}`;
+    const format = (value: number) => `NT$ ${formatNumber(value, 'count', { locale: marketLocale() })}`;
+    const readout = document.createElement('div'); readout.className = 'market-chart-readout';
+    readout.setAttribute('aria-live', 'polite');
+    svg.parentElement?.append(readout);
+    let active = points.length - 1;
+    const show = (index: number) => { active = index; readout.textContent = `${points[index].date} · ${marketText('Total assets', '總資產')} ${format(points[index].totalAssets)}`; };
+    show(active);
+    svg.setAttribute('tabindex', '0');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', marketText('Portfolio total assets (TWD)', '投資組合總資產（新臺幣）'));
+    svg.onpointermove = event => {
+        const rect = svg.getBoundingClientRect();
+        const fraction = ((event.clientX - rect.left) / Math.max(rect.width, 1) * width - pad.left) / (width - pad.left - pad.right);
+        show(Math.max(0, Math.min(points.length - 1, Math.round(fraction * (points.length - 1)))));
+    };
+    svg.onpointerdown = svg.onpointermove;
+    svg.onkeydown = event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        show(event.key === 'Home' ? 0 : event.key === 'End' ? points.length - 1 : Math.max(0, Math.min(points.length - 1, active + (event.key === 'ArrowLeft' ? -1 : 1))));
+    };
 
     for (let tick = 0; tick < 4; tick += 1) {
         const value = low + ((high - low) * tick) / 3;
@@ -2173,6 +2136,8 @@ function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
         const title = make('title', {});
         title.textContent = `${date} · ${format(point.totalAssets)}`;
         circle.append(title);
+        circle.addEventListener('focus', () => show(index));
+        circle.addEventListener('click', () => show(index));
         svg.append(circle);
     });
 
