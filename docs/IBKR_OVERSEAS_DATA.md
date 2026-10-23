@@ -70,7 +70,8 @@ TDnet 只保留約一個月，新加入的日本持股會沒有歷史。改用 J
   - 每分鐘 5 次請求，所以每次請求間隔 13 秒。
   - 只有決算短信摘要，沒有完整損益表／資產負債表（那是 Premium），所以沒有毛利。
 - **收集**：maya-sawa `services/jquants_financials.py`，背景每 24 小時跑一次，對象是曾經用 IB 收集過 profile 的日本代碼（`market_codes('JP')`）。
-  - 每筆摘要存成 `jquants_release`，period = `DiscNo`，同一筆不會重複處理。只有股利的公告和 REIT 公告存成空的，下次跳過。
+  - 每筆摘要存成 `jquants_release`，period = `DiscNo`。只有股利的公告和 REIT 公告存成空的。
+  - 2026-10-23 起每次都重新解析抓到的摘要，結果和已存的不同才改寫。原因：負債欄位加上後，舊摘要因為「看過就跳過」一直沒有負債，6857 的財務結構圖因此是空的。
   - 存完後用 `tdnet_financials.rebuild_japan` 把 TDnet 和 J-Quants 合成 `financials`。
 - **數字規則**：
   - 摘要是年初至今累計，Q1 是三個月。第二季以後的單季用相鄰兩次累計相減，標示 `derivedFromYtd`。
@@ -84,3 +85,16 @@ TDnet 只保留約一個月，新加入的日本持股會沒有歷史。改用 J
   - Advantest 共 9 季（2024Q1～2026Q1）。2025 年度第四季推算營收 = 1,128,610 − 800,537 = 328,073 百萬日圓。
   - 6524 是湖北工業（Kohoku Kogyo，J-GAAP，12 月制），不是 Lasertec（Lasertec 是 6920）。
 - **測試**：`maya-sawa/tests/test_jquants_financials.py`。fixture 是 2026-10-21 在正式 pod 內抓的 6857、6524 真實回應，不含 key。
+
+### 日本持股缺哪些圖、從哪裡補（2026-10-23）
+
+| 頁面區塊 | 需要的欄位 | J-Quants 免費摘要 | TDnet 決算短信附件 | EDINET 半期／有報 |
+|---|---|---|---|---|
+| 財務結構・負債比 | 負債、總資產 | 有（TA − Eq） | 有 | 有 |
+| 財務結構・流動比 | 流動資產、流動負債 | 沒有 | 有（`CurrentAssets(IFRS)`、`CurrentLiabilities`／`TotalCurrentLiabilitiesIFRS`） | 有 |
+| 庫存 | 存貨、銷貨成本 | 沒有 | 有（IFRS 是 `InventoriesCAIFRS`） | 有 |
+| 現金流・資本支出 ÷ 營業現金流 | 取得不動產廠房設備 | 沒有 | 有（`PurchaseOfPropertyPlantAndEquipmentInvCF(IFRS)`，原為負數，存成正數） | 有 |
+
+- TDnet 只保留約一個月，所以附件只補「之後新公布」的季度。Advantest 下一次是 10/28。
+- 庫存天數要同一季的存貨和單季銷貨成本；第二季以後的單季成本要用上一季累計相減，而 J-Quants 沒有銷貨成本，所以光靠 TDnet，第一份財報公布後庫存圖還是畫不出來，要累積幾季，或接 EDINET 補歷史。
+- EDINET（金融廳）有完整報表，但需要 API key（要用簡訊驗證註冊，只能由擁有者申請）。
