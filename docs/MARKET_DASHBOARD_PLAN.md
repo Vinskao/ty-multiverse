@@ -619,7 +619,7 @@ TWSE已驗證欄位與端點：
 ```mermaid
 flowchart LR
   H[人工登入 IB Gateway<br/>帳密＋2FA，約每 24 小時一次] --> C[maya-sawa 每 4 分鐘<br/>收集日韓美日線與報價]
-  C --> K{收盤後的資料都到了？<br/>今天還沒觸發？}
+  C --> K{排程時資料沒到（已記錯過）？<br/>現在到齊、今天還沒補跑？}
   W[擁有者開啟網站<br/>POST /market/automation/check] --> K
   K -- 是 --> F[以 API 觸發 Routine<br/>每檔市場每個交易日一次]
   S[固定排程<br/>21:15／07:30] --> R
@@ -630,7 +630,7 @@ flowchart LR
 | 環節 | 一般叫法 | 本站實作 |
 |---|---|---|
 | 固定時間執行 | 排程觸發（cron trigger） | 台股收盤後：週一至週五 21:15（融資融券約 20:45 公布，2026-10-19 實測）；美股與總經：週二至週六 07:30 |
-| 資料到了就執行 | 事件驅動觸發（event-driven / webhook 式） | `services/market_automation.py`：在台北時間收盤後（台日韓 14:30、美股 05:30），所有海外持股的日線都收集完才觸發 |
+| 資料到了就補跑 | 事件驅動觸發（event-driven / webhook 式） | `services/market_automation.py`：2026-10-23 起只「補跑」。固定排程執行時 IB 資料還沒到，就記為錯過；排程會推播叫你執行 `ibkr-gateway\login.ps1` 登入，登入後資料到齊（且距排程時間至少 15 分鐘），maya-sawa 就再觸發一次，每個交易日最多一次。IB 正常的日子不會多跑。 |
 | 雲端執行的 Claude | 雲端代理（cloud agent），Claude Code **Routines** | 兩個 routine，Sonnet 5.5，使用訂閱額度，不另走 API 計費 |
 | 每天登入 IB | 人工介入關卡（human-in-the-loop） | 網站對擁有者顯示「IB 未登入」提醒；IB 沒有無人登入（headless login）可用 |
 | 每天最多一次、失敗會重試 | 冪等觸發與重試 | 觸發紀錄表 `maya_sawa_market_routine_fire`：觸發失敗就釋放紀錄，下次檢查會重試 |
@@ -640,6 +640,6 @@ flowchart LR
 
 **還要手動設定的地方**
 - **觸發 token：** 兩個 routine 各加一個 API trigger，token 存到 Jenkins 的 `MARKET_ROUTINE_TAIWAN_TOKEN`、`MARKET_ROUTINE_US_TOKEN`。沒設之前只回報狀態，不會觸發。
-- **手機登入 IB：** 需要子網域 `ibkr.peoplesystem.tatdvsonorth.com`，因為 Keycloak 已經占用主網域的 `/sso`。在那之前只能用 `kubectl port-forward` 登入。
+- **手機登入 IB：** 需要子網域 `ibkr.peoplesystem.tatdvsonorth.com`，因為 Keycloak 已經占用主網域的 `/sso`。在那之前用電腦執行 maya-sawa 的 `ibkr-gateway\login.ps1`（自動開關隧道）。
 
 **細節文件：** maya-sawa `docs/MARKET_AGENT_KEY.md`。

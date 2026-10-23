@@ -19,7 +19,16 @@ describe('automationNotice', () => {
         expect(notice.lines).toContain('台股收盤後：等 IB 資料');
         expect(notice.lines.join(' ')).not.toContain('美股');  // no session waiting yet
         expect(notice.loginUrl).toBeNull();
-        expect(notice.loginHint).toContain('kubectl port-forward deployment/ibkr-gw 5000:5000');
+        // One-step login script (maya-sawa ibkr-gateway/login.ps1) since 2026-10-23.
+        expect(notice.loginHint).toContain('ibkr-gateway\\login.ps1');
+    });
+
+    it('stays hidden when IB is live and the scheduled run covers the session', () => {
+        // maya-sawa reports "scheduled" when the cron run had fresh bars, so no catch-up is pending.
+        expect(automationNotice({
+            ib: { authenticated: true, lastSeenAt: '2026-10-19T13:20:00+00:00', loginUrl: '' },
+            runs: [{ key: 'taiwan', sessionDate: '2026-10-19', state: 'scheduled' }, { key: 'us', sessionDate: null, state: 'no-session' }],
+        }, 'zh')).toBeNull();
     });
 
     it('links straight to the login page once one is configured', () => {

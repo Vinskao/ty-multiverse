@@ -1,6 +1,7 @@
 // IB session and analysis-routine status for the signed-in owner; covered by tests/market/automationStatus.test.ts.
-// maya-sawa POST /market/automation/check fires a routine once its markets closed and IBKR bars arrived,
-// so the only manual step left is the daily IB login this notice reminds about.
+// maya-sawa POST /market/automation/check re-runs a routine whose scheduled run found stale IBKR bars, once the
+// owner has logged in and the bars arrived ("scheduled" = the cron run covered it), so the only manual step left
+// is the IB login this notice reminds about.
 
 export type AutomationRun = { key: string; sessionDate: string | null; state: string; sessionUrl?: string };
 export type AutomationStatus = { ib: { authenticated: boolean; lastSeenAt: string | null; loginUrl: string }; runs: AutomationRun[] };
@@ -20,7 +21,7 @@ const STATE_TEXT: Record<string, Record<Lang, string>> = {
     'not-configured': { zh: '尚未設定觸發 token', en: 'fire token not set up' },
     error: { zh: '觸發失敗，稍後自動重試', en: 'start failed, will retry' },
 };
-const LOGIN_HINT = 'kubectl port-forward deployment/ibkr-gw 5000:5000 -n default → https://localhost:5000';
+const LOGIN_HINT = 'powershell -ExecutionPolicy Bypass -File ibkr-gateway\\login.ps1 (maya-sawa repo)';
 const https = (url: string | undefined) => (url && /^https:\/\//.test(url) ? url : null);
 
 function taipeiTime(iso: string | null) {
