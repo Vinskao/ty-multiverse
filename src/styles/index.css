@@ -238,9 +238,9 @@
   .market-chart-controls button, .market-price-comparison select { min-height:44px; }
   .market-price-comparison select { font-size:16px; }
 }
-/* Keep the instrument picker beside long charts; each column scrolls independently. */
+/* Keep the instrument picker beside long charts while the chart stays in page flow. */
 @media (min-width: 769px) {
-  .market-watchlist, .market-chart-section {
+  .market-watchlist {
     position: sticky;
     top: 5rem;
     align-self: start;
