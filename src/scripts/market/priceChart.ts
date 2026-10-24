@@ -44,7 +44,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         const empty = document.createElement('p'); empty.textContent = zh ? '此範圍沒有觀察值，請選更長的時間範圍。' : 'No observations in this range. Choose a wider range.';
         target.append(empty); return;
     }
-    const comparisons = candles.map(candle => metric === 'pe' ? (candle.pe === null ? null : { value: candle.pe, period: candle.date, estimated: false })
+    const comparisons = candles.map(candle => metric === 'pe' ? (candle.pe === null ? null : { value: candle.pe, period: candle.date, estimated: candle.peEstimated })
         : metric === 'none' ? null : comparisonAt(options.comparisons?.[metric] ?? [], candle.date));
     const numbers = comparisons.flatMap(point => point ? [point.value] : []);
     const width = Math.max(280, Math.min(1000, target.clientWidth || 900)), height = 390;

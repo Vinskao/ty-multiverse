@@ -496,10 +496,10 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
     }
     const points = overseasHistoryPoints(payload.daily);
     const currency = { US: 'USD', JP: 'JPY', KR: 'KRW' }[instrument.market || ''] || '';
-    const peByDate = new Map(overseasPePoints(payload.daily ?? [], payload.datasets?.financials?.payload, currency).map(point => [point.date, point.value]));
+    const peByDate = new Map(overseasPePoints(payload.daily ?? [], payload.datasets?.financials?.payload, currency).map(point => [point.date, point]));
     for (const point of points) {
         const pe = peByDate.get(point.date);
-        if (pe !== undefined) point.sources['financials:trailing-pe'] = { pe_ratio: pe };
+        if (pe !== undefined) point.sources['financials:trailing-pe'] = { pe_ratio: pe.value, estimated: pe.estimated };
     }
     const profile = payload.datasets?.profile?.payload || {};
     // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
