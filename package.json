@@ -67,6 +67,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "jsdom": "^27.0.1",
+    "mermaid": "10.6.1",
     "nodemon": "^3.0.2",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"

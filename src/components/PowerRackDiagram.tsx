@@ -110,6 +110,16 @@ export default function PowerRackDiagram({ parts, lang }: Props) {
         </defs>
       </svg>
 
+      <p className="power-rack-hint" data-testid="power-rack-evidence-note">
+        {lang === 'zh'
+          ? '參考架構：本圖為 800V→48V 情境；NVIDIA 公開的 Kyber 方案亦有 800V→12V。PDU 配電與 DC/DC 轉換是不同功能；相關公司清單不代表該架構的客戶驗證或實際供貨。'
+          : 'Reference architecture: this diagram uses 800V→48V; NVIDIA also describes 800V→12V for Kyber. PDU distribution and DC/DC conversion are distinct functions; the company list does not establish customer qualification or shipments for this architecture.'}
+        {' '}
+        <a href="https://developer.nvidia.com/blog/building-the-800-vdc-ecosystem-for-efficient-scalable-ai-factories/" target="_blank" rel="noopener noreferrer">
+          {lang === 'zh' ? 'NVIDIA 架構說明（2025-10-13）' : 'NVIDIA architecture reference (2025-10-13)'}
+        </a>
+      </p>
+
       {activePart && (
         <div
           className="power-rack-tooltip"

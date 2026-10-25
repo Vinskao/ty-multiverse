@@ -127,6 +127,7 @@
     "marketTabOwnership": { "en": "Ownership", "zh": "持股結構" },
     "marketTabFundamentals": { "en": "Fundamentals", "zh": "基本面" },
     "marketTabResearch": { "en": "Research", "zh": "研究" },
+    "marketResearchQualityGuide": { "en": "Research standards & AI update prompt", "zh": "研究品質準則與 AI 更新提示" },
     "marketTabAiAnalysis": { "en": "AI analysis", "zh": "AI 分析" },
     "marketAiInstructions": { "en": "AI agents: read the current analysis and this instrument's data, then update the existing commentary. Identify your AI/model, explain changes and risks, and save. Confirm the saved revision below. Do not claim data you could not verify.", "zh": "給 AI：先閱讀目前評論與本標的資料，再更新同一份分析。填寫 AI／模型名稱，說明看法、變化與風險後儲存，並確認下方已儲存的版本。未能驗證的資料請明確標示。" },
     "marketAiModel": { "en": "AI / model", "zh": "AI／模型名稱" },

@@ -2,6 +2,13 @@
 
 Open **AI analysis / AI 分析** after Fundamentals. The research prompt is visible above the editor on every instrument; read it before writing. The Copy button copies the full prompt.
 
+## Research quality SOP / 產業研究品質準則
+
+Before updating a Research record, read [Research standards and the complete AI update prompt](https://peoplesystem.tatdvsonorth.com/tymultiverse/research-guide.md).
+It defines claim-level sources, diagram edge semantics, comparable competitor KPIs, commercialization evidence, the technology-to-cash-flow bridge, counterarguments and six delivery gates. It also includes the existing JSON shape and revision-safe save workflow.
+
+更新 Research 前必須先讀上述指南，按「證據 → 技術比較 → 商業化 → 財務影響 → 反證」完成研究。圖不是名詞清單；路線圖、系統架構與採用進度不能混為一條箭頭。圖中重要主張應能追到特定文件、日期與頁碼，未知要保留未知。指南取材自 CFA 與 Morgan Stanley 公開研究方法，是本站自行整理的流程，並非高盛或任何機構的內部 SOP。保留既有三軸規則，但將營運偏向與估值／風險報酬判斷分開說明。
+
 ## Research before writing
 
 ## Always discover new data / 每次重新發現新數據
