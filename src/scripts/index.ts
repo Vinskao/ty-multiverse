@@ -26,6 +26,8 @@ import { canUploadReports, reportClaimTone, reportFileAllowed, reportStatusLabel
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
+import { historyCloses } from './market/priceTargets';
+import { renderPriceTargetChart } from './market/priceTargetChart';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
@@ -751,6 +753,7 @@ function selectMarketDetailTab(tabName: string) {
     if (selectedMarketInstrument) {
         if (tabName === 'ai-analysis') void loadMarketAiAnalysis(selectedMarketInstrument);
         else if (tabName === 'research') void loadMarketResearch(selectedMarketInstrument);
+        else if (tabName === 'targets') void loadMarketTargets(selectedMarketInstrument);
         else void loadMarketHistory(selectedMarketInstrument, tabName);
     }
 }
@@ -905,6 +908,45 @@ function renderMarketAiTable(targetId: string, rows: MarketAiComment[]) {
         const content = tr.insertCell(); content.textContent = row.content;
     }
     wrap.append(table); target.append(wrap);
+}
+
+let marketTargetsSequence = 0;
+async function loadMarketTargets(instrument: DashboardInstrument) {
+    const status = document.getElementById('market-targets-status');
+    const chart = document.getElementById('market-targets-chart');
+    if (!status || !chart) return;
+    const sequence = ++marketTargetsSequence;
+    const taiwan = isTaiwanInstrument(instrument);
+    const market = taiwan ? 'TW' : (instrument.market || 'US');
+    const code = taiwan ? (marketUnderlyingCode(instrument) || (instrument.productType === 'stock' ? instrument.code : '')) : instrument.code;
+    chart.replaceChildren();
+    if (!code) { status.textContent = marketText('Index futures have no broker target prices.', '指數期貨沒有券商目標價。'); return; }
+    status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
+    try {
+        const response = await fetch(astroApiPath(`/api/market/dashboard/targets/${encodeURIComponent(code)}?market=${market}`));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        let closes;
+        if (taiwan) {
+            const start = new Date(); start.setUTCFullYear(start.getUTCFullYear() - 2);
+            const history = await fetch(astroApiPath(`/api/market/dashboard/history/${encodeURIComponent(code)}?start=${start.toISOString().slice(0, 10)}`))
+                .then(r => r.ok ? r.json() : null).catch(() => null);
+            closes = historyCloses(history?.points ?? []);
+        } else {
+            closes = historyCloses(undefined, (await fetchOverseasResearch(instrument).catch(() => null))?.daily ?? []);
+        }
+        if (sequence !== marketTargetsSequence || selectedMarketInstrument !== instrument) return;
+        const brokers = new Set((data.actions ?? []).filter((row: any) => row.target).map((row: any) => row.firm)).size;
+        const latest = (data.consensus ?? []).at(-1);
+        status.textContent = [`${code} · ${data.currency}`, marketText(`${brokers} brokers with targets`, `${brokers} 家券商有目標價`),
+            latest ? marketText(`consensus ${latest.date}: ${latest.analysts ?? '?'} analysts`, `共識 ${latest.date}：${latest.analysts ?? '?'} 位分析師`) : '',
+            marketText('Yahoo Finance + AI routine (news)', 'Yahoo Finance＋AI 排程（新聞）')].filter(Boolean).join(' · ');
+        renderPriceTargetChart('market-targets-chart', { actions: data.actions ?? [], consensus: data.consensus ?? [], closes,
+            currency: data.currency, zh: marketLocale() === 'zh-TW' });
+    } catch (error) {
+        console.error('Price targets unavailable:', error);
+        if (sequence === marketTargetsSequence) status.textContent = marketText('Target prices are temporarily unavailable.', '目標價資料暫時無法讀取。');
+    }
 }
 
 async function loadMarketAiAnalysis(instrument: DashboardInstrument) {

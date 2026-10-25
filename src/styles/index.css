@@ -1851,3 +1851,9 @@
 .market-automation p { margin:0; }
 .market-automation code { font-size:.72rem; overflow-wrap:anywhere; color:var(--gray-400, #94a3b8); }
 .market-automation a { color:#d8a43b; font-weight:600; }
+.market-target-legend { display:flex; flex-wrap:wrap; gap:.25rem .9rem; }
+.market-target-table { width:100%; margin-top:.75rem; border-collapse:collapse; font-size:.82rem; font-variant-numeric:tabular-nums; }
+.market-target-table th, .market-target-table td { padding:.35rem .5rem; border-bottom:1px solid color-mix(in srgb, var(--gray-500) 30%, transparent); text-align:left; }
+.market-target-table th { color:var(--gray-300); font-weight:600; }
+.market-target-stale { opacity:.55; }
+@media (max-width: 480px) { .market-target-table { display:block; overflow-x:auto; } }

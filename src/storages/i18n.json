@@ -126,6 +126,8 @@
     "marketTabMargin": { "en": "Margin & lending", "zh": "資券與借券" },
     "marketTabOwnership": { "en": "Ownership", "zh": "持股結構" },
     "marketTabFundamentals": { "en": "Fundamentals", "zh": "基本面" },
+    "marketTabTargets": { "en": "Targets", "zh": "目標價" },
+    "marketTargetsDescription": { "en": "Broker target prices over time: dots are each broker's target, the dashed line and band are the consensus mean and high/low.", "zh": "券商目標價時間軸：圓點是各券商目標價，虛線與色帶是共識均值與最高／最低。" },
     "marketTabResearch": { "en": "Research", "zh": "研究" },
     "marketResearchQualityGuide": { "en": "Research standards & AI update prompt", "zh": "研究品質準則與 AI 更新提示" },
     "marketTabAiAnalysis": { "en": "AI analysis", "zh": "AI 分析" },

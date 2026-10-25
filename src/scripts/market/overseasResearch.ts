@@ -12,7 +12,7 @@ export type OverseasResearch = { code: string; market: string; daily?: Bar[]; da
 
 // Institutional flows, margin/lending and TDCC ownership are TWSE/TPEx/TDCC data with no IBKR equivalent.
 export function overseasDetailTabs() {
-    return ['price', 'fundamentals', 'research', 'ai-analysis'];
+    return ['price', 'fundamentals', 'targets', 'research', 'ai-analysis'];
 }
 
 export function overseasHistoryPoints(daily: Bar[] | undefined): HistoryPoint[] {
