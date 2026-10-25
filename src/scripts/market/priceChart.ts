@@ -111,7 +111,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         readout.append(prices);
         if (metric !== 'none') {
             const entry = document.createElement('span'); entry.style.color = tone;
-            entry.textContent = `${metricLabel} ${value ? metricText(value.value) : '—'}${value && metric !== 'pe' ? ` · ${value.period}${value.estimated ? (zh ? '（依估計公布日對齊）' : ' (estimated publication date)') : ''}` : ''}`;
+            entry.textContent = `${metricLabel} ${value ? metricText(value.value) : '—'}${value && metric !== 'pe' ? ` · ${value.period}${value.estimated ? (zh ? '（依估計公布日對齊）' : ' (estimated publication date)') : ''}` : ''}${value && metric === 'pe' && candle.peAdjusted ? (zh ? '（排除一次性項目）' : ' (excl. one-time items)') : ''}`;
             readout.append(entry);
         }
     };
@@ -144,6 +144,12 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         const note = document.createElement('p'); note.className = 'market-updated';
         note.textContent = options.financialsLoading && metric !== 'pe' ? (zh ? '正在載入財報指標…' : 'Loading financial metrics…')
             : zh ? `${metricLabel}在此期間沒有可用資料。` : `${metricLabel}: no available data in this range.`;
+        target.append(note);
+    }
+    if (metric === 'pe' && candles.some(candle => candle.peAdjusted)) {
+        const note = document.createElement('p'); note.className = 'market-updated';
+        note.textContent = zh ? '本益比已排除一次性項目（債務清償損益、可轉債誘導轉換、減損、處分事業），該期以 21% 稅率重算稅後，其餘期間為財報原值。'
+            : 'P/E excludes one-time items (debt extinguishment, induced conversion, impairments, business disposals), taxed at 21% in that period; other periods are as reported.';
         target.append(note);
     }
     if (comparisons.some(point => point?.estimated)) {

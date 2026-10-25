@@ -5,12 +5,12 @@ import { priceCandles, comparisonAt, statementComparisons, overseasPePoints, PRI
 
 it('pins existing daily OHLC and volume behavior and rejects invalid prices', () => {
   const points = [{ date: '2026-10-22', sources: { 'twse:daily-price': { open: 38.8, high: 39, low: 38.5, close: 38.55, volume_shares: 321 } } }];
-  expect(priceCandles(points, ['twse:daily-price'], 'volume_shares')).toEqual([{ date: '2026-10-22', open: 38.8, high: 39, low: 38.5, close: 38.55, volume: 321, pe: null, peEstimated: false }]);
+  expect(priceCandles(points, ['twse:daily-price'], 'volume_shares')).toEqual([{ date: '2026-10-22', open: 38.8, high: 39, low: 38.5, close: 38.55, volume: 321, pe: null, peEstimated: false, peAdjusted: false }]);
   expect(priceCandles([{ date: 'x', sources: { bad: { open: NaN, high: 1, low: 1, close: 1 } } }], ['bad'], 'volume')).toEqual([]);
 });
 it('calculates overseas trailing PE only from four consecutive quarters already filed in the price currency', () => {
   const rows = ['2025-03-31', '2025-06-30', '2025-09-30', '2025-12-31'].map(end => ({ end, currency: 'USD', epsDiluted: 2, evidence: { epsDiluted: { filed: '2026-02-01' } } }));
-  expect(overseasPePoints([{ date: '2026-01-30', close: 80 }, { date: '2026-02-02', close: 88 }], { quarterly: rows }, 'USD')).toEqual([{ date: '2026-02-02', value: 11, period: '2025-12-31', estimated: false }]);
+  expect(overseasPePoints([{ date: '2026-01-30', close: 80 }, { date: '2026-02-02', close: 88 }], { quarterly: rows }, 'USD')).toEqual([{ date: '2026-02-02', value: 11, period: '2025-12-31', estimated: false, adjusted: false }]);
   expect(overseasPePoints([{ date: '2026-02-02', close: 88 }], { quarterly: rows.slice(1) }, 'USD')).toEqual([]);
   expect(overseasPePoints([{ date: '2026-02-02', close: 88 }], { quarterly: rows }, 'JPY')).toEqual([]);
 });
@@ -45,6 +45,33 @@ it('gives US stocks a PE across a fiscal Q4 that exists only in the 10-K, dating
   // Before 2026-01-29 only comparatives re-filed a year later exist; they align 120 days after period end, marked estimated.
   expect(peOn(points, '2025-10-17')).toMatchObject({ period: '2025-03-31', estimated: true });
 });
+// Lumentum FY2025–FY2026 from SEC companyfacts (USD millions → USD); FY2026 holds a one-time $7.76B extinguishment loss.
+const M = 1e6;
+const lite = (oneTime: boolean) => {
+  const row = (start: string, end: string, publishedAt: string, netIncome: number, epsDiluted: number, adjusted?: number) => ({
+    start, end, publishedAt, currency: 'USD', netIncome: netIncome * M, epsDiluted,
+    ...(oneTime && adjusted !== undefined ? { oneTimeItems: -1, netIncomeExcludingOneTime: adjusted * M } : {}) });
+  return {
+    quarterly: [row('2024-06-30', '2024-09-28', '2024-11-08', -82.4, -1.21), row('2024-09-29', '2024-12-28', '2025-02-06', -60.9, -0.88),
+      row('2024-12-29', '2025-03-29', '2025-05-07', -44.1, -0.64), row('2025-06-29', '2025-09-27', '2025-11-05', 4.2, 0.05, 8.769),
+      row('2025-09-28', '2025-12-27', '2026-02-04', 78.2, 0.89), row('2025-12-28', '2026-03-28', '2026-05-06', 144.2, 1.5)],
+    cumulative: [row('2024-06-30', '2025-03-29', '2025-05-07', -187.4, -2.72), row('2025-06-29', '2026-03-28', '2026-05-06', 226.6, 2.59, 230.206)],
+    annual: [row('2024-06-30', '2025-06-28', '2025-08-14', 25.9, 0.37), row('2025-06-29', '2026-06-27', '2026-08-17', -6935.1, -92.96, 465.863)],
+  };
+};
+it('excludes one-time items from overseas PE and keeps the diluted share count of the last profitable report (LITE)', () => {
+  const [point] = overseasPePoints([{ date: '2026-10-23', close: 756.17 }], lite(true), 'USD');
+  // Q4 FY2026 = adjusted year 465.863M less adjusted nine months 230.206M; FY2026 EPS used 74.6M basic shares (a loss),
+  // so per-share scaling uses Q3's 1.50 / 144.2M (diluted) instead.
+  const ttm = (8.769 + 78.2 + 144.2 + (465.863 - 230.206)) * M * 1.5 / (144.2 * M);
+  expect(point).toMatchObject({ period: '2026-06-27', adjusted: true, estimated: false });
+  expect(point.value).toBeCloseTo(756.17 / ttm, 6);
+});
+it('shows no PE after a newer loss is filed instead of repeating the last profitable period', () => {
+  const bars = [{ date: '2026-06-01', close: 500 }, { date: '2026-10-23', close: 756.17 }];
+  const points = overseasPePoints(bars, lite(false), 'USD');
+  expect(points.map(point => [point.date, point.period, point.adjusted])).toEqual([['2026-06-01', '2026-03-28', false]]);
+});
 it('leaves loss-making trailing years, other currencies and undated rows without a PE', () => {
   const quarters = (eps: number[]) => ['2025-03-31', '2025-06-30', '2025-09-30', '2025-12-31'].map((end, i) => ({ end, currency: 'USD', netIncome: eps[i] * 10, epsDiluted: eps[i], evidence: { epsDiluted: { filed: '2026-02-01' } } }));
   const bar = [{ date: '2026-02-02', close: 88 }];
@@ -55,7 +82,9 @@ it('leaves loss-making trailing years, other currencies and undated rows without
 });
 it('carries an estimated overseas PE date through to the candle', () => {
   const point = { date: '2026-01-02', sources: { price: { open: 1, high: 1, low: 1, close: 1 }, 'financials:trailing-pe': { pe_ratio: 20, estimated: true } } };
-  expect(priceCandles([point], ['price'], 'volume')[0]).toMatchObject({ pe: 20, peEstimated: true });
+  expect(priceCandles([point], ['price'], 'volume')[0]).toMatchObject({ pe: 20, peEstimated: true, peAdjusted: false });
+  const adjusted = { ...point, sources: { ...point.sources, 'financials:trailing-pe': { pe_ratio: 20, adjusted: true } } };
+  expect(priceCandles([adjusted], ['price'], 'volume')[0]).toMatchObject({ peEstimated: false, peAdjusted: true });
 });
 it('uses only same-day official PE, never fills missing PE from a later or previous trading day', () => {
   const point = (date: string, pe?: number) => ({ date, sources: { price: { open: 1, high: 1, low: 1, close: 1 }, 'twse:valuation': pe === undefined ? {} : { pe_ratio: pe } } });

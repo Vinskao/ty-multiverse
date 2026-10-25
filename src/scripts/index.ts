@@ -501,7 +501,7 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
     const peByDate = new Map(overseasPePoints(payload.daily ?? [], payload.datasets?.financials?.payload, currency).map(point => [point.date, point]));
     for (const point of points) {
         const pe = peByDate.get(point.date);
-        if (pe !== undefined) point.sources['financials:trailing-pe'] = { pe_ratio: pe.value, estimated: pe.estimated };
+        if (pe !== undefined) point.sources['financials:trailing-pe'] = { pe_ratio: pe.value, estimated: pe.estimated, adjusted: pe.adjusted === true };
     }
     const profile = payload.datasets?.profile?.payload || {};
     // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
