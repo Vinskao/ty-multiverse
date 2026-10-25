@@ -24,6 +24,7 @@ import { automationNotice, type AutomationStatus } from './market/automationStat
 import { canUploadReports, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
+import { addedNotice } from './market/customSelection';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
@@ -1939,6 +1940,8 @@ function initMarketCustomEditor() {
             saveButton.disabled = false;
             return;
         }
+        const notice = document.getElementById('market-custom-notice');
+        if (notice) notice.textContent = addedNotice(await response.json().catch(() => null), marketLocale() === 'zh-TW');
         dialog.close(); await fetchMarketDashboard();
     });
     void fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() }).then((response) => { if (response.ok) button.hidden = false; }).catch(() => undefined);
