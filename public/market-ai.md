@@ -4,6 +4,10 @@ Open **AI analysis / AI 分析** after Fundamentals. The research prompt is visi
 
 ## Research quality SOP / 產業研究品質準則
 
+General ETF Research shows allocation ratios only (holdings / sectors / regions / assets, each with its own date and source). Do not create company technology maps, three-axis assessments or a lean for a broad ETF. Add theme research only for an explicit industry theme, such as electric vehicles. Follow the ETF schema in the guide below.
+
+一般 ETF 的 Research 只顯示配置比例與來源／日期；有明確產業主題（例如電動車）才加主題研究。不可因大型股 ETF 持有 Tesla 就將整檔基金視為電動車主題。
+
 Before updating a Research record, read [Research standards and the complete AI update prompt](https://peoplesystem.tatdvsonorth.com/tymultiverse/research-guide.md).
 It defines claim-level sources, diagram edge semantics, comparable competitor KPIs, commercialization evidence, the technology-to-cash-flow bridge, counterarguments and six delivery gates. It also includes the existing JSON shape and revision-safe save workflow.
 

@@ -11,7 +11,8 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { parseResearchRecord, researchRecordCode, researchViewTone, researchLeanTone, RESEARCH_DIMENSIONS, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
+import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
+import { renderResearchContent } from './market/researchContent';
 import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
@@ -823,8 +824,6 @@ async function loadMarketResearch(instrument: DashboardInstrument) {
     if (sequence !== marketResearchSequence) return;
     const groups = await groupsRequest;
     if (sequence !== marketResearchSequence) return;
-    if (industry) industry.hidden = !industryDiagrams(groups).includes('power-rack');
-    renderIndustryPeers(target, groups, code);
     const saved = payload.analysis;
     const record = saved ? parseResearchRecord(saved.content) : null;
     if (!saved || !record) {
@@ -832,44 +831,12 @@ async function loadMarketResearch(instrument: DashboardInstrument) {
         return;
     }
     status.textContent = `${code} · ${marketText('revision', '版本')} ${saved.revision} · ${saved.model} · ${new Date(saved.updatedAt).toLocaleString()} · ${marketText('as of', '資料截點')} ${record.asOf}`;
-    const el = (tag: string, className: string, text?: string) => { const node = document.createElement(tag); node.className = className; if (text !== undefined) node.textContent = text; return node; };
-    const head = el('div', 'market-research-head');
-    head.append(el('strong', '', record.name), el('span', `market-research-lean market-research-tone--${researchLeanTone(record.lean)}`, `${marketText('Lean', '偏向')}：${record.lean}`));
-    const grid = el('div', 'market-research-dimensions');
-    for (const dimension of RESEARCH_DIMENSIONS) {
-        const item = record.assessment[dimension.key];
-        const card = el('article', 'market-research-dimension');
-        card.append(el('span', '', marketText(dimension.label.en, dimension.label.zh)),
-            el('strong', `market-research-tone--${researchViewTone(item.view)}`, item.view), el('p', '', item.note));
-        grid.append(card);
+    if (record.kind !== 'etf') {
+        if (industry) industry.hidden = !industryDiagrams(groups).includes('power-rack');
+        renderIndustryPeers(target, groups, code);
     }
-    const diagrams: HTMLElement[] = [];
-    const diagram = (title: string, source: string) => {
-        const section = el('section', 'market-research-diagram');
-        const pre = el('pre', 'mermaid', source);
-        diagrams.push(pre);
-        section.append(el('h5', '', title), pre);
-        return section;
-    };
-    target.append(head, el('p', 'market-research-summary', record.summary), grid,
-        el('p', 'market-research-reason', record.leanReason),
-        diagram(marketText('Supply chain', '供應鏈環節'), record.supplyChain),
-        diagram(marketText('Technology roadmap', '技術環節與量產狀態'), record.technology));
-    if (record.watch.length) {
-        const list = el('ul', 'market-research-watch');
-        record.watch.forEach((item) => list.append(el('li', '', item)));
-        target.append(el('h5', '', marketText('Watch next', '接下來觀察')), list);
-    }
-    if (record.sources.length) {
-        const links = el('p', 'market-updated');
-        record.sources.forEach((source, index) => {
-            const link = document.createElement('a'); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = source.label;
-            links.append(...(index ? [document.createTextNode(' · '), link] : [link]));
-        });
-        target.append(links);
-    }
-    if (record.basis) target.append(el('p', 'market-updated', record.basis));
-    await renderResearchDiagrams(diagrams);
+    const diagrams = renderResearchContent(target, record, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    if (diagrams.length) await renderResearchDiagrams(diagrams);
 }
 
 interface MarketAiComment { code: string; productType: string; model: string; content: string; revision: number; updatedAt: string }

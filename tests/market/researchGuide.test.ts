@@ -31,3 +31,12 @@ it('preserves evidence, counterarguments and optimistic-concurrency instructions
   expect(guide).toContain('409');
   expect(guide).toContain('不是高盛');
 });
+
+it('gives general ETFs an allocation-only exception with an explicit theme opt-in', () => {
+  expect(guide).toContain('ETF 分支優先');
+  expect(guide).toContain('kind: "etf"');
+  expect(guide).toContain('themeResearch');
+  expect(guide).toContain('部分披露不補成 100%');
+  expect(page).toContain('一般 ETF 只顯示');
+  expect(aiGuide).toContain('一般 ETF');
+});

@@ -21,7 +21,14 @@ describe('reviewed research content in the actual frontend parser', () => {
   it.each(records)('parses and accepts both diagrams for %s', async (_name, json) => {
     const record = parseResearchRecord(json);
     expect(record).not.toBeNull();
-    for (const graph of [record!.supplyChain, record!.technology]) {
+    // General ETFs intentionally have allocation tables and no company diagrams.
+    const analysis = record!.kind === 'etf' ? record!.themeResearch : record!;
+    if (!analysis) {
+      expect(record!.kind).toBe('etf');
+      expect((record as any).allocations.length).toBeGreaterThan(0);
+      return;
+    }
+    for (const graph of [analysis.supplyChain, analysis.technology]) {
       expect(await mermaid.parse(graph)).toBeTruthy();
     }
   });

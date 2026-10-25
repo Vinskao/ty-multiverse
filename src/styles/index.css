@@ -1810,6 +1810,12 @@
 .market-research-summary, .market-research-reason { font-size:.85rem; line-height:1.65; overflow-wrap:anywhere; }
 .market-research-reason { color:var(--gray-300, #cbd5e1); }
 .market-research-dimensions { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.6rem; margin:.75rem 0; }
+.market-research-allocation { margin:1rem 0; min-width:0; overflow-x:auto; }
+.market-research-allocation table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.market-research-allocation caption { text-align:left; font-size:.75rem; }
+.market-research-allocation th, .market-research-allocation td { padding:.4rem; border-bottom:1px solid rgba(148,163,184,.3); }
+.market-research-allocation th { text-align:left; font-weight:500; overflow-wrap:anywhere; }
+.market-research-allocation td:last-child, .market-research-allocation thead th:last-child { text-align:right; white-space:nowrap; }
 .market-research-dimension { padding:.6rem .75rem; border:1px solid rgba(148,163,184,.3); border-radius:8px; min-width:0; }
 .market-research-dimension span { display:block; font-size:.75rem; color:var(--gray-400, #94a3b8); }
 .market-research-dimension strong { display:block; font-size:1.05rem; margin:.15rem 0; }
