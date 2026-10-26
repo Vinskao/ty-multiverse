@@ -1,17 +1,8 @@
 ---
 import { Icon } from './Icon';
-import { execSync } from 'node:child_process';
+import { buildRevision } from '../scripts/buildRevision';
 const currentYear = new Date().getFullYear();
-let revision = import.meta.env.PUBLIC_BUILD_REVISION || 'unknown';
-
-try {
-	if (revision === 'unknown') revision = execSync('git rev-parse --short HEAD', {
-		cwd: new URL('../..', import.meta.url),
-		encoding: 'utf-8',
-	}).trim();
-} catch (error) {
-	// Production source archives do not contain Git metadata.
-}
+const revision = buildRevision(import.meta.env.PUBLIC_BUILD_REVISION);
 ---
 
 <footer>
@@ -31,5 +22,5 @@ try {
 			<span>GitHub</span>
 		</a>
 	</div>
-	<div class="version">revision {revision}</div>
+	{revision && <div class="version"><span data-i18n="home.buildVersion">版本</span> {revision}</div>}
 </footer>

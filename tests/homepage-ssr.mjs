@@ -23,5 +23,10 @@ test('built homepage renders agent instructions as text with HTTP 200', async ()
     const html = await response.text();
     assert.ok(html.includes('market-ai-live-context'));
     assert.ok(html.includes('/overseas/{code}?market='));
+    assert.ok(html.includes('maintenance-team-title'), 'homepage includes the product maintenance background');
+    assert.ok(!html.includes('revision unknown'), 'missing build metadata must not leak a placeholder');
+    if (/^[a-f0-9]{7,40}$/i.test(process.env.PUBLIC_BUILD_REVISION || '')) {
+      assert.ok(html.includes(process.env.PUBLIC_BUILD_REVISION.slice(0, 8)), 'Docker passes the Jenkins revision into the rendered footer');
+    }
   } finally { server.kill(); }
 });

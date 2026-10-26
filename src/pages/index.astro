@@ -1,7 +1,5 @@
 ---
 import { getCollection } from 'astro:content';
-import algorithmsData from '../storages/algorithmsUsed.json';
-import skillsData from '../storages/skills.json';
 
 // Layout import — provides basic page elements: <head>, <nav>, <footer> etc.
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -9,18 +7,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 // Component Imports
 import CallToAction from '../components/CallToAction.astro';
 import Grid from '../components/Grid.astro';
-import Hero from '../components/Hero.astro';
 import { Icon } from '../components/Icon';
-import Pill from '../components/Pill.astro';
 import PortfolioPreview from '../components/PortfolioPreview.astro';
-import SkillsBubbleChart from '../components/SkillsBubbleChart';
 import AiTokenUsageDashboard from '../components/AiTokenUsageDashboard';
 import ResearchZone from '../components/ResearchZone';
 import companyProductMapping from '../storages/companyProductMapping.json';
 
 // Page section components
-import ContactCTA from '../components/ContactCTA.astro';
-import Skills from '../components/Skills.astro';
+import MaintainerExperience from '../components/MaintainerExperience.astro';
 import indexCssUrl from '../styles/index.css?url';
 import MarketBrief from '../components/MarketBrief.astro';
 import { getMarketBrief } from '../services/server/marketBrief';
@@ -28,40 +22,6 @@ import { getMarketBrief } from '../services/server/marketBrief';
 // Server-rendered so AI agents that read raw HTML (no JS) still see the holdings' chip summary.
 const marketBrief = await getMarketBrief();
 
-// 準備 Bubble Chart 資料 - 從 skillsData 計算每個類別的總分
-const shadeScores: { [key: string]: number } = {
-	shade1: 5,
-	shade2: 4,
-	shade3: 3,
-	shade4: 2,
-	shade5: 1,
-};
-
-interface BubbleData {
-	id: string;
-	name: string;
-	value: number;
-	category: string;
-}
-
-const bubbleChartData: BubbleData[] = skillsData.categories.map((category: any) => {
-	// Flatten skills from subcategories if they exist, otherwise use direct skills
-	const allSkills = category.subcategories 
-		? category.subcategories.flatMap((sub: any) => sub.skills)
-		: category.skills || [];
-	
-	// Calculate total score for the category
-	const totalScore = allSkills.reduce((sum: number, skill: any) => {
-		return sum + (shadeScores[skill.level] || 0);
-	}, 0);
-
-	return {
-		id: category.name,
-		name: category.name,
-		value: totalScore,
-		category: category.name,
-	};
-});
 // Content Fetching: List four most recent work projects
 const projects = (await getCollection('work'))
 	.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
@@ -79,13 +39,16 @@ try {
 // 檢查是否需要顯示登入提示
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
-const algorithmsUsed = algorithmsData.algorithms;
-const skillsCategories = skillsData.categories;
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
 ---
-<BaseLayout>
+<BaseLayout
+	title="免寫程式的量化研究與投資決策圖表｜TY 市場研究室"
+	description="TY 市場研究室整合總經、台股籌碼、財報與研究觀點，讓不熟悉程式開發的投資人，把自己的判斷記成資料，用圖表比較市場訊號與決策條件。服務預計按使用量計費，試用與需求請以 email 聯繫。"
+	canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"
+	lang="zh-Hant"
+>
 	<Fragment slot="head">
 		<link rel="stylesheet" href={indexCssUrl} />
 		<link rel="alternate" type="text/markdown" href="/tymultiverse/brief.md" title="持股籌碼摘要" />
@@ -111,16 +74,32 @@ const skillsCategories = skillsData.categories;
 			});
 		</script>
 	}
-	<div class="stack gap-20 lg:gap-48">
+	<div class="home-page stack gap-20 lg:gap-48">
 
 		<div class="wrapper stack gap-20 lg:gap-50">
 
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
 					<div class="hero-header">
-						<h1 data-i18n="home.heroTitle">People System</h1>
-						<p data-i18n="home.heroTagline">Java Backend Engineer | Enterprise Systems | Security Integration | AI/RAG Applications</p>
+						<p class="home-product-brand" data-i18n="home.productBrand">TY 市場研究室 · TY Multiverse</p>
+						<h1 class="home-product-title" data-i18n="home.heroTitle">免寫程式，建立自己的市場判斷</h1>
+						<p data-i18n="home.heroTagline">彙整市場資料與他人觀點，把自己的判斷記成資料，再用圖表做決策。</p>
+						<p class="home-product-audience" data-i18n="home.productAudience">給想開始量化研究、卻不熟悉程式開發的人，也給想用圖像整理投資思路的一般投資人。</p>
+						<div class="home-product-actions">
+							<a class="home-product-contact" href="mailto:tianyikao@gmail.com" data-i18n="home.productContact">Email 洽詢試用與需求</a>
+							<a href="#market-overview" data-i18n="home.productExplore">先看市場資料與圖表</a>
+						</div>
 					</div>
+					<section class="home-product-intro" aria-labelledby="home-workflow-title">
+						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">從市場研究到決策，留下每一步的依據</h2>
+						<div class="home-product-steps">
+							<article><h3 data-i18n="home.productCollectTitle">彙總資料與市場觀點</h3><p data-i18n="home.productCollectBody">集中閱讀總經指標、台股籌碼、財報與產業研究，對照來源與資料日期，理解他人判斷市場的理由。</p></article>
+							<article><h3 data-i18n="home.productJudgeTitle">加入自己的判斷</h3><p data-i18n="home.productJudgeBody">把觀察、理由與改變看法的條件整理成研究紀錄；資料更新時，回頭檢查自己的假設。</p></article>
+							<article><h3 data-i18n="home.productDecideTitle">用圖表比較，再做決策</h3><p data-i18n="home.productDecideBody">用趨勢圖、供應鏈圖與技術路線圖交叉比較訊號，逐步建立自己的量化研究與投資決策流程。</p></article>
+						</div>
+						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">不會寫程式，也能開始量化研究嗎？</summary><p data-i18n="home.productFaqBody">可以先從整理有來源的資料、記錄判斷條件，以及比較圖表開始。本頁展示市場資料與研究工具；如果想把自己的研究流程搬進來，請以 email 說明需求與目前的做法。</p></details>
+						<div class="home-product-pricing"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="mailto:tianyikao@gmail.com">tianyikao@gmail.com</a></div>
+					</section>
 
 					<section id="market-overview" class="market-overview">
 						<div class="market-overview-header">
@@ -472,119 +451,12 @@ const skillsCategories = skillsData.categories;
 
 				</div>
 
-				<div class="hero-side">
-
-					<div class="video-container">
-						<div class="roles">
-							<Pill class="gold"><Icon icon="code" size="1.33em" /> Backend</Pill>
-							<Pill class="gold"><Icon icon="pencil-line" size="1.33em" /> DevOps</Pill>
-							<Pill><Icon icon="code" size="1.33em" /> Frontend</Pill>
-							<Pill><Icon icon="microphone-stage" size="1.33em" /> PM</Pill>
-						</div>
-						<div class="github-graph">
-							<h5 class="section-title" data-i18n="home.githubTitle">Github Contributions</h5>
-							<div>
-								<img src="https://ghchart.rshah.org/VinsKao" alt="VinsKao's Github chart" />
-							</div>
-						</div>
-
-						<div class="leetcode-graph">
-							<h5 class="section-title" data-i18n="home.leetcodeTitle">LeetCode Stats</h5>
-							<div id="leetcode-stats" class="leetcode-container">
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.solved">Total Solved</h6>
-									<p id="total-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="total-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.easy">Easy</h6>
-									<p id="easy-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="easy-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.medium">Medium</h6>
-									<p id="medium-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="medium-progress"></div>
-									</div>
-								</div>
-								<div class="leetcode-card">
-									<h6 data-i18n="home.leetcodeLabels.hard">Hard</h6>
-									<p id="hard-solved" data-i18n="home.loading">Loading...</p>
-									<div class="progress-bar">
-										<div id="hard-progress"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="algorithms-section">
-							<h5 class="section-title" data-i18n="home.patternsTitle">Patterns Learned</h5>
-							<div class="algorithms-list">
-								{algorithmsUsed.map((algo) => (
-									<span class="algo-pill" data-explanation={algo.explanation}>{algo.name}</span>
-								))}
-							</div>
-						</div>
-
-						<div class="portrait-container">
-
-						</div>
-
-					</div>
-				</div>
-
-				
 				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
-					<AiTokenUsageDashboard client:load />
+					<details class="home-transparency"><summary data-i18n="home.operationsTitle">產品運作資訊 · AI 使用紀錄</summary><AiTokenUsageDashboard client:visible /></details>
 				</div>
 			</header>
 
-			<!-- Skills Bubble Chart: full-width -->
-			<div class="wrapper">
-				<SkillsBubbleChart client:load data={bubbleChartData} categoriesData={skillsCategories} />
-			</div>
-
-			<!-- Skills Overview: full-width above Research Zone -->
-			<div class="wrapper categories-section">
-				<div class="categories">
-					{skillsCategories.map((category) => {
-						return (
-							<div class="category">
-								<h5 class="section-title">{category.name}</h5>
-								{(category as any).subcategories ? (
-									(category as any).subcategories.map((sub: any) => (
-										<div class="subcategory-group">
-											<span class="subcategory-label">{sub.name}</span>
-											<div class="pills-container">
-												{sub.skills.map((skill: any) => (
-													<span class={`skill-pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
-														{skill.name}
-													</span>
-												))}
-											</div>
-										</div>
-									))
-								) : (
-									<div class="pills-container">
-										{((category as any).skills || []).map((skill: any) => (
-											<span class={`skill-pill ${category.pillClass} ${skill.level} ${skill.specialClass || ''}`}>
-												{skill.name}
-											</span>
-										))}
-									</div>
-								)}
-							</div>
-						);
-					})}
-				</div>
-			</div>
-
-			<Skills />
+			<MaintainerExperience />
 
 		</div>
 
@@ -596,7 +468,7 @@ const skillsCategories = skillsData.categories;
 				</header>
 
 				<div class="gallery">
-					<Grid variant="offset">
+					<Grid>
 						{
 							projects.map((project) => (
 								<li>
@@ -615,29 +487,10 @@ const skillsCategories = skillsData.categories;
 				</div>
 			</section>
 
-			<section class="section with-background bg-variant">
-				<header class="section-header stack gap-2 lg:gap-4">
-					<!-- <h5>Mentions</h5>
-					<p>
-						To be Continued...
-					</p> -->
-				</header>
 
-				<!-- <div class="gallery">
-					<Grid variant="small">
-						{
-							['Who', 'Am', 'I'].map((brand) => (
-								<li class="mention-card">
-									<p>{brand}</p>
-								</li>
-							))
-						}
-					</Grid>
-				</div> -->
-			</section>
 		</main>
 
-		<ContactCTA />
+		<aside class="home-contact"><h2 data-i18n="home.contactTitle">一起整理你的研究流程</h2><p data-i18n="home.contactBody">試用、資料整合與功能需求，歡迎直接以 email 聯繫。</p><a href="mailto:tianyikao@gmail.com">tianyikao@gmail.com</a></aside>
 	</div>
 	<script src="../scripts/index.ts"></script>
 </BaseLayout>

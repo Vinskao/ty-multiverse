@@ -12,7 +12,7 @@
   function get() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return normalize(saved || 'en');
+      return normalize(saved || document.documentElement.dataset.defaultLanguage || 'en');
     } catch (_) {
       return 'en';
     }

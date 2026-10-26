@@ -39,6 +39,8 @@ RUN npm ci --prefer-offline --no-audit --legacy-peer-deps && \
     npm cache clean --force
 
 FROM build-deps AS build
+ARG PUBLIC_BUILD_REVISION
+ENV PUBLIC_BUILD_REVISION=${PUBLIC_BUILD_REVISION}
 COPY . .
 RUN npm run build
 RUN node --test tests/homepage-ssr.mjs

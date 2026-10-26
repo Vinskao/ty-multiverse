@@ -1,0 +1,52 @@
+---
+import skillsData from '../storages/skills.json';
+---
+
+<section class="maintenance-team" id="maintenance-team" aria-labelledby="maintenance-team-title">
+    <header class="maintenance-team-heading">
+        <div>
+            <p class="maintenance-team-eyebrow" data-i18n="home.teamEyebrow">產品開發與維護</p>
+            <h2 id="maintenance-team-title" data-i18n="home.teamTitle">產品背後的維護經驗</h2>
+            <p data-i18n="home.teamIntro">由 Tianyi Kao 開發與維護，結合金融資料研究、企業系統開發與雲端部署經驗，持續改善資料整理與決策工具。</p>
+        </div>
+        <a href="/tymultiverse/about/" data-i18n="home.teamProfile">認識維護者與完整經歷 ↗</a>
+    </header>
+    <div class="maintenance-experience-grid">
+        <article>
+            <span class="maintenance-team-period">2021–2023</span>
+            <h3 data-i18n="home.teamMarketTitle">金融資料與視覺決策</h3>
+            <p data-i18n="home.teamMarketBody">曾參與銀行金融科技產品與投顧總經研究，處理市場資料、自動化報表及 Power BI 儀表板，理解資料如何成為判斷依據。</p>
+            <ul class="maintenance-tags" aria-label="Tools"><li>Python</li><li>Power BI</li><li>SQL</li></ul>
+        </article>
+        <article>
+            <span class="maintenance-team-period">2023–2026</span>
+            <h3 data-i18n="home.teamSystemsTitle">企業系統與資料整合</h3>
+            <p data-i18n="home.teamSystemsBody">具備金融業文件管理、登入權限、API 串接與知識檢索系統經驗，涵蓋資料流程、版本管理及前後端整合。</p>
+            <ul class="maintenance-tags" aria-label="Tools"><li>Java / Spring</li><li>PostgreSQL</li><li>React / Astro</li></ul>
+        </article>
+        <article>
+            <span class="maintenance-team-period" data-i18n="home.teamOperationsPeriod">工程維護經驗</span>
+            <h3 data-i18n="home.teamOperationsTitle">部署、測試與持續維護</h3>
+            <p data-i18n="home.teamOperationsBody">具備 CI/CD、容器化、雲端佈建、測試與監控實作經驗，將工程背景用於產品更新與問題追蹤。</p>
+            <ul class="maintenance-tags" aria-label="Tools"><li>Docker / Kubernetes</li><li>Jenkins</li><li>Terraform</li></ul>
+        </article>
+    </div>
+    <details class="maintenance-catalog" id="maintenance-skills">
+        <summary data-i18n="home.teamSkills">查看完整技術能力與工具</summary>
+        <div class="maintenance-skills-grid">
+            {skillsData.categories.map((category) => (
+                <details class="maintenance-category">
+                    <summary>{category.name}</summary>
+                    {category.subcategories ? category.subcategories.map((sub) => (
+                        <div class="maintenance-skill-group"><h4>{sub.name}</h4><ul class="maintenance-tags">{sub.skills.map((skill) => <li>{skill.name}</li>)}</ul></div>
+                    )) : <ul class="maintenance-tags">{category.skills.map((skill) => <li>{skill.name}</li>)}</ul>}
+                </details>
+            ))}
+        </div>
+    </details>
+    <div class="maintenance-team-links">
+        <a href="https://github.com/Vinskao" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+        <a href="https://www.credly.com/badges/0584630d-b598-4eba-a6d1-425cb7a997fe" target="_blank" rel="noopener noreferrer" data-i18n="home.teamCredential">查看技術認證 ↗</a>
+        <a href="mailto:tianyikao@gmail.com" data-i18n="home.teamContact">Email 聯繫維護者</a>
+    </div>
+</section>

@@ -38,20 +38,21 @@ import { ClientRouter } from 'astro:transitions';
 interface Props {
 	title?: string | undefined;
 	description?: string | undefined;
+	canonical?: string;
+	lang?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, canonical, lang = 'en' } = Astro.props;
 
 
 
 
 ---
 
-<html lang="en">
+<html lang={lang} data-default-language={lang.startsWith('zh') ? 'zh' : 'en'}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-		<title>TY Multiverse</title>
 		<script is:inline src="/tymultiverse/scripts/lang.js"></script>
 		<script is:inline>
 			// 🎨 主題初始化 - 在任何渲染之前執行，避免主題閃爍 (FOUC)
@@ -196,7 +197,7 @@ const { title, description } = Astro.props;
 		<link rel="stylesheet" href={learnCssUrl} />
 		<link rel="stylesheet" href={marketMacroCssUrl} />
 		<slot name="head" />
-		<MainHead title={title} description={description} />
+		<MainHead title={title} description={description} canonical={canonical} />
 		<ClientRouter />
 	</head>
 	<body>
