@@ -13,6 +13,7 @@ import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
 import { renderResearchContent } from './market/researchContent';
+import { addResearchDiagramZoom } from './market/researchDiagramZoom';
 import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
@@ -777,6 +778,10 @@ async function renderResearchDiagrams(nodes: HTMLElement[]) {
         const mermaid = await loadMermaidLibrary();
         mermaid.initialize({ ...getMermaidConfig(document.documentElement.classList.contains('theme-dark')), startOnLoad: false, securityLevel: 'strict' });
         await mermaid.run({ nodes });
+        nodes.forEach((node) => {
+            const section = node.closest<HTMLElement>('.market-research-diagram');
+            if (section) addResearchDiagramZoom(section, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+        });
     } catch (error) {
         console.error('Research diagram rendering failed:', error);
         nodes.forEach((node) => node.classList.add('market-research-diagram--source'));
