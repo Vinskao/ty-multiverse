@@ -1,5 +1,6 @@
 ---
 import skillsData from '../storages/skills.json';
+import { mailtoHref } from '../scripts/contact';
 ---
 
 <section class="maintenance-team" id="maintenance-team" aria-labelledby="maintenance-team-title">
@@ -47,6 +48,6 @@ import skillsData from '../storages/skills.json';
     <div class="maintenance-team-links">
         <a href="https://github.com/Vinskao" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
         <a href="https://www.credly.com/badges/0584630d-b598-4eba-a6d1-425cb7a997fe" target="_blank" rel="noopener noreferrer" data-i18n="home.teamCredential">查看技術認證 ↗</a>
-        <a href="mailto:tianyikao@gmail.com" data-i18n="home.teamContact">Email 聯繫維護者</a>
+        <a href={mailtoHref('feature', 'zh')} data-contact-topic="feature" data-i18n="home.teamContact">Email 聯繫維護者</a>
     </div>
 </section>

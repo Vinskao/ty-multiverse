@@ -1,0 +1,76 @@
+---
+import { CONTACT_EMAIL, CONTACT_TOPICS, mailtoHref } from '../scripts/contact';
+import i18n from '../storages/i18n.json';
+
+const topicText = i18n.home.contactTopic as Record<string, Record<'title' | 'body', { zh: string; en: string }>>;
+---
+
+<section class="home-cta" id="contact" aria-labelledby="home-cta-title">
+    <div class="home-cta-inner">
+        <p class="home-cta-eyebrow" data-i18n="home.contactEyebrow">聯繫 · 試用 · 合作</p>
+        <h2 id="home-cta-title" class="home-cta-title" data-i18n="home.contactTitle">把你的研究流程，變成看得見的決策</h2>
+        <p class="home-cta-lead" data-i18n="home.contactBody">試用、資料整合與功能需求都直接以 email 討論。選一個主題，信件會帶好要回答的問題。</p>
+        <ol class="home-cta-topics">
+            {CONTACT_TOPICS.map((topic, i) => (
+                <li>
+                    <a class="home-cta-topic" href={mailtoHref(topic.id, 'zh')} data-contact-topic={topic.id}>
+                        <span class="home-cta-topic-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                        <strong data-i18n={`home.contactTopic.${topic.id}.title`}>{topicText[topic.id].title.zh}</strong>
+                        <span class="home-cta-topic-body" data-i18n={`home.contactTopic.${topic.id}.body`}>{topicText[topic.id].body.zh}</span>
+                        <span class="home-cta-topic-arrow" aria-hidden="true">→</span>
+                    </a>
+                </li>
+            ))}
+        </ol>
+        <div class="home-cta-direct">
+            <span data-i18n="home.contactDirect">或直接寫信到</span>
+            <a class="home-cta-address" href={mailtoHref('trial', 'zh')} data-contact-topic="trial">{CONTACT_EMAIL}</a>
+            <button type="button" class="home-cta-copy" data-contact-copy={CONTACT_EMAIL} data-i18n="home.contactCopy">複製地址</button>
+            <span class="home-cta-status" role="status" aria-live="polite"></span>
+        </div>
+    </div>
+</section>
+
+<script>
+    import { mailtoHref } from '../scripts/contact';
+
+    const lang = () => ((window as any).AppLang?.get?.() === 'en' ? 'en' : 'zh');
+    let unsubscribe: (() => void) | null = null;
+
+    // Every [data-contact-topic] link on the page (hero, pricing, maintainer, this section) gets the current language's mail.
+    function syncLinks() {
+        document.querySelectorAll<HTMLAnchorElement>('a[data-contact-topic]')
+            .forEach(link => { link.href = mailtoHref(link.dataset.contactTopic, lang()); });
+    }
+
+    async function copy(text: string) {
+        try { await navigator.clipboard.writeText(text); return true; } catch { /* insecure context or denied: fall back */ }
+        const field = Object.assign(document.createElement('textarea'), { value: text });
+        field.setAttribute('readonly', ''); field.style.position = 'fixed'; field.style.opacity = '0';
+        document.body.append(field); field.select();
+        const ok = document.execCommand('copy'); field.remove();
+        return ok;
+    }
+
+    function initHomeContact() {
+        syncLinks();
+        unsubscribe?.();
+        unsubscribe = (window as any).AppLang?.onChange?.(syncLinks) ?? null;
+        const button = document.querySelector<HTMLButtonElement>('.home-cta [data-contact-copy]');
+        const status = document.querySelector<HTMLElement>('.home-cta-status');
+        if (!button || !status || button.dataset.bound) return;
+        button.dataset.bound = 'true';
+        let timer = 0;
+        button.addEventListener('click', async () => {
+            const ok = await copy(button.dataset.contactCopy!);
+            const zh = lang() === 'zh';
+            status.textContent = ok ? (zh ? '已複製，貼到任何信箱即可寄出' : 'Copied. Paste it into any mail app.')
+                : (zh ? '無法自動複製，請手動選取地址' : 'Could not copy. Please select the address.');
+            button.classList.toggle('is-copied', ok);
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => { status.textContent = ''; button.classList.remove('is-copied'); }, 4000);
+        });
+    }
+
+    document.addEventListener('astro:page-load', initHomeContact);
+</script>

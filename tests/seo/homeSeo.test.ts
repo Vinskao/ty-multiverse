@@ -19,7 +19,11 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         expect(home).toContain('免寫程式的量化研究與投資決策圖表');
         expect(home).toContain('免寫程式，建立自己的市場判斷');
-        expect(home).toContain('mailto:tianyikao@gmail.com');
+        expect(home).toContain('<HomeContact />');
+        expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
+        expect(home).toMatch(/class="home-product-contact" href=\{mailtoHref\('trial', 'zh'\)\} data-contact-topic="trial"/);
+        expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
+        expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@gmail.com'");
         expect(home).toContain('預計按使用量計費');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"');

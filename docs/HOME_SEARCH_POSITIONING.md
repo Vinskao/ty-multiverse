@@ -27,6 +27,21 @@
 
 試用、整合與服務需求皆以 tianyikao@gmail.com 聯繫，不建立購買或預約流程。
 
+## Email 聯繫（2026-10-26 整理）
+
+原本首頁有四個寫死的 `mailto:`，樣式各不相同：首屏外框按鈕、計費區和頁尾的裸地址、維護者區的小連結。頁尾那段只有一行字加地址，緊貼 footer，沒有收尾的力道。另外，沒有設定預設郵件程式的電腦按 `mailto:` 不會有任何反應，看起來就像壞掉。
+
+現在的做法：
+
+- **單一來源：** 地址、洽詢主題、信件主旨與範本都在 `src/scripts/contact.ts`，由 `mailtoHref(topic, lang)` 產生連結。頁面和元件不再寫 `mailto:`，`tests/seo/homeSeo.test.ts` 會檢查這一點。
+- **三個主題：** 申請試用、資料整合、功能需求。點下去的信件會帶好主旨（例如 `[TY 市場研究室] 申請試用`）和要回答的問題，回信時就知道對方的研究方式、資料來源或問題。
+- **編碼：** 用 `encodeURIComponent`，空白是 `%20`、換行是 `%0A`。`URLSearchParams` 會把空白編成 `+`，Outlook 和 Apple Mail 會原樣顯示加號（RFC 6068）。
+- **語言：** 所有帶 `data-contact-topic` 的連結（首屏、維護者區、收尾區）在切換中英文時改用對應語言的主旨與範本。
+- **沒有郵件程式也能聯繫：** 收尾區有「複製地址」按鈕，`navigator.clipboard` 不能用時改用選取複製，並以 `role="status"` 告知結果。
+- **版面：** 首屏主按鈕改成實心金色「寄信申請試用」；計費區改連到 `#contact`；頁尾換成 `HomeContact.astro` 的收尾區（大標、三張主題卡、直接寫信與複製）。金色用 `--cta-gold`，淺色主題換成較深的金色以維持對比。
+
+測試：`tests/contact/contact.test.ts`（主旨、範本、編碼、英文版、未知主題的預設）、`tests/seo/homeSeo.test.ts`。
+
 ## 後續搜尋成效工作
 
 部署後透過 Search Console 檢查首頁索引與 Google 選定的 canonical，再觀察實際查詢詞、曝光與點擊，調整文案。尚未操作 Search Console 或提交索引。
