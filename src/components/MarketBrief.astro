@@ -118,6 +118,9 @@ const headers: Text[] = [
 					</table>
 				</div>
 			)}
+			{/* Text form of the table for AI readers; folded for people, still in the server HTML. */}
+			<details class="market-brief-ai">
+				<summary>{T(both('文字版訊號與說明（供 AI 讀取）', 'Signals as text and notes (for AI readers)'))}</summary>
 			{stocks.some((s) => s.signals?.length) && (
 				<ul class="market-brief-signals">
 					{stocks.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {nameOf(s)}</strong>: {T(signalText(s.signals))}</li>)}
@@ -127,6 +130,7 @@ const headers: Text[] = [
 				'只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現股呈現；紅漲綠跌。非投資建議。',
 				'Instrument codes only; no quantities, cost, P/L or account values. Lot = 1,000 shares; pp = percentage points; futures are shown through their underlying stock; red = up, green = down. Not investment advice.',
 			))}</p>
+			</details>
 		</section>
 	);
 })()}

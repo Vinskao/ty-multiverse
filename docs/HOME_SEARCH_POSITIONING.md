@@ -37,7 +37,7 @@
 - **三個主題：** 申請試用、資料整合、功能需求。點下去的信件會帶好主旨（例如 `[TY 市場研究室] 申請試用`）和要回答的問題，回信時就知道對方的研究方式、資料來源或問題。
 - **編碼：** 用 `encodeURIComponent`，空白是 `%20`、換行是 `%0A`。`URLSearchParams` 會把空白編成 `+`，Outlook 和 Apple Mail 會原樣顯示加號（RFC 6068）。
 - **語言：** 所有帶 `data-contact-topic` 的連結（首屏、維護者區、收尾區）在切換中英文時改用對應語言的主旨與範本。
-- **沒有郵件程式也能聯繫：** 收尾區有「複製地址」按鈕，`navigator.clipboard` 不能用時改用選取複製，並以 `role="status"` 告知結果。
+- **沒有郵件程式也能聯繫（2026-10-26 再修）：** 第一版上線後回報「這些都不能點」。按鈕其實點得到（沒有東西擋住），但沒設定郵件程式的電腦按 `mailto:` 什麼都不會發生。現在點任何聯繫連結都會開一個選擇視窗：預覽收件人、主旨與範本，並提供「用 Gmail 寫信」「用 Outlook 寫信」（網頁版撰寫頁，`composeLinks`）、「用電腦的郵件程式」（`mailto:`）和「複製信件內容」（`mailText`）。沒有 JavaScript 時連結仍是 `mailto:`。收尾區另有「複製地址」按鈕；`navigator.clipboard` 不能用時改用選取複製，並以 `role="status"` 告知結果。
 - **版面：** 首屏主按鈕改成實心金色「寄信申請試用」；計費區改連到 `#contact`；頁尾換成 `HomeContact.astro` 的收尾區（大標、三張主題卡、直接寫信與複製）。金色用 `--cta-gold`，淺色主題換成較深的金色以維持對比。
 
 測試：`tests/contact/contact.test.ts`（主旨、範本、編碼、英文版、未知主題的預設）、`tests/seo/homeSeo.test.ts`。
@@ -49,3 +49,12 @@
 有足夠實際內容後，再增加獨立的「免寫程式量化研究入門」、「把市場觀點變成可驗證條件」與「總經和籌碼圖表怎麼一起看」指南，避免建立只有關鍵字的空頁。現有 sitemap 與 SSR 頁面涵蓋率需另行核對，不把增加 metadata 視為索引完成。
 
 參考 Google Search Central：[標題連結](https://developers.google.com/search/docs/appearance/title-link)、[搜尋摘要](https://developers.google.com/search/docs/appearance/snippet)。搜尋引擎可能依查詢重寫標題與摘要，這次變更不代表排名保證。
+
+## 首頁其他調整（2026-10-26）
+
+- **帳戶區塊登入後才顯示：** Account Portfolio、配置甜甜圈、每日資產走勢都標 `data-account-only`，伺服器輸出時就是 `hidden`，`fetchPortfolio` 依 `hasMarketAuth()` 開關（`src/scripts/market/accountSections.ts`）。未登入的訪客不再看到一整塊「--」。
+- **市場總覽靠左：** 市場總覽放在 `.hero` 裡，繼承了 `text-align:center`，所以「多國重要總體經濟資料」等標題在靠左的框裡置中。現在 `.home-page .market-overview` 靠左；圖表標題、資料期間、讀數與圖例原本也靠同一個繼承置中，另外明確保留置中，圖表外觀不變。
+- **給 AI 讀的文字收起來：** 持股籌碼摘要下方的逐檔文字訊號（例如「2330 台積電: 外資連續 12 日賣超…」）與附註放進 `<details class="market-brief-ai">`。內容仍在伺服器 HTML 中，不執行 JavaScript 的 AI 一樣讀得到。
+- **技能泡泡圖回來：** f254ee1 把 D3 泡泡圖從首頁拿掉。現在放在「查看完整技術能力與工具」裡、分類清單上方，`client:visible` 在展開時才載入。分數算法抽到 `src/scripts/skillBubbles.ts`（shade1=5 … shade5=1，依類別加總）。
+
+測試：`tests/home/accountSections.test.ts`、`tests/home/skillBubbles.test.ts`、`tests/seo/homeLayout.test.ts`、`tests/contact/contact.test.ts`。

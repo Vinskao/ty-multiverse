@@ -29,6 +29,7 @@ import { statementComparisons, overseasPePoints, type StatementComparisons } fro
 import { addedNotice } from './market/customSelection';
 import { historyCloses } from './market/priceTargets';
 import { renderPriceTargetChart } from './market/priceTargetChart';
+import { setAccountSections } from './market/accountSections';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
@@ -3232,6 +3233,7 @@ async function fetchMarketUsage() {
 async function fetchPortfolio() {
     const section = document.getElementById('portfolio-section');
     if (!section) return;
+    setAccountSections(document, hasMarketAuth());
     if (!hasMarketAuth()) {
         clearPortfolioCache();
         resetPortfolioDisplay();

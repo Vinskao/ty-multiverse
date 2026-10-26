@@ -20,3 +20,20 @@ describe('homepage responsive presentation', () => {
         expect(css).toMatch(/\.market-chart-controls button\s*\{[^}]*min-height:28px/s);
     });
 });
+
+describe('homepage layout fixes (2026-10-26)', () => {
+    const css = () => read('src/styles/index.css');
+    it('left-aligns the market overview although it sits inside the centered .hero', () => {
+        expect(css()).toMatch(/\.home-page \.market-overview\s*\{[^}]*text-align:left/);
+        // Chart titles, ranges and readouts were centered by the same inheritance and stay centered.
+        expect(css()).toMatch(/\.market-overview \.macro-trend-chart,[^{]*\.market-chart-controls,[^{]*\.market-chart-readout\s*\{\s*text-align:center/);
+    });
+    it('folds the text-only signal list for AI readers into a details element that stays in the HTML', () => {
+        const brief = read('src/components/MarketBrief.astro');
+        expect(brief).toMatch(/<details class="market-brief-ai">[\s\S]*class="market-brief-signals"[\s\S]*<\/details>/);
+    });
+    it('shows the skills bubble chart inside the full skills section', () => {
+        const team = read('src/components/MaintainerExperience.astro');
+        expect(team).toMatch(/<details class="maintenance-catalog"[\s\S]*<SkillsBubbleChart client:visible[\s\S]*<\/details>/);
+    });
+});

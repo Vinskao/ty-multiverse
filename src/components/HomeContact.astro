@@ -31,13 +31,31 @@ const topicText = i18n.home.contactTopic as Record<string, Record<'title' | 'bod
     </div>
 </section>
 
+<!-- Without JS every link above is a plain mailto. With JS a click opens this chooser, because a bare mailto
+     does nothing on a computer with no mail app. -->
+<dialog class="contact-dialog" id="contact-dialog" aria-labelledby="contact-dialog-title">
+    <form method="dialog" class="contact-dialog-close"><button type="submit" aria-label="Close">×</button></form>
+    <p class="home-cta-eyebrow" data-i18n="home.contactDialogEyebrow">選擇寄信方式</p>
+    <h3 id="contact-dialog-title"></h3>
+    <pre class="contact-dialog-preview" id="contact-dialog-preview"></pre>
+    <div class="contact-dialog-actions">
+        <a id="contact-dialog-gmail" class="contact-dialog-primary" target="_blank" rel="noopener noreferrer" data-i18n="home.contactViaGmail">用 Gmail 寫信</a>
+        <a id="contact-dialog-outlook" target="_blank" rel="noopener noreferrer" data-i18n="home.contactViaOutlook">用 Outlook 寫信</a>
+        <a id="contact-dialog-mailto" data-i18n="home.contactViaApp">用電腦的郵件程式</a>
+        <button type="button" id="contact-dialog-copy" data-i18n="home.contactCopyMail">複製信件內容</button>
+    </div>
+    <p class="home-cta-status" id="contact-dialog-status" role="status" aria-live="polite"></p>
+</dialog>
+
 <script>
-    import { mailtoHref } from '../scripts/contact';
+    import { CONTACT_EMAIL, composeLinks, mailText, mailtoHref } from '../scripts/contact';
 
     const lang = () => ((window as any).AppLang?.get?.() === 'en' ? 'en' : 'zh');
+    const zh = () => lang() === 'zh';
     let unsubscribe: (() => void) | null = null;
 
-    // Every [data-contact-topic] link on the page (hero, pricing, maintainer, this section) gets the current language's mail.
+    // Every [data-contact-topic] link on the page (hero, maintainer, this section) keeps a mailto in the current
+    // language as its no-JS fallback.
     function syncLinks() {
         document.querySelectorAll<HTMLAnchorElement>('a[data-contact-topic]')
             .forEach(link => { link.href = mailtoHref(link.dataset.contactTopic, lang()); });
@@ -52,24 +70,45 @@ const topicText = i18n.home.contactTopic as Record<string, Record<'title' | 'bod
         return ok;
     }
 
+    function flash(status: HTMLElement, button: HTMLElement, ok: boolean, okText: [string, string]) {
+        status.textContent = ok ? (zh() ? okText[0] : okText[1]) : (zh() ? '無法自動複製，請手動選取文字' : 'Could not copy. Please select the text.');
+        button.classList.toggle('is-copied', ok);
+        window.setTimeout(() => { status.textContent = ''; button.classList.remove('is-copied'); }, 4000);
+    }
+
+    function openChooser(topic: string) {
+        const dialog = document.getElementById('contact-dialog') as HTMLDialogElement | null;
+        if (!dialog?.showModal) return false;
+        const links = composeLinks(topic, lang());
+        const card = document.querySelector(`.home-cta-topic[data-contact-topic="${topic}"] strong`);
+        dialog.dataset.topic = topic;
+        document.getElementById('contact-dialog-title')!.textContent = card?.textContent ?? CONTACT_EMAIL;
+        document.getElementById('contact-dialog-preview')!.textContent = mailText(topic, lang());
+        (document.getElementById('contact-dialog-gmail') as HTMLAnchorElement).href = links.gmail;
+        (document.getElementById('contact-dialog-outlook') as HTMLAnchorElement).href = links.outlook;
+        (document.getElementById('contact-dialog-mailto') as HTMLAnchorElement).href = links.mailto;
+        document.getElementById('contact-dialog-status')!.textContent = '';
+        dialog.showModal();
+        return true;
+    }
+
     function initHomeContact() {
         syncLinks();
         unsubscribe?.();
         unsubscribe = (window as any).AppLang?.onChange?.(syncLinks) ?? null;
-        const button = document.querySelector<HTMLButtonElement>('.home-cta [data-contact-copy]');
-        const status = document.querySelector<HTMLElement>('.home-cta-status');
-        if (!button || !status || button.dataset.bound) return;
-        button.dataset.bound = 'true';
-        let timer = 0;
-        button.addEventListener('click', async () => {
-            const ok = await copy(button.dataset.contactCopy!);
-            const zh = lang() === 'zh';
-            status.textContent = ok ? (zh ? '已複製，貼到任何信箱即可寄出' : 'Copied. Paste it into any mail app.')
-                : (zh ? '無法自動複製，請手動選取地址' : 'Could not copy. Please select the address.');
-            button.classList.toggle('is-copied', ok);
-            window.clearTimeout(timer);
-            timer = window.setTimeout(() => { status.textContent = ''; button.classList.remove('is-copied'); }, 4000);
-        });
+        const dialog = document.getElementById('contact-dialog') as HTMLDialogElement | null;
+        if (!dialog || dialog.dataset.bound) return;
+        dialog.dataset.bound = 'true';
+        document.querySelectorAll<HTMLAnchorElement>('a[data-contact-topic]').forEach(link => link.addEventListener('click', event => {
+            if (openChooser(link.dataset.contactTopic ?? 'trial')) event.preventDefault();
+        }));
+        dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); }); // backdrop
+        const copyMail = document.getElementById('contact-dialog-copy')!;
+        copyMail.addEventListener('click', async () => flash(document.getElementById('contact-dialog-status')!, copyMail,
+            await copy(mailText(dialog.dataset.topic, lang())), ['已複製收件人、主旨與內容，貼到任何信箱即可', 'Copied the recipient, subject and text. Paste into any mail service.']));
+        const copyAddress = document.querySelector<HTMLButtonElement>('.home-cta [data-contact-copy]');
+        copyAddress?.addEventListener('click', async () => flash(document.querySelector<HTMLElement>('.home-cta-direct .home-cta-status')!, copyAddress,
+            await copy(copyAddress.dataset.contactCopy!), ['已複製，貼到任何信箱即可寄出', 'Copied. Paste it into any mail app.']));
     }
 
     document.addEventListener('astro:page-load', initHomeContact);

@@ -1,6 +1,10 @@
 ---
 import skillsData from '../storages/skills.json';
 import { mailtoHref } from '../scripts/contact';
+import SkillsBubbleChart from './SkillsBubbleChart';
+import { skillBubbles } from '../scripts/skillBubbles';
+
+const bubbles = skillBubbles(skillsData.categories as any);
 ---
 
 <section class="maintenance-team" id="maintenance-team" aria-labelledby="maintenance-team-title">
@@ -34,6 +38,10 @@ import { mailtoHref } from '../scripts/contact';
     </div>
     <details class="maintenance-catalog" id="maintenance-skills">
         <summary data-i18n="home.teamSkills">查看完整技術能力與工具</summary>
+        <div class="maintenance-bubbles">
+            <p data-i18n="home.teamSkillsChart">泡泡大小是各類別技能的熟練度總分；點一個泡泡可展開該類別的技能。</p>
+            <SkillsBubbleChart client:visible data={bubbles} categoriesData={skillsData.categories as any} />
+        </div>
         <div class="maintenance-skills-grid">
             {skillsData.categories.map((category) => (
                 <details class="maintenance-category">

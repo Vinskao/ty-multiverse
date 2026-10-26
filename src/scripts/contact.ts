@@ -24,11 +24,32 @@ export function contactTopic(id: string | null | undefined): ContactTopic {
     return CONTACT_TOPICS.find(topic => topic.id === id) ?? CONTACT_TOPICS[0];
 }
 
-/** mailto link with the topic's subject and template; encodeURIComponent keeps spaces as %20 (RFC 6068), not "+". */
-export function mailtoHref(topicId: string | null | undefined, lang: string | null | undefined): string {
+function mail(topicId: string | null | undefined, lang: string | null | undefined) {
     const code: Lang = lang === 'en' ? 'en' : 'zh';
     const topic = contactTopic(topicId);
     const brand = code === 'zh' ? 'TY 市場研究室' : 'TY Market Lab';
-    const subject = `[${brand}] ${topic.subject[code]}`;
-    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(topic.body[code])}`;
+    return { code, subject: `[${brand}] ${topic.subject[code]}`, body: topic.body[code] };
+}
+
+/** mailto link with the topic's subject and template; encodeURIComponent keeps spaces as %20 (RFC 6068), not "+". */
+export function mailtoHref(topicId: string | null | undefined, lang: string | null | undefined): string {
+    const { subject, body } = mail(topicId, lang);
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+/** A bare mailto does nothing without a mail app, so each topic also opens Gmail and Outlook web compose pages. */
+export function composeLinks(topicId: string | null | undefined, lang: string | null | undefined) {
+    const { subject, body } = mail(topicId, lang);
+    const query = (params: Record<string, string>) => Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    return {
+        gmail: `https://mail.google.com/mail/?${query({ view: 'cm', fs: '1', to: CONTACT_EMAIL, su: subject, body })}`,
+        outlook: `https://outlook.live.com/mail/0/deeplink/compose?${query({ to: CONTACT_EMAIL, subject, body })}`,
+        mailto: mailtoHref(topicId, lang),
+    };
+}
+
+/** Recipient, subject and template as plain text, for pasting into any mail service. */
+export function mailText(topicId: string | null | undefined, lang: string | null | undefined): string {
+    const { code, subject, body } = mail(topicId, lang);
+    return code === 'zh' ? `收件人：${CONTACT_EMAIL}\n主旨：${subject}\n\n${body}` : `To: ${CONTACT_EMAIL}\nSubject: ${subject}\n\n${body}`;
 }

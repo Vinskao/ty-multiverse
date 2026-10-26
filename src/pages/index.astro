@@ -297,7 +297,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
 								<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
 							</section>
-							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite">
+							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite" data-account-only hidden>
 								<div class="market-quote-heading">
 									<div>
 										<h5 class="section-title">Account Portfolio</h5>
@@ -344,7 +344,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 
 					<!-- Donut charts: full market-overview-grid width -->
-					<div class="portfolio-donuts-fullwidth">
+					<div class="portfolio-donuts-fullwidth" data-account-only hidden>
 						<!-- 台灣 region: Securities + Futures -->
 						<span class="portfolio-region-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
 						<div class="portfolio-donuts-row">
@@ -424,7 +424,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						*/}
 						<p class="portfolio-chart-hint">Hover, focus, or tap a slice for position details.</p>
 					</div>
-					<section id="portfolio-history-section" class="portfolio-history" aria-live="polite" aria-labelledby="portfolio-history-title">
+					<section id="portfolio-history-section" class="portfolio-history" aria-live="polite" aria-labelledby="portfolio-history-title" data-account-only hidden>
 						<div class="portfolio-history-heading">
 							<div>
 								<h5 id="portfolio-history-title" class="section-title" data-i18n="home.portfolioHistoryTitle">Daily portfolio value</h5>
