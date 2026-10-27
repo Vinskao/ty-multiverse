@@ -5,18 +5,15 @@ import postcss from 'postcss';
 
 const css = postcss.parse(readFileSync(resolve(__dirname, '../../src/styles/index.css'), 'utf8'));
 
-it('keeps the instrument picker visible with independent desktop scrolling', () => {
-  const declarations: Record<string, string> = {};
+it('keeps the instrument picker in document flow so it cannot overlap the usage section', () => {
+  const declarations: Record<string, string[]> = {};
   css.walkRules(rule => {
     if (!rule.selector.split(',').map(s => s.trim()).includes('.market-watchlist')) return;
-    if (rule.parent?.type !== 'atrule' || rule.parent.params !== '(min-width: 769px)') return;
-    rule.walkDecls(decl => { declarations[decl.prop] = decl.value; });
+    rule.walkDecls(decl => { (declarations[decl.prop] ??= []).push(decl.value); });
   });
-  expect(declarations).toMatchObject({
-    position: 'sticky', top: '5rem', 'align-self': 'start',
-    'max-height': 'calc(100dvh - 6rem)', 'overflow-y': 'auto',
-    'scrollbar-gutter': 'stable',
-  });
+  expect(declarations.position).toContain('static');
+  expect(declarations.position).not.toContain('sticky');
+  expect(declarations['overflow-y'] ?? []).not.toContain('auto');
 });
 
 it('lets the chart section grow in document flow so it cannot cover the portfolio below', () => {

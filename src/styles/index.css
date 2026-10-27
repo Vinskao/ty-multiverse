@@ -217,7 +217,7 @@
 .market-report-claim--opposed { border-left-color: #e35d6a; color: #ff9ca4; }
 .market-report-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
 
-.market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; }
+.market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; position: static; max-height: none; overflow: visible; }
 .market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: .75rem; }
 .market-watchlist-heading { padding: 0 .9rem; color: var(--gray-400); font-size: .72rem; text-transform: uppercase; }
 .market-watch-row { position: relative; box-sizing: border-box; min-width: 0; overflow-wrap: anywhere; width: 100%; padding: 1rem; text-align: left; color: inherit; border: 1px solid var(--gray-800); border-radius: .9rem; background: var(--gradient-subtle); cursor: pointer; }
@@ -239,18 +239,6 @@
 @media (max-width:768px) {
   .market-price-comparison select { min-height:36px; }
   .market-price-comparison select { font-size:16px; }
-}
-/* Keep the instrument picker beside long charts while the chart stays in page flow. */
-@media (min-width: 769px) {
-  .market-watchlist {
-    position: sticky;
-    top: 5rem;
-    align-self: start;
-    max-height: calc(100dvh - 6rem);
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    scroll-padding-block: .75rem;
-  }
 }
 .market-chart-section .market-instrument-detail { border-top: 1px solid color-mix(in srgb, #d8a43b 65%, transparent); border-radius: .9rem; }
 .market-chart-placeholder { min-height: 14rem; display: grid; place-items: center; padding: 2rem; border: 1px dashed var(--gray-700); border-radius: .9rem; color: var(--gray-400); text-align: center; }
@@ -387,6 +375,35 @@
 .market-usage-section {
 	width: 100%;
 	margin-top: 1rem;
+}
+
+.market-usage-layout {
+	display: grid;
+	grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+	align-items: start;
+	gap: 1rem;
+}
+
+.research-economics-panel {
+	min-width: 0;
+	padding: 1rem;
+	border: 1px solid color-mix(in srgb, #61f6ea 35%, transparent);
+	border-radius: 1rem;
+	background: var(--gradient-subtle);
+}
+
+#research-economics-panel[hidden] { display: none; }
+.research-economics-heading h6 { margin: 0; font-size: .92rem; }
+.research-economics-heading p, .research-economics-cost-note { margin: .25rem 0 .65rem; color: var(--gray-400); font-size: .75rem; line-height: 1.5; }
+.research-economics-chart { display: block; width: 100%; min-height: 10rem; overflow: visible; }
+.research-economics-gridline { stroke: var(--gray-700); stroke-width: 1; opacity: .55; }
+.research-economics-axis-label { fill: var(--gray-400); font-size: 11px; font-variant-numeric: tabular-nums; }
+.research-economics-return-line { fill: none; stroke: #61f6ea; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.research-economics-return-point { fill: #61f6ea; stroke: var(--gray-999); stroke-width: 2; cursor: pointer; vector-effect: non-scaling-stroke; }
+.research-economics-return-point:focus { outline: none; stroke: #fff; stroke-width: 3; }
+
+@media (max-width: 768px) {
+	.market-usage-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 .market-usage-card {

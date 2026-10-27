@@ -26,6 +26,8 @@ import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainVi
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
+import { buildResearchEconomicsSeries } from './market/researchEconomics';
+import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
@@ -2116,6 +2118,13 @@ function initMarketReports() {
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
 
+function renderResearchPortfolioReturn(points: PortfolioHistoryPoint[]) {
+    const svg = document.getElementById('research-economics-return-chart') as SVGSVGElement | null;
+    const readout = document.getElementById('research-economics-return-readout') as HTMLOutputElement | null;
+    if (!svg || !readout) return;
+    renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, []));
+}
+
 export function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
     const svg = document.getElementById('portfolio-history-svg') as SVGSVGElement | null;
     const empty = document.getElementById('portfolio-history-empty');
@@ -2219,6 +2228,7 @@ async function fetchPortfolioHistory() {
     if (!status) return;
     if (!hasMarketAuth()) {
         renderPortfolioHistory([]);
+        renderResearchPortfolioReturn([]);
         status.textContent = 'Login';
         return;
     }
@@ -2226,10 +2236,13 @@ async function fetchPortfolioHistory() {
         const response = await fetch(astroApiPath('/api/market/history'), { headers: marketAuthHeaders() });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json() as { history?: PortfolioHistoryPoint[] };
-        renderPortfolioHistory(Array.isArray(payload.history) ? payload.history : []);
+        const history = Array.isArray(payload.history) ? payload.history : [];
+        renderPortfolioHistory(history);
+        renderResearchPortfolioReturn(history);
     } catch (error) {
         console.error('Error fetching daily portfolio history:', error);
         renderPortfolioHistory([]);
+        renderResearchPortfolioReturn([]);
         status.textContent = 'Offline';
         const empty = document.getElementById('portfolio-history-empty');
         if (empty) empty.textContent = 'Daily portfolio history is temporarily unavailable.';

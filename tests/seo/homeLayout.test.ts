@@ -19,10 +19,11 @@ describe('homepage responsive presentation', () => {
         expect(css).not.toMatch(/\.market-chart-controls button, \.market-price-comparison select\s*\{\s*min-height:44px/);
         expect(css).toMatch(/\.market-chart-controls button\s*\{[^}]*min-height:28px/s);
     });
-    it('keeps the holdings and custom selection groups in normal flow on narrow screens', () => {
+    it('keeps the holdings list in grid flow so sticky positioning cannot cover the next section', () => {
         const css = read('src/styles/index.css');
         expect(css).toMatch(/\.market-overview-grid\s*\{[^}]*align-items:\s*start/s);
-        expect(css).toMatch(/@media\s*\(max-width:\s*768px\)\s*\{[\s\S]*?\.market-watchlist\s*\{[^}]*position:\s*static/s);
+        expect(css).toMatch(/\.market-watchlist\s*\{[^}]*position:\s*static/s);
+        expect(css).not.toMatch(/\.market-watchlist\s*\{[^}]*position:\s*sticky/s);
     });
 });
 
