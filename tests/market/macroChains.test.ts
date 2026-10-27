@@ -100,3 +100,11 @@ describe('renderMacroChains', () => {
         expect(document.querySelectorAll('.macro-edge--focus').length).toBe(g.edges.filter((edge) => edge.to.startsWith('focus-')).length);
     });
 });
+
+it('tells the routine to write two short sentences with a data cut-off, and to update only when data changes', () => {
+    const format = (graph as any).analysisFormat;
+    expect(format.zh).toContain('一到兩句話');
+    expect(format.zh).toContain('資料截點：');
+    expect(format.updateRule).toContain('新期間');
+    expect(format.updateRule).toContain('週六');
+});

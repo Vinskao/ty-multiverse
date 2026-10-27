@@ -67,7 +67,7 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
                 analysis.revision ? `rev ${analysis.revision}` : ''].filter(Boolean).join(' · ');
             if (meta) body.append(el('small', 'macro-node-meta', meta));
         } else {
-            body.append(el('p', 'macro-node-pending', zh ? '分析待寫入：每個交易日早上的總經排程會更新。' : 'Analysis pending: the morning macro routine updates it every trading day.'));
+            body.append(el('p', 'macro-node-pending', zh ? '分析待寫入：資料有新公布時，早上的總經排程會補上（日資料每週六更新一次）。' : 'Analysis pending: the morning macro routine writes it when new data is released (daily series once a week, on Saturday).'));
         }
         article.append(body);
 

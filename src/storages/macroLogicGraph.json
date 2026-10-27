@@ -2,7 +2,8 @@
   "version": "2026-10-27",
   "about": "Top-down macro logic chains for Taiwan tech equities. Each row starts at a root chart and branches left to right; every branch ends in one of the focus nodes, the few macro variables a stock investor must watch. Node ids are the analysis codes (productType=macro-node). Change connections by editing edges; tests/market/macroChains.test.ts checks the graph.",
   "analysisFormat": {
-    "zh": "第一行必須是【判讀】順風／【判讀】中性／【判讀】逆風（對台股科技股），接著：資料截點（序列與期間）、現況（數字附期間與來源）、傳導（這個節點如何影響下一個節點）、翻轉條件。焦點節點另寫「對個股的意義」。"
+    "zh": "固定三行。第一行：【判讀】順風／【判讀】中性／【判讀】逆風（對台股科技股）。第二行：一到兩句話，最多 120 字，寫最新數字（附期間）與它對下一個節點的影響；焦點節點改寫對個股的意義。第三行：資料截點：每個序列代碼與最新期間，例如「資料截點：CUUR0000SA0L1E 2026-09、TW_CPI 2026-09」，排程靠這行判斷資料有沒有更新。",
+    "updateRule": "只有節點序列出現新期間（或修正值）才更新：月／季／週資料在新資料公布後的那一輪更新；含日資料的節點每週只在週六那一輪（美股週五收盤後）更新一次。焦點節點另在連入節點判讀改變時更新。"
   },
   "rows": [
     { "id": "inflation", "title": { "zh": "通膨與貨幣政策", "en": "Inflation and monetary policy" },
