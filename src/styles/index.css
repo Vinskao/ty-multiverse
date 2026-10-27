@@ -2004,7 +2004,7 @@
 .contact-dialog-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; }
 .contact-dialog-actions a, .contact-dialog-actions button { display:flex; align-items:center; justify-content:center; min-height:2.75rem; padding:.55rem .8rem; border:1px solid var(--gray-600); border-radius:.65rem; background:transparent; color:var(--gray-100); font:inherit; font-size:.9rem; font-weight:600; text-align:center; text-decoration:none; cursor:pointer; }
 .contact-dialog-actions a:hover, .contact-dialog-actions button:hover { border-color:var(--cta-gold, #d5ae4b); }
-.contact-dialog-actions .contact-dialog-primary { background:var(--cta-gold, #d5ae4b); border-color:var(--cta-gold, #d5ae4b); color:var(--cta-gold-text, #14110a); }
+.contact-dialog-actions .contact-dialog-primary { grid-column:1 / -1; background:var(--cta-gold, #d5ae4b); border-color:var(--cta-gold, #d5ae4b); color:var(--cta-gold-text, #14110a); }
 .contact-dialog-actions button.is-copied { border-color:#2f9e8f; color:#2f9e8f; }
 #contact-dialog-status:empty { display:none; }
 #contact-dialog-status { margin:.75rem 0 0; }

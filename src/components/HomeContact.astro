@@ -41,7 +41,6 @@ const topicText = i18n.home.contactTopic as Record<string, Record<'title' | 'bod
     <div class="contact-dialog-actions">
         <a id="contact-dialog-gmail" class="contact-dialog-primary" target="_blank" rel="noopener noreferrer" data-i18n="home.contactViaGmail">用 Gmail 寫信</a>
         <a id="contact-dialog-outlook" target="_blank" rel="noopener noreferrer" data-i18n="home.contactViaOutlook">用 Outlook 寫信</a>
-        <a id="contact-dialog-mailto" data-i18n="home.contactViaApp">用電腦的郵件程式</a>
         <button type="button" id="contact-dialog-copy" data-i18n="home.contactCopyMail">複製信件內容</button>
     </div>
     <p class="home-cta-status" id="contact-dialog-status" role="status" aria-live="polite"></p>
@@ -86,7 +85,6 @@ const topicText = i18n.home.contactTopic as Record<string, Record<'title' | 'bod
         document.getElementById('contact-dialog-preview')!.textContent = mailText(topic, lang());
         (document.getElementById('contact-dialog-gmail') as HTMLAnchorElement).href = links.gmail;
         (document.getElementById('contact-dialog-outlook') as HTMLAnchorElement).href = links.outlook;
-        (document.getElementById('contact-dialog-mailto') as HTMLAnchorElement).href = links.mailto;
         document.getElementById('contact-dialog-status')!.textContent = '';
         dialog.showModal();
         return true;

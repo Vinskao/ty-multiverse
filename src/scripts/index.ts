@@ -20,6 +20,9 @@ import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload,
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
+import macroLogicGraph from '../storages/macroLogicGraph.json';
+import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
+import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainView';
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
@@ -1688,7 +1691,50 @@ function buildMacroGrowthChart(chartId: string, byCode: Map<string, MacroIndicat
     return section;
 }
 
+// Macro logic chains (default view): each node's chart reuses buildMacroTrendChart; analyses come from the routine.
+let macroNodeAnalyses: Promise<Map<string, MacroNodeAnalysis>> | null = null;
+function loadMacroNodeAnalyses() {
+    macroNodeAnalyses ??= fetch(astroApiPath('/api/market/dashboard/macro/nodes'))
+        .then((response) => response.ok ? response.json() : { analyses: [] })
+        .then((data: { analyses?: MacroNodeAnalysis[] }) => new Map((data.analyses ?? []).map((row) => [row.code, row])))
+        .catch(() => new Map());
+    return macroNodeAnalyses;
+}
+
+function bindMacroViewToggle() {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-macro-view]')];
+    for (const button of buttons) {
+        if (button.dataset.bound) continue;
+        button.dataset.bound = 'true';
+        button.addEventListener('click', () => {
+            const view = button.dataset.macroView;
+            buttons.forEach((other) => other.setAttribute('aria-selected', String(other === button)));
+            document.getElementById('macro-chains')!.hidden = view !== 'chains';
+            document.getElementById('macro-indicator-grid')!.hidden = view !== 'grid';
+        });
+    }
+}
+
+async function renderMacroChainsView(snapshot: MacroSnapshot) {
+    const target = document.getElementById('macro-chains');
+    if (!target) return;
+    bindMacroViewToggle();
+    const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
+    if (!byCode.size) { target.replaceChildren(Object.assign(document.createElement('p'), { className: 'market-updated', textContent: marketI18n('macroLoading', 'Loading macro data…') })); return; }
+    const specs = new Map(MACRO_GROUPS.flatMap((group) => group.metrics.map(([code, label, format]) => [code, { label, format }] as const)));
+    const chart = (node: MacroChainNode) => {
+        const [base, ...rest] = chartCodes(node, (code) => byCode.has(code)).flatMap((code) => {
+            const indicator = byCode.get(code); const meta = specs.get(code);
+            return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
+        });
+        return base ? buildMacroTrendChart(base.indicator, base.format, base.label, rest,
+            { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }) : null;
+    };
+    renderMacroChains(target, { graph: macroLogicGraph as MacroGraph, zh: marketLocale() === 'zh-TW', analyses: await loadMacroNodeAnalyses(), chart });
+}
+
 function renderMacroDashboard(snapshot: MacroSnapshot) {
+    void renderMacroChainsView(snapshot);
     const grid = document.getElementById('macro-indicator-grid');
     const list = document.getElementById('macro-event-list');
     const status = document.getElementById('macro-dashboard-status');

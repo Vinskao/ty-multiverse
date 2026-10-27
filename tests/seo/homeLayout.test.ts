@@ -37,3 +37,18 @@ describe('homepage layout fixes (2026-10-26)', () => {
         expect(team).toMatch(/<details class="maintenance-catalog"[\s\S]*<SkillsBubbleChart client:visible[\s\S]*<\/details>/);
     });
 });
+
+it('offers Gmail, Outlook and copy in the contact chooser, without the mail-app button that did nothing (2026-10-27)', () => {
+    const contact = read('src/components/HomeContact.astro');
+    expect(contact).not.toContain('contact-dialog-mailto');
+    expect(contact).toContain('id="contact-dialog-gmail"');
+    expect(contact).toContain('id="contact-dialog-outlook"');
+    expect(contact).toContain('id="contact-dialog-copy"');
+});
+
+it('shows the macro logic chains by default with the indicator grid one tab away', () => {
+    const home = read('src/pages/index.astro');
+    expect(home).toMatch(/data-macro-view="chains"[^>]*>邏輯鏈/);
+    expect(home).toContain('<div id="macro-chains" class="macro-chains" role="tabpanel">');
+    expect(home).toMatch(/<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden>/);
+});

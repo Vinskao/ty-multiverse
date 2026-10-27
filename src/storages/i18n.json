@@ -56,6 +56,8 @@
   "home": {
     "buildVersion": { "en": "Build", "zh": "版本" },
     "teamSkillsChart": { "en": "Bubble size is each category's total proficiency score; click a bubble to open its skills.", "zh": "泡泡大小是各類別技能的熟練度總分；點一個泡泡可展開該類別的技能。" },
+    "macroViewChains": { "en": "Logic chains", "zh": "邏輯鏈" },
+    "macroViewGrid": { "en": "All indicators", "zh": "指標總表" },
     "teamEyebrow": { "en": "Product development & maintenance", "zh": "產品開發與維護" },
     "teamTitle": { "en": "The experience behind the product", "zh": "產品背後的維護經驗" },
     "teamIntro": { "en": "Built and maintained by Tianyi Kao, bringing experience in financial research, enterprise software and cloud deployment to data organization and decision tools.", "zh": "由 Tianyi Kao 開發與維護，結合金融資料研究、企業系統開發與雲端部署經驗，持續改善資料整理與決策工具。" },
@@ -84,7 +86,6 @@
     "contactDialogEyebrow": { "en": "Choose how to send", "zh": "選擇寄信方式" },
     "contactViaGmail": { "en": "Write in Gmail", "zh": "用 Gmail 寫信" },
     "contactViaOutlook": { "en": "Write in Outlook", "zh": "用 Outlook 寫信" },
-    "contactViaApp": { "en": "Use my mail app", "zh": "用電腦的郵件程式" },
     "contactCopyMail": { "en": "Copy the email", "zh": "複製信件內容" },
     "heroTitle": { "en": "Build your market view without writing code", "zh": "免寫程式，建立自己的市場判斷" },
     "heroTagline": { "en": "Bring market data and other researchers’ views together. Record your own judgments as data, then use charts to make decisions.", "zh": "彙整市場資料與他人觀點，把自己的判斷記成資料，再用圖表做決策。" },
