@@ -45,6 +45,21 @@ For each stock, call these public endpoints separately, in order. Do not combine
 
 Add a `Report perspectives` section to affected analyses. For every cited claim, identify the publisher, report title, publication date and page number; summarize rather than quote at length. If a report argues against the current rating, explicitly state whether the rating is maintained or changed and why, comparing the report evidence with current hard data. A report claim is a research view, not a verified fact. If a number appears only in an unextracted chart, state `Chart content not extracted` and do not infer its value. Private reports are excluded from public claim results. Public analysis routines must not include private report content.
 
+## Watchlist nominations / 觀察名單提名
+
+讀研究報告主張時，若報告點名一檔**目前不在儀表板**的台股（4 位數代碼），而且主張有具體的循環、技術力或交貨證據，就把它提名進 custom 區。這是你以研究員身分的判斷，不是把報告提到的股票全部加進來。
+
+1. 先 `GET https://peoplesystem.tatdvsonorth.com/maya-sawa/market/watch` 看目前在名單內（`watching`）與候選（`candidates`）的標的，避免重複，並優先處理還在候選、這輪又有新報告支持的標的。
+2. 提名：`curl -sS -X POST https://peoplesystem.tatdvsonorth.com/maya-sawa/market/watch -H "Content-Type: application/json" --data-binary @nomination.json`，內容 `{"code": "3711", "reason": "…", "reportIds": ["…"], "conviction": "normal"}`，用 python json.dump 產生。寫入 key 由雲端環境的代理自動加入，不要自行設定。
+   - `reason`：10–300 字，寫明哪份報告的哪項證據（循環／技術力／交貨），以及它為什麼值得追蹤；不要寫「看好」這類沒有證據的話。
+   - `reportIds`：支持這個判斷的公開報告 `report_id`（從 claims 回應取得），1–10 份。系統會驗證報告存在且公開。
+   - `conviction`：預設 `normal`。只有在報告給出明確的訂單、產能或營收證據、而且你用最新資料核對過時才用 `high`。
+3. 進名單的條件：兩份**不同**的報告在 21 天內都支持它（一次提名引用兩份報告即可），或是一次 `high`。只有一份報告時它是候選，不會出現在 custom 區。
+4. 留多久：每次有新的報告支持（重新提名並引用新報告）就續期；30 天沒有任何報告再提到，就自動移出，你不需要處理。名單同時最多 3 檔，額滿時新進的會取代被冷落最久的（待滿 7 天以上才會被取代）。
+5. 擁有者買入後，它變成一般持股（自動區），不再算名單；賣出後若報告仍支持，會再回到 custom 區。系統自己處理，你不要為此提名。
+6. 每輪最多提名 3 檔。不要提名已是持股的標的（會回 422）、非台股（422）或沒有報告依據的標的。同一份報告同一天重複提名不會重複計算。
+7. 進名單的標的下一輪會出現在 `GET /tymultiverse/api/market/dashboard` 的 `custom`（`source` 為 `ai-watch`，附 `reason`、`expiresAt`），照一般標的寫分析；在「公司定位」註明它因哪些報告進入名單與預計到期日。系統在標的剛進名單時會自動補歷史資料並產生第一份分析，不必等排程。
+
 ## Browser workflow
 
 1. Sign in to TY Multiverse, select an instrument, and open AI analysis.

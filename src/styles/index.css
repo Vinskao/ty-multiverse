@@ -24,6 +24,7 @@
 .market-history-band { fill:var(--gray-500); opacity:.14; pointer-events:none; }
 .market-history-guide { stroke:var(--gray-300); stroke-width:1; stroke-dasharray:3 3; opacity:.7; pointer-events:none; vector-effect:non-scaling-stroke; }
 .market-history-hover-dot,.market-history-last { stroke:var(--gray-999); stroke-width:2; pointer-events:none; }
+.market-watch-badge { display:inline-block; margin-top:.2rem; padding:0 .5rem; border:1px solid var(--accent-regular); border-radius:999px; color:var(--accent-regular); font-size:.7rem; line-height:1.4; white-space:nowrap; cursor:help; }
 .market-target-legend { display:flex; flex-wrap:wrap; gap:.3rem 1rem; margin:.4rem 0 0; font-size:.78rem; color:var(--gray-300); font-variant-numeric:tabular-nums; }
 .market-target-legend span::before { content:''; display:inline-block; width:1.4rem; border-top:2px dashed var(--swatch, #999); margin-right:.4rem; vertical-align:middle; }
 .market-chart-readout--compact { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem .9rem; min-height:auto; margin:.35rem 0 1rem; padding:.45rem .7rem; font-size:.78rem; }

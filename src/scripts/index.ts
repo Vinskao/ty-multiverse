@@ -33,6 +33,7 @@ import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
 import { historyCloses, type TargetAction } from './market/priceTargets';
+import { watchBadge } from './market/watchBadge';
 import { renderPriceTargetChart } from './market/priceTargetChart';
 import { setAccountSections } from './market/accountSections';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
@@ -132,6 +133,8 @@ interface DashboardInstrument {
     market?: string;  // TW, US, JP, KR…; overseas codes can share digits with Taiwan codes (6857)
     underlyingCode?: string;
     quote?: TxfQuote | null;
+    // Set on stocks the analyst added to the custom area from research reports.
+    source?: string; reason?: string; reports?: number; expiresAt?: string;
 }
 interface MarketDashboardPayload {
     fixed: DashboardInstrument;
@@ -1288,6 +1291,8 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         item.append(code, name);
         const marketLabel = instrumentMarketLabel(instrument, marketLocale() === 'zh-TW' ? 'zh' : 'en');
         if (marketLabel) name.append(` · ${marketLabel}`);
+        const watch = watchBadge(instrument, marketLocale() === 'zh-TW');
+        if (watch) { const tag = document.createElement('span'); tag.className = 'market-watch-badge'; tag.textContent = watch.text; tag.title = watch.title; item.append(tag); }
         const analysisLabel = document.createElement('span'); analysisLabel.className = 'market-row-analysis';
         analysisLabel.textContent = marketText('Checking analysis…', '檢查評論…');
         item.append(analysisLabel);

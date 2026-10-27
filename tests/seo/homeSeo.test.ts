@@ -17,8 +17,9 @@ describe('homepage search and contact contract', () => {
 
     it('explains the product in server HTML and sends enquiries to email', () => {
         const home = source('src/pages/index.astro');
-        expect(home).toContain('免寫程式的量化研究與投資決策圖表');
-        expect(home).toContain('免寫程式，建立自己的市場判斷');
+        expect(home).toContain('從今天起，雇用一位頂級機構研究員｜TY 市場研究室');
+        expect(home).toContain('data-i18n="home.heroTitle">從今天起，雇用一位頂級機構研究員</h1>');
+        expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
         expect(home).toMatch(/class="home-product-contact" href=\{mailtoHref\('trial', 'zh'\)\} data-contact-topic="trial"/);
