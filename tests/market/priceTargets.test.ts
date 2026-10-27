@@ -107,3 +107,14 @@ it('draws a views lane, and clicking a broker dot shows its reasoning and linked
   expect(detail).toContain('Optical networking');
   expect(document.querySelector('.market-target-views')!.textContent).toContain('claim p5'); // all views listed below the table
 });
+
+it('says when a view is dated by the day it was recorded or by its data cut-off instead of a publication date', () => {
+  document.body.innerHTML = '<div id="targets-test"></div>';
+  const closes = [{ date: '2026-10-20', close: 100 }, { date: '2026-10-21', close: 101 }];
+  renderPriceTargetChart('targets-test', { actions: [], consensus: [], closes, currency: 'TWD', zh: true,
+    views: [{ ...view(3, '2026-10-20'), dateKind: 'recorded' }, { ...view(5, '2026-10-21'), dateKind: 'data' }, view(7, '2026-10-21')] });
+  const list = document.querySelector('.market-target-views')!.textContent!;
+  expect(list).toContain('2026-10-20（入庫日）');
+  expect(list).toContain('2026-10-21（資料截點）');
+  expect(list.match(/2026-10-21 ·/g)).toHaveLength(1); // the published one has no suffix
+});

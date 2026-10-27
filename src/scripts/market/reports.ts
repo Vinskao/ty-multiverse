@@ -5,6 +5,8 @@ export type MarketReport = {
   title: string;
   publisher: string;
   published_at: string | null;
+  received_at?: string;
+  source_url?: string | null;
   page_count: number;
   visibility: 'public' | 'owner';
   status: ReportStatus;
@@ -51,4 +53,19 @@ export function reportSegmentForText(text: string): string | null {
 
 export function reportClaimRelevant(claim: { codes: string[]; segment: string }, code: string, segment: string | null): boolean {
   return claim.codes.includes(code.toUpperCase()) || (claim.codes.length === 0 && segment !== null && claim.segment === segment);
+}
+
+const recordedDay = (receivedAt?: string | null) => (receivedAt ? receivedAt.slice(0, 10) : '');
+
+/** Report card date: the publication date when known, always the day it was recorded in the database. */
+export function reportDateLabel(report: { published_at: string | null; received_at?: string | null }): string {
+  const recorded = recordedDay(report.received_at);
+  return `${report.published_at ? `發布 ${report.published_at}` : '發布日未填'}${recorded ? ` · 入庫 ${recorded}` : ''}`;
+}
+
+/** Date in a claim citation: the report's publication date, else the day the report was recorded. */
+export function claimDateLabel(claim: { published_at: string | null; received_at?: string | null }): string {
+  if (claim.published_at) return claim.published_at;
+  const recorded = recordedDay(claim.received_at);
+  return recorded ? `入庫 ${recorded}` : '';
 }

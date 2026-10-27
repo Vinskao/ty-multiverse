@@ -26,7 +26,7 @@ import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainVi
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
-import { canUploadReports, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
@@ -1011,7 +1011,7 @@ async function loadReportViewpoints(code: string, analysis: string) {
     const list = document.getElementById('market-ai-report-viewpoints-list');
     if (!section || !list) return;
     list.replaceChildren(); section.hidden = true;
-    type Claim = { report_id: string; title: string; publisher: string; published_at: string | null; page: number; segment: string; codes: string[]; direction: 'tailwind' | 'neutral' | 'headwind'; claim: string };
+    type Claim = { report_id: string; title: string; publisher: string; published_at: string | null; received_at?: string; page: number; segment: string; codes: string[]; direction: 'tailwind' | 'neutral' | 'headwind'; claim: string };
     const claimEndpoint = astroApiPath(`/api/market/reports/claims?code=${encodeURIComponent(code)}`);
     const [response, researchResponse] = await Promise.all([
         fetch(claimEndpoint, { cache: 'no-store' }).catch(() => null),
@@ -1038,7 +1038,7 @@ async function loadReportViewpoints(code: string, analysis: string) {
     for (const claim of claims.values()) {
         const item = document.createElement('p');
         item.className = `market-report-claim${reportClaimTone(claim.direction, lean) === 'opposed' ? ' market-report-claim--opposed' : ''}`;
-        const citation = `${claim.publisher} ${claim.published_at || ''}〈${claim.title}〉p.${claim.page}`.trim();
+        const citation = `${claim.publisher} ${claimDateLabel(claim)}〈${claim.title}〉p.${claim.page}`.trim();
         item.textContent = `${reportClaimTone(claim.direction, lean) === 'opposed' ? '方向相反｜' : ''}${claim.claim}（${citation}）`;
         list.append(item);
     }
@@ -2022,7 +2022,7 @@ function renderMarketReports(reports: MarketReport[]) {
         const card = document.createElement('article'); card.className = 'market-report-card';
         const title = document.createElement('h5'); title.textContent = report.title; card.append(title);
         const meta = document.createElement('p');
-        meta.textContent = `${report.publisher || '出版者未填'} · ${report.published_at || '發布日未填'} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
+        meta.textContent = `${report.publisher || '出版者未填'} · ${reportDateLabel(report)} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
         card.append(meta);
         const extractionNote = document.createElement('p'); extractionNote.textContent = '圖表內容未擷取；主張依報告文字敘述整理。'; card.append(extractionNote);
         if (report.visibility === 'owner') { const privacy = document.createElement('p'); privacy.textContent = '只有你看得到'; card.append(privacy); }

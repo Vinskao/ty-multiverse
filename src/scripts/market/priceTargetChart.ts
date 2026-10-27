@@ -25,7 +25,7 @@ export function renderPriceTargetChart(targetId: string, options: Options) {
     const direction = (value: string) => DIRECTION[value] ?? DIRECTION.neutral;
     const allDates = [...options.closes.map(p => p.date), ...options.consensus.map(p => p.date), ...options.actions.filter(a => a.target).map(a => a.date),
         ...views.flatMap(v => v.date ? [v.date] : [])];
-    if (!options.actions.some(a => a.target) && !options.consensus.length) {
+    if (!options.actions.some(a => a.target) && !options.consensus.length && !views.length) {
         const empty = document.createElement('p'); empty.className = 'market-updated';
         empty.textContent = zh ? '尚無目標價資料；每日收集後會出現。' : 'No target prices stored yet; they appear after the daily collection.';
         target.append(empty); return;
@@ -131,7 +131,8 @@ export function renderPriceTargetChart(targetId: string, options: Options) {
         const li = document.createElement('li');
         const [zhLabel, enLabel, tone] = direction(view.direction);
         const badge = document.createElement('span'); badge.className = `market-target-view-badge ${tone}`; badge.textContent = zh ? zhLabel : enLabel;
-        const head = document.createElement('strong'); head.textContent = `${view.date ?? (zh ? '未標日期' : 'undated')} · ${view.publisher || (zh ? '未標示出版者' : 'publisher not stated')}`;
+        const kind = view.dateKind === 'recorded' ? (zh ? '（入庫日）' : ' (recorded)') : view.dateKind === 'data' ? (zh ? '（資料截點）' : ' (data date)') : '';
+        const head = document.createElement('strong'); head.textContent = `${view.date ?? (zh ? '未標日期' : 'undated')}${kind} · ${view.publisher || (zh ? '未標示出版者' : 'publisher not stated')}`;
         const text = document.createElement('p'); text.textContent = view.claim;
         const source = document.createElement('small'); source.textContent = `《${view.title}》 p.${view.page} · ${view.evidence}`;
         li.append(badge, head, text, source);

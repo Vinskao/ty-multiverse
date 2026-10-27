@@ -37,3 +37,20 @@ describe('market research reports', () => {
     expect(reportClaimRelevant({ codes: ['2330'], segment: 'foundry' }, '2408', segment)).toBe(false);
   });
 });
+
+// 2026-10-27: a report without a publication date still shows when it was saved to the database.
+import { claimDateLabel, reportDateLabel } from '../../src/scripts/market/reports';
+
+describe('report dates', () => {
+  it('shows the publication date and the day it was recorded, or only the recording day when no publication date is known', () => {
+    expect(reportDateLabel({ published_at: '2026-10-01', received_at: '2026-10-27T01:03:00.000+00:00' })).toBe('發布 2026-10-01 · 入庫 2026-10-27');
+    expect(reportDateLabel({ published_at: null, received_at: '2026-10-20T05:35:13.559+00:00' })).toBe('發布日未填 · 入庫 2026-10-20');
+    expect(reportDateLabel({ published_at: null })).toBe('發布日未填');
+  });
+
+  it('dates a claim by the report, falling back to the recording day', () => {
+    expect(claimDateLabel({ published_at: '2026-10-01', received_at: '2026-10-27T01:03:00+00:00' })).toBe('2026-10-01');
+    expect(claimDateLabel({ published_at: null, received_at: '2026-10-20T05:35:13+00:00' })).toBe('入庫 2026-10-20');
+    expect(claimDateLabel({ published_at: null })).toBe('');
+  });
+});
