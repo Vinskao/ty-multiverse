@@ -49,7 +49,8 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
 
         const body = el('section', 'macro-node-analysis');
         if (analysis?.content) {
-            const lines = analysis.content.split('\n').filter((line) => line.trim());
+            // The routine sometimes stores a literal backslash-n instead of a line break (seen in production 2026-10-27).
+            const lines = analysis.content.replace(/\\n/g, '\n').split('\n').filter((line) => line.trim());
             const text = el('div', 'macro-node-analysis-text');
             lines.forEach((line) => text.append(el('p', undefined, line)));
             body.append(text);

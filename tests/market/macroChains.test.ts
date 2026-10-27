@@ -108,3 +108,15 @@ it('tells the routine to write two short sentences with a data cut-off, and to u
     expect(format.updateRule).toContain('新期間');
     expect(format.updateRule).toContain('週六');
 });
+
+it('shows a literal "\\n" written by the routine as a line break (production, 2026-10-27)', async () => {
+    const { renderMacroChains } = await import('../../src/scripts/market/macroChainView');
+    document.body.innerHTML = '<div id="chains"></div>';
+    const content = '【判讀】順風\\n聖路易斯壓力指數 -0.63（週至 10/16），金融條件偏寬鬆。\\n資料截點：STLFSI4 2026-10-16、NFCI 2026-10-16';
+    renderMacroChains(document.getElementById('chains')!, { graph: g, zh: true, chart: () => null,
+        analyses: new Map([['FIN-STRESS', { code: 'FIN-STRESS', content }]]) });
+    const node = document.getElementById('macro-node-fin-stress')!;
+    expect(node.dataset.stance).toBe('tailwind');
+    const lines = [...node.querySelectorAll('.macro-node-analysis-text p')].map((p) => p.textContent);
+    expect(lines).toEqual(['【判讀】順風', '聖路易斯壓力指數 -0.63（週至 10/16），金融條件偏寬鬆。', '資料截點：STLFSI4 2026-10-16、NFCI 2026-10-16']);
+});
