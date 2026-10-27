@@ -6,6 +6,8 @@ export type ResearchEconomicsPoint = {
   cumulativeCostUsd: number;
 };
 
+export type PublicPortfolioReturnPoint = { date: string; returnPercent: number };
+
 const validIsoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
   && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
 
@@ -49,6 +51,35 @@ export function buildResearchEconomicsSeries(
       returnPercent: Math.round((((latestAssets / baseline[1]) - 1) * 100) * 1_000_000) / 1_000_000,
       cumulativeCostUsd,
     };
+  });
+}
+
+/** Join a public, amount-free portfolio return series with public research-cost estimates. */
+export function buildResearchEconomicsFromReturns(
+  history: PublicPortfolioReturnPoint[],
+  costs: TokenCostPoint[],
+): ResearchEconomicsPoint[] {
+  const returns = new Map<string, number>();
+  for (const point of history) {
+    if (validIsoDate(point.date) && Number.isFinite(point.returnPercent)) returns.set(point.date, point.returnPercent);
+  }
+  const baseline = [...returns.keys()].sort()[0];
+  if (!baseline) return [];
+  const costsByDate = new Map<string, number>();
+  for (const point of costs) {
+    if (!validIsoDate(point.period) || !Number.isFinite(point.totalEstimatedCostUsd)) continue;
+    costsByDate.set(point.period, (costsByDate.get(point.period) ?? 0) + point.totalEstimatedCostUsd);
+  }
+  const dates = [...new Set([
+    ...[...returns.keys()].filter(date => date >= baseline),
+    ...[...costsByDate.keys()].filter(date => date >= baseline),
+  ])].sort();
+  let latestReturn = returns.get(baseline)!;
+  let cumulativeCostUsd = 0;
+  return dates.map(date => {
+    if (returns.has(date)) latestReturn = returns.get(date)!;
+    cumulativeCostUsd += costsByDate.get(date) ?? 0;
+    return { date, returnPercent: latestReturn, cumulativeCostUsd };
   });
 }
 

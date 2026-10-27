@@ -3,10 +3,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round" /></svg>
     <span class="notification-count" data-count hidden aria-live="polite"></span>
   </button>
-  <section id="notification-panel" class="notification-panel" data-panel hidden aria-label="通知 / Notifications">
-    <header><strong data-heading>通知</strong><button type="button" data-read-all>全部已讀</button></header>
+  <section id="notification-panel" class="notification-panel" data-panel popover="manual" hidden aria-labelledby="notification-heading">
+    <header class="notification-header"><h2 id="notification-heading" data-heading>通知</h2><div class="notification-actions"><button type="button" data-read-all>全部已讀</button><button type="button" class="notification-close" data-close aria-label="關閉通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round" /></svg></button></div></header>
     <div class="notification-tabs" role="group" aria-label="篩選"><button type="button" data-tab="all" aria-pressed="true">全部</button><button type="button" data-tab="unread" aria-pressed="false">未讀</button></div>
-    <ul data-list></ul><p data-empty>目前沒有通知</p>
+    <div class="notification-content"><ul data-list></ul><div class="notification-empty" data-empty-state><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round" /></svg><p data-empty>目前沒有通知</p></div></div>
   </section>
 </div>
 <script>
@@ -56,23 +56,33 @@
   .notification-bell:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 2px; }
   .notification-count { position: absolute; top: -6px; right: -6px; min-width: 16px; padding: 0 4px; border-radius: 20px; background: #c83d55; color: white; font: 600 10px/16px system-ui; }
   .notification-count[hidden], .notification-panel[hidden] { display: none !important; }
-  .notification-panel { position: absolute; right: 0; top: calc(100% + 12px); width: min(420px, calc(100vw - 32px)); max-height: min(560px, 70vh); overflow: auto; z-index: 1000; padding: 14px 16px 8px; border: 1px solid var(--gray-800); border-radius: 12px; background: var(--gray-999); color: var(--gray-200); box-shadow: 0 12px 36px #0005; text-align: left; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  header button { background: transparent; color: var(--accent-regular); border: 0; cursor: pointer; font: inherit; font-size: .8rem; }
-  header button:disabled { opacity: .45; cursor: default; }
-  .notification-tabs { display: flex; gap: 6px; margin-top: 10px; }
-  .notification-tabs button { border: 1px solid var(--gray-800); border-radius: 999px; background: transparent; color: var(--gray-300); padding: 2px 12px; font: inherit; font-size: .78rem; cursor: pointer; }
-  .notification-tabs button[aria-pressed="true"] { background: var(--gray-800); color: var(--gray-0); }
-  ul { list-style: none; padding: 0; margin: 8px 0 0; }
-  .notification-panel :global(li) { border-top: 1px solid var(--gray-800); }
-  .notification-panel :global(li.unread) { box-shadow: inset 3px 0 var(--accent-regular); }
+  .notification-panel { position: fixed; inset: auto; margin: 0; box-sizing: border-box; display: flex; flex-direction: column; width: min(420px, calc(100vw - 32px)); max-height: min(560px, calc(100dvh - 32px)); overflow: hidden; z-index: 10000; padding: 0; border: 1px solid var(--gray-600); border-radius: 16px; background: var(--gray-900); color: var(--gray-100); box-shadow: 0 16px 48px #0005, 0 2px 8px #0003; text-align: left; font: 400 .875rem/1.5 var(--font-body, system-ui); }
+  .notification-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 16px 10px 20px; }
+  .notification-header h2 { margin: 0; color: var(--gray-0); font-size: 1.05rem; font-weight: 700; }
+  .notification-actions { display: flex; align-items: center; gap: 10px; }
+  .notification-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 4px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--gray-100); cursor: pointer; font: inherit; font-size: .78rem; }
+  .notification-actions button:hover:not(:disabled) { background: var(--gray-800); }
+  .notification-actions button:disabled { color: var(--gray-400); cursor: default; }
+  .notification-actions .notification-close { width: 32px; padding: 0; }
+  .notification-panel button:focus-visible { outline: 2px solid var(--gray-200); outline-offset: -3px; }
+  .notification-tabs { display: flex; flex: 0 0 auto; gap: 8px; margin: 0; padding: 0 20px 12px; border-bottom: 1px solid var(--gray-700); }
+  .notification-tabs button { min-height: 30px; border: 1px solid var(--gray-700); border-radius: 999px; background: transparent; color: var(--gray-300); padding: 3px 12px; font: inherit; font-size: .78rem; cursor: pointer; }
+  .notification-tabs button[aria-pressed="true"] { background: var(--gray-700); color: var(--gray-0); border-color: var(--gray-600); }
+  .notification-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  .notification-empty { display: grid; justify-items: center; gap: 10px; padding: 32px 20px; color: var(--gray-400); }
+  .notification-empty[hidden] { display: none; }
+  .notification-empty p { margin: 0; }
+  .notification-panel :global(li + li) { border-top: 1px solid var(--gray-800); }
+  .notification-panel :global(li.unread) { box-shadow: inset 3px 0 var(--gray-300); background: color-mix(in srgb, var(--gray-700) 24%, transparent); }
   .notification-panel :global(li.attention) { box-shadow: inset 3px 0 #e0a43a; }
   .notification-panel :global(li.read strong) { font-weight: 500; color: var(--gray-300); }
   .notification-panel :global(li.read .n-body) { color: var(--gray-400); }
-  .notification-panel :global(li > a), .notification-panel :global(li > button) { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; width: 100%; padding: 12px 12px 12px 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+  .notification-panel :global(li > a), .notification-panel :global(li > button) { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; width: 100%; padding: 16px 16px 16px 20px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+  .notification-panel :global(li strong) { font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
   .notification-panel :global(li > a:hover), .notification-panel :global(li > button:hover), .notification-panel :global(li > a:focus-visible), .notification-panel :global(li > button:focus-visible) { background: color-mix(in srgb, var(--accent-regular) 12%, transparent); }
   .notification-panel :global(time) { font-size: .75rem; color: var(--gray-400); white-space: nowrap; }
-  .notification-panel :global(.n-body) { grid-column: 1 / -1; font-size: .85rem; line-height: 1.6; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .notification-panel :global(.n-body) { grid-column: 1 / -1; color: var(--gray-300); font-size: .85rem; line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .notification-panel :global(li.expanded .n-body) { display: block; overflow: visible; }
   p { font-size: .85rem; line-height: 1.6; color: var(--gray-400); }
 </style>

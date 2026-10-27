@@ -77,7 +77,7 @@ describe('layout and analysis', () => {
 });
 
 describe('renderMacroChains', () => {
-    it('draws every row, the focus column, analyses with their stance, pending notes and the next-step links', async () => {
+    it('draws every row, convergence above the rows, analyses, and an actionable link for every graph relationship', async () => {
         const { renderMacroChains } = await import('../../src/scripts/market/macroChainView');
         document.body.innerHTML = '<div id="chains"></div>';
         const analyses = new Map([['CORE-INFLATION', { code: 'CORE-INFLATION', content: '【判讀】逆風\n資料截點：CPI 2026-09\n核心 CPI 年增 3.1%', model: 'Claude', revision: 2 }],
@@ -96,8 +96,17 @@ describe('renderMacroChains', () => {
         expect(document.getElementById('macro-node-oil')!.querySelector('.macro-node-pending')).not.toBeNull();
         expect(document.getElementById('macro-node-focus-discount')!.dataset.stance).toBe('neutral');
         drawEdges();
-        expect(document.querySelectorAll('.macro-edge')).toHaveLength(g.edges.length);
-        expect(document.querySelectorAll('.macro-edge--focus').length).toBe(g.edges.filter((edge) => edge.to.startsWith('focus-')).length);
+        // Local SVG connectors stay inside independent rows; convergence now lives above them.
+        const links = [...document.querySelectorAll<HTMLButtonElement>('.macro-node-next button')];
+        expect(links).toHaveLength(g.edges.length);
+        for (const edge of g.edges) {
+            expect(links.some(link => link.closest<HTMLElement>('.macro-node')?.dataset.node === edge.from && link.dataset.target === edge.to), `${edge.from} → ${edge.to}`).toBe(true);
+        }
+        const localEdges = g.edges.filter(edge => !g.focus.some(node => node.id === edge.to));
+        const paths = [...document.querySelectorAll<SVGPathElement>('.macro-edge')];
+        expect(paths).toHaveLength(localEdges.length);
+        for (const edge of localEdges) expect(paths.some(path => path.dataset.from === edge.from && path.dataset.to === edge.to)).toBe(true);
+        expect(document.querySelector('.macro-chain-rows')?.previousElementSibling?.classList.contains('macro-chain-overview')).toBe(true);
     });
 });
 

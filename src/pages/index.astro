@@ -101,13 +101,12 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						<div class="home-product-pricing">
 							<div class="home-product-pricing-copy"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
 							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">
-								<section id="research-economics-panel" data-account-only hidden aria-labelledby="research-economics-title">
-									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value.</p></div></div>
+								<section id="research-economics-panel" aria-labelledby="research-economics-title">
+									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value. Account values are never shown.</p></div></div>
 									<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
 									<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
 									<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Dashed amber line and right axis: cumulative token cost of the scheduled research routines in USD (estimated). The line appears once the routines start reporting usage.</p>
 								</section>
-								<div class="research-economics-signin"><h3 data-i18n="home.researchEconomicsTitle">研究費用與投資報酬</h3><p data-i18n="home.researchEconomicsSignIn">登入後查看投資組合報酬率歷史，以及第二軸的排程研究累積費用。</p></div>
 							</aside>
 						</div>
 					</section>

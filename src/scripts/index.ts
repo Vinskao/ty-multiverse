@@ -26,7 +26,7 @@ import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainVi
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
-import { buildResearchEconomicsSeries, tokenCostsFromDaily, type TokenCostPoint } from './market/researchEconomics';
+import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportMetaLine, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
@@ -2179,6 +2179,25 @@ function renderResearchPortfolioReturn(points: PortfolioHistoryPoint[]) {
     renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, tokenCosts), marketLocale() === 'zh-TW' ? 'zh' : 'en');
 }
 
+async function loadPublicResearchEconomics() {
+    if (hasMarketAuth()) return; // Signed-in visitors use the existing authorized history request.
+    const svg = document.getElementById('research-economics-return-chart') as SVGSVGElement | null;
+    const readout = document.getElementById('research-economics-return-readout') as HTMLOutputElement | null;
+    if (!svg || !readout) return;
+    try {
+        const [response] = await Promise.all([
+            fetch(astroApiPath('/api/market/research-economics')),
+            loadTokenCosts(),
+        ]);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json() as { history?: PublicPortfolioReturnPoint[] };
+        renderResearchReturnChart(svg, readout, buildResearchEconomicsFromReturns(payload.history ?? [], tokenCosts), marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    } catch (error) {
+        console.error('Public research economics unavailable:', error);
+        renderResearchReturnChart(svg, readout, [], marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    }
+}
+
 export function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
     const svg = document.getElementById('portfolio-history-svg') as SVGSVGElement | null;
     const empty = document.getElementById('portfolio-history-empty');
@@ -2282,7 +2301,6 @@ async function fetchPortfolioHistory() {
     if (!status) return;
     if (!hasMarketAuth()) {
         renderPortfolioHistory([]);
-        renderResearchPortfolioReturn([]);
         status.textContent = 'Login';
         return;
     }
@@ -3436,6 +3454,7 @@ function initIndexPage() {
     fetchLeetCodeStats();
     fetchTxfQuote();
     fetchMarketUsage();
+    void loadPublicResearchEconomics();
     fetchPortfolio();
     if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
     _marketQuoteTimer = window.setInterval(() => {

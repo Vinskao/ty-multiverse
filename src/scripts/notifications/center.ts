@@ -1,4 +1,5 @@
 import { formatNumber } from '../format/numbers';
+import { notificationPanelLayout } from './layout';
 export type SiteNotification = { id: string; title: string; body: string; href: string; at?: string; attention?: boolean };
 export type RoutineRow = { id: number; kind: string; title: string; body: string; createdAt: string };
 
@@ -42,6 +43,7 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   const badge = get('[data-count]');
   const list = get('[data-list]');
   const all = get<HTMLButtonElement>('[data-read-all]');
+  const closeButton = root.querySelector<HTMLButtonElement>('[data-close]');
   const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
   let filter: 'all' | 'unread' = 'all';
   const open = new Set<string>();
@@ -51,7 +53,23 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   const notifications = [...new Map(items.map(item => [item.id, item])).values()];
   const abort = new AbortController();
   const signal = abort.signal;
-  const close = () => { panel.hidden = true; bell.setAttribute('aria-expanded', 'false'); };
+  const positionPanel = () => {
+    if (panel.hidden) return;
+    const anchor = bell.getBoundingClientRect();
+    const viewport = { width: document.documentElement.clientWidth || window.innerWidth, height: window.innerHeight };
+    let placement = notificationPanelLayout(anchor, viewport, panel.getBoundingClientRect().height);
+    panel.style.width = `${placement.width}px`;
+    panel.style.maxHeight = `${placement.maxHeight}px`;
+    // Re-measure after constraining the width/height so an upward-opening panel hugs its bell.
+    placement = notificationPanelLayout(anchor, viewport, panel.getBoundingClientRect().height);
+    panel.style.left = `${placement.left}px`;
+    panel.style.top = `${placement.top}px`;
+  };
+  const close = () => {
+    if (!panel.hidden) panel.hidePopover?.();
+    panel.hidden = true;
+    bell.setAttribute('aria-expanded', 'false');
+  };
   const render = () => {
     const unread = notifications.filter(item => !read.includes(item.id)).length;
     badge.textContent = unread > 99 ? '99+' : formatNumber(unread, 'count');
@@ -59,6 +77,7 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
     bell.setAttribute('aria-label', lang === 'en' ? `Notifications, ${unread} unread` : `通知，${unread} 則未讀`);
     all.textContent = lang === 'en' ? 'Mark all read' : '全部已讀';
     all.disabled = unread === 0;
+    closeButton?.setAttribute('aria-label', lang === 'en' ? 'Close notifications' : '關閉通知');
     const shown = filter === 'unread' ? notifications.filter(item => !read.includes(item.id)) : notifications;
     for (const tab of tabs) {
       const unreadTab = tab.dataset.tab === 'unread';
@@ -68,6 +87,8 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
     const empty = get('[data-empty]');
     empty.textContent = filter === 'unread' ? (lang === 'en' ? 'Nothing unread' : '沒有未讀通知') : (lang === 'en' ? 'No notifications' : '目前沒有通知');
     empty.hidden = shown.length > 0;
+    const emptyState = root.querySelector<HTMLElement>('[data-empty-state]');
+    if (emptyState) emptyState.hidden = shown.length > 0;
     list.replaceChildren();
     for (const item of shown) {
       const li = document.createElement('li');
@@ -92,17 +113,30 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
       }
       list.append(li);
     }
+    positionPanel();
   };
   const mark = (ids: string[]) => {
     read = [...new Set([...read, ...ids])].slice(-200);
     try { localStorage.setItem(key, JSON.stringify(read)); } catch { /* Retain session state. */ }
     render();
   };
-  bell.addEventListener('click', () => { panel.hidden = !panel.hidden; bell.setAttribute('aria-expanded', String(!panel.hidden)); }, { signal });
+  bell.addEventListener('click', () => {
+    if (!panel.hidden) { close(); return; }
+    panel.hidden = false;
+    // Native top layer escapes the nav's overflow clipping and stacking contexts.
+    panel.showPopover?.();
+    bell.setAttribute('aria-expanded', 'true');
+    positionPanel();
+  }, { signal });
+  closeButton?.addEventListener('click', () => { close(); bell.focus(); }, { signal });
   all.addEventListener('click', () => mark(notifications.map(item => item.id)), { signal });
   for (const tab of tabs) tab.addEventListener('click', () => { filter = tab.dataset.tab === 'unread' ? 'unread' : 'all'; render(); }, { signal });
   document.addEventListener('click', e => { if (!root.contains(e.target as Node)) close(); }, { signal });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { close(); bell.focus(); } }, { signal });
+  window.addEventListener('resize', positionPanel, { signal });
+  document.addEventListener('scroll', positionPanel, { signal, capture: true });
+  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(positionPanel) : null;
+  observer?.observe(panel);
   close(); render();
-  return () => { abort.abort(); close(); list.replaceChildren(); badge.hidden = true; };
+  return () => { abort.abort(); observer?.disconnect(); close(); list.replaceChildren(); badge.hidden = true; };
 }

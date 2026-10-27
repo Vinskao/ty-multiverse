@@ -1,6 +1,7 @@
-// Draws the macro logic chains: one row per chain, nodes in stage columns, the focus column on the right, and
-// SVG connectors measured from the laid-out cards. Graph rules and stance parsing are in ./macroChains.ts.
+// Each themed chain scrolls independently; convergence stays above the chains.
+// SVG connectors are local to a chain. Links to convergence retain their explicit destination buttons.
 import { layoutMacroGraph, macroNodeLinks, parseStance, type MacroChainNode, type MacroGraph, type MacroStance } from './macroChains';
+import { chainScrollTarget } from './macroChainNavigation';
 
 export type MacroNodeAnalysis = { code: string; content: string; model?: string; updatedAt?: string; revision?: number };
 type Options = {
@@ -28,9 +29,9 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
     const titleOf = new Map([...graph.nodes, ...graph.focus].map((node) => [node.id, t(node.title)]));
     const focusIds = new Set(graph.focus.map((node) => node.id));
 
-    const grid = el('div', 'macro-chains-grid');
-    grid.style.setProperty('--macro-stages', String(layout.stages));
-    grid.style.setProperty('--macro-rows', String(layout.rows.length));
+    const view = el('div', 'macro-chains-view');
+    const rowViews: Array<{ grid: HTMLElement; svg: SVGSVGElement; updateControls: () => void }> = [];
+    const motion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' as const : 'smooth' as const;
 
     const card = (node: MacroChainNode, focus = false) => {
         const article = el('article', `macro-node${focus ? ' macro-node--focus' : ''}`);
@@ -79,10 +80,10 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
             for (const edge of outgoing) {
                 const item = el('li');
                 const jump = el('button', focusIds.has(edge.to) ? 'is-focus' : '', `→ ${titleOf.get(edge.to)}`) as HTMLButtonElement;
-                jump.type = 'button';
+                jump.type = 'button'; jump.dataset.target = edge.to;
                 jump.addEventListener('click', () => {
                     const destination = document.getElementById(`macro-node-${edge.to}`);
-                    destination?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    destination?.scrollIntoView({ behavior: motion(), block: 'nearest', inline: 'center' });
                     destination?.focus({ preventScroll: true });
                 });
                 item.append(jump, el('span', undefined, t(edge.mechanism)));
@@ -92,10 +93,12 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
         }
         const related = () => new Set([node.id, ...graph.edges.flatMap((edge) => edge.from === node.id ? [edge.to] : edge.to === node.id ? [edge.from] : [])]);
         const highlight = (on: boolean) => {
-            grid.classList.toggle('has-active', on);
+            const scope = article.closest<HTMLElement>('.macro-chain-row, .macro-chain-overview');
+            if (!scope) return;
+            scope.classList.toggle('has-active', on);
             const ids = related();
-            grid.querySelectorAll<HTMLElement>('.macro-node').forEach((other) => other.classList.toggle('is-related', on && ids.has(other.dataset.node!)));
-            grid.querySelectorAll<SVGPathElement>('.macro-edge').forEach((path) =>
+            scope.querySelectorAll<HTMLElement>('.macro-node').forEach((other) => other.classList.toggle('is-related', on && ids.has(other.dataset.node!)));
+            scope.querySelectorAll<SVGPathElement>('.macro-edge').forEach((path) =>
                 path.classList.toggle('is-related', on && (path.dataset.from === node.id || path.dataset.to === node.id)));
         };
         article.addEventListener('pointerenter', () => highlight(true));
@@ -105,30 +108,80 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
         return article;
     };
 
+    const rows = el('div', 'macro-chain-rows');
     layout.rows.forEach(({ row, columns }, index) => {
+        const section = el('section', 'macro-chain-row');
+        section.dataset.chain = row.id; section.dataset.theme = row.id;
+        const titleId = `macro-chain-title-${row.id}`;
+        section.setAttribute('aria-labelledby', titleId);
         const head = el('header', 'macro-chain-head');
-        head.style.gridRow = String(index + 1); head.dataset.theme = row.id;
-        head.append(el('span', 'macro-chain-index', String(index + 1).padStart(2, '0')), el('h5', undefined, t(row.title)), el('p', undefined, t(row.thesis)));
-        grid.append(head);
-        columns.forEach((nodes, stage) => {
+        const summary = el('div', 'macro-chain-summary');
+        const title = el('h5', undefined, t(row.title)); title.id = titleId;
+        summary.append(el('span', 'macro-chain-index', String(index + 1).padStart(2, '0')), title, el('p', undefined, t(row.thesis)));
+        const controls = el('div', 'macro-chain-controls');
+        const jumpSelect = el('select');
+        jumpSelect.setAttribute('aria-label', `${t(row.title)}：${zh ? '跳至指標' : 'Jump to indicator'}`);
+        const placeholder = el('option', undefined, zh ? '跳至指標' : 'Jump to indicator'); placeholder.value = '';
+        jumpSelect.append(placeholder);
+        columns.flat().forEach(node => { const option = el('option', undefined, t(node.title)); option.value = node.id; jumpSelect.append(option); });
+        const arrows = el('div', 'macro-chain-arrows');
+        const previous = el('button', undefined, '‹'); previous.type = 'button'; previous.dataset.chainPrevious = '';
+        previous.setAttribute('aria-label', `${t(row.title)}：${zh ? '往左' : 'Scroll left'}`);
+        const next = el('button', undefined, '›'); next.type = 'button'; next.dataset.chainNext = '';
+        next.setAttribute('aria-label', `${t(row.title)}：${zh ? '往右' : 'Scroll right'}`);
+        arrows.append(previous, next); controls.append(jumpSelect, arrows); head.append(summary, controls);
+        const scroll = el('div', 'macro-chains-scroll');
+        scroll.tabIndex = 0; scroll.setAttribute('role', 'region'); scroll.setAttribute('aria-labelledby', titleId);
+        const grid = el('div', 'macro-chains-grid');
+        const stages = columns.filter(nodes => nodes.length);
+        grid.style.setProperty('--macro-stages', String(stages.length));
+        stages.forEach(nodes => {
             const cell = el('div', 'macro-chain-cell');
-            cell.style.gridRow = String(index + 1); cell.style.gridColumn = String(stage + 2); cell.dataset.theme = row.id;
             nodes.forEach((node) => cell.append(card(node)));
             grid.append(cell);
         });
+        const updateControls = () => {
+            const max = scroll.scrollWidth - scroll.clientWidth;
+            arrows.hidden = max <= 1;
+            previous.disabled = scroll.scrollLeft <= 1;
+            next.disabled = scroll.scrollLeft >= max - 1;
+        };
+        const move = (direction: 'previous' | 'next') => {
+            const left = grid.getBoundingClientRect().left;
+            // Desktop cards can share a stage; mobile exposes each card as its own horizontal step.
+            const offsets = [...grid.querySelectorAll<HTMLElement>('.macro-node')].map(node => node.getBoundingClientRect().left - left);
+            scroll.scrollTo({ left: chainScrollTarget(offsets, scroll.scrollLeft, direction), behavior: motion() });
+        };
+        previous.addEventListener('click', () => move('previous'));
+        next.addEventListener('click', () => move('next'));
+        scroll.addEventListener('scroll', updateControls, { passive: true });
+        scroll.addEventListener('keydown', event => {
+            if (event.target !== scroll || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+            event.preventDefault(); move(event.key === 'ArrowLeft' ? 'previous' : 'next');
+        });
+        jumpSelect.addEventListener('change', () => {
+            const destination = [...grid.querySelectorAll<HTMLElement>('.macro-node')].find(node => node.dataset.node === jumpSelect.value);
+            if (!destination) return;
+            scroll.scrollTo({ left: destination.getBoundingClientRect().left - grid.getBoundingClientRect().left, behavior: motion() });
+            // Only a lower card in a desktop stage needs vertical navigation. Mobile cards share one row.
+            if (destination.offsetTop > 0) destination.scrollIntoView({ behavior: motion(), block: 'nearest', inline: 'start' });
+            destination.focus({ preventScroll: true });
+        });
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'macro-chain-edges'); svg.setAttribute('aria-hidden', 'true');
+        grid.prepend(svg); scroll.append(grid); section.append(head, scroll); rows.append(section);
+        rowViews.push({ grid, svg, updateControls });
     });
     const focus = el('section', 'macro-chain-focus');
     focus.setAttribute('aria-label', zh ? '收斂：個股要盯的總經變數' : 'Where macro chains converge');
     focus.append(el('h5', 'macro-chain-focus-title', zh ? '收斂：個股要盯的總經變數' : 'Where it converges: the macro variables a stock depends on'));
     layout.focus.forEach((node) => focus.append(card(node, true)));
 
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'macro-chain-edges'); svg.setAttribute('aria-hidden', 'true');
-    grid.prepend(svg);
-
     function drawEdges() {
+      for (const { grid, svg, updateControls } of rowViews) {
+        updateControls();
         const box = grid.getBoundingClientRect();
-        svg.setAttribute('width', String(grid.scrollWidth)); svg.setAttribute('height', String(grid.scrollHeight));
+        svg.setAttribute('width', String(grid.offsetWidth)); svg.setAttribute('height', String(grid.offsetHeight));
         svg.replaceChildren();
         for (const edge of graph.edges) {
             if (focusIds.has(edge.to)) continue;
@@ -147,16 +200,15 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
             path.append(title);
             svg.append(path);
         }
+      }
     }
 
-    const scroll = el('div', 'macro-chains-scroll');
-    scroll.append(grid);
     const overview = el('div', 'macro-chain-overview');
     overview.append(focus);
-    target.replaceChildren(overview, scroll);
+    view.append(overview, rows); target.replaceChildren(view);
     resizeObserver?.disconnect();
     resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => drawEdges()) : null;
-    resizeObserver?.observe(grid);
+    rowViews.forEach(({ grid }) => resizeObserver?.observe(grid));
     requestAnimationFrame(drawEdges);
     return { drawEdges };
 }
