@@ -52,13 +52,16 @@ export function buildResearchEconomicsSeries(
   });
 }
 
-/** Daily token-cost rows (one per day, provider and model) from `/ai-usage/daily`; anything malformed is dropped. */
-export function tokenCostsFromDaily(payload: unknown): TokenCostPoint[] {
+/** Provider the scheduled cloud routines export their usage under (see maya-sawa `/otel/v1/metrics`). */
+export const ROUTINE_PROVIDER = 'claude-routine';
+
+/** Daily token-cost rows (one per day, provider and model) from `/ai-usage/daily` for one provider; malformed rows are dropped. */
+export function tokenCostsFromDaily(payload: unknown, provider: string = ROUTINE_PROVIDER): TokenCostPoint[] {
   const rows = (payload as { data?: unknown } | null)?.data;
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
-    const { period, totalEstimatedCostUsd } = (row ?? {}) as Partial<TokenCostPoint>;
-    return typeof period === 'string' && typeof totalEstimatedCostUsd === 'number' && Number.isFinite(totalEstimatedCostUsd)
+    const { period, totalEstimatedCostUsd, aiProvider } = (row ?? {}) as Partial<TokenCostPoint> & { aiProvider?: string };
+    return aiProvider === provider && typeof period === 'string' && typeof totalEstimatedCostUsd === 'number' && Number.isFinite(totalEstimatedCostUsd)
       ? [{ period, totalEstimatedCostUsd }] : [];
   });
 }
