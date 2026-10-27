@@ -1,5 +1,6 @@
-﻿---
+---
 import { Icon } from "./Icon";
+import NotificationCenter from "./NotificationCenter.astro";
 import { ThemeToggle } from "./ThemeToggle";
 import type { iconPaths } from "./IconPaths";
 
@@ -210,6 +211,7 @@ const iconLinks: {
       <div class="nav-controls-footer">
         <button class="reset-website-btn lang-toggle-btn" data-i18n="home.resetWebsite">Reset</button>
         <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
+        <NotificationCenter />
       </div>
     </div>
   </div>

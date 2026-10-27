@@ -27,7 +27,7 @@ import marketMacroCssUrl from '../styles/market-macro.css?url';
 // Component Imports
 import MainHead from '../components/MainHead.astro';
 import Nav from '../components/Nav.astro';
-import DiaryReminder from '../components/DiaryReminder.astro';
+
 import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
 import QABot from '../components/QABot.astro';
@@ -62,13 +62,11 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 				const savedTheme = localStorage.getItem('theme');
 				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-				
-				// 2. 立即設置正確的主題類別，確保頁面渲染時就是正確的主題
+					// 2. 立即設置正確的主題類別，確保頁面渲染時就是正確的主題
 				const html = document.documentElement;
 				html.classList.remove('theme-light', 'theme-dark');
 				html.classList.add(`theme-${theme}`);
-				
-				// 3. 儲存主題設定（確保首次訪問時也能記住偏好）
+					// 3. 儲存主題設定（確保首次訪問時也能記住偏好）
 				if (!savedTheme) {
 					localStorage.setItem('theme', theme);
 				}
@@ -205,7 +203,6 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 	<body>
 		<div class="stack backgrounds">
 			<Nav />
-			<DiaryReminder />
 			<!-- 頁面主要內容容器 - 用於 AI 分析 -->
 			<main class="page-content" data-page-type="content">
 				<slot />
@@ -243,7 +240,6 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 				addLoadedClass();
 				restoreLanguageSwitchScroll();
 			}
-			
 			// 頁面內容提取輔助函數
 			(window as any).extractPageContent = function() {
 				const contentSelectors = [
@@ -257,11 +253,9 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 					'#content',
 					'#main'
 				];
-				
-				let bestContent: string | null = null;
+					let bestContent: string | null = null;
 				let maxLength = 0;
-				
-				// 尋找最佳內容元素
+					// 尋找最佳內容元素
 				contentSelectors.forEach(selector => {
 					const elements = document.querySelectorAll(selector);
 					elements.forEach(element => {
@@ -273,8 +267,7 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 						}
 					});
 				});
-				
-				const finalContent = bestContent || document.body.innerText || '';
+					const finalContent = bestContent || document.body.innerText || '';
 				return {
 					content: finalContent,
 					length: finalContent.length,
