@@ -3,6 +3,12 @@ import { renderArticle } from '../../src/scripts/work/markdown';
 import { proxyBlog } from '../../src/services/server/blog';
 import { draftFromForm, markdownFromDraft } from '../../src/scripts/work/editor';
 import i18n from '../../src/storages/i18n.json';
+import lock from '../../package-lock.json';
+
+it('ships the Markdown renderer in the production dependency set', () => {
+  expect(lock.packages[''].dependencies.micromark).toBeTruthy();
+  expect(lock.packages['node_modules/micromark'].dev).not.toBe(true);
+});
 import { retiredArticleSync } from '../../src/services/server/retiredArticleSync';
 
 it('retires frontend sync without pruning the bucket-backed catalog', () => {
