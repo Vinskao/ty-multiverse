@@ -6,9 +6,7 @@ nav {
   font-family: var(--font-brand);
   font-weight: 500;
   margin-bottom: 1.25rem;
-  background-color: color-mix(in srgb, var(--gray-999) 92%, transparent);
-  border-bottom: 1px solid var(--gray-800);
-  backdrop-filter: blur(14px);
+  background-color: transparent;
 }
 
 .menu-header {
