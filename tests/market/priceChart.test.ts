@@ -33,3 +33,34 @@ it('keeps controls for missing data and does not draw a fabricated PE line', () 
   expect(document.querySelector('[data-price-metric="pe"]')).toBeNull();
   expect(document.querySelectorAll('.market-chart-controls button')).toHaveLength(6);
 });
+
+const target = (firm: string, date: string, value: number) => ({ firm, date, action: null, rating: null, previousRating: null, target: value,
+  previousTarget: null, currency: 'TWD', source: 'ai-routine', sourceUrl: 'https://example.com' });
+const targets = [target('高盛', '2026-10-21', 150), target('美銀', '2026-10-22', 130), target('高盛', '2026-10-22', 160)];
+
+it('draws one dashed line per broker on the price axis, with their latest values in the legend and readout', () => {
+  window.localStorage.removeItem('market-price-targets-visible:v1');
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: 'TWD', targets });
+  expect([...document.querySelectorAll('[data-broker-target]')].map(path => path.getAttribute('data-broker-target')).sort()).toEqual(['美銀', '高盛']);
+  const labels = [...document.querySelectorAll('.market-history-axis-label')].map(node => Number(node.textContent!.replace(/,/g, ''))).filter(Number.isFinite);
+  expect(Math.max(...labels)).toBeGreaterThanOrEqual(150);           // the price axis stretches to the highest target
+  expect(document.querySelector('.market-target-legend')!.textContent).toContain('高盛 160.00');
+  expect(document.querySelector('.market-chart-readout')!.textContent).toContain('券商目標價 高盛 160.00 · 美銀 130.00');
+});
+
+it('lets the viewer hide the broker lines, remembers the choice, and never draws them for futures', () => {
+  const saved = vi.spyOn(window.localStorage, 'setItem');
+  window.localStorage.removeItem('market-price-targets-visible:v1');
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: 'TWD', targets });
+  const box = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+  box.checked = false; box.dispatchEvent(new Event('change'));
+  expect(saved).toHaveBeenCalledWith('market-price-targets-visible:v1', '0');
+  expect(document.querySelector('[data-broker-target]')).toBeNull();
+  expect(document.querySelector('.market-target-legend')).toBeNull();
+  const again = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+  again.checked = true; again.dispatchEvent(new Event('change'));
+  expect(document.querySelectorAll('[data-broker-target]')).toHaveLength(2);
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: '點', futures: true, targets });
+  expect(document.querySelector('[data-broker-target]')).toBeNull();
+  expect(document.querySelector('input[type="checkbox"]')).toBeNull();
+});

@@ -32,7 +32,7 @@ import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, rep
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
-import { historyCloses } from './market/priceTargets';
+import { historyCloses, type TargetAction } from './market/priceTargets';
 import { renderPriceTargetChart } from './market/priceTargetChart';
 import { setAccountSections } from './market/accountSections';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
@@ -327,15 +327,41 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
     });
 }
 
+// Each broker's target prices, drawn on the price chart as one line per broker (same axis as the price).
+const brokerTargetCache = new Map<string, TargetAction[]>();
+function brokerTargetIdentity(instrument: DashboardInstrument | null | undefined) {
+    if (!instrument) return null;
+    const taiwan = isTaiwanInstrument(instrument);
+    const code = taiwan ? (marketUnderlyingCode(instrument) || (instrument.productType === 'stock' ? instrument.code : '')) : instrument.code;
+    return code ? { code, market: taiwan ? 'TW' : (instrument.market || 'US') } : null;
+}
+async function ensureBrokerTargets(instrument: DashboardInstrument, redraw: () => void) {
+    const identity = brokerTargetIdentity(instrument);
+    if (!identity) return;
+    const key = `${identity.market}:${identity.code}`;
+    if (brokerTargetCache.has(key)) return;
+    try {
+        const response = await fetch(astroApiPath(`/api/market/dashboard/targets/${encodeURIComponent(identity.code)}?market=${identity.market}`));
+        if (!response.ok) { brokerTargetCache.set(key, []); return; }
+        const data = await response.json();
+        brokerTargetCache.set(key, (data.actions ?? []) as TargetAction[]);
+        if (selectedMarketInstrument === instrument) redraw();
+    } catch { brokerTargetCache.set(key, []); /* The chart simply stays without broker lines. */ }
+}
+
 function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[], sourceKeys: string[], volumeField: string, comparisons?: StatementComparisons, financialsLoading = false) {
     const target = document.getElementById(targetId); if (!target) return;
     const redraw = () => drawMarketOHLCVolumeChart(targetId, points, sourceKeys, volumeField, comparisons, financialsLoading);
     observeMarketChart(target, redraw);
     const market = selectedMarketInstrument?.market || 'TW';
+    const identity = brokerTargetIdentity(selectedMarketInstrument);
+    const futures = volumeField === 'volume_contracts';
     renderPriceChart(targetId, points, sourceKeys, volumeField, {
-        zh: marketLocale() === 'zh-TW', currency: volumeField === 'volume_contracts' ? marketText('points', '點') : ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW' }[market] || market),
-        comparisons, financialsLoading, futures: volumeField === 'volume_contracts',
+        zh: marketLocale() === 'zh-TW', currency: futures ? marketText('points', '點') : ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW' }[market] || market),
+        comparisons, financialsLoading, futures,
+        targets: futures || !identity ? undefined : brokerTargetCache.get(`${identity.market}:${identity.code}`),
     });
+    if (!futures && selectedMarketInstrument) void ensureBrokerTargets(selectedMarketInstrument, redraw);
 }
 
 let marketHistoryRetryTimer: number | null = null;

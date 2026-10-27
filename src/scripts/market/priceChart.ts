@@ -1,8 +1,12 @@
 import { formatNumber } from '../format/numbers';
 import { addChartControls, bindChartZoom, chartView, readChartPreference, visibleRows, writeChartPreference } from './chartViewport';
+import { brokerTargetLines, firmColors, type TargetAction } from './priceTargets';
 import { comparisonAt, PRICE_METRICS, priceCandles, type PriceMetric, type PricePoint, type StatementComparisons } from './priceComparison';
 
-type Options = { zh: boolean; currency: string; comparisons?: StatementComparisons; financialsLoading?: boolean; futures?: boolean };
+type Options = { zh: boolean; currency: string; comparisons?: StatementComparisons; financialsLoading?: boolean; futures?: boolean; targets?: readonly TargetAction[] };
+const TARGET_PALETTE = ['#d5ae4b', '#7198df', '#f08e82', '#55b8a8', '#b48ce0', '#e0a35c', '#8fc46a', '#e57fb0'];
+const TARGETS_KEY = 'market-price-targets-visible:v1';
+let showTargets: boolean | undefined;
 const STORAGE_KEY = 'market-price-comparison:v1';
 let selected: PriceMetric | undefined;
 function storage() { try { return window.localStorage; } catch { return undefined; } }
@@ -29,6 +33,10 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     const dates = all.map(p => p.date);
     const redraw = () => renderPriceChart(targetId, points, sources, volumeField, options);
     const candles = visibleRows(all, p => p.date, chartView(targetId, dates).window);
+    const targetLines = options.futures || !options.targets ? [] : brokerTargetLines(options.targets, candles.map(p => p.date)).slice(0, TARGET_PALETTE.length);
+    showTargets ??= storage()?.getItem(TARGETS_KEY) !== '0';
+    const drawTargets = showTargets && targetLines.length > 0;
+    const targetColors = firmColors(options.targets ?? [], TARGET_PALETTE);
     target.replaceChildren();
     addChartControls(target, targetId, dates, redraw, zh);
     if (!options.futures) {
@@ -40,6 +48,13 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         select.addEventListener('change', () => { selected = select.value as PriceMetric; writeChartPreference(storage(), STORAGE_KEY, selected); redraw(); });
         label.append(select); target.append(label);
     }
+    if (targetLines.length) {
+        const toggle = document.createElement('label'); toggle.className = 'market-price-comparison';
+        const box = document.createElement('input'); box.type = 'checkbox'; box.checked = showTargets;
+        box.addEventListener('change', () => { showTargets = box.checked; try { storage()?.setItem(TARGETS_KEY, box.checked ? '1' : '0'); } catch { /* keep the choice for this visit */ } redraw(); });
+        toggle.append(box, document.createTextNode(zh ? ' 券商目標價（每家一條線，與股價同軸）' : ' Broker targets (one line each, same axis as price)'));
+        target.append(toggle);
+    }
     if (!candles.length) {
         const empty = document.createElement('p'); empty.textContent = zh ? '此範圍沒有觀察值，請選更長的時間範圍。' : 'No observations in this range. Choose a wider range.';
         target.append(empty); return;
@@ -50,7 +65,8 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     const width = Math.max(280, Math.min(1000, target.clientWidth || 900)), height = 390;
     const left = width < 480 ? 52 : 72, right = width - (metric === 'none' ? 16 : width < 480 ? 58 : 84);
     const top = 30, bottom = 246, volumeTop = 274, volumeBottom = 330;
-    const minPrice = Math.min(...candles.map(p => p.low)), maxPrice = Math.max(...candles.map(p => p.high));
+    const targetValues = drawTargets ? targetLines.flatMap(line => line.values.filter((value): value is number => value !== null)) : [];
+    const minPrice = Math.min(...candles.map(p => p.low), ...targetValues), maxPrice = Math.max(...candles.map(p => p.high), ...targetValues);
     const pad = (maxPrice - minPrice || Math.abs(maxPrice) * .05 || 1) * .08;
     const low = minPrice - pad, high = maxPrice + pad;
     const minMetric = numbers.length ? Math.min(...numbers) : 0, maxMetric = numbers.length ? Math.max(...numbers) : 1;
@@ -81,6 +97,15 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
             svg.append(element('rect', { x: x(i) - barWidth / 2, y: volumeBottom - h, width: barWidth, height: h, fill: color, opacity: .65 }));
         }
     });
+    if (drawTargets) for (const line of targetLines) {
+        let held = false;
+        const path = line.values.map((value, i) => {
+            if (value === null) { held = false; return ''; }
+            const command = held ? `H ${x(i)} V ${y(value)}` : `M ${x(i)} ${y(value)}`; held = true;
+            return command;
+        }).join(' ');
+        svg.append(element('path', { d: path, fill: 'none', stroke: targetColors.get(line.firm) ?? '#999', 'stroke-width': 1.6, 'stroke-dasharray': '6 3', 'data-broker-target': line.firm }));
+    }
     if (numbers.length) {
         let previous = false;
         const path = comparisons.map((point, i) => {
@@ -109,6 +134,14 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         readout.replaceChildren();
         const prices = document.createElement('span'); prices.textContent = `${candle.date} · O ${price(candle.open)} · H ${price(candle.high)} · L ${price(candle.low)} · C ${price(candle.close)} ${options.currency} · ${zh ? '成交量' : 'Volume'} ${formatNumber(candle.volume, 'count', { locale })} ${options.futures ? (zh ? '口' : 'contracts') : (zh ? '股' : 'shares')}`;
         readout.append(prices);
+        if (drawTargets) {
+            const entries = targetLines.flatMap(line => line.values[index] === null ? [] : [{ line, value: line.values[index]! }]);
+            if (entries.length) {
+                const brokers = document.createElement('span');
+                brokers.textContent = `${zh ? '券商目標價' : 'Broker targets'} ` + entries.map(({ line, value }) => `${line.firm} ${price(value)}`).join(' · ');
+                readout.append(brokers);
+            }
+        }
         if (metric !== 'none') {
             const entry = document.createElement('span'); entry.style.color = tone;
             entry.textContent = `${metricLabel} ${value ? metricText(value.value) : '—'}${value && metric !== 'pe' ? ` · ${value.period}${value.estimated ? (zh ? '（依估計公布日對齊）' : ' (estimated publication date)') : ''}` : ''}${value && metric === 'pe' && candle.peAdjusted ? (zh ? '（排除一次性項目）' : ' (excl. one-time items)') : ''}`;
@@ -140,6 +173,16 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     });
     bindChartZoom(svg, targetId, dates, redraw, { left: left / width, right: right / width });
     show(active); target.append(svg, readout);
+    if (drawTargets) {
+        const legend = document.createElement('p'); legend.className = 'market-target-legend';
+        for (const line of targetLines) {
+            const item = document.createElement('span'); item.style.setProperty('--swatch', targetColors.get(line.firm) ?? '#999');
+            const latest = [...line.values].reverse().find(value => value !== null);
+            item.textContent = `${line.firm} ${latest === undefined ? '' : price(latest)}`;
+            legend.append(item);
+        }
+        target.append(legend);
+    }
     if (metric !== 'none' && !numbers.length) {
         const note = document.createElement('p'); note.className = 'market-updated';
         note.textContent = options.financialsLoading && metric !== 'pe' ? (zh ? '正在載入財報指標…' : 'Loading financial metrics…')

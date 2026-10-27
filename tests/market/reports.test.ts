@@ -65,6 +65,9 @@ describe('channel posts in the report list', () => {
     expect(reportIsChannelPost({ ...base, source_url: 'https://example.com/report.pdf' })).toBe(false);
     expect(reportIsChannelPost({ ...base, source_url: null })).toBe(false);
   });
+  it('says when a post is still waiting for its claims', () => {
+    expect(reportMetaLine({ ...base, claim_count: 0, status: 'claims_pending', source_url: 'https://t.me/ieobserve/1' })).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 頻道貼文 · 0 項主張 · 等待萃取主張');
+  });
   it('does not call a one-message post "1 頁" and keeps the claim count', () => {
     expect(reportMetaLine({ ...base, source_url: 'https://t.me/Gooaye/123' })).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 頻道貼文 · 3 項主張');
     expect(reportMetaLine(base)).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 1 頁 · 3 項主張 · 完成（3 項主張）');

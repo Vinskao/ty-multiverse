@@ -78,6 +78,6 @@ export function reportIsChannelPost(report: { source_url?: string | null }): boo
 export function reportMetaLine(report: MarketReport): string {
   const head = `${report.publisher || '出版者未填'} · ${reportDateLabel(report)}`;
   return reportIsChannelPost(report)
-    ? `${head} · 頻道貼文 · ${report.claim_count} 項主張`
+    ? `${head} · 頻道貼文 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`
     : `${head} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
 }

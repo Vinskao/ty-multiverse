@@ -1,4 +1,4 @@
-import { beforeEach, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { firmColors, historyCloses, latestTargets, targetSeries, type TargetAction } from '../../src/scripts/market/priceTargets';
 import { renderPriceTargetChart } from '../../src/scripts/market/priceTargetChart';
 
@@ -127,4 +127,30 @@ it('links a view back to the post it came from, so the source is named and one c
   expect(link.href).toBe('https://t.me/ieobserve/2312');
   expect(link.textContent).toBe('原文 ↗');
   expect(document.querySelector('.market-target-views')!.textContent).toContain('IEObserve 國際經濟觀察');
+});
+
+import { brokerTargetLines } from '../../src/scripts/market/priceTargets';
+
+describe('broker target lines on the price chart', () => {
+  const row = (firm: string, date: string, target: number | null): TargetAction => ({ firm, date, action: null, rating: null, previousRating: null,
+    target, previousTarget: null, currency: 'TWD', source: 'ai-routine', sourceUrl: 'https://example.com' });
+  const dates = ['2026-09-01', '2026-09-15', '2026-10-01', '2026-10-20'];
+
+  it('gives each broker its own step line that holds until that broker changes its target', () => {
+    const lines = brokerTargetLines([row('高盛', '2026-09-10', 3000), row('高盛', '2026-10-15', 3400), row('美銀', '2026-10-01', 2800)], dates);
+    expect(lines.map(line => line.firm).sort()).toEqual(['美銀', '高盛']);
+    expect(lines.find(line => line.firm === '高盛')!.values).toEqual([null, 3000, 3000, 3400]);
+    expect(lines.find(line => line.firm === '美銀')!.values).toEqual([null, null, 2800, 2800]);
+  });
+
+  it('ignores rating-only notes, keeps same-day last write and drops a target a year after it was made', () => {
+    const lines = brokerTargetLines([row('高盛', '2026-09-10', null), row('美銀', '2025-08-01', 2000), row('美銀', '2025-08-01', 2100), row('元大', '2026-09-10', 0)], ['2025-09-01', '2026-09-15']);
+    expect(lines).toEqual([expect.objectContaining({ firm: '美銀', values: [2100, null] })]);
+  });
+
+  it('orders brokers by how many targets they published, then by name', () => {
+    const lines = brokerTargetLines([row('甲', '2026-09-10', 1), row('乙', '2026-09-10', 2), row('乙', '2026-10-01', 3), row('丙', '2026-09-10', 4)], dates);
+    expect(lines.map(line => line.firm)).toEqual(['乙', '丙', '甲']);
+    expect(brokerTargetLines([], dates)).toEqual([]);
+  });
 });

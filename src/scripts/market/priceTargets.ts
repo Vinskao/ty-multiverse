@@ -83,3 +83,24 @@ export function actionViews(action: TargetAction, views: readonly TargetView[]):
 export function viewsInWindow(views: readonly TargetView[], window: ChartWindow | null): TargetView[] {
     return views.filter((view) => view.date && (!window || view.date >= window.start && view.date <= window.end)).sort(newestFirst);
 }
+
+export type BrokerLine = { firm: string; values: Array<number | null>; count: number };
+
+/** One step line per broker for the price chart: the broker's latest target on each date, held until it changes and
+ *  dropped a year after it was made (a target is a 12-month view). Brokers with the most targets come first. */
+export function brokerTargetLines(actions: readonly TargetAction[], dates: readonly string[]): BrokerLine[] {
+    const byFirm = new Map<string, TargetAction[]>();
+    for (const row of actions) {
+        if (row.target === null || !(row.target > 0)) continue;
+        byFirm.set(row.firm, [...(byFirm.get(row.firm) ?? []), row]);
+    }
+    return [...byFirm].map(([firm, rows]) => {
+        const sorted = rows.map((row, order) => ({ row, order })).sort((a, b) => a.row.date.localeCompare(b.row.date) || a.order - b.order).map(item => item.row);
+        const values = dates.map(date => {
+            const made = sorted.filter(row => row.date <= date).at(-1);
+            return made && Date.parse(date) - Date.parse(made.date) <= 365 * DAY ? made.target : null;
+        });
+        return { firm, values, count: rows.length };
+    }).filter(line => line.values.some(value => value !== null))
+        .sort((a, b) => b.count - a.count || a.firm.localeCompare(b.firm));
+}
