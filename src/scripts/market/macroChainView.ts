@@ -35,6 +35,7 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
     const card = (node: MacroChainNode, focus = false) => {
         const article = el('article', `macro-node${focus ? ' macro-node--focus' : ''}`);
         article.id = `macro-node-${node.id}`; article.dataset.node = node.id; article.tabIndex = -1;
+        if (node.row) article.dataset.theme = node.row;
         const analysis = analyses.get(node.id.toUpperCase());
         const stance = parseStance(analysis?.content);
         const head = el('header', 'macro-node-head');
@@ -106,22 +107,20 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
 
     layout.rows.forEach(({ row, columns }, index) => {
         const head = el('header', 'macro-chain-head');
-        head.style.gridRow = String(index + 1);
+        head.style.gridRow = String(index + 1); head.dataset.theme = row.id;
         head.append(el('span', 'macro-chain-index', String(index + 1).padStart(2, '0')), el('h5', undefined, t(row.title)), el('p', undefined, t(row.thesis)));
         grid.append(head);
         columns.forEach((nodes, stage) => {
             const cell = el('div', 'macro-chain-cell');
-            cell.style.gridRow = String(index + 1); cell.style.gridColumn = String(stage + 2);
+            cell.style.gridRow = String(index + 1); cell.style.gridColumn = String(stage + 2); cell.dataset.theme = row.id;
             nodes.forEach((node) => cell.append(card(node)));
             grid.append(cell);
         });
     });
     const focus = el('section', 'macro-chain-focus');
-    focus.style.gridColumn = String(layout.stages + 2);
-    focus.style.gridRow = `1 / span ${layout.rows.length}`;
+    focus.setAttribute('aria-label', zh ? '收斂：個股要盯的總經變數' : 'Where macro chains converge');
     focus.append(el('h5', 'macro-chain-focus-title', zh ? '收斂：個股要盯的總經變數' : 'Where it converges: the macro variables a stock depends on'));
     layout.focus.forEach((node) => focus.append(card(node, true)));
-    grid.append(focus);
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'macro-chain-edges'); svg.setAttribute('aria-hidden', 'true');
@@ -132,6 +131,7 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
         svg.setAttribute('width', String(grid.scrollWidth)); svg.setAttribute('height', String(grid.scrollHeight));
         svg.replaceChildren();
         for (const edge of graph.edges) {
+            if (focusIds.has(edge.to)) continue;
             const from = grid.querySelector<HTMLElement>(`[data-node="${edge.from}"]`)?.getBoundingClientRect();
             const to = grid.querySelector<HTMLElement>(`[data-node="${edge.to}"]`)?.getBoundingClientRect();
             if (!from || !to) continue;
@@ -151,7 +151,9 @@ export function renderMacroChains(target: HTMLElement, options: Options) {
 
     const scroll = el('div', 'macro-chains-scroll');
     scroll.append(grid);
-    target.replaceChildren(scroll);
+    const overview = el('div', 'macro-chain-overview');
+    overview.append(focus);
+    target.replaceChildren(overview, scroll);
     resizeObserver?.disconnect();
     resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(() => drawEdges()) : null;
     resizeObserver?.observe(grid);

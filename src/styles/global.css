@@ -1,15 +1,20 @@
 /* Global variables */
 :root {
   /* Colors */
-  --gray-0: #090b11;
-  --gray-50: #141925;
-  --gray-100: #1a1f2e; /* Darkened from #283044 */
-  --gray-200: #2e354f; /* Darkened from #3d4663 to improve text readability */
-  --gray-300: #4a5578; /* Adjusted for balance */
-  --gray-999-basis: 0, 0%, 100%;
+  --gray-0: #1d1d1f;
+  --gray-50: #2c2c2e;
+  --gray-100: #3a3a3c;
+  --gray-200: #515154;
+  --gray-300: #6e6e73;
+  --gray-400: #86868b;
+  --gray-500: #a1a1a6;
+  --gray-600: #c7c7cc;
+  --gray-700: #d2d2d7;
+  --gray-800: #e8e8ed;
+  --gray-900: #f5f5f7;
+  --gray-999-basis: 240, 20%, 99%;
   --gray-999_40: hsla(var(--gray-999-basis), 0.4);
-  --gray-999: #ffffff;
-
+  --gray-999: #fbfbfd;
   --accent-light: #61f6ea;
   --accent-regular: #255187;
   --accent-dark: #001a56;
@@ -76,19 +81,18 @@
 
 :root.theme-dark {
   --gray-0: #ffffff;
-  --gray-50: #f3f4f7;
-  --gray-100: #e3e6ee;
-  --gray-200: #c3cadb;
-  --gray-300: #a3acc8;
-  --gray-400: #8490b5;
-  --gray-500: #6474a2;
-  --gray-600: #505d84;
-  --gray-700: #3d4663;
-  --gray-800: #283044;
-  --gray-900: #141925;
-  --gray-999-basis: 225, 31%, 5%;
-  --gray-999: #090b11;
-
+  --gray-50: #f5f5f7;
+  --gray-100: #e5e5ea;
+  --gray-200: #d1d1d6;
+  --gray-300: #aeaeb2;
+  --gray-400: #8e8e93;
+  --gray-500: #6e6e73;
+  --gray-600: #48484a;
+  --gray-700: #3a3a3c;
+  --gray-800: #2c2c2e;
+  --gray-900: #1c1c1e;
+  --gray-999-basis: 0, 0%, 0%;
+  --gray-999: #000000;
   --accent-light: #1c0056;
   --accent-regular: #1163a6;
   --accent-dark: #a4a21b;

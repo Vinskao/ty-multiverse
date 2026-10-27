@@ -1239,27 +1239,7 @@
 }
 
 .with-background::before {
-	--hero-bg: var(--bg-image-subtle-2);
-
-	content: '';
-	position: absolute;
-	pointer-events: none;
-	left: 50%;
-	width: 100vw;
-	aspect-ratio: calc(2.25 / var(--bg-scale));
-	top: 0;
-	transform: translateY(-75%) translateX(-50%);
-	background:
-		url('/tymultiverse/assets/backgrounds/noise.png') top center/220px repeat,
-		var(--hero-bg) center center / var(--bg-gradient-size) no-repeat,
-		var(--gray-999);
-	background-blend-mode: overlay, var(--bg-blend-mode), normal;
-	mix-blend-mode: normal;
-	z-index: -1;
-}
-
-.with-background.bg-variant::before {
-	--hero-bg: var(--bg-image-subtle-1);
+	content: none; /* flat surface: the artwork behind sections was removed */
 }
 
 .section-header {

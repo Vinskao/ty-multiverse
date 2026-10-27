@@ -1,6 +1,5 @@
 // src/components/ThemeToggle.tsx
 import { useEffect, useState } from 'react';
-import { Icon } from './Icon';
 import { ThemeProvider, useTheme } from './ThemeProvider';
 
 function ThemeButton() {
@@ -12,56 +11,27 @@ function ThemeButton() {
   }, []);
 
   const isDark = theme === 'dark';
-
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log('[ThemeToggle] Button clicked! Current theme:', theme);
-
-    if (typeof toggleTheme === 'function') {
-      try {
-        toggleTheme();
-        console.log('[ThemeToggle] Theme toggled successfully');
-      } catch (error) {
-        console.error('[ThemeToggle] Error toggling theme:', error);
-      }
-    } else {
-      console.error('[ThemeToggle] toggleTheme is not a function:', toggleTheme);
-    }
-  };
+  const label = '切換明暗主題 / Toggle light and dark theme';
 
   return (
     <div className={`theme-toggle ${mounted ? 'hydrated' : ''}`}>
       <button
         type="button"
-        onClick={handleClick}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggleTheme();
+        }}
         aria-pressed={mounted ? isDark : false}
-        title="Toggle theme"
-        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+        aria-label={label}
+        title={label}
       >
-        <span className="sr-only">Dark theme</span>
-        <span className="icon light">
-          <Icon icon="sun" />
-        </span>
-        <span className="icon dark">
-          <Icon icon="moon-stars" />
-        </span>
+        {/* Black-and-white half-moon: a white disc with its left half black. It turns over in the dark theme. */}
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9.25" fill="#fff" stroke="#8e8e93" strokeWidth="1" />
+          <path d="M12 2.75a9.25 9.25 0 0 0 0 18.5z" fill="#000" />
+        </svg>
       </button>
-
-      <style>{`
-        .theme-toggle .icon {
-          opacity: 0;
-          transition: opacity 0.2s ease;
-        }
-        /* CSS-driven visibility to prevent flash */
-        :root:not(.theme-dark) .theme-toggle .icon.light {
-          opacity: 1 !important;
-        }
-        :root.theme-dark .theme-toggle .icon.dark {
-          opacity: 1 !important;
-        }
-      `}</style>
     </div>
   );
 }
