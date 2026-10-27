@@ -395,6 +395,8 @@
 .research-economics-gridline { stroke: var(--gray-700); stroke-width: 1; opacity: .55; }
 .research-economics-axis-label { fill: var(--gray-400); font-size: 11px; font-variant-numeric: tabular-nums; }
 .research-economics-return-line { fill: none; stroke: #61f6ea; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.research-economics-cost-line { fill: none; stroke: #f5b94b; stroke-width: 2; stroke-dasharray: 6 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.research-economics-axis-label--cost { fill: #f5b94b; }
 .research-economics-return-point { fill: #61f6ea; stroke: var(--gray-999); stroke-width: 2; cursor: pointer; vector-effect: non-scaling-stroke; }
 .research-economics-return-point:focus { outline: none; stroke: #fff; stroke-width: 3; }
 

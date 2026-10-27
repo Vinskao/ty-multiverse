@@ -2,6 +2,14 @@ import type { ResearchEconomicsPoint } from './researchEconomics';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/** Round a positive maximum up to 1, 2, 5 or 10 times a power of ten so the right-hand axis gets round tick values. */
+function niceCeil(value: number) {
+  if (!(value > 0)) return 1;
+  const base = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 2, 5, 10].find((m) => value <= m * base) ?? 10;
+  return step * base;
+}
+
 export function renderResearchReturnChart(
   svg: SVGSVGElement,
   readout: HTMLOutputElement,
@@ -14,7 +22,8 @@ export function renderResearchReturnChart(
   svg.onpointerdown = null;
   const width = 900;
   const height = 260;
-  const pad = { top: 18, right: 24, bottom: 42, left: 74 };
+  const hasCost = points.some((point) => point.cumulativeCostUsd > 0);
+  const pad = { top: 18, right: hasCost ? 66 : 24, bottom: 42, left: 74 };
   const innerW = width - pad.left - pad.right;
   const innerH = height - pad.top - pad.bottom;
   const make = (tag: string, attrs: Record<string, string>) => {
@@ -46,6 +55,9 @@ export function renderResearchReturnChart(
   const low = min - span * 0.12;
   const high = max + span * 0.12;
   const y = (value: number) => pad.top + ((high - value) / (high - low)) * innerH;
+  const costMax = niceCeil(Math.max(...points.map((point) => point.cumulativeCostUsd)));
+  const yCost = (value: number) => pad.top + (1 - value / costMax) * innerH;
+  const money = (value: number) => `$${value === 0 ? '0' : value < 10 ? String(Number(value.toFixed(1))) : String(Math.round(value))}`;
   const pct = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
 
   for (let tick = 0; tick <= 4; tick += 1) {
@@ -61,10 +73,22 @@ export function renderResearchReturnChart(
     });
     label.textContent = `${value.toFixed(1)}%`;
     svg.append(label);
+    if (hasCost) {
+      const right = make('text', {
+        x: String(width - pad.right + 10), y: String(tickY + 4), 'text-anchor': 'start',
+        class: 'research-economics-axis-label research-economics-axis-label--cost',
+      });
+      right.textContent = money((costMax * tick) / 4);
+      svg.append(right);
+    }
   }
 
   const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(point.returnPercent)}`).join(' ');
   svg.append(make('path', { d: path, class: 'research-economics-return-line' }));
+  if (hasCost) {
+    const costPath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${yCost(point.cumulativeCostUsd)}`).join(' ');
+    svg.append(make('path', { d: costPath, class: 'research-economics-cost-line' }));
+  }
 
   const dateLabel = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
   const labelIndexes = [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])];
@@ -82,9 +106,10 @@ export function renderResearchReturnChart(
   const show = (index: number) => {
     active = Math.max(0, Math.min(points.length - 1, index));
     const point = points[active];
-    readout.textContent = zh
+    const cost = hasCost ? (zh ? ` · 累積 token 費用 $${point.cumulativeCostUsd.toFixed(2)}` : ` · Cumulative token cost $${point.cumulativeCostUsd.toFixed(2)}`) : '';
+    readout.textContent = (zh
       ? `${point.date} · 投資組合報酬率 ${pct(point.returnPercent)}`
-      : `${point.date} · Portfolio return ${pct(point.returnPercent)}`;
+      : `${point.date} · Portfolio return ${pct(point.returnPercent)}`) + cost;
   };
   points.forEach((point, index) => {
     const circle = make('circle', {

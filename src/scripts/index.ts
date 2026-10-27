@@ -26,7 +26,7 @@ import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainVi
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
 import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
-import { buildResearchEconomicsSeries } from './market/researchEconomics';
+import { buildResearchEconomicsSeries, tokenCostsFromDaily, type TokenCostPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
@@ -2118,11 +2118,23 @@ function initMarketReports() {
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
 
+let tokenCosts: TokenCostPoint[] = [];
+
+/** Daily token cost (Claude Code, Codex) for the second axis; the return line still draws when this is unavailable. */
+async function loadTokenCosts() {
+    const base = import.meta.env.PUBLIC_TYMB_URL;
+    if (!base) return;
+    try {
+        const response = await fetch(`${base}/ai-usage/daily?days=400`, { headers: { Accept: 'application/json' } });
+        if (response.ok) tokenCosts = tokenCostsFromDaily(await response.json());
+    } catch { /* keep the return line without a cost line */ }
+}
+
 function renderResearchPortfolioReturn(points: PortfolioHistoryPoint[]) {
     const svg = document.getElementById('research-economics-return-chart') as SVGSVGElement | null;
     const readout = document.getElementById('research-economics-return-readout') as HTMLOutputElement | null;
     if (!svg || !readout) return;
-    renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, []), marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, tokenCosts), marketLocale() === 'zh-TW' ? 'zh' : 'en');
 }
 
 export function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
@@ -2237,6 +2249,7 @@ async function fetchPortfolioHistory() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json() as { history?: PortfolioHistoryPoint[] };
         const history = Array.isArray(payload.history) ? payload.history : [];
+        await loadTokenCosts();
         renderPortfolioHistory(history);
         renderResearchPortfolioReturn(history);
     } catch (error) {

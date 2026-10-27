@@ -51,3 +51,14 @@ export function buildResearchEconomicsSeries(
     };
   });
 }
+
+/** Daily token-cost rows (one per day, provider and model) from `/ai-usage/daily`; anything malformed is dropped. */
+export function tokenCostsFromDaily(payload: unknown): TokenCostPoint[] {
+  const rows = (payload as { data?: unknown } | null)?.data;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    const { period, totalEstimatedCostUsd } = (row ?? {}) as Partial<TokenCostPoint>;
+    return typeof period === 'string' && typeof totalEstimatedCostUsd === 'number' && Number.isFinite(totalEstimatedCostUsd)
+      ? [{ period, totalEstimatedCostUsd }] : [];
+  });
+}

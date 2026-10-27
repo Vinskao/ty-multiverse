@@ -41,4 +41,39 @@ describe('research economics return chart', () => {
     expect(svg.getAttribute('aria-label')).toContain('投資組合報酬率');
     expect(readout.textContent).toContain('投資組合報酬率');
   });
+
+  it('draws cumulative token cost on a second right-hand axis and reads it out with the return', () => {
+    document.body.innerHTML = '<div><svg id="chart"></svg><output id="readout"></output></div>';
+    const svg = document.querySelector<SVGSVGElement>('#chart')!;
+    const readout = document.querySelector<HTMLOutputElement>('#readout')!;
+    renderResearchReturnChart(svg, readout, [
+      { date: '2026-10-12', returnPercent: 0, cumulativeCostUsd: 0 },
+      { date: '2026-10-22', returnPercent: -10, cumulativeCostUsd: 36.5 },
+      { date: '2026-10-27', returnPercent: -17.3, cumulativeCostUsd: 39 },
+    ], 'zh');
+
+    expect(svg.querySelectorAll('path')).toHaveLength(2);
+    expect(svg.querySelector('.research-economics-cost-line')).not.toBeNull();
+    const rightLabels = [...svg.querySelectorAll('.research-economics-axis-label--cost')].map((node) => node.textContent);
+    expect(rightLabels.length).toBeGreaterThan(1);
+    expect(rightLabels[0]).toMatch(/^\$\d/);
+    expect(rightLabels.some((label) => label === '$0')).toBe(true);
+    expect(readout.textContent).toContain('-17.30%');
+    expect(readout.textContent).toContain('$39.00');
+    svg.querySelectorAll<SVGCircleElement>('[data-return-point]')[1].dispatchEvent(new FocusEvent('focus'));
+    expect(readout.textContent).toContain('$36.50');
+  });
+
+  it('keeps a single line and no right axis while there is no cost data', () => {
+    document.body.innerHTML = '<div><svg id="chart"></svg><output id="readout"></output></div>';
+    const svg = document.querySelector<SVGSVGElement>('#chart')!;
+    const readout = document.querySelector<HTMLOutputElement>('#readout')!;
+    renderResearchReturnChart(svg, readout, [
+      { date: '2026-04-02', returnPercent: 0, cumulativeCostUsd: 0 },
+      { date: '2026-04-03', returnPercent: 2.5, cumulativeCostUsd: 0 },
+    ]);
+    expect(svg.querySelector('.research-economics-cost-line')).toBeNull();
+    expect(svg.querySelector('.research-economics-axis-label--cost')).toBeNull();
+    expect(readout.textContent).not.toContain('$');
+  });
 });
