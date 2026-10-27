@@ -194,6 +194,7 @@
 .market-overview-grid {
 	display: grid;
 	grid-template-columns: minmax(18rem, .9fr) minmax(0, 1.6fr);
+	align-items: start;
 	gap: 1rem;
 	container-type: inline-size;
 }
@@ -1650,6 +1651,11 @@
 
 /* Keep mobile scrolling inside data tables, with readable charts and touch targets. */
 @media (max-width: 768px) {
+	.market-watchlist {
+		position: static;
+		max-height: none;
+		overflow: visible;
+	}
   .market-overview, .market-overview-grid > *, .market-brief,
   .market-history-panel > div, .market-detail-toolbar { min-width: 0; max-width: 100%; }
   /* Keep the dashboard inside its actual mobile column. A viewport-based width here
