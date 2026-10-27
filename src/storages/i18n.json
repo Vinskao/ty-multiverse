@@ -70,7 +70,7 @@
     "teamOperationsTitle": { "en": "Deployment, testing & maintenance", "zh": "部署、測試與持續維護" },
     "teamOperationsBody": { "en": "Hands-on experience with CI/CD, containers, cloud provisioning, tests and monitoring, applied to product updates and issue tracking.", "zh": "具備 CI/CD、容器化、雲端佈建、測試與監控實作經驗，將工程背景用於產品更新與問題追蹤。" },
     "teamSkills": { "en": "Explore the full technical toolkit", "zh": "查看完整技術能力與工具" },
-    "teamCredential": { "en": "View technical certification ↗", "zh": "查看技術認證 ↗" },
+    "teamCredentials": { "en": "Technical certifications", "zh": "技術認證" },
     "teamContact": { "en": "Email the maintainer", "zh": "Email 聯繫維護者" },
     "operationsTitle": { "en": "Product operations · AI usage", "zh": "產品運作資訊 · AI 使用紀錄" },
     "contactEyebrow": { "en": "Contact · Trial · Collaboration", "zh": "聯繫 · 試用 · 合作" },
