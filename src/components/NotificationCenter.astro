@@ -5,6 +5,7 @@
   </button>
   <section id="notification-panel" class="notification-panel" data-panel hidden aria-label="通知 / Notifications">
     <header><strong data-heading>通知</strong><button type="button" data-read-all>全部已讀</button></header>
+    <div class="notification-tabs" role="group" aria-label="篩選"><button type="button" data-tab="all" aria-pressed="true">全部</button><button type="button" data-tab="unread" aria-pressed="false">未讀</button></div>
     <ul data-list></ul><p data-empty>目前沒有通知</p>
   </section>
 </div>
@@ -12,7 +13,7 @@
   import { createDiaryClient } from '../scripts/diary/client';
   import { config } from '../services/core/config';
   import { storageService } from '../services/core/storageService';
-  import { mountNotifications, diaryNotification } from '../scripts/notifications/center';
+  import { mountNotifications, diaryNotification, fetchRoutineNotifications } from '../scripts/notifications/center';
   let version = 0;
   let cleanup: (() => void) | undefined;
   async function check() {
@@ -26,13 +27,16 @@
     const username = storageService.get<string>(storageService.KEYS.USERNAME) || new URLSearchParams(location.search).get('username') || '';
     cleanup = mountNotifications(root, username, [], lang);
     if (!token || !username) return;
+    const history = fetchRoutineNotifications(token, lang, fetch, import.meta.env.BASE_URL || '/');
+    let diary: ReturnType<typeof diaryNotification> = null;
     try {
       const result = await createDiaryClient(config.api.backendUrl || '/tymb', () => token)<{ pending: boolean; triggeredAt: string | null; nextDueAt: string }>('/check-in', {});
-      if (current !== version || token !== storageService.get<string>(storageService.KEYS.TOKEN)) return;
-      const item = diaryNotification(result, username, lang);
-      cleanup?.();
-      cleanup = mountNotifications(root, username, item ? [item] : [], lang);
-    } catch { /* Retry when the page becomes visible or authentication changes. */ }
+      diary = diaryNotification(result, username, lang);
+    } catch { /* The diary check may fail on its own; routine messages still load. */ }
+    const routine = await history;
+    if (current !== version || token !== storageService.get<string>(storageService.KEYS.TOKEN)) return;
+    cleanup?.();
+    cleanup = mountNotifications(root, username, [...(diary ? [diary] : []), ...routine], lang);
   }
   let languageCleanup: (() => void) | undefined;
   function init() {
@@ -48,17 +52,27 @@
 </script>
 <style>
   .notification-center { position: relative; }
-  .notification-bell { position: relative; display: flex; align-items: center; justify-content: center; min-height: 34px; min-width: 36px; cursor: pointer; }
-  .notification-count { position: absolute; top: -7px; right: -7px; min-width: 18px; padding: 1px 4px; border-radius: 20px; background: #c83d55; color: white; font: bold 11px/16px system-ui; }
+  .notification-bell { position: relative; display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; min-width: 2rem; padding: 0; cursor: pointer; }
+  .notification-bell:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 2px; }
+  .notification-count { position: absolute; top: -6px; right: -6px; min-width: 16px; padding: 0 4px; border-radius: 20px; background: #c83d55; color: white; font: 600 10px/16px system-ui; }
   .notification-count[hidden], .notification-panel[hidden] { display: none !important; }
-  .notification-panel { position: absolute; right: 0; top: calc(100% + 12px); width: min(350px, calc(100vw - 32px)); max-height: min(480px, 65vh); overflow: auto; z-index: 1000; padding: 16px; border: 1px solid var(--gray-700); border-radius: 12px; background: var(--gray-999); color: var(--gray-200); box-shadow: 0 12px 36px #0005; text-align: left; }
+  .notification-panel { position: absolute; right: 0; top: calc(100% + 12px); width: min(420px, calc(100vw - 32px)); max-height: min(560px, 70vh); overflow: auto; z-index: 1000; padding: 14px 16px 8px; border: 1px solid var(--gray-800); border-radius: 12px; background: var(--gray-999); color: var(--gray-200); box-shadow: 0 12px 36px #0005; text-align: left; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   header button { background: transparent; color: var(--accent-regular); border: 0; cursor: pointer; font: inherit; font-size: .8rem; }
   header button:disabled { opacity: .45; cursor: default; }
-  ul { list-style: none; padding: 0; margin: 12px 0 0; }
-  .notification-panel :global(li) { border-top: 1px solid var(--gray-800); border-radius: 6px; }
-  .notification-panel :global(li.unread) { background: color-mix(in srgb, var(--accent-regular) 10%, transparent); border-left: 3px solid var(--accent-regular); }
-  .notification-panel :global(a) { display: grid; gap: 6px; padding: 12px; color: inherit; text-decoration: none; }
-  .notification-panel :global(a:hover), .notification-panel :global(a:focus-visible) { background: color-mix(in srgb, var(--accent-regular) 16%, transparent); }
-  .notification-panel :global(a span), p { font-size: .85rem; line-height: 1.6; }
+  .notification-tabs { display: flex; gap: 6px; margin-top: 10px; }
+  .notification-tabs button { border: 1px solid var(--gray-800); border-radius: 999px; background: transparent; color: var(--gray-300); padding: 2px 12px; font: inherit; font-size: .78rem; cursor: pointer; }
+  .notification-tabs button[aria-pressed="true"] { background: var(--gray-800); color: var(--gray-0); }
+  ul { list-style: none; padding: 0; margin: 8px 0 0; }
+  .notification-panel :global(li) { border-top: 1px solid var(--gray-800); }
+  .notification-panel :global(li.unread) { box-shadow: inset 3px 0 var(--accent-regular); }
+  .notification-panel :global(li.attention) { box-shadow: inset 3px 0 #e0a43a; }
+  .notification-panel :global(li.read strong) { font-weight: 500; color: var(--gray-300); }
+  .notification-panel :global(li.read .n-body) { color: var(--gray-400); }
+  .notification-panel :global(li > a), .notification-panel :global(li > button) { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; width: 100%; padding: 12px 12px 12px 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+  .notification-panel :global(li > a:hover), .notification-panel :global(li > button:hover), .notification-panel :global(li > a:focus-visible), .notification-panel :global(li > button:focus-visible) { background: color-mix(in srgb, var(--accent-regular) 12%, transparent); }
+  .notification-panel :global(time) { font-size: .75rem; color: var(--gray-400); white-space: nowrap; }
+  .notification-panel :global(.n-body) { grid-column: 1 / -1; font-size: .85rem; line-height: 1.6; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .notification-panel :global(li.expanded .n-body) { display: block; overflow: visible; }
+  p { font-size: .85rem; line-height: 1.6; color: var(--gray-400); }
 </style>

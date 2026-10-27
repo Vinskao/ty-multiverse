@@ -157,6 +157,16 @@ nav {
   content: none;
 }
 
+/* The three controls (Reset, language, bell) share one height so the row reads as a single group. */
+.nav-controls-footer .lang-toggle-btn {
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 0;
+  line-height: 1;
+}
+
 .lang-toggle-btn:hover {
   color: var(--gray-0);
   background: var(--accent-subtle-overlay);

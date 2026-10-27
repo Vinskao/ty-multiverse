@@ -69,3 +69,15 @@ export function claimDateLabel(claim: { published_at: string | null; received_at
   const recorded = recordedDay(claim.received_at);
   return recorded ? `入庫 ${recorded}` : '';
 }
+
+/** Posts collected from public Telegram channels have a link to the post instead of a PDF. */
+export function reportIsChannelPost(report: { source_url?: string | null }): boolean {
+  return /^https:\/\/t\.me\//.test(report.source_url ?? '');
+}
+
+export function reportMetaLine(report: MarketReport): string {
+  const head = `${report.publisher || '出版者未填'} · ${reportDateLabel(report)}`;
+  return reportIsChannelPost(report)
+    ? `${head} · 頻道貼文 · ${report.claim_count} 項主張`
+    : `${head} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
+}

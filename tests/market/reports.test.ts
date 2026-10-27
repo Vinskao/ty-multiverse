@@ -54,3 +54,19 @@ describe('report dates', () => {
     expect(claimDateLabel({ published_at: null })).toBe('');
   });
 });
+
+import { reportIsChannelPost, reportMetaLine } from '../../src/scripts/market/reports';
+
+describe('channel posts in the report list', () => {
+  const base = { id: 'a', title: '[股癌] EP1', publisher: '股癌 Gooaye', published_at: '2026-10-25', received_at: '2026-10-26T01:00:00+00:00',
+    page_count: 1, visibility: 'public', status: 'ready', claim_count: 3, claims: [] } as MarketReport;
+  it('recognises a Telegram post by its source link, not by the missing PDF', () => {
+    expect(reportIsChannelPost({ ...base, source_url: 'https://t.me/Gooaye/123' })).toBe(true);
+    expect(reportIsChannelPost({ ...base, source_url: 'https://example.com/report.pdf' })).toBe(false);
+    expect(reportIsChannelPost({ ...base, source_url: null })).toBe(false);
+  });
+  it('does not call a one-message post "1 頁" and keeps the claim count', () => {
+    expect(reportMetaLine({ ...base, source_url: 'https://t.me/Gooaye/123' })).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 頻道貼文 · 3 項主張');
+    expect(reportMetaLine(base)).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 1 頁 · 3 項主張 · 完成（3 項主張）');
+  });
+});
