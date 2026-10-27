@@ -20,3 +20,24 @@ describe('knowledge catalog', () => {
     expect(filterArticles([], '', '')).toEqual([]);
   });
 });
+
+// 2026-10-27: the article page keeps the search and category chosen in the list.
+import { loadFilter, saveFilter } from '../../src/scripts/work/catalog';
+
+describe('remembered list filter', () => {
+  const memory = () => { const data = new Map<string, string>(); return { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) }; };
+  it('round-trips the query and category', () => {
+    const storage = memory();
+    saveFilter(storage, { query: 'java', category: 'Concurrency' });
+    expect(loadFilter(storage)).toEqual({ query: 'java', category: 'Concurrency' });
+  });
+  it('falls back to an empty filter for missing, corrupt or unavailable storage', () => {
+    const empty = { query: '', category: '' };
+    expect(loadFilter(memory())).toEqual(empty);
+    expect(loadFilter({ getItem: () => '{bad json', setItem: () => {} })).toEqual(empty);
+    expect(loadFilter({ getItem: () => JSON.stringify({ query: 5, category: null }), setItem: () => {} })).toEqual(empty);
+    expect(loadFilter(null)).toEqual(empty);
+    expect(() => saveFilter({ getItem: () => null, setItem: () => { throw new Error('quota'); } }, { query: 'x', category: '' })).not.toThrow();
+    expect(() => saveFilter(null, { query: 'x', category: '' })).not.toThrow();
+  });
+});

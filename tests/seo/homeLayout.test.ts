@@ -19,6 +19,11 @@ describe('homepage responsive presentation', () => {
         expect(css).not.toMatch(/\.market-chart-controls button, \.market-price-comparison select\s*\{\s*min-height:44px/);
         expect(css).toMatch(/\.market-chart-controls button\s*\{[^}]*min-height:28px/s);
     });
+    it('keeps the holdings and custom selection groups in normal flow on narrow screens', () => {
+        const css = read('src/styles/index.css');
+        expect(css).toMatch(/\.market-overview-grid\s*\{[^}]*align-items:\s*start/s);
+        expect(css).toMatch(/@media\s*\(max-width:\s*768px\)\s*\{[\s\S]*?\.market-watchlist\s*\{[^}]*position:\s*static/s);
+    });
 });
 
 describe('homepage layout fixes (2026-10-26)', () => {
@@ -60,4 +65,11 @@ it('hides the indicator grid and the release list while the logic chains view is
     expect(css).toMatch(/\.macro-dashboard\[data-macro-view="chains"\]\s+#macro-event-list[^{]*\{[^}]*display:\s*none/);
     expect(read('src/pages/index.astro')).toMatch(/id="macro-dashboard"[^>]*data-macro-view="chains"/);
     expect(read('src/scripts/index.ts')).toContain("macro-dashboard')!.dataset.macroView");
+});
+
+it('left-aligns the notes section heading on every screen width (2026-10-27)', () => {
+    const css = read('src/styles/index.css');
+    // .section-title is text-align:center with auto margins, which kept 產品維護與開發筆記 centered inside the left header.
+    expect(css).toMatch(/\.home-page \.with-cta \.section-header\s*\{[^}]*justify-self:\s*start[^}]*text-align:\s*left/);
+    expect(css).toMatch(/\.home-page \.with-cta \.section-header \.section-title\s*\{[^}]*text-align:\s*left[^}]*margin:\s*0/);
 });

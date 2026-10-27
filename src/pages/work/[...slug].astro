@@ -2,9 +2,13 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { readBlog } from '../../services/server/blog';
 import { renderArticle } from '../../scripts/work/markdown';
+import ArticleSidebar from '../../components/ArticleSidebar.astro';
+import { sortArticles } from '../../scripts/work/catalog';
 const slug = Astro.params.slug || '';
 let article;
 let status = 200;
+let catalog = [];
+try { catalog = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, publishDate: new Date(row.publishDate) } }))); } catch { /* the list stays empty; the article below still loads */ }
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) status = 404;
 else {
   try { article = await readBlog(`articles/${slug}`); }
@@ -14,11 +18,13 @@ Astro.response.status = status;
 const html = article ? renderArticle(article.content) : '';
 ---
 <BaseLayout title={`${article?.title || (status === 404 ? '找不到文章' : '文章服務暫時無法使用')} | TY Multiverse`} description={article?.description} lang="zh-TW">
-  <div class="wrapper knowledge-page knowledge-detail">
-    <a href="/tymultiverse/work/" data-i18n="work.back">← 返回知識庫</a>
+  <div class="wrapper knowledge-page knowledge-detail knowledge-split">
+    <ArticleSidebar projects={catalog} currentId={slug} />
+    <div class="knowledge-article">
     {article ? <>
       <header class="knowledge-header"><p class="knowledge-eyebrow">{article.category} / ENGINEERING NOTES</p><h1>{article.title}</h1><p class="knowledge-intro">{article.description}</p><time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
       <article class="knowledge-prose" set:html={html} />
     </> : <h1>{status === 404 ? '找不到文章' : '文章服務暫時無法使用，請稍後再試。'}</h1>}
+    </div>
   </div>
 </BaseLayout>

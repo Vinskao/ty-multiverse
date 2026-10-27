@@ -2036,3 +2036,7 @@
 .maintenance-credentials a { overflow-wrap:anywhere; }
 .maintenance-credentials small { color:var(--gray-400); font-size:.75rem; }
 @media (max-width:640px) { .maintenance-credentials ul { grid-template-columns:1fr; } }
+
+/* 2026-10-27: the notes section heading sits on the left at every width. */
+.home-page .with-cta .section-header { justify-self:start; text-align:left; }
+.home-page .with-cta .section-header .section-title { text-align:left; margin:0; }

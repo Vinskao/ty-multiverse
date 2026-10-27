@@ -43,30 +43,7 @@ const latest = projects[0];
     <script type="application/json" id="article-catalog" set:html={JSON.stringify(projects).replace(/</g, '\u003c')} />
   </div>
   <script>
-    import { filterArticles } from '../scripts/work/catalog';
-    import i18n from '../storages/i18n.json';
-    let cleanup: (() => void) | undefined;
-    function init() {
-      cleanup?.();
-      const input = document.querySelector<HTMLInputElement>('#article-search');
-      const category = document.querySelector<HTMLSelectElement>('#article-category');
-      const source = document.getElementById('article-catalog');
-      if (!input || !category || !source) return;
-      const articles = JSON.parse(source.textContent || '[]');
-      const render = () => {
-        const found = filterArticles(articles, input.value, category.value);
-        const ids = new Set(found.map(row => row.id));
-        document.querySelectorAll<HTMLElement>('[data-article-id]').forEach(row => { row.hidden = !ids.has(row.dataset.articleId); });
-        const lang = (window as any).AppLang?.get() === 'en' ? 'en' : 'zh';
-        document.getElementById('article-results')!.textContent = i18n.work.resultCount[lang].replace('{count}', String(found.length));
-        document.getElementById('article-empty')!.hidden = found.length > 0;
-      };
-      input.addEventListener('input', render);
-      category.addEventListener('change', render);
-      const off = (window as any).AppLang?.onChange(render);
-      cleanup = () => { off?.(); input.removeEventListener('input', render); category.removeEventListener('change', render); };
-      render();
-    }
-    document.addEventListener('astro:page-load', init);
+    import { initArticleFilter } from '../scripts/work/articleFilter';
+    document.addEventListener('astro:page-load', () => initArticleFilter());
   </script>
 </BaseLayout>

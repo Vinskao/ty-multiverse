@@ -1,0 +1,30 @@
+---
+// The filterable article list beside an open article. Ids match the index page so ../scripts/work/articleFilter.ts drives both.
+import type { Article } from '../scripts/work/catalog';
+interface Props { projects: Article[]; currentId?: string }
+const { projects, currentId } = Astro.props;
+const categories = [...new Set(projects.map(({ data }) => data.category).filter(Boolean))].sort();
+const catalog = projects.map(({ id, data }) => ({ id, data: { title: data.title, description: data.description, category: data.category, tags: data.tags, publishDate: data.publishDate.toISOString() } }));
+---
+<aside class="knowledge-sidebar" aria-labelledby="sidebar-title">
+  <div class="knowledge-section-title"><h2 id="sidebar-title" data-i18n="work.library">知識索引</h2><a href="/tymultiverse/work/" data-i18n="work.back">← 返回知識庫</a></div>
+  <form class="knowledge-filters knowledge-filters--stacked" role="search" onsubmit="return false">
+    <label><span data-i18n="work.search">搜尋標題、摘要或技術</span><input id="article-search" type="search" autocomplete="off" /></label>
+    <label><span data-i18n="work.category">技術分類</span><select id="article-category"><option value="" data-i18n="work.all">全部分類</option>{categories.map(category => <option value={category}>{category}</option>)}</select></label>
+  </form>
+  <p id="article-results" role="status" aria-live="polite"></p>
+  <ol class="knowledge-list knowledge-list--compact">
+    {projects.map(project => <li data-article-id={project.id}>
+      <a class="knowledge-item" href={`/tymultiverse/work/${project.id}`} aria-current={project.id === currentId ? 'page' : undefined}>
+        <span class="knowledge-item-meta"><time datetime={project.data.publishDate.toISOString()}>{project.data.publishDate.toISOString().slice(0, 10)}</time>{project.data.category && <span>{project.data.category}</span>}</span>
+        <strong>{project.data.title}</strong>
+      </a>
+    </li>)}
+  </ol>
+  <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>
+  <script type="application/json" id="article-catalog" set:html={JSON.stringify(catalog).replace(/</g, '\\u003c')} />
+</aside>
+<script>
+  import { initArticleFilter } from '../scripts/work/articleFilter';
+  document.addEventListener('astro:page-load', () => initArticleFilter());
+</script>
