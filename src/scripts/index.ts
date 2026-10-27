@@ -1875,7 +1875,7 @@ async function loadMarketAutomation() {
 function initMarketCustomEditor() {
     const button = document.getElementById('market-custom-edit') as HTMLButtonElement | null;
     const dialog = document.getElementById('market-custom-dialog') as HTMLDialogElement | null;
-    if (!button || !dialog || button.dataset.bound === 'true' || !hasMarketAuth()) return;
+    if (!button || !dialog || button.dataset.bound === 'true') return;
     button.dataset.bound = 'true';
     let selected: CustomInstrument[] = [];
     let saved = '';
@@ -1977,18 +1977,28 @@ function initMarketCustomEditor() {
         if (input.value.trim()) void search(input.value.trim());
     });
     button.addEventListener('click', async () => {
-        const response = await fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() });
-        if (!response.ok) { button.hidden = true; return; }
-        const payload = await response.json();
-        selected = payload.symbols ?? [];
-        saved = JSON.stringify(selected.map(key));
-        lastResults = [];
-        if (input) { input.value = ''; input.placeholder = marketText('Code or name, e.g. 2330 or TSMC', '代號或名稱，例如 2330 或 台積電'); }
-        if (error) error.textContent = '';
-        refresh();
-        dialog.showModal();
-        input?.focus();
-        void showRecent();
+        if (!hasMarketAuth()) {
+            if (error) error.textContent = marketText('Sign in to edit custom instruments.', '請先登入再編輯自選標的。');
+            return;
+        }
+        button.disabled = true;
+        try {
+            const response = await fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const payload = await response.json();
+            selected = payload.symbols ?? [];
+            saved = JSON.stringify(selected.map(key));
+            lastResults = [];
+            if (input) { input.value = ''; input.placeholder = marketText('Code or name, e.g. 2330 or TSMC', '代號或名稱，例如 2330 或台積電'); }
+            if (error) error.textContent = '';
+            refresh();
+            dialog.showModal();
+            input?.focus();
+            void showRecent();
+        } catch (cause) {
+            if (error) error.textContent = marketText('Could not load custom instruments. Please try again.', '自選標的載入失敗，請稍後再試。');
+            console.error('Custom instruments unavailable:', cause);
+        } finally { button.disabled = false; }
     });
     document.getElementById('market-custom-cancel')?.addEventListener('click', () => dialog.close());
     // Clicking the dimmed backdrop closes the dialog like the × button.

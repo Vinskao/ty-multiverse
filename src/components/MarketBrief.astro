@@ -71,7 +71,7 @@ const nameOf = (s: any) => s.name || heldStockNames[s.code] || '';
 const headers: Text[] = [
 	both('標的', 'Stock'), both('收盤 · 5日', 'Close · 5d'), both('外資 5日(張)', 'Foreign 5d (lots)'),
 	both('投信 5日(張)', 'Trust 5d (lots)'), both('融資 5日', 'Margin 5d'), both('大戶≥400張 週變化', '400+ lot holders · 1w'),
-	both('外資持股 20日', 'Foreign holding · 20d'), both('營收年增', 'Revenue YoY'), both('毛利率 季變化', 'Gross margin · QoQ'),
+	both('外資持股 20日', 'Foreign holding · 20d'), both('營收年增', 'Revenue YoY'), both('毛利率／營益率與變化', 'Gross / operating margin and change'),
 ];
 ---
 {(() => {
@@ -112,7 +112,7 @@ const headers: Text[] = [
 											[plain(s.tdcc?.largeHolderPercent, '%'), sep, signed(s.tdcc?.largeHolderChange1wPp, ' pp')],
 											[plain(s.foreignHolding?.percent, '%'), sep, signed(s.foreignHolding?.change20dPp, ' pp')],
 											[signed(s.fundamentals?.latestMonth?.yoyPercent, '%', 1)],
-											[plain(s.fundamentals?.latestQuarter?.grossMargin, '%', 1), sep, signed(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp')],
+										[plain(s.fundamentals?.latestQuarter?.grossMargin, '%', 1), sep, signed(s.fundamentals?.latestQuarter?.grossMarginQoQ, ' pp'), { text: both(' 季變', ' QoQ') }],
 										].map((parts) => <td>{parts.map((part) => part.cls ? <span class={part.cls}>{T(part.text)}</span> : T(part.text))}</td>)}
 									</tr>
 								);
@@ -121,10 +121,10 @@ const headers: Text[] = [
 								const quarter = s.fundamentals?.latestQuarter;
 								// Gross margin when the filing reports it (US), otherwise operating margin (Japan reports no gross profit).
 								const margin = quarter?.grossMarginPercent != null
-									? [plain(quarter.grossMarginPercent, '%', 1), sep, signed(quarter.grossMarginYoYPp, ' pp')]
+								? [plain(quarter.grossMarginPercent, '%', 1), sep, signed(quarter.grossMarginYoYPp, ' pp'), { text: both(' 年變', ' YoY') }]
 									: quarter?.operatingMarginPercent != null
-										? [{ text: both('營益率 ', 'Op. margin ') }, plain(quarter.operatingMarginPercent, '%', 1), sep, signed(quarter.operatingMarginYoYPp, ' pp')]
-										: [{ text: '—' }];
+										? [{ text: both('營益率 ', 'Op. margin ') }, plain(quarter.operatingMarginPercent, '%', 1), sep, signed(quarter.operatingMarginYoYPp, ' pp'), { text: both(' 年變', ' YoY') }]
+										: [{ text: quarter ? '—' : both('財報資料尚未取得', 'Financial data not available yet') }];
 								const cells = [
 									[plain(s.price?.close), sep, signed(s.price?.change5dPct, '%')],
 									[{ text: '—' }], [{ text: '—' }], [{ text: '—' }], [{ text: '—' }], [{ text: '—' }],
