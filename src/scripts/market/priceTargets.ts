@@ -1,7 +1,11 @@
 import type { ChartWindow } from './chartViewport';
 
 export type TargetAction = { firm: string; date: string; action: string | null; rating: string | null; previousRating: string | null;
-    target: number | null; previousTarget: number | null; currency: string; source: string; sourceUrl: string };
+    target: number | null; previousTarget: number | null; currency: string; source: string; sourceUrl: string;
+    thesis?: string | null; reportId?: string | null };
+/** A public report claim about the stock, dated by the report's publication (or the claim's data date). */
+export type TargetView = { reportId: string; title: string; publisher: string; date: string | null; page: number; dimension: string;
+    direction: string; claim: string; evidence: string };
 export type TargetConsensus = { date: string; mean: number | null; median: number | null; high: number | null; low: number | null;
     analysts: number | null; currency: string; source: string };
 export type ClosePoint = { date: string; close: number };
@@ -63,4 +67,19 @@ export function historyCloses(points?: ReadonlyArray<{ date: string; sources: Re
         : (daily ?? []).map(bar => ({ date: bar.date, close: bar.close }));
     return rows.filter((row): row is ClosePoint => typeof row.close === 'number' && Number.isFinite(row.close) && row.close > 0)
         .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+const newestFirst = (a: TargetView, b: TargetView) => (b.date ?? '').localeCompare(a.date ?? '') || a.page - b.page;
+
+/** The views behind a broker's call: the claims of the report it came from, else that broker's own views on the same day. */
+export function actionViews(action: TargetAction, views: readonly TargetView[]): TargetView[] {
+    const linked = action.reportId
+        ? views.filter((view) => view.reportId === action.reportId)
+        : views.filter((view) => view.publisher === action.firm && view.date === action.date);
+    return [...linked].sort(newestFirst);
+}
+
+/** Dated views inside the chart window (all dated views without one), newest first. */
+export function viewsInWindow(views: readonly TargetView[], window: ChartWindow | null): TargetView[] {
+    return views.filter((view) => view.date && (!window || view.date >= window.start && view.date <= window.end)).sort(newestFirst);
 }

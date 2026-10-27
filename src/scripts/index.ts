@@ -951,7 +951,7 @@ async function loadMarketTargets(instrument: DashboardInstrument) {
             latest ? marketText(`consensus ${latest.date}: ${latest.analysts ?? '?'} analysts`, `共識 ${latest.date}：${latest.analysts ?? '?'} 位分析師`) : '',
             marketText('Yahoo Finance + AI routine (news)', 'Yahoo Finance＋AI 排程（新聞）')].filter(Boolean).join(' · ');
         renderPriceTargetChart('market-targets-chart', { actions: data.actions ?? [], consensus: data.consensus ?? [], closes,
-            currency: data.currency, zh: marketLocale() === 'zh-TW' });
+            currency: data.currency, zh: marketLocale() === 'zh-TW', views: data.views ?? [] });
     } catch (error) {
         console.error('Price targets unavailable:', error);
         if (sequence === marketTargetsSequence) status.textContent = marketText('Target prices are temporarily unavailable.', '目標價資料暫時無法讀取。');

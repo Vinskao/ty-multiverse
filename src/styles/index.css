@@ -2009,3 +2009,22 @@
 #contact-dialog-status:empty { display:none; }
 #contact-dialog-status { margin:.75rem 0 0; }
 @media (max-width:480px) { .contact-dialog-actions { grid-template-columns:1fr; } }
+
+/* Target timeline views (2026-10-27): diamonds under the chart, click a broker for its reasoning. */
+.market-target-dot { cursor:pointer; }
+.market-target-view { fill:var(--gray-500); stroke:#0b0d12; stroke-width:1; }
+.market-target-view--tailwind { fill:#e45b5b; }
+.market-target-view--headwind { fill:#3fb27f; }
+.market-target-row { cursor:pointer; }
+.market-target-row:hover, .market-target-row:focus { background:color-mix(in srgb, var(--gray-700) 35%, transparent); outline:none; }
+.market-target-detail { margin:.75rem 0; padding:.85rem 1rem; border:1px solid var(--gray-700); border-left:3px solid #d5ae4b; border-radius:.6rem; font-size:.85rem; line-height:1.65; }
+.market-target-detail h5 { margin:0 0 .35rem; font-size:.95rem; }
+.market-target-detail h6 { margin:.75rem 0 .35rem; font-size:.8rem; color:var(--gray-400); }
+.market-target-detail > p { margin:0 0 .35rem; }
+.market-target-views { margin-top:1rem; }
+.market-target-views h5 { margin:0 0 .5rem; font-size:.95rem; }
+.market-target-view-list { display:grid; gap:.6rem; margin:0; padding:0; list-style:none; font-size:.82rem; line-height:1.6; }
+.market-target-view-list li { padding:.55rem .7rem; border:1px solid var(--gray-800); border-radius:.5rem; }
+.market-target-view-list p { margin:.2rem 0; }
+.market-target-view-list small { color:var(--gray-400); }
+.market-target-view-badge { display:inline-block; margin-right:.4rem; padding:0 .35rem; border:1px solid currentColor; border-radius:.3rem; font-size:.72rem; font-weight:700; }
