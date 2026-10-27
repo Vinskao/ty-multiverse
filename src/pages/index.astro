@@ -98,7 +98,18 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<article><h3 data-i18n="home.productDecideTitle">用圖表比較，再做決策</h3><p data-i18n="home.productDecideBody">用趨勢圖、供應鏈圖與技術路線圖交叉比較訊號，逐步建立自己的量化研究與投資決策流程。</p></article>
 						</div>
 						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">不會寫程式，也能開始量化研究嗎？</summary><p data-i18n="home.productFaqBody">可以先從整理有來源的資料、記錄判斷條件，以及比較圖表開始。本頁展示市場資料與研究工具；如果想把自己的研究流程搬進來，請以 email 說明需求與目前的做法。</p></details>
-						<div class="home-product-pricing"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
+						<div class="home-product-pricing">
+							<div class="home-product-pricing-copy"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
+							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">
+								<section id="research-economics-panel" data-account-only hidden aria-labelledby="research-economics-title">
+									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value.</p></div></div>
+									<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
+									<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
+									<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Research schedule token costs will appear after per-run token usage can be verified. No cost curve is shown yet.</p>
+								</section>
+								<div class="research-economics-signin"><h3 data-i18n="home.researchEconomicsTitle">研究費用與投資報酬</h3><p data-i18n="home.researchEconomicsSignIn">登入後查看投資組合報酬率歷史；研究排程費用將於逐次用量可核對後加入。</p></div>
+							</aside>
+						</div>
 					</section>
 
 					<section id="market-overview" class="market-overview">
@@ -295,14 +306,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</section>
 							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
-								<div class="market-usage-layout">
+								<div class="market-usage-content">
 									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
-									<section id="research-economics-panel" class="research-economics-panel" data-account-only hidden aria-labelledby="research-economics-title">
-										<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value.</p></div></div>
-										<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
-										<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
-										<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Research schedule token costs will appear after per-run token usage can be verified. No cost curve is shown yet.</p>
-									</section>
 								</div>
 							</section>
 							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite" data-account-only hidden>

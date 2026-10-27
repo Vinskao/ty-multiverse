@@ -379,12 +379,6 @@
 
 .market-overview-grid > .market-usage-section { grid-column: 1 / -1; }
 
-.market-usage-layout {
-	display: grid;
-	grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-	align-items: start;
-	gap: 1rem;
-}
 
 .research-economics-panel {
 	min-width: 0;
@@ -404,9 +398,6 @@
 .research-economics-return-point { fill: #61f6ea; stroke: var(--gray-999); stroke-width: 2; cursor: pointer; vector-effect: non-scaling-stroke; }
 .research-economics-return-point:focus { outline: none; stroke: #fff; stroke-width: 3; }
 
-@media (max-width: 768px) {
-	.market-usage-layout { grid-template-columns: minmax(0, 1fr); }
-}
 
 .market-usage-card {
 	display: grid;
@@ -1519,9 +1510,15 @@
 .home-product-faq { margin-top:1rem; padding:.85rem 0; }
 .home-product-faq summary { cursor:pointer; font-weight:600; }
 .home-product-faq p { margin-top:.6rem; }
-.home-product-pricing { border-left:3px solid #b78b32; padding:.75rem 1rem; margin-top:.75rem; }
+.home-product-pricing { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:1.5rem; border-left:3px solid #b78b32; padding:.75rem 1rem; margin-top:.75rem; }
+.home-product-pricing-copy, .home-product-pricing-chart { min-width:0; text-align:left; }
+.home-product-pricing-chart { box-sizing:border-box; width:100%; }
+#research-economics-panel:not([hidden]) + .research-economics-signin { display:none; }
+.research-economics-signin h3 { margin:0 0 .5rem; font-size:1rem; }
+.research-economics-signin p { margin:0; color:var(--gray-400); font-size:.85rem; line-height:1.6; }
 .home-product-pricing a { display:inline-block; margin-top:.5rem; overflow-wrap:anywhere; }
 @media (max-width:768px) {
+  .home-product-pricing { grid-template-columns:minmax(0,1fr); }
   .home-product-steps { grid-template-columns:1fr; }
   .home-product-actions { justify-content:center; }
 }

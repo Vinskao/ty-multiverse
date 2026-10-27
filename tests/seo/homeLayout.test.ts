@@ -3,6 +3,14 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
+it('places the return chart in the right half of the pricing introduction, once only', () => {
+    document.body.innerHTML = read('src/pages/index.astro');
+    const pricing = document.querySelector('.home-product-pricing');
+    expect(pricing?.querySelector('.home-product-pricing-copy [data-i18n="home.productPricingTitle"]')).not.toBeNull();
+    expect(pricing?.querySelector('#research-economics-return-chart')).not.toBeNull();
+    expect(document.querySelector('#market-usage-section #research-economics-panel')).toBeNull();
+    expect(document.querySelectorAll('#research-economics-return-chart')).toHaveLength(1);
+});
 describe('homepage responsive presentation', () => {
     it('presents maintenance experience instead of scored skill graphics', () => {
         const home = read('src/pages/index.astro');
