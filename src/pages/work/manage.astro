@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="文章管理 | TY Multiverse" description="知識庫文章草稿、發布與索引管理" lang="zh-TW">
+  <div class="wrapper knowledge-page knowledge-detail">
+    <a href="/tymultiverse/work/">← 知識庫 / Knowledge base</a>
+    <header class="knowledge-header"><p class="knowledge-eyebrow">EDITORIAL WORKSPACE</p><h1>文章管理 / Articles</h1><p class="knowledge-intro">保存草稿 → 檢查內容 → 發布 → 更新搜尋索引。編輯已發布文章時，公開版本維持到下次發布。</p><p>需要管理者登入 / Administrator access required · <a href="/tymultiverse/login">登入 / Sign in</a></p></header>
+    <div class="knowledge-actions"><button id="blog-refresh" type="button">載入文章 / Refresh</button><button id="blog-new" type="button">新增文章 / New</button></div>
+    <p id="blog-status" role="status" aria-live="polite">請載入文章或建立草稿。</p>
+    <div id="blog-admin-list" class="knowledge-admin-list"></div>
+    <form id="blog-markdown-form" class="knowledge-editor">
+      <h2>上傳或貼上 Markdown / Import Markdown</h2>
+      <p>Agent 可呼叫 Markdown 匯入 API；這裡可直接貼上包含 frontmatter 的完整文章。選取既有文章後會以版本檢查更新。</p>
+      <label>上傳 UTF-8 .md / Upload<input id="blog-markdown-file" type="file" accept=".md,text/markdown" /></label>
+      <label>完整 Markdown（可直接貼上）/ Paste Markdown<textarea id="blog-markdown" required maxlength="550000" spellcheck="false" rows="18"></textarea></label>
+      <div class="knowledge-actions"><button type="submit">直接存入 DB 草稿 / Save to DB</button><button id="blog-markdown-publish" type="button">存入並發布 / Save & publish</button></div>
+    </form>
+    <details><summary>欄位編輯與生命週期管理 / Fields & lifecycle</summary>
+    <form id="blog-editor" class="knowledge-editor">
+      <label>文章網址 / Slug<input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="120" placeholder="engineering-log-2026-10" /></label>
+      <label>標題 / Title<input name="title" required maxlength="200" /></label>
+      <label>摘要 / Summary<textarea name="description" required maxlength="1000"></textarea></label>
+      <label>分類 / Category<input name="category" required value="Engineering" maxlength="80" /></label>
+      <label>標籤（逗號分隔）/ Tags<input name="tags" placeholder="Astro, TDD, Data Engineering" /></label>
+      <label>文章日期（台北時間）/ Article date<input name="date" type="datetime-local" required /></label>
+      <label>Markdown 正文 / Content<textarea name="content" required maxlength="500000" spellcheck="false"></textarea></label>
+      <p id="blog-state"></p>
+      <div class="knowledge-actions"><button type="submit">保存草稿 / Save draft</button><button type="button" data-blog-action="publish">發布 / Publish</button><button type="button" data-blog-action="unpublish">下架 / Unpublish</button><button type="button" data-blog-action="delete">移至回收區 / Delete</button><button type="button" data-blog-action="restore">還原為草稿 / Restore</button><button type="button" data-blog-action="trigger">重試搜尋索引 / Retry index</button></div>
+    </form>
+    </details>
+  </div>
+  <script>
+    import { initBlogEditor } from '../../scripts/work/editor';
+    document.addEventListener('astro:page-load', initBlogEditor);
+  </script>
+</BaseLayout>

@@ -372,17 +372,97 @@
     "viewAll": { "en": "View All", "zh": "查看全部" }
   },
   "work": {
-    "title": { "en": "TY's Blog", "zh": "TY 的部落格" },
-    "tagline": {
-      "en": "Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding.",
-      "zh": "雖然每篇文章都集中在單一主題，但通常包含多種關鍵知識點。透過識別並連結不同文章中的相同知識點，你可以建立更全面的理解。"
+    "title": {
+      "en": "Engineering knowledge & development log",
+      "zh": "工程知識庫與開發紀錄"
     },
-    "articleCount": { "en": "📚 Total {count} articles", "zh": "📚 總計 {count} 篇文章" },
-    "syncBtn": { "en": "🔄 Sync Articles to DB", "zh": "🔄 同步文章至資料庫" },
-    "syncPreparing": { "en": "Preparing to sync articles...", "zh": "正在準備同步文章..." },
-    "synced": { "en": "✅ Synced!", "zh": "✅ 已同步！" },
-    "retry": { "en": "❌ Retry", "zh": "❌ 重試" },
-    "advance": { "en": "🚀 Advance", "zh": "🚀 進階" },
-    "basic": { "en": "📘 Basic", "zh": "📘 基礎" }
+    "tagline": {
+      "en": "Document problems, architecture choices and validation results to inform the next decision.",
+      "zh": "記錄問題、架構選擇與驗證結果，讓每次開發都成為下一次決策的依據。"
+    },
+    "articleCount": {
+      "en": "{count} articles",
+      "zh": "共 {count} 篇文章"
+    },
+    "syncBtn": {
+      "en": "🔄 Sync Articles to DB",
+      "zh": "🔄 同步文章至資料庫"
+    },
+    "syncPreparing": {
+      "en": "Preparing to sync articles...",
+      "zh": "正在準備同步文章..."
+    },
+    "synced": {
+      "en": "✅ Synced!",
+      "zh": "✅ 已同步！"
+    },
+    "retry": {
+      "en": "❌ Retry",
+      "zh": "❌ 重試"
+    },
+    "advance": {
+      "en": "🚀 Advance",
+      "zh": "🚀 進階"
+    },
+    "basic": {
+      "en": "📘 Basic",
+      "zh": "📘 基礎"
+    },
+    "browse": {
+      "en": "Browse the library ↓",
+      "zh": "瀏覽知識庫 ↓"
+    },
+    "manage": {
+      "en": "Manage articles ↗",
+      "zh": "文章管理 ↗"
+    },
+    "latest": {
+      "en": "LATEST DEVELOPMENT",
+      "zh": "最新紀錄"
+    },
+    "library": {
+      "en": "Knowledge index",
+      "zh": "知識索引"
+    },
+    "search": {
+      "en": "Search title, summary or technology",
+      "zh": "搜尋標題、摘要或技術"
+    },
+    "category": {
+      "en": "Technology category",
+      "zh": "技術分類"
+    },
+    "all": {
+      "en": "All categories",
+      "zh": "全部分類"
+    },
+    "empty": {
+      "en": "No matching articles. Adjust the keyword or category.",
+      "zh": "沒有符合條件的文章，請調整關鍵字或分類。"
+    },
+    "read": {
+      "en": "Read the full record →",
+      "zh": "閱讀完整紀錄 →"
+    },
+    "resultCount": {
+      "en": "{count} matching articles",
+      "zh": "找到 {count} 篇文章"
+    },
+    "back": {
+      "en": "← Back to knowledge base",
+      "zh": "← 返回知識庫"
+    },
+    "unavailable": {
+      "en": "The article service is temporarily unavailable. Please try again later.",
+      "zh": "文章服務暫時無法使用，請稍後再試。"
+    },
+    "methodTitle": {
+      "en": "How knowledge accumulates",
+      "zh": "知識如何累積"
+    },
+    "methodBody": {
+      "en": "Development logs retain context, decisions, implementation and validation limits. Browse fundamentals by technology and deliveries by date.",
+      "zh": "每篇開發紀錄保留背景、決策、實作與驗證限制；基礎筆記依技術分類查找，實際交付則按時間追蹤。"
+    }
   }
 }

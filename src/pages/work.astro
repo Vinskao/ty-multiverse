@@ -1,144 +1,72 @@
 ---
-import { getCollection } from 'astro:content';
-
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-import ContactCTA from '../components/ContactCTA.astro';
-import PortfolioPreview from '../components/PortfolioPreview.astro';
-import Hero from '../components/Hero.astro';
-import Grid from '../components/Grid.astro';
-import CKEditor from '../components/CKEditor.astro';
-
-const projects = (await getCollection('work')).sort(
-	(a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
-);
-
-const links = [
-    "https://www.freecodecamp.org/certification/TianyiKao/javascript-algorithms-and-data-structures",
-    "https://www.freecodecamp.org/certification/TianyiKao/data-visualization",
-    "",
-    "https://www.cloudskillsboost.google/public_profiles/28b434be-64c8-4b98-b2a6-7851772bda44/badges/3572551?utm_medium=social&utm_source=linkedin&utm_campaign=ql-social-share",
-	"",
-];
+import { readBlog } from '../services/server/blog';
+import { sortArticles } from '../scripts/work/catalog';
+let projects = [];
+let unavailable = false;
+try {
+  projects = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, publishDate: new Date(row.publishDate) } })));
+} catch { unavailable = true; Astro.response.status = 503; }
+const categories = [...new Set(projects.map(({data}) => data.category).filter(Boolean))].sort();
+const latest = projects[0];
 ---
-<body>
-
-<BaseLayout
-	title="My Work | Tianyi Kao"
-	description="Learn about TY's most recent projects"
->
-	<div class="stack gap-20">
-		<main class="wrapper stack gap-8">
-			<Hero
-				title="TY's Blog"
-				tagline="Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding."
-				align="start"
-			>
-				<div slot="title" data-i18n="work.title">TY's Blog</div>
-				<div slot="tagline" data-i18n="work.tagline">Although each article focuses on a single topic, it often contains a variety of key knowledge points. By identifying and connecting these same points across different articles, you can build a more comprehensive understanding.</div>
-			</Hero>
-
-
-			<CKEditor />
-			<div class="article-count" style="text-align: center;">
-				<p class="article-count-text" style="margin: 0 auto;" data-i18n="work.articleCount" data-i18n-count={projects.length}>📚 Total {projects.length} articles</p>
-				<div class="sync-section" style="margin-top: 1rem; text-align: center;">
-					<button id="sync-articles-btn" class="btn is-primary" data-i18n="work.syncBtn">
-						Sync Articles to DB
-					</button>
-					<div id="sync-status" class="sync-status" style="
-						margin-top: 0.5rem;
-						font-size: 0.85rem;
-						min-height: 1.2em;
-						font-weight: 500;
-					"></div>
-				</div>
-			</div>
-			<Grid variant="offset">
-				{
-					projects.map((project, index) => (
-						<li>
-							<a href={links[index]}>
-								<PortfolioPreview project={project} />
-							</a>
-						</li>
-					))
-				}
-			</Grid>
-			
-		</main>
-		<ContactCTA />
-	</div>
-
-	<script>
-		import { syncService } from '../services/api/syncService';
-		import i18nData from '../storages/i18n.json';
-
-		document.addEventListener('DOMContentLoaded', () => {
-			const syncBtn = document.getElementById('sync-articles-btn') as HTMLButtonElement;
-			const syncStatus = document.getElementById('sync-status');
-
-			const getI18n = (key: string) => {
-				const lang = (window as any).AppLang ? (window as any).AppLang.get() : (localStorage.getItem('site_language') || 'en');
-				const keys = key.split('.');
-				let translation: any = i18nData;
-				for (const k of keys) {
-					translation = translation[k];
-				}
-				return translation[lang] || translation['en'] || key;
-			};
-
-			if (syncBtn && syncStatus) {
-				syncBtn.addEventListener('click', async () => {
-					try {
-						const lang = (window as any).AppLang ? (window as any).AppLang.get() : 'en';
-						
-						// 禁用按鈕並顯示載入狀態
-						syncBtn.disabled = true;
-						syncBtn.textContent = lang === 'zh' ? '同步中...' : 'Syncing...';
-						syncStatus.textContent = getI18n('work.syncPreparing');
-						syncStatus.style.color = '#666';
-
-						// 執行同步
-						const result = await syncService.syncArticlesToBackend();
-
-						if (result.success) {
-							const vectorInfo =
-								typeof result.vectorizedCount === 'number'
-									? (lang === 'zh' ? `, 向量化: ${result.vectorizedCount}` : `, embeddings: ${result.vectorizedCount}`)
-									: '';
-							const purgeInfo =
-								typeof result.purgedCount === 'number'
-									? (lang === 'zh' ? `, 清理: ${result.purgedCount}` : `, purged: ${result.purgedCount}`)
-									: '';
-							
-							const msg = lang === 'zh' ? '同步成功' : result.message;
-							const articleText = lang === 'zh' ? '篇文章' : 'articles';
-							
-							syncStatus.textContent = `${msg} (${result.articleCount} ${articleText}${vectorInfo}${purgeInfo})`;
-							syncStatus.style.color = '#28a745';
-							syncBtn.textContent = getI18n('work.synced');
-						} else {
-							throw new Error(result.message);
-						}
-
-					} catch (error) {
-						console.error('Sync failed:', error);
-						syncStatus.textContent = `${getI18n('work.retry')}: ${error.message}`;
-						syncStatus.style.color = '#dc3545';
-						syncBtn.textContent = getI18n('work.retry');
-					} finally {
-						syncBtn.disabled = false;
-						// 3秒後恢復原始狀態
-						setTimeout(() => {
-							syncBtn.textContent = getI18n('work.syncBtn');
-							syncStatus.textContent = '';
-						}, 3000);
-					}
-				});
-			}
-		});
-	</script>
+<BaseLayout title="工程知識庫與開發紀錄 | TY Multiverse" description="TY Multiverse 的架構決策、實作紀錄與技術知識：從資料整合、AI 研究到部署驗證。" lang="zh-TW">
+  <div class="wrapper knowledge-page">
+    <header class="knowledge-header">
+      <p class="knowledge-eyebrow">TY MULTIVERSE / ENGINEERING</p>
+      <h1 data-i18n="work.title">工程知識庫與開發紀錄</h1>
+      <p class="knowledge-intro" data-i18n="work.tagline">記錄問題、架構選擇與驗證結果，讓每次開發都成為下一次決策的依據。</p>
+      <div class="knowledge-header-links"><a href="#article-library" data-i18n="work.browse">瀏覽知識庫 ↓</a><a href="/tymultiverse/work/manage" data-i18n="work.manage">文章管理 ↗</a></div>
+    </header>
+    {unavailable && <p class="knowledge-notice" role="status" data-i18n="work.unavailable">文章服務暫時無法使用，請稍後再試。</p>}
+    {latest && <section class="knowledge-feature" aria-labelledby="latest-title">
+      <div><p class="knowledge-eyebrow" data-i18n="work.latest">最新紀錄</p><time datetime={latest.data.publishDate.toISOString()}>{latest.data.publishDate.toISOString().slice(0,10)}</time><p>{latest.data.category}</p></div>
+      <div><h2 id="latest-title"><a href={`/tymultiverse/work/${latest.id}`}>{latest.data.title}</a></h2><p>{latest.data.description}</p><div class="knowledge-tags">{latest.data.tags.map(tag => <span>{tag}</span>)}</div><a class="knowledge-read" href={`/tymultiverse/work/${latest.id}`} data-i18n="work.read">閱讀完整紀錄 →</a></div>
+    </section>}
+    <section id="article-library" class="knowledge-library" aria-labelledby="library-title">
+      <div class="knowledge-section-title"><h2 id="library-title" data-i18n="work.library">知識索引</h2><span data-i18n="work.articleCount" data-i18n-count={projects.length}>共 {projects.length} 篇文章</span></div>
+      <form class="knowledge-filters" role="search" onsubmit="return false">
+        <label><span data-i18n="work.search">搜尋標題、摘要或技術</span><input id="article-search" type="search" autocomplete="off" /></label>
+        <label><span data-i18n="work.category">技術分類</span><select id="article-category"><option value="" data-i18n="work.all">全部分類</option>{categories.map(category => <option value={category}>{category}</option>)}</select></label>
+      </form>
+      <p id="article-results" role="status" aria-live="polite"></p>
+      <ol class="knowledge-list">
+        {projects.map(project => <li data-article-id={project.id}><article class="knowledge-row">
+          <div class="knowledge-date"><time datetime={project.data.publishDate.toISOString()}>{project.data.publishDate.toISOString().slice(0,10)}</time><span>{project.data.category}</span></div>
+          <div><h3><a href={`/tymultiverse/work/${project.id}`}>{project.data.title}</a></h3><p>{project.data.description}</p><div class="knowledge-tags">{project.data.tags.map(tag => <span>{tag}</span>)}</div></div>
+          <a class="knowledge-arrow" href={`/tymultiverse/work/${project.id}`} aria-label={project.data.title}>↗</a>
+        </article></li>)}
+      </ol>
+      <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>
+    </section>
+    <aside class="knowledge-note"><h2 data-i18n="work.methodTitle">知識如何累積</h2><p data-i18n="work.methodBody">每篇開發紀錄保留背景、決策、實作與驗證限制；基礎筆記依技術分類查找，實際交付則按時間追蹤。</p></aside>
+    <script type="application/json" id="article-catalog" set:html={JSON.stringify(projects).replace(/</g, '\u003c')} />
+  </div>
+  <script>
+    import { filterArticles } from '../scripts/work/catalog';
+    import i18n from '../storages/i18n.json';
+    let cleanup: (() => void) | undefined;
+    function init() {
+      cleanup?.();
+      const input = document.querySelector<HTMLInputElement>('#article-search');
+      const category = document.querySelector<HTMLSelectElement>('#article-category');
+      const source = document.getElementById('article-catalog');
+      if (!input || !category || !source) return;
+      const articles = JSON.parse(source.textContent || '[]');
+      const render = () => {
+        const found = filterArticles(articles, input.value, category.value);
+        const ids = new Set(found.map(row => row.id));
+        document.querySelectorAll<HTMLElement>('[data-article-id]').forEach(row => { row.hidden = !ids.has(row.dataset.articleId); });
+        const lang = (window as any).AppLang?.get() === 'en' ? 'en' : 'zh';
+        document.getElementById('article-results')!.textContent = i18n.work.resultCount[lang].replace('{count}', String(found.length));
+        document.getElementById('article-empty')!.hidden = found.length > 0;
+      };
+      input.addEventListener('input', render);
+      category.addEventListener('change', render);
+      const off = (window as any).AppLang?.onChange(render);
+      cleanup = () => { off?.(); input.removeEventListener('input', render); category.removeEventListener('change', render); };
+      render();
+    }
+    document.addEventListener('astro:page-load', init);
+  </script>
 </BaseLayout>
-
-</body>
