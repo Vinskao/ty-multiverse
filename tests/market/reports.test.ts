@@ -22,6 +22,13 @@ describe('market research reports', () => {
     expect(reportStatusLabel('failed', undefined, '沒有文字層')).toContain('沒有文字層');
   });
 
+  it('does not call a queued old channel post a failure', () => {
+    // 2026-10-28: posts waiting in the backlog showed "處理失敗：請稍後重試" because any unknown status fell through to the failure text.
+    const label = reportStatusLabel('backlog');
+    expect(label).toContain('排隊');
+    expect(label).not.toContain('失敗');
+  });
+
   it('marks report claims opposite the saved research lean', () => {
     const claim: MarketReport['claims'][number] = { direction: 'headwind', segment: 'memory', page: 4, claim: 'Supply tightens' };
     expect(reportClaimTone(claim.direction, 'bullish')).toBe('opposed');

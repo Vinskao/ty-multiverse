@@ -1,4 +1,4 @@
-export type ReportStatus = 'extracted' | 'embedded' | 'claims_pending' | 'ready' | 'failed';
+export type ReportStatus = 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed';
 export const MAX_REPORT_BYTES = 40 * 1024 * 1024;
 export type MarketReport = {
   id: string;
@@ -28,6 +28,7 @@ export function reportStatusLabel(status: ReportStatus, claimCount?: number, fai
   if (status === 'extracted') return '已抽取文字，正在向量化';
   if (status === 'embedded') return '已向量化，等待萃取主張';
   if (status === 'claims_pending') return '等待萃取主張';
+  if (status === 'backlog') return '排隊中：舊貼文，每天分批萃取主張';
   if (status === 'ready') return `完成（${claimCount ?? 0} 項主張）`;
   return `處理失敗：${failureReason || '請稍後重試'}`;
 }
