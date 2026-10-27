@@ -118,3 +118,13 @@ it('says when a view is dated by the day it was recorded or by its data cut-off 
   expect(list).toContain('2026-10-21（資料截點）');
   expect(list.match(/2026-10-21 ·/g)).toHaveLength(1); // the published one has no suffix
 });
+
+it('links a view back to the post it came from, so the source is named and one click away', () => {
+  document.body.innerHTML = '<div id="targets-test"></div>';
+  renderPriceTargetChart('targets-test', { actions: [], consensus: [], closes: [{ date: '2026-10-20', close: 100 }], currency: 'USD', zh: true,
+    views: [{ ...view(1, '2026-10-20', 'tailwind', 'IEObserve 國際經濟觀察'), sourceUrl: 'https://t.me/ieobserve/2312' }] });
+  const link = document.querySelector<HTMLAnchorElement>('.market-target-views a')!;
+  expect(link.href).toBe('https://t.me/ieobserve/2312');
+  expect(link.textContent).toBe('原文 ↗');
+  expect(document.querySelector('.market-target-views')!.textContent).toContain('IEObserve 國際經濟觀察');
+});

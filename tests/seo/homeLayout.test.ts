@@ -74,3 +74,13 @@ it('left-aligns the notes section heading on every screen width (2026-10-27)', (
     expect(css).toMatch(/\.home-page \.with-cta \.section-header\s*\{[^}]*justify-self:\s*start[^}]*text-align:\s*left/);
     expect(css).toMatch(/\.home-page \.with-cta \.section-header \.section-title\s*\{[^}]*text-align:\s*left[^}]*margin:\s*0/);
 });
+
+it('lists IB-sourced holdings (Japan, Korea, US) in the holdings chip summary, with dashes where they have no chip data (2026-10-27)', () => {
+    const brief = read('src/components/MarketBrief.astro');
+    expect(brief).toContain('brief?.overseas');
+    expect(brief).toMatch(/overseas\.map\(\(s\) => \{[\s\S]*latestQuarter[\s\S]*revenueYoYPercent/);
+    expect(brief).toContain('operatingMarginPercent');
+    expect(brief).toMatch(/stocks\.length > 0 \|\| overseas\.length > 0/);
+    expect(brief).toMatch(/overseas\.filter\(\(s\) => s\.signals\?\.length\)/);
+    expect(brief).toContain('海外持股沒有外資、投信、融資與集保籌碼');
+});

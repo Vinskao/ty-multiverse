@@ -136,6 +136,10 @@ export function renderPriceTargetChart(targetId: string, options: Options) {
         const text = document.createElement('p'); text.textContent = view.claim;
         const source = document.createElement('small'); source.textContent = `《${view.title}》 p.${view.page} · ${view.evidence}`;
         li.append(badge, head, text, source);
+        if (view.sourceUrl) {
+            const origin = document.createElement('a'); origin.href = view.sourceUrl; origin.target = '_blank'; origin.rel = 'noopener noreferrer';
+            origin.textContent = zh ? '原文 ↗' : 'Original ↗'; li.append(origin);
+        }
         return li;
     }
     function showDetail(action: TargetAction) {

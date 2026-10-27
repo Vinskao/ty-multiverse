@@ -62,6 +62,9 @@ const signalText = (signals: any[]): Text => both(
 const heldStockNames: Record<string, string> = {};
 for (const item of brief?.instruments ?? []) if (item.productType === 'stock') heldStockNames[String(item.code).toUpperCase()] = item.name || '';
 const stocks = Object.values(brief?.stocks ?? {}) as any[];
+// IBKR holdings (Japan, Korea, US): no TWSE chip data, so they carry price, technicals and the latest quarter's growth and margins.
+const overseas = Object.values(brief?.overseas ?? {}) as any[];
+const marketName: Record<string, Text> = { US: both('美國', 'US'), JP: both('日本', 'Japan'), KR: both('韓國', 'Korea'), HK: both('香港', 'Hong Kong') };
 // The stock's own name (台積電), never the futures contract that led to it (小型台積電期貨).
 const nameOf = (s: any) => s.name || heldStockNames[s.code] || '';
 
@@ -84,8 +87,8 @@ const headers: Text[] = [
 				</p>
 			</div>
 			{!brief && <p class="market-updated">{T(both('摘要暫時無法取得；請改讀 /tymultiverse/brief.md。', 'Summary temporarily unavailable; see /tymultiverse/brief.md.'))}</p>}
-			{brief && stocks.length === 0 && <p class="market-updated">{T(both('目前沒有可摘要的股票持股。', 'No stock holdings to summarise.'))}</p>}
-			{stocks.length > 0 && (
+			{brief && stocks.length === 0 && overseas.length === 0 && <p class="market-updated">{T(both('目前沒有可摘要的股票持股。', 'No stock holdings to summarise.'))}</p>}
+			{(stocks.length > 0 || overseas.length > 0) && (
 				<div class="market-fin-table-wrap">
 					<table class="market-fin-table market-brief-table">
 						<thead><tr>{headers.map((header) => <th scope="col">{T(header)}</th>)}</tr></thead>
@@ -114,6 +117,31 @@ const headers: Text[] = [
 									</tr>
 								);
 							})}
+							{overseas.map((s) => {
+								const quarter = s.fundamentals?.latestQuarter;
+								// Gross margin when the filing reports it (US), otherwise operating margin (Japan reports no gross profit).
+								const margin = quarter?.grossMarginPercent != null
+									? [plain(quarter.grossMarginPercent, '%', 1), sep, signed(quarter.grossMarginYoYPp, ' pp')]
+									: quarter?.operatingMarginPercent != null
+										? [{ text: both('營益率 ', 'Op. margin ') }, plain(quarter.operatingMarginPercent, '%', 1), sep, signed(quarter.operatingMarginYoYPp, ' pp')]
+										: [{ text: '—' }];
+								const cells = [
+									[plain(s.price?.close), sep, signed(s.price?.change5dPct, '%')],
+									[{ text: '—' }], [{ text: '—' }], [{ text: '—' }], [{ text: '—' }], [{ text: '—' }],
+									[signed(quarter?.revenueYoYPercent, '%', 1)],
+									margin,
+								];
+								return (
+									<tr>
+										<th scope="row">
+											{s.code} {s.name || ''}
+											<small class="market-brief-via">{T(marketName[s.market] ?? { zh: s.market, en: s.market })} · {T(s.group === 'automatic' ? both('持有', 'held') : both('自選', 'watchlist'))} · IB</small>
+											{quarter && <small class="market-brief-release">{quarter.period}</small>}
+										</th>
+										{cells.map((parts) => <td>{parts.map((part) => part.cls ? <span class={part.cls}>{T(part.text)}</span> : T(part.text))}</td>)}
+									</tr>
+								);
+							})}
 						</tbody>
 					</table>
 				</div>
@@ -121,14 +149,15 @@ const headers: Text[] = [
 			{/* Text form of the table for AI readers; folded for people, still in the server HTML. */}
 			<details class="market-brief-ai">
 				<summary>{T(both('文字版訊號與說明（供 AI 讀取）', 'Signals as text and notes (for AI readers)'))}</summary>
-			{stocks.some((s) => s.signals?.length) && (
+			{(stocks.some((s) => s.signals?.length) || overseas.some((s) => s.signals?.length)) && (
 				<ul class="market-brief-signals">
 					{stocks.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {nameOf(s)}</strong>: {T(signalText(s.signals))}</li>)}
+					{overseas.filter((s) => s.signals?.length).map((s) => <li><strong>{s.code} {s.name || ''}（{T(marketName[s.market] ?? { zh: s.market, en: s.market })}）</strong>: {T(signalText(s.signals))}</li>)}
 				</ul>
 			)}
 			<p class="market-fin-note">{T(both(
-				'只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現股呈現；紅漲綠跌。非投資建議。',
-				'Instrument codes only; no quantities, cost, P/L or account values. Lot = 1,000 shares; pp = percentage points; futures are shown through their underlying stock; red = up, green = down. Not investment advice.',
+				'只列持有標的代號，不含張數、成本、損益或帳戶金額。張 = 1,000 股；pp = 百分點；期貨以標的現股呈現；紅漲綠跌。海外持股沒有外資、投信、融資與集保籌碼資料（顯示 —），營收為最近一季對去年同季的年增，毛利率或營益率的變化也是對去年同季。非投資建議。',
+				'Instrument codes only; no quantities, cost, P/L or account values. Lot = 1,000 shares; pp = percentage points; futures are shown through their underlying stock; red = up, green = down. Overseas holdings have no foreign/trust flow, margin or TDCC data (shown as —); their revenue is the latest quarter year over year, and margin changes are against the same quarter a year earlier. Not investment advice.',
 			))}</p>
 			</details>
 		</section>

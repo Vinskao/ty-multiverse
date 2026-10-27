@@ -5,7 +5,7 @@ export type TargetAction = { firm: string; date: string; action: string | null; 
     thesis?: string | null; reportId?: string | null };
 /** A public report claim about the stock, dated by the report's publication (or the claim's data date). */
 export type TargetView = { reportId: string; title: string; publisher: string; date: string | null; page: number; dimension: string;
-    direction: string; claim: string; evidence: string; dateKind?: 'published' | 'data' | 'recorded' | null };
+    direction: string; claim: string; evidence: string; dateKind?: 'published' | 'data' | 'recorded' | null; sourceUrl?: string | null };
 export type TargetConsensus = { date: string; mean: number | null; median: number | null; high: number | null; low: number | null;
     analysts: number | null; currency: string; source: string };
 export type ClosePoint = { date: string; close: number };
