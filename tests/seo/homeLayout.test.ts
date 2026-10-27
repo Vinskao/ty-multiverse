@@ -25,6 +25,10 @@ describe('homepage responsive presentation', () => {
         expect(css).toMatch(/\.market-watchlist\s*\{[^}]*position:\s*static/s);
         expect(css).not.toMatch(/\.market-watchlist\s*\{[^}]*position:\s*sticky/s);
     });
+    it('gives the usage card and return chart the full dashboard row', () => {
+        const css = read('src/styles/index.css');
+        expect(css).toMatch(/\.market-overview-grid\s*>\s*\.market-usage-section\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/s);
+    });
 });
 
 describe('homepage layout fixes (2026-10-26)', () => {

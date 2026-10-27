@@ -377,6 +377,8 @@
 	margin-top: 1rem;
 }
 
+.market-overview-grid > .market-usage-section { grid-column: 1 / -1; }
+
 .market-usage-layout {
 	display: grid;
 	grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
