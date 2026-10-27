@@ -108,7 +108,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</div>
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
-						<section id="macro-dashboard" class="macro-dashboard" aria-labelledby="macro-dashboard-title" aria-live="polite">
+						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
 							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
 							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
 							<div id="macro-chains" class="macro-chains" role="tabpanel"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>

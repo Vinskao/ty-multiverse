@@ -9,6 +9,8 @@
 .macro-group-header .macro-event { flex:0 1 auto; min-width:min(100%,11rem); text-align:right; justify-items:end; padding:.4rem .6rem; }
 .macro-event-label { color:var(--gray-400); font-size:.68rem; }
 .macro-later { margin:auto 0 0; text-align:left; color:var(--gray-400); font-size:.7rem; }
+.macro-group-grid[hidden] { display:none; }
+.macro-dashboard[data-macro-view="chains"] #macro-event-list, .macro-dashboard[data-macro-view="chains"] #macro-indicator-grid { display:none !important; }
 .macro-other-list { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .75rem; margin-top:.65rem; font-size:.72rem; }
 .macro-other-list[hidden] { display:none; }
 .macro-other-title { color:var(--gray-400); font-weight:650; }

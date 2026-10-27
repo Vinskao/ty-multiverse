@@ -52,3 +52,12 @@ it('shows the macro logic chains by default with the indicator grid one tab away
     expect(home).toContain('<div id="macro-chains" class="macro-chains" role="tabpanel">');
     expect(home).toMatch(/<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden>/);
 });
+
+it('hides the indicator grid and the release list while the logic chains view is selected (2026-10-27)', () => {
+    const css = read('src/styles/market-macro.css');
+    // display:grid on .macro-group-grid beat the hidden attribute, so the grid kept showing under the chains.
+    expect(css).toMatch(/\.macro-group-grid\[hidden\]\s*\{[^}]*display:\s*none/);
+    expect(css).toMatch(/\.macro-dashboard\[data-macro-view="chains"\]\s+#macro-event-list[^{]*\{[^}]*display:\s*none/);
+    expect(read('src/pages/index.astro')).toMatch(/id="macro-dashboard"[^>]*data-macro-view="chains"/);
+    expect(read('src/scripts/index.ts')).toContain("macro-dashboard')!.dataset.macroView");
+});

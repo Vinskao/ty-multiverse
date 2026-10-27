@@ -1710,6 +1710,7 @@ function bindMacroViewToggle() {
             const view = button.dataset.macroView;
             buttons.forEach((other) => other.setAttribute('aria-selected', String(other === button)));
             document.getElementById('macro-chains')!.hidden = view !== 'chains';
+            document.getElementById('macro-dashboard')!.dataset.macroView = view === 'grid' ? 'grid' : 'chains';
             document.getElementById('macro-indicator-grid')!.hidden = view !== 'grid';
         });
     }
