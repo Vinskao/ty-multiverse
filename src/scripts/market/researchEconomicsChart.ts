@@ -6,7 +6,9 @@ export function renderResearchReturnChart(
   svg: SVGSVGElement,
   readout: HTMLOutputElement,
   points: ResearchEconomicsPoint[],
+  language = 'en',
 ) {
+  const zh = language.toLowerCase().startsWith('zh');
   svg.replaceChildren();
   svg.onpointermove = null;
   svg.onpointerdown = null;
@@ -26,12 +28,12 @@ export function renderResearchReturnChart(
   svg.style.width = '100%';
   svg.style.height = 'auto';
   if (points.length === 0) {
-    svg.setAttribute('aria-label', 'Portfolio return history unavailable');
-    readout.textContent = 'No daily portfolio history is available yet.';
+    svg.setAttribute('aria-label', zh ? '投資組合報酬率歷史資料尚無法使用' : 'Portfolio return history unavailable');
+    readout.textContent = zh ? '目前沒有每日投資組合歷史資料。' : 'No daily portfolio history is available yet.';
     return;
   }
 
-  svg.setAttribute('aria-label', 'Portfolio return, cumulative since the first recorded snapshot');
+  svg.setAttribute('aria-label', zh ? '投資組合報酬率，自最早一筆快照累積計算' : 'Portfolio return, cumulative since the first recorded snapshot');
   const firstMs = Date.parse(`${points[0].date}T00:00:00Z`);
   const lastMs = Date.parse(`${points[points.length - 1].date}T00:00:00Z`);
   const x = (index: number) => points.length === 1 || firstMs === lastMs
@@ -80,13 +82,15 @@ export function renderResearchReturnChart(
   const show = (index: number) => {
     active = Math.max(0, Math.min(points.length - 1, index));
     const point = points[active];
-    readout.textContent = `${point.date} · Portfolio return ${pct(point.returnPercent)}`;
+    readout.textContent = zh
+      ? `${point.date} · 投資組合報酬率 ${pct(point.returnPercent)}`
+      : `${point.date} · Portfolio return ${pct(point.returnPercent)}`;
   };
   points.forEach((point, index) => {
     const circle = make('circle', {
       cx: String(x(index)), cy: String(y(point.returnPercent)), r: '4',
       class: 'research-economics-return-point', 'data-return-point': String(index),
-      tabindex: '0', role: 'button', 'aria-label': `${point.date}, portfolio return ${pct(point.returnPercent)}`,
+      tabindex: '0', role: 'button', 'aria-label': `${point.date}, ${zh ? '投資組合報酬率' : 'portfolio return'} ${pct(point.returnPercent)}`,
     });
     const title = make('title', {});
     title.textContent = `${point.date} · ${pct(point.returnPercent)}`;

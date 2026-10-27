@@ -30,4 +30,15 @@ describe('research economics return chart', () => {
     expect(svg.getAttribute('aria-label')).toMatch(/unavailable/i);
     expect(readout.textContent).toMatch(/no daily portfolio/i);
   });
+
+  it('localizes the chart readout for Chinese visitors', () => {
+    document.body.innerHTML = '<div><svg id="chart"></svg><output id="readout"></output></div>';
+    const svg = document.querySelector<SVGSVGElement>('#chart')!;
+    const readout = document.querySelector<HTMLOutputElement>('#readout')!;
+    renderResearchReturnChart(svg, readout, [
+      { date: '2026-04-02', returnPercent: 0, cumulativeCostUsd: 0 },
+    ], 'zh');
+    expect(svg.getAttribute('aria-label')).toContain('投資組合報酬率');
+    expect(readout.textContent).toContain('投資組合報酬率');
+  });
 });

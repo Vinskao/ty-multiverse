@@ -298,10 +298,10 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<div class="market-usage-layout">
 									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
 									<section id="research-economics-panel" class="research-economics-panel" data-account-only hidden aria-labelledby="research-economics-title">
-										<div class="research-economics-heading"><div><h6 id="research-economics-title">Portfolio return since first snapshot</h6><p>Return is rebased to 0% on the earliest recorded portfolio value.</p></div></div>
+										<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value.</p></div></div>
 										<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
 										<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
-										<p class="research-economics-cost-note">Research schedule token costs will appear after per-run token usage can be verified. No cost curve is shown yet.</p>
+										<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Research schedule token costs will appear after per-run token usage can be verified. No cost curve is shown yet.</p>
 									</section>
 								</div>
 							</section>

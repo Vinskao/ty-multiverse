@@ -2122,7 +2122,7 @@ function renderResearchPortfolioReturn(points: PortfolioHistoryPoint[]) {
     const svg = document.getElementById('research-economics-return-chart') as SVGSVGElement | null;
     const readout = document.getElementById('research-economics-return-readout') as HTMLOutputElement | null;
     if (!svg || !readout) return;
-    renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, []));
+    renderResearchReturnChart(svg, readout, buildResearchEconomicsSeries(points, []), marketLocale() === 'zh-TW' ? 'zh' : 'en');
 }
 
 export function renderPortfolioHistory(points: PortfolioHistoryPoint[]) {
