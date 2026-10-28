@@ -28,7 +28,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportClaimRelevant, reportSegmentForText, reportIndustryCategory, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
@@ -2057,12 +2057,31 @@ type ReportClaimsPayload = { reports: MarketReport[] };
 function renderMarketReports(reports: MarketReport[]) {
     const list = document.getElementById('market-report-list');
     if (!list) return;
+    const filters = document.getElementById('market-report-filters');
     list.replaceChildren();
+    filters?.replaceChildren();
     if (!reports.length) {
         const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = '目前沒有公開研究報告。'; list.append(empty); return;
     }
-    for (const report of reports) {
-        const card = document.createElement('article'); card.className = 'market-report-card';
+    const categorized = reports.map((report) => ({ report, industry: reportIndustryCategory((report.claims ?? []).map((claim) => claim.segment)) }));
+    if (filters) {
+        const counts = new Map<string, number>();
+        for (const { industry } of categorized) counts.set(industry, (counts.get(industry) ?? 0) + 1);
+        const categories = ['全部', ...[...counts.keys()].sort((a, b) => a.localeCompare(b, 'zh-TW'))];
+        for (const category of categories) {
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'market-report-filter';
+            button.textContent = category === '全部' ? `${category} ${reports.length}` : `${category} ${counts.get(category)}`;
+            button.setAttribute('aria-pressed', String(category === '全部')); button.dataset.category = category;
+            button.addEventListener('click', () => {
+                filters.querySelectorAll<HTMLButtonElement>('.market-report-filter').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+                list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => { card.hidden = category !== '全部' && card.dataset.industry !== category; });
+            });
+            filters.append(button);
+        }
+    }
+    for (const { report, industry } of categorized) {
+        const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry;
+        const category = document.createElement('span'); category.className = 'market-report-industry'; category.textContent = industry; card.append(category);
         const title = document.createElement('h5'); title.textContent = report.title; card.append(title);
         const meta = document.createElement('p');
         meta.textContent = reportMetaLine(report);

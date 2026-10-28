@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { canUploadReports, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, type MarketReport } from '../../src/scripts/market/reports';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { canUploadReports, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportIndustryCategory, type MarketReport } from '../../src/scripts/market/reports';
+
+describe('report industry categories', () => {
+  it('groups company and supply-chain segments into readable industry boards', () => {
+    expect(reportIndustryCategory(['foundry', 'memory'])).toBe('半導體');
+    expect(reportIndustryCategory(['ccl_pcb'])).toBe('PCB 與電子材料');
+    expect(reportIndustryCategory(['odm', 'csp'])).toBe('AI 伺服器與雲端');
+    expect(reportIndustryCategory(['thermal'])).toBe('散熱');
+    expect(reportIndustryCategory(['optical'])).toBe('光通訊');
+  });
+
+  it('keeps unclassified reports in a catch-all category', () => {
+    expect(reportIndustryCategory([])).toBe('其他產業');
+    expect(reportIndustryCategory(['macroeconomics'])).toBe('其他產業');
+  });
+});
+
+it('provides a sector filter area above the market report list', () => {
+  const home = readFileSync(resolve(process.cwd(), 'src/pages/index.astro'), 'utf8');
+  expect(home).toMatch(/id="market-report-filters"[^>]*aria-label="依產業板塊篩選"/);
+  expect(home.indexOf('id="market-report-filters"')).toBeLessThan(home.indexOf('id="market-report-list"'));
+});
 
 describe('market research reports', () => {
   it('shows upload controls only to an authenticated owner', () => {

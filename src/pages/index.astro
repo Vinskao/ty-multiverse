@@ -459,6 +459,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<label>可見範圍<select name="visibility"><option value="public">公開</option><option value="owner">只有自己</option></select></label>
 							<button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p>
 						</form>
+						<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
 						<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
 					</section>
 					</section>

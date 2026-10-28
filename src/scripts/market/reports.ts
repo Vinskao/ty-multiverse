@@ -52,6 +52,20 @@ export function reportSegmentForText(text: string): string | null {
   return matches.find(([, pattern]) => pattern.test(value))?.[0] ?? null;
 }
 
+const REPORT_INDUSTRY_SEGMENTS: Array<[string, Set<string>]> = [
+  ['半導體', new Set(['foundry', 'memory', 'packaging', 'abf'])],
+  ['PCB 與電子材料', new Set(['ccl_pcb'])],
+  ['AI 伺服器與雲端', new Set(['odm', 'csp'])],
+  ['散熱', new Set(['thermal'])],
+  ['光通訊', new Set(['optical'])],
+];
+
+/** Map extracted report claim segments to a broad, readable industry board. */
+export function reportIndustryCategory(segments: string[]): string {
+  const normalized = new Set(segments.map((segment) => segment.trim().toLowerCase()));
+  return REPORT_INDUSTRY_SEGMENTS.find(([, members]) => [...members].some((segment) => normalized.has(segment)))?.[0] ?? '其他產業';
+}
+
 export function reportClaimRelevant(claim: { codes: string[]; segment: string }, code: string, segment: string | null): boolean {
   return claim.codes.includes(code.toUpperCase()) || (claim.codes.length === 0 && segment !== null && claim.segment === segment);
 }
