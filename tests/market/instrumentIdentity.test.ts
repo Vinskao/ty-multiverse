@@ -19,5 +19,7 @@ describe('instrument identity', () => {
         expect(instrumentMarketLabel({ code: '6857', market: 'JP' }, 'zh')).toBe('日本');
         expect(instrumentMarketLabel({ code: 'LITE', market: 'US' }, 'en')).toBe('U.S.');
         expect(instrumentMarketLabel({ code: '2330' }, 'zh')).toBe('');
+        expect(instrumentMarketLabel({ code: 'BTC', market: 'CRYPTO' }, 'zh')).toBe('加密貨幣');
+        expect(analysisRecordCode({ code: 'BTC', market: 'CRYPTO' })).toBe('BTC-CRYPTO');
     });
 });

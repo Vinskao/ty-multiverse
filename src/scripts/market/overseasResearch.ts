@@ -11,7 +11,9 @@ type SecFinancials = { source?: string; company?: string; sourceUrl?: string; qu
 export type OverseasResearch = { code: string; market: string; daily?: Bar[]; datasets?: { financials?: { payload?: SecFinancials; fetchedAt?: string } | null; profile?: { payload?: Record<string, any> } | null } };
 
 // Institutional flows, margin/lending and TDCC ownership are TWSE/TPEx/TDCC data with no IBKR equivalent.
-export function overseasDetailTabs() {
+// Crypto (Binance) has no filings or broker targets either.
+export function overseasDetailTabs(market?: string | null) {
+    if (String(market || '').toUpperCase() === 'CRYPTO') return ['price', 'research', 'ai-analysis'];
     return ['price', 'fundamentals', 'targets', 'research', 'ai-analysis'];
 }
 

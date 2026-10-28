@@ -11,6 +11,11 @@ describe('overseasDetailTabs', () => {
         // Institutional flows, margin/lending and TDCC ownership come from TWSE/TPEx/TDCC; IBKR has no equivalent.
         expect(overseasDetailTabs()).toEqual(['price', 'fundamentals', 'targets', 'research', 'ai-analysis']);
     });
+
+    it('crypto has no filings or broker targets, only price, research and AI analysis', () => {
+        expect(overseasDetailTabs('CRYPTO')).toEqual(['price', 'research', 'ai-analysis']);
+        expect(overseasDetailTabs('US')).toEqual(['price', 'fundamentals', 'targets', 'research', 'ai-analysis']);
+    });
 });
 
 describe('overseasHistoryPoints', () => {

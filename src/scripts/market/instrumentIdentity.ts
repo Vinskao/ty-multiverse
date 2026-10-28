@@ -7,6 +7,7 @@ type Identified = { code: string; market?: string | null };
 const MARKET_LABELS: Record<string, { en: string; zh: string }> = {
     US: { en: 'U.S.', zh: '美國' }, JP: { en: 'Japan', zh: '日本' }, KR: { en: 'Korea', zh: '韓國' },
     HK: { en: 'Hong Kong', zh: '香港' }, EU: { en: 'Europe', zh: '歐洲' }, GB: { en: 'UK', zh: '英國' },
+    CRYPTO: { en: 'Crypto', zh: '加密貨幣' },
 };
 
 export function instrumentMarket(item: Identified): string {

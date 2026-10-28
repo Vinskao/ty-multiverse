@@ -3,7 +3,9 @@ import { addChartControls, bindChartZoom, chartView, readChartPreference, visibl
 import { brokerTargetLines, firmColors, type TargetAction } from './priceTargets';
 import { comparisonAt, PRICE_METRICS, priceCandles, type PriceMetric, type PricePoint, type StatementComparisons } from './priceComparison';
 
-type Options = { zh: boolean; currency: string; comparisons?: StatementComparisons; financialsLoading?: boolean; futures?: boolean; targets?: readonly TargetAction[] };
+type Options = { zh: boolean; currency: string; comparisons?: StatementComparisons; financialsLoading?: boolean; futures?: boolean; targets?: readonly TargetAction[];
+    // Crypto: volume in the coin, and no P/E / inventory / margin overlay or broker targets.
+    overlays?: boolean; volumeUnit?: { en: string; zh: string } };
 const TARGET_PALETTE = ['#d5ae4b', '#7198df', '#f08e82', '#55b8a8', '#b48ce0', '#e0a35c', '#8fc46a', '#e57fb0'];
 const TARGETS_KEY = 'market-price-targets-visible:v1';
 let showTargets: boolean | undefined;
@@ -26,20 +28,22 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     const labels = zh ? ['本益比', '庫存天數', '營益率', '不疊加'] : ['P/E', 'Inventory days', 'Operating margin', 'None'];
     const units = zh ? { pe: '倍', inventoryDays: '天', operatingMargin: '%', none: '' } : { pe: '×', inventoryDays: 'days', operatingMargin: '%', none: '' };
     selected ??= readChartPreference(storage(), STORAGE_KEY, PRICE_METRICS, 'pe');
-    const metric: PriceMetric = options.futures ? 'none' : selected;
+    const plain = options.futures || options.overlays === false;
+    const volumeUnit = options.volumeUnit ?? (options.futures ? { en: 'contracts', zh: '口' } : { en: 'shares', zh: '股' });
+    const metric: PriceMetric = plain ? 'none' : selected;
     const metricLabel = labels[PRICE_METRICS.indexOf(metric)];
     const tone = metricColors[metric];
     const all = priceCandles(points, sources, volumeField);
     const dates = all.map(p => p.date);
     const redraw = () => renderPriceChart(targetId, points, sources, volumeField, options);
     const candles = visibleRows(all, p => p.date, chartView(targetId, dates).window);
-    const targetLines = options.futures || !options.targets ? [] : brokerTargetLines(options.targets, candles.map(p => p.date)).slice(0, TARGET_PALETTE.length);
+    const targetLines = plain || !options.targets ? [] : brokerTargetLines(options.targets, candles.map(p => p.date)).slice(0, TARGET_PALETTE.length);
     showTargets ??= storage()?.getItem(TARGETS_KEY) !== '0';
     const drawTargets = showTargets && targetLines.length > 0;
     const targetColors = firmColors(options.targets ?? [], TARGET_PALETTE);
     target.replaceChildren();
     addChartControls(target, targetId, dates, redraw, zh);
-    if (!options.futures) {
+    if (!plain) {
         const label = document.createElement('label'); label.className = 'market-price-comparison';
         label.append(document.createTextNode(zh ? '右軸指標 ' : 'Right axis '));
         const select = document.createElement('select'); select.setAttribute('aria-label', zh ? '股價比較指標' : 'Price comparison metric');
@@ -78,14 +82,14 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     const yMetric = (value: number) => top + (metricHigh - value) / (metricHigh - metricLow) * (bottom - top);
     const price = (value: number) => formatNumber(value, 'decimal', { locale });
     const metricText = (value: number) => `${formatNumber(value, metric === 'operatingMargin' ? 'percent' : 'decimal', { locale })}${metric === 'operatingMargin' ? '' : ` ${units[metric]}`}`;
-    const svg = element('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', tabindex: 0, 'aria-label': `${zh ? '股價與成交量' : 'OHLC and volume'} · ${options.currency}${metric === 'none' ? '' : ` / ${metricLabel}`}`, class: 'market-history-chart' });
+    const svg = element('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', tabindex: 0, 'aria-label': `${zh ? (options.volumeUnit ? '價格與成交量' : '股價與成交量') : 'OHLC and volume'} · ${options.currency}${metric === 'none' ? '' : ` / ${metricLabel}`}`, class: 'market-history-chart' });
     for (let tick = 0; tick <= 4; tick++) {
         const value = low + (high - low) * tick / 4, tickY = y(value);
         svg.append(element('line', { x1: left, x2: right, y1: tickY, y2: tickY, class: 'market-history-grid' }));
         svg.append(element('text', { x: left - 6, y: tickY + 4, 'text-anchor': 'end', class: 'market-history-axis-label' }, price(value)));
         if (numbers.length) svg.append(element('text', { x: right + 6, y: tickY + 4, class: 'market-history-axis-label', style: `fill:${tone}` }, metricText(metricLow + (metricHigh - metricLow) * tick / 4)));
     }
-    svg.append(element('text', { x: left, y: 16, class: 'market-history-axis-title' }, `${zh ? '股價' : 'Price'} (${options.currency})`));
+    svg.append(element('text', { x: left, y: 16, class: 'market-history-axis-title' }, `${zh ? (options.volumeUnit ? '價格' : '股價') : 'Price'} (${options.currency})`));
     if (metric !== 'none') svg.append(element('text', { x: right, y: 16, 'text-anchor': 'end', class: 'market-history-axis-title', style: `fill:${tone}` }, `${metricLabel} (${units[metric]})`));
     const maxVolume = Math.max(...candles.map(p => p.volume ?? 0), 1);
     candles.forEach((candle, i) => {
@@ -115,7 +119,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         }).join(' ');
         svg.append(element('path', { d: path, fill: 'none', stroke: tone, 'stroke-width': 2, 'data-price-metric': metric }));
     }
-    svg.append(element('text', { x: left, y: volumeTop - 8, class: 'market-history-axis-title' }, zh ? `成交量（${options.futures ? '口' : '股'}）` : `Volume (${options.futures ? 'contracts' : 'shares'})`));
+    svg.append(element('text', { x: left, y: volumeTop - 8, class: 'market-history-axis-title' }, zh ? `成交量（${volumeUnit.zh}）` : `Volume (${volumeUnit.en})`));
     const ticks = Math.min(candles.length, width < 480 ? 2 : 5);
     for (let i = 0; i < ticks; i++) {
         const index = Math.round(i * (candles.length - 1) / Math.max(ticks - 1, 1));
@@ -132,7 +136,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         marker.style.display = value ? '' : 'none';
         if (value) { marker.setAttribute('cx', String(x(index))); marker.setAttribute('cy', String(yMetric(value.value))); }
         readout.replaceChildren();
-        const prices = document.createElement('span'); prices.textContent = `${candle.date} · O ${price(candle.open)} · H ${price(candle.high)} · L ${price(candle.low)} · C ${price(candle.close)} ${options.currency} · ${zh ? '成交量' : 'Volume'} ${formatNumber(candle.volume, 'count', { locale })} ${options.futures ? (zh ? '口' : 'contracts') : (zh ? '股' : 'shares')}`;
+        const prices = document.createElement('span'); prices.textContent = `${candle.date} · O ${price(candle.open)} · H ${price(candle.high)} · L ${price(candle.low)} · C ${price(candle.close)} ${options.currency} · ${zh ? '成交量' : 'Volume'} ${formatNumber(candle.volume, 'count', { locale })} ${zh ? volumeUnit.zh : volumeUnit.en}`;
         readout.append(prices);
         if (drawTargets) {
             const entries = targetLines.flatMap(line => line.values[index] === null ? [] : [{ line, value: line.values[index]! }]);

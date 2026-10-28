@@ -65,3 +65,10 @@ it('lets the viewer hide the broker lines, remembers the choice, and never draws
   expect(document.querySelector('input[type="checkbox"]')).toBeNull();
 });
 
+it('crypto charts show volume in the coin and no financial overlay or broker targets', () => {
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: 'USDT', overlays: false, volumeUnit: { en: 'BTC', zh: 'BTC' } });
+  expect(document.querySelector('[data-price-metric="pe"]')).toBeNull();
+  expect(document.querySelector('select')).toBeNull();
+  expect(document.body.textContent).toContain('成交量（BTC）');
+  expect(document.body.textContent).not.toContain('股');
+});

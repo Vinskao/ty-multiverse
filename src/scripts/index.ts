@@ -80,6 +80,7 @@ let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
 let marketCustomInstruments: DashboardInstrument[] = [];
+let marketCryptoInstruments: DashboardInstrument[] = [];
 
 function placeMarketDetail(row: HTMLElement | null, scroll = true) {
     const detail = document.getElementById('market-instrument-detail');
@@ -130,8 +131,8 @@ function initMarketWatchlist() {
 }
 
 interface DashboardInstrument {
-    code: string; name: string; productType: 'stock' | 'futures';
-    market?: string;  // TW, US, JP, KR…; overseas codes can share digits with Taiwan codes (6857)
+    code: string; name: string; productType: 'stock' | 'futures' | 'crypto';
+    market?: string;  // TW, US, JP, KR, CRYPTO…; overseas codes can share digits with Taiwan codes (6857)
     underlyingCode?: string;
     quote?: TxfQuote | null;
     // Set on stocks the analyst added to the custom area from research reports.
@@ -141,6 +142,7 @@ interface MarketDashboardPayload {
     fixed: DashboardInstrument;
     automatic: { snapshotAt: string | null; positions: DashboardInstrument[] };
     custom: DashboardInstrument[];
+    crypto?: DashboardInstrument[];  // Binance spot (USDT), public quotes persisted by maya-sawa
 }
 
 type MarketHistoryValues = Record<string, number>;
@@ -363,10 +365,13 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
     const market = selectedMarketInstrument?.market || 'TW';
     const identity = brokerTargetIdentity(selectedMarketInstrument);
     const futures = volumeField === 'volume_contracts';
+    const crypto = market === 'CRYPTO';
+    const coin = selectedMarketInstrument?.code || '';
     renderPriceChart(targetId, points, sourceKeys, volumeField, {
-        zh: marketLocale() === 'zh-TW', currency: futures ? marketText('points', '點') : ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW' }[market] || market),
+        zh: marketLocale() === 'zh-TW', currency: futures ? marketText('points', '點') : ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW', CRYPTO: 'USDT' }[market] || market),
         comparisons, financialsLoading, futures,
-        targets: futures || !identity ? undefined : brokerTargetCache.get(`${identity.market}:${identity.code}`)?.actions,
+        overlays: !crypto, volumeUnit: crypto ? { en: coin, zh: coin } : undefined,
+        targets: futures || crypto || !identity ? undefined : brokerTargetCache.get(`${identity.market}:${identity.code}`)?.actions,
     });
     // The broker table and report views under the chart; drawn once per instrument so a resize does not close an opened broker.
     const details = document.getElementById('market-targets-detail');
@@ -381,13 +386,13 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
                 currency: ({ TW: 'TWD', US: 'USD', JP: 'JPY', KR: 'KRW' }[market] || market), zh: marketLocale() === 'zh-TW' });
         }
     }
-    if (!futures && selectedMarketInstrument) void ensureBrokerTargets(selectedMarketInstrument, redraw);
+    if (!futures && !crypto && selectedMarketInstrument) void ensureBrokerTargets(selectedMarketInstrument, redraw);
 }
 
 let marketHistoryRetryTimer: number | null = null;
 async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 'price', retries = 5) {
     if (marketHistoryRetryTimer !== null) { window.clearTimeout(marketHistoryRetryTimer); marketHistoryRetryTimer = null; }
-    if (instrument.productType !== 'stock' && instrument.productType !== 'futures') return;
+    if (!['stock', 'futures', 'crypto'].includes(instrument.productType)) return;
     const status = document.getElementById('market-history-status');
     // Overseas holdings never touch Taiwan sources (same digits can be a different company); they read the
     // IBKR/SEC data maya-sawa has persisted, so the panels work while the IB gateway is logged out.
@@ -561,12 +566,17 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
     const profile = payload.datasets?.profile?.payload || {};
     // The collector keeps the last good data when IB is logged out; say when the latest attempt failed.
     const brokerDown = payload.coverage?.history_raw?.status && payload.coverage.history_raw.status !== 'ok';
+    const crypto = instrument.market === 'CRYPTO';
     if (status) {
-        const parts = [points.length
-            ? marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)
-            : marketText('No IBKR daily bars stored yet; they fill in after the gateway is logged in.', '尚未保存 IB 日線；IB gateway 登入後會自動補上。'),
-            'Interactive Brokers · ' + marketText('stored in this site', '本站資料庫')];
-        if (brokerDown) parts.push(marketText('IB gateway offline: showing the last stored data', 'IB 未登入：顯示最後保存的資料'));
+        const loaded = points.length
+            ? marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date) : '';
+        const parts = crypto
+            ? [loaded || marketText('No Binance daily candles stored yet; they fill in automatically.', '尚未保存 Binance 日線；會自動補上。'),
+                `Binance ${instrument.code}/USDT · ` + marketText('daily candles open 00:00 UTC · stored in this site', '日線以 UTC 00:00 起算 · 本站資料庫')]
+            : [loaded || marketText('No IBKR daily bars stored yet; they fill in after the gateway is logged in.', '尚未保存 IB 日線；IB gateway 登入後會自動補上。'),
+                'Interactive Brokers · ' + marketText('stored in this site', '本站資料庫')];
+        if (brokerDown) parts.push(crypto ? marketText('Binance unreachable: showing the last stored data', 'Binance 暫時連不上：顯示最後保存的資料')
+            : marketText('IB gateway offline: showing the last stored data', 'IB 未登入：顯示最後保存的資料'));
         if (profile.industry) parts.push(`${profile.industry}${profile.category ? ` / ${profile.category}` : ''}`);
         status.textContent = parts.join(' · ');
     }
@@ -1274,7 +1284,7 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     // Overseas holdings get price, fundamentals and AI analysis from persisted IBKR/SEC data; institutional,
     // margin and ownership tabs are TWSE/TPEx/TDCC data with no overseas equivalent.
     const taiwan = isTaiwanInstrument(instrument);
-    const overseasTabs = overseasDetailTabs();
+    const overseasTabs = overseasDetailTabs(instrument.market);
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => { tab.hidden = !taiwan && !overseasTabs.includes(tab.dataset.marketTab || ''); });
     document.getElementById('market-overseas-kpis')?.remove();
     if (taiwan) {
@@ -1308,7 +1318,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const quote = instrument.quote;
         const item = document.createElement('span'); item.className = 'market-watch-instrument';
         const code = document.createElement('strong'); code.textContent = instrument.code;
-        const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
+        const name = document.createElement('small'); name.textContent = `${instrument.name} · ${instrument.productType === 'stock' ? marketText('Stock', '股票') : instrument.productType === 'crypto' ? marketText('Spot', '現貨') : marketText('Futures', '期貨')}${quote?.deliveryMonth ? ` · ${quote.deliveryMonth}` : ''}`;
         item.append(code, name);
         const marketLabel = instrumentMarketLabel(instrument, marketLocale() === 'zh-TW' ? 'zh' : 'en');
         if (marketLabel) name.append(` · ${marketLabel}`);
@@ -1341,7 +1351,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const lastKnown = quote && quote.quoteSource && quote.quoteSource !== 'live'
             ? `${quote.quoteSource === 'dailyClose' ? marketText('Last close', '最後收盤') : marketText('Last price', '最後價格')} · ` : '';
         timestamp.textContent = quote?.timestamp ? `${lastKnown}${new Date(quote.timestamp).toLocaleString()}` : '--';
-        if (!isTaiwanInstrument(instrument) && quote) {
+        if (!isTaiwanInstrument(instrument) && instrument.productType !== 'crypto' && quote) {
             timestamp.prepend(`${brokerAvailabilityLabel(quote.availability, marketLocale() === 'zh-TW' ? 'zh' : 'en')} · `);
         }
         row.append(item, price, timestamp);
@@ -1368,8 +1378,10 @@ async function fetchMarketDashboard() {
         const data = await response.json() as MarketDashboardPayload;
         marketAutoInstruments = data.automatic?.positions ?? [];
         marketCustomInstruments = data.custom ?? [];
+        marketCryptoInstruments = data.crypto ?? [];
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
+        renderDashboardRows('market-crypto-list', marketCryptoInstruments, marketText('No crypto quotes collected yet.', '尚未收集加密貨幣報價。'));
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
         await fetchMarketCompanyEvents();
@@ -1377,6 +1389,7 @@ async function fetchMarketDashboard() {
         console.error('Market dashboard unavailable:', error);
         renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
         renderDashboardRows('market-custom-list', [], 'Custom selections are temporarily unavailable.');
+        renderDashboardRows('market-crypto-list', [], marketText('Crypto quotes are temporarily unavailable.', '加密貨幣報價暫時無法讀取。'));
     }
 }
 
