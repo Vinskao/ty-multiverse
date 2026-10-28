@@ -1,4 +1,26 @@
 {
+  "openSource": {
+    "eyebrow": { "zh": "開源協作 · TY Multiverse", "en": "Open collaboration · TY Multiverse" },
+    "title": { "zh": "一起把研究工具做好", "en": "Build better research tools together" },
+    "intro": { "zh": "你正在使用的網站，由這些公開專案共同組成。歡迎從你熟悉的部分開始：回報問題、改善文件，或 Fork 後提交 Pull Request。", "en": "This website is built from these public repositories. Start with an area you know: report an issue, improve the documentation, or fork a repository and submit a pull request." },
+    "explore": { "zh": "參與開源協作", "en": "Contribute on GitHub" },
+    "github": { "zh": "查看程式碼", "en": "View source" },
+    "issues": { "zh": "回報問題", "en": "Open an issue" },
+    "help": { "zh": "可以從這裡協助", "en": "Where you can help" },
+    "guide": { "zh": "先閱讀對應專案的 README 與 AGENTS.md，了解啟動方式和開發規範。跨服務的問題，請在 Issue 附上重現步驟與相關專案。", "en": "Read each repository's README and AGENTS.md for setup and development guidance. For issues spanning services, include reproduction steps and the repositories involved." },
+    "frontendRole": { "zh": "你眼前的網站：研究報告、資料圖表與操作介面。", "en": "The website you see: research reports, data charts and user interfaces." },
+    "frontendHelp": { "zh": "圖表互動、手機版面、無障礙、多國語系與前端測試。", "en": "Chart interactions, mobile layouts, accessibility, translations and frontend tests." },
+    "mayaRole": { "zh": "資料與 AI 研究服務：文件檢索、報告主張與市場資料整合。", "en": "Data and AI research services: document retrieval, report claims and market-data integrations." },
+    "mayaHelp": { "zh": "新增資料來源、修正解析與單位換算、改善主張擷取和研究證據。", "en": "New data sources, parser and unit-conversion fixes, claim extraction and research evidence." },
+    "backendRole": { "zh": "核心業務 API、資料管理與身分驗證整合。", "en": "Core business APIs, data management and authentication integration." },
+    "backendHelp": { "zh": "API 行為、資料驗證、權限邊界、查詢效率與服務測試。", "en": "API behavior, data validation, authorization boundaries, query efficiency and service tests." },
+    "gatewayRole": { "zh": "各服務的共同入口，負責路由與流量控制。", "en": "The shared entry point for service routing and traffic controls." },
+    "gatewayHelp": { "zh": "路由、CORS、限流、逾時與服務間的錯誤處理。", "en": "Routing, CORS, rate limits, timeouts and error handling between services." },
+    "commonRole": { "zh": "Java 服務共用的例外處理、錯誤代碼與記錄工具。", "en": "Shared exception handling, error codes and logging tools for Java services." },
+    "commonHelp": { "zh": "一致的錯誤訊息、REST／gRPC 例外轉換與共用工具測試。", "en": "Consistent error messages, REST/gRPC exception mapping and tests for shared utilities." },
+    "consumerRole": { "zh": "接收 RabbitMQ 訊息，執行非同步工作與資料寫入。", "en": "Consumes RabbitMQ messages for asynchronous work and database writes." },
+    "consumerHelp": { "zh": "訊息重試、去重、ACK／NACK、資料一致性與反應式流程。", "en": "Retries, deduplication, ACK/NACK handling, data consistency and reactive flows." }
+  },
   "diary": {
     "category": { "en": "Category", "zh": "分類" },
     "all": { "en": "All", "zh": "全部" },

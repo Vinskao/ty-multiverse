@@ -1,0 +1,49 @@
+---
+import i18n from '../storages/i18n.json';
+
+const projects = [
+  { id: 'frontend', name: 'Frontend', repo: 'ty-multiverse', stack: 'Astro · React · TypeScript' },
+  { id: 'maya', name: 'Maya Sawa', repo: 'maya-sawa', stack: 'Python · FastAPI · PostgreSQL' },
+  { id: 'backend', name: 'Backend', repo: 'ty-multiverse-backend', stack: 'Java · Spring Boot' },
+  { id: 'gateway', name: 'Gateway', repo: 'ty-multiverse-gateway', stack: 'Spring Cloud Gateway · Redis' },
+  { id: 'common', name: 'Common', repo: 'ty-multiverse-common', stack: 'Java · REST · gRPC' },
+  { id: 'consumer', name: 'Consumer', repo: 'ty-multiverse-consumer', stack: 'RabbitMQ · WebFlux · R2DBC' },
+] as const;
+const copy = i18n.openSource;
+---
+
+<section id="open-source" class="open-source" aria-labelledby="open-source-title">
+  <header class="open-source-heading">
+    <p class="open-source-eyebrow" data-i18n="openSource.eyebrow">{copy.eyebrow.zh}</p>
+    <h2 id="open-source-title" data-i18n="openSource.title">{copy.title.zh}</h2>
+    <p data-i18n="openSource.intro">{copy.intro.zh}</p>
+  </header>
+  <div class="open-source-grid">
+    {projects.map((project) => {
+      const url = `https://github.com/Vinskao/${project.repo}`;
+      const role = `${project.id}Role` as keyof typeof copy;
+      const help = `${project.id}Help` as keyof typeof copy;
+      return <article class="open-source-project">
+        <p class="open-source-stack">{project.stack}</p>
+        <h3><a href={url} target="_blank" rel="noopener noreferrer">{project.name}<span aria-hidden="true"> ↗</span></a></h3>
+        <code>{project.repo}</code>
+        <p class="open-source-role" data-i18n={`openSource.${role}`}>{copy[role].zh}</p>
+        <div class="open-source-help">
+          <h4 data-i18n="openSource.help">{copy.help.zh}</h4>
+          <p data-i18n={`openSource.${help}`}>{copy[help].zh}</p>
+        </div>
+        <div class="open-source-links" role="group" aria-label={`${project.name} GitHub`}>
+          <a href={url} target="_blank" rel="noopener noreferrer" data-i18n="openSource.github">{copy.github.zh}</a>
+          <a href={`${url}/issues`} target="_blank" rel="noopener noreferrer" data-i18n="openSource.issues">{copy.issues.zh}</a>
+          <a class="open-source-fork" href={`${url}/fork`} target="_blank" rel="noopener noreferrer" aria-label={`Fork ${project.repo}`}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="4" r="2.5"/><circle cx="18" cy="4" r="2.5"/><circle cx="12" cy="20" r="2.5"/><path d="M6 6.5v2A3.5 3.5 0 0 0 9.5 12h5A3.5 3.5 0 0 0 18 8.5v-2M12 12v5.5"/></svg>
+            Fork
+          </a>
+        </div>
+      </article>;
+    })}
+  </div>
+  <p class="open-source-guide" data-i18n="openSource.guide">{copy.guide.zh}</p>
+</section>
+
+

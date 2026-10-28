@@ -14,9 +14,11 @@ import companyProductMapping from '../storages/companyProductMapping.json';
 
 // Page section components
 import MaintainerExperience from '../components/MaintainerExperience.astro';
+import OpenSourceProjects from '../components/OpenSourceProjects.astro';
 import HomeContact from '../components/HomeContact.astro';
 import { mailtoHref } from '../scripts/contact';
 import indexCssUrl from '../styles/index.css?url';
+import openSourceCssUrl from '../styles/open-source.css?url';
 import MarketBrief from '../components/MarketBrief.astro';
 import { getMarketBrief } from '../services/server/marketBrief';
 
@@ -50,6 +52,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 >
 	<Fragment slot="head">
 		<link rel="stylesheet" href={indexCssUrl} />
+		<link rel="stylesheet" href={openSourceCssUrl} />
 		<link rel="alternate" type="text/markdown" href="/tymultiverse/brief.md" title="持股籌碼摘要" />
 		<link rel="alternate" type="application/json" href="/tymultiverse/brief.json" title="Holdings chip summary (JSON)" />
 	</Fragment>
@@ -87,6 +90,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						<div class="home-product-actions">
 							<a class="home-product-contact" href={mailtoHref('trial', 'zh')} data-contact-topic="trial" data-i18n="home.productContact">寄信申請試用</a>
 							<a href="#market-overview" data-i18n="home.productExplore">先看市場資料與圖表</a>
+							<a href="#open-source" data-i18n="openSource.explore">參與開源協作</a>
 						</div>
 					</div>
 					<section class="home-product-intro" aria-labelledby="home-workflow-title">
@@ -485,6 +489,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				</div>
 			</header>
 
+			<OpenSourceProjects />
 			<MaintainerExperience />
 
 		</div>

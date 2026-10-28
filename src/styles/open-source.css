@@ -1,0 +1,24 @@
+.open-source { scroll-margin-top: 6rem; padding-block: 2rem; border-top: 1px solid var(--gray-800); }
+  .open-source-heading { max-width: 50rem; margin-bottom: 1.8rem; }
+  .open-source-eyebrow { margin: 0 0 .65rem; color: var(--accent-regular); font-size: .8rem; letter-spacing: .08em; }
+  .open-source-heading h2 { margin: 0 0 .8rem; font-size: clamp(1.6rem, 3vw, 2.4rem); }
+  .open-source-heading > p:last-child { color: var(--gray-300); line-height: 1.8; }
+  .open-source-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .open-source-project { display: flex; flex-direction: column; min-width: 0; padding: 1.4rem; border: 1px solid var(--gray-700); border-radius: .9rem; background: color-mix(in srgb, var(--gray-900) 35%, transparent); }
+  .open-source-stack { margin: 0 0 .7rem; color: var(--gray-400); font-size: .72rem; }
+  .open-source h3 { margin: 0 0 .25rem; font-size: 1.25rem; }
+  .open-source h3 a { color: var(--gray-100); text-decoration: none; }
+  .open-source h3 a span { color: var(--accent-regular); font-size: .9rem; }
+  .open-source code { align-self: flex-start; padding: 0; background: transparent; color: var(--gray-400); font-size: .72rem; overflow-wrap: anywhere; }
+  .open-source-role { margin: 1rem 0; color: var(--gray-200); font-size: .9rem; line-height: 1.7; }
+  .open-source-help { flex: 1; margin-bottom: 1.2rem; }
+  .open-source h4 { margin: 0 0 .35rem; color: var(--gray-300); font-size: .75rem; font-weight: 600; }
+  .open-source-help p { margin: 0; color: var(--gray-400); font-size: .82rem; line-height: 1.8; }
+  .open-source-links { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; padding-top: .9rem; border-top: 1px solid var(--gray-800); }
+  .open-source-links a { color: var(--gray-300); font-size: .78rem; text-decoration: none; }
+  .open-source-links .open-source-fork { display: inline-flex; align-items: center; gap: .35rem; margin-left: auto; color: var(--accent-regular); }
+  .open-source a:hover { color: var(--accent-light); }
+  .open-source a:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 4px; border-radius: .15rem; }
+  .open-source-guide { margin: 1rem 0 0; max-width: 65rem; color: var(--gray-400); font-size: .8rem; line-height: 1.8; }
+  @media (max-width: 1050px) { .open-source-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 650px) { .open-source-grid { grid-template-columns: minmax(0, 1fr); } .open-source-project { padding: 1.1rem; } }
