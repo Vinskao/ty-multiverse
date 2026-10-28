@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { canUploadReports, filterMarketReports, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, type MarketReport } from '../../src/scripts/market/reports';
+import { canUploadReports, filterMarketReports, groupReportDocuments, reportDocumentGroupMeta, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, type MarketReport } from '../../src/scripts/market/reports';
 
 describe('report industry categories', () => {
   it('groups company and supply-chain segments into readable industry boards', () => {
@@ -16,6 +16,11 @@ describe('report industry categories', () => {
     expect(reportSegmentForText('NVIDIA 中介層光學 CPO co-packaged optics')).toBe('cpo');
     expect(reportIndustryForReport({ title: '輝達 CPO 布局再升級：中介層光學', claims: [{ segment: 'optical', claim: 'CPO co-packaged optics' }] })).toContain('CPO');
     expect(reportIndustryForReport({ title: '800G 光通訊模組', claims: [{ segment: 'optical', claim: 'optical transceiver' }] })).toBe(reportIndustryCategory(['optical']));
+  });
+
+  it('classifies AI model companies such as Anthropic as their own industry board', () => {
+    expect(reportIndustryForReport({ title: 'Anthropic, PBC S-1 | Management discussion', claims: [] })).toBe('AI 模型與軟體');
+    expect(reportClaimRelevantToResearchTags({ codes: [], segment: 'ai_software' }, 'NVDA', ['ai-models'])).toBe(true);
   });
 
   it('hides reports that failed because no readable text or transcript was available', () => {
@@ -147,6 +152,34 @@ describe('channel posts in the report list', () => {
   it('does not call a one-message post "1 頁" and keeps the claim count', () => {
     expect(reportMetaLine({ ...base, source_url: 'https://t.me/Gooaye/123' })).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 頻道貼文 · 3 項主張');
     expect(reportMetaLine(base)).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 1 頁 · 3 項主張 · 完成（3 項主張）');
+  });
+});
+
+describe('SEC filing report groups', () => {
+  const secUrl = 'https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm';
+  const secReport = (id: string, title: string, received: string) => ({
+    id, title, publisher: 'SEC EDGAR', published_at: '2026-10-26', received_at: received,
+    source_url: secUrl, page_count: 6, visibility: 'public', status: 'claims_pending', claim_count: 0, claims: [],
+  }) as MarketReport;
+
+  it('combines chunks from the same filing and orders numbered sections naturally', () => {
+    const groups = groupReportDocuments([
+      secReport('part-5', 'Anthropic, PBC S-1｜Management discussion (5/5)', '2026-10-28T07:20:15Z'),
+      secReport('part-1', 'Anthropic, PBC S-1｜Management discussion (1/5)', '2026-10-28T07:20:10Z'),
+      secReport('part-2', 'Anthropic, PBC S-1｜Prospectus summary (2/2)', '2026-10-28T07:20:11Z'),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].title).toBe('Anthropic, PBC S-1');
+    expect(groups[0].reports.map(({ id }) => id)).toEqual(['part-1', 'part-2', 'part-5']);
+    expect(groups[0].sections.map(({ title }) => title)).toEqual([
+      'Management discussion (1/5)', 'Prospectus summary (2/2)', 'Management discussion (5/5)',
+    ]);
+    expect(reportDocumentGroupMeta(groups[0])).toContain('3 個文件區段 · AI 主張整理中');
+  });
+
+  it('keeps different SEC filing URLs as separate report groups', () => {
+    const second = { ...secReport('other-filing', 'Anthropic, PBC S-1/A｜Amendment', '2026-10-29T07:20:10Z'), source_url: `${secUrl}?amendment=1` };
+    expect(groupReportDocuments([secReport('part-1', 'Anthropic, PBC S-1｜Use of proceeds', '2026-10-28T07:20:10Z'), second])).toHaveLength(2);
   });
 });
 

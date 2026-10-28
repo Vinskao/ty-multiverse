@@ -28,7 +28,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
@@ -2109,14 +2109,20 @@ function renderMarketReports(reports: MarketReport[]) {
     if (!reports.length) {
         const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = '目前沒有公開研究報告。'; list.append(empty); return;
     }
-    const categorized = reports.map((report) => ({ report, industry: reportIndustryForReport(report), tagId: reportTagIdForReport(report) }));
+    const reportGroups = groupReportDocuments(reports);
+    const categorized = reportGroups.map((group) => {
+        const claims = group.reports.flatMap((report) => report.claims ?? []);
+        const filing = { title: group.title, claims };
+        return { group, industry: reportIndustryForReport(filing), tagId: reportTagIdForReport(filing) };
+    });
     const allCategory = 'all';
     let selectedCategory = allCategory;
     const search = document.getElementById('market-report-search') as HTMLInputElement | null;
     const applyFilters = () => {
         const matches = new Set(filterMarketReports(reports, selectedCategory, search?.value ?? '').map((report) => report.id));
         list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => {
-            card.hidden = !matches.has(card.dataset.reportId ?? '');
+            const ids = (card.dataset.reportIds ?? '').split(' ').filter(Boolean);
+            card.hidden = !ids.some((id) => matches.has(id));
         });
     };
     if (filters) {
@@ -2126,7 +2132,7 @@ function renderMarketReports(reports: MarketReport[]) {
         for (const category of categories) {
             const button = document.createElement('button'); button.type = 'button'; button.className = 'market-report-filter';
             const label = category === allCategory ? marketText('All reports', '全部') : researchTagLabel(category, marketLocale() === 'zh-TW' ? 'zh' : 'en');
-            button.textContent = `${label} ${category === allCategory ? reports.length : counts.get(category)}`;
+            button.textContent = `${label} ${category === allCategory ? reportGroups.length : counts.get(category)}`;
             button.setAttribute('aria-pressed', String(category === allCategory)); button.dataset.category = category; button.dataset.tagId = category;
             button.addEventListener('click', () => {
                 selectedCategory = category;
@@ -2137,15 +2143,22 @@ function renderMarketReports(reports: MarketReport[]) {
         }
     }
     if (search) search.oninput = applyFilters;
-    for (const { report, industry, tagId } of categorized) {
-        const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry; card.dataset.tagId = tagId; card.dataset.reportId = report.id;
+    for (const { group, industry, tagId } of categorized) {
+        const report = group.reports[0];
+        const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry; card.dataset.tagId = tagId; card.dataset.reportIds = group.reports.map(({ id }) => id).join(' ');
         const category = document.createElement('span'); category.className = 'market-report-industry'; category.textContent = industry; card.append(category);
-        const title = document.createElement('h5'); title.textContent = report.title; card.append(title);
+        const title = document.createElement('h5'); title.textContent = group.title; card.append(title);
         const meta = document.createElement('p');
-        meta.textContent = reportMetaLine(report);
+        meta.textContent = reportDocumentGroupMeta(group);
         card.append(meta);
         const extractionNote = document.createElement('p');
-        if (reportIsWebArticle(report)) {
+        if (group.isSecFiling && group.reports.length > 1) {
+            extractionNote.textContent = `同一份 SEC 申報拆成 ${group.reports.length} 個區段，合併呈現以便閱讀。`;
+            if (report.source_url) {
+                const source = document.createElement('a'); source.href = report.source_url; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看 SEC 原文';
+                extractionNote.append(source);
+            }
+        } else if (reportIsWebArticle(report)) {
             extractionNote.textContent = '來自頻道連結的網路文章；主張依文章文字整理。';
             const source = document.createElement('a'); source.href = report.source_url!; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看原文';
             extractionNote.append(source);
@@ -2155,12 +2168,29 @@ function renderMarketReports(reports: MarketReport[]) {
             extractionNote.append(source);
         } else extractionNote.textContent = '圖表內容未擷取；主張依報告文字敘述整理。';
         card.append(extractionNote);
-        if (report.visibility === 'owner') { const privacy = document.createElement('p'); privacy.textContent = '只有你看得到'; card.append(privacy); }
-        if (report.claims?.length) {
-            const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = `報告主張（${report.claims.length}）`;
+        if (group.reports.some(({ visibility }) => visibility === 'owner')) { const privacy = document.createElement('p'); privacy.textContent = '只有你看得到'; card.append(privacy); }
+        if (group.isSecFiling && group.reports.length > 1) {
+            const sections = document.createElement('details');
+            const summary = document.createElement('summary'); summary.textContent = `查看文件區段（${group.sections.length}）`;
+            sections.append(summary);
+            const sectionList = document.createElement('ol'); sectionList.className = 'market-report-sections';
+            for (const section of group.sections) {
+                const row = document.createElement('li');
+                const pages = `${section.report.page_count} 頁`;
+                const status = section.report.status === 'claims_pending' || section.report.status === 'backlog'
+                    ? '主張整理中'
+                    : `${section.report.claim_count} 項主張`;
+                row.textContent = `${section.title} · ${pages} · ${status}`;
+                sectionList.append(row);
+            }
+            sections.append(sectionList); card.append(sections);
+        }
+        const claims = group.reports.flatMap((document) => document.claims ?? []);
+        if (claims.length) {
+            const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = `報告主張（${claims.length}）`;
             details.append(summary);
             const groups = new Map<string, MarketReport['claims']>();
-            for (const claim of report.claims) groups.set(claim.segment, [...(groups.get(claim.segment) ?? []), claim]);
+            for (const claim of claims) groups.set(claim.segment, [...(groups.get(claim.segment) ?? []), claim]);
             for (const [segment, claims] of groups) {
                 const groupTitle = document.createElement('h6'); groupTitle.textContent = segment; details.append(groupTitle);
                 for (const claim of claims) {
@@ -2171,12 +2201,12 @@ function renderMarketReports(reports: MarketReport[]) {
             }
             card.append(details);
         }
-        if (report.can_download) {
+        for (const reportDocument of group.reports.filter(({ can_download }) => can_download)) {
             const actions = document.createElement('div'); actions.className = 'market-report-actions';
-            const download = document.createElement('button'); download.type = 'button'; download.textContent = '下載原始 PDF';
-            download.addEventListener('click', () => void downloadMarketReport(report.id)); actions.append(download);
-            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '刪除報告';
-            remove.addEventListener('click', () => void deleteMarketReport(report.id)); actions.append(remove); card.append(actions);
+            const download = document.createElement('button'); download.type = 'button'; download.textContent = group.reports.length > 1 ? `下載區段 ${group.sections.findIndex(({ report: item }) => item.id === reportDocument.id) + 1}` : '下載原始 PDF';
+            download.addEventListener('click', () => void downloadMarketReport(reportDocument.id)); actions.append(download);
+            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = group.reports.length > 1 ? '刪除此區段' : '刪除報告';
+            remove.addEventListener('click', () => void deleteMarketReport(reportDocument.id)); actions.append(remove); card.append(actions);
         }
         list.append(card);
     }

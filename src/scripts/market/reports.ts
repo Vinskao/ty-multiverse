@@ -90,6 +90,51 @@ export function filterMarketReports(reports: MarketReport[], categoryId: string,
     && reportSearchMatches(report, query));
 }
 
+export type ReportDocumentSection = { report: MarketReport; title: string };
+export type ReportDocumentGroup = { key: string; title: string; isSecFiling: boolean; reports: MarketReport[]; sections: ReportDocumentSection[] };
+
+function secFilingUrl(report: MarketReport): string | null {
+  const url = report.source_url ?? '';
+  return report.publisher === 'SEC EDGAR' && /^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\//i.test(url) ? url : null;
+}
+
+function sectionTitle(title: string): string {
+  return title.split(/[|｜]/, 2)[1]?.trim() || title;
+}
+
+function filingTitle(title: string): string {
+  return title.split(/[|｜]/, 2)[0]?.trim() || title;
+}
+
+/** SEC imports split one filing into several same-URL excerpts; show them as one filing with ordered sections. */
+export function groupReportDocuments(reports: MarketReport[]): ReportDocumentGroup[] {
+  const groups = new Map<string, ReportDocumentGroup>();
+  for (const report of reports) {
+    const sourceUrl = secFilingUrl(report);
+    const key = sourceUrl ? `sec:${sourceUrl}` : `report:${report.id}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { key, title: sourceUrl ? filingTitle(report.title) : report.title, isSecFiling: Boolean(sourceUrl), reports: [], sections: [] };
+      groups.set(key, group);
+    }
+    group.reports.push(report);
+    group.sections.push({ report, title: sourceUrl ? sectionTitle(report.title) : report.title });
+  }
+  return [...groups.values()].map((group) => {
+    if (group.isSecFiling) group.sections.sort((a, b) => (a.report.received_at ?? '').localeCompare(b.report.received_at ?? ''));
+    return { ...group, reports: group.sections.map(({ report }) => report) };
+  });
+}
+
+export function reportDocumentGroupMeta(group: ReportDocumentGroup): string {
+  const first = group.reports[0];
+  const published = first?.published_at ? `發布 ${first.published_at}` : '發布日未填';
+  if (!group.isSecFiling || group.reports.length < 2) return first ? reportMetaLine(first) : '';
+  const pending = group.reports.every(({ status }) => status === 'claims_pending' || status === 'backlog');
+  const status = pending ? 'AI 主張整理中' : `${group.reports.reduce((sum, report) => sum + report.claim_count, 0)} 項主張`;
+  return `${first.publisher} · ${published} · ${group.reports.length} 個文件區段 · ${status}`;
+}
+
 export function reportClaimRelevant(claim: { codes: string[]; segment: string }, code: string, segment: string | null): boolean {
   return claim.codes.includes(code.toUpperCase()) || (claim.codes.length === 0 && segment !== null && claim.segment === segment);
 }

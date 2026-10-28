@@ -43,9 +43,18 @@ describe('public API page data', () => {
     const all = publicOperations(later as any, 'https://x');
     expect(groupOperations(all).map(([title]) => title)).toEqual(['行情與標的', '研究報告與主張', 'AI 觀察名單', '衍生品']);
     expect(all.at(-1)!.curl).toBe("curl 'https://x/maya-sawa/market/dashboard/options/2330'");
-    // a route that declares no group at all still appears, under "其他"
+    // a route under the recognized market API family gets a useful fallback group
     const bare = { ...spec, paths: { '/market/bare': { get: { summary: '無分組', parameters: [], responses: {} } } } };
-    expect(groupOperations(publicOperations(bare as any, 'https://x')).map(([title]) => title)).toEqual(['其他']);
+    expect(groupOperations(publicOperations(bare as any, 'https://x')).map(([title]) => title)).toEqual(['行情與標的']);
+  });
+
+  it('keeps recognized market APIs out of 其他 when the published group is missing or generic', () => {
+    const stale = { paths: {
+      '/market/dashboard/macro': { get: { summary: '總體經濟指標序列', 'x-group': '其他' } },
+      '/market/reports': { get: { summary: '研究報告清單' } },
+      '/market/dashboard/history/{code}': { get: { summary: '個股日線' } },
+    } };
+    expect(publicOperations(stale as any, 'https://x').map(op => op.group)).toEqual(['總體經濟', '研究報告與主張', '行情與標的']);
   });
 });
 
@@ -56,8 +65,10 @@ describe('the API tab', () => {
     expect(nav).toContain('/tymultiverse/api-reference/');
     const page = read('src/pages/api-reference.astro');
     expect(page).toContain('/maya-sawa/public-openapi.json');
-    expect(page).toContain('SSO token');
-    expect(page).toContain('聯繫');
+    expect(page).toContain('可查詢行情、總體經濟資料、財報與研究報告');
+    expect(page).not.toContain('所以不會和實際有出入');
+    expect(page).toContain('個人帳戶資料不提供匿名存取');
+    expect(page).toContain('資料整合需求');
     expect(JSON.parse(read('src/storages/i18n.json')).nav.api.zh).toBe('API');
   });
 });

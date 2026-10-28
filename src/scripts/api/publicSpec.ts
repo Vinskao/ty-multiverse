@@ -3,6 +3,14 @@ export type ApiOperation = { method: 'GET'; path: string; url: string; summary: 
 
 type Spec = { servers?: Array<{ url: string }>; paths: Record<string, Record<string, any>> };
 
+function fallbackGroup(path: string): string | undefined {
+  if (path.startsWith('/market/reports')) return '研究報告與主張';
+  if (path.includes('/macro')) return '總體經濟';
+  if (path.includes('/analysis/') || path === '/market/watch') return 'AI 分析與研究';
+  if (path.startsWith('/market/')) return '行情與標的';
+  return undefined;
+}
+
 // Sample values so the curl line works when pasted: path parameters not listed here stay as <name>.
 const SAMPLES: Record<string, string> = { code: '2330' };
 
@@ -14,8 +22,10 @@ export function publicOperations(spec: Spec, origin: string): ApiOperation[] {
     if (!op) return [];
     const url = `${origin}${base}${path}`;
     const curlPath = path.replace(/\{(\w+)\}/g, (_, name: string) => SAMPLES[name] ?? `<${name}>`);
+    const declaredGroup = String(op['x-group'] ?? op.tags?.[0] ?? '').trim();
+    const group = !declaredGroup || declaredGroup === '其他' ? (fallbackGroup(path) ?? declaredGroup) || '其他' : declaredGroup;
     return [{
-      method: 'GET' as const, path, url, summary: String(op.summary ?? ''), group: String(op['x-group'] ?? op.tags?.[0] ?? '其他'),
+      method: 'GET' as const, path, url, summary: String(op.summary ?? ''), group,
       params: (op.parameters ?? []).map((parameter: any) => ({ name: parameter.name, where: parameter.in === 'path' ? 'path' as const : 'query' as const,
         required: Boolean(parameter.required), description: String(parameter.description ?? '') })),
       curl: `curl '${origin}${base}${curlPath}'`,

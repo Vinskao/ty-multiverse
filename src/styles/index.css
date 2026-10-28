@@ -232,6 +232,8 @@
 .market-report-card h5 { margin: 0; }
 .market-report-card p { margin: .3rem 0; color: var(--gray-400); font-size: .85rem; }
 .market-report-card details { margin-top: .5rem; }
+.market-report-sections { display:grid; gap:.35rem; margin:.45rem 0 0; padding-left:1.4rem; color:var(--gray-300); font-size:.84rem; }
+.market-report-sections li { padding:.35rem .4rem; border-left:2px solid var(--gray-700); }
 .market-report-claim { margin: .4rem 0; padding: .55rem; border-left: 3px solid var(--gray-600); background: var(--gray-900_50); }
 .market-report-claim--opposed { border-left-color: #e35d6a; color: #ff9ca4; }
 .market-report-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }

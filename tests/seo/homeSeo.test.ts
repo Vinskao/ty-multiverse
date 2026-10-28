@@ -19,7 +19,7 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
         expect(home).toContain('title="TY 市場研究室"');
-        expect(home).toContain('data-i18n="home.heroTitle">從今天起，雇用一位頂級機構研究員</h1>');
+        expect(home).toContain('data-i18n="home.heroTitle">把機構研究方法，走成自己的投資流程</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
@@ -29,6 +29,16 @@ describe('homepage search and contact contract', () => {
         expect(home).toContain('預計按使用量計費');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"');
+    });
+
+    it('describes the founder as a former desk researcher and independent investor', () => {
+        const home = JSON.parse(source('src/storages/i18n.json')).home;
+        expect(home.heroTagline.zh).toContain('曾在避險基金交易室做研究');
+        expect(home.heroTagline.zh).toContain('之後多年以個人投資人的身分自行研究與交易');
+        expect(home.heroTagline.zh).toContain('哪些證據會讓自己改變看法');
+        expect(home.productAudience.zh).toContain('持倉集中度');
+        expect(home.heroTagline.en).toContain('then spent years researching and trading independently');
+        expect(home.productAudience.en).toContain('position risk');
     });
 });
 

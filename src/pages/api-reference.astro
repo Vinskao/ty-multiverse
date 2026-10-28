@@ -4,15 +4,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="API｜TY 市場研究室"
-  description="TY 市場研究室的公開資料 API：行情、財報、AI 分析、券商目標價與研究報告，唯讀、不需登入。"
+  description="查詢 TY 市場研究室提供的行情、總體經濟資料、財報與研究報告 API。公開端點為唯讀，無須登入。"
   canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse/api-reference/"
   lang="zh-Hant"
 >
   <main class="wrapper stack gap-8 api-reference">
     <header class="stack gap-2">
       <h1 data-i18n="apiPage.title">公開資料 API</h1>
-      <p>市場資料與研究紀錄的唯讀端點：任何人都能呼叫，不需要登入。下面的清單直接讀自後端的規格（<code>/maya-sawa/public-openapi.json</code>），所以不會和實際有出入。</p>
-      <p class="api-note">寫入、持股與帳戶資料不開放。需要 SSO token 的端點無法在這裡直接呼叫，需要的話請聯繫網站擁有者（見<a href="/tymultiverse/#contact">首頁的聯絡方式</a>）。</p>
+      <p>可查詢行情、總體經濟資料、財報與研究報告。公開端點僅供讀取，無須登入；每個端點附有參數說明與 curl 範例。</p>
+      <p class="api-note">寫入操作與個人帳戶資料不提供匿名存取。如有其他資料整合需求，請透過<a href="/tymultiverse/#contact">首頁聯絡我們</a>。</p>
     </header>
     <p id="api-status" class="api-status" role="status" aria-live="polite">載入規格中…</p>
     <div id="api-groups" class="stack gap-8"></div>
