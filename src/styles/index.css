@@ -211,6 +211,8 @@
 .market-report-upload label { display: grid; gap: .3rem; color: var(--gray-300); font-size: .82rem; }
 .market-report-upload input, .market-report-upload select { min-width: 0; padding: .5rem; color: inherit; border: 1px solid var(--gray-700); border-radius: .4rem; background: var(--gray-999); }
 .market-report-upload button, .market-report-actions button { padding: .5rem .8rem; color: var(--gray-100); border: 1px solid var(--gray-700); border-radius: .45rem; background: var(--gray-800); cursor: pointer; }
+#market-report-web { grid-template-columns: minmax(14rem, 1fr) auto; align-items: end; }
+#market-report-web p { grid-column: 1 / -1; margin: 0; color: var(--gray-300); font-size: .85rem; }
 .market-report-filters { display:flex; flex-wrap:wrap; gap:.4rem; margin:.85rem 0 .2rem; }
 .market-report-filter { padding:.35rem .65rem; color:var(--gray-300); border:1px solid var(--gray-700); border-radius:999px; background:transparent; font:inherit; font-size:.78rem; cursor:pointer; }
 .market-report-filter:hover, .market-report-filter:focus-visible { border-color:var(--gray-500); color:var(--gray-100); }

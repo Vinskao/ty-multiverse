@@ -185,3 +185,12 @@ describe('adding an SEC filing from its URL', () => {
     expect(webImportSummary({ ...made, created: 2, known: 14 }, true)).toContain('新增 2 份');
   });
 });
+
+
+describe('the SEC URL form layout', () => {
+  it('keeps the button its own size next to the URL field and the status on a full row below', () => {
+    const css = readFileSync('src/styles/index.css', 'utf8');
+    expect(css).toMatch(/#market-report-web \{[^}]*grid-template-columns:\s*minmax\(14rem, 1fr\) auto/);
+    expect(css).toMatch(/#market-report-web p \{[^}]*grid-column:\s*1 \/ -1/);
+  });
+});
