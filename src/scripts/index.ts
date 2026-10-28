@@ -3067,8 +3067,11 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
         const amount = Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
         return `${sign}NT$ ${amount}`;
     };
+    // Crypto P/L covers only coins with a known purchase cost (not deposits or Earn rewards).
+    const cryptoPnl = portfolio.binance?.twd.unrealizedPnl;
     setSummaryTooltip('portfolio-pnl', 'portfolio-pnl-tooltip',
         `${marketText('Securities', '證券')}  ${nbCurrency(secPnl)}\n+ ${marketText('Futures', '期貨')}  ${nbCurrency(futPnl)}`
+        + (typeof cryptoPnl === 'number' ? `\n+ ${marketText('Crypto (known cost)', '加密貨幣（有成本者）')}  ${nbCurrency(cryptoPnl)}` : '')
     );
     // Region split sub-lines (台 Taiwan · 外 Overseas) under Cash / Total / Leverage.
     const regions = portfolio.regions;

@@ -100,8 +100,12 @@ export interface Portfolio {
         fetchedAt: string;
         usdTwdRate: number;
         fxSource: string;
-        usdt: { total: number; positions: number; otherWallets: number; wallets: Record<string, number> };
-        twd: { total: number; positions: number; otherWallets: number };
+        usdt: { total: number; positions: number; otherWallets: number; wallets: Record<string, number>; unrealizedPnl?: number | null; realizedPnl?: number | null };
+        twd: { total: number; positions: number; otherWallets: number; unrealizedPnl?: number | null };
+        // Moving-average cost from stablecoin trades and converts; uncovered coins (deposits, rewards) have no cost.
+        costBasis?: Record<string, { heldQuantity: number; coveredQuantity: number; uncoveredQuantity: number;
+            averageCostUsdt: number | null; priceUsdt: number; unrealizedPnlUsdt: number | null; unrealizedPnlTwd: number | null;
+            realizedPnlUsdt: number | null; events: number }>;
         positions: Array<{ asset: string; name: string; wallet: string; quantity: number; priceUsdt: number; valueUsdt: number; valueTwd: number }>;
         unpriced: string[];
     };
