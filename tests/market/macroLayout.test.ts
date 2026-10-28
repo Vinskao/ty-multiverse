@@ -10,21 +10,22 @@ describe('macro chart layout', () => {
         const card = MACRO_MERGED_CHARTS['fx-trade'];
         expect(card).toBeDefined();
         expect(card[0]).toEqual(['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX']);
-        expect(card).toHaveLength(1);
+        expect(card).toHaveLength(2);
+        expect(card[1]).toEqual(['DEXKOUS']);
         expect(MACRO_GROWTH_CHARTS.trade.group).toBe('fx-trade');
         expect(MACRO_MERGED_CHARTS['taiwan-fx']).toBeUndefined();
         expect(MACRO_MERGED_CHARTS['taiwan-trade']).toBeUndefined();
     });
 
     it('compares the U.S. and Taiwan unemployment rates in one chart', () => {
-        expect(MACRO_MERGED_CHARTS.employment).toEqual([['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE'], ['ICSA']]);
+        expect(MACRO_MERGED_CHARTS.employment).toEqual([['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE', 'LRUNTTTTJPM156S', 'LRUNTTTTKRM156S'], ['ICSA']]);
     });
 
     it('titles the dashboard as multi-country, not U.S.-only', () => {
         const title = i18n.home.macroTitle;
         expect(title.zh).not.toMatch(/^美國/);
         expect(title.en).not.toMatch(/^US /);
-        expect(title.zh).toContain('台灣');
+        expect(title.zh).toBe('多國重要總體經濟資料');
     });
 
     it('compares commodity price histories in one chart', () => {
@@ -34,7 +35,7 @@ describe('macro chart layout', () => {
     it('splits rates into policy, yield-curve, spread, real-yield and foreign-central-bank charts', () => {
         expect(MACRO_MERGED_CHARTS.rates).toEqual([
             ['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']]);
+            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']]);
     });
 
     it('splits the Fed balance sheet from its drains and keeps weekly and monthly balance sheets in separate charts', () => {

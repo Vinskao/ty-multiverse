@@ -28,9 +28,9 @@ describe('MACRO_GROWTH_CHARTS', () => {
     });
 
     it('covers CPI, PPI, retail sales, Taiwan trade and money supply', () => {
-        expect(Object.keys(MACRO_GROWTH_CHARTS).sort()).toEqual(['cpi', 'money', 'ppi', 'retail', 'trade']);
-        expect(MACRO_GROWTH_CHARTS.cpi.lines.mom.map((line) => line.code)).toEqual(['CUSR0000SA0', 'CUSR0000SA0L1E', 'TW_CPI']);
-        expect(MACRO_GROWTH_CHARTS.cpi.lines.yoy.map((line) => line.code)).toEqual(['CUUR0000SA0', 'CUUR0000SA0L1E', 'TW_CPI']);
+        expect(Object.keys(MACRO_GROWTH_CHARTS).sort()).toEqual(['cpi', 'jp-trade', 'kr-trade', 'money', 'ppi', 'retail', 'trade']);
+        expect(MACRO_GROWTH_CHARTS.cpi.lines.mom.map((line) => line.code)).toEqual(['CUSR0000SA0', 'CUSR0000SA0L1E', 'TW_CPI', 'JP_CPI', 'KR_CPI']);
+        expect(MACRO_GROWTH_CHARTS.cpi.lines.yoy.map((line) => line.code)).toEqual(['CUUR0000SA0', 'CUUR0000SA0L1E', 'TW_CPI', 'JP_CPI', 'KR_CPI']);
         expect(MACRO_GROWTH_CHARTS.trade.group).toBe('fx-trade');
     });
 

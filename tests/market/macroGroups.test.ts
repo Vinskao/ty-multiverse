@@ -7,6 +7,12 @@ const group = (id: string) => MACRO_GROUP_SPECS.find((item) => item.id === id)!;
 const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 
 describe('MACRO_GROUP_SPECS', () => {
+    it('includes Japan and Korea employment, inflation, rates, retail, FX and trade', () => {
+        const codes = new Set(MACRO_GROUP_SPECS.flatMap((group) => group.metrics.map((metric) => metric.code)));
+        for (const code of ['LRUNTTTTJPM156S', 'LRUNTTTTKRM156S', 'JP_CPI', 'KR_CPI', 'IRSTCI01KRM156N', 'DEXKOUS',
+            'JPNSLRTTO01GPSAM', 'JPNSLRTTO01GYSAM', 'KORSLRTTO01GPSAM', 'KORSLRTTO01GYSAM',
+            'XTEXVA01JPM667S', 'XTIMVA01JPM667S', 'XTEXVA01KRM667S', 'XTIMVA01KRM667S']) expect(codes.has(code), code).toBe(true);
+    });
     it('gives every merged-chart series a tile in the same card (the chart takes its label and format from the tile)', () => {
         for (const [id, charts] of Object.entries(MACRO_MERGED_CHARTS)) {
             const codes = new Set(codesOf(id));

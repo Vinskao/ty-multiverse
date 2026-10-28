@@ -124,6 +124,8 @@
     "macroCountryEuroArea": { "en": "Euro area", "zh": "歐元區" },
     "macroCountryUk": { "en": "United Kingdom", "zh": "英國" },
     "macroCountryJapan": { "en": "Japan", "zh": "日本" },
+    "macroCountryKorea": { "en": "South Korea", "zh": "韓國" },
+    "macroPeriodNote": { "en": "Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.", "zh": "各來源的資料月份不同；BIS CPI 可能落後各國最新公布。日韓隔夜拆款利率為市場利率，並非央行政策目標利率。" },
     "macroLoading": { "en": "Loading macro data…", "zh": "\u6b63\u5728\u8f09\u5165\u7e3d\u9ad4\u7d93\u6fdf\u8cc7\u6599\u2026" },
     "macroSources": { "en": "Sources", "zh": "\u8cc7\u6599\u4f86\u6e90" },
     "macroConfirmed": { "en": "Confirmed time", "zh": "\u5df2\u78ba\u8a8d\u6642\u9593" },

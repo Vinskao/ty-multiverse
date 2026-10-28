@@ -7,7 +7,8 @@ export type MacroGrowthLine = { code: string; format: 'mom' | 'yoy' | 'raw' | 'r
 export type MacroGrowthChart = { group: string; lines: Record<'mom' | 'yoy', MacroGrowthLine[]> & { level?: MacroGrowthLine[] } };
 
 // Series the source already publishes as a growth rate (plotted as-is) and which rate they are.
-const PUBLISHED_RATE: Record<string, MacroGrowthMode> = { GBRSLRTTO01GPSAM: 'mom', GBRSLRTTO01GYSAM: 'yoy' };
+const PUBLISHED_RATE: Record<string, MacroGrowthMode> = { GBRSLRTTO01GPSAM: 'mom', GBRSLRTTO01GYSAM: 'yoy',
+    JPNSLRTTO01GPSAM: 'mom', JPNSLRTTO01GYSAM: 'yoy', KORSLRTTO01GPSAM: 'mom', KORSLRTTO01GYSAM: 'yoy' };
 
 const headline = { en: 'U.S. headline CPI', zh: '美國整體 CPI' };
 const core = { en: 'U.S. core CPI', zh: '美國核心 CPI' };
@@ -52,6 +53,23 @@ export const MACRO_GROWTH_CHARTS: Record<string, MacroGrowthChart> = {
         yoy: [{ code: 'TW_EXPORTS', format: 'yoy', label: exports }, { code: 'TW_IMPORTS', format: 'yoy', label: imports }],
     } },
 };
+
+// National CPI indices as distributed by BIS; retain each observation's own reference month.
+for (const [code, en, zh] of [['JP_CPI', 'Japan CPI (BIS)', '日本 CPI（BIS）'], ['KR_CPI', 'Korea CPI (BIS)', '韓國 CPI（BIS）']]) {
+    MACRO_GROWTH_CHARTS.cpi.lines.mom.push({ code, format: 'mom', label: { en, zh } });
+    MACRO_GROWTH_CHARTS.cpi.lines.yoy.push({ code, format: 'yoy', label: { en, zh } });
+}
+for (const [country, en, zh] of [['JPN', 'Japan retail volume', '日本零售銷售量'], ['KOR', 'Korea retail volume', '韓國零售銷售量']]) {
+    MACRO_GROWTH_CHARTS.retail.lines.mom.push({ code: `${country}SLRTTO01GPSAM`, format: 'raw', label: { en, zh } });
+    MACRO_GROWTH_CHARTS.retail.lines.yoy.push({ code: `${country}SLRTTO01GYSAM`, format: 'raw', label: { en, zh } });
+}
+for (const [country, en, zh] of [['JP', 'Japan', '日本'], ['KR', 'Korea', '韓國']]) {
+    const lines = (format: 'mom' | 'yoy'): MacroGrowthLine[] => [
+        { code: `XTEXVA01${country}M667S`, format, label: { en: `${en} exports (USD, SA)`, zh: `${zh}出口（美元、季調）` } },
+        { code: `XTIMVA01${country}M667S`, format, label: { en: `${en} imports (USD, SA)`, zh: `${zh}進口（美元、季調）` } },
+    ];
+    MACRO_GROWTH_CHARTS[`${country.toLowerCase()}-trade`] = { group: 'fx-trade', lines: { mom: lines('mom'), yoy: lines('yoy') } };
+}
 
 // Which growth rate a line shows: computed lines from their format, published rates from their code.
 export function macroLineMeasure(line: { code: string; format: string }): MacroGrowthMode | null {

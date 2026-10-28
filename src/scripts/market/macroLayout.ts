@@ -5,11 +5,11 @@
 // metric tiles instead of one chart per tile. "a|b" means the first code that has data.
 export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]> = {
     // U.S. and Taiwan unemployment rates (both percent of the labour force) share one chart.
-    employment: [['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE'], ['ICSA']],
+    employment: [['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE', 'LRUNTTTTJPM156S', 'LRUNTTTTKRM156S'], ['ICSA']],
     // Daily series only share a chart with daily series: monthly (YYYY-MM) periods would interleave out of order
     // with dates, so Japan's monthly call rate and the BoJ balance sheet get their own charts.
     rates: [['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']],
+        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']],
     // Fed total assets with net liquidity, then the two drains (TGA, ON RRP) on their own scale: on one axis the
     // ~6,800B balance sheet flattened a 0-2,500B reverse repo. Money supply is the "money" growth chart.
     liquidity: [['WALCL', 'US_NET_LIQUIDITY'], ['WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
@@ -21,7 +21,7 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD', 'DCOILWTICO']],
     // Exchange rates and Taiwan trade sit in one card: this currency chart, plus the export/import growth chart
     // with its MoM/YoY toggle (macroGrowth.ts, chart "trade").
-    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX']],
+    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX'], ['DEXKOUS']],
 };
 
 // The unit a series is plotted in: growth formats are percent whatever the level's unit.
