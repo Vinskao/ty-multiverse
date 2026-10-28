@@ -310,6 +310,16 @@
    "frequency": "daily",
    "unit": "percent",
    "lastPeriod": "2024-03-22"
+  },
+  "XTEXVA01KRM667S": {
+   "frequency": "monthly",
+   "unit": "million U.S. dollars",
+   "lastPeriod": "2026-08"
+  },
+  "XTIMVA01KRM667S": {
+   "frequency": "monthly",
+   "unit": "million U.S. dollars",
+   "lastPeriod": "2026-08"
   }
  }
 }

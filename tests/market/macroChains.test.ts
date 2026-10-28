@@ -21,6 +21,13 @@ describe('the macro logic graph (src/storages/macroLogicGraph.json)', () => {
         }
     });
 
+    it('puts Korea trade data in the default logic-chain view as an electronics-cycle cross-check', () => {
+        expect(g.rows.find((row) => row.id === 'korea')?.title.zh).toContain('韓國');
+        const node = g.nodes.find((item) => item.id === 'korea-trade');
+        expect(node?.series).toEqual(['XTEXVA01KRM667S', 'XTIMVA01KRM667S']);
+        expect(g.edges).toContainEqual(expect.objectContaining({ from: 'korea-trade', to: 'focus-demand' }));
+    });
+
     it('never mixes monthly (YYYY-MM) and dated series in one chart, which would interleave periods out of order', () => {
         const series = (frequencies as any).series as Record<string, { lastPeriod: string }>;
         for (const node of [...g.nodes, ...g.focus]) {
@@ -54,7 +61,7 @@ describe('validateMacroGraph', () => {
 describe('layout and analysis', () => {
     it('lays each row out in stage columns and keeps the focus nodes in their own column', () => {
         const layout = layoutMacroGraph(g);
-        expect(layout.rows.map((row) => row.row.id)).toEqual(['inflation', 'rates', 'liquidity', 'growth', 'taiwan']);
+        expect(layout.rows.map((row) => row.row.id)).toEqual(['inflation', 'rates', 'liquidity', 'growth', 'taiwan', 'korea']);
         const inflation = layout.rows[0].columns.map((column) => column.map((node) => node.id));
         expect(inflation).toEqual([['core-inflation'], ['producer-prices'], ['oil'], ['fed-policy']]);
         expect(layout.rows[1].columns[1].map((node) => node.id)).toEqual(['curve-spread', 'real-yield', 'global-rates']);
@@ -85,7 +92,8 @@ describe('renderMacroChains', () => {
         const charted: string[] = [];
         const { drawEdges } = renderMacroChains(document.getElementById('chains')!, { graph: g, zh: true, analyses,
             chart: (node) => { charted.push(node.id); const div = document.createElement('div'); div.className = 'stub-chart'; return div; } });
-        expect(document.querySelectorAll('.macro-chain-head')).toHaveLength(5);
+        expect(document.querySelectorAll('.macro-chain-head')).toHaveLength(6);
+        expect(document.querySelector('.macro-chain-row[data-chain="korea"] .macro-node')?.id).toBe('macro-node-korea-trade');
         expect(document.querySelectorAll('.macro-chain-focus .macro-node--focus')).toHaveLength(4);
         expect(charted).toHaveLength(g.nodes.length + g.focus.length);
         const core = document.getElementById('macro-node-core-inflation')!;

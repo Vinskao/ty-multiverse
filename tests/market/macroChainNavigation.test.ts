@@ -20,8 +20,9 @@ describe('compact independent macro chains', () => {
     renderMacroChains(root, { graph: graph as MacroGraph, zh: true, analyses: new Map(), chart: () => null });
     expect(root.firstElementChild?.querySelector('.macro-chain-overview')).not.toBeNull();
     const rows = [...root.querySelectorAll<HTMLElement>('.macro-chain-row')];
-    expect(rows.map(row => row.dataset.chain)).toEqual(['inflation', 'rates', 'liquidity', 'growth', 'taiwan']);
-    expect(root.querySelectorAll('.macro-chains-scroll')).toHaveLength(5);
+    expect(rows.map(row => row.dataset.chain)).toEqual(['inflation', 'rates', 'liquidity', 'growth', 'taiwan', 'korea']);
+    expect(root.querySelectorAll('.macro-chains-scroll')).toHaveLength(6);
+    expect(rows[5].querySelector('.macro-node')?.id).toBe('macro-node-korea-trade');
     rows.forEach(row => {
       const scroll = row.querySelector<HTMLElement>('.macro-chains-scroll')!;
       expect(scroll).not.toBeNull();

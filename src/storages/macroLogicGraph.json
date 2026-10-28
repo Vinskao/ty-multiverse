@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-27",
+  "version": "2026-10-28",
   "about": "Top-down macro logic chains for Taiwan tech equities. Each row starts at a root chart and branches left to right; every branch ends in one of the focus nodes, the few macro variables a stock investor must watch. Node ids are the analysis codes (productType=macro-node). Change connections by editing edges; tests/market/macroChains.test.ts checks the graph.",
   "analysisFormat": {
     "zh": "固定三行。第一行：【判讀】順風／【判讀】中性／【判讀】逆風（對台股科技股）。第二行：一到兩句話，最多 120 字，寫最新數字（附期間）與它對下一個節點的影響；焦點節點改寫對個股的意義。第三行：資料截點：每個序列代碼與最新期間，例如「資料截點：CUUR0000SA0L1E 2026-09、TW_CPI 2026-09」，排程靠這行判斷資料有沒有更新。",
@@ -15,7 +15,9 @@
     { "id": "growth", "title": { "zh": "景氣、消費與信用", "en": "Growth, consumption and credit" },
       "thesis": { "zh": "就業帶動所得與消費，決定終端需求；信用品質決定景氣轉弱時的下檔風險。", "en": "Jobs drive income and spending, the end demand; credit quality sets the downside when growth slows." } },
     { "id": "taiwan", "title": { "zh": "台灣外需與匯率", "en": "Taiwan exports and currencies" },
-      "thesis": { "zh": "台股獲利靠出口；外資進出看美元、日圓與新台幣。", "en": "Taiwan earnings ride on exports; foreign flows follow the dollar, the yen and the Taiwan dollar." } }
+      "thesis": { "zh": "台股獲利靠出口；外資進出看美元、日圓與新台幣。", "en": "Taiwan earnings ride on exports; foreign flows follow the dollar, the yen and the Taiwan dollar." } },
+    { "id": "korea", "title": { "zh": "韓國科技出口循環", "en": "Korea's technology export cycle" },
+      "thesis": { "zh": "韓國進出口補充觀察亞洲電子與半導體景氣；這是區域循環參照，不等同台灣公司營收。", "en": "Korean trade adds an Asia electronics and semiconductor cycle check; it is a regional reference, not a proxy for Taiwan company revenue." } }
   ],
   "focus": [
     { "id": "focus-discount", "title": { "zh": "折現率 → 本益比", "en": "Discount rate → P/E" }, "series": ["DFII10"],
@@ -92,7 +94,10 @@
     { "id": "dollar-index", "row": "taiwan", "stage": 1, "title": { "zh": "美元指數", "en": "U.S. Dollar Index" }, "series": ["US_DOLLAR_INDEX"],
       "question": { "zh": "美元走強時亞洲貨幣偏弱、外資傾向撤出新興市場。", "en": "A stronger dollar weakens Asian currencies and pushes foreign investors out of emerging markets." } },
     { "id": "yen-carry", "row": "taiwan", "stage": 2, "title": { "zh": "日圓與套利交易", "en": "Yen and the carry trade" }, "series": ["USD_JPY"],
-      "question": { "zh": "借日圓買高收益資產的套利交易；日圓急升時平倉，全球風險資產同步賣壓（例如 2024 年 8 月）。", "en": "Borrowing yen to buy higher-yielding assets; a sharp yen rally forces unwinds and global risk selling (for example August 2024)." } }
+      "question": { "zh": "借日圓買高收益資產的套利交易；日圓急升時平倉，全球風險資產同步賣壓（例如 2024 年 8 月）。", "en": "Borrowing yen to buy higher-yielding assets; a sharp yen rally forces unwinds and global risk selling (for example August 2024)." } },
+    { "id": "korea-trade", "row": "korea", "stage": 0, "title": { "zh": "韓國進出口", "en": "Korea exports and imports" },
+      "series": ["XTEXVA01KRM667S", "XTIMVA01KRM667S"],
+      "question": { "zh": "韓國出口涵蓋半導體與電子產品，進口反映設備和原料需求；搭配台灣出口與產業報價交叉觀察，不單獨推論個股營收。", "en": "Korean exports include semiconductors and electronics, while imports reflect equipment and materials demand. Compare with Taiwan exports and industry pricing; do not infer a company's revenue from this series alone." } }
   ],
   "edges": [
     { "from": "core-inflation", "to": "producer-prices", "mechanism": { "zh": "往上游找通膨的來源", "en": "Trace inflation upstream" } },
@@ -133,6 +138,7 @@
     { "from": "dollar-index", "to": "yen-carry", "mechanism": { "zh": "美日利差與日圓套利", "en": "U.S.–Japan rate gap and the yen carry trade" } },
     { "from": "tw-trade", "to": "focus-demand", "mechanism": { "zh": "出口年增就是電子業營收總量", "en": "Export growth is electronics revenue in aggregate" } },
     { "from": "dollar-index", "to": "focus-fx", "mechanism": { "zh": "美元強弱帶動新台幣與外資方向", "en": "The dollar steers the TWD and foreign flows" } },
-    { "from": "yen-carry", "to": "focus-risk", "mechanism": { "zh": "日圓急升引發全球去槓桿", "en": "A yen spike forces global deleveraging" } }
+    { "from": "yen-carry", "to": "focus-risk", "mechanism": { "zh": "日圓急升引發全球去槓桿", "en": "A yen spike forces global deleveraging" } },
+    { "from": "korea-trade", "to": "focus-demand", "mechanism": { "zh": "作為亞洲電子景氣的交叉驗證，不取代美國消費與台灣出口", "en": "Cross-checks the Asia electronics cycle; does not replace U.S. consumption or Taiwan exports" } }
   ]
 }
