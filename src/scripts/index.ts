@@ -28,7 +28,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportMetaLine, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportClaimRelevant, reportSegmentForText, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
@@ -2068,7 +2068,11 @@ function renderMarketReports(reports: MarketReport[]) {
         meta.textContent = reportMetaLine(report);
         card.append(meta);
         const extractionNote = document.createElement('p');
-        if (reportIsChannelPost(report)) {
+        if (reportIsWebArticle(report)) {
+            extractionNote.textContent = '來自頻道連結的網路文章；主張依文章文字整理。';
+            const source = document.createElement('a'); source.href = report.source_url!; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看原文';
+            extractionNote.append(source);
+        } else if (reportIsChannelPost(report)) {
             extractionNote.textContent = '來自公開 Telegram 頻道；主張依貼文文字整理。';
             const source = document.createElement('a'); source.href = report.source_url!; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看原貼文';
             extractionNote.append(source);

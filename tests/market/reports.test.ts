@@ -80,3 +80,19 @@ describe('channel posts in the report list', () => {
     expect(reportMetaLine(base)).toBe('股癌 Gooaye · 發布 2026-10-25 · 入庫 2026-10-26 · 1 頁 · 3 項主張 · 完成（3 項主張）');
   });
 });
+
+import { reportIsWebArticle } from '../../src/scripts/market/reports';
+
+describe('news articles collected from channel links', () => {
+  const article = { id: 'n', title: '花旗給聯發科 6,800 元目標價', publisher: 'TechNews 科技新報', published_at: '2026-10-22', received_at: '2026-10-28T01:00:00+00:00',
+    source_url: 'https://finance.technews.tw/2026/10/22/a/', page_count: 1, visibility: 'public', status: 'ready', claim_count: 4, claims: [] } as MarketReport;
+  it('tells a web article from a channel post and from an uploaded PDF', () => {
+    expect(reportIsWebArticle(article)).toBe(true);
+    expect(reportIsWebArticle({ ...article, source_url: 'https://t.me/technews_tw/1' })).toBe(false);
+    expect(reportIsWebArticle({ ...article, source_url: null })).toBe(false);
+  });
+  it('labels it an article, not "1 頁", and still shows a queued state', () => {
+    expect(reportMetaLine(article)).toBe('TechNews 科技新報 · 發布 2026-10-22 · 入庫 2026-10-28 · 網路文章 · 4 項主張');
+    expect(reportMetaLine({ ...article, claim_count: 0, status: 'claims_pending' })).toContain('等待萃取主張');
+  });
+});

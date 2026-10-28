@@ -76,8 +76,16 @@ export function reportIsChannelPost(report: { source_url?: string | null }): boo
   return /^https:\/\/t\.me\//.test(report.source_url ?? '');
 }
 
+/** A news article the collector read from a link in a channel digest (full text stored; the page shows claims and a link). */
+export function reportIsWebArticle(report: { source_url?: string | null }): boolean {
+  return /^https?:\/\//.test(report.source_url ?? '') && !reportIsChannelPost(report);
+}
+
 export function reportMetaLine(report: MarketReport): string {
   const head = `${report.publisher || '出版者未填'} · ${reportDateLabel(report)}`;
+  if (reportIsWebArticle(report)) {
+    return `${head} · 網路文章 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`;
+  }
   return reportIsChannelPost(report)
     ? `${head} · 頻道貼文 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`
     : `${head} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
