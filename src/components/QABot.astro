@@ -25,7 +25,6 @@
   import qabotConfig from "../storages/qabot.json";
   import { getErrorMessage, parseJsonOrThrow } from "../services/core/apiError";
   import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
-  import { thumbnailService } from "../services/thumbnailService";
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -470,11 +469,7 @@
       avatarImg.alt = name;
       avatarImg.className = 'avatar-selector-img';
 
-      const originalUrl = this.getAvatarUrl(name);
-      thumbnailService
-        .getThumbnail(name, originalUrl)
-        .then((thumbUrl) => { avatarImg.src = thumbUrl; })
-        .catch(() => { avatarImg.src = originalUrl; });
+      void this.getAvatarUrl(name).then((avatarUrl) => { avatarImg.src = avatarUrl; });
 
       avatarImg.onerror = () => { avatarItem.style.display = 'none'; };
 
@@ -544,72 +539,13 @@
 
     // 依目前 botName 更新 UI
     private updateAvatarAndName() {
-      const avatarUrl = this.getAvatarUrl(this.state.botName);
-      const defaultAvatarUrl = this.getDefaultAvatarUrl();
-
-      // 更新 header 頭像
-      const avatarEl = this.elements.headerAvatar as HTMLImageElement;
-      if (avatarEl) {
-        avatarEl.src = avatarUrl;
-        avatarEl.alt = this.state.botName;
-        avatarEl.onerror = () => {
-          avatarEl.src = defaultAvatarUrl;
-        };
-      }
-
-      // 更新 toggle 按鈕頭像
-      const toggleImage = this.elements.qaBotToggle?.querySelector(
-        ".toggle-image",
-      ) as HTMLImageElement;
-      if (toggleImage) {
-        toggleImage.src = avatarUrl;
-        toggleImage.alt = this.state.botName;
-        toggleImage.onerror = () => {
-          toggleImage.src = defaultAvatarUrl;
-        };
-      }
-
-      // 更新 toggle 按鈕文字
-      const toggleText = this.elements.qaBotToggle?.querySelector(
-        ".toggle-text",
-      ) as HTMLElement;
-      if (toggleText) toggleText.textContent = this.state.botName;
-
-      const headerName = avatarEl?.parentElement?.querySelector(
-        ".header-text h3",
-      ) as HTMLElement;
-      if (headerName) headerName.textContent = this.state.botName;
-
-      // 更新歡迎訊息頭像與名稱
-      const welcomeAvatar = document.getElementById("welcomeMsgAvatar") as HTMLImageElement;
-      if (welcomeAvatar) {
-        welcomeAvatar.src = avatarUrl;
-        welcomeAvatar.alt = this.state.botName;
-        welcomeAvatar.onerror = () => { welcomeAvatar.src = defaultAvatarUrl; };
-      }
-      const welcomeName = document.getElementById("welcomeMsgName") as HTMLElement;
-      if (welcomeName) welcomeName.textContent = this.state.botName;
-
-      // 更新 loading 訊息頭像與名稱
-      const loadingAvatar = document.getElementById("loadingMsgAvatar") as HTMLImageElement;
-      if (loadingAvatar) {
-        loadingAvatar.src = avatarUrl;
-        loadingAvatar.alt = this.state.botName;
-        loadingAvatar.onerror = () => { loadingAvatar.src = defaultAvatarUrl; };
-      }
-      const loadingName = document.getElementById("loadingMsgName") as HTMLElement;
-      if (loadingName) loadingName.textContent = this.state.botName;
+      void this.updateAvatarAndNameAsync();
     }
 
     // 依目前 botName 更新 UI (非同步版本)
     private async updateAvatarAndNameAsync() {
-      const originalUrl = this.getAvatarUrl(this.state.botName);
-      const avatarUrl = await thumbnailService.getThumbnail(
-        this.state.botName,
-        originalUrl,
-      );
+      const avatarUrl = await this.getAvatarUrl(this.state.botName);
       const defaultAvatarUrl = this.getDefaultAvatarUrl();
-
       // 更新 header 頭像
       const avatarEl = this.elements.headerAvatar as HTMLImageElement;
       if (avatarEl) {
@@ -666,8 +602,27 @@
 
     // 取得預設頭貼 URL
     private getDefaultAvatarUrl(): string {
-      // 使用環境變數取得 PNG 圖片 URL
-      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/default.png`;
+      return `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#404040"/><circle cx="32" cy="24" r="12" fill="#aaa"/><path d="M10 60c2-14 11-22 22-22s20 8 22 22" fill="#aaa"/></svg>')}`;
+    }
+
+    private async getAvatarUrl(name: string): Promise<string> {
+      try {
+        const url = new URL('/tymultiverse/api/people/avatar', window.location.origin);
+        url.searchParams.set('name', name);
+        const token = localStorage.getItem('token');
+        const response = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error(`Avatar request failed (${response.status})`);
+        const blob = await response.blob();
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let binary = '';
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return `data:${blob.type};base64,${btoa(binary)}`;
+      } catch {
+        return this.getDefaultAvatarUrl();
+      }
     }
 
     // 建立頭貼選擇 UI 與事件
@@ -792,8 +747,6 @@
       const avatarGrid = document.createElement("div");
       avatarGrid.className = "avatar-grid";
 
-      const defaultAvatarUrl = this.getDefaultAvatarUrl();
-
       // 過濾掉 default / unknown，其餘全部顯示（不等 thumbnail 預先 loaded）
       const validBots = this.state.availableBots.filter(
         (botName) =>
@@ -811,19 +764,11 @@
         }
 
         const avatarImg = document.createElement("img");
-        const originalUrl = this.getAvatarUrl(botName);
         avatarImg.alt = botName;
         avatarImg.className = "avatar-selector-img";
 
         // 已 cache 的立即顯示，未 cache 的等 getThumbnail resolve
-        thumbnailService
-          .getThumbnail(botName, originalUrl)
-          .then((thumbUrl) => {
-            avatarImg.src = thumbUrl;
-          })
-          .catch(() => {
-            avatarImg.src = originalUrl;
-          });
+        void this.getAvatarUrl(botName).then((avatarUrl) => { avatarImg.src = avatarUrl; });
 
         // 如果圖片載入失敗，隱藏整個選項
         avatarImg.onerror = () => {
@@ -892,11 +837,6 @@
     }
 
     // 取得頭貼 URL
-    private getAvatarUrl(name: string): string {
-      // 使用位址 `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`
-      return `${import.meta.env.PUBLIC_PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png`;
-    }
-
     // 設置事件監聽器
     private setupEventListeners() {
       // 基本控制事件
@@ -1073,19 +1013,11 @@
         const avatarDiv = document.createElement("div");
         avatarDiv.className = "message-avatar";
         const avatarImg = document.createElement("img");
-        const originalUrl = this.getAvatarUrl(this.state.botName);
         avatarImg.alt = this.state.botName;
         avatarImg.className = "bot-avatar";
 
         // 使用 thumbnail service
-        thumbnailService
-          .getThumbnail(this.state.botName, originalUrl)
-          .then((thumbUrl) => {
-            avatarImg.src = thumbUrl;
-          })
-          .catch(() => {
-            avatarImg.src = originalUrl;
-          });
+        void this.getAvatarUrl(this.state.botName).then((avatarUrl) => { avatarImg.src = avatarUrl; });
 
         avatarImg.onerror = () => {
           avatarImg.src = this.getDefaultAvatarUrl();
