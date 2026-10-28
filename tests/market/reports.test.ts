@@ -119,3 +119,23 @@ describe('news articles collected from channel links', () => {
     expect(reportMetaLine({ ...article, claim_count: 0, status: 'claims_pending' })).toContain('等待萃取主張');
   });
 });
+
+import { secFilingUrlAllowed, webImportSummary } from '../../src/scripts/market/reports';
+
+describe('adding an SEC filing from its URL', () => {
+  const url = 'https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm';
+  it('accepts only EDGAR archive pages on sec.gov, like the server', () => {
+    expect(secFilingUrlAllowed(url)).toBe(true);
+    expect(secFilingUrlAllowed(` ${url} `)).toBe(true);
+    for (const bad of ['http://www.sec.gov/Archives/edgar/data/1/2/a.htm', 'https://evil.example/Archives/edgar/data/1/2/a.htm',
+      'https://www.sec.gov/cgi-bin/browse-edgar', 'https://www.sec.gov/Archives/edgar/data/1/2/a.pdf', '', 'not a url']) {
+      expect(secFilingUrlAllowed(bad), bad).toBe(false);
+    }
+  });
+  it('says what was added, what was already there, and that extraction runs in batches', () => {
+    const made = { title: 'Anthropic, PBC S-1', created: 16, known: 0, sections: ['A', 'B', 'C', 'D', 'E'], characters: 528687 };
+    expect(webImportSummary(made, true)).toBe('已加入 Anthropic, PBC S-1：新增 16 份報告（5 個章節、約 52.9 萬字元）；主張會由萃取排程分批處理。');
+    expect(webImportSummary({ ...made, created: 0, known: 16 }, true)).toBe('Anthropic, PBC S-1 已經加入過（16 份），沒有新增。');
+    expect(webImportSummary({ ...made, created: 2, known: 14 }, true)).toContain('新增 2 份');
+  });
+});

@@ -104,3 +104,20 @@ export function reportMetaLine(report: MarketReport): string {
     ? `${head} · 頻道貼文 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`
     : `${head} · ${report.page_count} 頁 · ${report.claim_count} 項主張 · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`;
 }
+
+/** Mirrors the server: only https://www.sec.gov/Archives/edgar/data/... pages (.htm) can be added from a URL. */
+export function secFilingUrlAllowed(url: string): boolean {
+  try {
+    const parts = new URL(url.trim());
+    return parts.protocol === 'https:' && parts.hostname === 'www.sec.gov' && parts.pathname.startsWith('/Archives/edgar/data/') && /\.html?$/i.test(parts.pathname);
+  } catch { return false; }
+}
+
+export type WebImportResult = { title: string; created: number; known: number; sections: string[]; characters: number };
+
+export function webImportSummary(result: WebImportResult, zh: boolean): string {
+  if (!result.created) return zh ? `${result.title} 已經加入過（${result.known} 份），沒有新增。` : `${result.title} was already added (${result.known} reports); nothing new.`;
+  const size = result.characters >= 10000 ? `${(result.characters / 10000).toFixed(1)} 萬` : String(result.characters);
+  return zh ? `已加入 ${result.title}：新增 ${result.created} 份報告（${result.sections.length} 個章節、約 ${size}字元）；主張會由萃取排程分批處理。`
+    : `Added ${result.title}: ${result.created} reports (${result.sections.length} sections); claims are extracted in batches by the routine.`;
+}

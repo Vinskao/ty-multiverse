@@ -28,7 +28,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportClaimRelevant, reportSegmentForText, reportIndustryCategory, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevant, reportSegmentForText, reportIndustryCategory, type MarketReport } from './market/reports';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
@@ -2135,6 +2135,8 @@ async function loadMarketReports() {
         owner = Boolean(auth?.ok);
     }
     form.hidden = !canUploadReports(Object.keys(headers).length > 0, owner);
+    const webForm = document.getElementById('market-report-web') as HTMLFormElement | null;
+    if (webForm) webForm.hidden = form.hidden;
     const response = await fetch(astroApiPath('/api/market/reports'), { headers, cache: 'no-store' }).catch(() => null);
     if (!response?.ok) { status.textContent = '報告列表暫時無法載入。'; return; }
     const payload = await response.json() as ReportClaimsPayload;
@@ -2183,6 +2185,25 @@ function initMarketReports() {
         status.textContent = result.duplicate ? '這份 PDF 已存在，已載入既有報告。' : reportStatusLabel(result.report?.status ?? 'claims_pending', result.report?.claim_count);
         form.reset(); await loadMarketReports();
     });
+    const webForm = document.getElementById('market-report-web') as HTMLFormElement | null;
+    if (webForm && !webForm.dataset.bound) {
+        webForm.dataset.bound = 'true';
+        webForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const status = document.getElementById('market-report-web-status'); if (!status) return;
+            const url = String(new FormData(webForm).get('url') || '').trim();
+            if (!secFilingUrlAllowed(url)) { status.textContent = '只收 https://www.sec.gov/Archives/edgar/data/… 的 .htm 頁面。'; return; }
+            status.textContent = '正在從 SEC 讀取並切成章節…（大型申報約需 1 分鐘）';
+            const headers = new Headers({ ...marketAuthHeaders(), 'Content-Type': 'application/json' });
+            const response = await fetch(astroApiPath('/api/market/reports/web'), { method: 'POST', headers, body: JSON.stringify({ url }) }).catch(() => null);
+            if (!response?.ok) {
+                const error = response ? await response.json().catch(() => ({})) as { detail?: string } : {};
+                status.textContent = error.detail || '加入失敗，請稍後重試。'; return;
+            }
+            status.textContent = webImportSummary(await response.json() as WebImportResult, marketLocale() === 'zh-TW');
+            webForm.reset(); await loadMarketReports();
+        });
+    }
     void loadMarketReports();
 }
 
