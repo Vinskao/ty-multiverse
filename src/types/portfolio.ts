@@ -91,6 +91,19 @@ export interface Portfolio {
         taiwan: RegionFigures;
         overseas: RegionFigures;
         total: RegionFigures;
+        crypto?: RegionFigures;  // Binance in NT$; cash and P/L are null (unknown)
+    };
+    // Read-only Binance balances, valued in USDT and converted to NT$.
+    binance?: {
+        source: string;
+        quoteAsset: string;
+        fetchedAt: string;
+        usdTwdRate: number;
+        fxSource: string;
+        usdt: { total: number; positions: number; otherWallets: number; wallets: Record<string, number> };
+        twd: { total: number; positions: number; otherWallets: number };
+        positions: Array<{ asset: string; name: string; wallet: string; quantity: number; priceUsdt: number; valueUsdt: number; valueTwd: number }>;
+        unpriced: string[];
     };
     fetchedAt: string;
     source: string;

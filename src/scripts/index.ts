@@ -1,5 +1,6 @@
-import type { Portfolio, PortfolioPosition, RegionFigures } from '../types/portfolio';
+import type { Portfolio, PortfolioPosition } from '../types/portfolio';
 import { taiwanPortfolio } from '../services/core/taiwanPortfolio';
+import { hasOverseasRegion, regionSplit } from './market/portfolioRegions';
 // 加上tooltip
 // 使用 astro:page-load 來支援 View Transitions 的客戶端導航
 import { serviceAvailabilityManager } from '../services/core/serviceAvailabilityManager';
@@ -3071,7 +3072,7 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
     );
     // Region split sub-lines (台 Taiwan · 外 Overseas) under Cash / Total / Leverage.
     const regions = portfolio.regions;
-    const hasOverseas = !!regions && ((regions.overseas.totalAssets ?? 0) !== 0 || (regions.overseas.cash ?? 0) !== 0);
+    const hasOverseas = hasOverseasRegion(regions);
 
     // 合併槓桿的後端公式與台灣單區公式不同；tooltip 和小字都必須跟目前顯示值一致。
     const combinedLeverageFormula = hasOverseas && portfolio.ibkr && portfolio.totalAssetsEstimated
@@ -3095,20 +3096,17 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
         leverageLabel.dataset.i18n = `home.${key}`;
         leverageLabel.textContent = copy[lang];
     }
-    const setSplit = (id: string, fmt: (r: RegionFigures) => string) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (regions && hasOverseas) {
-            el.textContent = `${marketText('TW', '台')} ${fmt(regions.taiwan)} · ${marketText('Overseas', '外')} ${fmt(regions.overseas)}`;
-            el.hidden = false;
-        } else {
-            el.hidden = true;
-        }
-    };
     const cur0 = (v: number | null) => v === null ? '—' : currency(v);
     const lev = (v: number | null) => v === null || v === undefined ? '—' : `${v.toFixed(2)}x`;
-    setSplit('portfolio-cash-split', (r) => cur0(r.cash));
-    setSplit('portfolio-total-split', (r) => cur0(r.totalAssets));
+    const setSplit = (id: string, field: 'cash' | 'totalAssets') => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const text = regionSplit(regions, field, marketLocale() === 'zh-TW' ? 'zh' : 'en', cur0);
+        el.textContent = text ?? '';
+        el.hidden = text === null;
+    };
+    setSplit('portfolio-cash-split', 'cash');
+    setSplit('portfolio-total-split', 'totalAssets');
     const leverageSplit = document.getElementById('portfolio-leverage-split');
     const taiwanLeverage = document.getElementById('portfolio-leverage-taiwan');
     const overseasLeverage = document.getElementById('portfolio-leverage-overseas');
