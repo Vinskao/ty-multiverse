@@ -1,0 +1,137 @@
+/* Maya chat widget in the site's flat style: neutral surfaces, hairline borders, one accent colour.
+   Loaded after qabot.css / qabotv2.css, which still carry the old gold gradient theme; the tokens below flip with the
+   light/dark theme, so one set of rules covers both. */
+
+.qa-bot-container {
+  border: 1px solid var(--gray-800) !important;
+  border-radius: 16px !important;
+  background: var(--gray-999) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28) !important;
+}
+
+.chat-header {
+  background: color-mix(in srgb, var(--gray-900) 60%, var(--gray-999)) !important;
+  color: var(--gray-200) !important;
+  border-bottom: 1px solid var(--gray-800) !important;
+}
+.chat-header h3,
+.header-text {
+  color: var(--gray-200) !important;
+  text-shadow: none !important;
+}
+.chat-header p {
+  color: var(--gray-400) !important;
+  text-shadow: none !important;
+}
+
+.fullscreen-button,
+.history-button,
+.language-button,
+.close-button {
+  background: transparent !important;
+  color: var(--gray-300) !important;
+  border: 1px solid var(--gray-800) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+.fullscreen-button:hover,
+.history-button:hover,
+.language-button:hover,
+.close-button:hover {
+  background: color-mix(in srgb, var(--accent-regular) 14%, transparent) !important;
+  color: var(--gray-0) !important;
+}
+
+.chat-messages {
+  background: transparent !important;
+}
+.ai-name,
+.user-id {
+  color: var(--gray-400) !important;
+  text-shadow: none !important;
+}
+
+.message-content {
+  box-shadow: none !important;
+}
+.bot-message .message-content {
+  background: color-mix(in srgb, var(--gray-800) 40%, transparent) !important;
+  color: var(--gray-100) !important;
+  border: 1px solid var(--gray-800) !important;
+}
+.user-message .message-content {
+  background: var(--accent-regular) !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+.bot-message .message-content p,
+.bot-message .message-content li {
+  color: inherit !important;
+}
+
+.topic-suggestions {
+  background: transparent !important;
+  border: 0 !important;
+}
+.topic-suggestions h4 {
+  color: var(--gray-300) !important;
+  text-shadow: none !important;
+  border-bottom-color: var(--gray-800) !important;
+}
+.suggestion-btn {
+  background: transparent !important;
+  color: var(--gray-200) !important;
+  border: 1px solid var(--gray-800) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.suggestion-btn:hover {
+  background: color-mix(in srgb, var(--accent-regular) 12%, transparent) !important;
+  border-color: var(--accent-regular) !important;
+  box-shadow: none !important;
+}
+
+.chat-input-container {
+  background: var(--gray-999) !important;
+  border-top: 1px solid var(--gray-800) !important;
+}
+.chat-input {
+  background: color-mix(in srgb, var(--gray-800) 35%, transparent) !important;
+  color: var(--gray-100) !important;
+  border: 1px solid var(--gray-800) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+.chat-input:focus {
+  border-color: var(--accent-regular) !important;
+  outline: none !important;
+}
+.chat-input::placeholder {
+  color: var(--gray-500) !important;
+}
+.send-button {
+  background: var(--accent-regular) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.send-button:disabled {
+  background: var(--gray-800) !important;
+  color: var(--gray-500) !important;
+}
+
+.load-more-container,
+.load-more-button,
+.page-analysis-button,
+.avatar-selector,
+.bot-switch-message {
+  background: color-mix(in srgb, var(--gray-800) 40%, transparent) !important;
+  color: var(--gray-200) !important;
+  border: 1px solid var(--gray-800) !important;
+  box-shadow: none !important;
+}
+
+.qa-bot-toggle {
+  border: 1px solid var(--gray-800) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+}

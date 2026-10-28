@@ -13,7 +13,7 @@
   import { createDiaryClient } from '../scripts/diary/client';
   import { config } from '../services/core/config';
   import { storageService } from '../services/core/storageService';
-  import { mountNotifications, collectNotifications } from '../scripts/notifications/center';
+  import { mountNotifications, collectNotifications, emptyNotice } from '../scripts/notifications/center';
   let version = 0;
   let cleanup: (() => void) | undefined;
   async function check() {
@@ -23,17 +23,18 @@
     if (!root) return;
     const lang = (window as any).AppLang?.get?.() === 'en' ? 'en' : 'zh';
     root.querySelector('[data-heading]')!.textContent = lang === 'en' ? 'Notifications' : '通知';
-    const token = storageService.get<string>(storageService.KEYS.TOKEN);
+    // The same token the market pages use (they also accept the 'accessToken' key).
+    const token = storageService.get<string>(storageService.KEYS.TOKEN) || localStorage.getItem('accessToken');
     const username = storageService.get<string>(storageService.KEYS.USERNAME) || new URLSearchParams(location.search).get('username') || '';
-    cleanup = mountNotifications(root, username || 'owner', [], lang);
+    cleanup = mountNotifications(root, username || 'owner', [], lang, emptyNotice(token ? 'none' : 'signed-out', lang));
     if (!token) return;
-    const items = await collectNotifications({
+    const collected = await collectNotifications({
       token, username, lang, request: fetch, base: import.meta.env.BASE_URL || '/',
       getDiary: () => createDiaryClient(config.api.backendUrl || '/tymb', () => token)<{ pending: boolean; triggeredAt: string | null; nextDueAt: string }>('/check-in', {}),
     });
-    if (current !== version || token !== storageService.get<string>(storageService.KEYS.TOKEN)) return;
+    if (current !== version) return;
     cleanup?.();
-    cleanup = mountNotifications(root, username || 'owner', items, lang);
+    cleanup = mountNotifications(root, username || 'owner', collected.items, lang, emptyNotice(collected.empty, lang));
   }
   let languageCleanup: (() => void) | undefined;
   function init() {

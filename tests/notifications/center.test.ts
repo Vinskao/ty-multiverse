@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { mountNotifications, diaryNotification, routineNotification, fetchRoutineNotifications, collectNotifications } from '../../src/scripts/notifications/center';
+import { mountNotifications, diaryNotification, routineNotification, fetchRoutineNotifications, collectNotifications, emptyNotice } from '../../src/scripts/notifications/center';
 
 describe('which notifications the bell collects', () => {
   // 2026-10-28: the owner was signed in (token) but no username was stored, and the bell stayed empty because the whole
@@ -12,21 +12,49 @@ describe('which notifications the bell collects', () => {
   it('shows the routine messages to a signed-in owner even when no username is stored, and skips the diary then', async () => {
     const getDiary = vi.fn(async () => diary);
     const items = await collectNotifications({ token: 'tok', username: '', lang: 'zh', request: history() as any, getDiary });
-    expect(items.map(item => item.id)).toEqual(['routine:7']);
+    expect(items.items.map(item => item.id)).toEqual(['routine:7']);
     expect(getDiary).not.toHaveBeenCalled();
   });
 
   it('puts the diary reminder first when there is a username, and a failing diary check does not hide the routine messages', async () => {
     const both = await collectNotifications({ token: 'tok', username: 'alice', lang: 'zh', request: history() as any, getDiary: async () => diary });
-    expect(both.map(item => item.id)).toEqual([`diary:2026-10-27`, 'routine:7']);
+    expect(both.items.map(item => item.id)).toEqual([`diary:2026-10-27`, 'routine:7']);
     const failing = await collectNotifications({ token: 'tok', username: 'alice', lang: 'zh', request: history() as any, getDiary: async () => { throw new Error('down'); } });
-    expect(failing.map(item => item.id)).toEqual(['routine:7']);
+    expect(failing.items.map(item => item.id)).toEqual(['routine:7']);
   });
 
   it('collects nothing, and calls nothing, without a token', async () => {
     const request = history();
-    expect(await collectNotifications({ token: null, username: 'alice', lang: 'zh', request: request as any, getDiary: async () => diary })).toEqual([]);
+    expect(await collectNotifications({ token: null, username: 'alice', lang: 'zh', request: request as any, getDiary: async () => diary })).toEqual({ items: [], empty: 'signed-out' });
     expect(request).not.toHaveBeenCalled();
+  });
+});
+
+describe('why the bell is empty', () => {
+  // 2026-10-28: an empty bell said only "no notifications", so a signed-out owner could not tell it from "nothing was sent".
+  const reply = (status: number, body: unknown = {}) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
+  const diary = async () => ({ pending: false });
+
+  it('names the reason: not signed in, not the owner, or the history is unreachable', async () => {
+    const ask = (request: any, token: string | null = 'tok') => collectNotifications({ token, username: '', lang: 'zh', request, getDiary: diary });
+    expect((await ask(reply(200), null)).empty).toBe('signed-out');
+    expect((await ask(reply(403))).empty).toBe('forbidden');
+    expect((await ask(reply(401))).empty).toBe('forbidden');
+    expect((await ask(reply(503))).empty).toBe('unavailable');
+    expect((await ask(vi.fn(async () => { throw new Error('offline'); }))).empty).toBe('unavailable');
+    expect((await ask(reply(200, { notifications: [] }))).empty).toBe('none');          // signed in as the owner, genuinely nothing yet
+  });
+
+  it('words each reason, and shows it in the panel instead of "no notifications"', () => {
+    expect(emptyNotice('signed-out', 'zh')).toContain('登入');
+    expect(emptyNotice('forbidden', 'zh')).toContain('權限');
+    expect(emptyNotice('unavailable', 'en')).toContain('unavailable');
+    expect(emptyNotice('none', 'zh')).toBe('目前沒有通知');
+    document.body.innerHTML = `<div id="c"><button data-bell></button><span data-count></span><section data-panel hidden><button data-tab="all"></button><button data-tab="unread"></button><button data-read-all></button><ul data-list></ul><p data-empty></p></section></div>`;
+    const root = document.querySelector<HTMLElement>('#c')!;
+    const cleanup = mountNotifications(root, 'owner', [], 'zh', emptyNotice('signed-out', 'zh'));
+    expect(root.querySelector('[data-empty]')!.textContent).toContain('登入');
+    cleanup();
   });
 });
 

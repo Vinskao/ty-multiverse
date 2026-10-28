@@ -8,30 +8,49 @@ export function routineNotification(row: RoutineRow, _lang = 'zh'): SiteNotifica
   return { id: `routine:${row.id}`, title: row.title, body: row.body, href: '', at: row.createdAt, attention: row.kind === 'attention' };
 }
 
-/** Owner-only: anyone else (or an unreachable backend) simply has no routine messages. */
-export async function fetchRoutineNotifications(token: string, lang = 'zh', request: typeof fetch = fetch, base = ''): Promise<SiteNotification[]> {
+export type RoutineHistory = { items: SiteNotification[]; status: 'ok' | 'forbidden' | 'unavailable' };
+
+/** Owner-only: anyone else (or an unreachable backend) simply has no routine messages, and `status` says which. */
+export async function loadRoutineHistory(token: string, lang = 'zh', request: typeof fetch = fetch, base = ''): Promise<RoutineHistory> {
   try {
     const response = await request(`${base.replace(/\/$/, '')}/api/market/notifications?limit=100`, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
-    if (!response.ok) return [];
+    if (response.status === 401 || response.status === 403) return { items: [], status: 'forbidden' };
+    if (!response.ok) return { items: [], status: 'unavailable' };
     const payload = await response.json() as { notifications?: RoutineRow[] };
-    return (payload.notifications ?? []).map(row => routineNotification(row, lang));
-  } catch { return []; }
+    return { items: (payload.notifications ?? []).map(row => routineNotification(row, lang)), status: 'ok' };
+  } catch { return { items: [], status: 'unavailable' }; }
+}
+
+export async function fetchRoutineNotifications(token: string, lang = 'zh', request: typeof fetch = fetch, base = ''): Promise<SiteNotification[]> {
+  return (await loadRoutineHistory(token, lang, request, base)).items;
 }
 
 type DiaryCheck = { pending: boolean; triggeredAt?: string | null; nextDueAt?: string };
+export type Collected = { items: SiteNotification[]; empty: 'signed-out' | 'forbidden' | 'unavailable' | 'none' };
 
-/** Everything the bell lists. Routine messages (owner only, from the backend) need just the token; the diary reminder also needs
- *  a username. One failing source never hides the other. */
+/** Everything the bell lists, and why it is empty when it is. Routine messages (owner only, from the backend) need just the token;
+ *  the diary reminder also needs a username. One failing source never hides the other. */
 export async function collectNotifications(options: { token: string | null; username: string; lang: string; request?: typeof fetch; base?: string;
-                                                      getDiary: () => Promise<DiaryCheck> }): Promise<SiteNotification[]> {
+                                                      getDiary: () => Promise<DiaryCheck> }): Promise<Collected> {
   const { token, username, lang } = options;
-  if (!token) return [];
-  const routine = fetchRoutineNotifications(token, lang, options.request ?? fetch, options.base ?? '');
+  if (!token) return { items: [], empty: 'signed-out' };
+  const history = loadRoutineHistory(token, lang, options.request ?? fetch, options.base ?? '');
   let diary: SiteNotification | null = null;
   if (username) {
     try { diary = diaryNotification(await options.getDiary(), username, lang); } catch { /* the diary check may fail on its own */ }
   }
-  return [...(diary ? [diary] : []), ...await routine];
+  const routine = await history;
+  const items = [...(diary ? [diary] : []), ...routine.items];
+  return { items, empty: items.length ? 'none' : routine.status === 'ok' ? 'none' : routine.status };
+}
+
+/** The empty-state line: an empty bell must say whether you are signed out, not the owner, or the history is unreachable. */
+export function emptyNotice(reason: Collected['empty'], lang: string): string {
+  const en = lang === 'en';
+  if (reason === 'signed-out') return en ? 'Sign in to see your notifications' : '登入後才會顯示通知（排程訊息只有擁有者看得到）';
+  if (reason === 'forbidden') return en ? 'This account cannot read scheduled-run messages' : '這個帳號沒有讀取排程通知的權限';
+  if (reason === 'unavailable') return en ? 'Notifications are temporarily unavailable' : '通知暫時無法載入，稍後再試';
+  return en ? 'No notifications' : '目前沒有通知';
 }
 
 /** Taipei wall-clock "MM/DD HH:mm" so the time matches the Telegram message the owner saw. */
@@ -52,7 +71,7 @@ export function diaryNotification(result: { pending: boolean; triggeredAt?: stri
 }
 
 /** Read receipts are scoped to the signed-in account and never contain diary content. */
-export function mountNotifications(root: HTMLElement, username: string, items: SiteNotification[], lang: string) {
+export function mountNotifications(root: HTMLElement, username: string, items: SiteNotification[], lang: string, emptyText?: string) {
   const get = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const bell = get<HTMLButtonElement>('[data-bell]');
   const panel = get('[data-panel]');
@@ -101,7 +120,7 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
       tab.setAttribute('aria-pressed', String((tab.dataset.tab as string) === filter));
     }
     const empty = get('[data-empty]');
-    empty.textContent = filter === 'unread' ? (lang === 'en' ? 'Nothing unread' : '沒有未讀通知') : (lang === 'en' ? 'No notifications' : '目前沒有通知');
+    empty.textContent = filter === 'unread' && notifications.length ? (lang === 'en' ? 'Nothing unread' : '沒有未讀通知') : (emptyText ?? (lang === 'en' ? 'No notifications' : '目前沒有通知'));
     empty.hidden = shown.length > 0;
     const emptyState = root.querySelector<HTMLElement>('[data-empty-state]');
     if (emptyState) emptyState.hidden = shown.length > 0;
