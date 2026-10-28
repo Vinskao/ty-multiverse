@@ -5,11 +5,10 @@ import { expect, it } from 'vitest';
 const css = readFileSync(resolve(process.cwd(), 'src/styles/nav.css'), 'utf8');
 const navRule = css.match(/^nav \{[^}]*\}/m)![0];
 
-// 2026-10-27: the bar changed from near-black (92% --gray-999, border, blur) to transparent.
-it('draws the nav bar transparent, without a border or blur', () => {
-    expect(navRule).toMatch(/background-color:\s*transparent/);
-    expect(navRule).not.toMatch(/border-bottom:\s*1px/);
-    expect(navRule).not.toMatch(/backdrop-filter/);
+it('draws the nav bar with a translucent blurred glass background', () => {
+    expect(navRule).toMatch(/background(?:-color)?:\s*color-mix\(in srgb, var\(--gray-999\)\s+\d+%, transparent\)/);
+    expect(navRule).toMatch(/backdrop-filter:\s*blur\(/);
+    expect(navRule).toMatch(/border-bottom:\s*1px solid/);
 });
 
 it('keeps the opened mobile menu solid so its links stay readable', () => {
