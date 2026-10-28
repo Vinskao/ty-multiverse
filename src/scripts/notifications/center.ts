@@ -18,6 +18,22 @@ export async function fetchRoutineNotifications(token: string, lang = 'zh', requ
   } catch { return []; }
 }
 
+type DiaryCheck = { pending: boolean; triggeredAt?: string | null; nextDueAt?: string };
+
+/** Everything the bell lists. Routine messages (owner only, from the backend) need just the token; the diary reminder also needs
+ *  a username. One failing source never hides the other. */
+export async function collectNotifications(options: { token: string | null; username: string; lang: string; request?: typeof fetch; base?: string;
+                                                      getDiary: () => Promise<DiaryCheck> }): Promise<SiteNotification[]> {
+  const { token, username, lang } = options;
+  if (!token) return [];
+  const routine = fetchRoutineNotifications(token, lang, options.request ?? fetch, options.base ?? '');
+  let diary: SiteNotification | null = null;
+  if (username) {
+    try { diary = diaryNotification(await options.getDiary(), username, lang); } catch { /* the diary check may fail on its own */ }
+  }
+  return [...(diary ? [diary] : []), ...await routine];
+}
+
 /** Taipei wall-clock "MM/DD HH:mm" so the time matches the Telegram message the owner saw. */
 export function taipeiStamp(iso: string): string {
   const date = new Date(new Date(iso).getTime() + 8 * 3600000);

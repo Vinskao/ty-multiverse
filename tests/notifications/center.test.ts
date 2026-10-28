@@ -1,6 +1,34 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { mountNotifications, diaryNotification, routineNotification, fetchRoutineNotifications } from '../../src/scripts/notifications/center';
+import { mountNotifications, diaryNotification, routineNotification, fetchRoutineNotifications, collectNotifications } from '../../src/scripts/notifications/center';
+
+describe('which notifications the bell collects', () => {
+  // 2026-10-28: the owner was signed in (token) but no username was stored, and the bell stayed empty because the whole
+  // loader returned early without a username. Routine messages need only the token.
+  const row = { id: 7, kind: 'update', title: '台股收盤後', body: '3008 賣→買', createdAt: '2026-10-27T13:25:00+00:00' };
+  const history = (status = 200) => vi.fn(async () => new Response(JSON.stringify({ notifications: [row] }), { status }));
+  const diary = { pending: true, triggeredAt: '2026-10-27', nextDueAt: '2026-11-27' };
+
+  it('shows the routine messages to a signed-in owner even when no username is stored, and skips the diary then', async () => {
+    const getDiary = vi.fn(async () => diary);
+    const items = await collectNotifications({ token: 'tok', username: '', lang: 'zh', request: history() as any, getDiary });
+    expect(items.map(item => item.id)).toEqual(['routine:7']);
+    expect(getDiary).not.toHaveBeenCalled();
+  });
+
+  it('puts the diary reminder first when there is a username, and a failing diary check does not hide the routine messages', async () => {
+    const both = await collectNotifications({ token: 'tok', username: 'alice', lang: 'zh', request: history() as any, getDiary: async () => diary });
+    expect(both.map(item => item.id)).toEqual([`diary:2026-10-27`, 'routine:7']);
+    const failing = await collectNotifications({ token: 'tok', username: 'alice', lang: 'zh', request: history() as any, getDiary: async () => { throw new Error('down'); } });
+    expect(failing.map(item => item.id)).toEqual(['routine:7']);
+  });
+
+  it('collects nothing, and calls nothing, without a token', async () => {
+    const request = history();
+    expect(await collectNotifications({ token: null, username: 'alice', lang: 'zh', request: request as any, getDiary: async () => diary })).toEqual([]);
+    expect(request).not.toHaveBeenCalled();
+  });
+});
 
 describe('notification center', () => {
   it('places the bell after language and removes the page banner', () => {
