@@ -2,6 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { buildResearchContext, brokerAvailabilityLabel } from '../../src/scripts/market/researchContext';
 
 describe('live agent research context', () => {
+    it('includes shared research tags and linked report claims in the AI context', () => {
+        const context = buildResearchContext({ code: 'NVDA', market: 'US' }, null, null, null, '2026-10-28T00:00:00Z', null,
+            { tagIds: ['cpo'], relatedClaims: [{ title: 'CPO interposer optics', publisher: 'Gooaye', claim: 'NVIDIA advances interposer optics' }] });
+        expect(context.researchTags).toEqual([{ id: 'cpo', label: expect.stringContaining('CPO') }]);
+        expect(context.relatedReportClaims[0].publisher).toBe('Gooaye');
+    });
+
     it('distinguishes delayed, frozen and unclassified broker values', () => {
         expect(brokerAvailabilityLabel('DPB', 'zh')).toBe('延遲行情');
         expect(brokerAvailabilityLabel('ZB', 'zh')).toBe('凍結行情');

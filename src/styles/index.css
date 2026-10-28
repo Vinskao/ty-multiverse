@@ -215,6 +215,14 @@
 .market-report-filter { padding:.35rem .65rem; color:var(--gray-300); border:1px solid var(--gray-700); border-radius:999px; background:transparent; font:inherit; font-size:.78rem; cursor:pointer; }
 .market-report-filter:hover, .market-report-filter:focus-visible { border-color:var(--gray-500); color:var(--gray-100); }
 .market-report-filter[aria-pressed="true"] { border-color:var(--accent-regular); background:color-mix(in srgb, var(--accent-regular) 22%, transparent); color:var(--gray-100); }
+.market-report-browser { display:grid; grid-template-columns:minmax(170px,220px) minmax(0,1fr); gap:1rem; align-items:start; margin-top:.85rem; }
+.market-report-sidebar { position:sticky; top:4.5rem; max-height:calc(100dvh - 5.5rem); overflow-y:auto; padding-right:.65rem; border-right:1px solid var(--gray-800); }
+.market-report-sidebar h5 { margin:.25rem 0 .65rem; color:var(--gray-200); font-size:.85rem; }
+.market-report-sidebar .market-report-filters { display:grid; gap:.35rem; margin:0; }
+.market-report-sidebar .market-report-filter { width:100%; padding:.55rem .65rem; border-radius:.5rem; text-align:left; }
+.market-report-results { min-width:0; }
+.market-report-search { display:grid; gap:.35rem; color:var(--gray-300); font-size:.82rem; }
+.market-report-search input { box-sizing:border-box; width:100%; min-width:0; padding:.65rem .8rem; color:var(--gray-100); border:1px solid var(--gray-700); border-radius:.55rem; background:var(--gray-999); font:inherit; }
 .market-report-list { display: grid; gap: .65rem; margin-top: .8rem; }
 .market-report-card { padding: .8rem; border: 1px solid var(--gray-800); border-radius: .7rem; }
 .market-report-card[hidden] { display:none; }
@@ -225,6 +233,13 @@
 .market-report-claim { margin: .4rem 0; padding: .55rem; border-left: 3px solid var(--gray-600); background: var(--gray-900_50); }
 .market-report-claim--opposed { border-left-color: #e35d6a; color: #ff9ca4; }
 .market-report-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
+
+@media (max-width: 700px) {
+  .market-report-browser { grid-template-columns:minmax(0,1fr); }
+  .market-report-sidebar { position:static; max-height:none; overflow:visible; padding:0 0 .6rem; border-right:0; border-bottom:1px solid var(--gray-800); }
+  .market-report-sidebar .market-report-filters { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:.3rem; }
+  .market-report-sidebar .market-report-filter { width:auto; flex:0 0 auto; white-space:nowrap; }
+}
 
 .market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; position: static; max-height: none; overflow: visible; }
 .market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: .75rem; }
@@ -1887,6 +1902,9 @@
 .market-research-peers li.is-current { border-color:#facc15; }
 .market-research-peers strong { font-size:.82rem; }
 .market-research-peers span { font-size:.72rem; color:var(--gray-400, #94a3b8); }
+.market-research-tag-list { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.45rem; }
+.market-research-tag { padding:.3rem .55rem; color:var(--gray-200); border:1px solid var(--accent-regular); border-radius:999px; background:color-mix(in srgb, var(--accent-regular) 14%, transparent); font:inherit; font-size:.72rem; cursor:pointer; }
+.market-research-tag:hover, .market-research-tag:focus-visible { background:color-mix(in srgb, var(--accent-regular) 26%, transparent); }
 .market-automation { display:grid; gap:.3rem; margin:.5rem 0 .75rem; padding:.6rem .8rem; border:1px solid rgba(148,163,184,.3); border-left:3px solid #22c55e; border-radius:8px; font-size:.82rem; }
 .market-automation[hidden] { display:none; }
 .market-automation[data-tone="warn"] { border-left-color:#facc15; }

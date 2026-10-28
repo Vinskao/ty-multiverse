@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { canUploadReports, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportIndustryCategory, type MarketReport } from '../../src/scripts/market/reports';
+import { canUploadReports, filterMarketReports, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, type MarketReport } from '../../src/scripts/market/reports';
 
 describe('report industry categories', () => {
   it('groups company and supply-chain segments into readable industry boards', () => {
@@ -10,6 +10,45 @@ describe('report industry categories', () => {
     expect(reportIndustryCategory(['odm', 'csp'])).toBe('AI 伺服器與雲端');
     expect(reportIndustryCategory(['thermal'])).toBe('散熱');
     expect(reportIndustryCategory(['optical'])).toBe('光通訊');
+  });
+
+  it('gives CPO and interposer optics their own board, ahead of general optical communications', () => {
+    expect(reportSegmentForText('NVIDIA 中介層光學 CPO co-packaged optics')).toBe('cpo');
+    expect(reportIndustryForReport({ title: '輝達 CPO 布局再升級：中介層光學', claims: [{ segment: 'optical', claim: 'CPO co-packaged optics' }] })).toContain('CPO');
+    expect(reportIndustryForReport({ title: '800G 光通訊模組', claims: [{ segment: 'optical', claim: 'optical transceiver' }] })).toBe(reportIndustryCategory(['optical']));
+  });
+
+  it('hides reports that failed because no readable text or transcript was available', () => {
+    const noTranscript = { status: 'failed', failure_reason: '沒有文字或逐字稿可供分析', claims: [] } as MarketReport;
+    const readable = { ...noTranscript, failure_reason: 'temporary extraction timeout' } as MarketReport;
+    expect(reportHasAnalyzableText(noTranscript)).toBe(false);
+    expect(reportHasAnalyzableText(readable)).toBe(true);
+  });
+
+  it('hides completed Telegram episodes that have no extracted text claims', () => {
+    const episode = { status: 'ready', source_url: 'https://t.me/Gooaye/6499', claim_count: 0, claims: [] } as MarketReport;
+    const analyzed = { ...episode, claim_count: 1, claims: [{ page: 1, segment: 'optical', direction: 'neutral', claim: 'CPO technology update' }] } as MarketReport;
+    expect(reportHasAnalyzableText(episode)).toBe(false);
+    expect(reportHasAnalyzableText(analyzed)).toBe(true);
+  });
+
+  it('searches titles, publishers, and extracted claim text without case sensitivity', () => {
+    const report = { title: 'NVIDIA CPO optics', publisher: 'Gooaye', claims: [{ claim: 'co-packaged optics volume ramp' }] } as MarketReport;
+    expect(reportSearchMatches(report, 'gooaye cpo')).toBe(true);
+    expect(reportSearchMatches(report, 'volume ramp')).toBe(true);
+    expect(reportSearchMatches(report, 'foundry')).toBe(false);
+  });
+
+  it('combines category and text search while excluding textless reports', () => {
+    const cpo = { id: 'cpo', title: 'NVIDIA CPO interposer optics', publisher: 'Gooaye', status: 'ready', claims: [{ segment: 'optical', claim: 'co-packaged optics ramp' }] } as MarketReport;
+    const optical = { id: 'optical', title: '800G optics', publisher: 'Analyst', status: 'ready', claims: [{ segment: 'optical', claim: 'transceiver demand' }] } as MarketReport;
+    const empty = { id: 'empty', title: 'Podcast EP707', publisher: 'Gooaye', status: 'failed', failure_reason: 'no transcript or readable text', claims: [] } as MarketReport;
+    expect(filterMarketReports([cpo, optical, empty], 'cpo', 'Gooaye')).toEqual([cpo]);
+  });
+
+  it('shares CPO tags with existing optical claims when building stock research context', () => {
+    expect(reportClaimRelevantToResearchTags({ codes: [], segment: 'optical' }, 'NVDA', ['cpo'])).toBe(true);
+    expect(reportClaimRelevantToResearchTags({ codes: ['2330'], segment: 'optical' }, 'NVDA', ['cpo'])).toBe(false);
   });
 
   it('keeps unclassified reports in a catch-all category', () => {
@@ -22,6 +61,13 @@ it('provides a sector filter area above the market report list', () => {
   const home = readFileSync(resolve(process.cwd(), 'src/pages/index.astro'), 'utf8');
   expect(home).toMatch(/id="market-report-filters"[^>]*aria-label="依產業板塊篩選"/);
   expect(home.indexOf('id="market-report-filters"')).toBeLessThan(home.indexOf('id="market-report-list"'));
+});
+
+it('places category navigation on the left and searchable reports on the right', () => {
+  const home = readFileSync(resolve(process.cwd(), 'src/pages/index.astro'), 'utf8');
+  expect(home).toContain('class="market-report-browser"');
+  expect(home).toMatch(/id="market-report-search"[^>]*type="search"/);
+  expect(home.indexOf('market-report-sidebar')).toBeLessThan(home.indexOf('id="market-report-list"'));
 });
 
 describe('market research reports', () => {

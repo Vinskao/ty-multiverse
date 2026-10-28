@@ -28,7 +28,8 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevant, reportSegmentForText, reportIndustryCategory, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, type MarketReport } from './market/reports';
+import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
@@ -836,6 +837,20 @@ function renderIndustryPeers(target: HTMLElement, groups: IndustryGroup[], code:
             item.append(name, role); list.append(item);
         }
         section.append(title, list); target.append(section);
+        const tagIds = researchTagIdsForIndustryGroup({ id: group.id, name: group.name });
+        if (tagIds.length) {
+            const tags = document.createElement('div'); tags.className = 'market-research-tag-list';
+            for (const tagId of tagIds) {
+                const tag = document.createElement('button'); tag.type = 'button'; tag.className = 'market-research-tag';
+                tag.textContent = `${marketText('Related reports', '相關報告')} · ${researchTagLabel(tagId, marketLocale() === 'zh-TW' ? 'zh' : 'en')}`;
+                tag.addEventListener('click', () => {
+                    document.getElementById('market-reports')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.querySelector<HTMLButtonElement>(`#market-report-filters [data-tag-id="${tagId}"]`)?.click();
+                });
+                tags.append(tag);
+            }
+            section.append(tags);
+        }
     }
 }
 
@@ -892,6 +907,9 @@ async function loadLiveResearchContext(instrument: DashboardInstrument, sequence
     target.textContent = marketText('Checking current data…', '正在檢查本次資料…');
     const paths = ['/api/market/dashboard/brief', '/api/market/dashboard/macro', '/api/market/dashboard/events'];
     if (!isTaiwanInstrument(instrument)) paths.push(`/api/market/dashboard/overseas/${encodeURIComponent(instrument.code)}?market=${encodeURIComponent(instrument.market || '')}`);
+    const researchCode = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
+    const researchIndex = paths.push(`/api/market/dashboard/analysis/${encodeURIComponent(researchCode)}?productType=research`) - 1;
+    const groupsIndex = paths.push(`/api/market/dashboard/industries?code=${encodeURIComponent(researchCode)}`) - 1;
     const results = await Promise.allSettled(paths.map(async (path) => {
         const response = await fetch(astroApiPath(path), { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -899,11 +917,35 @@ async function loadLiveResearchContext(instrument: DashboardInstrument, sequence
     }));
     if (sequence !== marketAiLoadSequence) return;
     const values = results.map((result) => result.status === 'fulfilled' ? result.value : null);
-    const context = buildResearchContext(instrument, values[0], values[1], values[2], new Date().toISOString(), values[3]);
+    const saved = values[researchIndex]?.analysis;
+    const researchRecord = saved?.content ? parseResearchRecord(saved.content) : null;
+    const tagIds = new Set<ResearchTagId>();
+    if (researchRecord) for (const tagId of researchTagIdsForText(`${researchRecord.name} ${researchRecord.summary}`)) tagIds.add(tagId);
+    for (const group of values[groupsIndex]?.groups ?? []) {
+        for (const tagId of researchTagIdsForIndustryGroup(group)) tagIds.add(tagId);
+    }
+    const segments = segmentsForResearchTags([...tagIds]);
+    const claimPaths = [
+        `/api/market/reports/claims?code=${encodeURIComponent(researchCode)}`,
+        ...segments.map((segment) => `/api/market/reports/claims?segment=${encodeURIComponent(segment)}`),
+    ];
+    const claimResults = await Promise.all(claimPaths.map(async (path) => {
+        const response = await fetch(astroApiPath(path), { cache: 'no-store' }).catch(() => null);
+        return response?.ok ? (await response.json() as { claims?: Array<Record<string, any>> }).claims ?? [] : [];
+    }));
+    if (sequence !== marketAiLoadSequence) return;
+    const relatedClaims = new Map<string, Record<string, any>>();
+    for (const claim of claimResults.flat()) {
+        if (reportClaimRelevantToResearchTags(claim as any, researchCode, [...tagIds])) {
+            relatedClaims.set(`${claim.report_id}:${claim.page}:${claim.claim}`, claim);
+        }
+    }
+    const context = buildResearchContext(instrument, values[0], values[1], values[2], new Date().toISOString(),
+        !isTaiwanInstrument(instrument) ? values[3] : null,
+        { tagIds: [...tagIds], relatedClaims: [...relatedClaims.values()] as any });
     target.textContent = JSON.stringify({ ...context,
         unavailableEndpoints: paths.filter((_, i) => results[i].status === 'rejected') }, null, 2);
 }
-
 async function loadRowAnalysisBadge(target: HTMLElement, instrument: DashboardInstrument) {
     const code = marketUnderlyingCode(instrument) || analysisRecordCode(instrument);
     const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
@@ -1051,18 +1093,21 @@ async function loadReportViewpoints(code: string, analysis: string) {
     if (!response?.ok) return;
     const directPayload = await response.json() as { claims: Claim[] };
     let industryClaims: Claim[] = [];
-    let industrySegment: string | null = null;
+    let researchTagIds: string[] = [];
     if (researchResponse?.ok) {
         const saved = await researchResponse.json() as { analysis?: { content?: string } | null };
         const research = saved.analysis?.content ? parseResearchRecord(saved.analysis.content) : null;
-        industrySegment = research ? reportSegmentForText(`${research.name} ${research.summary}`) : null;
-        if (industrySegment) {
-            const byIndustry = await fetch(astroApiPath(`/api/market/reports/claims?segment=${encodeURIComponent(industrySegment)}`), { cache: 'no-store' }).catch(() => null);
-            if (byIndustry?.ok) industryClaims = ((await byIndustry.json()) as { claims: Claim[] }).claims ?? [];
+        researchTagIds = research ? researchTagIdsForText(`${research.name} ${research.summary}`) : [];
+        const segments = segmentsForResearchTags(researchTagIds);
+        const responses = await Promise.all(segments.map((segment) => fetch(
+            astroApiPath(`/api/market/reports/claims?segment=${encodeURIComponent(segment)}`), { cache: 'no-store' },
+        ).catch(() => null)));
+        for (const byIndustry of responses) {
+            if (byIndustry?.ok) industryClaims.push(...(((await byIndustry.json()) as { claims: Claim[] }).claims ?? []));
         }
     }
     const claims = new Map<string, Claim>();
-    for (const claim of [...(directPayload.claims ?? []), ...industryClaims.filter((item) => reportClaimRelevant(item, code, industrySegment))]) {
+    for (const claim of [...(directPayload.claims ?? []), ...industryClaims.filter((item) => reportClaimRelevantToResearchTags(item, code, researchTagIds))]) {
         claims.set(`${claim.report_id}:${claim.page}:${claim.claim}`, claim);
     }
     const lean = analysisRating(analysis);
@@ -2060,27 +2105,40 @@ function renderMarketReports(reports: MarketReport[]) {
     const filters = document.getElementById('market-report-filters');
     list.replaceChildren();
     filters?.replaceChildren();
+    reports = reports.filter(reportHasAnalyzableText);
     if (!reports.length) {
         const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = '目前沒有公開研究報告。'; list.append(empty); return;
     }
-    const categorized = reports.map((report) => ({ report, industry: reportIndustryCategory((report.claims ?? []).map((claim) => claim.segment)) }));
+    const categorized = reports.map((report) => ({ report, industry: reportIndustryForReport(report), tagId: reportTagIdForReport(report) }));
+    const allCategory = 'all';
+    let selectedCategory = allCategory;
+    const search = document.getElementById('market-report-search') as HTMLInputElement | null;
+    const applyFilters = () => {
+        const matches = new Set(filterMarketReports(reports, selectedCategory, search?.value ?? '').map((report) => report.id));
+        list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => {
+            card.hidden = !matches.has(card.dataset.reportId ?? '');
+        });
+    };
     if (filters) {
         const counts = new Map<string, number>();
-        for (const { industry } of categorized) counts.set(industry, (counts.get(industry) ?? 0) + 1);
-        const categories = ['全部', ...[...counts.keys()].sort((a, b) => a.localeCompare(b, 'zh-TW'))];
+        for (const { tagId } of categorized) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
+        const categories = [allCategory, ...[...counts.keys()].sort((a, b) => a.localeCompare(b, 'zh-TW'))];
         for (const category of categories) {
             const button = document.createElement('button'); button.type = 'button'; button.className = 'market-report-filter';
-            button.textContent = category === '全部' ? `${category} ${reports.length}` : `${category} ${counts.get(category)}`;
-            button.setAttribute('aria-pressed', String(category === '全部')); button.dataset.category = category;
+            const label = category === allCategory ? marketText('All reports', '全部') : researchTagLabel(category, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+            button.textContent = `${label} ${category === allCategory ? reports.length : counts.get(category)}`;
+            button.setAttribute('aria-pressed', String(category === allCategory)); button.dataset.category = category; button.dataset.tagId = category;
             button.addEventListener('click', () => {
+                selectedCategory = category;
                 filters.querySelectorAll<HTMLButtonElement>('.market-report-filter').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-                list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => { card.hidden = category !== '全部' && card.dataset.industry !== category; });
+                applyFilters();
             });
             filters.append(button);
         }
     }
-    for (const { report, industry } of categorized) {
-        const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry;
+    if (search) search.oninput = applyFilters;
+    for (const { report, industry, tagId } of categorized) {
+        const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry; card.dataset.tagId = tagId; card.dataset.reportId = report.id;
         const category = document.createElement('span'); category.className = 'market-report-industry'; category.textContent = industry; card.append(category);
         const title = document.createElement('h5'); title.textContent = report.title; card.append(title);
         const meta = document.createElement('p');
@@ -2140,8 +2198,9 @@ async function loadMarketReports() {
     const response = await fetch(astroApiPath('/api/market/reports'), { headers, cache: 'no-store' }).catch(() => null);
     if (!response?.ok) { status.textContent = '報告列表暫時無法載入。'; return; }
     const payload = await response.json() as ReportClaimsPayload;
-    renderMarketReports(payload.reports ?? []);
-    status.textContent = `${payload.reports?.length ?? 0} 份報告`;
+    const visibleReports = (payload.reports ?? []).filter(reportHasAnalyzableText);
+    renderMarketReports(visibleReports);
+    status.textContent = `${visibleReports.length} 份報告`;
 }
 
 async function downloadMarketReport(id: string) {

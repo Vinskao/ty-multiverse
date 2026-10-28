@@ -463,8 +463,18 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<label>SEC 申報網址（只收 sec.gov 的 EDGAR 頁面）<input name="url" type="url" maxlength="500" placeholder="https://www.sec.gov/Archives/edgar/data/…/….htm" required /></label>
 							<button type="submit">從網址加入</button><p id="market-report-web-status" role="status" aria-live="polite"></p>
 						</form>
-						<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
-						<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
+						<div class="market-report-browser">
+							<aside class="market-report-sidebar" aria-label="報告種類選取">
+								<h5>報告種類</h5>
+								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
+							</aside>
+							<div class="market-report-results">
+								<label class="market-report-search" for="market-report-search">搜尋報告
+									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
+								</label>
+								<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
+							</div>
+						</div>
 					</section>
 					</section>
 

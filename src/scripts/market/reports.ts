@@ -1,3 +1,5 @@
+import { researchSegmentForText, researchTagIdForSegments, researchTagIdsForSegments, researchTagIdsForText, researchTagLabel, segmentsForResearchTags, type ResearchTagId } from './researchTaxonomy';
+
 export type ReportStatus = 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed';
 export const MAX_REPORT_BYTES = 40 * 1024 * 1024;
 export type MarketReport = {
@@ -42,28 +44,50 @@ export function reportClaimTone(direction: 'tailwind' | 'neutral' | 'headwind', 
 }
 
 export function reportSegmentForText(text: string): string | null {
-  const value = text.toLowerCase();
-  const matches: Array<[string, RegExp]> = [
-    ['foundry', /foundry|wafer|晶圓代工|晶圓廠/], ['memory', /memory|dram|nand|記憶體/],
-    ['packaging', /packaging|封裝|測試/], ['abf', /\babf\b/], ['ccl_pcb', /ccl|pcb|銅箔基板|印刷電路板/],
-    ['thermal', /thermal|cooling|散熱|液冷/], ['optical', /optical|photonics|光通訊|光模組/],
-    ['odm', /\bodm\b|組裝/], ['csp', /\bcsp\b|cloud service|hyperscaler|雲端業者/],
-  ];
-  return matches.find(([, pattern]) => pattern.test(value))?.[0] ?? null;
+  return researchSegmentForText(text);
 }
 
-const REPORT_INDUSTRY_SEGMENTS: Array<[string, Set<string>]> = [
-  ['半導體', new Set(['foundry', 'memory', 'packaging', 'abf'])],
-  ['PCB 與電子材料', new Set(['ccl_pcb'])],
-  ['AI 伺服器與雲端', new Set(['odm', 'csp'])],
-  ['散熱', new Set(['thermal'])],
-  ['光通訊', new Set(['optical'])],
-];
+export function reportTagIdForReport(report: Pick<MarketReport, 'title' | 'claims'>): ResearchTagId {
+  const text = `${report.title} ${(report.claims ?? []).map(({ claim, segment }) => `${segment} ${claim}`).join(' ')}`;
+  if (researchTagIdsForText(text).includes('cpo')) return 'cpo';
+  const claimTags = researchTagIdsForSegments((report.claims ?? []).map(({ segment }) => segment));
+  return claimTags[0] ?? researchTagIdsForText(text)[0] ?? 'other';
+}
 
-/** Map extracted report claim segments to a broad, readable industry board. */
+/** Map extracted report claim segments to the labels shared with stock research groups. */
 export function reportIndustryCategory(segments: string[]): string {
-  const normalized = new Set(segments.map((segment) => segment.trim().toLowerCase()));
-  return REPORT_INDUSTRY_SEGMENTS.find(([, members]) => [...members].some((segment) => normalized.has(segment)))?.[0] ?? '其他產業';
+  return researchTagLabel(researchTagIdForSegments(segments), 'zh');
+}
+
+export function reportIndustryForReport(report: Pick<MarketReport, 'title' | 'claims'>): string {
+  return researchTagLabel(reportTagIdForReport(report), 'zh');
+}
+
+export function reportClaimRelevantToResearchTags(claim: { codes: string[]; segment: string }, code: string, tagIds: string[]): boolean {
+  return claim.codes.includes(code.toUpperCase())
+    || (claim.codes.length === 0 && segmentsForResearchTags(tagIds).includes(claim.segment));
+}
+/** Failed, textless imports do not help readers evaluate a report. */
+export function reportHasAnalyzableText(report: Pick<MarketReport, 'status' | 'failure_reason' | 'claims' | 'source_url' | 'claim_count'>): boolean {
+  if (report.status === 'ready' && reportIsChannelPost(report) && report.claim_count === 0 && !(report.claims?.length)) return false;
+  const noText = /no\s+(?:readable\s+)?text|no\s+transcript|without\s+transcript|文字層|沒有文字|無文字|無逐字稿|無字幕|無法擷取文字/i
+    .test(report.failure_reason ?? '');
+  return !(report.status === 'failed' && noText && !(report.claims?.length));
+}
+
+/** Search the visible text of a report; every typed word must match somewhere. */
+export function reportSearchMatches(report: Pick<MarketReport, 'title' | 'publisher' | 'source_url' | 'claims'>, query: string): boolean {
+  const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  if (!terms.length) return true;
+  const content = [report.title, report.publisher, report.source_url ?? '', ...(report.claims ?? []).flatMap(({ claim, segment }) => [claim, segment])]
+    .join(' ').toLocaleLowerCase();
+  return terms.every((term) => content.includes(term));
+}
+
+export function filterMarketReports(reports: MarketReport[], categoryId: string, query: string): MarketReport[] {
+  return reports.filter((report) => reportHasAnalyzableText(report)
+    && (categoryId === 'all' || reportTagIdForReport(report) === categoryId)
+    && reportSearchMatches(report, query));
 }
 
 export function reportClaimRelevant(claim: { codes: string[]; segment: string }, code: string, segment: string | null): boolean {

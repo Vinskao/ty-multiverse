@@ -1,4 +1,5 @@
 import { analysisRecordCode, isTaiwanInstrument } from './instrumentIdentity';
+import { researchTagLabel, type ResearchTagId } from './researchTaxonomy';
 
 export function brokerAvailabilityLabel(availability: string | undefined, language: 'en' | 'zh'): string {
     const states: Record<string, [string, string]> = {
@@ -12,7 +13,8 @@ export function brokerAvailabilityLabel(availability: string | undefined, langua
 // Fetch time is kept distinct from reference/trading/publication dates.
 // Rebuild from current API results on every analysis opening, never from an old prompt.
 export function buildResearchContext(instrument: { code: string; market?: string | null; underlyingCode?: string },
-    brief: any, macro: any, events: any, checkedAt: string, overseas: any = null) {
+    brief: any, macro: any, events: any, checkedAt: string, overseas: any = null,
+    research: { tagIds?: ResearchTagId[]; relatedClaims?: Array<{ title: string; publisher: string; claim: string; segment?: string; published_at?: string | null }> } = {}) {
     const code = isTaiwanInstrument(instrument) ? instrument.underlyingCode || instrument.code : analysisRecordCode(instrument);
     return {
         checkedAt, analysisCode: code, market: instrument.market || 'TW',
@@ -22,6 +24,8 @@ export function buildResearchContext(instrument: { code: string; market?: string
             value: item.value, previousPeriod: item.previousPeriod, previousValue: item.previousValue,
             unit: item.unit, fetchedAt: item.fetchedAt, publishedAt: item.sourcePublishedAt ?? null })),
         events: events?.events || [],
-        instruction: 'Compare these reference periods, trading dates, published dates and revised values with the saved analysis cutoff. Fetch time is not publication time. Recheck company primary sources; explicitly state missing data.'
+        researchTags: (research.tagIds ?? []).map((id) => ({ id, label: researchTagLabel(id, 'zh') })),
+        relatedReportClaims: (research.relatedClaims ?? []).slice(0, 20),
+        instruction: 'Use researchTags as the shared industry labels from the stock Research tab and report boards. Compare relatedReportClaims with the saved analysis and cite report title, publisher and publication date. Compare reference periods, trading dates, published dates and revised values with the saved analysis cutoff. Fetch time is not publication time. Recheck company primary sources; explicitly state missing data.'
     };
 }
