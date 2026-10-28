@@ -15,7 +15,7 @@ export function publicOperations(spec: Spec, origin: string): ApiOperation[] {
     const url = `${origin}${base}${path}`;
     const curlPath = path.replace(/\{(\w+)\}/g, (_, name: string) => SAMPLES[name] ?? `<${name}>`);
     return [{
-      method: 'GET' as const, path, url, summary: String(op.summary ?? ''), group: String(op.tags?.[0] ?? 'other'),
+      method: 'GET' as const, path, url, summary: String(op.summary ?? ''), group: String(op['x-group'] ?? op.tags?.[0] ?? '其他'),
       params: (op.parameters ?? []).map((parameter: any) => ({ name: parameter.name, where: parameter.in === 'path' ? 'path' as const : 'query' as const,
         required: Boolean(parameter.required), description: String(parameter.description ?? '') })),
       curl: `curl '${origin}${base}${curlPath}'`,
@@ -23,15 +23,10 @@ export function publicOperations(spec: Spec, origin: string): ApiOperation[] {
   });
 }
 
-const GROUPS: Array<[string, string[]]> = [
-  ['行情與標的', ['dashboard', 'taiex-futures', 'mini-tsmc-futures']],
-  ['研究報告與主張', ['reports']],
-  ['AI 觀察名單', ['watch']],
-];
-
+/** Groups in the order the server first mentions them; the heading is whatever the route declared, so a new API (or a new group)
+ *  shows up without touching this page. */
 export function groupOperations(ops: ApiOperation[]): Array<[string, ApiOperation[]]> {
-  const known = new Set(GROUPS.flatMap(([, tags]) => tags));
-  const grouped = GROUPS.map(([title, tags]): [string, ApiOperation[]] => [title, ops.filter(op => tags.includes(op.group))]).filter(([, rows]) => rows.length);
-  const rest = ops.filter(op => !known.has(op.group));
-  return rest.length ? [...grouped, ['其他', rest]] : grouped;
+  const groups = new Map<string, ApiOperation[]>();
+  for (const op of ops) groups.set(op.group, [...(groups.get(op.group) ?? []), op]);
+  return [...groups];
 }

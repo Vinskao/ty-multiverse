@@ -53,6 +53,17 @@ export function emptyNotice(reason: Collected['empty'], lang: string): string {
   return en ? 'No notifications' : '目前沒有通知';
 }
 
+export const TELEGRAM_BOT_URL = 'https://t.me/MayaSawaBot';
+
+/** What the Telegram button says, and what the bot is for (shown as its tooltip). */
+export function telegramCopy(lang: string): { label: string; tip: string } {
+  return lang === 'en'
+    ? { label: 'Get notifications on Telegram',
+        tip: 'Maya Sawa notification bot: when a scheduled research run finishes, it posts the highlights to this chat — changed conclusions, broker target changes, and anything that needs you (for example the IB gateway login). It only sends; it never reads your messages.' }
+    : { label: '在 Telegram 收通知',
+        tip: 'Maya Sawa 通知機器人：排程研究跑完，會把重點傳到這個聊天室——結論改變、券商目標價調整、需要你處理的事（例如 IB 要重新登入）。它只負責發送，不會讀取你的訊息。' };
+}
+
 /** Taipei wall-clock "MM/DD HH:mm" so the time matches the Telegram message the owner saw. */
 export function taipeiStamp(iso: string): string {
   const date = new Date(new Date(iso).getTime() + 8 * 3600000);
@@ -172,6 +183,9 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   document.addEventListener('scroll', positionPanel, { signal, capture: true });
   const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(positionPanel) : null;
   observer?.observe(panel);
+  const telegram = telegramCopy(lang);
+  const label = root.querySelector('[data-telegram-label]'); if (label) label.textContent = telegram.label;
+  const tip = root.querySelector('[data-telegram-tip]'); if (tip) tip.textContent = telegram.tip;
   close(); render();
   return () => { abort.abort(); observer?.disconnect(); close(); list.replaceChildren(); badge.hidden = true; };
 }

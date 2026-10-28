@@ -7,6 +7,14 @@
     <header class="notification-header"><h2 id="notification-heading" data-heading>通知</h2><div class="notification-actions"><button type="button" data-read-all>全部已讀</button><button type="button" class="notification-close" data-close aria-label="關閉通知"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round" /></svg></button></div></header>
     <div class="notification-tabs" role="group" aria-label="篩選"><button type="button" data-tab="all" aria-pressed="true">全部</button><button type="button" data-tab="unread" aria-pressed="false">未讀</button></div>
     <div class="notification-content"><ul data-list></ul><div class="notification-empty" data-empty-state><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round" /></svg><p data-empty>目前沒有通知</p></div></div>
+    <footer class="notification-telegram">
+      <a class="notification-telegram-link" href="https://t.me/MayaSawaBot" target="_blank" rel="noopener noreferrer" aria-describedby="telegram-tip">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 3.5 18.2 20c-.25 1.18-.91 1.47-1.84.92l-5.08-3.74-2.45 2.36c-.27.27-.5.5-1.02.5l.36-5.17 9.41-8.5c.41-.36-.09-.56-.64-.2L5.31 13.5.29 11.93c-1.09-.34-1.11-1.09.23-1.62L20.16 2.7c.91-.34 1.71.22 1.34.8Z" /></svg>
+        <span data-telegram-label>在 Telegram 收通知</span>
+        <span class="notification-telegram-hint" aria-hidden="true">?</span>
+      </a>
+      <div id="telegram-tip" class="notification-telegram-tip" role="tooltip" data-telegram-tip>Maya Sawa 通知機器人：排程研究跑完，會把重點傳到這個聊天室——結論改變、券商目標價調整、需要你處理的事（例如 IB 要重新登入）。它只負責發送，不會讀取你的訊息。</div>
+    </footer>
   </section>
 </div>
 <script>
@@ -83,4 +91,10 @@
   .notification-panel :global(.n-body) { grid-column: 1 / -1; color: var(--gray-300); font-size: .85rem; line-height: 1.7; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .notification-panel :global(li.expanded .n-body) { display: block; overflow: visible; }
   p { font-size: .85rem; line-height: 1.6; color: var(--gray-400); }
+  .notification-telegram { position: relative; flex: 0 0 auto; border-top: 1px solid var(--gray-700); }
+  .notification-telegram-link { display: flex; align-items: center; gap: 8px; padding: 12px 20px; color: var(--gray-200); text-decoration: none; font-size: .82rem; }
+  .notification-telegram-link:hover, .notification-telegram-link:focus-visible { background: color-mix(in srgb, var(--accent-regular) 12%, transparent); color: var(--gray-0); }
+  .notification-telegram-hint { margin-left: auto; display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--gray-500); border-radius: 50%; color: var(--gray-400); font-size: .7rem; }
+  .notification-telegram-tip { display: none; position: absolute; left: 12px; right: 12px; bottom: calc(100% + 6px); padding: 10px 12px; border: 1px solid var(--gray-600); border-radius: 10px; background: var(--gray-999); color: var(--gray-200); box-shadow: 0 8px 24px #0004; font-size: .78rem; line-height: 1.6; pointer-events: none; z-index: 2; }
+  .notification-telegram-link:hover + .notification-telegram-tip, .notification-telegram-link:focus-visible + .notification-telegram-tip { display: block; }
 </style>
