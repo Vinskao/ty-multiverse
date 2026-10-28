@@ -1,0 +1,81 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="API｜TY 市場研究室"
+  description="TY 市場研究室的公開資料 API：行情、財報、AI 分析、券商目標價與研究報告，唯讀、不需登入。"
+  canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse/api-reference/"
+  lang="zh-Hant"
+>
+  <main class="wrapper stack gap-8 api-reference">
+    <header class="stack gap-2">
+      <h1 data-i18n="apiPage.title">公開資料 API</h1>
+      <p>市場資料與研究紀錄的唯讀端點：任何人都能呼叫，不需要登入。下面的清單直接讀自後端的規格（<code>/maya-sawa/public-openapi.json</code>），所以不會和實際有出入。</p>
+      <p class="api-note">寫入、持股與帳戶資料不開放。需要 SSO token 的端點無法在這裡直接呼叫，需要的話請聯繫網站擁有者（見<a href="/tymultiverse/#contact">首頁的聯絡方式</a>）。</p>
+    </header>
+    <p id="api-status" class="api-status" role="status" aria-live="polite">載入規格中…</p>
+    <div id="api-groups" class="stack gap-8"></div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { groupOperations, publicOperations } from "../scripts/api/publicSpec";
+
+  const status = document.getElementById("api-status");
+  const root = document.getElementById("api-groups");
+
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+
+  async function load() {
+    if (!status || !root) return;
+    try {
+      const response = await fetch("/maya-sawa/public-openapi.json", { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const operations = publicOperations(await response.json(), window.location.origin);
+      status.textContent = `共 ${operations.length} 個公開端點`;
+      for (const [title, rows] of groupOperations(operations)) {
+        const section = el("section", "api-group");
+        section.append(el("h2", undefined, title));
+        for (const op of rows) {
+          const card = el("article", "api-op");
+          const head = el("h3");
+          head.append(el("span", "api-method", op.method), el("code", "api-path", op.path));
+          card.append(head, el("p", "api-summary", op.summary));
+          if (op.params.length) {
+            const list = el("ul", "api-params");
+            for (const param of op.params) {
+              list.append(el("li", undefined, `${param.name}（${param.where === "path" ? "路徑" : "查詢"}${param.required ? "、必填" : ""}）${param.description ? `：${param.description}` : ""}`));
+            }
+            card.append(list);
+          }
+          card.append(el("pre", "api-curl", op.curl));
+          section.append(card);
+        }
+        root.append(section);
+      }
+    } catch {
+      if (status) status.textContent = "規格暫時無法載入，請稍後再試。";
+    }
+  }
+  void load();
+</script>
+
+<style is:global>
+  .api-reference code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .api-note { color: var(--gray-300); border-left: 3px solid var(--accent-regular); padding-left: 0.75rem; }
+  .api-status { color: var(--gray-400); }
+  .api-group h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+  .api-op { border: 1px solid var(--gray-800); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.75rem; }
+  .api-op h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0 0 0.35rem; font-size: 1rem; }
+  .api-method { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.1rem 0.5rem; border-radius: 999px; background: color-mix(in srgb, var(--accent-regular) 18%, transparent); color: var(--accent-regular); }
+  .api-path { word-break: break-all; }
+  .api-summary { margin: 0 0 0.5rem; color: var(--gray-200); }
+  .api-params { margin: 0 0 0.5rem; padding-left: 1.1rem; color: var(--gray-300); font-size: 0.88rem; }
+  .api-curl { margin: 0; padding: 0.55rem 0.75rem; border-radius: 8px; background: color-mix(in srgb, var(--gray-800) 40%, transparent); font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+</style>

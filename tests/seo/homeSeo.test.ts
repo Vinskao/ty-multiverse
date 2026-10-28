@@ -17,7 +17,8 @@ describe('homepage search and contact contract', () => {
 
     it('explains the product in server HTML and sends enquiries to email', () => {
         const home = source('src/pages/index.astro');
-        expect(home).toContain('從今天起，雇用一位頂級機構研究員｜TY 市場研究室');
+        // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
+        expect(home).toContain('title="TY 市場研究室"');
         expect(home).toContain('data-i18n="home.heroTitle">從今天起，雇用一位頂級機構研究員</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');

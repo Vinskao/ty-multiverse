@@ -57,6 +57,12 @@ const textLinks: {
       : "/tymultiverse/about/",
     isActive: currentPath.startsWith("/tymultiverse/about"),
   },
+  {
+    label: "API",
+    i18nKey: "nav.api",
+    href: "/tymultiverse/api-reference/",
+    isActive: currentPath.startsWith("/tymultiverse/api-reference"),
+  },
   ...(isLoggedIn
     ? [
         {
