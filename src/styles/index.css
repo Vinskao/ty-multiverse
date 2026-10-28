@@ -2047,3 +2047,23 @@
 /* 2026-10-27: the notes section heading sits on the left at every width. */
 .home-page .with-cta .section-header { justify-self:start; text-align:left; }
 .home-page .with-cta .section-header .section-title { text-align:left; margin:0; }
+.section-view-all {
+	display: inline-flex;
+	align-items: center;
+	gap: .5rem;
+	padding: .35rem 0;
+	border-bottom: 1px solid var(--gray-500);
+	background: transparent;
+	color: var(--gray-100);
+	font-size: 1rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color .18s ease, border-color .18s ease;
+}
+.section-view-all:hover,
+.section-view-all:focus-visible {
+	color: var(--accent-light);
+	border-color: var(--accent-light);
+}
+.section-view-all svg { transition: transform .18s ease; }
+.section-view-all:hover svg { transform: translateX(3px); }

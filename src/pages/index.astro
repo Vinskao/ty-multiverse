@@ -5,7 +5,6 @@ import { readBlog } from '../services/server/blog';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 // Component Imports
-import CallToAction from '../components/CallToAction.astro';
 import Grid from '../components/Grid.astro';
 import { Icon } from '../components/Icon';
 
@@ -495,10 +494,10 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				</div>
 
 				<div class="cta">
-					<CallToAction href="/tymultiverse/work/">
+					<a class="section-view-all" href="/tymultiverse/work/">
 						<span data-i18n="home.viewAll">View All</span>
 						<Icon icon="arrow-right" size="1.2em" />
-					</CallToAction>
+					</a>
 				</div>
 			</section>
 

@@ -87,6 +87,15 @@ it('left-aligns the notes section heading on every screen width (2026-10-27)', (
     expect(css).toMatch(/\.home-page \.with-cta \.section-header \.section-title\s*\{[^}]*text-align:\s*left[^}]*margin:\s*0/);
 });
 
+it('styles the notes section view-all action as a quiet text link instead of a filled button', () => {
+    const home = read('src/pages/index.astro');
+    const css = read('src/styles/index.css');
+    expect(home).toContain('class="section-view-all"');
+    expect(home).not.toContain('class="call-to-action btn is-primary"');
+    expect(css).toMatch(/\.section-view-all\s*\{[^}]*background:\s*transparent/);
+    expect(css).toMatch(/\.section-view-all:hover,[\s\S]*?\.section-view-all:focus-visible\s*\{[^}]*color:/);
+});
+
 it('lists IB-sourced holdings (Japan, Korea, US) in the holdings chip summary, with dashes where they have no chip data (2026-10-27)', () => {
     const brief = read('src/components/MarketBrief.astro');
     expect(brief).toContain('brief?.overseas');
