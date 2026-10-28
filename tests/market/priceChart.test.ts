@@ -64,3 +64,4 @@ it('lets the viewer hide the broker lines, remembers the choice, and never draws
   expect(document.querySelector('[data-broker-target]')).toBeNull();
   expect(document.querySelector('input[type="checkbox"]')).toBeNull();
 });
+

@@ -39,26 +39,6 @@ export function firmColors(actions: readonly TargetAction[], palette: readonly s
     return new Map(ranked.map(([firm], i) => [firm, palette[i]]));
 }
 
-export type TargetSeries = { dates: string[]; close: Array<number | null>; consensus: Array<TargetConsensus | null>;
-    dots: Array<{ date: string; firm: string; target: number; action: TargetAction }> };
-
-/** Dates with a close, a consensus snapshot or a broker target inside the window; the consensus holds until the next one. */
-export function targetSeries(actions: readonly TargetAction[], consensus: readonly TargetConsensus[], closes: readonly ClosePoint[],
-                             window: ChartWindow | null): TargetSeries {
-    const inside = (date: string) => !window || date >= window.start && date <= window.end;
-    const withTarget = actions.filter(row => row.target !== null && row.target > 0);
-    const dates = [...new Set([...closes.map(p => p.date), ...consensus.map(p => p.date), ...withTarget.map(p => p.date)])].filter(inside).sort();
-    const closeByDate = new Map(closes.map(p => [p.date, p.close]));
-    const snapshots = [...consensus].filter(row => row.mean !== null).sort((a, b) => a.date.localeCompare(b.date));
-    return {
-        dates,
-        close: dates.map(date => closeByDate.get(date) ?? null),
-        consensus: dates.map(date => snapshots.filter(row => row.date <= date).at(-1) ?? null),
-        dots: withTarget.filter(row => inside(row.date)).sort((a, b) => a.date.localeCompare(b.date) || a.firm.localeCompare(b.firm))
-            .map(row => ({ date: row.date, firm: row.firm, target: row.target!, action: row })),
-    };
-}
-
 /** Closes for the target chart: Taiwan history points (TWSE or TPEx daily price) or overseas daily bars. */
 export function historyCloses(points?: ReadonlyArray<{ date: string; sources: Record<string, Record<string, any>> }>,
                               daily?: ReadonlyArray<{ date: string; close?: number | null }>): ClosePoint[] {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { firmColors, historyCloses, latestTargets, targetSeries, type TargetAction } from '../../src/scripts/market/priceTargets';
-import { renderPriceTargetChart } from '../../src/scripts/market/priceTargetChart';
+import { firmColors, historyCloses, latestTargets, type TargetAction } from '../../src/scripts/market/priceTargets';
+import { renderTargetDetails } from '../../src/scripts/market/targetDetails';
 
 // LITE from Yahoo upgradeDowngradeHistory (dates are the brokers' New York dates).
 const action = (firm: string, date: string, target: number | null, previousTarget: number | null = null, rating = 'Buy', source = 'yahoo'): TargetAction => ({
@@ -28,38 +28,15 @@ it('gives the most active brokers their own colors and groups the rest', () => {
   expect(colors.get('Jefferies')).toBeUndefined();
 });
 
-it('keeps only the window and steps the consensus until the next snapshot', () => {
-  const closes = [{ date: '2026-10-01', close: 600 }, { date: '2026-10-05', close: 650 }, { date: '2026-10-21', close: 740 }, { date: '2026-10-23', close: 756.17 }];
-  const consensus = [{ date: '2026-10-02', mean: 1100, median: 1150, high: 1400, low: 700, analysts: 26, currency: 'USD', source: 'yahoo' },
-    { date: '2026-10-22', mean: 1165, median: 1200, high: 1500, low: 750, analysts: 27, currency: 'USD', source: 'yahoo' }];
-  const series = targetSeries(actions, consensus, closes, { start: '2026-10-02', end: '2026-10-23' });
-  expect(series.dates).toEqual(['2026-10-02', '2026-10-05', '2026-10-21', '2026-10-22', '2026-10-23']);
-  expect(series.close).toEqual([null, 650, 740, null, 756.17]);
-  expect(series.consensus.map(row => row?.mean ?? null)).toEqual([1100, 1100, 1100, 1165, 1165]);
-  expect(series.dots.map(dot => `${dot.date} ${dot.firm} ${dot.target}`)).toEqual(['2026-10-05 Rosenblatt 1300', '2026-10-05 Stifel 1232', '2026-10-21 Jefferies 1250']);
-});
-
 beforeEach(() => { document.body.innerHTML = '<div id="targets-test"></div>'; });
-it('draws broker dots and the consensus, reads out the day, and says when there is no per-broker data', () => {
-  const closes = [{ date: '2026-10-05', close: 650 }, { date: '2026-10-21', close: 740 }];
-  const consensus = [{ date: '2026-10-05', mean: 1100, median: 1150, high: 1400, low: 700, analysts: 26, currency: 'USD', source: 'yahoo' }];
-  renderPriceTargetChart('targets-test', { actions, consensus, closes, currency: 'USD', zh: true });
-  expect(document.querySelectorAll('[data-target-dot]').length).toBe(5); // one-year window: Morgan Stanley 2025-08 is outside
-  expect(document.querySelector('[data-consensus-mean]')).not.toBeNull();
-  const svg = document.querySelector('svg')!;
-  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
-  expect(document.querySelector('.market-chart-readout')!.textContent).toContain('2026-09-22');
-  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-  svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-  const readout = document.querySelector('.market-chart-readout')!.textContent!;
-  expect(readout).toContain('2026-10-05');
-  expect(readout).toContain('Stifel');
-  expect(readout).toContain('1,232');
+const closes = [{ date: '2026-10-05', close: 650 }, { date: '2026-10-21', close: 740 }];
+it('lists each broker with its change and upside, and says when there is no per-broker data', () => {
+  renderTargetDetails('targets-test', { actions, closes, currency: 'USD', zh: true });
   expect(document.querySelector('table')!.textContent).toContain('Jefferies');
-  renderPriceTargetChart('targets-test', { actions: [], consensus, closes, currency: 'TWD', zh: true });
+  expect(document.querySelectorAll('.market-target-row')).toHaveLength(5);
+  renderTargetDetails('targets-test', { actions: [], closes, currency: 'TWD', zh: true });
   expect(document.body.textContent).toContain('沒有個別券商');
-  renderPriceTargetChart('targets-test', { actions: [], consensus: [], closes: [], currency: 'TWD', zh: true });
-  expect(document.body.textContent).toContain('尚無目標價資料');
+  expect(document.querySelector('.market-target-views')).not.toBeNull();
 });
 
 it('reads closes from Taiwan history (TWSE or TPEx) and overseas daily bars, skipping missing closes', () => {
@@ -91,27 +68,21 @@ it('keeps dated views inside the chart window, newest first', () => {
   expect(viewsInWindow(views, null).map((v) => v.page)).toEqual([2, 4, 1]);
 });
 
-it('draws a views lane, and clicking a broker dot shows its reasoning and linked report claims', () => {
-  document.body.innerHTML = '<div id="targets-test"></div>';
+it('clicking a broker row shows its reasoning and linked report claims, and every view is listed below', () => {
   const linked = [...actions.filter((a) => a.firm !== 'Jefferies'), { ...action('Jefferies', '2026-10-21', 1250, 1200), reportId: REPORT, thesis: '800G orders visible into 1H27' }];
-  const closes = [{ date: '2026-10-05', close: 650 }, { date: '2026-10-21', close: 740 }];
-  renderPriceTargetChart('targets-test', { actions: linked, consensus: [], closes, currency: 'USD', zh: true, views: [view(3, '2026-10-21'), view(5, '2026-10-15', 'headwind')] });
-  expect(document.querySelectorAll('[data-target-view]')).toHaveLength(2);
-  expect(document.querySelector('[data-target-view="2026-10-15"]')!.getAttribute('class')).toContain('market-target-view--headwind');
-  const dot = document.querySelector('[data-target-dot="Jefferies"]')!;
-  dot.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  renderTargetDetails('targets-test', { actions: linked, closes, currency: 'USD', zh: true, views: [view(3, '2026-10-21'), view(5, '2026-10-15', 'headwind')] });
+  const row = [...document.querySelectorAll('.market-target-row')].find(tr => tr.textContent!.includes('Jefferies'))!;
+  row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   const detail = document.querySelector('.market-target-detail')!.textContent!;
   expect(detail).toContain('Jefferies');
   expect(detail).toContain('800G orders visible into 1H27');
   expect(detail).toContain('claim p3');
   expect(detail).toContain('Optical networking');
-  expect(document.querySelector('.market-target-views')!.textContent).toContain('claim p5'); // all views listed below the table
+  expect(document.querySelector('.market-target-views')!.textContent).toContain('claim p5');
 });
 
 it('says when a view is dated by the day it was recorded or by its data cut-off instead of a publication date', () => {
-  document.body.innerHTML = '<div id="targets-test"></div>';
-  const closes = [{ date: '2026-10-20', close: 100 }, { date: '2026-10-21', close: 101 }];
-  renderPriceTargetChart('targets-test', { actions: [], consensus: [], closes, currency: 'TWD', zh: true,
+  renderTargetDetails('targets-test', { actions: [], closes, currency: 'TWD', zh: true,
     views: [{ ...view(3, '2026-10-20'), dateKind: 'recorded' }, { ...view(5, '2026-10-21'), dateKind: 'data' }, view(7, '2026-10-21')] });
   const list = document.querySelector('.market-target-views')!.textContent!;
   expect(list).toContain('2026-10-20（入庫日）');
@@ -120,8 +91,7 @@ it('says when a view is dated by the day it was recorded or by its data cut-off 
 });
 
 it('links a view back to the post it came from, so the source is named and one click away', () => {
-  document.body.innerHTML = '<div id="targets-test"></div>';
-  renderPriceTargetChart('targets-test', { actions: [], consensus: [], closes: [{ date: '2026-10-20', close: 100 }], currency: 'USD', zh: true,
+  renderTargetDetails('targets-test', { actions: [], closes: [{ date: '2026-10-20', close: 100 }], currency: 'USD', zh: true,
     views: [{ ...view(1, '2026-10-20', 'tailwind', 'IEObserve 國際經濟觀察'), sourceUrl: 'https://t.me/ieobserve/2312' }] });
   const link = document.querySelector<HTMLAnchorElement>('.market-target-views a')!;
   expect(link.href).toBe('https://t.me/ieobserve/2312');
