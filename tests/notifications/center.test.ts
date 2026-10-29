@@ -149,3 +149,23 @@ describe('notification center', () => {
     cleanup();
   });
 });
+
+describe('clicking inside the open panel', () => {
+  // 2026-10-29: clicking a message without a link closed the whole panel. Marking it read re-rendered the list, so by the
+  // time the document "click outside" handler ran, the clicked button was detached and looked like it was outside.
+  it('keeps the panel open and expands the message after a re-render', () => {
+    document.body.innerHTML = `<div id="c"><button data-bell></button><span data-count></span><section data-panel hidden><button data-tab="all"></button><button data-tab="unread"></button><button data-read-all></button><ul data-list></ul><p data-empty></p></section></div><p id="outside"></p>`;
+    const root = document.querySelector<HTMLElement>('#c')!;
+    const cleanup = mountNotifications(root, 'owner', [{ id: 'routine:1', title: '台股收盤後', body: '更新 17 檔' }], 'zh');
+    root.querySelector<HTMLButtonElement>('[data-bell]')!.click();
+    const panel = root.querySelector<HTMLElement>('[data-panel]')!;
+    root.querySelector<HTMLButtonElement>('[data-list] button')!.click();
+    expect(panel.hidden).toBe(false);
+    expect(root.querySelector('[data-list] li')!.classList.contains('expanded')).toBe(true);
+    root.querySelector<HTMLButtonElement>('[data-tab="unread"]')!.click();
+    expect(panel.hidden).toBe(false);
+    document.querySelector<HTMLElement>('#outside')!.click();
+    expect(panel.hidden).toBe(true);
+    cleanup();
+  });
+});

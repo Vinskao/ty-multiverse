@@ -176,7 +176,8 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   closeButton?.addEventListener('click', () => { close(); bell.focus(); }, { signal });
   all.addEventListener('click', () => mark(notifications.map(item => item.id)), { signal });
   for (const tab of tabs) tab.addEventListener('click', () => { filter = tab.dataset.tab === 'unread' ? 'unread' : 'all'; render(); }, { signal });
-  document.addEventListener('click', e => { if (!root.contains(e.target as Node)) close(); }, { signal });
+  // composedPath is fixed at dispatch, so a click that re-renders the list (and detaches its target) still counts as inside.
+  document.addEventListener('click', e => { if (!e.composedPath().includes(root)) close(); }, { signal });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) { close(); bell.focus(); } }, { signal });
   window.addEventListener('resize', positionPanel, { signal });
   document.addEventListener('scroll', positionPanel, { signal, capture: true });
