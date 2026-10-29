@@ -500,3 +500,15 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 **VIX（`US_VIX`）**：CBOE 波動率指數日收盤，沿用既有 Yahoo 日收盤來源（`^VIX`），不佔 FRED 每日額度。一手來源是 CBOE 的 `VIX_History.csv`。
 
 測試：maya-sawa `tests/test_market_macro_margin.py`（真實 2026-10-28 回應，只刪用不到的欄位，列數完整）、`tests/test_market_macro_sources.py`；前端 `tests/market/macroLayout.test.ts`、`tests/market/macroGroups.test.ts`。
+
+### 23.1 放進「收斂：個股要盯的總經變數」（2026-10-29）
+
+邏輯鏈檢視（預設檢視）的收斂區新增第五個焦點 `focus-leverage`「融資維持率與 VIX → 台股籌碼」，同一張圖、左右兩軸。三條鏈接進來：`fin-stress`（金融條件收緊時 VIX 先跳）、`tw-m1b-m2`（活存資金與融資一起擴張）、`yen-carry`（日圓急升引發去槓桿）。指標網格的「市場風險情緒」卡片保留。
+
+**上線當天 VIX 是空的，原因是額度**：Yahoo 日收盤來源每天只預留 12 次。每次部署 pod 重啟都會先跑一次總經更新，而重啟後還原的黃金、日圓、美元指數仍被重抓。10/28 部署多次，額度在 VIX 上線前就用完（狀態 `yahoo_daily_budget_exhausted`），VIX 一次都沒抓到。修正：`_fetch_yahoo_markets` 跳過五小時內抓過的序列，全部都新鮮就不佔額度；新加的代碼（例如 VIX）不在快取裡，下一次更新就會抓。每 6 小時的排程仍會照常重抓。測試 `test_yahoo_markets_skips_series_restored_fresh_after_a_restart`。
+
+### 23.2 韓國記憶體報價（2026-10-29 查證）
+
+- DRAMeXchange（TrendForce）的 DRAM／NAND 現貨價要付費會員，沒有公開 API；網頁內容不能爬來用。
+- 免費且官方的替代：韓國關稅廳在 data.go.kr 的品目別進出口實績 API（依 HS 代碼，記憶體是 HS 8542.32，月資料）。需要使用者自行在 data.go.kr 申請服務金鑰，存成 Jenkins credential 後才能接。
+- 另一個不需金鑰的代理指標：SK hynix（`000660.KS`）、三星（`005930.KS`）、美光（`MU`）股價，可走既有 Yahoo 日收盤來源。

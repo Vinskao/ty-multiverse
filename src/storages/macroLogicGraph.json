@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-28",
+  "version": "2026-10-29",
   "about": "Top-down macro logic chains for Taiwan tech equities. Each row starts at a root chart and branches left to right; every branch ends in one of the focus nodes, the few macro variables a stock investor must watch. Node ids are the analysis codes (productType=macro-node). Change connections by editing edges; tests/market/macroChains.test.ts checks the graph.",
   "analysisFormat": {
     "zh": "固定三行。第一行：【判讀】順風／【判讀】中性／【判讀】逆風（對台股科技股）。第二行：一到兩句話，最多 120 字，寫最新數字（附期間）與它對下一個節點的影響；焦點節點改寫對個股的意義。第三行：資料截點：每個序列代碼與最新期間，例如「資料截點：CUUR0000SA0L1E 2026-09、TW_CPI 2026-09」，排程靠這行判斷資料有沒有更新。",
@@ -27,7 +27,9 @@
     { "id": "focus-risk", "title": { "zh": "風險溢酬與資金 → 評價波動", "en": "Risk premium and liquidity → valuation swings" }, "series": ["BAMLH0A0HYM2", "US_NET_LIQUIDITY"],
       "question": { "zh": "高收益債利差是市場要求的風險補償，Fed 淨流動性是可用資金；利差擴大加上流動性收縮，是估值下修最直接的訊號。", "en": "The high-yield spread is the risk premium the market demands and Fed net liquidity is the money available; wider spreads with shrinking liquidity are the most direct de-rating signal." } },
     { "id": "focus-fx", "title": { "zh": "匯率與外資 → 台股資金流", "en": "FX and foreign investors → Taiwan flows" }, "series": ["CBC_USD_TWD"],
-      "question": { "zh": "新台幣升值通常伴隨外資匯入、利於權值股；但出口商的新台幣營收與毛利率會被匯率吃掉一部分。", "en": "A stronger Taiwan dollar usually comes with foreign inflows that lift large caps, but it trims exporters' revenue and gross margin in Taiwan dollars." } }
+      "question": { "zh": "新台幣升值通常伴隨外資匯入、利於權值股；但出口商的新台幣營收與毛利率會被匯率吃掉一部分。", "en": "A stronger Taiwan dollar usually comes with foreign inflows that lift large caps, but it trims exporters' revenue and gross margin in Taiwan dollars." } },
+    { "id": "focus-leverage", "title": { "zh": "融資維持率與 VIX → 台股籌碼", "en": "Margin maintenance and VIX → Taiwan positioning" }, "series": ["TW_MARGIN_MAINTENANCE", "US_VIX"],
+      "question": { "zh": "融資維持率越低，散戶槓桿越接近追繳線（個人帳戶 130%），一跌就有斷頭賣壓；VIX 是美股選擇權定價的恐慌程度。VIX 急升同時維持率跌向 150%，常是台股被動殺盤的時候；維持率高、VIX 低則代表籌碼偏熱。", "en": "The lower the margin maintenance ratio, the closer retail leverage is to margin calls (130% per account), so a drop brings forced selling; VIX is the fear priced into U.S. options. A VIX spike while the ratio falls toward 150% often marks forced selling in Taiwan; a high ratio with a low VIX means crowded positioning." } }
   ],
   "nodes": [
     { "id": "core-inflation", "row": "inflation", "stage": 0, "title": { "zh": "核心通膨", "en": "Core inflation" },
@@ -139,6 +141,9 @@
     { "from": "tw-trade", "to": "focus-demand", "mechanism": { "zh": "出口年增就是電子業營收總量", "en": "Export growth is electronics revenue in aggregate" } },
     { "from": "dollar-index", "to": "focus-fx", "mechanism": { "zh": "美元強弱帶動新台幣與外資方向", "en": "The dollar steers the TWD and foreign flows" } },
     { "from": "yen-carry", "to": "focus-risk", "mechanism": { "zh": "日圓急升引發全球去槓桿", "en": "A yen spike forces global deleveraging" } },
-    { "from": "korea-trade", "to": "focus-demand", "mechanism": { "zh": "作為亞洲電子景氣的交叉驗證，不取代美國消費與台灣出口", "en": "Cross-checks the Asia electronics cycle; does not replace U.S. consumption or Taiwan exports" } }
+    { "from": "korea-trade", "to": "focus-demand", "mechanism": { "zh": "作為亞洲電子景氣的交叉驗證，不取代美國消費與台灣出口", "en": "Cross-checks the Asia electronics cycle; does not replace U.S. consumption or Taiwan exports" } },
+    { "from": "fin-stress", "to": "focus-leverage", "mechanism": { "zh": "金融條件收緊時 VIX 先跳，槓桿部位被迫減碼", "en": "Tightening conditions lift VIX first and force leveraged positions to shrink" } },
+    { "from": "tw-m1b-m2", "to": "focus-leverage", "mechanism": { "zh": "活存資金充沛時融資跟著擴張", "en": "Ample demand deposits come with growing margin loans" } },
+    { "from": "yen-carry", "to": "focus-leverage", "mechanism": { "zh": "日圓急升引發全球去槓桿，VIX 與追繳同時出現", "en": "A yen spike triggers global deleveraging: VIX jumps and margin calls follow" } }
   ]
 }

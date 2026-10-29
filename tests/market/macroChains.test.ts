@@ -28,6 +28,14 @@ describe('the macro logic graph (src/storages/macroLogicGraph.json)', () => {
         expect(g.edges).toContainEqual(expect.objectContaining({ from: 'korea-trade', to: 'focus-demand' }));
     });
 
+    it('draws Taiwan margin maintenance and VIX together in the convergence section', () => {
+        // 2026-10-29: the owner asked for the two on one chart under 「收斂：個股要盯的總經變數」, not only in the indicator grid.
+        const node = g.focus.find((item) => item.id === 'focus-leverage');
+        expect(node?.series).toEqual(['TW_MARGIN_MAINTENANCE', 'US_VIX']);
+        expect(node?.title.zh).toContain('融資維持率');
+        expect(node?.title.zh).toContain('VIX');
+    });
+
     it('never mixes monthly (YYYY-MM) and dated series in one chart, which would interleave periods out of order', () => {
         const series = (frequencies as any).series as Record<string, { lastPeriod: string }>;
         for (const node of [...g.nodes, ...g.focus]) {
@@ -65,7 +73,7 @@ describe('layout and analysis', () => {
         const inflation = layout.rows[0].columns.map((column) => column.map((node) => node.id));
         expect(inflation).toEqual([['core-inflation'], ['producer-prices'], ['oil'], ['fed-policy']]);
         expect(layout.rows[1].columns[1].map((node) => node.id)).toEqual(['curve-spread', 'real-yield', 'global-rates']);
-        expect(layout.focus.map((node) => node.id)).toEqual(['focus-discount', 'focus-demand', 'focus-risk', 'focus-fx']);
+        expect(layout.focus.map((node) => node.id)).toEqual(['focus-discount', 'focus-demand', 'focus-risk', 'focus-fx', 'focus-leverage']);
     });
 
     it('reads the stance from the first line of a node analysis', () => {
@@ -94,7 +102,7 @@ describe('renderMacroChains', () => {
             chart: (node) => { charted.push(node.id); const div = document.createElement('div'); div.className = 'stub-chart'; return div; } });
         expect(document.querySelectorAll('.macro-chain-head')).toHaveLength(6);
         expect(document.querySelector('.macro-chain-row[data-chain="korea"] .macro-node')?.id).toBe('macro-node-korea-trade');
-        expect(document.querySelectorAll('.macro-chain-focus .macro-node--focus')).toHaveLength(4);
+        expect(document.querySelectorAll('.macro-chain-focus .macro-node--focus')).toHaveLength(g.focus.length); // five since focus-leverage (2026-10-29)
         expect(charted).toHaveLength(g.nodes.length + g.focus.length);
         const core = document.getElementById('macro-node-core-inflation')!;
         expect(core.dataset.stance).toBe('headwind');
