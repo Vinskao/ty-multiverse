@@ -7,6 +7,11 @@ const group = (id: string) => MACRO_GROUP_SPECS.find((item) => item.id === id)!;
 const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 
 describe('MACRO_GROUP_SPECS', () => {
+    it('has a market risk card with the Taiwan margin maintenance ratio and VIX', () => {
+        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_MAINTENANCE', 'US_VIX']);
+        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['percent', 'raw']);
+    });
+
     it('includes Japan and Korea employment, inflation, rates, retail, FX and trade', () => {
         const codes = new Set(MACRO_GROUP_SPECS.flatMap((group) => group.metrics.map((metric) => metric.code)));
         for (const code of ['LRUNTTTTJPM156S', 'LRUNTTTTKRM156S', 'JP_CPI', 'KR_CPI', 'IRSTCI01KRM156N', 'DEXKOUS',

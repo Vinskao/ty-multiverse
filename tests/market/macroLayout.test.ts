@@ -52,6 +52,12 @@ describe('macro chart layout', () => {
             ['STLFSI4', 'NFCI']]);
     });
 
+    // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.
+    it('draws the Taiwan margin maintenance ratio and VIX in one chart with two y-axes', () => {
+        expect(MACRO_MERGED_CHARTS['market-risk']).toEqual([['TW_MARGIN_MAINTENANCE', 'US_VIX']]);
+        expect(macroChartNeedsSeparateAxes([{ format: 'percent', unit: 'percent' }, { format: 'raw', unit: 'index points' }])).toBe(true);
+    });
+
     it('never draws a series in two charts and keeps multi-line charts to the three-axis maximum when units differ', () => {
         const all = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         expect(new Set(all).size).toBe(all.length);
