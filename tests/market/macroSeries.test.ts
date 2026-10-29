@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore,
-    macroPeriodLabel, MACRO_REBASE_PERIOD,
+    macroPeriodLabel, MACRO_REBASE_PERIOD, macroCommonStart,
 } from '../../src/scripts/market/macroSeries';
 
 const monthly = (values: Array<[string, string]>) => values.map(([period, value]) => ({ period, value }));
@@ -200,5 +200,35 @@ describe('macroAxisRange for non-negative levels', () => {
         // Was -843.5 to 7873 for WALCL 7,029 and ON RRP 0.1.
         expect(macroAxisRange([0.1, 7029.4]).low).toBe(0);
         expect(macroAxisRange([-0.5, 1]).low).toBeLessThan(-0.5);
+    });
+});
+
+// 2026-10-29: the owner wants the Taiwan, Korean, Japanese, euro and U.S. currencies on one chart "to see where the money
+// goes". Quotes differ (TWD/JPY/KRW per dollar, dollars per euro, a dollar index), so each is shown as strength against
+// the dollar, 100 on a start date all series share: up always means that currency gained.
+describe('fx-strength', () => {
+    const twd = [{ period: '2025-10-28', value: '30.0' }, { period: '2026-10-28', value: '32.418' }];
+    it('inverts per-dollar quotes so a weaker Taiwan dollar reads below 100', () => {
+        const points = macroSeriesPoints(twd, 'fx-strength', 'CBC_USD_TWD', true);
+        expect(points[0].value).toBe(100);
+        expect(points[1].value).toBeCloseTo(30 / 32.418 * 100, 6);
+        expect(points[1].raw).toBe(32.418);
+    });
+
+    it('keeps dollars-per-euro and the dollar index the right way up', () => {
+        const eur = [{ period: '2025-10-28', value: '1.10' }, { period: '2026-10-28', value: '1.21' }];
+        expect(macroSeriesPoints(eur, 'fx-strength', 'EUR_USD', true)[1].value).toBeCloseTo(110, 6);
+        expect(macroSeriesPoints(eur, 'fx-strength', 'US_DOLLAR_INDEX', true)[1].value).toBeCloseTo(110, 6);
+    });
+
+    it('rebases every line on the latest common start, not each series on its own first day', () => {
+        const long = [{ period: '2023-10-30', value: '32.0' }, ...twd];
+        const short = [{ period: '2025-10-28', value: '150' }, { period: '2026-10-28', value: '160' }];
+        const start = macroCommonStart([long, short]);
+        expect(start).toBe('2025-10-28');
+        const points = macroSeriesPoints(long, 'fx-strength', 'CBC_USD_TWD', true, start);
+        expect(points.map((point) => point.period)).toEqual(['2025-10-28', '2026-10-28']);
+        expect(points[0].value).toBe(100);
+        expect(macroCommonStart([undefined, []])).toBeUndefined();
     });
 });

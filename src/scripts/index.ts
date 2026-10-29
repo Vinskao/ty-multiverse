@@ -7,7 +7,7 @@ import { serviceAvailabilityManager } from '../services/core/serviceAvailability
 import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 import { config } from '../services/core/config';
 import i18nData from '../storages/i18n.json';
-import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, macroPeriodLabel, type MacroSeriesTone, type MacroSeriesFormat } from './market/macroSeries';
+import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, macroCommonStart, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, macroPeriodLabel, type MacroSeriesTone, type MacroSeriesFormat } from './market/macroSeries';
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
@@ -1527,9 +1527,12 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
     const baseSeriesLabel = indicatorLabel;
     const raw = (indicator.history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
         .filter((item) => Number.isFinite(item.value));
-    const allPoints = macroSeriesPoints(indicator.history, format, indicator.code, true);
+    // Currency-strength lines all start at 100 on the latest first date they share (macroCommonStart).
+    const strengthStart = macroCommonStart([{ indicator, format }, ...comparisons].filter((item) => item.format === 'fx-strength').map((item) => item.indicator.history));
+    const startFor = (lineFormat: MacroMetricFormat) => lineFormat === 'fx-strength' ? strengthStart : undefined;
+    const allPoints = macroSeriesPoints(indicator.history, format, indicator.code, true, startFor(format));
     const allComparisonLines = comparisons.map((comparison) => ({ label: comparison.label, code: comparison.indicator.code,
-        values: macroSeriesPoints(comparison.indicator.history, comparison.format, comparison.indicator.code, true),
+        values: macroSeriesPoints(comparison.indicator.history, comparison.format, comparison.indicator.code, true, startFor(comparison.format)),
         format: comparison.format, unit: comparison.indicator.unit }));
     const allRetailYear = format === 'sales' ? raw.flatMap((item) => {
         const previous = raw.find((candidate) => candidate.period === shiftMacroPeriod(item.period, -12));
@@ -1555,6 +1558,7 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
         : format === 'claims' ? marketText('Initial claims (persons)', '初領失業救濟金人數')
         : format === 'yoy' ? marketText('Year-over-year (%)', '年增率 (%)')
         : format === 'rebased' ? marketText('Index (Jan 2020 = 100)', '指數 (2020-01 = 100)')
+        : format === 'fx-strength' ? marketText('Strength vs USD (start = 100)', '對美元強弱（起點 = 100）')
             : ['mom', 'sales'].includes(format) ? marketText(format === 'sales' ? 'Change (%)' : 'Month-over-month (%)', format === 'sales' ? '變動率 (%)' : '月增率 (%)')
                 : indicator.code === 'DGS10' ? marketText('Yield (%)', '殖利率 (%)')
                     : marketText('Rate (%)', '百分比');
@@ -1620,6 +1624,10 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
     readout.setAttribute('role', 'status');
     // A rebased money stock reads as its index plus the amount in its own currency (trillions).
     const describeMacroPoint = (point: { period: string; value: number; raw?: number }, pointFormat = format, pointUnit = displayUnit, code = indicator.code) => {
+        if (pointFormat === 'fx-strength') {
+            const index = formatNumber(point.value, 'decimal', { digits: 1, locale: marketLocale() });
+            return point.raw === undefined ? index : `${index} (${formatNumber(point.raw, 'decimal', { digits: point.raw < 10 ? 4 : 2, locale: marketLocale() })})`;
+        }
         if (pointFormat === 'rebased') {
             const stock = point.raw === undefined ? null : macroMoneyStock(code, point.raw);
             const index = formatNumber(point.value, 'decimal', { digits: 1, locale: marketLocale() });

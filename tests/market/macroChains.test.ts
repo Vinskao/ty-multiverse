@@ -28,6 +28,12 @@ describe('the macro logic graph (src/storages/macroLogicGraph.json)', () => {
         expect(g.edges).toContainEqual(expect.objectContaining({ from: 'korea-trade', to: 'focus-demand' }));
     });
 
+    it('compares the currencies and policy rates of five economies in the convergence section', () => {
+        // 2026-10-29: "利率匯率 我至少要台韓日美歐一起看 我才知道錢會往哪跑".
+        expect(g.focus.find((item) => item.id === 'focus-fx')?.series).toEqual(['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']);
+        expect(g.focus.find((item) => item.id === 'focus-rates')?.series).toEqual(['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']);
+    });
+
     it('draws margin balance, market turnover and VIX together in the convergence section', () => {
         // 2026-10-29: the owner asked for these on one chart under 「收斂：個股要盯的總經變數」, not only in the indicator grid.
         const node = g.focus.find((item) => item.id === 'focus-leverage');
@@ -74,7 +80,7 @@ describe('layout and analysis', () => {
         const inflation = layout.rows[0].columns.map((column) => column.map((node) => node.id));
         expect(inflation).toEqual([['core-inflation'], ['producer-prices'], ['oil'], ['fed-policy']]);
         expect(layout.rows[1].columns[1].map((node) => node.id)).toEqual(['curve-spread', 'real-yield', 'global-rates']);
-        expect(layout.focus.map((node) => node.id)).toEqual(['focus-discount', 'focus-demand', 'focus-risk', 'focus-fx', 'focus-leverage']);
+        expect(layout.focus.map((node) => node.id)).toEqual(['focus-discount', 'focus-demand', 'focus-risk', 'focus-fx', 'focus-rates', 'focus-leverage']);
     });
 
     it('reads the stance from the first line of a node analysis', () => {

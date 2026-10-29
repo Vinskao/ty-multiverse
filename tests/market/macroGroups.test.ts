@@ -4,6 +4,15 @@ import { MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 
 const group = (id: string) => MACRO_GROUP_SPECS.find((item) => item.id === id)!;
+
+describe('five-economy rates and currencies (2026-10-29)', () => {
+    it('shows currencies as strength against the dollar and policy rates as percent', () => {
+        for (const code of ['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX'])
+            expect(group('fx-trade').metrics.find((metric) => metric.code === code)?.format, code).toBe('fx-strength');
+        for (const code of ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR'])
+            expect(group('rates').metrics.find((metric) => metric.code === code)?.format, code).toBe('percent');
+    });
+});
 const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 
 describe('MACRO_GROUP_SPECS', () => {

@@ -577,3 +577,37 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - 2026 年實測：6～10 月超額價差一直是正的，約 +50 到 +290 點，表示期貨長期比合理值貴。10/28 的價差是 122 點，合理值 72.49 點，超額 49.51 點。
 
 測試：maya-sawa `tests/test_futures_roll.py`，共 11 個。fixture 是真實回應的裁剪版：`tests/fixtures/taifex/tx_2026-10-27_28.csv`，以及 `tests/fixtures/twse/` 裡的 `t187ap03_L`、`twt48u`、`twt49u`，另外在 `mi_index` 加上加權指數那一列。前端測試：`macroLayout.test.ts`（`macroAxisPlan`）、`macroGroups.test.ts`、`macroChains.test.ts`。
+
+### 23.7 台美日韓歐：利率與匯率一起看（2026-10-29）
+
+需求：「利率匯率我至少要台韓日美歐一起看，我才知道錢會往哪跑」。
+
+**政策利率（`POLICY_RATE_*`，日資料，百分比）**：
+
+- 美國、歐元區、日本、韓國取自 BIS WS_CBPOL（`https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/D.US+XM+JP+KR`）。
+  - 美國用目標區間中值。
+  - 歐元區用存款機制利率。
+  - BIS 約落後一週。
+- 台灣不在 BIS 資料裡，用央行重貼現率 `CBC_REDISCOUNT`。它只在調整日有資料，所以補到每個工作日（`carry_forward_weekdays`）。
+- 抓兩年，12 小時內抓過就跳過。
+- 實際資料：
+  - 日銀 2026-09-24 升到 1.25%。
+  - 韓銀 2026-08-27 升到 3.00%。
+  - Fed 2026-09-17 升到中值 3.875%。
+
+**匯率（格式 `fx-strength`）**：
+
+- 新台幣、日圓、韓元、歐元、美元指數畫在同一張圖，都換成「對美元強弱」，往上是該貨幣升值：
+  - 以每美元報價的（`CBC_USD_TWD`、`USD_JPY`、`DEXKOUS`）取倒數。
+  - 以美元報價的（`EUR_USD`，Yahoo `EURUSD=X`，新增）和美元指數直接用。
+- 所有線在共同的起點日都等於 100（`macroCommonStart`：各序列第一筆日期裡最晚的那天），所以不同貨幣的漲跌可以直接比。
+- 游標讀值會同時顯示原始報價。
+
+**放在哪裡**：
+
+- 收斂區：「台美日韓歐匯率 → 資金流向」（`focus-fx`，五條匯率）、新增「台美日韓歐政策利率 → 利差與資金」（`focus-rates`，由 Fed、全球利率、日圓套利三個節點連入）。
+- 指標網格：利率卡新增五國政策利率圖；匯率與進出口卡的匯率合成一張強弱圖。
+
+測試：
+- maya-sawa：`tests/test_market_macro_policy_rates.py`，用真實 BIS CSV 裁剪成 2026-06 起；`tests/test_market_macro_sources.py` 加上歐元。
+- 前端：`macroSeries.test.ts`（`fx-strength`、`macroCommonStart`）、`macroLayout.test.ts`、`macroGroups.test.ts`、`macroChains.test.ts`。

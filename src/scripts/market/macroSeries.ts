@@ -1,7 +1,10 @@
 // Pure macro-series math shared by the dashboard charts; covered by tests/market/macroSeries.test.ts.
 
 // 'rebased': a level indexed to 100 in MACRO_REBASE_PERIOD, so stocks in different currencies share one axis.
-export type MacroSeriesFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw' | 'rebased';
+// 'fx-strength': a currency's strength against the U.S. dollar, 100 on a start date shared by every line in the chart;
+// quotes per dollar (MACRO_FX_PER_USD) are inverted so up always means that currency gained.
+export type MacroSeriesFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw' | 'rebased' | 'fx-strength';
+export const MACRO_FX_PER_USD = new Set(['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS']);
 export type MacroHistoryRow = { period: string; value: string };
 export type MacroPoint = { period: string; value: number; raw?: number };
 
@@ -33,11 +36,17 @@ export function macroHistoryLimit(history: MacroHistoryRow[] | undefined, code?:
 
 // What a chart plots for a format: MoM/YoY percent, monthly job change (thousand-person levels × 1000), or the level.
 // Periods without a base observation, or with a zero base (an unpublished month stored as 0), are dropped.
-export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat, code?: string, fullHistory = false): MacroPoint[] {
+export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format: MacroSeriesFormat, code?: string, fullHistory = false,
+    startPeriod?: string): MacroPoint[] {
     const limit = fullHistory ? Infinity : macroHistoryLimit(history, code);
     const valid = (history || []).map((item) => ({ period: item.period, value: Number(item.value) }))
-        .filter((item) => item.period && Number.isFinite(item.value));
+        .filter((item) => item.period && Number.isFinite(item.value) && (!startPeriod || item.period >= startPeriod));
     const raw = Number.isFinite(limit) ? valid.slice(-limit) : valid;
+    if (format === 'fx-strength') {
+        const base = raw[0]?.value;
+        const inverted = MACRO_FX_PER_USD.has(code ?? '');
+        return base ? raw.map((item) => ({ period: item.period, value: inverted ? base / item.value * 100 : item.value / base * 100, raw: item.value })) : [];
+    }
     if (format === 'rebased') {
         const base = (raw.find((item) => item.period === MACRO_REBASE_PERIOD) || raw[0])?.value;
         return base ? raw.map((item) => ({ period: item.period, value: item.value / base * 100, raw: item.value })) : [];
@@ -51,6 +60,15 @@ export function macroSeriesPoints(history: MacroHistoryRow[] | undefined, format
         const value = format === 'jobs' ? (item.value - base) * 1000 : (item.value / base - 1) * 100;
         return Number.isFinite(value) ? [{ period: item.period, value }] : [];
     });
+}
+
+/** The latest first period among the histories, so lines rebased on it all start together; undefined without data. */
+export function macroCommonStart(histories: ReadonlyArray<MacroHistoryRow[] | undefined>): string | undefined {
+    const starts = histories.flatMap((history) => {
+        const first = (history || []).find((item) => item.period && Number.isFinite(Number(item.value)));
+        return first ? [first.period] : [];
+    });
+    return starts.length ? starts.sort().at(-1) : undefined;
 }
 
 // Chart specs may list alternatives as "a|b": the first code that has data wins, else the first code.

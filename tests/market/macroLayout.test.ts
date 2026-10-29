@@ -9,12 +9,15 @@ describe('macro chart layout', () => {
     it('shows exchange rates and Taiwan trade in the same card', () => {
         const card = MACRO_MERGED_CHARTS['fx-trade'];
         expect(card).toBeDefined();
-        expect(card[0]).toEqual(['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX']);
-        expect(card).toHaveLength(2);
-        expect(card[1]).toEqual(['DEXKOUS']);
+        // 2026-10-29: Taiwan, Japan, Korea, the euro and the dollar index on one strength-vs-dollar chart.
+        expect(card).toEqual([['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']]);
         expect(MACRO_GROWTH_CHARTS.trade.group).toBe('fx-trade');
         expect(MACRO_MERGED_CHARTS['taiwan-fx']).toBeUndefined();
         expect(MACRO_MERGED_CHARTS['taiwan-trade']).toBeUndefined();
+    });
+
+    it('compares the policy rates of Taiwan, the U.S., the euro area, Japan and Korea in one chart', () => {
+        expect(MACRO_MERGED_CHARTS.rates).toContainEqual(['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']);
     });
 
     it('compares the U.S. and Taiwan unemployment rates in one chart', () => {
@@ -35,7 +38,8 @@ describe('macro chart layout', () => {
     it('splits rates into policy, yield-curve, spread, real-yield and foreign-central-bank charts', () => {
         expect(MACRO_MERGED_CHARTS.rates).toEqual([
             ['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']]);
+            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'],
+            ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']]);   // five economies, 2026-10-29
     });
 
     it('splits the Fed balance sheet from its drains and keeps weekly and monthly balance sheets in separate charts', () => {

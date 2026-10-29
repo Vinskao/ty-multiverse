@@ -9,7 +9,9 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     // Daily series only share a chart with daily series: monthly (YYYY-MM) periods would interleave out of order
     // with dates, so Japan's monthly call rate and the BoJ balance sheet get their own charts.
     rates: [['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN']],
+        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'],
+        // Five-economy policy rates on one daily axis: rate gaps show where carry money is pulled (2026-10-29).
+        ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']],
     // Fed total assets with net liquidity, then the two drains (TGA, ON RRP) on their own scale: on one axis the
     // ~6,800B balance sheet flattened a 0-2,500B reverse repo. Money supply is the "money" growth chart.
     liquidity: [['WALCL', 'US_NET_LIQUIDITY'], ['WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
@@ -21,7 +23,8 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD', 'DCOILWTICO']],
     // Exchange rates and Taiwan trade sit in one card: this currency chart, plus the export/import growth chart
     // with its MoM/YoY toggle (macroGrowth.ts, chart "trade").
-    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX'], ['DEXKOUS']],
+    // Taiwan, Japan, Korea, the euro and the dollar index as strength against the dollar on one shared start (100).
+    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']],
     // All daily, one shared time axis, one y-axis per unit (macroAxisPlan): margin balance and trading value (NT$ 100m,
     // left), VIX (right), the TX roll spread above fair carry (TAIEX points, outer right), maintenance ratio (%, outer
     // left). The raw calendar spread is drawn alone: it shares its unit with the excess but a series is drawn only once.
@@ -31,7 +34,7 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
 // The unit a series is plotted in: growth formats are percent whatever the level's unit.
 function plottedUnit(series: { format: string; unit: string }) {
     if (['mom', 'yoy', 'sales'].includes(series.format) || series.unit === 'percent') return '%';
-    if (series.format === 'rebased') return 'index';
+    if (series.format === 'rebased' || series.format === 'fx-strength') return 'index';
     if (series.format === 'jobs') return 'persons per month';
     return series.unit;
 }
