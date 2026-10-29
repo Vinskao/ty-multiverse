@@ -23,10 +23,15 @@ describe('which notifications the bell collects', () => {
     expect(failing.items.map(item => item.id)).toEqual(['routine:7']);
   });
 
-  it('collects nothing, and calls nothing, without a token', async () => {
+  // 2026-10-29: the owner wants the routine updates readable without signing in (the backend keeps 'attention' owner-only).
+  it('reads the public routine updates without a token, sends no Authorization header, and skips the diary', async () => {
     const request = history();
-    expect(await collectNotifications({ token: null, username: 'alice', lang: 'zh', request: request as any, getDiary: async () => diary })).toEqual({ items: [], empty: 'signed-out' });
-    expect(request).not.toHaveBeenCalled();
+    const getDiary = vi.fn(async () => diary);
+    expect(await collectNotifications({ token: null, username: 'alice', lang: 'zh', request: request as any, getDiary }))
+      .toEqual({ items: [routineNotification(row)], empty: 'none' });
+    const init = (request.mock.calls[0] as unknown as [string, RequestInit])[1];
+    expect(new Headers(init.headers).has('Authorization')).toBe(false);
+    expect(getDiary).not.toHaveBeenCalled();
   });
 });
 
@@ -35,9 +40,10 @@ describe('why the bell is empty', () => {
   const reply = (status: number, body: unknown = {}) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
   const diary = async () => ({ pending: false });
 
-  it('names the reason: not signed in, not the owner, or the history is unreachable', async () => {
+  it('names the reason: not the owner, or the history is unreachable; signed out is no longer a reason to be empty', async () => {
     const ask = (request: any, token: string | null = 'tok') => collectNotifications({ token, username: '', lang: 'zh', request, getDiary: diary });
-    expect((await ask(reply(200), null)).empty).toBe('signed-out');
+    expect((await ask(reply(200, { notifications: [] }), null)).empty).toBe('none');
+    expect((await ask(reply(503), null)).empty).toBe('unavailable');
     expect((await ask(reply(403))).empty).toBe('forbidden');
     expect((await ask(reply(401))).empty).toBe('forbidden');
     expect((await ask(reply(503))).empty).toBe('unavailable');

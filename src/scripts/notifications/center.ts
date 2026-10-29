@@ -10,10 +10,10 @@ export function routineNotification(row: RoutineRow, _lang = 'zh'): SiteNotifica
 
 export type RoutineHistory = { items: SiteNotification[]; status: 'ok' | 'forbidden' | 'unavailable' };
 
-/** Owner-only: anyone else (or an unreachable backend) simply has no routine messages, and `status` says which. */
-export async function loadRoutineHistory(token: string, lang = 'zh', request: typeof fetch = fetch, base = ''): Promise<RoutineHistory> {
+/** Anyone reads the routine updates; the owner's token also brings the 'attention' rows. `status` says why the list is empty. */
+export async function loadRoutineHistory(token: string | null, lang = 'zh', request: typeof fetch = fetch, base = ''): Promise<RoutineHistory> {
   try {
-    const response = await request(`${base.replace(/\/$/, '')}/api/market/notifications?limit=100`, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } });
+    const response = await request(`${base.replace(/\/$/, '')}/api/market/notifications?limit=100`, { cache: 'no-store', headers: token ? { Authorization: `Bearer ${token}` } : {} });
     if (response.status === 401 || response.status === 403) return { items: [], status: 'forbidden' };
     if (!response.ok) return { items: [], status: 'unavailable' };
     const payload = await response.json() as { notifications?: RoutineRow[] };
@@ -28,15 +28,14 @@ export async function fetchRoutineNotifications(token: string, lang = 'zh', requ
 type DiaryCheck = { pending: boolean; triggeredAt?: string | null; nextDueAt?: string };
 export type Collected = { items: SiteNotification[]; empty: 'signed-out' | 'forbidden' | 'unavailable' | 'none' };
 
-/** Everything the bell lists, and why it is empty when it is. Routine messages (owner only, from the backend) need just the token;
- *  the diary reminder also needs a username. One failing source never hides the other. */
+/** Everything the bell lists, and why it is empty when it is. Routine updates need no sign-in (the owner's token adds the
+ *  'attention' rows); the diary reminder needs a token and a username. One failing source never hides the other. */
 export async function collectNotifications(options: { token: string | null; username: string; lang: string; request?: typeof fetch; base?: string;
                                                       getDiary: () => Promise<DiaryCheck> }): Promise<Collected> {
   const { token, username, lang } = options;
-  if (!token) return { items: [], empty: 'signed-out' };
   const history = loadRoutineHistory(token, lang, options.request ?? fetch, options.base ?? '');
   let diary: SiteNotification | null = null;
-  if (username) {
+  if (token && username) {
     try { diary = diaryNotification(await options.getDiary(), username, lang); } catch { /* the diary check may fail on its own */ }
   }
   const routine = await history;

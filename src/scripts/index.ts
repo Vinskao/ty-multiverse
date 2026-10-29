@@ -81,7 +81,6 @@ let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
 let marketCustomInstruments: DashboardInstrument[] = [];
-let marketCryptoInstruments: DashboardInstrument[] = [];
 
 function placeMarketDetail(row: HTMLElement | null, scroll = true) {
     const detail = document.getElementById('market-instrument-detail');
@@ -143,7 +142,6 @@ interface MarketDashboardPayload {
     fixed: DashboardInstrument;
     automatic: { snapshotAt: string | null; positions: DashboardInstrument[] };
     custom: DashboardInstrument[];
-    crypto?: DashboardInstrument[];  // Binance spot (USDT), public quotes persisted by maya-sawa
 }
 
 type MarketHistoryValues = Record<string, number>;
@@ -543,6 +541,12 @@ async function loadOverseasPanel(instrument: DashboardInstrument, selectedTab: s
     const status = document.getElementById(fundamentals ? 'market-fundamentals-status' : 'market-history-status');
     if (fundamentalsRetryTimer !== null) { window.clearTimeout(fundamentalsRetryTimer); fundamentalsRetryTimer = null; }
     const seq = ++fundamentalsRequestSeq;
+    // USDT is a holding but also the quote asset: there is no USDT/USDT market to chart.
+    if (instrument.market === 'CRYPTO' && instrument.code === 'USDT') {
+        document.getElementById('market-history-price-chart')?.replaceChildren();
+        if (status) status.textContent = marketText('USDT is the quote currency (about 1 US dollar), so it has no price chart.', 'USDT 是計價幣（約 1 美元），沒有行情圖。');
+        return;
+    }
     if (status) status.textContent = marketI18n('marketHistoryLoading', 'Loading history…');
     let payload: OverseasResearch & Record<string, any>;
     try { payload = await fetchOverseasResearch(instrument); }
@@ -1379,10 +1383,8 @@ async function fetchMarketDashboard() {
         const data = await response.json() as MarketDashboardPayload;
         marketAutoInstruments = data.automatic?.positions ?? [];
         marketCustomInstruments = data.custom ?? [];
-        marketCryptoInstruments = data.crypto ?? [];
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
-        renderDashboardRows('market-crypto-list', marketCryptoInstruments, marketText('No crypto quotes collected yet.', '尚未收集加密貨幣報價。'));
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
         await fetchMarketCompanyEvents();
@@ -1390,7 +1392,6 @@ async function fetchMarketDashboard() {
         console.error('Market dashboard unavailable:', error);
         renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
         renderDashboardRows('market-custom-list', [], 'Custom selections are temporarily unavailable.');
-        renderDashboardRows('market-crypto-list', [], marketText('Crypto quotes are temporarily unavailable.', '加密貨幣報價暫時無法讀取。'));
     }
 }
 

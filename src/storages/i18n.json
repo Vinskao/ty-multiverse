@@ -137,7 +137,6 @@
     "leetcodeTitle": { "en": "LeetCode Stats", "zh": "LeetCode 統計" },
     "marketOverviewTitle": { "en": "Market Overview", "zh": "市場總覽" },
     "marketAutomaticHoldings": { "en": "All holdings · largest positions first", "zh": "全部持倉 · 依部位由大到小" },
-    "marketCryptoQuotes": { "en": "Crypto · Binance spot (USDT)", "zh": "加密貨幣 · Binance 現貨（USDT）" },
     "marketOverviewNote": { "en": "Refreshed every 10 minutes", "zh": "每 10 分鐘更新一次" },
     "macroTitle": { "en": "Key macro data · U.S., Taiwan and more", "zh": "多國重要總體經濟資料" },
     "macroDescription": { "en": "Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.", "zh": "美國、台灣與主要經濟體的就業、通膨、利率、消費、匯率與貿易資料，並提醒即將公布的日程。" },
