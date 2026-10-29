@@ -215,10 +215,10 @@ const iconLinks: {
         }
       </div>
       <div class="nav-controls-footer">
-        <div id="langToggleBtn" class="lang-toggle-btn" role="group" aria-label="Language">
-          <button class="lang-toggle-option" type="button" data-lang-option="zh" aria-label="繁體中文">繁</button>
-          <button class="lang-toggle-option" type="button" data-lang-option="en" aria-label="English">EN</button>
-        </div>
+        <button id="langToggleBtn" class="lang-toggle-btn lang-switch" type="button" data-lang="zh" aria-label="Switch to English">
+          <span class="lang-toggle-option is-active" data-lang-option="zh" aria-hidden="true">繁</span>
+          <span class="lang-toggle-option" data-lang-option="en" aria-hidden="true">EN</span>
+        </button>
         <NotificationCenter />
       </div>
     </div>
@@ -228,6 +228,7 @@ const iconLinks: {
 
 <script>
   import i18nData from "../storages/i18n.json";
+  import { langToggleState } from "../scripts/lang/toggle";
 
   let _langCleanup: (() => void) | null = null;
 
@@ -270,30 +271,29 @@ const iconLinks: {
     };
 
     const updateBtn = (lang: string) => {
+      const state = langToggleState(lang);
       groups.forEach((group) => {
-        group.querySelectorAll<HTMLButtonElement>("[data-lang-option]").forEach((option) => {
-          const active = option.dataset.langOption === lang;
-          option.classList.toggle("is-active", active);
-          option.setAttribute("aria-pressed", String(active));
+        group.dataset.lang = state.lang;
+        group.setAttribute("aria-label", state.label);
+        group.querySelectorAll<HTMLElement>("[data-lang-option]").forEach((option) => {
+          option.classList.toggle("is-active", option.dataset.langOption === state.lang);
         });
       });
     };
 
     groups.forEach((group) => {
-      group.querySelectorAll<HTMLButtonElement>("[data-lang-option]").forEach((option) => {
-        if (option.dataset.langToggleBound === "true") return;
-        option.dataset.langToggleBound = "true";
-        option.addEventListener("click", () => {
-          const next = option.dataset.langOption === "zh" ? "zh" : "en";
-          const AppLang = (window as any).AppLang;
-          if (AppLang) {
-            AppLang.set(next);
-          } else {
-            localStorage.setItem("site_language", next);
-            updateBtn(next);
-            translatePage(next);
-          }
-        });
+      if (group.dataset.langToggleBound === "true") return;
+      group.dataset.langToggleBound = "true";
+      group.addEventListener("click", () => {
+        const next = langToggleState(group.dataset.lang).next;
+        const AppLang = (window as any).AppLang;
+        if (AppLang) {
+          AppLang.set(next);
+        } else {
+          localStorage.setItem("site_language", next);
+          updateBtn(next);
+          translatePage(next);
+        }
       });
     });
 

@@ -181,6 +181,38 @@ nav {
   background: #111114;
 }
 
+/* One button: the black pill slides under the active language instead of two separate buttons. */
+.lang-switch {
+  position: relative;
+  gap: 0;
+  cursor: pointer;
+}
+.lang-switch::before {
+  content: '';
+  position: absolute;
+  top: 0.18rem;
+  bottom: 0.18rem;
+  left: 0.18rem;
+  width: calc(50% - 0.18rem);
+  border-radius: 999px;
+  background: #111114;
+  transition: transform 0.22s ease;
+}
+.lang-switch[data-lang='en']::before { transform: translateX(100%); }
+.lang-switch .lang-toggle-option {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 1.9rem;
+  background: transparent;
+  transition: color 0.22s ease;
+}
+.lang-switch .lang-toggle-option.is-active { background: transparent; }
+.lang-switch:focus-visible { outline: 2px solid #111114; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .lang-switch::before, .lang-switch .lang-toggle-option { transition: none; }
+}
+
 .theme-toggle button {
   position: relative;
   display: flex;
