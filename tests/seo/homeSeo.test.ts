@@ -26,7 +26,7 @@ describe('homepage search and contact contract', () => {
         expect(home).toMatch(/class="home-product-contact" href=\{mailtoHref\('trial', 'zh'\)\} data-contact-topic="trial"/);
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
         expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@peoplesystem.tatdvsonorth.com'");
-        expect(home).toContain('預計按使用量計費');
+        expect(home).toContain('API 採用量計費');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"');
     });
@@ -48,7 +48,7 @@ describe('homepage search and contact contract', () => {
             'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody',
             'contactTitle'].flatMap(key => [json[key].zh, json[key].en]).join(' | ');
         const page = source('src/pages/index.astro');
-        for (const old of ['建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件']) {
+        for (const old of ['建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件', '你只要把報告加進來', '你唯一要做的事', '預計按使用量計費']) {
             expect(copy + page).not.toContain(old);
         }
         expect(json.heroTitle.zh).toContain('大數據工程師');
@@ -91,5 +91,27 @@ describe('page language defaults', () => {
         expect(window.AppLang.get()).toBe('zh');
         window.AppLang.set('en');
         expect(window.AppLang.get()).toBe('en');
+    });
+});
+
+// 2026-10-30: the site proactively brings the latest tickers and technology research; reports people contribute are an
+// optional, shared community supplement. Ads run on the homepage, so only the API is described as paid.
+describe('community narrative and pricing scope', () => {
+    it('frames user reports as a shared community supplement, and the API as the only paid part', () => {
+        const json = JSON.parse(source('src/storages/i18n.json')).home;
+        const page = source('src/pages/index.astro');
+        expect(json.productWorkflow.zh).toContain('最新');
+        expect(json.productWorkflow.zh).toContain('標的');
+        expect(json.productWorkflow.zh).toContain('社群報告');
+        expect(json.productDecideTitle.zh).toContain('一起貢獻');
+        expect(json.productDecideBody.zh).toContain('自己喜歡的報告');
+        expect(json.productDecideBody.zh).toContain('社群');
+        expect(json.productDecideBody.zh).not.toContain('唯一要做');
+        expect(json.productPricingTitle.zh).toBe('API 採用量計費');
+        expect(json.productPricingBody.zh).toContain('免費開放');
+        expect(json.productPricingBody.zh).toContain('廣告');
+        expect(json.productPricingBody.zh).toContain('價格與開放方式尚未公布');
+        expect(page).toContain('data-i18n="home.productPricingTitle">API 採用量計費</h2>');
+        expect(page).toContain('data-i18n="home.productWorkflow">網站主動提供最新標的與技術研究');
     });
 });

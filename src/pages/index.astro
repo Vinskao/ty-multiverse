@@ -46,7 +46,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 ---
 <BaseLayout
 	title="TY 市場研究室"
-	description="今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師。每天主動整理最新技術與可參考標的，連到標的背後的技術與供應鏈，並以總體經濟環境檢視個股風險；報告加進研究庫後，會整理成更好讀的研究圖像。作者曾在避險基金交易室研究，由你決定買進、減碼或等待。"
+	description="今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師。每天主動整理最新技術與可參考標的，連到標的背後的技術與供應鏈，並以總體經濟環境檢視個股風險；大家一起貢獻報告，研究圖像與推薦會更好。作者曾在避險基金交易室研究，由你決定買進、減碼或等待。"
 	canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"
 	lang="zh-Hant"
 >
@@ -95,15 +95,15 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 					</div>
 					<section class="home-product-intro" aria-labelledby="home-workflow-title">
-						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">你只要把報告加進來，研究庫負責整理成可讀的研究圖像</h2>
+						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">網站主動提供最新標的與技術研究，社群報告讓推薦更好</h2>
 						<div class="home-product-steps">
 							<article><h3 data-i18n="home.productCollectTitle">主動提供標的與技術</h3><p data-i18n="home.productCollectBody">持續更新可參考的標的，並連到它所屬的技術路線與供應鏈。同一處就能看到標的、背後的技術，以及它在產業裡的位置。</p></article>
 							<article><h3 data-i18n="home.productJudgeTitle">用總經環境看風險</h3><p data-i18n="home.productJudgeBody">把利率、通膨、就業與匯率等總經資料，對照這些個股目前的處境，看出壓力可能從哪裡來。</p></article>
-							<article><h3 data-i18n="home.productDecideTitle">把報告加進研究庫</h3><p data-i18n="home.productDecideBody">你唯一要做的事，是把報告放進來。每份報告會被整理成可檢查的觀點，定時彙整成更好讀的研究圖像；報告提到的標的，也會被對應並篩選出來。</p></article>
+							<article><h3 data-i18n="home.productDecideTitle">一起貢獻報告，共享更好的推薦</h3><p data-i18n="home.productDecideBody">你也可以放入自己喜歡的報告，作為補充。這是大家一起貢獻的社群資料庫：提供越多高品質的報告，整理出的研究圖像與推薦就越好，所有人一起受惠。報告提到的標的，也會被對應並篩選出來。</p></article>
 						</div>
 						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">需要自己設計研究方法或寫程式嗎？</summary><p data-i18n="home.productFaqBody">不需要。研究資訊由系統主動整理，每項都附來源與資料日期，你可以直接閱讀、核對，再自行判斷。想把自己的報告或資料接進來，請以 email 說明需求與目前的做法。</p></details>
 						<div class="home-product-pricing">
-							<div class="home-product-pricing-copy"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
+							<div class="home-product-pricing-copy"><h2 data-i18n="home.productPricingTitle">API 採用量計費</h2><p data-i18n="home.productPricingBody">首頁、總經與市場資料、研究圖持續免費開放，首頁會顯示廣告。API 依使用量計費，價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
 							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">
 								<section id="research-economics-panel" aria-labelledby="research-economics-title">
 									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value. Account values are never shown.</p></div></div>
