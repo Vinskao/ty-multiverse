@@ -524,3 +524,16 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 | DGBAS、DGBASPrices | 部署重啟後還原的月資料仍被重抓（與 Yahoo 同一個問題）。另外額度用 `LIKE 'DGBAS%'` 計算，DGBASPrices 的每次請求也算進 DGBAS。 | 12 小時內抓過就跳過、不佔額度；額度改成來源名稱完全相同才計入。 |
 
 測試：maya-sawa `tests/test_market_macro_free_sources_budget.py`（中經院頁面、世界銀行頁面與 xlsx 都是 2026-10-29 真實回應的裁剪版，放在 `tests/fixtures/macro/`），`tests/test_market_macro_budget.py::test_a_source_budget_counts_only_its_own_calls_not_names_that_start_with_it`。
+
+### 23.4 融資餘額、成交量與 VIX 合成一個指標（2026-10-29）
+
+收斂區的 `focus-leverage` 改成「融資餘額、成交量與 VIX → 台股籌碼」，三條線一張圖：左軸融資餘額、右軸成交量（都是億元），外側右軸 VIX。融資維持率移到「市場風險情緒」卡片裡自己一張圖。
+
+| 代碼 | 定義 | 來源與抓法 |
+|---|---|---|
+| `TW_MARGIN_BALANCE` | 上市融資金額「今日餘額」（仟元）× 1000 ÷ 1 億 | 與維持率同一份 `MI_MARGN`，不多打請求。回補時某天缺維持率或餘額任一個就要抓；只缺餘額時不再抓 `MI_INDEX`。 |
+| `TW_MARKET_TURNOVER` | 上市大盤成交金額（元）÷ 1 億，民國日期轉西元 | `FMTQIK`，一次回整個月的每日資料。每次更新都抓當月；以前的月份只有完全沒資料時才補，約 13 個月。五小時內抓過就跳過。額度名稱 `TWSETurnover`，每天 8 次。 |
+
+10/28 實際值：融資餘額 6,323.00 億、成交金額 7,503.41 億。
+
+測試：maya-sawa `tests/test_market_macro_margin.py`（新增 5 個，`tests/fixtures/twse/fmtqik_2026-10.json` 是 2026-10 的完整真實回應）；前端 `tests/market/macroGroups.test.ts`、`macroLayout.test.ts`、`macroChains.test.ts`。

@@ -53,7 +53,7 @@ describe('macro chart layout', () => {
     });
 
     // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.
-    it('draws the Taiwan margin maintenance ratio and VIX in one chart with two y-axes', () => {
+    it('draws margin balance, turnover and VIX in one chart and the maintenance ratio in its own', () => {
         // 2026-10-29: margin balance, market turnover and VIX read together as one indicator; the ratio keeps its own chart.
         expect(MACRO_MERGED_CHARTS['market-risk']).toEqual([['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX'], ['TW_MARGIN_MAINTENANCE']]);
         expect(macroChartNeedsSeparateAxes([{ format: 'percent', unit: 'percent' }, { format: 'raw', unit: 'index points' }])).toBe(true);
