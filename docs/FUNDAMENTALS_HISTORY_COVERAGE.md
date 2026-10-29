@@ -44,10 +44,17 @@ maya-sawa `services/mops_fundamentals.py` backfills five years for every listed 
 - **FinMind is off since 2026-10-29** (`FINMIND_ENABLED=1` turns it back on). Rows it already stored stay in the database until MOPS overwrites the same items.
 - Tests: maya-sawa `tests/test_mops_fundamentals.py`. Fixtures are real 2026 pages that keep every table and header and the rows of 2330, 1101, 2801, 2855 and 6488. A live run on 2026-10-29 wrote 866 OTC companies' September revenue and the 2026Q2 OTC statements.
 
-## Japan via EDINET (in progress)
+## Japan via EDINET (2026-10-29)
 
-The owner registered an EDINET API key on 2026-10-29. It belongs in Jenkins as Secret text `EDINET_API_KEY`, never in chat, the repo or logs. EDINET support will be built once the key is in Jenkins, so fixtures can be captured from real responses.
+maya-sawa `services/edinet_financials.py` adds five fiscal years per Japan holding at no cost:
 
+- Every annual securities report (有価証券報告書, docTypeCode 120) has a five-year table (主要な経営指標等の推移). EDINET API v2 `documents/{docID}?type=5` returns it as XBRL-to-CSV. The rows end in `SummaryOfBusinessResults` and carry contexts `CurrentYear…` to `Prior4Year…`.
+- Kept: revenue, net income attributable to owners, basic and diluted EPS, operating and investing cash flow, total assets, owners' equity, and cash. Element names cover IFRS, US GAAP and Japan GAAP. Consolidated figures win; parent-only rows (`_NonConsolidatedMember`) are used only when a company reports no consolidated figure.
+- EDINET lists filings only by day, so the collector walks back day by day, at most 400 days and one request a second, until every Japan holding's latest annual report is found. Later daily passes check the last three days.
+- Releases join TDnet and J-Quants in `rebuild_japan`. At an equal release time EDINET ranks lowest, but its newer report also carries restated figures for earlier years.
+- The key comes from Jenkins Secret text `EDINET_API_KEY` through the `edinet-credentials` Kubernetes secret. It is sent only as a request parameter. Failed requests log only the error type or HTTP status, and stored evidence links point to the public EDINET viewer, never the API.
+- Half-year reports (半期報告書) are not parsed yet; quarters still come from J-Quants Free and TDnet.
+- Tests: maya-sawa `tests/test_edinet_financials.py`. The fixtures are Advantest's real report S100YKTA (filed 2026-06-26, all 160 summary rows) and two records from that day's list, fetched inside the pod so the key never left it.
 ## What this change does not add
 
 The five-year window applies to the fundamentals already collected by the site. It does not add new datasets such as dividend history, analyst estimates, or market valuation series, and it does not cause an all-listed-stock Taiwan backfill.
