@@ -1,4 +1,5 @@
 import { palaisLinkDisplay } from './palais/modules';
+import { visibleNavItems } from './navigation/menu';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
 
@@ -584,7 +585,7 @@ export class NavController {
           // Keycloak SSO session 通常還活著，會靜默取得全新 token（不需重輸密碼）。
           // 登入頁不屬於受保護路徑，因此可直接導向，不必把失效頁留在畫面或瀏覽紀錄中。
           const path = window.location.pathname;
-          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work|learn)/.test(path);
+          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work)/.test(path);
           if (isProtectedPage) {
             const current = window.location.pathname + window.location.search;
             sessionStorage.setItem('tym_post_login_redirect', current);
@@ -616,9 +617,7 @@ export class NavController {
 
     const workLink = document.querySelector('a[href^="/tymultiverse/work"]') as HTMLAnchorElement;
     const aboutLink = document.querySelector('a[href^="/tymultiverse/about"]') as HTMLAnchorElement;
-    const controlLink = document.querySelector('a[href^="/tymultiverse/control"]') as HTMLElement;
     const learnLink = document.querySelector('a[href^="/tymultiverse/learn"]') as HTMLElement;
-    const wildlandLink = document.querySelector('a[href*="/tymultiverse/wildland"]') as HTMLAnchorElement;
     const palaisLink = document.querySelector('a[href*="/tymultiverse/palais"]') as HTMLAnchorElement;
 
     // 在登入頁面上始終顯示登入鏈接，不隱藏
@@ -650,57 +649,14 @@ export class NavController {
     }
 
     if (learnLink) {
-      learnLink.style.display = (this.isLoggedIn && this.hasUserAccess) ? 'block' : 'none';
+      const showLearn = visibleNavItems({ isLoggedIn: this.isLoggedIn, isAdmin: this.isAdmin }).includes('learn');
+      learnLink.style.display = showLearn ? 'block' : 'none';
       const parentLi = learnLink.closest('li');
       if (parentLi) parentLi.style.display = learnLink.style.display;
-      if (this.isLoggedIn && this.hasUserAccess) {
-        (learnLink as HTMLAnchorElement).href = `/tymultiverse/learn/?username=${this.username}`;
-      }
+      (learnLink as HTMLAnchorElement).href = this.isLoggedIn && this.username
+        ? `/tymultiverse/learn/?username=${encodeURIComponent(this.username)}`
+        : '/tymultiverse/learn/';
     }
-
-    // Control 需要用戶登入權限
-    if (controlLink) {
-      controlLink.style.display = (this.isLoggedIn && this.hasUserAccess) ? 'block' : 'none';
-      if (controlLink && this.isLoggedIn && this.hasUserAccess) {
-        (controlLink as HTMLAnchorElement).href = `/tymultiverse/control/?username=${this.username}`;
-      }
-    }
-
-    // Wildland 需要管理員權限
-    // 查找所有可能的 Wildland 鏈接（包括 admin-only class 的）
-    const wildlandLinks = Array.from(document.querySelectorAll('a')).filter(link => {
-      const href = link.getAttribute('href') || '';
-      const text = link.textContent?.trim() || '';
-      return href.includes('/tymultiverse/wildland') || text === 'Wildland';
-    }) as HTMLAnchorElement[];
-
-    wildlandLinks.forEach(wildlandLink => {
-      const shouldShowWildland = this.isLoggedIn && this.isAdmin;
-      wildlandLink.style.display = shouldShowWildland ? 'block' : 'none';
-
-      // 同時隱藏父元素（li）如果存在
-      const parentLi = wildlandLink.closest('li');
-      if (parentLi) {
-        (parentLi as HTMLElement).style.display = shouldShowWildland ? 'block' : 'none';
-      }
-
-      if (shouldShowWildland && this.token) {
-        try {
-          // 僅帶 username（非機密）；token/refresh_token 不再進 URL，由各頁從 localStorage 讀取
-          const originalHref = wildlandLink.getAttribute('href') || '/tymultiverse/wildland/';
-          const baseUrl = window.location.origin;
-          const url = new URL(originalHref, baseUrl);
-
-          url.searchParams.set('username', this.username || '');
-          url.searchParams.delete('token');
-          url.searchParams.delete('refresh_token');
-
-          wildlandLink.href = url.pathname + url.search;
-        } catch (e) {
-          console.warn('無法更新 Wildland 鏈接:', e);
-        }
-      }
-    });
 
     // Palais 需要管理員權限
     // 查找所有可能的 Palais 鏈接（包括 admin-only class 的）
@@ -711,7 +667,7 @@ export class NavController {
     }) as HTMLAnchorElement[];
 
     palaisLinks.forEach(palaisLink => {
-      const shouldShowPalais = this.isLoggedIn && this.isAdmin;
+      const shouldShowPalais = visibleNavItems({ isLoggedIn: this.isLoggedIn, isAdmin: this.isAdmin }).includes('palais');
       palaisLink.style.display = palaisLinkDisplay(shouldShowPalais, palaisLink.hasAttribute('data-palais-module'));
 
       // 同時隱藏父元素（li）如果存在

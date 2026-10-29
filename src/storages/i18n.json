@@ -76,6 +76,12 @@
     "wildland": { "en": "Wildland", "zh": "荒野" },
     "palais": { "en": "Palais", "zh": "皇宮" }
   },
+  "palaisTools": {
+    "admin": { "en": "Administration", "zh": "管理後台" },
+    "clutches": { "en": "File tools", "zh": "檔案轉換" },
+    "fileSummary": { "en": "Local file tools", "zh": "本機檔案轉換" },
+    "fileHint": { "en": "Batch encode and restore image files", "zh": "批次轉換圖片與文字檔" }
+  },
   "apiPage": {
     "title": { "en": "Public data API", "zh": "公開資料 API" }
   },

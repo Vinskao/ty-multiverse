@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { palaisLinkDisplay, palaisModules } from '../../src/scripts/palais/modules';
+import { palaisLinkDisplay, palaisModules, palaisTools } from '../../src/scripts/palais/modules';
 import i18n from '../../src/storages/i18n.json';
 
 describe('palais module cards', () => {
@@ -41,5 +41,14 @@ describe('palais page placement', () => {
     expect(palais).not.toMatch(/<Galwall\b/);
     expect(levels).toMatch(/<Galwall\b/);
     expect(levels).toMatch(/galwall\.css\?url/);
+  });
+});
+
+describe('palais tools', () => {
+  it('includes the admin console and file converter, with monitoring and Jenkins removed', () => {
+    expect(palaisTools()).toEqual([
+      { key: 'admin', href: 'https://peoplesystem.tatdvsonorth.com/sso/admin/master/console/' },
+      { key: 'clutches', href: '#palais-file-tools' },
+    ]);
   });
 });

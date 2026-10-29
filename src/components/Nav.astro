@@ -63,27 +63,14 @@ const textLinks: {
     href: "/tymultiverse/api-reference/",
     isActive: currentPath.startsWith("/tymultiverse/api-reference"),
   },
+  {
+    label: "Learn",
+    i18nKey: "nav.learn",
+    href: isLoggedIn ? `/tymultiverse/learn/?username=${username}` : "/tymultiverse/learn/",
+    isActive: currentPath.startsWith("/tymultiverse/learn"),
+  },
   ...(isLoggedIn
     ? [
-        {
-          label: "Learn",
-          i18nKey: "nav.learn",
-          href: `/tymultiverse/learn/?username=${username}`,
-          isActive: currentPath.startsWith("/tymultiverse/learn"),
-        },
-        {
-          label: "Control",
-          i18nKey: "nav.control",
-          href: `/tymultiverse/control/?username=${username}`,
-          isActive: currentPath.startsWith("/tymultiverse/control"),
-        },
-        {
-          label: "Wildland",
-          i18nKey: "nav.wildland",
-          adminOnly: true,
-          href: `/tymultiverse/wildland/?username=${username}`,
-          isActive: currentPath.startsWith("/tymultiverse/wildland"),
-        },
         {
           label: "Palais",
           i18nKey: "nav.palais",

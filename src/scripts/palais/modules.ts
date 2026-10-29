@@ -1,7 +1,15 @@
 // Palais entry cards; covered by tests/palais/modules.test.ts. Text comes from i18n.json "palaisModules".
 export type PalaisModule = { key: string; href: string };
+export type PalaisTool = { key: 'admin' | 'clutches'; href: string };
 
 const KEYS = ['fight', 'group', 'dance', 'party', 'live', 'levels'];
+
+export function palaisTools(): PalaisTool[] {
+  return [
+    { key: 'admin', href: 'https://peoplesystem.tatdvsonorth.com/sso/admin/master/console/' },
+    { key: 'clutches', href: '#palais-file-tools' },
+  ];
+}
 
 export function palaisModules(username: string): PalaisModule[] {
   const query = new URLSearchParams({ username }).toString();

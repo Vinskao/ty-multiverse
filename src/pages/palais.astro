@@ -2,7 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import DiaryPanel from "../components/DiaryPanel.astro";
-import { palaisModules } from "../scripts/palais/modules";
+import Clutches from "../components/Clutches.html";
+import { palaisModules, palaisTools } from "../scripts/palais/modules";
 import i18n from "../storages/i18n.json";
 
 const moduleText = i18n.palaisModules as Record<string, { en: string; zh: string }>;
@@ -31,7 +32,21 @@ if (!isLoggedIn) {
   </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
-      <Hero title="Palais" tagline="Welcome to Lily Palais." align="start" />
+      <Hero title="皇宮" tagline="你的工作台：角色、社群與管理工具。" align="start" />
+
+      <nav class="palais-toolbar" aria-label="皇宮工具列">
+        {
+          palaisTools().map(({ key, href }) => key === 'admin' ? (
+            <a class="palais-tool-link" href={href} target="_blank" rel="noopener noreferrer">
+              <span class="palais-tool-kicker">01 · ADMIN</span><strong data-i18n="palaisTools.admin">管理後台</strong><span aria-hidden="true">↗</span>
+            </a>
+          ) : (
+              <a class="palais-tool-link" href={href} data-palais-open-tools>
+              <span class="palais-tool-kicker">02 · LOCAL</span><strong data-i18n="palaisTools.clutches">檔案轉換</strong><span aria-hidden="true">↓</span>
+            </a>
+          ))
+        }
+      </nav>
 
       <div class="gang-video-container" data-palais-media-zoom>
         {
@@ -67,6 +82,26 @@ if (!isLoggedIn) {
           ))
         }
       </div>
+
+      <details id="palais-file-tools" class="palais-file-tools">
+        <summary><span data-i18n="palaisTools.fileSummary">本機檔案轉換</span><span data-i18n="palaisTools.fileHint">批次轉換圖片與文字檔</span></summary>
+        <Clutches />
+      </details>
+
+      <script>
+        const bindPalaisToolLinks = () => {
+          document.querySelectorAll<HTMLAnchorElement>("[data-palais-open-tools]").forEach((link) => {
+            if (link.dataset.bound === "true") return;
+            link.dataset.bound = "true";
+            link.addEventListener("click", () => {
+              const tools = document.querySelector<HTMLDetailsElement>("#palais-file-tools");
+              if (tools) tools.open = true;
+            });
+          });
+        };
+        document.addEventListener("astro:page-load", bindPalaisToolLinks);
+        bindPalaisToolLinks();
+      </script>
 
       <DiaryPanel />
     </main>

@@ -1,10 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-const username = new URL(Astro.request.url).searchParams.get("username");
-if (!username) {
-  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
-}
 ---
 
 <BaseLayout title="Learn | TY Multiverse" description="TOEIC practice and learning history">
@@ -106,6 +102,8 @@ if (!username) {
 
 <script>
   import { GATEWAY_API_BASE } from "../common/constants/api";
+  import { ensureLearnGuestId } from "../scripts/learn/guestIdentity";
+  import { learningRequest } from "../scripts/learn/learnRequest";
 
   type Topic = {
     id: string; title: string; description: string; partCode?: string; recommendedMinutes?: number;
@@ -186,8 +184,11 @@ if (!username) {
   }
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${GATEWAY_API_BASE}${path}`, {
-      ...init, headers: { ...authHeaders(), ...(init.headers || {}) }
+    const token = localStorage.getItem("token");
+    const guestId = token ? "" : ensureLearnGuestId(localStorage);
+    const route = learningRequest(path, token, guestId);
+    const response = await fetch(`${GATEWAY_API_BASE}${route.path}`, {
+      ...init, headers: { ...authHeaders(), ...route.headers, ...(init.headers || {}) }
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload?.success) throw new Error(payload?.message || `HTTP ${response.status}`);
@@ -671,11 +672,6 @@ if (!username) {
       stopTimer();
       return;
     }
-    if (!localStorage.getItem("token")) {
-      window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
-      return;
-    }
-
     bindOnce(query("#learn-topics"), "bound", "click", event => {
       const button = (event.target as HTMLElement).closest<HTMLElement>("[data-topic-id]");
       if (button?.dataset.topicId) void openTopic(button.dataset.topicId);
@@ -712,7 +708,7 @@ if (!username) {
       await loadTopics();
       await loadHistory();
       // 導師帳號一進來就直接看到全班作答狀況，不必先挑主題。
-      profile = await request<Profile>("/learn/profile").catch(() => null);
+      profile = localStorage.getItem("token") ? await request<Profile>("/learn/profile").catch(() => null) : null;
       const mentorButton = query("#learn-mentor-open");
       if (mentorButton) mentorButton.hidden = !profile?.mentor;
       if (profile?.mentor) await loadMentor();

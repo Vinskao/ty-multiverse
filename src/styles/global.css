@@ -1,5 +1,8 @@
 /* Global variables */
 :root {
+  --surface-radius: 0.9rem;
+  --surface-radius-small: 0.55rem;
+  --layout-gap: clamp(1.25rem, 3vw, 2.5rem);
   /* Colors */
   --gray-0: #1d1d1f;
   --gray-50: #2c2c2e;
@@ -93,27 +96,22 @@
   --gray-900: #1c1c1e;
   --gray-999-basis: 0, 0%, 0%;
   --gray-999: #000000;
-  --accent-light: #1c0056;
-  --accent-regular: #1163a6;
-  --accent-dark: #a4a21b;
-  --accent-overlay: hsla(74, 67%, 47%, 0.33);
-  --accent-subtle-overlay: hsla(199, 81%, 36%, 0.33);
+  --accent-light: #eaff9a;
+  --accent-regular: #c7ff00;
+  --accent-dark: #d6ff42;
+  --accent-overlay: hsla(74, 100%, 50%, 0.2);
+  --accent-subtle-overlay: hsla(74, 100%, 50%, 0.12);
   --accent-text-over: var(--gray-0);
 
   --link-color: var(--accent-dark);
 
-  --gradient-stop-1: #1141c6;
+  --gradient-stop-1: #c7ff00;
   --gradient-subtle: linear-gradient(
     150deg,
     var(--gray-900) 19%,
     var(--gray-999) 81%
   );
-  --gradient-accent-orange: linear-gradient(
-    150deg,
-    #ca7879,
-    var(--accent-regular),
-    var(--accent-light)
-  );
+  --gradient-accent-orange: linear-gradient(150deg, #eaff9a, var(--accent-regular), #6f9200);
   --gradient-stroke: linear-gradient(180deg, var(--gray-600), var(--gray-800));
 
   --shadow-sm: 0px 6px 3px rgba(255, 255, 255, 0.01),
@@ -139,8 +137,13 @@ body {
   color: var(--gray-200);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  line-height: 1.5;
+  line-height: 1.55;
 }
+
+:root.theme-dark body { background: #080908; }
+:root.theme-dark a { text-underline-offset: .22em; }
+:root.theme-dark :is(button, input, select, textarea) { accent-color: var(--accent-regular); }
+:root.theme-dark :is(article, section[class*="card"], [class*="-panel"]) { border-radius: var(--surface-radius); }
 
 *,
 *::after,
@@ -391,10 +394,10 @@ h5 {
 }
 
 :root.theme-dark {
-  --btn-bg-default: #1f5bff;
-  --btn-br-default: #eef3fb;
-  --btn-bg-primary: #2196f3;
-  --btn-br-primary: #e8f4fd;
+  --btn-bg-default: #c7ff00;
+  --btn-br-default: #c7ff00;
+  --btn-bg-primary: #c7ff00;
+  --btn-br-primary: #eaff9a;
   --btn-bg-warning: #ff9800;
   --btn-br-warning: #fff3e0;
   --btn-bg-success: #43a047;
@@ -406,11 +409,11 @@ h5 {
 }
 
 :root.theme-dark .btn {
-  color: #ffffff;
+  color: #080908;
 }
 
 :root.theme-dark .btn:hover {
-  color: #0b1a33;
+  color: #080908;
 }
 
 @media (min-width: 50em) {

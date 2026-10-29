@@ -25,7 +25,7 @@ describe('homepage search and contact contract', () => {
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
         expect(home).toMatch(/class="home-product-contact" href=\{mailtoHref\('trial', 'zh'\)\} data-contact-topic="trial"/);
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
-        expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@gmail.com'");
+        expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@peoplesystem.tatdvsonorth.com'");
         expect(home).toContain('預計按使用量計費');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"');

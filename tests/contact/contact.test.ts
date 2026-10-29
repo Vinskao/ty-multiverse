@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL, CONTACT_TOPICS, composeLinks, contactTopic, mailText, mailtoHref } from '../../src/scripts/contact';
 
+describe('contact identity', () => {
+    it('uses the TY Multiverse domain mailbox everywhere', () => {
+        expect(CONTACT_EMAIL).toBe('tianyikao@peoplesystem.tatdvsonorth.com');
+    });
+});
+
 // A bare mailto does nothing on a computer without a mail app (reported 2026-10-26: "這些都不能點"),
 // so every topic also opens web mail compose pages and can be copied as text.
 describe('ways to send without a mail app', () => {
@@ -23,7 +29,7 @@ describe('ways to send without a mail app', () => {
         const text = mailText('feature', 'en');
         expect(text.split('\n').slice(0, 2)).toEqual([`To: ${CONTACT_EMAIL}`, 'Subject: [TY Market Lab] Feature request']);
         expect(text).toContain('The problem I want to solve:');
-        expect(mailText('feature', 'zh')).toContain('收件人：tianyikao@gmail.com\n主旨：[TY 市場研究室] 功能需求');
+        expect(mailText('feature', 'zh')).toContain('收件人：tianyikao@peoplesystem.tatdvsonorth.com\n主旨：[TY 市場研究室] 功能需求');
     });
 });
 
