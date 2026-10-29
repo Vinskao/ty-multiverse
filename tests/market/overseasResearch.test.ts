@@ -40,8 +40,8 @@ describe('secFundamentalsMetrics', () => {
     const metrics = secFundamentalsMetrics(financials);
     const quarter = (period: string) => metrics.quarterly.find((row) => row.period === period)!;
 
-    it('labels single quarters by calendar quarter end and keeps the latest eight', () => {
-        expect(metrics.quarterly).toHaveLength(8);
+    it('labels single quarters by calendar quarter end and keeps the latest five years', () => {
+        expect(metrics.quarterly).toHaveLength(12);
         expect(metrics.quarterly.at(-1)!.period).toBe('2026Q2');
     });
 
@@ -84,13 +84,29 @@ describe('secFundamentalsMetrics', () => {
     it('has no monthly revenue (SEC filers report quarterly)', () => {
         expect(metrics.monthly).toEqual([]);
     });
+
+    it('keeps five years of overseas quarterly, balance sheet and cash flow metrics', () => {
+        const quarterly = Array.from({ length: 24 }, (_, index) => {
+            const year = 2020 + Math.floor(index / 4), q = index % 4 + 1, month = String(q * 3).padStart(2, '0');
+            const end = `${year}-${month}-${new Date(Date.UTC(year, q * 3, 0)).getUTCDate()}`;
+            return { start: `${year}-${String((q - 1) * 3 + 1).padStart(2, '0')}-01`, end, durationDays: 90,
+                revenue: 100 + index, grossProfit: 50 + index, operatingIncome: 30 + index, netIncome: 20 + index, epsDiluted: 2 + index };
+        });
+        const balanceSheet = quarterly.map((row, index) => ({ end: row.end, assets: 1000 + index, liabilities: 500 + index, inventory: 100 + index }));
+        const cumulative = quarterly.map((row, index) => ({ ...row, operatingCashFlow: 80 + index, capitalExpenditure: -20 - index }));
+        const result = secFundamentalsMetrics({ quarterly, balanceSheet, cumulative });
+        expect(result.quarterly).toHaveLength(20);
+        expect(result.balance).toHaveLength(20);
+        expect(result.cashFlow).toHaveLength(20);
+        expect(result.quarterly[0].period).toBe('2021Q1');
+    });
 });
 
 describe('overseasFundamentalsPayload', () => {
     it('wraps US SEC metrics in the Taiwan fundamentals shape with an SEC source line', () => {
         const payload = overseasFundamentalsPayload(meta as any);
         expect(payload.code).toBe('META');
-        expect(payload.metrics.quarterly.length).toBe(8);
+        expect(payload.metrics.quarterly.length).toBe(12);
         expect(payload.source).toContain('SEC EDGAR');
         expect(payload.errors).toEqual([]);
     });

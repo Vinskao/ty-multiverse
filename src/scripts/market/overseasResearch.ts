@@ -29,6 +29,7 @@ export function overseasHistoryPoints(daily: Bar[] | undefined): HistoryPoint[] 
 }
 
 const DAY = 86_400_000;
+const FUNDAMENTAL_HISTORY_QUARTERS = 20;
 const daysBetween = (a: string, b: string) => (new Date(`${a}T00:00:00Z`).getTime() - new Date(`${b}T00:00:00Z`).getTime()) / DAY;
 // Filers close on fiscal week ends (e.g. 2026-03-28), so match periods within 20 days of the expected end.
 const findEnded = (rows: SecRow[], end: string, daysEarlier: number, extra: (row: SecRow) => boolean = () => true) =>
@@ -93,7 +94,8 @@ export function secFundamentalsMetrics(financials: SecFinancials | undefined) {
         return { period: quarterLabel(row.end), ocfYoY: growth(row.operatingCashFlow, yearAgo?.operatingCashFlow),
             cashConversion: null, cashConversionYoY: null, capexToOcf: capexShare(row), capexToOcfYoY: diff(capexShare(row), capexShare(yearAgo)) };
     });
-    return { monthly: [] as never[], quarterly: quarterly.slice(-8), balance: balance.slice(-8), cashFlow: cashFlow.slice(-8) };
+    return { monthly: [] as never[], quarterly: quarterly.slice(-FUNDAMENTAL_HISTORY_QUARTERS),
+        balance: balance.slice(-FUNDAMENTAL_HISTORY_QUARTERS), cashFlow: cashFlow.slice(-FUNDAMENTAL_HISTORY_QUARTERS) };
 }
 
 const FILINGS_GAP: Record<string, string> = {
