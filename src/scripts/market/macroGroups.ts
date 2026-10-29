@@ -92,7 +92,9 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('TW_MARGIN_BALANCE', 'Taiwan margin loan balance (TWSE listed, NT$ 100m)', '台股融資餘額（上市，億元）', 'raw'),
         m('TW_MARKET_TURNOVER', 'Taiwan market trading value (TWSE listed, NT$ 100m)', '台股成交量（上市成交金額，億元）', 'raw'),
         m('US_VIX', 'CBOE VIX (fear index)', '美國 VIX 恐慌指數', 'raw'),
+        m('TX_ROLL_EXCESS_SPREAD', 'TAIEX futures roll spread above fair carry (points)', '台指期轉倉超額價差（點，扣利率與股利）', 'raw'),
         m('TW_MARGIN_MAINTENANCE', 'Taiwan margin maintenance ratio (TWSE listed)', '台股融資維持率（上市大盤）', 'percent'),
+        m('TX_CALENDAR_SPREAD', 'TAIEX futures next minus near month (points)', '台指期次月減近月價差（點）', 'raw'),
     ] },
     { id: 'fx-trade', eventGroups: [], title: { en: 'Exchange rates and Taiwan trade', zh: '匯率與台灣進出口' }, metrics: [
         m('CBC_USD_TWD', 'Interbank USD/TWD close', '銀行間美元兌新台幣收盤', 'raw'),

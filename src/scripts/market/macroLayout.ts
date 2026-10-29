@@ -22,9 +22,10 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     // Exchange rates and Taiwan trade sit in one card: this currency chart, plus the export/import growth chart
     // with its MoM/YoY toggle (macroGrowth.ts, chart "trade").
     'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX'], ['DEXKOUS']],
-    // All daily. Margin balance (left axis), trading value (right) and VIX (outer right) read as one indicator;
-    // the maintenance ratio (percent) has its own chart.
-    'market-risk': [['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX'], ['TW_MARGIN_MAINTENANCE']],
+    // All daily, one shared time axis, one y-axis per unit (macroAxisPlan): margin balance and trading value (NT$ 100m,
+    // left), VIX (right), the TX roll spread above fair carry (TAIEX points, outer right), maintenance ratio (%, outer
+    // left). The raw calendar spread is drawn alone: it shares its unit with the excess but a series is drawn only once.
+    'market-risk': [['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE'], ['TX_CALENDAR_SPREAD']],
 };
 
 // The unit a series is plotted in: growth formats are percent whatever the level's unit.
@@ -37,6 +38,17 @@ function plottedUnit(series: { format: string; unit: string }) {
 
 // Series in different plotted units share the date axis but each gets its own colored y-axis (max three),
 // so no hand-kept list is needed when a chart is added.
+/** The y-axis of each series: one per distinct plotted unit in order of first appearance, at most four (0 left, 1 right,
+ *  2 outer right, 3 outer left). Same-unit series share an axis so their levels stay comparable. */
+export function macroAxisPlan(series: ReadonlyArray<{ format: string; unit: string }>): number[] {
+    const units: string[] = [];
+    return series.map((item) => {
+        const unit = plottedUnit(item);
+        if (!units.includes(unit)) units.push(unit);
+        return Math.min(units.indexOf(unit), 3);
+    });
+}
+
 export function macroChartNeedsSeparateAxes(series: ReadonlyArray<{ format: string; unit: string }>) {
     return new Set(series.map(plottedUnit)).size > 1;
 }

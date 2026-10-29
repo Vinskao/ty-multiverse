@@ -644,7 +644,7 @@ flowchart LR
 
 **細節文件：** maya-sawa `docs/MARKET_AGENT_KEY.md`。
 
-## 2026-10-29 期貨轉倉成本指數（設計筆記，尚未實作）
+## 2026-10-29 期貨轉倉成本指數（已實作超額價差版本，見 MACRO_ECONOMIC_DASHBOARD_PLAN.md 23.6）
 
 問題：能不能直接用「台指期次月 − 近月」當作「現在買期貨貴不貴」的指標？
 

@@ -537,3 +537,43 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 10/28 實際值：融資餘額 6,323.00 億、成交金額 7,503.41 億。
 
 測試：maya-sawa `tests/test_market_macro_margin.py`（新增 5 個，`tests/fixtures/twse/fmtqik_2026-10.json` 是 2026-10 的完整真實回應）；前端 `tests/market/macroGroups.test.ts`、`macroLayout.test.ts`、`macroChains.test.ts`。
+
+### 23.5 一張圖、多個 y 軸（2026-10-29）
+
+收斂區的 `focus-leverage` 和「市場風險情緒」卡片的主圖，現在把五條線畫在同一條時間軸上：融資餘額、成交量、VIX、台指期轉倉超額價差、融資維持率。y 軸按單位分配，同單位的線共用一個軸，單位不同才分開（`macroLayout.ts` 的 `macroAxisPlan`）：
+
+| 軸 | 位置 | 線 |
+|---|---|---|
+| 0 | 左 | 融資餘額、成交量（億元） |
+| 1 | 右 | VIX（點） |
+| 2 | 外側右 | 轉倉超額價差（台指點） |
+| 3 | 外側左 | 融資維持率（%） |
+
+最多四個軸；第五種以上的單位會和第四軸共用。原始次月減近月價差另畫一張圖，因為同一條序列只畫一次。
+
+**一整年的資料：**
+- 成交量（FMTQIK）與轉倉價差（TAIFEX）一次補 13 個月。
+- VIX 從 Yahoo 一次抓一年。
+- 融資餘額與維持率要逐日向 TWSE 抓，每次更新從 20 天改成 60 天，約一天補滿一年。
+
+### 23.6 台指期轉倉超額價差（`TX_ROLL_EXCESS_SPREAD`、`TX_CALENDAR_SPREAD`）
+
+公式與純函式在 maya-sawa `maya_sawa/services/futures_roll.py`，抓取在 `MarketMacroService._fetch_tx_roll_spread`：
+
+- 價差：次月結算價 − 近月結算價（期交所 futDataDown，TX，一般盤，只取月合約）。近月是到期日（第三個星期三）還沒過的第一個合約。
+- 合理價差：$F_{近月}\times r\times 天數/365 - D$。
+  - $r$ 用央行重貼現率 `CBC_REDISCOUNT`，取當天有效的值。
+  - 天數是兩個到期日的間隔。
+  - $D$ 是除息日落在（近月到期日，次月到期日］之間的現金股利點數：每股現金股利 × 已發行股數 ÷ 指數除數。
+- 除數：上市公司收盤價 × 已發行股數的總和 ÷ 加權指數，取最近交易日。2026-10-28 約 32.8 億，對應市值約 154 兆元。
+- 股利資料：
+  - 已除息的用 TWT49U，只取「息」。「權息」把股票股利和現金股利合成一個數字，無法拆開，所以不計入，會稍微低估 D。
+  - 未來的用 TWT48U 的「現金股利」欄。「待公告…」或 0 的不計入。
+  - ETF 不在已發行股數清單裡，自然排除；加權指數本來也不含 ETF。
+- 限制：
+  - 到期日遇假日順延沒有建模。
+  - 除數用單一參考日，期間的增資或新上市會造成小幅誤差。
+  - 次月成交量小，結算價是期交所依規則訂的，不一定是實際成交價。
+- 2026 年實測：6～10 月超額價差一直是正的，約 +50 到 +290 點，表示期貨長期比合理值貴。10/28 的價差是 122 點，合理值 72.49 點，超額 49.51 點。
+
+測試：maya-sawa `tests/test_futures_roll.py`，共 11 個。fixture 是真實回應的裁剪版：`tests/fixtures/taifex/tx_2026-10-27_28.csv`，以及 `tests/fixtures/twse/` 裡的 `t187ap03_L`、`twt48u`、`twt49u`，另外在 `mi_index` 加上加權指數那一列。前端測試：`macroLayout.test.ts`（`macroAxisPlan`）、`macroGroups.test.ts`、`macroChains.test.ts`。

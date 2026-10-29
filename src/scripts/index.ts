@@ -19,7 +19,7 @@ import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
-import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
+import { MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
 import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
@@ -1569,16 +1569,19 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
     }
     type ChartSeries = { tone: MacroSeriesTone; label: string; values: Array<{ period: string; value: number; raw?: number }>; format: MacroMetricFormat; unit: string; axis: number; code?: string };
     const separate = Boolean(options.separateAxes) && comparisonLines.length > 0;
+    // One y-axis per unit (macroAxisPlan): same-unit lines share a scale; up to four axes (left, right, outer right, outer left).
+    const axisPlan = separate ? macroAxisPlan([{ format, unit: indicator.unit }, ...comparisonLines.map((line) => ({ format: line.format, unit: line.unit }))]) : [];
     const series: ChartSeries[] = [
         { tone: 'base' as MacroSeriesTone, label: baseSeriesLabel, values: points, format, unit: displayUnit, axis: 0, code: indicator.code },
         ...comparisonLines.map((line, index) => ({ tone: `series-${index + 1}` as MacroSeriesTone, label: line.label, values: line.values,
-            format: line.format, unit: line.unit, axis: separate ? Math.min(index + 1, 2) : 0, code: line.code })),
+            format: line.format, unit: line.unit, axis: separate ? axisPlan[index + 1] : 0, code: line.code })),
         ...(retailYear.length ? [{ tone: 'series-3' as MacroSeriesTone, label: marketText('Year over year', '年增'), values: retailYear, format: 'yoy' as MacroMetricFormat, unit: '%', axis: 0 }] : []),
         ...(expected.length ? [{ tone: 'expected' as MacroSeriesTone, label: marketText('One-year consumer expectation', '消費者一年期預期'), values: expected, format, unit: displayUnit, axis: 0 }] : []),
         ...(consensus.length ? [{ tone: 'consensus' as MacroSeriesTone, label: marketText('CPI release consensus', 'CPI 公布共識預期'), values: consensus, format, unit: displayUnit, axis: 0 }] : []),
     ].filter((item) => item.values.length);
     const axisCount = Math.max(...series.map((item) => item.axis)) + 1;
-    const width = 340, height = 152, left = 48, right = 10 + (axisCount - 1) * 40, top = 8, bottom = 34;
+    const outerLeft = axisCount > 3;
+    const width = 340, height = 152, left = 48 + (outerLeft ? 40 : 0), right = 10 + Math.min(axisCount - 1, 2) * 40, top = 8, bottom = 34;
     const plotWidth = width - left - right, plotHeight = height - top - bottom;
     const ranges = Array.from({ length: axisCount }, (_, axis) => macroAxisRange(series.filter((item) => item.axis === axis).flatMap((item) => item.values.map((point) => point.value))));
     const { low, high } = ranges[0];
@@ -1603,10 +1606,11 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
         for (let axis = 1; axis < axisCount; axis++) {
             const owner = series.find((item) => item.axis === axis)!;
             const axisValue = ranges[axis].low + ((ranges[axis].high - ranges[axis].low) * tick) / 3;
-            add('text', { x: String(width - right + 4 + (axis - 1) * 40), y: String(tickY + 3), 'text-anchor': 'start', class: 'macro-trend-axis-label', style: `fill:${toneColor(owner.tone)}` }, tickText(axisValue, owner.format, owner.unit));
+            const onLeft = axis === 3;
+            add('text', { x: String(onLeft ? left - 46 : width - right + 4 + (axis - 1) * 40), y: String(tickY + 3), 'text-anchor': onLeft ? 'end' : 'start', class: 'macro-trend-axis-label', style: `fill:${toneColor(owner.tone)}` }, tickText(axisValue, owner.format, owner.unit));
         }
     }
-        add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title', ...(separate ? { style: `fill:${toneColor('base')}` } : {}) }, displayUnit);
+    if (!outerLeft) add('text', { x: '10', y: String(top + plotHeight / 2), transform: `rotate(-90 10 ${top + plotHeight / 2})`, 'text-anchor': 'middle', class: 'macro-trend-axis-title', ...(separate ? { style: `fill:${toneColor('base')}` } : {}) }, displayUnit);
     add('line', { x1: String(left), x2: String(width - right), y1: String(top + plotHeight), y2: String(top + plotHeight), class: 'macro-trend-axis' });
     const pathOn = (axis: number, values: Array<{period:string;value:number}>) => values.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.period).toFixed(1)} ${yOn(axis, point.value).toFixed(1)}`).join(' ');
     series.forEach((item) => add('path', { d: pathOn(item.axis, item.values), class: `macro-trend-line macro-trend-line--${item.tone}`, style: `--tone:${toneColor(item.tone)}` }));

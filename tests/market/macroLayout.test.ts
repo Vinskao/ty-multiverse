@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MACRO_MERGED_CHARTS, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
+import { MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 import i18n from '../../src/storages/i18n.json';
 
@@ -53,15 +53,30 @@ describe('macro chart layout', () => {
     });
 
     // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.
-    it('draws margin balance, turnover and VIX in one chart and the maintenance ratio in its own', () => {
-        // 2026-10-29: margin balance, market turnover and VIX read together as one indicator; the ratio keeps its own chart.
-        expect(MACRO_MERGED_CHARTS['market-risk']).toEqual([['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX'], ['TW_MARGIN_MAINTENANCE']]);
+    it('draws margin balance, turnover, VIX, the futures roll excess and the maintenance ratio on one shared time axis', () => {
+        // 2026-10-29: the owner wants all of these on one chart with several y-axes; the raw calendar spread is drawn alone.
+        expect(MACRO_MERGED_CHARTS['market-risk']).toEqual([
+            ['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE'], ['TX_CALENDAR_SPREAD']]);
         expect(macroChartNeedsSeparateAxes([{ format: 'percent', unit: 'percent' }, { format: 'raw', unit: 'index points' }])).toBe(true);
     });
 
     it('never draws a series in two charts and keeps multi-line charts to the three-axis maximum when units differ', () => {
         const all = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         expect(new Set(all).size).toBe(all.length);
+    });
+});
+
+describe('macroAxisPlan', () => {
+    it('gives each plotted unit its own y-axis so same-unit lines share one scale', () => {
+        // Margin balance and turnover are both NT$ 100 million; VIX, the roll excess (TAIEX points) and the ratio (%) differ.
+        expect(macroAxisPlan([{ format: 'raw', unit: 'TWD 100 million' }, { format: 'raw', unit: 'TWD 100 million' },
+            { format: 'raw', unit: 'index points' }, { format: 'raw', unit: 'TAIEX points' }, { format: 'percent', unit: 'percent' }]))
+            .toEqual([0, 0, 1, 2, 3]);
+    });
+
+    it('caps at four axes and keeps a single unit on one axis', () => {
+        expect(macroAxisPlan(['a', 'b', 'c', 'd', 'e'].map((unit) => ({ format: 'raw', unit })))).toEqual([0, 1, 2, 3, 3]);
+        expect(macroAxisPlan([{ format: 'percent', unit: 'percent' }, { format: 'yoy', unit: 'index' }])).toEqual([0, 0]);
     });
 });
 

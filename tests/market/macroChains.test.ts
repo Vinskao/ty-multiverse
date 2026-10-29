@@ -31,7 +31,7 @@ describe('the macro logic graph (src/storages/macroLogicGraph.json)', () => {
     it('draws margin balance, market turnover and VIX together in the convergence section', () => {
         // 2026-10-29: the owner asked for these on one chart under 「收斂：個股要盯的總經變數」, not only in the indicator grid.
         const node = g.focus.find((item) => item.id === 'focus-leverage');
-        expect(node?.series).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX']);
+        expect(node?.series).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE']);
         expect(node?.title.zh).toContain('融資餘額');
         expect(node?.title.zh).toContain('成交量');
         expect(node?.title.zh).toContain('VIX');
