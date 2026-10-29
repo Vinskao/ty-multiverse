@@ -19,7 +19,7 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
         expect(home).toContain('title="TY 市場研究室"');
-        expect(home).toContain('data-i18n="home.heroTitle">給基金經理人的研究員，也是資料處理員</h1>');
+        expect(home).toContain('data-i18n="home.heroTitle">今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
@@ -48,11 +48,11 @@ describe('homepage search and contact contract', () => {
             'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody',
             'contactTitle'].flatMap(key => [json[key].zh, json[key].en]).join(' | ');
         const page = source('src/pages/index.astro');
-        for (const old of ['一頓飯的錢', '頂級機構研究員', '建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件']) {
+        for (const old of ['建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件']) {
             expect(copy + page).not.toContain(old);
         }
-        expect(json.heroTitle.zh).toContain('基金經理人');
-        expect(json.heroTitle.en).toContain('fund manager');
+        expect(json.heroTitle.zh).toContain('大數據工程師');
+        expect(json.heroTitle.en).toContain('big-data engineer');
         expect(json.heroTagline.zh).toMatch(/標的/);
         expect(json.heroTagline.zh).toMatch(/技術/);
         expect(json.heroTagline.zh).toMatch(/總體經濟|總經/);
@@ -60,7 +60,7 @@ describe('homepage search and contact contract', () => {
         expect(json.productDecideBody.zh).toMatch(/研究圖像/);
         expect(json.productDecideBody.zh).toMatch(/標的/);
         expect(json.productFaqTitle.zh).toContain('研究方法');
-        expect(source('src/pages/index.astro')).toContain('description="給基金經理人的研究員，也是資料處理員');
+        expect(source('src/pages/index.astro')).toContain('description="今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師');
     });
 
     it('keeps the server-rendered Chinese identical to the i18n source, so the page does not flash different words on load', () => {

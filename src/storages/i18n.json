@@ -113,7 +113,7 @@
     "contactViaGmail": { "en": "Write in Gmail", "zh": "用 Gmail 寫信" },
     "contactViaOutlook": { "en": "Write in Outlook", "zh": "用 Outlook 寫信" },
     "contactCopyMail": { "en": "Copy the email", "zh": "複製信件內容" },
-    "heroTitle": { "en": "A researcher and data processor for fund managers", "zh": "給基金經理人的研究員，也是資料處理員" },
+    "heroTitle": { "en": "Hire a top-tier institutional researcher and a big-data engineer for the price of a meal—starting today", "zh": "今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師" },
     "heroTagline": { "en": "Every day it proactively prepares the research for you: the latest technology developments and tickers worth a look, the technology and supply chain behind each ticker, and where the risk in those stocks sits in today’s macro environment. I researched on a hedge fund trading desk, then spent years researching and trading independently; this hands that daily work to the system. You decide whether to buy, reduce, or wait.", "zh": "每天主動為你整理研究資訊：最新的技術動向與可參考的標的，標的背後的技術與供應鏈，以及這些個股在總體經濟環境下現在的風險。我曾在避險基金交易室做研究，之後多年以個人投資人的身分自行研究與交易，這裡就是把那套工作交給系統每天做。買進、減碼或等待，最後由你決定。" },
     "productBrand": { "en": "TY Market Lab · TY Multiverse", "zh": "TY 市場研究室 · TY Multiverse" },
     "productAudience": { "en": "For fund managers and professional investors who need the industry, technology and macro picture fast. The system collects and checks the data and attaches sources and dates; you read the conclusions, then bring position risk, leverage and cash into your decision.", "zh": "給需要快速掌握產業、技術與總經脈絡的基金經理人與專業投資人。資料由系統蒐集、核對並附上來源與日期，你直接閱讀結論，再把持倉集中度、槓桿和現金部位放進決策。" },
