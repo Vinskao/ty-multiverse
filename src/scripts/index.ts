@@ -2274,7 +2274,7 @@ function initMarketReports() {
             title: String(values.get('title') || '').trim(),
             publisher: String(values.get('publisher') || '').trim(),
             publishedAt: String(values.get('published_at') || '').trim(),
-            visibility: String(values.get('visibility') || 'public'),
+            visibility: String(values.get('visibility') || 'public') === 'owner' ? 'owner' : 'public',
         });
         const batch = ++uploadBatchSequence;
         status.textContent = `已開始傳送 ${plans.length} 份 PDF；擷取與主張狀態由後端管理。`;
