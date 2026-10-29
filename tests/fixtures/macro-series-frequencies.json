@@ -1,5 +1,5 @@
 {
- "source": "GET /maya-sawa/market/dashboard/macro 2026-10-27, trimmed to frequency/unit/last period; TW_MARGIN_MAINTENANCE from the same API 2026-10-29, US_VIX from Yahoo chart ^VIX 2026-10-29",
+ "source": "GET /maya-sawa/market/dashboard/macro 2026-10-27, trimmed to frequency/unit/last period; TW_MARGIN_MAINTENANCE from the same API 2026-10-29, US_VIX from Yahoo chart ^VIX 2026-10-29; TW_MARGIN_BALANCE and TW_MARKET_TURNOVER from TWSE MI_MARGN / FMTQIK 2026-10-29",
  "series": {
   "CES0000000001": {
    "frequency": "monthly",
@@ -329,6 +329,16 @@
   "US_VIX": {
    "frequency": "daily",
    "unit": "index points",
+   "lastPeriod": "2026-10-28"
+  },
+  "TW_MARGIN_BALANCE": {
+   "frequency": "daily",
+   "unit": "TWD 100 million",
+   "lastPeriod": "2026-10-28"
+  },
+  "TW_MARKET_TURNOVER": {
+   "frequency": "daily",
+   "unit": "TWD 100 million",
    "lastPeriod": "2026-10-28"
   }
  }

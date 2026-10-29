@@ -85,11 +85,14 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('WORLD_GOLD_USD', 'World gold monthly average', '國際黃金月均價', 'raw'),
         m('DCOILWTICO', 'WTI crude oil', 'WTI 原油', 'raw'),
     ] },
-    // Leverage and fear in one card: TWSE publishes no market-wide margin ratio, so maya-sawa computes it daily from
-    // MI_MARGN and MI_INDEX (collateral value / margin loans); VIX is the CBOE close.
+    // Leverage, activity and fear in one card: margin loan balance (MI_MARGN) and trading value (FMTQIK), both NT$ 100
+    // million, beside the CBOE VIX close. TWSE publishes no market-wide margin ratio, so maya-sawa computes it daily
+    // from MI_MARGN and MI_INDEX (collateral value / margin loans).
     { id: 'market-risk', eventGroups: [], title: { en: 'Market risk sentiment', zh: '市場風險情緒' }, metrics: [
-        m('TW_MARGIN_MAINTENANCE', 'Taiwan margin maintenance ratio (TWSE listed)', '台股融資維持率（上市大盤）', 'percent'),
+        m('TW_MARGIN_BALANCE', 'Taiwan margin loan balance (TWSE listed, NT$ 100m)', '台股融資餘額（上市，億元）', 'raw'),
+        m('TW_MARKET_TURNOVER', 'Taiwan market trading value (TWSE listed, NT$ 100m)', '台股成交量（上市成交金額，億元）', 'raw'),
         m('US_VIX', 'CBOE VIX (fear index)', '美國 VIX 恐慌指數', 'raw'),
+        m('TW_MARGIN_MAINTENANCE', 'Taiwan margin maintenance ratio (TWSE listed)', '台股融資維持率（上市大盤）', 'percent'),
     ] },
     { id: 'fx-trade', eventGroups: [], title: { en: 'Exchange rates and Taiwan trade', zh: '匯率與台灣進出口' }, metrics: [
         m('CBC_USD_TWD', 'Interbank USD/TWD close', '銀行間美元兌新台幣收盤', 'raw'),

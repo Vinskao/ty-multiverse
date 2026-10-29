@@ -22,8 +22,9 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     // Exchange rates and Taiwan trade sit in one card: this currency chart, plus the export/import growth chart
     // with its MoM/YoY toggle (macroGrowth.ts, chart "trade").
     'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'US_DOLLAR_INDEX'], ['DEXKOUS']],
-    // Both daily; percent and index points, so each gets its own y-axis (left: maintenance ratio, right: VIX).
-    'market-risk': [['TW_MARGIN_MAINTENANCE', 'US_VIX']],
+    // All daily. Margin balance (left axis), trading value (right) and VIX (outer right) read as one indicator;
+    // the maintenance ratio (percent) has its own chart.
+    'market-risk': [['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX'], ['TW_MARGIN_MAINTENANCE']],
 };
 
 // The unit a series is plotted in: growth formats are percent whatever the level's unit.

@@ -8,8 +8,8 @@ const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 
 describe('MACRO_GROUP_SPECS', () => {
     it('has a market risk card with the Taiwan margin maintenance ratio and VIX', () => {
-        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_MAINTENANCE', 'US_VIX']);
-        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['percent', 'raw']);
+        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TW_MARGIN_MAINTENANCE']);
+        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['raw', 'raw', 'raw', 'percent']);
     });
 
     it('includes Japan and Korea employment, inflation, rates, retail, FX and trade', () => {
