@@ -46,7 +46,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 ---
 <BaseLayout
 	title="TY 市場研究室"
-	description="曾在避險基金交易室研究，並有多年自行投資與交易經驗。把產業供需、獲利、估值與部位風險整理成每日研究流程：核對報告與資料，記錄判斷、理由與翻轉條件；由你決定買進、減碼或等待。"
+	description="給基金經理人的研究員，也是資料處理員。每天主動整理最新技術與可參考標的，連到標的背後的技術與供應鏈，並以總體經濟環境檢視個股風險；報告加進研究庫後，會整理成更好讀的研究圖像。作者曾在避險基金交易室研究，由你決定買進、減碼或等待。"
 	canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"
 	lang="zh-Hant"
 >
@@ -84,9 +84,9 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				<div class="hero-main">
 					<div class="hero-header">
 						<p class="home-product-brand" data-i18n="home.productBrand">TY 市場研究室 · TY Multiverse</p>
-						<h1 class="home-product-title" data-i18n="home.heroTitle">今天起，用一頓飯的錢，雇用一位頂級機構研究員</h1>
-						<p data-i18n="home.heroTagline">我曾在避險基金交易室做研究，之後多年以個人投資人的身分自行研究與交易。這裡把那套方法整理成每天可用的流程：讀報告、核對資料，寫下判斷、理由，以及哪些證據會讓自己改變看法。買進、減碼或等待，最後由你決定。</p>
-						<p class="home-product-audience" data-i18n="home.productAudience">給想建立有紀律研究流程、但沒有研究團隊的個人投資人。一起看產業供需、獲利與估值，也把持倉集中度、槓桿和現金部位放進決策。</p>
+						<h1 class="home-product-title" data-i18n="home.heroTitle">給基金經理人的研究員，也是資料處理員</h1>
+						<p data-i18n="home.heroTagline">每天主動為你整理研究資訊：最新的技術動向與可參考的標的，標的背後的技術與供應鏈，以及這些個股在總體經濟環境下現在的風險。我曾在避險基金交易室做研究，之後多年以個人投資人的身分自行研究與交易，這裡就是把那套工作交給系統每天做。買進、減碼或等待，最後由你決定。</p>
+						<p class="home-product-audience" data-i18n="home.productAudience">給需要快速掌握產業、技術與總經脈絡的基金經理人與專業投資人。資料由系統蒐集、核對並附上來源與日期，你直接閱讀結論，再把持倉集中度、槓桿和現金部位放進決策。</p>
 						<div class="home-product-actions">
 							<a class="home-product-contact" href={mailtoHref('trial', 'zh')} data-contact-topic="trial" data-i18n="home.productContact">寄信申請試用</a>
 							<a href="#market-overview" data-i18n="home.productExplore">先看市場資料與圖表</a>
@@ -94,13 +94,13 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 					</div>
 					<section class="home-product-intro" aria-labelledby="home-workflow-title">
-						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">從市場研究到決策，留下每一步的依據</h2>
+						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">你只要把報告加進來，研究庫負責整理成可讀的研究圖像</h2>
 						<div class="home-product-steps">
-							<article><h3 data-i18n="home.productCollectTitle">彙總資料與市場觀點</h3><p data-i18n="home.productCollectBody">集中閱讀總經指標、台股籌碼、財報與產業研究，對照來源與資料日期，理解他人判斷市場的理由。</p></article>
-							<article><h3 data-i18n="home.productJudgeTitle">加入自己的判斷</h3><p data-i18n="home.productJudgeBody">把觀察、理由與改變看法的條件整理成研究紀錄；資料更新時，回頭檢查自己的假設。</p></article>
-							<article><h3 data-i18n="home.productDecideTitle">用圖表比較，再做決策</h3><p data-i18n="home.productDecideBody">用趨勢圖、供應鏈圖與技術路線圖交叉比較訊號，逐步建立自己的量化研究與投資決策流程。</p></article>
+							<article><h3 data-i18n="home.productCollectTitle">主動提供標的與技術</h3><p data-i18n="home.productCollectBody">持續更新可參考的標的，並連到它所屬的技術路線與供應鏈。同一處就能看到標的、背後的技術，以及它在產業裡的位置。</p></article>
+							<article><h3 data-i18n="home.productJudgeTitle">用總經環境看風險</h3><p data-i18n="home.productJudgeBody">把利率、通膨、就業與匯率等總經資料，對照這些個股目前的處境，看出壓力可能從哪裡來。</p></article>
+							<article><h3 data-i18n="home.productDecideTitle">把報告加進研究庫</h3><p data-i18n="home.productDecideBody">你唯一要做的事，是把報告放進來。每份報告會被整理成可檢查的觀點，定時彙整成更好讀的研究圖像；報告提到的標的，也會被對應並篩選出來。</p></article>
 						</div>
-						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">不會寫程式，也能開始量化研究嗎？</summary><p data-i18n="home.productFaqBody">可以先從整理有來源的資料、記錄判斷條件，以及比較圖表開始。本頁展示市場資料與研究工具；如果想把自己的研究流程搬進來，請以 email 說明需求與目前的做法。</p></details>
+						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">需要自己設計研究方法或寫程式嗎？</summary><p data-i18n="home.productFaqBody">不需要。研究資訊由系統主動整理，每項都附來源與資料日期，你可以直接閱讀、核對，再自行判斷。想把自己的報告或資料接進來，請以 email 說明需求與目前的做法。</p></details>
 						<div class="home-product-pricing">
 							<div class="home-product-pricing-copy"><h2 data-i18n="home.productPricingTitle">預計按使用量計費</h2><p data-i18n="home.productPricingBody">希望讓不想負擔高額固定訂閱的人，也能依研究需求使用。價格與開放方式尚未公布；試用、資料整合與服務洽詢，一律以 email 聯繫。</p><a href="#contact" data-i18n="home.productPricingLink">選擇洽詢主題 ↓</a></div>
 							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">

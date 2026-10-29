@@ -19,7 +19,7 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
         expect(home).toContain('title="TY 市場研究室"');
-        expect(home).toContain('data-i18n="home.heroTitle">今天起，用一頓飯的錢，雇用一位頂級機構研究員</h1>');
+        expect(home).toContain('data-i18n="home.heroTitle">給基金經理人的研究員，也是資料處理員</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
@@ -35,10 +35,41 @@ describe('homepage search and contact contract', () => {
         const home = JSON.parse(source('src/storages/i18n.json')).home;
         expect(home.heroTagline.zh).toContain('曾在避險基金交易室做研究');
         expect(home.heroTagline.zh).toContain('之後多年以個人投資人的身分自行研究與交易');
-        expect(home.heroTagline.zh).toContain('哪些證據會讓自己改變看法');
         expect(home.productAudience.zh).toContain('持倉集中度');
         expect(home.heroTagline.en).toContain('then spent years researching and trading independently');
         expect(home.productAudience.en).toContain('position risk');
+    });
+
+    // 2026-10-29: the product is not a toolkit for building your own research method. It pushes research to the reader
+    // (tickers, the technology behind them, the macro backdrop) and the reader's one job is adding reports to the library.
+    it('sells an active researcher and data processor for fund managers, not a DIY research method', () => {
+        const json = JSON.parse(source('src/storages/i18n.json')).home;
+        const copy = ['heroTitle', 'heroTagline', 'productAudience', 'productWorkflow', 'productCollectTitle', 'productCollectBody',
+            'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody',
+            'contactTitle'].flatMap(key => [json[key].zh, json[key].en]).join(' | ');
+        const page = source('src/pages/index.astro');
+        for (const old of ['一頓飯的錢', '頂級機構研究員', '建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件']) {
+            expect(copy + page).not.toContain(old);
+        }
+        expect(json.heroTitle.zh).toContain('基金經理人');
+        expect(json.heroTitle.en).toContain('fund manager');
+        expect(json.heroTagline.zh).toMatch(/標的/);
+        expect(json.heroTagline.zh).toMatch(/技術/);
+        expect(json.heroTagline.zh).toMatch(/總體經濟|總經/);
+        expect(json.productWorkflow.zh).toMatch(/報告/);
+        expect(json.productDecideBody.zh).toMatch(/研究圖像/);
+        expect(json.productDecideBody.zh).toMatch(/標的/);
+        expect(json.productFaqTitle.zh).toContain('研究方法');
+        expect(source('src/pages/index.astro')).toContain('description="給基金經理人的研究員，也是資料處理員');
+    });
+
+    it('keeps the server-rendered Chinese identical to the i18n source, so the page does not flash different words on load', () => {
+        const json = JSON.parse(source('src/storages/i18n.json')).home;
+        const page = source('src/pages/index.astro');
+        for (const key of ['heroTitle', 'heroTagline', 'productAudience', 'productWorkflow', 'productCollectTitle', 'productCollectBody',
+            'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody']) {
+            expect(page, key).toContain(`data-i18n="home.${key}">${json[key].zh}<`);
+        }
     });
 });
 
