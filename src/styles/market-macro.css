@@ -58,7 +58,7 @@
 .macro-trend-axis { stroke:var(--gray-500); stroke-width:1; }
 .macro-trend-axis-label { fill:var(--gray-400); font-size:9px; }
 .macro-trend-axis-title { fill:var(--text-secondary,var(--gray-300)); font-size:8px; }
-.macro-trend-line { fill:none; stroke:var(--tone,#70b7f0); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.macro-trend-line { fill:none; stroke:var(--tone,#70b7f0); stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
 .macro-trend-line--expected { stroke-dasharray:5 4; }
 .macro-trend-line--consensus { stroke-dasharray:2 4; }
 .macro-trend-legend--series { display:flex; flex-wrap:wrap; gap:.2rem .7rem; margin:.35rem 0; }

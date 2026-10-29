@@ -333,7 +333,7 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
       .datum(sorted)
       .attr('fill', 'none')
       .attr('stroke', color)
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 1.25)
       .attr('d', lineGen);
 
     // Dots
@@ -427,7 +427,7 @@ function drawWeeklyCostChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
     const segment = [weekCost[i - 1], weekCost[i]];
     const color = monthColors(weekCost[i].month);
     g.append('path').datum(segment).attr('fill', `${color}18`).attr('d', segmentArea);
-    g.append('path').datum(segment).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2).attr('d', segmentLine);
+    g.append('path').datum(segment).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 1.25).attr('d', segmentLine);
   }
 
   g.selectAll('.weekly-cost-dot')

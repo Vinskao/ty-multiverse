@@ -11,7 +11,7 @@
 .market-history-chart { display:block; width:100%; height:auto; min-height:9rem; overflow:visible; }
 .market-history-chart { cursor: crosshair; user-select: none; }
 .market-chart-readout { min-height: 2.5rem; padding: .55rem .75rem; border-radius: .5rem; background: color-mix(in srgb, var(--gray-800) 55%, transparent); color: var(--gray-200); font-size: .85rem; font-variant-numeric: tabular-nums; }
-.market-history-line { fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.market-history-line { fill:none; stroke-width:1.25; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
 .market-history-zero { stroke:var(--gray-500); stroke-dasharray:4 4; stroke-width:1; }
 .market-history-grid { stroke:var(--gray-700); stroke-width:1; opacity:.45; vector-effect:non-scaling-stroke; }
 .market-history-axis-label { fill:var(--gray-400); font-size:12px; font-variant-numeric:tabular-nums; }
@@ -422,8 +422,8 @@
 .research-economics-chart { display: block; width: 100%; min-height: 10rem; overflow: visible; }
 .research-economics-gridline { stroke: var(--gray-700); stroke-width: 1; opacity: .55; }
 .research-economics-axis-label { fill: var(--gray-400); font-size: 11px; font-variant-numeric: tabular-nums; }
-.research-economics-return-line { fill: none; stroke: #61f6ea; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.research-economics-cost-line { fill: none; stroke: #f5b94b; stroke-width: 2; stroke-dasharray: 6 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.research-economics-return-line { fill: none; stroke: #61f6ea; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.research-economics-cost-line { fill: none; stroke: #f5b94b; stroke-width: 1.25; stroke-dasharray: 6 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .research-economics-axis-label--cost { fill: #f5b94b; }
 .research-economics-return-point { fill: #61f6ea; stroke: var(--gray-999); stroke-width: 2; cursor: pointer; vector-effect: non-scaling-stroke; }
 .research-economics-return-point:focus { outline: none; stroke: #fff; stroke-width: 3; }
@@ -936,7 +936,8 @@
 .portfolio-history-line {
 	fill: none;
 	stroke: #61f6ea;
-	stroke-width: 3;
+	stroke-width: 1.5;
+	vector-effect: non-scaling-stroke;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }

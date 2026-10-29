@@ -108,7 +108,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
             const command = held ? `H ${x(i)} V ${y(value)}` : `M ${x(i)} ${y(value)}`; held = true;
             return command;
         }).join(' ');
-        svg.append(element('path', { d: path, fill: 'none', stroke: targetColors.get(line.firm) ?? '#999', 'stroke-width': 1.6, 'stroke-dasharray': '6 3', 'data-broker-target': line.firm }));
+        svg.append(element('path', { d: path, fill: 'none', stroke: targetColors.get(line.firm) ?? '#999', 'stroke-width': 1, 'stroke-dasharray': '6 3', 'data-broker-target': line.firm }));
     }
     if (numbers.length) {
         let previous = false;
@@ -117,7 +117,7 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
             const command = previous ? (metric === 'pe' ? 'L' : 'H') : 'M'; previous = true;
             return command === 'H' ? `H ${x(i)} V ${yMetric(point.value)}` : `${command} ${x(i)} ${yMetric(point.value)}`;
         }).join(' ');
-        svg.append(element('path', { d: path, fill: 'none', stroke: tone, 'stroke-width': 2, 'data-price-metric': metric }));
+        svg.append(element('path', { d: path, fill: 'none', stroke: tone, 'stroke-width': 1.25, 'data-price-metric': metric }));
     }
     svg.append(element('text', { x: left, y: volumeTop - 8, class: 'market-history-axis-title' }, zh ? `成交量（${volumeUnit.zh}）` : `Volume (${volumeUnit.en})`));
     const ticks = Math.min(candles.length, width < 480 ? 2 : 5);
