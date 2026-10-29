@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import WritingGuide from '../components/WritingGuide.astro';
 import { readBlog } from '../services/server/blog';
 import { sortArticles } from '../scripts/work/catalog';
 let projects = [];
@@ -39,7 +40,7 @@ const latest = projects[0];
       </ol>
       <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>
     </section>
-    <aside class="knowledge-note"><h2 data-i18n="work.methodTitle">知識如何累積</h2><p data-i18n="work.methodBody">每篇開發紀錄保留背景、決策、實作與驗證限制；基礎筆記依技術分類查找，實際交付則按時間追蹤。</p></aside>
+    <WritingGuide />
     <script type="application/json" id="article-catalog" set:html={JSON.stringify(projects).replace(/</g, '\u003c')} />
   </div>
   <script>

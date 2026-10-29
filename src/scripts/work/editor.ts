@@ -1,4 +1,5 @@
 import { storageService } from '../../services/core/storageService';
+import { articleTemplate, auditArticle } from './writingGuide';
 
 export function markdownFromDraft(slug: string, draft: any) {
   return `---\nslug: ${slug}\ntitle: ${JSON.stringify(draft.title)}\ndescription: ${JSON.stringify(draft.description)}\ncategory: ${JSON.stringify(draft.category)}\ntags: ${JSON.stringify(draft.tags)}\npublishDate: ${draft.publishDate}\n---\n\n${draft.content}\n`;
@@ -93,7 +94,7 @@ export function initBlogEditor() {
   document.getElementById('blog-new')!.addEventListener('click', () => {
     if (dirty) { say('尚有未保存變更，請先保存 / Save your changes first'); return; }
     current = undefined; uploadedSlug = undefined; fileInput.value = ''; form.reset();
-    markdown.value = markdownFromDraft('new-article', { title: '文章標題', description: '文章摘要', category: 'Engineering', tags: ['Astro'], publishDate: new Date().toISOString(), content: '## 背景\n\n## 實作\n\n## 驗證\n' });
+    markdown.value = articleTemplate(new Date());
     showState(); say('可開始建立新草稿 / Ready for a new draft');
   });
   const saveMarkdown = (publish: boolean) => void busy(async () => {
@@ -108,7 +109,13 @@ export function initBlogEditor() {
     say(publish ? '已發布，向量化已排入背景流程 / Published; vectorization queued' : 'Markdown 已直接保存至 DB / Markdown saved to DB');
   });
   document.getElementById('blog-markdown-form')!.addEventListener('submit', event => { event.preventDefault(); saveMarkdown(false); });
-  document.getElementById('blog-markdown-publish')!.addEventListener('click', () => { if (markdown.reportValidity()) saveMarkdown(true); });
+  document.getElementById('blog-markdown-publish')!.addEventListener('click', () => {
+    if (!markdown.reportValidity()) return;
+    // Publishing follows the writing guide (see writingGuide.ts); a draft can still be saved and fixed.
+    const problems = auditArticle(markdown.value);
+    if (problems.length) { say(`未發布：不符合撰稿規範 / Not published: ${problems.join('；')}`); return; }
+    saveMarkdown(true);
+  });
   form.addEventListener('submit', event => {
     event.preventDefault();
     void busy(async () => {
@@ -133,5 +140,5 @@ export function initBlogEditor() {
     });
   }));
   showState();
-  markdown.value = markdownFromDraft('new-article', { title: '文章標題', description: '文章摘要', category: 'Engineering', tags: ['Astro'], publishDate: new Date().toISOString(), content: '## 背景\n\n## 實作\n\n## 驗證\n' });
+  markdown.value = articleTemplate(new Date());
 }

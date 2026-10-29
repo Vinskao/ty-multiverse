@@ -54,3 +54,39 @@ describe('Markdown clipboard entry', () => {
     await waitFor(() => expect(document.getElementById('blog-status')!.textContent).toContain('Markdown 已直接保存至 DB'));
   });
 });
+
+describe('publishing checks the writing guide', () => {
+  // 2026-10-29: diary-shaped posts were published; the editor now names what is missing instead of publishing them.
+  it('refuses to publish a diary-shaped post and names the problems, but still lets it be saved as a draft', async () => {
+    vi.spyOn(localStorage, 'getItem').mockImplementation(key => key === 'token' ? JSON.stringify('editor-token') : null);
+    document.body.innerHTML = `
+      <button id="blog-refresh"></button><button id="blog-new"></button>
+      <p id="blog-status"></p><p id="blog-state"></p><div id="blog-admin-list"></div>
+      <form id="blog-markdown-form"><input id="blog-markdown-file" type="file"><textarea id="blog-markdown"></textarea><button type="submit">Save</button><button id="blog-markdown-publish" type="button">Publish</button></form>
+      <form id="blog-editor">${['slug','title','description','category','tags','date','content'].map(name => `<input name="${name}">`).join('')}<button type="submit">Save</button></form>`;
+    const fetcher = vi.fn().mockImplementation(async () => Response.json([]));
+    vi.stubGlobal('fetch', fetcher);
+    initBlogEditor();
+    const input = document.querySelector<HTMLTextAreaElement>('#blog-markdown')!;
+    input.value = '---\nslug: log\ntitle: 近期開發紀錄\ntags: [Astro]\n---\n\n## 決策一：SSR\n…';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fetcher.mockClear();
+    document.getElementById('blog-markdown-publish')!.click();
+    await waitFor(() => expect(document.getElementById('blog-status')!.textContent).toContain('未發布'));
+    expect(document.getElementById('blog-status')!.textContent).toContain('日記');
+    expect(fetcher.mock.calls.some(([url]) => String(url).endsWith('/import'))).toBe(false);
+  });
+
+  it('starts a new article from the technical template, not 背景／實作／驗證', () => {
+    document.body.innerHTML = `
+      <button id="blog-refresh"></button><button id="blog-new"></button>
+      <p id="blog-status"></p><p id="blog-state"></p><div id="blog-admin-list"></div>
+      <form id="blog-markdown-form"><input id="blog-markdown-file" type="file"><textarea id="blog-markdown"></textarea><button type="submit">Save</button><button id="blog-markdown-publish" type="button">Publish</button></form>
+      <form id="blog-editor">${['slug','title','description','category','tags','date','content'].map(name => `<input name="${name}">`).join('')}<button type="submit">Save</button></form>`;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => Response.json([])));
+    initBlogEditor();
+    const text = document.querySelector<HTMLTextAreaElement>('#blog-markdown')!.value;
+    expect(text).toContain('## 替代方案');
+    expect(text).toContain('tags: [Software Engineering]');
+  });
+});

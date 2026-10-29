@@ -1,0 +1,13 @@
+---
+import { WRITING_GUIDE } from '../scripts/work/writingGuide';
+const { open = false } = Astro.props as { open?: boolean };
+---
+<details class="knowledge-note writing-guide" id="writing-guide" open={open}>
+  <summary><h2>{WRITING_GUIDE.title}</h2></summary>
+  <p><strong>{WRITING_GUIDE.purpose}</strong></p>
+  <p>給下一個撰稿的 AI：發文前照這份規範自我檢查；文章管理頁的「存入並發布」會用同一套規則檢查（<code>src/scripts/work/writingGuide.ts</code> 的 <code>auditArticle</code>），不符合就不發布。範例：〈不加依賴的 OpenTimestamps〉、〈把季報疊到日 K 線上而不偷看未來〉。</p>
+  <h3>必須 / Must</h3>
+  <ol>{WRITING_GUIDE.rules.map(rule => <li>{rule}</li>)}</ol>
+  <h3>不要 / Never</h3>
+  <ul>{WRITING_GUIDE.forbidden.map(rule => <li>{rule}</li>)}</ul>
+</details>
