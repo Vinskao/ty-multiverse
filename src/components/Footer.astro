@@ -1,26 +1,22 @@
 ---
 import { Icon } from './Icon';
 import { buildRevision } from '../scripts/buildRevision';
+import { socialLinks } from '../scripts/socialLinks';
+import type { iconPaths } from './IconPaths';
 const currentYear = new Date().getFullYear();
 const revision = buildRevision(import.meta.env.PUBLIC_BUILD_REVISION);
 ---
 
 <footer>
 	<div class="group">
-		<p>
-			Designed by TY
-		</p>
+		<p><span data-i18n="home.productBrand">TY 市場研究室 · TY Multiverse</span> · <span data-i18n="home.productName">Birch Investments 樺樹資本工具</span></p>
 		<p>&copy; {currentYear} TY Multiverse</p>
 	</div>
 	<div class="social-links">
-		<a href="https://twitter.com/wawiking">
-			<Icon icon="twitter-logo" />
-			<span>Twitter</span>
-		</a>
-		<a href="https://github.com/Vinskao">
-			<Icon icon="github-logo" />
-			<span>GitHub</span>
-		</a>
+		{socialLinks.map(({ href, icon, label }) => <a href={href} target="_blank" rel="noopener noreferrer">
+			<Icon icon={icon as keyof typeof iconPaths} />
+			<span>{label}</span>
+		</a>)}
 	</div>
 	{revision && <div class="version"><span data-i18n="home.buildVersion">版本</span> {revision}</div>}
 </footer>
