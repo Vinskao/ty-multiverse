@@ -40,7 +40,8 @@ maya-sawa `services/mops_fundamentals.py` backfills five years for every listed 
 - Columns are matched by name in each industry table (general, bank, securities, insurance, holding, other). Banks have no revenue or gross-profit line, so only the lines they report are kept.
 - Items use FinMind's names, so the metrics code is unchanged. Writes replace only these items, so FinMind items stay for the same period.
 - The collector waits 8 seconds between pages and stops a pass when MOPS answers 「查詢過於頻繁」. Passes run every 10 minutes while the backlog lasts, then hourly. The last two months and quarters are refetched each pass. Checkpoints are in `maya_sawa_mops_checkpoint`; set `MOPS_FUNDAMENTALS_ENABLED=0` to turn the collector off.
-- Inventory (inventory days) and capex (capex / operating cash flow) are not in the summaries. For now they still come from FinMind for selected or opened stocks. The next step is per-company MOPS statements for those stocks, after which FinMind can be switched off.
+- Inventory (inventory days) and capex (capex / operating cash flow) are not in the summaries. They come from each company's full statements (`ajax_t164sb03` balance sheet, row 存貨; `ajax_t164sb05` cash flow, row 取得不動產、廠房及設備, year to date) for the selected stocks and any stock opened in the fundamentals view: 2 pages per stock per quarter, 20 quarters, stored as `Inventories` and `PropertyAndPlantAndEquipment`.
+- **FinMind is off since 2026-10-29** (`FINMIND_ENABLED=1` turns it back on). Rows it already stored stay in the database until MOPS overwrites the same items.
 - Tests: maya-sawa `tests/test_mops_fundamentals.py`. Fixtures are real 2026 pages that keep every table and header and the rows of 2330, 1101, 2801, 2855 and 6488. A live run on 2026-10-29 wrote 866 OTC companies' September revenue and the 2026Q2 OTC statements.
 
 ## Japan via EDINET (in progress)
