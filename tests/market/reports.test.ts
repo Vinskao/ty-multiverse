@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { canUploadReports, filterMarketReports, groupReportDocuments, reportDocumentGroupMeta, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, type MarketReport } from '../../src/scripts/market/reports';
+import { canUploadReports, filterMarketReports, groupReportDocuments, reportDocumentGroupMeta, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, planReportUploads, type MarketReport } from '../../src/scripts/market/reports';
 
 describe('report industry categories', () => {
   it('groups company and supply-chain segments into readable industry boards', () => {
@@ -86,6 +86,28 @@ describe('market research reports', () => {
     expect(reportFileAllowed(MAX_REPORT_BYTES, 'application/pdf', 'report.PDF')).toBe(true);
     expect(reportFileAllowed(MAX_REPORT_BYTES + 1, 'application/pdf', 'report.pdf')).toBe(false);
     expect(reportFileAllowed(10, 'text/plain', 'report.txt')).toBe(false);
+  });
+
+  it('shows backend-owned queued and processing states', () => {
+    expect(reportStatusLabel('queued')).toContain('後端排隊');
+    expect(reportStatusLabel('processing')).toContain('後端處理');
+  });
+
+  it('creates one upload item per selected PDF and uses each filename as its batch title', () => {
+    const files = [
+      { name: 'CPO outlook.pdf', size: 10, type: 'application/pdf' },
+      { name: 'Memory supply.pdf', size: 20, type: 'application/pdf' },
+    ];
+    const items = planReportUploads(files, { title: 'Shared title', publisher: 'Broker', publishedAt: '2026-10-29', visibility: 'owner' });
+    expect(items.map(item => item.title)).toEqual(['CPO outlook', 'Memory supply']);
+    expect(items.map(item => item.file)).toEqual(files);
+    expect(items.every(item => item.publisher === 'Broker' && item.publishedAt === '2026-10-29' && item.visibility === 'owner')).toBe(true);
+  });
+
+  it('uses an edited title for a single report and defaults an empty title to the filename', () => {
+    const file = { name: 'Semiconductor.pdf', size: 10, type: 'application/pdf' };
+    expect(planReportUploads([file], { title: 'My title', publisher: '', publishedAt: '', visibility: 'public' })[0].title).toBe('My title');
+    expect(planReportUploads([file], { title: '', publisher: '', publishedAt: '', visibility: 'public' })[0].title).toBe('Semiconductor');
   });
 
   it('maps processing states and failures to clear UI text', () => {
@@ -174,7 +196,7 @@ describe('SEC filing report groups', () => {
     expect(groups[0].sections.map(({ title }) => title)).toEqual([
       'Management discussion (1/5)', 'Prospectus summary (2/2)', 'Management discussion (5/5)',
     ]);
-    expect(reportDocumentGroupMeta(groups[0])).toContain('3 個文件區段 · AI 主張整理中');
+    expect(reportDocumentGroupMeta(groups[0])).toContain('3 個文件區段 · 等待萃取主張');
   });
 
   it('keeps different SEC filing URLs as separate report groups', () => {

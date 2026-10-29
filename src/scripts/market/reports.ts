@@ -1,7 +1,22 @@
 import { researchSegmentForText, researchTagIdForSegments, researchTagIdsForSegments, researchTagIdsForText, researchTagLabel, segmentsForResearchTags, type ResearchTagId } from './researchTaxonomy';
 
-export type ReportStatus = 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed';
+export type ReportStatus = 'queued' | 'processing' | 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed';
 export const MAX_REPORT_BYTES = 40 * 1024 * 1024;
+export type ReportUploadMetadata = { title: string; publisher: string; publishedAt: string; visibility: 'public' | 'owner' };
+export type ReportUploadFile = { name: string; size: number; type: string };
+
+/** A batch shares publication metadata; each PDF keeps its own filename as its title. */
+export function planReportUploads<T extends ReportUploadFile>(files: readonly T[], metadata: ReportUploadMetadata) {
+  const title = metadata.title.trim();
+  return files.map(file => ({
+    file,
+    title: files.length === 1 && title ? title : file.name.replace(/\.pdf$/i, ''),
+    publisher: metadata.publisher.trim(),
+    publishedAt: metadata.publishedAt,
+    visibility: metadata.visibility,
+  }));
+}
+
 export type MarketReport = {
   id: string;
   title: string;
@@ -27,6 +42,8 @@ export function reportFileAllowed(size: number, type: string, filename: string):
 }
 
 export function reportStatusLabel(status: ReportStatus, claimCount?: number, failureReason?: string | null): string {
+  if (status === 'queued') return '後端排隊中';
+  if (status === 'processing') return '後端處理中';
   if (status === 'extracted') return '已抽取文字，正在向量化';
   if (status === 'embedded') return '已向量化，等待萃取主張';
   if (status === 'claims_pending') return '等待萃取主張';
@@ -130,8 +147,8 @@ export function reportDocumentGroupMeta(group: ReportDocumentGroup): string {
   const first = group.reports[0];
   const published = first?.published_at ? `發布 ${first.published_at}` : '發布日未填';
   if (!group.isSecFiling || group.reports.length < 2) return first ? reportMetaLine(first) : '';
-  const pending = group.reports.every(({ status }) => status === 'claims_pending' || status === 'backlog');
-  const status = pending ? 'AI 主張整理中' : `${group.reports.reduce((sum, report) => sum + report.claim_count, 0)} 項主張`;
+  const pending = group.reports.every(({ status }) => ['queued', 'processing', 'extracted', 'embedded', 'claims_pending', 'backlog'].includes(status));
+  const status = pending ? reportStatusLabel(group.reports[0].status, group.reports.reduce((sum, report) => sum + report.claim_count, 0)) : `${group.reports.reduce((sum, report) => sum + report.claim_count, 0)} 項主張`;
   return `${first.publisher} · ${published} · ${group.reports.length} 個文件區段 · ${status}`;
 }
 

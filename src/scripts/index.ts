@@ -29,7 +29,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
@@ -2255,27 +2255,47 @@ function initMarketReports() {
     if (!form || form.dataset.bound) return;
     form.dataset.bound = 'true';
     const fileInput = form.elements.namedItem('file') as HTMLInputElement;
+    let uploadBatchSequence = 0;
     fileInput.addEventListener('change', () => {
-        const file = fileInput.files?.[0]; const title = form.elements.namedItem('title') as HTMLInputElement;
-        if (file && !title.value) title.value = file.name.replace(/\.pdf$/i, '');
+        const title = form.elements.namedItem('title') as HTMLInputElement;
+        const count = fileInput.files?.length ?? 0;
+        if (count === 1 && !title.value) title.value = fileInput.files![0].name.replace(/\.pdf$/i, '');
+        if (count > 1) title.value = '';
     });
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const file = fileInput.files?.[0]; const status = document.getElementById('market-report-upload-status');
-        if (!file || !status) return;
-        if (!reportFileAllowed(file.size, file.type, file.name)) { status.textContent = '請選擇 40 MB 以下的 PDF。'; return; }
-        status.textContent = '正在抽取全文並建立向量…';
+        const files = Array.from(fileInput.files ?? []);
+        const status = document.getElementById('market-report-upload-status');
+        if (files.length === 0 || !status) return;
+        const invalid = files.find(file => !reportFileAllowed(file.size, file.type, file.name));
+        if (invalid) { status.textContent = `${invalid.name}：請選擇 40 MB 以下的 PDF。`; return; }
+        const values = new FormData(form);
+        const plans = planReportUploads(files, {
+            title: String(values.get('title') || '').trim(),
+            publisher: String(values.get('publisher') || '').trim(),
+            publishedAt: String(values.get('published_at') || '').trim(),
+            visibility: String(values.get('visibility') || 'public'),
+        });
+        const batch = ++uploadBatchSequence;
+        status.textContent = `已開始傳送 ${plans.length} 份 PDF；擷取與主張狀態由後端管理。`;
+        form.reset();
         const headers = new Headers(marketAuthHeaders());
-        const data = new FormData(form);
-        if (!String(data.get('published_at') || '').trim()) data.delete('published_at');
-        const response = await fetch(astroApiPath('/api/market/reports'), { method: 'POST', headers, body: data }).catch(() => null);
-        if (!response?.ok) {
-            const error = response ? await response.json().catch(() => ({})) as { detail?: string } : {};
-            status.textContent = error.detail || '上傳失敗，請稍後重試。'; return;
+        const results = await Promise.all(plans.map(async plan => {
+            const data = new FormData();
+            data.append('file', plan.file);
+            data.append('title', plan.title);
+            if (plan.publisher) data.append('publisher', plan.publisher);
+            if (plan.publishedAt) data.append('published_at', plan.publishedAt);
+            data.append('visibility', plan.visibility);
+            const response = await fetch(astroApiPath('/api/market/reports'), { method: 'POST', headers, body: data }).catch(() => null);
+            return Boolean(response?.ok);
+        }));
+        if (batch === uploadBatchSequence) {
+            const accepted = results.filter(Boolean).length;
+            const failed = results.length - accepted;
+            status.textContent = `傳送完成：${accepted} 份已交由後端處理${failed ? `，${failed} 份傳送失敗` : ''}。`;
         }
-        const result = await response.json() as { duplicate: boolean; report: MarketReport | null };
-        status.textContent = result.duplicate ? '這份 PDF 已存在，已載入既有報告。' : reportStatusLabel(result.report?.status ?? 'claims_pending', result.report?.claim_count);
-        form.reset(); await loadMarketReports();
+        if (results.some(Boolean)) await loadMarketReports();
     });
     const webForm = document.getElementById('market-report-web') as HTMLFormElement | null;
     if (webForm && !webForm.dataset.bound) {

@@ -456,8 +456,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
 						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
 						<form id="market-report-upload" class="market-report-upload" hidden>
-							<label>PDF（最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" required /></label>
-							<label>標題<input name="title" maxlength="300" required /></label>
+							<label>PDF（每份最多 40 MB，可多選）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /></label>
+							<label>標題（多檔時使用檔名）<input name="title" maxlength="300" /></label>
 							<label>出版者<input name="publisher" maxlength="200" /></label>
 							<label>發布日<input name="published_at" type="date" /></label>
 							<label>可見範圍<select name="visibility"><option value="public">公開</option><option value="owner">只有自己</option></select></label>

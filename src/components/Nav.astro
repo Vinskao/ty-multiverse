@@ -215,7 +215,10 @@ const iconLinks: {
         }
       </div>
       <div class="nav-controls-footer">
-        <button id="langToggleBtn" class="lang-toggle-btn" aria-label="Toggle language">EN</button>
+        <div id="langToggleBtn" class="lang-toggle-btn" role="group" aria-label="Language">
+          <button class="lang-toggle-option" type="button" data-lang-option="zh" aria-label="繁體中文">繁</button>
+          <button class="lang-toggle-option" type="button" data-lang-option="en" aria-label="English">EN</button>
+        </div>
         <NotificationCenter />
       </div>
     </div>
@@ -230,10 +233,10 @@ const iconLinks: {
 
   /** 瑾炶█鍒囨彌鎸夐垥閭忚集 **/
   function initLangToggle() {
-    const buttons = Array.from(
-      document.querySelectorAll<HTMLButtonElement>("#langToggleBtn, #langToggleBtn-noscript"),
+    const groups = Array.from(
+      document.querySelectorAll<HTMLElement>("#langToggleBtn, #langToggleBtn-noscript"),
     );
-    if (buttons.length === 0) return;
+    if (groups.length === 0) return;
 
     const translatePage = (code: string) => {
       // 缈昏甯舵湁 data-i18n 灞€х殑鍏冪礌
@@ -267,31 +270,30 @@ const iconLinks: {
     };
 
     const updateBtn = (lang: string) => {
-      buttons.forEach((button) => {
-        button.textContent = lang === "zh" ? "\u4E2D\u6587" : "EN";
+      groups.forEach((group) => {
+        group.querySelectorAll<HTMLButtonElement>("[data-lang-option]").forEach((option) => {
+          const active = option.dataset.langOption === lang;
+          option.classList.toggle("is-active", active);
+          option.setAttribute("aria-pressed", String(active));
+        });
       });
     };
 
-    buttons.forEach((btn) => {
-      if (btn.dataset.langToggleBound === "true") return;
-      btn.dataset.langToggleBound = "true";
-
-      // Always-working click handler - no dependency on AppLang being ready at init time
-      btn.addEventListener("click", () => {
-        const AppLang = (window as any).AppLang;
-        if (AppLang) {
-          const next = AppLang.get() === "en" ? "zh" : "en";
-          console.log("[LangToggle] click via AppLang -> toggling to:", next);
-          AppLang.set(next);
-        } else {
-          const STORAGE_KEY = "site_language";
-          const current = localStorage.getItem(STORAGE_KEY) || "en";
-          const next = current === "en" ? "zh" : "en";
-          localStorage.setItem(STORAGE_KEY, next);
-          updateBtn(next);
-          translatePage(next);
-          console.warn("[LangToggle] AppLang not ready -> fallback toggled to:", next);
-        }
+    groups.forEach((group) => {
+      group.querySelectorAll<HTMLButtonElement>("[data-lang-option]").forEach((option) => {
+        if (option.dataset.langToggleBound === "true") return;
+        option.dataset.langToggleBound = "true";
+        option.addEventListener("click", () => {
+          const next = option.dataset.langOption === "zh" ? "zh" : "en";
+          const AppLang = (window as any).AppLang;
+          if (AppLang) {
+            AppLang.set(next);
+          } else {
+            localStorage.setItem("site_language", next);
+            updateBtn(next);
+            translatePage(next);
+          }
+        });
       });
     });
 
