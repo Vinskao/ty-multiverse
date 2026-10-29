@@ -576,3 +576,9 @@ GitLogCollector (local, read-only)
 - 對 API 回傳做 schema validation、字數限制、雙語欄位與重複內容檢查。
 - AI API 失敗、逾時或輸出不合法時，回退本機 Agent／人工整理，不得清空既有 About 內容。
 - AI 僅產生草稿；寫檔、建置、視覺檢查與發布仍是獨立且可審核的步驟。
+
+## Design continuity
+
+Before changing product-facing pages, read [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md) and keep its product and visual judgment intact. It records why the site uses restrained black/white/gray surfaces, when semantic color must remain, how to preserve information while reducing clutter, and the current About hierarchy. Treat it as design guidance, not a mandate to make every data visualization monochrome.
+
+For the current screen-by-screen scope, see [`docs/MONOCHROME_WORKSPACE_REDESIGN.md`](docs/MONOCHROME_WORKSPACE_REDESIGN.md). For the intended social publishing workflow, see [`docs/THREADS_LINKEDIN_AUTOMATION.md`](docs/THREADS_LINKEDIN_AUTOMATION.md).

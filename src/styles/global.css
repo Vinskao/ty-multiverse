@@ -18,10 +18,10 @@
   --gray-999-basis: 240, 20%, 99%;
   --gray-999_40: hsla(var(--gray-999-basis), 0.4);
   --gray-999: #fbfbfd;
-  --accent-light: #61f6ea;
-  --accent-regular: #255187;
-  --accent-dark: #001a56;
-  --accent-overlay: hsla(204, 89%, 67%, 0.33);
+  --accent-light: #1d1d1f;
+  --accent-regular: #1d1d1f;
+  --accent-dark: #000000;
+  --accent-overlay: hsla(0, 0%, 0%, 0.12);
   --accent-subtle-overlay: var(--accent-overlay);
   --accent-text-over: var(--gray-999);
 
@@ -96,22 +96,22 @@
   --gray-900: #1c1c1e;
   --gray-999-basis: 0, 0%, 0%;
   --gray-999: #000000;
-  --accent-light: #eaff9a;
-  --accent-regular: #c7ff00;
-  --accent-dark: #d6ff42;
-  --accent-overlay: hsla(74, 100%, 50%, 0.2);
-  --accent-subtle-overlay: hsla(74, 100%, 50%, 0.12);
-  --accent-text-over: var(--gray-0);
+  --accent-light: #ffffff;
+  --accent-regular: #ffffff;
+  --accent-dark: #e5e5ea;
+  --accent-overlay: hsla(0, 0%, 100%, 0.18);
+  --accent-subtle-overlay: hsla(0, 0%, 100%, 0.1);
+  --accent-text-over: var(--gray-999);
 
   --link-color: var(--accent-dark);
 
-  --gradient-stop-1: #c7ff00;
+  --gradient-stop-1: #ffffff;
   --gradient-subtle: linear-gradient(
     150deg,
     var(--gray-900) 19%,
     var(--gray-999) 81%
   );
-  --gradient-accent-orange: linear-gradient(150deg, #eaff9a, var(--accent-regular), #6f9200);
+  --gradient-accent-orange: linear-gradient(150deg, #ffffff, var(--accent-regular), #6e6e73);
   --gradient-stroke: linear-gradient(180deg, var(--gray-600), var(--gray-800));
 
   --shadow-sm: 0px 6px 3px rgba(255, 255, 255, 0.01),
@@ -387,8 +387,8 @@ h5 {
   --btn-br-warning: #ff9800;
   --btn-bg-success: #e8f5e9;
   --btn-br-success: #43a047;
-  --btn-bg-accent: #ede7f6;
-  --btn-br-accent: #5e35b1;
+  --btn-bg-accent: #e5e5ea;
+  --btn-br-accent: #48484a;
   --btn-bg-danger: #fdecea;
   --btn-br-danger: #d64545;
 }
@@ -402,8 +402,8 @@ h5 {
   --btn-br-warning: #fff3e0;
   --btn-bg-success: #43a047;
   --btn-br-success: #e8f5e9;
-  --btn-bg-accent: #5e35b1;
-  --btn-br-accent: #ede7f6;
+  --btn-bg-accent: #2c2c2e;
+  --btn-br-accent: #6e6e73;
   --btn-bg-danger: #d64545;
   --btn-br-danger: #fdecea;
 }

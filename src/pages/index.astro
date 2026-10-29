@@ -176,7 +176,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</section>
 							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
 						</section>
-						<MarketBrief brief={marketBrief} />
 						<section id="market-company-events" class="market-company-events" aria-labelledby="market-company-events-title">
 							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
 							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
@@ -306,7 +305,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 										<details><summary data-i18n="home.marketAiApi">API instructions for AI agents</summary><p data-i18n="home.marketAiApiHelp">GET this endpoint first. PUT JSON with model, content and expectedRevision using your signed-in Bearer token. Use revision 0 for the first analysis. On 409 reload and reconcile your draft. Never put a token in the URL.</p><code id="market-ai-endpoint"></code><pre id="market-ai-api-example"></pre></details>
 									</section>
 								</div>
-								<div id="market-chart-placeholder" class="market-chart-placeholder">Select a holding to view its price and institutional charts.</div>
+					<div id="market-chart-placeholder" class="market-chart-placeholder"><strong>選一檔持倉，開始研究</strong><span>價格、法人、資券、基本面、研究與 AI 分析都會集中在這裡。</span><small>從左側清單選擇標的</small></div>
 							</section>
 							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
@@ -454,14 +453,20 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<svg id="portfolio-history-svg" class="is-hidden" viewBox="0 0 900 280" role="img" aria-label="Daily Taiwan portfolio total asset trend"></svg>
 						</div>
 					</section>
+					<details class="market-brief-disclosure">
+						<summary>持股籌碼摘要 <span>每日快照與完整明細</span></summary>
+						<MarketBrief brief={marketBrief} />
+					</details>
 					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
 						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
 						<form id="market-report-upload" class="market-report-upload" hidden>
-							<label>PDF（每份最多 40 MB，可多選）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /></label>
-							<label>標題（多檔時使用檔名）<input name="title" maxlength="300" /></label>
-							<label>出版者<input name="publisher" maxlength="200" /></label>
-							<label>發布日<input name="published_at" type="date" /></label>
+							<label class="market-report-file">選擇 PDF（可一次多選，每份最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /><small>檔名會自動作為報告標題；選完即可立即上傳。</small></label>
 							<label>可見範圍<select name="visibility"><option value="public">公開</option><option value="owner">只有自己</option></select></label>
+							<details class="market-report-metadata"><summary>補充資料（選填）</summary>
+								<label>自訂標題<input name="title" maxlength="300" placeholder="留白時使用 PDF 檔名" /></label>
+								<label>出版者<input name="publisher" maxlength="200" /></label>
+								<label>發布日<input name="published_at" type="date" /></label>
+							</details>
 							<button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p>
 						</form>
 						<form id="market-report-web" class="market-report-upload" hidden>

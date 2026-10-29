@@ -1932,7 +1932,7 @@
 .home-page .home-product-intro { margin-bottom:1rem; }
 .home-page .home-product-actions a, .home-page .home-product-pricing a { font-size:.95rem; line-height:1.5; }
 .home-page .market-overview { padding:clamp(.6rem,1.6vw,1.5rem); border-radius:1rem; }
-.home-page .market-overview-grid { grid-template-columns:minmax(15rem,.7fr) minmax(0,1.6fr); }
+.home-page .market-overview-grid { grid-template-columns:minmax(17rem,.85fr) minmax(0,2fr); }
 .home-page .market-research-diagram h5 { font-size:1rem; line-height:1.5; margin:.8rem 0 .4rem; text-align:left; }
 .home-page .market-ai-panel { min-width:0; font-size:.875rem; }
 .home-page .market-reports-heading { flex-wrap:wrap; }
@@ -1972,8 +1972,8 @@
 .maintenance-skill-group .maintenance-tags { margin-top:0; }
 .maintenance-team-links { display:flex; flex-wrap:wrap; gap:.65rem 1.25rem; margin-top:1.25rem; }
 /* Homepage contact: one closing call to action; every email link is built by src/scripts/contact.ts. */
-.home-page { --cta-gold:#8a6410; --cta-gold-text:#ffffff; }
-:root.theme-dark .home-page { --cta-gold:#d5ae4b; --cta-gold-text:#14110a; }
+.home-page { --cta-gold:#1d1d1f; --cta-gold-text:#ffffff; }
+:root.theme-dark .home-page { --cta-gold:#f5f5f7; --cta-gold-text:#000000; }
 .home-page .home-product-actions .home-product-contact { background:var(--cta-gold); border-color:var(--cta-gold); color:var(--cta-gold-text); text-decoration:none; transition:filter .2s ease, transform .2s ease; }
 .home-page .home-product-actions .home-product-contact:hover { filter:brightness(1.1); transform:translateY(-1px); }
 .home-cta { position:relative; overflow:hidden; width:min(100% - 2rem, 72rem); margin:0 auto 2rem; padding:clamp(2rem,6vw,4.5rem) clamp(1.25rem,5vw,4rem); border:1px solid color-mix(in srgb,var(--cta-gold) 45%,transparent); border-radius:1.5rem; text-align:left; scroll-margin-top:5rem;
@@ -2098,7 +2098,8 @@
 .section-view-all:hover svg { transform: translateX(3px); }
 
 /* Bold research identity: a short, high contrast editorial rhythm that preserves the existing sections. */
-.home-page { --home-accent: #c7ff00; --home-ink: #f5f5f2; --home-muted: #a7a7a2; }
+.home-page { --home-accent: #1d1d1f; --home-ink: #1d1d1f; --home-muted: #6e6e73; }
+:root.theme-dark .home-page { --home-accent: #f5f5f7; --home-ink: #f5f5f7; --home-muted: #a1a1a6; }
 .home-page .hero-layout { gap: clamp(2.5rem, 7vw, 7rem); }
 .home-page .home-product-brand { color: var(--home-accent); font-size: .82rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .home-page .home-product-title { max-width: 13ch; margin: .2em 0 .35em; color: var(--home-ink); font-size: clamp(3rem, 8.5vw, 8.25rem); font-weight: 850; line-height: .98; letter-spacing: -.065em; text-wrap: balance; }
@@ -2114,3 +2115,24 @@
 .home-page .home-product-steps article h3 { color:var(--home-accent); font-size:clamp(1.1rem,1.7vw,1.5rem); line-height:1.18; }
 .home-page .home-product-steps article p { max-width:38ch; color:var(--home-muted); line-height:1.55; }
 @media (max-width: 760px) { .home-page .home-product-steps { grid-template-columns:1fr; } .home-page .home-product-steps article { min-height:0; } }
+
+/* Monochrome workspace: grayscale surfaces and high-contrast controls. Market up/down values retain their established semantic colors. */
+.home-page .market-overview-grid { grid-template-columns: minmax(17rem, .85fr) minmax(0, 2fr); gap: clamp(.75rem, 1.6vw, 1.4rem); }
+.home-page .market-chart-placeholder { min-height: 12rem; align-content: center; justify-items: start; gap: .65rem; padding: clamp(1.25rem, 3vw, 2.5rem); border-style: solid; border-color: var(--gray-800); background: var(--gray-999_40); text-align: left; }
+.home-page .market-chart-placeholder strong { color: var(--gray-100); font-size: clamp(1.15rem, 2vw, 1.6rem); }
+.home-page .market-chart-placeholder span { max-width: 38rem; color: var(--gray-300); line-height: 1.65; }
+.home-page .market-chart-placeholder small { color: var(--gray-400); }
+.home-page .market-report-filter[aria-pressed="true"], .home-page .market-detail-toolbar [role="tab"][aria-selected="true"], .home-page .market-chart-controls button[aria-pressed="true"] { color: var(--accent-text-over); background: var(--accent-regular); border-color: var(--accent-regular); }
+.home-page .market-watch-row[aria-expanded="true"], .home-page .market-instrument-detail { border-color: var(--gray-500); }
+.market-brief-disclosure { margin: 1.25rem 0; padding: .95rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999_40); }
+.market-brief-disclosure > summary { display:flex; align-items:center; justify-content:space-between; gap:1rem; color:var(--gray-200); font-size:.95rem; font-weight:650; cursor:pointer; }
+.market-brief-disclosure > summary span { color:var(--gray-400); font-size:.78rem; font-weight:400; }
+.market-brief-disclosure[open] > summary { margin-bottom:1rem; }
+.market-report-file { grid-column: span 2; }
+.market-report-file small { color:var(--gray-400); line-height:1.5; }
+.market-report-metadata { align-self:center; }
+.market-report-metadata > summary { color:var(--gray-400); font-size:.82rem; cursor:pointer; }
+.market-report-metadata[open] { grid-column:1 / -1; display:grid; grid-template-columns:repeat(auto-fit,minmax(10rem,1fr)); gap:.75rem; }
+.market-report-metadata[open] > summary { grid-column:1 / -1; }
+@media (max-width:900px) { .home-page .market-overview-grid { grid-template-columns:minmax(0,1fr); } }
+@media (max-width:640px) { .market-report-file { grid-column:auto; } .market-brief-disclosure > summary { align-items:flex-start; flex-direction:column; gap:.2rem; } }

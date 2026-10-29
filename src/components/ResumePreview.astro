@@ -219,7 +219,9 @@ const { lang = 'en' } = Astro.props;
   }
 
   document.addEventListener('click', (e) => {
-    const target = e.target.closest('#preview-pdf-btn, #preview-briefing-btn');
+    const target = e.target instanceof Element
+      ? e.target.closest<HTMLButtonElement>('#preview-pdf-btn, #preview-briefing-btn')
+      : null;
     if (!target) return;
     target.disabled = true;
     openPreview(target.id === 'preview-briefing-btn' ? 'tech' : 'resume');
@@ -329,6 +331,7 @@ const { lang = 'en' } = Astro.props;
     document.dispatchEvent(new Event('tym:mermaid-refresh'));
   }
   document.addEventListener('astro:page-load', fillInlineBriefing);
+  document.addEventListener('about:content-updated', fillInlineBriefing);
   // Also run with a delay to catch mermaid.init() completing after initial load
   setTimeout(fillInlineBriefing, 500);
 </script>

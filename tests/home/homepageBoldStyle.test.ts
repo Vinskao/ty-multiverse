@@ -15,14 +15,15 @@ describe('homepage editorial layout', () => {
     expect(page).toContain('home.heroTagline');
   });
 
-  it('uses an oversized high-contrast headline and a vivid accent on the landing page', () => {
+  it('uses an oversized high-contrast headline and monochrome accent on the landing page', () => {
     expect(css).toMatch(/\.home-product-title[^}]*font-size:\s*clamp\(/s);
-    expect(css).toMatch(/\.home-page[^}]*--home-accent:/s);
+    expect(css).toContain('--home-accent: #1d1d1f');
+    expect(css).toContain(':root.theme-dark .home-page { --home-accent: #f5f5f7;');
     expect(css).toMatch(/\.home-product-steps article[^}]*grid-template-rows:/s);
   });
 
-  it('shares the dark lime accent across pages through the global theme tokens', () => {
-    expect(globalCss).toContain('--accent-regular: #c7ff00');
+  it('shares neutral contrast through the global theme tokens', () => {
+    expect(globalCss).toContain('--accent-regular: #ffffff');
     expect(globalCss).toContain('--surface-radius: 0.9rem');
   });
 });

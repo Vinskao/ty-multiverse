@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-import ContactCTA from "../components/ContactCTA.astro";
 import Hero from "../components/Hero.astro";
 import AboutMermaidDiagram from "../components/AboutMermaidDiagram.astro";
 import MermaidLoader from "../components/MermaidLoader.astro";
@@ -191,7 +190,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <link rel="stylesheet" href={briefingCssUrl} />
   </Fragment>
   <div class="stack gap-20">
-    <main class="wrapper about">
+    <main class="wrapper about about-mono">
 
       <div class="hero-section">
         <Hero title="About" tagline="KTY's Journey" />
@@ -246,6 +245,20 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
         </div>
       </div>
 
+      <p class="about-language-status" data-about-language-status role="status" aria-live="polite" hidden></p>
+
+      <section class="team-section" aria-labelledby="team-section-title">
+        <header class="team-section-heading">
+          <p>{lang === "zh" ? "團隊介紹" : "TEAM"}</p>
+          <h2 id="team-section-title">{lang === "zh" ? "一個人起步，持續擴大的團隊" : "Built by one. Open to many."}</h2>
+        </header>
+        <article class="team-member" aria-labelledby="team-founder-title">
+          <header class="team-member-heading">
+            <span>{lang === "zh" ? "創辦人" : "FOUNDER"}</span>
+            <h3 id="team-founder-title">{lang === "zh" ? "高天逸" : "Tianyi Kao"}</h3>
+            <p>TY Multiverse · Maya Sawa</p>
+          </header>
+          <div class="founder-overview">
       <section>
         <h2 class="section-title">{lang === "zh" ? "背景" : "Background"}</h2>
         <div class="content background-content">
@@ -851,16 +864,23 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
         </div>
       </section>
 
-      <section>
-        <h2 class="section-title">{lang === "zh" ? "人格特質" : "Personality"}</h2>
+      <details class="personality-overview">
+        <summary>{lang === "zh" ? "人格特質與職涯概覽" : "Personality & Career Overview"}</summary>
         <div class="content personality-content">
           {aboutData.personality[lang].split("\n\n").map((para) => (
             <p set:html={para.replace(/\n/g, "<br>")} />
           ))}
         </div>
+      </details>
+
+      <section class="founder-resume-tools" id="about-resume-preview" aria-label={lang === "zh" ? "履歷與專案簡介" : "Resume and project briefing"}>
+        <ResumePreview lang={lang} />
       </section>
 
 
+          </div>
+        </article>
+      </section>
     </main>
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>
@@ -906,11 +926,9 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
             const currentLang = normalizeLang(nextUrl.searchParams.get("lang"));
 
             if (currentLang !== nextLang) {
-              if (typeof (window as any).__saveLanguageSwitchScroll === "function") {
-                (window as any).__saveLanguageSwitchScroll();
-              }
-              nextUrl.searchParams.set("lang", nextLang);
-              window.location.href = nextUrl.toString();
+              import("../scripts/aboutLanguage").then(({ replaceAboutContent }) => {
+                void replaceAboutContent(nextLang);
+              });
             }
           });
         } catch (_) {}
@@ -1029,8 +1047,6 @@ less git-last-50-commits.txt`;
       document.addEventListener("astro:page-load", initGitCommitIngest);
     </script>
 
-    <ResumePreview lang={lang} />
-    <ContactCTA />
   </div>
   <MermaidLoader />
 

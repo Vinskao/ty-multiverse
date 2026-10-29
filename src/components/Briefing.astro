@@ -184,7 +184,7 @@ const content4 = splitContentToList(briefingData.quadrant4.content[lang]);
   }
   
   // Handle window resize to re-evaluate screen size
-  let resizeTimeout;
+  let resizeTimeout: ReturnType<typeof setTimeout>;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
@@ -198,6 +198,7 @@ const content4 = splitContentToList(briefingData.quadrant4.content[lang]);
   } else {
     setupHoverEffects();
   }
+  document.addEventListener('about:content-updated', setupHoverEffects);
   </script>
 
 
