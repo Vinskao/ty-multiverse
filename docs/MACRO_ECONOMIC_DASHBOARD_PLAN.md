@@ -512,3 +512,15 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 - DRAMeXchange（TrendForce）的 DRAM／NAND 現貨價要付費會員，沒有公開 API；網頁內容不能爬來用。
 - 免費且官方的替代：韓國關稅廳在 data.go.kr 的品目別進出口實績 API（依 HS 代碼，記憶體是 HS 8542.32，月資料）。需要使用者自行在 data.go.kr 申請服務金鑰，存成 Jenkins credential 後才能接。
 - 另一個不需金鑰的代理指標：SK hynix（`000660.KS`）、三星（`005930.KS`）、美光（`MU`）股價，可走既有 Yahoo 日收盤來源。
+
+### 23.3 其他來源的「額度用完」（2026-10-29）
+
+同一天的來源狀態裡，PMI、WorldBank、DGBAS、DGBASPrices 也都是 `*_daily_budget_exhausted`。原因各不相同：
+
+| 來源 | 真正原因 | 修正 |
+|---|---|---|
+| PMI（中經院） | `/pmi-trend/` 改版：只剩一張表，欄位是「臺灣製造業PMI」加六個產業分項；NMI 表消失（`/nmi-trend/` 是 404）。解析器要求 PMI 和 NMI 都有，所以每次都失敗、每次都扣額度，從未成功過。 | NMI 改為選填；依表頭找「臺灣製造業PMI」那一欄，不再固定讀第 2 欄。整張表不見才報 `cier_pmi_table_missing`。`TW_NMI` 暫時沒有資料，需另找來源。 |
+| WorldBank（月金價） | worldbank.org 和 thedocs.worldbank.org 對 urllib 預設 User-Agent 回 403，從未成功過。 | 兩個請求都帶瀏覽器 User-Agent（`BROWSER_AGENT`，與 Yahoo 共用）。 |
+| DGBAS、DGBASPrices | 部署重啟後還原的月資料仍被重抓（與 Yahoo 同一個問題）。另外額度用 `LIKE 'DGBAS%'` 計算，DGBASPrices 的每次請求也算進 DGBAS。 | 12 小時內抓過就跳過、不佔額度；額度改成來源名稱完全相同才計入。 |
+
+測試：maya-sawa `tests/test_market_macro_free_sources_budget.py`（中經院頁面、世界銀行頁面與 xlsx 都是 2026-10-29 真實回應的裁剪版，放在 `tests/fixtures/macro/`），`tests/test_market_macro_budget.py::test_a_source_budget_counts_only_its_own_calls_not_names_that_start_with_it`。
