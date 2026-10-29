@@ -25,6 +25,28 @@ The persisted FinMind rows are upserted and retained. The first fetch after this
 | Taiwan: only selected or opened stocks | Official whole-market tables (TWSE/TPEx open data and MOPS summary reports) return every listed company for one month or one quarter per request, so five years of the whole market is a few hundred requests instead of four per stock. | Decide whether a full-market screen is wanted; it adds about 1,800 companies of rows to the small PostgreSQL. |
 | FinMind Free is non-commercial | Keep FinMind if the site stays personal and non-commercial (with attribution). If the site becomes commercial, move Taiwan history to the official tables above, which are government open data that allow reuse with attribution (check each dataset's terms). | Owner decides whether the site is commercial. |
 
+## Taiwan whole market from MOPS (2026-10-29)
+
+maya-sawa `services/mops_fundamentals.py` backfills five years for every listed (sii) and OTC company from MOPS summary pages. Each page returns every company for one period, so the whole market is about 240 pages, not four requests per stock:
+
+| Data | MOPS page | Period | Stored as |
+| --- | --- | --- | --- |
+| Monthly revenue | `t21sc03` | 60 months | `TaiwanStockMonthRevenue` / `revenue` |
+| Income statement | `ajax_t163sb04` | 20 quarters | `TaiwanStockFinancialStatements`: Revenue, CostOfGoodsSold, GrossProfit, OperatingIncome, IncomeAfterTaxes, EPS |
+| Balance sheet | `ajax_t163sb05` | 20 quarters | `TaiwanStockBalanceSheet`: CurrentAssets, TotalAssets, CurrentLiabilities, Liabilities, equity |
+| Cash flow | `ajax_t163sb20` | 20 quarters | `TaiwanStockCashFlowsStatement`: operating cash flow, plus year-to-date pre-tax income |
+
+- MOPS amounts are NT$ thousand and statements are year to date. They are stored in yuan, and single quarters are the difference of consecutive year-to-date values; a quarter is skipped when the quarter before it is missing.
+- Columns are matched by name in each industry table (general, bank, securities, insurance, holding, other). Banks have no revenue or gross-profit line, so only the lines they report are kept.
+- Items use FinMind's names, so the metrics code is unchanged. Writes replace only these items, so FinMind items stay for the same period.
+- The collector waits 8 seconds between pages and stops a pass when MOPS answers 「查詢過於頻繁」. Passes run every 10 minutes while the backlog lasts, then hourly. The last two months and quarters are refetched each pass. Checkpoints are in `maya_sawa_mops_checkpoint`; set `MOPS_FUNDAMENTALS_ENABLED=0` to turn the collector off.
+- Inventory (inventory days) and capex (capex / operating cash flow) are not in the summaries. For now they still come from FinMind for selected or opened stocks. The next step is per-company MOPS statements for those stocks, after which FinMind can be switched off.
+- Tests: maya-sawa `tests/test_mops_fundamentals.py`. Fixtures are real 2026 pages that keep every table and header and the rows of 2330, 1101, 2801, 2855 and 6488. A live run on 2026-10-29 wrote 866 OTC companies' September revenue and the 2026Q2 OTC statements.
+
+## Japan via EDINET (in progress)
+
+The owner registered an EDINET API key on 2026-10-29. It belongs in Jenkins as Secret text `EDINET_API_KEY`, never in chat, the repo or logs. EDINET support will be built once the key is in Jenkins, so fixtures can be captured from real responses.
+
 ## What this change does not add
 
 The five-year window applies to the fundamentals already collected by the site. It does not add new datasets such as dividend history, analyst estimates, or market valuation series, and it does not cause an all-listed-stock Taiwan backfill.
