@@ -13,6 +13,7 @@ import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedD
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
+import { holdingGroupKey } from './market/holdingsGroups';
 import { renderResearchContent } from './market/researchContent';
 import { addResearchDiagramZoom } from './market/researchDiagramZoom';
 import { getMermaidConfig } from './mermaid-theme';
@@ -80,6 +81,7 @@ type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' 
 let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
+let marketHoldingIndustries = new Map<string, IndustryGroup[]>();
 let marketCustomInstruments: DashboardInstrument[] = [];
 
 function placeMarketDetail(row: HTMLElement | null, scroll = true) {
@@ -1314,6 +1316,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         target.append(empty);
         return;
     }
+    const groups = new Map<string, HTMLElement>();
     for (const instrument of instruments) {
         const row = document.createElement('button');
         row.type = 'button';
@@ -1360,6 +1363,13 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             timestamp.prepend(`${brokerAvailabilityLabel(quote.availability, marketLocale() === 'zh-TW' ? 'zh' : 'en')} · `);
         }
         row.append(item, price, timestamp);
+        if (targetId === 'market-auto-list') {
+            name.textContent = instrument.name;
+            row.classList.toggle('market-holding-up', Boolean(quote && quote.change > 0));
+            row.classList.toggle('market-holding-down', Boolean(quote && quote.change < 0));
+            row.title = [instrument.code, instrument.name, marketLabel, last.textContent, change.textContent, timestamp.textContent, watch?.text, ...instrumentEvents.map(event => `${marketEventLabel(event.type)} ${event.date}`)].filter(Boolean).join(' · ');
+            row.setAttribute('aria-label', row.title);
+        }
         row.addEventListener('click', () => {
             document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected').forEach((item) => item.setAttribute('aria-expanded', String(item === row && row.getAttribute('aria-expanded') !== 'true')));
             const detail = document.getElementById('market-instrument-detail');
@@ -1369,7 +1379,19 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             if (placeholder) placeholder.hidden = expanded;
             if (expanded) { setMarketDetailInstrument(instrument); placeMarketDetail(row); }
         });
-        target.append(row);
+        if (targetId === 'market-auto-list') {
+            const identity = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
+            const industries = marketHoldingIndustries.get(identity) || [];
+            const key = holdingGroupKey(industries);
+            let group = groups.get(key);
+            if (!group) {
+                group = document.createElement('section'); group.className = 'market-holding-industry';
+                const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : marketText('Unclassified', '未分類');
+                const rows = document.createElement('div'); rows.className = 'market-holding-industry-rows';
+                group.append(heading, rows); groups.set(key, group); target.append(group);
+            }
+            group.querySelector('.market-holding-industry-rows')?.append(row);
+        } else target.append(row);
     }
     // Restore the open instrument after the rebuild, without scrolling the page.
     const reopened = openCode ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((row) => row.dataset.marketCode === openCode) : undefined;
@@ -1383,6 +1405,15 @@ async function fetchMarketDashboard() {
         const data = await response.json() as MarketDashboardPayload;
         marketAutoInstruments = data.automatic?.positions ?? [];
         marketCustomInstruments = data.custom ?? [];
+        const codes = [...new Set(marketAutoInstruments.map(instrument => researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null })))];
+        const industries = await Promise.all(codes.map(async code => {
+            try {
+                const response = await fetch(astroApiPath(`/api/market/dashboard/industries?code=${encodeURIComponent(code)}`), { cache: 'no-store', signal: AbortSignal.timeout(6000) });
+                if (!response.ok) return [] as IndustryGroup[];
+                const body = await response.json(); return (Array.isArray(body.groups) ? body.groups : []) as IndustryGroup[];
+            } catch { return [] as IndustryGroup[]; }
+        }));
+        marketHoldingIndustries = new Map(codes.map((code, index) => [code, industries[index]]));
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
         const updated = document.getElementById('market-auto-updated');

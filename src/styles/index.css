@@ -2137,3 +2137,21 @@
 .market-report-metadata[open] > summary { grid-column:1 / -1; }
 @media (max-width:900px) { .home-page .market-overview-grid { grid-template-columns:minmax(0,1fr); } }
 @media (max-width:640px) { .market-report-file { grid-column:auto; } .market-brief-disclosure > summary { align-items:flex-start; flex-direction:column; gap:.2rem; } }
+
+/* Compact holdings navigator; retain an overflow fallback for large portfolios. */
+@media (min-width: 901px) {
+  .home-page .market-watchlist { position:sticky; top:4.5rem; max-height:calc(100vh - 5rem); overflow-y:auto; scrollbar-width:thin; }
+}
+.market-holding-industry { min-width:0; margin:.45rem 0; }
+.market-holding-industry h6 { margin:0 0 .25rem; color:var(--gray-400); font-size:.72rem; font-weight:650; }
+.market-holding-industry-rows { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.25rem; }
+.market-holding-industry .market-watch-row { display:block; padding:.4rem .5rem; border-radius:.45rem; min-width:0; }
+.market-holding-industry .market-watch-instrument { display:flex; align-items:baseline; gap:.4rem; min-width:0; }
+.market-holding-industry .market-watch-instrument strong { font-size:.78rem; flex:none; }
+.market-holding-industry .market-watch-instrument small { font-size:.72rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.market-holding-industry .market-watch-price, .market-holding-industry .market-updated, .market-holding-industry .market-watch-badge, .market-holding-industry .market-row-analysis, .market-holding-industry .market-event-badges { display:none; }
+.market-holding-industry .market-watch-row[aria-expanded="true"] { border-radius:.45rem; background:var(--gray-800); }
+.market-holding-industry .market-watch-row:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+.market-holding-industry .market-watch-row.market-holding-up { border-left:2px solid #e35b64; }
+.market-holding-industry .market-watch-row.market-holding-down { border-left:2px solid #3aa985; }
+.market-holding-industry-rows > .market-instrument-detail { grid-column:1 / -1; }
