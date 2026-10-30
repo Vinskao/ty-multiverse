@@ -245,7 +245,9 @@ const { lang = 'en' } = Astro.props;
 <!-- Inject diagram-map into window so the inline script can access it without imports -->
 <script>
   import diagramMapJson from '../storages/diagram-map.json';
+  import { diagramSource } from '../scripts/portfolio/briefingSource';
   (window as any).__diagramMap = diagramMapJson;
+  (window as any).__diagramSource = diagramSource;
 </script>
 
 <!-- Populate the inline Architecture Diagrams block after mermaid has rendered -->
@@ -274,7 +276,9 @@ const { lang = 'en' } = Astro.props;
     techHeading.closest('section')
       .querySelectorAll('.mermaid-diagram').forEach(function(d) {
         var origPre = d.querySelector('pre.mermaid');
-        var src = origPre && origPre.dataset && origPre.dataset.original;
+        var src = origPre && (window.__diagramSource
+          ? window.__diagramSource(origPre)
+          : (origPre.dataset && (origPre.dataset.original || origPre.dataset.mermaidSource)));
         if (!src) return; // skip if original wasn't saved
 
         var meta = diagramMap[idx] || null;

@@ -2,7 +2,7 @@
 ---
 
 <!-- 浮動聊天按鈕（共用） -->
-<div class="qa-bot-toggle" id="qaBotToggle">
+<div class="qa-bot-toggle" id="qaBotToggle" transition:persist="qa-bot-toggle">
 	<div class="avatar-img-wrap">
 		<img src="" alt="" class="toggle-image" />
 	</div>
@@ -10,7 +10,7 @@
 </div>
 
 <!-- 聊天對話框（共用） -->
-<div class="qa-bot-container" id="qaBotContainer">
+<div class="qa-bot-container" id="qaBotContainer" transition:persist="qa-bot-container">
 	<div class="chat-header">
 		<div class="header-content">
 			<div class="avatar-img-wrap">
@@ -92,7 +92,7 @@
 </div>
 
 <!-- 圖片放大模態框（共用） -->
-<div class="image-modal" id="imageModal">
+<div class="image-modal" id="imageModal" transition:persist="qa-image-modal">
 	<div class="image-modal-content">
 		<button class="image-modal-close" id="imageModalClose">&times;</button>
 		<img id="modalImage" src="" alt="放大圖片" />
@@ -100,7 +100,7 @@
 </div>
 
 <!-- 共用的等待UI组件 -->
-<div class="loading-message" id="loadingMessage" style="display: none;">
+<div class="loading-message" id="loadingMessage" style="display: none;" transition:persist="qa-loading-message">
 	<div class="message bot-message">
 		<div class="message-avatar">
 			<img src="" alt="" class="bot-avatar" id="loadingMsgAvatar" />

@@ -4,6 +4,7 @@ import NotificationCenter from "./NotificationCenter.astro";
 import { ThemeToggle } from "./ThemeToggle";
 import type { iconPaths } from "./IconPaths";
 import { socialLinks } from '../scripts/socialLinks';
+import { currentPageKey } from '../scripts/navigation/menu';
 
 // 鐛插彇 URL 鍙冩暩
 const url = new URL(Astro.request.url);
@@ -84,10 +85,15 @@ const textLinks: {
 ];
 
 const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[] = socialLinks;
+
+// Which page the brand area names (null for pages outside the menu).
+const pageKey = currentPageKey(currentPath);
+const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (pageKey === "nav.login" ? "Login" : null);
 ---
 
 <nav>
   <div class="menu-header">
+    <div class="site-brand">
     <a
       href="/tymultiverse"
       class="site-title section-title is-inline"
@@ -101,6 +107,10 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[]
       />
       TY Multiverse
     </a>
+    {pageKey && pageLabel && (
+      <span class="site-page" aria-current="page" data-i18n={pageKey}>{pageLabel}</span>
+    )}
+    </div>
     <menu-button>
       <template>
         <button class="menu-button" aria-expanded="false">

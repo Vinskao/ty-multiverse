@@ -29,6 +29,33 @@ nav {
   letter-spacing: 0;
 }
 
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* The page you are on, shown beside the brand: "TY MULTIVERSE / About". */
+.site-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--gray-300);
+}
+
+.site-page::before {
+  content: "/";
+  color: var(--gray-600);
+}
+
 .menu-button {
   position: relative;
   display: flex;
