@@ -2451,6 +2451,9 @@ section:nth-child(3) {
 .about-mono .team-member-heading p { margin:0; color:var(--gray-400); font-size:.85rem; }
 .about-mono .founder-overview { display:grid; gap:2.5rem; }
 .about-mono .personality-overview { padding-top:1rem; border-top:1px solid var(--gray-800); }
+.about-mono .career-overview { padding-top:1rem; border-top:1px solid var(--gray-800); }
+.about-mono .career-overview > summary { color:var(--gray-200); font-size:1.25rem; font-weight:700; cursor:pointer; padding:.5rem 0; }
+.about-mono .career-overview[open] > summary { margin-bottom:1rem; }
 .about-mono .personality-overview > summary { color:var(--gray-200); font-weight:650; cursor:pointer; }
 .about-mono .personality-overview[open] > summary { margin-bottom:.8rem; }
 .about-mono .exp-badge { background:color-mix(in srgb,var(--gray-800) 45%,transparent); border-color:var(--gray-700); }

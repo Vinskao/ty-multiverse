@@ -354,6 +354,10 @@ const { lang = 'en' } = Astro.props;
     margin: 0 auto 3rem;
   }
 
+  .briefing-inline:has(.briefing-inline-content:empty) {
+    display: none;
+  }
+
   .briefing-inline .section-title {
     margin-bottom: 1.5rem;
   }

@@ -282,7 +282,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
         </div>
       </section>
       <!-- Briefing Section -->
-      <Briefing />
+      <details class="career-overview">
+        <summary>{lang === "zh" ? "職涯概覽" : "Career Briefing"}</summary>
+        <Briefing showTitle={false} />
+      </details>
 
       <section>
         <h2 class="section-title">{lang === "zh" ? "專案經歷" : "Project Experience"}</h2>
