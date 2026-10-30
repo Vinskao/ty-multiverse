@@ -2458,3 +2458,48 @@ section:nth-child(3) {
 .about-mono .experience-item, .about-mono .education-item, .about-mono .technical-experience-item { border-color:var(--gray-800); }
 .about-mono .btn.is-accent, .about-mono .btn.is-primary, .about-mono .btn.is-success { color:var(--accent-text-over); background:var(--accent-regular); border-color:var(--gray-600); }
 .about-mono .btn.is-outline { color:var(--gray-100); background:transparent; border-color:var(--gray-600); }
+
+/* The legacy desktop grid put every item after the hero into its narrow side tracks. */
+main.about.about-mono {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  width: min(100%, 83rem);
+  max-width: 83rem;
+  min-width: 0;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+main.about.about-mono > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.about-mono .team-section,
+.about-mono .team-member,
+.about-mono .founder-overview {
+  width: 100%;
+  min-width: 0;
+}
+
+.about-mono .founder-overview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.about-mono .exp-badges {
+  width: min(100%, 60rem);
+}
+
+.about-mono .founder-overview > section {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.about-mono .founder-overview > section:hover {
+  transform: none;
+  box-shadow: none;
+}

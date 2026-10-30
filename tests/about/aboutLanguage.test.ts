@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { replaceAboutContent } from '../../src/scripts/aboutLanguage';
+import { bindAboutLanguage, replaceAboutContent } from '../../src/scripts/aboutLanguage';
 
 const markup = (language: string, label: string) => `<!doctype html><html lang="${language}"><body><main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>${label}</h1><section id="about-resume-preview">${label} resume</section></main></body></html>`;
 
@@ -51,5 +51,29 @@ describe('About language content swap', () => {
 
     expect(document.querySelector('.about h1')?.textContent).toBe('English');
     expect(document.querySelector('[data-about-language-status]')?.textContent).toContain('語言切換失敗');
+  });
+
+  it('binds AppLang changes to an in-place About update', async () => {
+    let listener: ((event: { code: string }) => void) | undefined;
+    const unsubscribe = vi.fn();
+    const appLang = {
+      onChange: vi.fn((callback: (event: { code: string }) => void) => {
+        listener = callback;
+        return unsubscribe;
+      }),
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => markup('zh-Hant', '繁體中文'),
+    }));
+
+    const cleanup = bindAboutLanguage(appLang);
+    listener?.({ code: 'zh' });
+    await vi.waitFor(() => expect(document.querySelector('.about h1')?.textContent).toBe('繁體中文'));
+
+    expect(document.documentElement.lang).toBe('zh-Hant');
+    expect(cleanup).toBe(unsubscribe);
+    cleanup();
+    expect(unsubscribe).toHaveBeenCalledOnce();
   });
 });

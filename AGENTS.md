@@ -62,7 +62,8 @@ Follow the workspace TDD rules (`../AGENTS.md`, "Test-driven development"): fail
   - `Nav.astro` contains the global script that translates these elements on `astro:page-load` and `AppLang.onChange`
 - **Server-side / SSR (About)**
   - Reads `?lang=` search parameter
-  - **Reload Rule**: `about.astro` must trigger a full `window.location.href` reload on language change so the server can re-render
+  - Initial rendering reads `?lang=`. Language toggles fetch the matching SSR variant and replace the About profile in place; do not reload the document.
+  - The page script must re-run or rebind after Astro view transitions, and should preserve the shared `AppLang` source of truth.
 - **Cleanup**
   - In module scripts, always keep the `onChange` cleanup function to avoid listener accumulation during View Transitions navigation
   ```javascript

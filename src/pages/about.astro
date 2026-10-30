@@ -184,7 +184,11 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 }
 ---
 
-<BaseLayout title="About | Tianyi Kao" description="About Tianyi Kao">
+<BaseLayout
+  title={lang === "zh" ? "關於｜高天逸" : "About | Tianyi Kao"}
+  description={lang === "zh" ? "TY Multiverse 創辦人高天逸的經歷與履歷。" : "About Tianyi Kao and his experience."}
+  lang={lang === "zh" ? "zh-Hant" : "en"}
+>
   <Fragment slot="head">
     <link rel="stylesheet" href={aboutCssUrl} />
     <link rel="stylesheet" href={briefingCssUrl} />
@@ -193,7 +197,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <main class="wrapper about about-mono">
 
       <div class="hero-section">
-        <Hero title="About" tagline="KTY's Journey" />
+        <Hero title={lang === "zh" ? "關於" : "About"} tagline={lang === "zh" ? "KTY 的旅程" : "KTY's Journey"} />
         <div class="exp-badges">
           <span class="exp-badge">
             <span class="exp-badge-label">
@@ -884,58 +888,52 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     </main>
     <!-- Global language manager -->
     <script src="/tymultiverse/scripts/lang.js" is:inline></script>
-    <script>
-      let cleanupAboutLangSync: (() => void) | null = null;
+    <script data-astro-rerun>
+      import { bindAboutLanguage, replaceAboutContent } from "../scripts/aboutLanguage";
+
+      type AboutLanguageWindow = Window & {
+        AppLang?: {
+          get: () => string;
+          set: (code: "zh" | "en") => void;
+          onChange: (callback: (event: { code: string }) => void) => () => void;
+        };
+        __tymAboutLanguageState?: { cleanup?: () => void; pageLoadBound?: boolean };
+      };
+
+      const aboutWindow = window as AboutLanguageWindow;
+      const state = (aboutWindow.__tymAboutLanguageState ??= {});
 
       function normalizeLang(code?: string | null) {
-        return code && code.toLowerCase().startsWith("zh") ? "zh" : "en";
+        return code?.toLowerCase().startsWith("zh") ? "zh" : "en";
       }
 
       function syncAboutLanguage() {
-        try {
-          const appLang = (window as any).AppLang;
-          if (!appLang) {
-            setTimeout(syncAboutLanguage, 50);
-            return;
-          }
+        const appLang = aboutWindow.AppLang;
+        if (!appLang) return;
 
-          const url = new URL(window.location.href);
-          const urlLang = normalizeLang(url.searchParams.get("lang"));
-          const appLangCode = normalizeLang(appLang.get());
+        const url = new URL(window.location.href);
+        const hasUrlLanguage = url.searchParams.has("lang");
+        const targetLanguage = hasUrlLanguage
+          ? normalizeLang(url.searchParams.get("lang"))
+          : normalizeLang(appLang.get());
+        if (!hasUrlLanguage) {
+          url.searchParams.set("lang", targetLanguage);
+          window.history.replaceState({}, "", url.toString());
+        }
 
-          if (url.searchParams.has("lang")) {
-            if (appLangCode !== urlLang) {
-              appLang.set(urlLang);
-            }
-          } else {
-            // About is SSR-rendered from the URL. Add the default language before
-            // syncing AppLang so a saved site preference cannot override this page.
-            url.searchParams.set("lang", "en");
-            window.history.replaceState({}, "", url.toString());
-            if (appLangCode !== "en") appLang.set("en");
-          }
+        if (normalizeLang(appLang.get()) !== targetLanguage) appLang.set(targetLanguage);
+        state.cleanup?.();
+        state.cleanup = bindAboutLanguage(appLang);
 
-          if (cleanupAboutLangSync) {
-            cleanupAboutLangSync();
-            cleanupAboutLangSync = null;
-          }
-
-          cleanupAboutLangSync = appLang.onChange(({ code }: { code: string }) => {
-            const nextLang = normalizeLang(code);
-            const nextUrl = new URL(window.location.href);
-            const currentLang = normalizeLang(nextUrl.searchParams.get("lang"));
-
-            if (currentLang !== nextLang) {
-              import("../scripts/aboutLanguage").then(({ replaceAboutContent }) => {
-                void replaceAboutContent(nextLang);
-              });
-            }
-          });
-        } catch (_) {}
+        const renderedLanguage = normalizeLang(document.documentElement.dataset.defaultLanguage);
+        if (renderedLanguage !== targetLanguage) void replaceAboutContent(targetLanguage);
       }
 
+      if (!state.pageLoadBound) {
+        document.addEventListener("astro:page-load", syncAboutLanguage);
+        state.pageLoadBound = true;
+      }
       syncAboutLanguage();
-      document.addEventListener("astro:page-load", syncAboutLanguage);
     </script>
 
     <script>
