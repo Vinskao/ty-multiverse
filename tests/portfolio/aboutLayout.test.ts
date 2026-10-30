@@ -19,7 +19,8 @@ it('keeps the founder profile in one readable desktop column', () => {
 
 it('re-runs the About language controller after Astro view transitions', () => {
   const page = readFileSync(resolve(__dirname, '../../src/pages/about.astro'), 'utf8');
-  expect(page).toMatch(/<script[^>]*data-astro-rerun/);
+  expect(page).toMatch(/<script>\s*import \{ bindAboutLanguage, replaceAboutContent \}/);
+  expect(page).toContain('document.addEventListener("astro:page-load", syncAboutLanguage)');
   expect(page).toContain('bindAboutLanguage');
   expect(page).toContain('lang={lang === "zh" ? "zh-Hant" : "en"}');
 });
