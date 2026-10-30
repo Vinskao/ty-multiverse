@@ -1,5 +1,6 @@
 import { palaisLinkDisplay } from './palais/modules';
 import { visibleNavItems } from './navigation/menu';
+import { updateAuthNavLabel } from './navigation/authNavLanguage';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
 
@@ -627,7 +628,7 @@ export class NavController {
       if (this.isLoggedIn && !isOnLoginPage) {
         // 已登入：顯示為 Logout，href 設為 #
         loginLogoutLink.href = '#';
-        loginLogoutLink.textContent = 'Logout';
+        updateAuthNavLabel(loginLogoutLink, true, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
         loginLogoutLink.style.display = 'block';
         loginLogoutLink.style.visibility = 'visible';
         loginLogoutLink.style.opacity = '1';
@@ -635,7 +636,7 @@ export class NavController {
         // 未登入：顯示為 Login，href 設為登入頁面
         const currentPath = window.location.pathname + window.location.search;
         loginLogoutLink.href = `/tymultiverse/login?redirect=${encodeURIComponent(currentPath)}`;
-        loginLogoutLink.textContent = 'Login';
+        updateAuthNavLabel(loginLogoutLink, false, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
         loginLogoutLink.style.display = 'block';
         loginLogoutLink.style.visibility = 'visible';
         loginLogoutLink.style.opacity = '1';
