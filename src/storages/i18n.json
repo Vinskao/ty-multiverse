@@ -83,7 +83,7 @@
     "fileHint": { "en": "Batch encode and restore image files", "zh": "批次轉換圖片與文字檔" }
   },
   "apiPage": {
-    "title": { "en": "Public data API", "zh": "公開資料 API" }
+    "title": { "en": "Data API", "zh": "資料 API" }
   },
   "home": {
     "buildVersion": { "en": "Build", "zh": "版本" },
@@ -147,6 +147,7 @@
     "marketOverviewNote": { "en": "Refreshed every 10 minutes", "zh": "每 10 分鐘更新一次" },
     "macroTitle": { "en": "Key macro data · U.S., Taiwan and more", "zh": "多國重要總體經濟資料" },
     "macroDescription": { "en": "Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.", "zh": "美國、台灣與主要經濟體的就業、通膨、利率、消費、匯率與貿易資料，並提醒即將公布的日程。" },
+    "macroCountryClear": { "en": "Clear", "zh": "清除" },
     "macroCoverage": { "en": "Economies covered", "zh": "資料涵蓋經濟體" },
     "macroCountryUs": { "en": "United States", "zh": "美國" },
     "macroCountryTaiwan": { "en": "Taiwan", "zh": "台灣" },

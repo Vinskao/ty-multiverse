@@ -1,3 +1,4 @@
+import { prioritizeMacroGroups, type MacroCountry } from './market/macroCountry';
 import type { Portfolio, PortfolioPosition } from '../types/portfolio';
 import { taiwanPortfolio } from '../services/core/taiwanPortfolio';
 import { hasOverseasRegion, regionSplit } from './market/portfolioRegions';
@@ -1814,7 +1815,7 @@ function loadMacroNodeAnalyses() {
 }
 
 function bindMacroViewToggle() {
-    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-macro-view]')];
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('.macro-view-toggle button[data-macro-view]')];
     for (const button of buttons) {
         if (button.dataset.bound) continue;
         button.dataset.bound = 'true';
@@ -1846,7 +1847,31 @@ async function renderMacroChainsView(snapshot: MacroSnapshot) {
     renderMacroChains(target, { graph: macroLogicGraph as MacroGraph, zh: marketLocale() === 'zh-TW', analyses: await loadMacroNodeAnalyses(), chart });
 }
 
+let macroCountry: MacroCountry | null = null;
+let macroSnapshot: MacroSnapshot | null = null;
+let macroPreviousView = 'chains';
+function bindMacroCountryControls() {
+    const controls = document.querySelector<HTMLElement>('.macro-country-coverage');
+    if (!controls || controls.dataset.bound) return;
+    controls.dataset.bound = 'true';
+    controls.addEventListener('click', (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button');
+        if (!button) return;
+        const next = button.dataset.macroCountry as MacroCountry | undefined;
+        if (next && !macroCountry) macroPreviousView = document.getElementById('macro-dashboard')?.dataset.macroView || 'chains';
+        macroCountry = next && next !== macroCountry ? next : null;
+        controls.querySelectorAll<HTMLButtonElement>('[data-macro-country]').forEach(item => item.setAttribute('aria-pressed', String(item.dataset.macroCountry === macroCountry)));
+        const clear = controls.querySelector<HTMLButtonElement>('[data-macro-country-clear]');
+        if (clear) clear.hidden = !macroCountry;
+        const view = macroCountry ? 'grid' : macroPreviousView;
+        document.querySelector<HTMLButtonElement>(`.macro-view-toggle button[data-macro-view="${view}"]`)?.click();
+        if (macroSnapshot) renderMacroDashboard(macroSnapshot);
+    });
+}
+
 function renderMacroDashboard(snapshot: MacroSnapshot) {
+    macroSnapshot = snapshot;
+    bindMacroCountryControls();
     void renderMacroChainsView(snapshot);
     const grid = document.getElementById('macro-indicator-grid');
     const list = document.getElementById('macro-event-list');
@@ -1856,7 +1881,8 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
-    for (const group of MACRO_GROUPS) {
+    for (const groupSpec of prioritizeMacroGroups(MACRO_GROUP_SPECS, macroCountry)) {
+        const group = MACRO_GROUPS.find(item => item.id === groupSpec.id)!;
         const inGroup = events.filter((event) => group.eventGroups.includes(event.groupId)
             && (group.id === 'consumption' || !MACRO_FOREIGN_EVENT.test(event.title)));
         inGroup.forEach((event) => claimed.add(event));

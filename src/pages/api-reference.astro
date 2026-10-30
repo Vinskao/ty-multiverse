@@ -4,15 +4,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="API｜TY 市場研究室"
-  description="查詢 TY 市場研究室提供的行情、總體經濟資料、財報與研究報告 API。公開端點為唯讀，無須登入。"
+  description="查詢行情、總體經濟、財報與研究報告 API 規格；授權與計費方式待洽談。"
   canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse/api-reference/"
   lang="zh-Hant"
 >
   <main class="wrapper stack gap-8 api-reference">
     <header class="stack gap-2">
-      <h1 data-i18n="apiPage.title">公開資料 API</h1>
-      <p>可查詢行情、總體經濟資料、財報與研究報告。公開端點僅供讀取，無須登入；每個端點附有參數說明與 curl 範例。</p>
-      <p class="api-note">寫入操作與個人帳戶資料不提供匿名存取。如有其他資料整合需求，請透過<a href="/tymultiverse/#contact">首頁聯絡我們</a>。</p>
+      <h1 data-i18n="apiPage.title">資料 API</h1>
+      <p>行情、總體經濟資料、財報與研究報告的 API 規格，供資料整合評估。API 服務預計採授權收費，方案與開通方式請洽詢。</p>
+      <p class="api-note">此頁提供規格文件；登入授權、權限控管及計費尚待建置。如有資料整合需求，請透過<a href="/tymultiverse/#contact">首頁聯絡我們</a>。</p>
     </header>
     <p id="api-status" class="api-status" role="status" aria-live="polite">載入規格中…</p>
     <div id="api-groups" class="stack gap-8"></div>
@@ -38,7 +38,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const response = await fetch("/maya-sawa/public-openapi.json", { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const operations = publicOperations(await response.json(), window.location.origin);
-      status.textContent = `共 ${operations.length} 個公開端點`;
+      status.textContent = `共 ${operations.length} 個文件端點`;
       for (const [title, rows] of groupOperations(operations)) {
         const section = el("section", "api-group");
         section.append(el("h2", undefined, title));
