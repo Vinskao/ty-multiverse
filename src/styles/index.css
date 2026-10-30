@@ -2139,6 +2139,8 @@
 @media (max-width:640px) { .market-report-file { grid-column:auto; } .market-brief-disclosure > summary { align-items:flex-start; flex-direction:column; gap:.2rem; } }
 
 /* Compact holdings navigator; retain an overflow fallback for large portfolios. */
+.home-page .market-instrument-layout { grid-column:1 / -1; display:grid; grid-template-columns:minmax(17rem,.85fr) minmax(0,2fr); align-items:start; gap:clamp(.75rem,1.6vw,1.4rem); min-width:0; }
+@media (max-width:900px) { .home-page .market-instrument-layout { grid-template-columns:minmax(0,1fr); } }
 @media (min-width: 901px) {
   .home-page .market-watchlist { position:sticky; top:4.5rem; max-height:calc(100vh - 5rem); overflow-y:auto; scrollbar-width:thin; }
 }

@@ -183,6 +183,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
 						</section>
 						<div class="market-overview-grid">
+							<div class="market-instrument-layout">
 							<section id="market-watchlist" class="market-watchlist market-quote-section" aria-label="Market watchlist">
 								<div id="market-automation" class="market-automation" role="status" aria-live="polite" hidden></div>
 								<div class="market-watchlist-heading"><span>Instrument</span><span>Price / change</span><span>Data time</span></div>
@@ -308,6 +309,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								</div>
 					<div id="market-chart-placeholder" class="market-chart-placeholder"><strong>選一檔持倉，開始研究</strong><span>價格、法人、資券、基本面、研究與 AI 分析都會集中在這裡。</span><small>從左側清單選擇標的</small></div>
 							</section>
+							</div>
 							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
 								<div class="market-usage-content">
