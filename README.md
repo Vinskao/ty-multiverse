@@ -50,24 +50,19 @@ TY-Multiverse 前端為多維度管理系統，包含：
 
 ```mermaid
 graph TD
-    Client[客戶端/瀏覽器] --> |請求| Router[路由層]
-    Router --> |重定向| SSO[SSO Server 認證]
-    SSO --> |驗證| API[TY-Multiverse-Backend]
-    API --> |查詢| DB[(數據庫)]
-    
-    Client --> |請求圖片| Nginx[Nginx Static File Server]
-    Nginx --> |提供| Images[角色圖片]
-    
-    subgraph 客戶端緩存
-        BrowserCache[瀏覽器緩存]
-        BrowserCache --> |localStorage| CharacterData[角色戰力數據]
-        BrowserCache --> |localStorage| ThemeData[主題設置]
-        BrowserCache --> |localStorage| EditorContent[編輯器內容]
-        BrowserCache --> |localStorage| FightData[戰鬥數據]
-    end
-    
-    Client --> |讀取/寫入| BrowserCache
-    API --> |返回數據| Client
+    Browser["瀏覽器"] --> Astro["Astro SSR（src/pages, src/middleware.ts）"]
+    Astro --> Islands["React islands / src/scripts"]
+    Browser --> |"localStorage"| LocalCache["主題、語言、角色與編輯器快取"]
+    Astro --> ApiRoutes["Astro API routes（src/pages/api）"]
+    ApiRoutes --> MarketProxy["market/*：行情、投組、報告、通知代理"]
+    ApiRoutes --> PeopleProxy["people/avatar、blog、runpod/cost"]
+    MarketProxy --> |"HTTP"| MayaSawa["maya-sawa（MAYA_SAWA_URL）"]
+    Islands --> |"HTTP 登入"| Backend["ty-multiverse-backend（TYMB_URL）"]
+    Islands --> |"HTTP /tymg"| Gateway["ty-multiverse-gateway（GATEWAY_URL）"]
+    Gateway --> Backend
+    Islands --> |"QA、voyeur、影片合併"| MayaSawa
+    Islands --> |"登入流程"| SSO["SSO（Keycloak）"]
+    Backend --> DB[("資料庫")]
 ```
 
 ### Astro 組件架構
