@@ -198,8 +198,10 @@ spec:
             name: ty-multiverse-frontend
             port:
               number: 80
+      # Prefix, not Exact: in regex mode an Exact "/" does not replace the default
+      # backend location, so the old root would 404 instead of redirecting.
       - path: /
-        pathType: Exact
+        pathType: Prefix
         backend:
           service:
             name: ty-multiverse-frontend

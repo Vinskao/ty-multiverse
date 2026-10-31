@@ -27,6 +27,16 @@ describe('old site URLs move to the root of tymultiverse.cc', () => {
     expect(at('http://localhost:4321/about/')).toBeNull();
   });
 
+  it('recognises the old host from the proxy header when Astro reports localhost', () => {
+    // Astro does not trust the Host header by default, so behind the Ingress context.url is localhost.
+    const url = new URL('http://localhost:4321/');
+    expect(legacyRedirect(url, 'peoplesystem.tatdvsonorth.com')).toBe('https://tymultiverse.cc/');
+    expect(legacyRedirect(new URL('http://localhost:4321/about/?x=1'), 'peoplesystem.tatdvsonorth.com:443'))
+      .toBe('https://tymultiverse.cc/about/?x=1');
+    expect(legacyRedirect(url, 'tymultiverse.cc')).toBeNull();
+    expect(legacyRedirect(url, 'evil.example')).toBeNull();
+  });
+
   it('never redirects off-site, whatever the path contains', () => {
     expect(at('https://tymultiverse.cc/tymultiverse//evil.example/x')).toBe('https://tymultiverse.cc/evil.example/x');
   });
