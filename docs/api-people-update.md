@@ -166,7 +166,7 @@ if (response.ok) {
 The API route automatically detects the environment and forwards requests to the appropriate backend URL:
 
 - **Development**: `http://localhost:8080/tymb/people/update`
-- **Production**: Uses `PUBLIC_TYMB_URL` environment variable or defaults to `https://peoplesystem.tatdvsonorth.com/tymb/people/update`
+- **Production**: Uses `PUBLIC_TYMB_URL` environment variable or defaults to `https://tymultiverse.cc/tymb/people/update`
 
 ## Testing
 

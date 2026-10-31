@@ -143,7 +143,7 @@ FRED 日曆沒有確認資料所屬月時，`referencePeriod=null`，UI 顯示�
 
 ## 6. 本站 API 契約
 
-新增 backend `GET /market/dashboard/macro`，由 Astro 代理為 `GET /tymultiverse/api/market/dashboard/macro`。公開唯讀，回應不含任何帳戶資料。
+新增 backend `GET /market/dashboard/macro`，由 Astro 代理為 `GET /api/market/dashboard/macro`。公開唯讀，回應不含任何帳戶資料。
 
 參數：`from`／`to` 為 ISO 日期，`historyMonths` 預設 24、上限 60；日期視窗上限 366 天。預設視窗為台北今日往前 7 天到未來 30 天。
 
@@ -325,7 +325,7 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 ## 17. 最新正式環境驗收（2026-10-15）
 
 - Maya build #108 已部署 `papakao/maya-sawa:108`，pod 在 `10.0.158.183` 為 Ready，rollout 成功。修正 build #107 暴露的 ARM64 wheel 相容性，將 Shioaji 升至可安裝的 1.5.8。
-- 前端 build #277 已部署 `papakao/ty-multiverse-frontend:277`，Deployment 為 1/1 Ready；正式 `/tymultiverse` 回 HTTP 200，頁面含總經事件與指標面板。
+- 前端 build #277 已部署 `papakao/ty-multiverse-frontend:277`，Deployment 為 1/1 Ready；正式首頁回 HTTP 200，頁面含總經事件與指標面板。
 - 正式 macro API 回 HTTP 200，回傳 6 個 BLS 指標與 6 個近期事件。直接查詢 PostgreSQL 確認 `maya_sawa_macro_observations` 486 列、`maya_sawa_macro_events` 6 列、`maya_sawa_macro_fetch_runs` 17 列及 `maya_sawa_macro_event_revisions` 6 列；GET 取用既有 DB snapshot，不以頁面請求現場抓取。
 - 最近同步時 FinanceCalendar、FederalReserve 日曆與 BLS 回報 success；事件日期／時間已供總經面板顯示。尚無共識值的事件繼續顯示「尚無共識資料」，不產生超預期／低於預期標籤。
 - **FRED 尚未驗收成功**：正式 API source health 為 `TimeoutError`，資料庫目前沒有 FRED 利率觀察值；FRED release dates 亦未確認寫入。已在 Maya pod 內確認 FRED 網域 DNS、TCP 443 與 TLS 握手可通，但 keyed API 請求仍逾時。不可將 FRED 利率與 FRED release dates 標示完成，需再查上游回應／執行環境出口並於 API 成功後重驗 DB。

@@ -5,7 +5,7 @@
  *
  * 配置說明：
  * 1. 在 Google Apps Script 中設置以下腳本屬性：
- *    - KEYCLOAK_URL: Keycloak 服務器 URL (例如: https://peoplesystem.tatdvsonorth.com)
+ *    - KEYCLOAK_URL: Keycloak 服務器 URL (例如: https://tymultiverse.cc)
  *    - KEYCLOAK_REALM: Realm 名稱 (例如: PeopleSystem)
  *    - KEYCLOAK_CLIENT_ID: Client ID (例如: peoplesystem)
  *    - KEYCLOAK_USERNAME: 用戶名
@@ -32,7 +32,7 @@ interface ApiConfig {
 
 // 配置常量
 const CONFIG: ApiConfig = {
-  KEYCLOAK_URL: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_URL') || 'https://peoplesystem.tatdvsonorth.com',
+  KEYCLOAK_URL: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_URL') || 'https://tymultiverse.cc',
   KEYCLOAK_REALM: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_REALM') || 'PeopleSystem',
   KEYCLOAK_CLIENT_ID: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_CLIENT_ID') || 'peoplesystem',
   KEYCLOAK_USERNAME: PropertiesService.getScriptProperties().getProperty('KEYCLOAK_USERNAME'),
@@ -324,7 +324,7 @@ function setupScriptProperties() {
   const properties = PropertiesService.getScriptProperties();
 
   // 設置 Keycloak 配置
-  properties.setProperty('KEYCLOAK_URL', 'https://peoplesystem.tatdvsonorth.com');
+  properties.setProperty('KEYCLOAK_URL', 'https://tymultiverse.cc');
   properties.setProperty('KEYCLOAK_REALM', 'PeopleSystem');
   properties.setProperty('KEYCLOAK_CLIENT_ID', 'peoplesystem');
   properties.setProperty('KEYCLOAK_USERNAME', 'your_username');

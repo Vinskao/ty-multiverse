@@ -15,7 +15,7 @@
 
 ## 實際讀了什麼
 
-1. 線上 `GET /tymultiverse/api/market/dashboard/research`，再逐一讀取 20 個 `analysis/{code}?productType=research` 的完整 content。
+1. 線上 `GET /api/market/dashboard/research`，再逐一讀取 20 個 `analysis/{code}?productType=research` 的完整 content。
 2. 全部 20 筆為 revision 1、asOf=2026-10-18，與當前 repository 的同名種子 JSON 逐欄相同。這代表尚未有不同於種子的持久更新，不代表其中每一句都錯。
    再對照即時 dashboard：目前 20 個標的中 19 個有研究，`009811 統一美國50` 缺紀錄；研究清單中的 `000660-KR` 是保留的歷史研究，不能把「有 20 筆」誤當成全部目前標的已覆蓋。009811 雖在 API 標為 stock，[證交所商品頁](https://www.twse.com.tw/zh/ETFortune/etfInfo/009811)確認它是國外股票 ETF，應按指數、持倉及基金結構研究，不套單一公司的製程護城河。更新時以最新公開說明書為準。
 3. 讀取 `researchMap.ts`、`loadMarketResearch`、後端 `validate_research_content`、`market-ai.md` 與頁面可見 prompt。

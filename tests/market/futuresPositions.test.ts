@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS } from '../../src/scripts/market/futuresPositions';
 
-// Trimmed from GET /tymultiverse/api/market/dashboard/history/TXF on 2026-10-19 (taifex:futures-institutional).
+// Trimmed from GET /api/market/dashboard/history/TXF on 2026-10-19 (taifex:futures-institutional).
 const point = (date: string, foreign: number | null, trust = 0, dealer = 0) => ({
   date,
   sources: { 'taifex:futures-institutional': {

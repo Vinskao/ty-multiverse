@@ -258,7 +258,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - MOPS 新首頁 `https://mops.twse.com.tw/` 列有董監持股／質押／轉讓分類，實際查詢端點與歷史尚待驗證。
 - 富邦 TOP15 頁面列的是所列家數合計淨金額／合計淨張數均價，不是逐分點買進／賣出均價；後端 403 與 OKE 正常瀏覽器收集尚待判定，不能繞過 CAPTCHA 或供應商存取控制。
 - `ssh oke-node` 已成功；正式 Pod 為前端 image `papakao/ty-multiverse-frontend:244`、Maya Sawa `papakao/maya-sawa:77`。叢集節點沒有建置器；沿用 Jenkins job 建置與部署。Maya job #77 Success；前端 #244 console 已證明建置本輪 revision 並產生 image，摘要頁仍顯示執行中但 rollout/image 已驗證。
-- 前端 manifest 含 secrets placeholders，禁止原樣 apply 或輸出秘密；server runtime secret 用 `process.env`，本站 client Astro API 帶 `/tymultiverse` base。
+- 前端 manifest 含 secrets placeholders，禁止原樣 apply 或輸出秘密；server runtime secret 用 `process.env`，本站 client Astro API 用 `import.meta.env.BASE_URL`（2026-10-31 起 base 為 `/`）。
 - 本機 shell Node 曾是 20；workspace Node 實測 v24.19.0，可將 `/Users/vinskao/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin` 加入該命令 PATH 建置，或用 nvm 選符合專案版本。
 
 ### Terminal 與模型
@@ -311,7 +311,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 
 - Jenkins `vinskao/ty-multiverse-frontend-deploy` #247 成功，正式 Deployment image 為 `papakao/ty-multiverse-frontend:247`；Maya `vinskao/maya` #81 已確認 checkout `7c9bf98e3428420beb463d42371335167d1d8378`，Kubernetes 已 rollout `papakao/maya-sawa:81` 且 Pod 1/1 Ready。工作樹乾淨，程式 commit 已推送。
 - 已以正式瀏覽器登入首頁確認有 TXF 與 `QFFJ6 · 小型台積電期貨10 · 202610` 即時報價，QFFJ6 展開 panel 有 Price／Institutional、報價 OHLC／量；權證排除篩選由原有搜尋邏輯處理。候選歷史 API 需登入，匿名請求回 401；本次瀏覽器未帶有效市場 token，因此 custom 編輯按鈕隱藏，無法登入後驗收候選名單內容。
-- 正式首頁掛載於 `/tymultiverse/`；歷史 API `GET /tymultiverse/api/market/dashboard/history/QFFJ6` 回 200，但本次查看仍為 `points: []`。panel 顯示「No stored history yet」。因此 UI 上線不等於歷史管線驗收完成。
+- 正式首頁掛載於 `/`；歷史 API `GET /api/market/dashboard/history/QFFJ6` 回 200，但本次查看仍為 `points: []`。panel 顯示「No stored history yet」。因此 UI 上線不等於歷史管線驗收完成。
 - PostgreSQL 已見 `maya_sawa_market_daily_history` 與 `maya_sawa_market_history_coverage`，股票已至少累積 30 個交易日到 2026-08-24（選擇項有 TWSE／TPEx，現階段仍在回補，不足三個曆月）。`twse:borrow-short` 在上市標的回 `no_data`，須維持與融券餘額分開；不可將 no_data 解讀成來源整體不可用。當前尚未見 TDCC 或 TAIFEX 覆蓋資料。
 - 部署修正已處理先前 `await` 同步方法及 HTTP IncompleteRead 導致排程中止的問題。曾經在人工診斷中短暫占用 PostgreSQL session advisory lock，已手動釋放；本次確認收集繼續寫入股票日期。TAIFEX collector 需再針對正式選擇清單確認啟動與持續回補，不能將該項勾為完成。
 - 部署後正式 UI 尚未完成歷史圖表與籌碼實數驗收，TDCC、期貨回補、分點、MOPS 限制、三個月覆蓋、手機與互動狀態均仍未完成；原清單的相應驗收方框保持未勾。
@@ -356,7 +356,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
 - 官方 TAIFEX 法人下載 POST 以 `commodityId=TXF`、`STF` 及 2026-07-14 至 2026-10-13 日期區間實測，各回 189 筆（63 日 × 3 法人）；確認可按商品類別一次回補整段日期。TAIFEX 日行情端點只接受單日範圍，跨日回傳「日期時間錯誤」HTML，因此新增 CSV header 驗證、429／timeout 重試，並將逐日行情請求間隔提高至至少 0.5 秒。
 - Backend `2f32d23` 部署為 Jenkins #90 `SUCCESS`，production API 已由 503 恢復 200。因 429 coverage 不會在部署後持續重試，另改 collector 在價格或法人回補仍有 error 時每 5 分鐘重跑；本機 market-history collector + dashboard 測試 22 passed、compileall 與 `git diff --check` 通過。修正 commit `798a906` 已推送 `main`，Jenkins #91 與其 TAIFEX 回補效果待驗證。這份計畫文件維持使用者要求的未提交狀態。
 - 2026-10-14 17:18 再讀 production coverage：`TXF` 與 `QFFJ6` 法人各 17 日 `ok`、49 日 `error`，最後成功日期 2026-08-05，error 仍為 HTTP 429。#91 尚在建置，因此 5 分鐘重試行為還未部署驗證。
-- 本機以 Node 22+ 執行 `npm run dev -- --host 0.0.0.0` 可正常打開 Astro 頁面；但市場 Astro API route 預設指向容器內 DNS `http://maya-sawa/maya-sawa`，在筆電直接呼叫回 502。設 `MAYA_SAWA_INTERNAL_URL=https://peoplesystem.tatdvsonorth.com/maya-sawa` 可讓本機 route 指向正式服務，但本次正式 API 正逢 backend #90 部署而回 503，故本機頁面只能驗證啟動與版面，行情／歷史圖表的資料驗證需待服務恢復後補做。權限 API 仍未驗證，未使用或偽造管理 token。
+- 本機以 Node 22+ 執行 `npm run dev -- --host 0.0.0.0` 可正常打開 Astro 頁面；但市場 Astro API route 預設指向容器內 DNS `http://maya-sawa/maya-sawa`，在筆電直接呼叫回 502。設 `MAYA_SAWA_INTERNAL_URL=https://tymultiverse.cc/maya-sawa` 可讓本機 route 指向正式服務，但本次正式 API 正逢 backend #90 部署而回 503，故本機頁面只能驗證啟動與版面，行情／歷史圖表的資料驗證需待服務恢復後補做。權限 API 仍未驗證，未使用或偽造管理 token。
 - 分點來源再查證：[TWSE 不含權證買賣日報商品](https://eshop.twse.com.tw/zh/product/detail/34e615c34c4e4ca3b23fc732bd736f94) 外部 NT$80,000/月；[TPEx 不含權證買賣日報商品](https://eshop.tpex.org.tw/zh/product/detail/E982FB3B7484B8AD66AF83E6F31F0CDB) 每日 EXE/CSV、資料自 2014-12-01、外部 NT$50,000/月。已下載並讀取 TPEx 官方 S32 格式 PDF：代號、券商代號／名稱、價格、買進股數、賣出股數，足以計算分別的買賣加權均價。兩來源均未購買或接入，因此本站目前仍無分點資料；TPEx 日檔存取與外部傳輸條款仍待確認。
 
 
@@ -393,7 +393,7 @@ About 已改用完整 URL reload，缺省語系正規化為英文；正式站 zh
    - 保留歷史候選功能：曾出現在目前系統清單上的商品持久化為可加入 custom 的候選者；不再要求使用者先列出「十個清單」。確認既有候選儲存、去重、最後出現時間及權證過濾是否完整。
    - 依計畫逐項核對完成度；MOPS、全部分點日檔、個別期貨合約法人持倉等未有資料者仍明列限制，不得以其他資料代稱完成。
 6. **驗證、部署與交接**
-   - 執行與修改相符的檢查及 build；非權限流程以本機 dev 驗證，設定 `MAYA_SAWA_INTERNAL_URL=https://peoplesystem.tatdvsonorth.com/maya-sawa`，Node >=22.12。
+   - 執行與修改相符的檢查及 build；非權限流程以本機 dev 驗證，設定 `MAYA_SAWA_INTERNAL_URL=https://tymultiverse.cc/maya-sawa`，Node >=22.12。
    - 部署前讀 infra guide，可評估本機建置配合既有 k apply/scp 流程；確認 ARM64、映像/產物版本與既有 pipeline 相容後使用。部署後再驗正式 API、圖表與手機畫面，不以 build 成功代替正式驗收。
    - 更新本文件的完成/未完成證據與剩餘工作；本計畫文件繼續維持未提交，除非使用者另有指示。
 
@@ -575,7 +575,7 @@ TWSE已驗證欄位與端點：
 - Backend image maya-sawa:102 and frontend image ty-multiverse-frontend:271 are READY 1/1; Jenkins frontend #271 SUCCESS.
 - Production browser confirms 14 automatic holdings, descending position order, and AI analysis tab directly after Fundamentals; editor handlers initialized.
 - PostgreSQL transaction verification passed current update, revision history, idempotent retry and stale revision rejection; transaction rolled back without publishing QA commentary.
-- AI writing guide: /tymultiverse/market-ai.md. Existing analysis is loaded for replacement by the next AI, with revision history retained.
+- AI writing guide: /market-ai.md. Existing analysis is loaded for replacement by the next AI, with revision history retained.
 
 
 ## 2026-10-18 研究分頁（研究圖）與三項判斷
@@ -640,7 +640,7 @@ flowchart LR
 
 **還要手動設定的地方**
 - **觸發 token：** 兩個 routine 各加一個 API trigger，token 存到 Jenkins 的 `MARKET_ROUTINE_TAIWAN_TOKEN`、`MARKET_ROUTINE_US_TOKEN`。沒設之前只回報狀態，不會觸發。
-- **手機登入 IB：** 需要子網域 `ibkr.peoplesystem.tatdvsonorth.com`，因為 Keycloak 已經占用主網域的 `/sso`。在那之前用電腦執行 maya-sawa 的 `ibkr-gateway\login.ps1`（自動開關隧道）。
+- **手機登入 IB：** 需要子網域 `ibkr.tymultiverse.cc`，因為 Keycloak 已經占用主網域的 `/sso`。在那之前用電腦執行 maya-sawa 的 `ibkr-gateway\login.ps1`（自動開關隧道）。
 
 **細節文件：** maya-sawa `docs/MARKET_AGENT_KEY.md`。
 

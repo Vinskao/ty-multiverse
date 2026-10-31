@@ -17,13 +17,13 @@ const spec = {
 };
 
 describe('public API page data', () => {
-  const ops = publicOperations(spec, 'https://peoplesystem.tatdvsonorth.com');
+  const ops = publicOperations(spec, 'https://tymultiverse.cc');
 
   it('lists each GET with its full URL, summary, parameters and a curl example using a sample code', () => {
     const history = ops.find(op => op.path === '/market/dashboard/history/{code}')!;
-    expect(history).toMatchObject({ method: 'GET', summary: '個股日線', group: '行情與標的', url: 'https://peoplesystem.tatdvsonorth.com/maya-sawa/market/dashboard/history/{code}' });
+    expect(history).toMatchObject({ method: 'GET', summary: '個股日線', group: '行情與標的', url: 'https://tymultiverse.cc/maya-sawa/market/dashboard/history/{code}' });
     expect(history.params).toEqual([{ name: 'code', where: 'path', required: true, description: '股票代號' }, { name: 'start', where: 'query', required: false, description: '' }]);
-    expect(history.curl).toBe("curl 'https://peoplesystem.tatdvsonorth.com/maya-sawa/market/dashboard/history/2330'");
+    expect(history.curl).toBe("curl 'https://tymultiverse.cc/maya-sawa/market/dashboard/history/2330'");
     expect(ops.find(op => op.path === '/market/reports/{report_id}')!.curl).toContain('/market/reports/<report_id>');
   });
 

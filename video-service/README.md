@@ -61,10 +61,10 @@ curl -X POST http://localhost:3000/api/videos/merge \
   -H "Content-Type: application/json" \
   -d '{
     "videoUrls": [
-      "http://peoplesystem.tatdvsonorth.com/images/people/Lily.mp4",
-      "http://peoplesystem.tatdvsonorth.com/images/people/Yuki1.mp4",
-      "http://peoplesystem.tatdvsonorth.com/images/people/Anna.mp4",
-      "http://peoplesystem.tatdvsonorth.com/images/people/Maria2.mp4"
+      "https://tymultiverse.cc/images/people/Lily.mp4",
+      "https://tymultiverse.cc/images/people/Yuki1.mp4",
+      "https://tymultiverse.cc/images/people/Anna.mp4",
+      "https://tymultiverse.cc/images/people/Maria2.mp4"
     ],
     "outputFormat": "webm",
     "removeBackground": true

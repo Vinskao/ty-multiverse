@@ -125,7 +125,7 @@ curl -X POST http://YOUR_IP:8082/tymg/people/delete-all -H "Content-Type: applic
 // 在 Apps Script 編輯器中：
 // 檔案 > 專案屬性 > 指令碼屬性
 
-KEYCLOAK_URL: https://peoplesystem.tatdvsonorth.com
+KEYCLOAK_URL: https://tymultiverse.cc
 KEYCLOAK_REALM: PeopleSystem
 KEYCLOAK_CLIENT_ID: peoplesystem
 KEYCLOAK_USERNAME: your_username
@@ -346,7 +346,7 @@ function parseBoolean(value) {
    // 在 Apps Script 編輯器中運行
    function setupScriptProperties() {
      const properties = PropertiesService.getScriptProperties();
-     properties.setProperty('KEYCLOAK_URL', 'https://peoplesystem.tatdvsonorth.com');
+     properties.setProperty('KEYCLOAK_URL', 'https://tymultiverse.cc');
      properties.setProperty('KEYCLOAK_REALM', 'PeopleSystem');
      properties.setProperty('KEYCLOAK_CLIENT_ID', 'peoplesystem');
      properties.setProperty('KEYCLOAK_USERNAME', 'your_username');
@@ -375,7 +375,7 @@ function parseBoolean(value) {
 ### 1. 獲取 Token
 
 ```javascript
-POST https://peoplesystem.tatdvsonorth.com/realms/PeopleSystem/protocol/openid-connect/token
+POST https://tymultiverse.cc/realms/PeopleSystem/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=password

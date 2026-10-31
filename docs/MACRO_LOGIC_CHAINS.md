@@ -61,7 +61,7 @@ Linked list 每個節點只有一個 `next`，只能排成一條線；這裡要�
 - 重複的 id；
 - 月資料和日資料放在同一張圖。
 
-另外也檢查每條鏈只有一個起點，每個焦點至少由兩條鏈連入。改完跑測試，通過就能部署。排程每次都會重新讀 `GET /tymultiverse/api/market/dashboard/macro/graph`，新節點下次排程就會補上分析。
+另外也檢查每條鏈只有一個起點，每個焦點至少由兩條鏈連入。改完跑測試，通過就能部署。排程每次都會重新讀 `GET /api/market/dashboard/macro/graph`，新節點下次排程就會補上分析。
 
 ## 排程
 

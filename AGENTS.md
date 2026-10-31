@@ -142,7 +142,7 @@ Follow the workspace TDD rules (`../AGENTS.md`, "Test-driven development"): fail
 ## 5. Astro CSS Loading / Astro CSS 載入規則
 
 ### SSR CSS Rule / SSR 模式現象
-- **Current project context**: `astro.config.ts` uses `output: 'server'`, `base: '/tymultiverse'`, and `ClientRouter` view transitions
+- **Current project context**: `astro.config.ts` uses `output: 'server'`, `base: '/'` (site root of https://tymultiverse.cc since 2026-10-31), and `ClientRouter` view transitions
 - **Observed behavior in this repo**: under Astro v5 SSR dev mode, CSS imported only inside sub-components or page scripts, and even scoped inline `<style>` blocks inside sub-components, may not be collected into the server-rendered `<head>` on hard reload
 - **Symptom**: HTML renders, but the page looks unstyled or partially styled. Some styles may appear only after HMR, while hard reload loses them
 
@@ -331,9 +331,9 @@ import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 ## 8. 這次排查的經驗
 
 ### Astro base path API 路徑
-- 專案 base 是 `/tymultiverse`，所以在 client-side `fetch()` 裡不能直接寫 `/api/...`，否則瀏覽器會打到站台根路徑 `/api/...`。
-- 這次 `Account Portfolio` 一直顯示舊資料，是因為前端打到 `https://peoplesystem.tatdvsonorth.com/api/market/portfolio`，實際回 `404`，然後 UI 走 localStorage fallback。
-- 之後只要是在 client script 內打本站自己的 Astro API，請優先用：
+- 2026-10-31 起網站在 `https://tymultiverse.cc/` 根路徑，`base` 是 `/`。舊網址（舊網域、`/tymultiverse/...`）由 `src/middleware.ts` 301 到新網域；不要再寫死 `/tymultiverse` 或舊網域，`tests/site/rootBase.test.ts` 會擋。
+- 當時 base 還是 `/tymultiverse`，`Account Portfolio` 顯示舊資料，是因為前端打到站台根路徑的 `/api/market/portfolio`，實際回 `404`，然後 UI 走 localStorage fallback。
+- 在 client script 內打本站自己的 Astro API，仍請用下列方式，日後 base 再變也不用改：
   - `import.meta.env.BASE_URL`
   - 或集中成一個像 `astroApiPath()` 的 helper
 
@@ -402,20 +402,20 @@ docker push papakao/ty-multiverse-frontend:latest
 
 ```bash
 # 檢查文件狀態（GET）
-curl -X GET "http://localhost:4321/tymultiverse/md-exporter"
-curl -X GET "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter"
+curl -X GET "http://localhost:4321/md-exporter"
+curl -X GET "https://tymultiverse.cc/md-exporter"
 
 # 執行同步（POST）
-curl -X POST "http://localhost:4321/tymultiverse/md-exporter" \
+curl -X POST "http://localhost:4321/md-exporter" \
   -H "Content-Type: application/json" -d '{"action": "sync"}'
-curl -X POST "https://peoplesystem.tatdvsonorth.com/tymultiverse/md-exporter" \
+curl -X POST "https://tymultiverse.cc/md-exporter" \
   -H "Content-Type: application/json" -d '{"action": "sync"}'
 ```
 
 Windows PowerShell：
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method GET | ConvertTo-Json -Depth 10
-Invoke-RestMethod -Uri "http://localhost:4321/tymultiverse/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}' | ConvertTo-Json -Depth 10
+Invoke-RestMethod -Uri "http://localhost:4321/md-exporter" -Method GET | ConvertTo-Json -Depth 10
+Invoke-RestMethod -Uri "http://localhost:4321/md-exporter" -Method POST -ContentType "application/json" -Body '{"action": "sync"}' | ConvertTo-Json -Depth 10
 ```
 
 ## Kubernetes CronJob（文章同步）

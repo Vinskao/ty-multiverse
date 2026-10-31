@@ -149,7 +149,7 @@ npm run dev
 
 ### 2. 打开浏览器控制台
 
-访问 `http://localhost:4321/tymultiverse/` 并打开浏览器开发者工具的控制台。
+访问 `http://localhost:4321/` 并打开浏览器开发者工具的控制台。
 
 ### 3. 查看调试日志
 
