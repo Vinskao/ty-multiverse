@@ -20,7 +20,7 @@ const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 loca
 // 如果未登入，重定向到登入頁面
 if (!isLoggedIn) {
   return Astro.redirect(
-    `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
   );
 }
 ---
@@ -51,11 +51,11 @@ if (!isLoggedIn) {
       <div class="gang-video-container" data-palais-media-zoom>
         {
           [
-            "https://peoplesystem.tatdvsonorth.com/images/people/gangHagisun.mp4",
-            "https://peoplesystem.tatdvsonorth.com/images/people/gangHagishi.mp4",
-            "https://peoplesystem.tatdvsonorth.com/images/people/gangPhoenix.mp4",
-            "https://peoplesystem.tatdvsonorth.com/images/people/gangRegalos.mp4",
-            "https://peoplesystem.tatdvsonorth.com/images/people/gangRapeum.mp4",
+            "https://tymultiverse.cc/images/people/gangHagisun.mp4",
+            "https://tymultiverse.cc/images/people/gangHagishi.mp4",
+            "https://tymultiverse.cc/images/people/gangPhoenix.mp4",
+            "https://tymultiverse.cc/images/people/gangRegalos.mp4",
+            "https://tymultiverse.cc/images/people/gangRapeum.mp4",
           ].map((src) => (
             <video
               src={src}

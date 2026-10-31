@@ -7,7 +7,7 @@ import sharp from 'sharp';
 const IMAGE_BASE_URL =
   process.env.PUBLIC_PEOPLE_IMAGE_URL ||
   import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ||
-  'https://peoplesystem.tatdvsonorth.com/images/people';
+  'https://tymultiverse.cc/images/people';
 
 const CHARACTERS_DIR = path.join(homedir(), 'Pictures', 'images', 'characters');
 const PADDED_DIR = path.join(CHARACTERS_DIR, 'characters_padded');

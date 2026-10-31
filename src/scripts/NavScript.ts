@@ -129,7 +129,7 @@ export class NavController {
         const target = new URL(postLoginRedirect, window.location.origin);
         if (
           target.origin === window.location.origin &&
-          target.pathname.startsWith('/tymultiverse/')
+          target.pathname.startsWith('/') && !target.pathname.startsWith('//')
         ) {
           // 補回 username，否則各頁 SSR 閘門看不到 username 會再轉去 login 造成無限迴圈
           if (this.username && !target.searchParams.get('username')) {
@@ -158,7 +158,7 @@ export class NavController {
   private setupHomeLinkListeners() {
     try {
       const STORAGE_KEY = 'lastVisitedPath';
-      const selector = 'a[href="/tymultiverse"], a[href="/tymultiverse/"], a[href="/"]';
+      const selector = 'a[href="/"]';
       document.querySelectorAll(selector).forEach((link) => {
         link.addEventListener('click', () => {
           localStorage.removeItem(STORAGE_KEY);
@@ -234,8 +234,6 @@ export class NavController {
         const name = eqPos > -1 ? cookie.substring(0, eqPos) : cookie;
         // 清除多個路徑的 cookie
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse`;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse/`;
       }
 
       // 清除登入狀態
@@ -251,12 +249,12 @@ export class NavController {
       this.updateNavLinks();
 
       // 清除 URL 參數並重定向到首頁
-      const cleanUrl = new URL(window.location.origin + '/tymultiverse/');
+      const cleanUrl = new URL(window.location.origin + '/');
       window.history.replaceState({}, '', cleanUrl);
 
       // 延遲一小段時間後重定向，確保所有清理操作完成
       setTimeout(() => {
-        window.location.href = '/tymultiverse/';
+        window.location.href = '/';
       }, 100);
 
     } catch (error) {
@@ -284,11 +282,11 @@ export class NavController {
         this.updateNavLinks();
 
         // 重定向到首頁
-        window.location.href = '/tymultiverse/';
+        window.location.href = '/';
       } catch (cleanupError) {
         console.error('❌ 清理數據時發生錯誤:', cleanupError);
         // 最後的手段：強制重定向
-        window.location.href = '/tymultiverse/';
+        window.location.href = '/';
       }
     }
   }
@@ -586,12 +584,12 @@ export class NavController {
           // Keycloak SSO session 通常還活著，會靜默取得全新 token（不需重輸密碼）。
           // 登入頁不屬於受保護路徑，因此可直接導向，不必把失效頁留在畫面或瀏覽紀錄中。
           const path = window.location.pathname;
-          const isProtectedPage = /\/tymultiverse\/(palais|wildland|control|work)/.test(path);
+          const isProtectedPage = /^\/(palais|wildland|control|work)/.test(path);
           if (isProtectedPage) {
             const current = window.location.pathname + window.location.search;
             sessionStorage.setItem('tym_post_login_redirect', current);
             // Do not leave a stale protected URL in browser history.
-            window.location.replace(`/tymultiverse/login?redirect=${encodeURIComponent(current)}`);
+            window.location.replace(`/login?redirect=${encodeURIComponent(current)}`);
           }
         }
       );
@@ -603,11 +601,11 @@ export class NavController {
     // Nav.astro 中 Login/Logout 是同一個鏈接，根據 isLoggedIn 狀態顯示不同文本
     const allLinks = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
 
-    // 查找 Login/Logout 鏈接：可能是 /tymultiverse/login 或 href="#"
+    // 查找 Login/Logout 鏈接：可能是 /login 或 href="#"
     const loginLogoutLink = allLinks.find(link => {
       const href = link.getAttribute('href') || '';
       const text = link.textContent?.trim() || '';
-      return href.includes('/tymultiverse/login') ||
+      return href.includes('/login') ||
         href === '#' ||
         href.endsWith('#') ||
         text === 'Login' ||
@@ -616,13 +614,13 @@ export class NavController {
         text === '登出';
     }) as HTMLAnchorElement;
 
-    const workLink = document.querySelector('a[href^="/tymultiverse/work"]') as HTMLAnchorElement;
-    const aboutLink = document.querySelector('a[href^="/tymultiverse/about"]') as HTMLAnchorElement;
-    const learnLink = document.querySelector('a[href^="/tymultiverse/learn"]') as HTMLElement;
-    const palaisLink = document.querySelector('a[href*="/tymultiverse/palais"]') as HTMLAnchorElement;
+    const workLink = document.querySelector('a[href^="/work"]') as HTMLAnchorElement;
+    const aboutLink = document.querySelector('a[href^="/about"]') as HTMLAnchorElement;
+    const learnLink = document.querySelector('a[href^="/learn"]') as HTMLElement;
+    const palaisLink = document.querySelector('a[href*="/palais"]') as HTMLAnchorElement;
 
     // 在登入頁面上始終顯示登入鏈接，不隱藏
-    const isOnLoginPage = window.location.pathname === '/tymultiverse/login';
+    const isOnLoginPage = window.location.pathname === '/login';
 
     if (loginLogoutLink) {
       if (this.isLoggedIn && !isOnLoginPage) {
@@ -635,7 +633,7 @@ export class NavController {
       } else {
         // 未登入：顯示為 Login，href 設為登入頁面
         const currentPath = window.location.pathname + window.location.search;
-        loginLogoutLink.href = `/tymultiverse/login?redirect=${encodeURIComponent(currentPath)}`;
+        loginLogoutLink.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
         updateAuthNavLabel(loginLogoutLink, false, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
         loginLogoutLink.style.display = 'block';
         loginLogoutLink.style.visibility = 'visible';
@@ -643,10 +641,10 @@ export class NavController {
       }
     }
     if (workLink && this.isLoggedIn) {
-      workLink.href = `/tymultiverse/work/?username=${this.username}`;
+      workLink.href = `/work/?username=${this.username}`;
     }
     if (aboutLink && this.isLoggedIn) {
-      aboutLink.href = `/tymultiverse/about/?username=${this.username}`;
+      aboutLink.href = `/about/?username=${this.username}`;
     }
 
     if (learnLink) {
@@ -655,8 +653,8 @@ export class NavController {
       const parentLi = learnLink.closest('li');
       if (parentLi) parentLi.style.display = learnLink.style.display;
       (learnLink as HTMLAnchorElement).href = this.isLoggedIn && this.username
-        ? `/tymultiverse/learn/?username=${encodeURIComponent(this.username)}`
-        : '/tymultiverse/learn/';
+        ? `/learn/?username=${encodeURIComponent(this.username)}`
+        : '/learn/';
     }
 
     // Palais 需要管理員權限
@@ -664,7 +662,7 @@ export class NavController {
     const palaisLinks = Array.from(document.querySelectorAll('a')).filter(link => {
       const href = link.getAttribute('href') || '';
       const text = link.textContent?.trim() || '';
-      return href.includes('/tymultiverse/palais') || text === 'Palais';
+      return href.includes('/palais') || text === 'Palais';
     }) as HTMLAnchorElement[];
 
     palaisLinks.forEach(palaisLink => {
@@ -680,7 +678,7 @@ export class NavController {
       if (shouldShowPalais && this.token) {
         try {
           // 僅帶 username（非機密）；token/refresh_token 不再進 URL，由各頁從 localStorage 讀取
-          const originalHref = palaisLink.getAttribute('href') || '/tymultiverse/palais/';
+          const originalHref = palaisLink.getAttribute('href') || '/palais/';
           const baseUrl = window.location.origin;
           const url = new URL(originalHref, baseUrl);
 

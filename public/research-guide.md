@@ -140,13 +140,13 @@ leanReason 必須寫明重要資料缺口與判斷限制。三軸偏向不等於
 任務：依最新、可追溯的公開證據，更新目標的 Research 內容，讓技術圖能支持且能被證偽的營運判斷。
 目標：{CODE + MARKET；或「由 dashboard 重新取得目前全部標的」}
 覆核截點：{本次實際日期與時區}
-先讀完整 https://peoplesystem.tatdvsonorth.com/tymultiverse/research-guide.md 及 market-ai.md。
+先讀完整 https://tymultiverse.cc/research-guide.md 及 market-ai.md。
 若尚未部署，改讀 repository 的 public/research-guide.md 與 public/market-ai.md；只有網頁工具且 URL 不可讀時，回報這項限制並請提供指南全文，不能假裝讀過。
 不要假裝使用銀行內部 SOP；不要沿用前一模型的技術結論或引用而不覆核。
 
 A. 確認輸入
-1. 重新 GET /tymultiverse/api/market/dashboard、research、events 與目標研究紀錄。
-   研究紀錄：/tymultiverse/api/market/dashboard/analysis/{recordCode}?productType=research。
+1. 重新 GET /api/market/dashboard、research、events 與目標研究紀錄。
+   研究紀錄：/api/market/dashboard/analysis/{recordCode}?productType=research。
    海外用 CODE-MARKET，例如 6857-JP；台灣股票期貨用 underlyingCode；指數期貨獨立處理。
    比對目前標的與研究清單的缺漏；保留離開持股的歷史研究。API 的 stock 標籤不保證是營運公司，ETF（如 009811）需另查證券身分與公開說明書，依基金章節分析。
 2. 讀現有 content、revision、asOf；保存原始版本作比較。依 market-ai.md 讀公開 report claims，再做可用的公開報告搜尋。

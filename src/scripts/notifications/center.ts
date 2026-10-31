@@ -76,7 +76,7 @@ export function diaryNotification(result: { pending: boolean; triggeredAt?: stri
     id: `diary:${result.triggeredAt || result.nextDueAt || 'pending'}`,
     title: lang === 'en' ? 'Diary review due' : '日記整理到期',
     body: lang === 'en' ? 'Generate Markdown in the original conversation on your phone, then import it here.' : '請到手機原對話產生 MD，再回來匯入。',
-    href: `/tymultiverse/palais/?${new URLSearchParams({ username })}#private-diary`,
+    href: `/palais/?${new URLSearchParams({ username })}#private-diary`,
   };
 }
 

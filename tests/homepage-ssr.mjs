@@ -15,7 +15,7 @@ test('built homepage renders agent instructions as text with HTTP 200', async ()
   try {
     let response;
     for (let i = 0; i < 100; i++) {
-      try { response = await fetch(`http://127.0.0.1:${port}/tymultiverse/`); break; }
+      try { response = await fetch(`http://127.0.0.1:${port}/`); break; }
       catch { await setTimeout(50); }
     }
     assert.ok(response, 'SSR server started');

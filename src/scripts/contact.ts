@@ -1,5 +1,5 @@
 // One source for every homepage email link: the address, the enquiry topics and their prefilled mail.
-export const CONTACT_EMAIL = 'tianyikao@peoplesystem.tatdvsonorth.com';
+export const CONTACT_EMAIL = 'tianyikao@tymultiverse.cc';
 
 type Lang = 'zh' | 'en';
 type Text = Record<Lang, string>;

@@ -7,7 +7,7 @@ describe('About language content swap', () => {
   beforeEach(() => {
     document.documentElement.lang = 'en';
     document.body.innerHTML = '<main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>English</h1><section id="about-resume-preview">English resume</section></main>';
-    window.history.replaceState(null, '', '/tymultiverse/about/?lang=en');
+    window.history.replaceState(null, '', '/about/?lang=en');
   });
 
   it('updates the profile and resume in place, records the language, and emits a content event', async () => {

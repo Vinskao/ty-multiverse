@@ -10,8 +10,8 @@ const aiGuide = readFileSync(resolve(__dirname, '../../public/market-ai.md'), 'u
 it('makes the research SOP discoverable from Research and the existing AI instructions', () => {
   const research = page.slice(page.indexOf('data-market-panel="research"'), page.indexOf('data-market-panel="ai-analysis"'));
   expect(research).toContain('/research-guide.md');
-  expect(page.slice(page.indexOf('id="market-ai-research-prompt-text"'))).toContain('/tymultiverse/research-guide.md');
-  expect(aiGuide).toContain('/tymultiverse/research-guide.md');
+  expect(page.slice(page.indexOf('id="market-ai-research-prompt-text"'))).toContain('https://tymultiverse.cc/research-guide.md');
+  expect(aiGuide).toContain('https://tymultiverse.cc/research-guide.md');
 });
 
 it('keeps the documented JSON template compatible with the existing research renderer', () => {

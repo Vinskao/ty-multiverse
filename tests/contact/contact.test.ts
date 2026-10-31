@@ -3,7 +3,7 @@ import { CONTACT_EMAIL, CONTACT_TOPICS, composeLinks, contactTopic, mailText, ma
 
 describe('contact identity', () => {
     it('uses the TY Multiverse domain mailbox everywhere', () => {
-        expect(CONTACT_EMAIL).toBe('tianyikao@peoplesystem.tatdvsonorth.com');
+        expect(CONTACT_EMAIL).toBe('tianyikao@tymultiverse.cc');
     });
 });
 
@@ -29,7 +29,7 @@ describe('ways to send without a mail app', () => {
         const text = mailText('feature', 'en');
         expect(text.split('\n').slice(0, 2)).toEqual([`To: ${CONTACT_EMAIL}`, 'Subject: [TY Market Lab] Feature request']);
         expect(text).toContain('The problem I want to solve:');
-        expect(mailText('feature', 'zh')).toContain('收件人：tianyikao@peoplesystem.tatdvsonorth.com\n主旨：[TY 市場研究室] 功能需求');
+        expect(mailText('feature', 'zh')).toContain('收件人：tianyikao@tymultiverse.cc\n主旨：[TY 市場研究室] 功能需求');
     });
 });
 

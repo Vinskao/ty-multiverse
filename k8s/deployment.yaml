@@ -70,7 +70,7 @@ spec:
                 curl -X POST \
                   -H "Content-Type: application/json" \
                   -d '{"action": "sync"}' \
-                  "http://localhost:4321/tymultiverse/md-exporter" || echo "Initial sync failed, will retry via CronJob"
+                  "http://localhost:4321/md-exporter" || echo "Initial sync failed, will retry via CronJob"
         env:
         - name: PUBLIC_DECKOFCARDS_URL
           valueFrom:
@@ -151,6 +151,34 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - tymultiverse.cc
+    # Certificate is managed in peoplesystem-terraform-oke/tymultiverse-domain/certificate.yaml
+    secretName: tymultiverse-cc-tls
+  rules:
+  - host: tymultiverse.cc
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ty-multiverse-frontend
+            port:
+              number: 80
+---
+# The site used to live under /tymultiverse on the old host. Those URLs still reach the
+# frontend, whose middleware (src/scripts/site/legacyRedirect.ts) answers 301 to the same
+# page at the root of tymultiverse.cc. On the new host "/" above already covers /tymultiverse.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ty-multiverse-frontend-legacy-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: letsencrypt-production
     cert-manager.io/certificate-name: peoplesystem-tls
 spec:
@@ -165,6 +193,13 @@ spec:
       paths:
       - path: /tymultiverse
         pathType: Prefix
+        backend:
+          service:
+            name: ty-multiverse-frontend
+            port:
+              number: 80
+      - path: /
+        pathType: Exact
         backend:
           service:
             name: ty-multiverse-frontend

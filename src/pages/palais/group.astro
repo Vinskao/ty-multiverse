@@ -9,7 +9,7 @@ const username = url.searchParams.get('username');
 
 const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
 if (!isLoggedIn) {
-  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+  return Astro.redirect(`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 ---
 <BaseLayout title="Palais 模組2 | Wavo Yuropha" description="Group module within Palais">
@@ -2312,7 +2312,7 @@ if (!isLoggedIn) {
       if (browserResult) return browserResult;
     }
 
-    const endpoint = '/tymultiverse/api/local-character-download';
+    const endpoint = '/api/local-character-download';
     let capabilityResponse: Response;
     try {
       capabilityResponse = await fetch(endpoint, {
@@ -2349,7 +2349,7 @@ if (!isLoggedIn) {
     padded: boolean,
     onProgress: (completed: number, total: number) => void,
   ) {
-    const endpoint = '/tymultiverse/api/save-character-image';
+    const endpoint = '/api/save-character-image';
     let capabilityResponse: Response;
     try {
       capabilityResponse = await fetch(endpoint, {

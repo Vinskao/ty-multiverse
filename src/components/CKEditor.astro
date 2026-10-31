@@ -24,7 +24,7 @@ const username = url.searchParams.get('username');
             <div class="overlay-icon">🔒</div>
             <h3 class="overlay-title">請登入以查看留言</h3>
             <div class="overlay-buttons">
-                <a href="/tymultiverse/login" class="btn-login" id="login-link">登入</a>
+                <a href="/login" class="btn-login" id="login-link">登入</a>
             </div>
         </div>
     </div>
@@ -313,7 +313,7 @@ const username = url.searchParams.get('username');
             const loginLink = document.getElementById('login-link');
             if (loginLink) {
                 const currentPath = window.location.pathname + window.location.search;
-                loginLink.href = `/tymultiverse/login?redirect=${encodeURIComponent(currentPath)}`;
+                loginLink.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
             }
         } else {
             if (loginPrompt) loginPrompt.style.display = 'none';

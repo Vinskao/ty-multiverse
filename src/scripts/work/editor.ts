@@ -40,7 +40,7 @@ export function initBlogEditor() {
   const request = async (path = '', method = 'GET', body?: unknown, etag?: string) => {
     const token = storageService.get<string>('token');
     if (!token) throw new Error('請先以管理者登入 / Sign in as an administrator');
-    const response = await fetch(`/tymultiverse/api/blog/admin/${path === '@import' ? 'import' : `articles${path}`}`, {
+    const response = await fetch(`/api/blog/admin/${path === '@import' ? 'import' : `articles${path}`}`, {
       method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(etag ? {'If-Match': etag} : {}) },
       ...(body ? {body: JSON.stringify(body)} : {}),
     });

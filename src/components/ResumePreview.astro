@@ -210,7 +210,7 @@ const { lang = 'en' } = Astro.props;
 
       // Replace history state so header/footer URL isn't about:blank
       try {
-        const nicePath = '/tymultiverse/about';
+        const nicePath = '/about';
         printWin.history.replaceState(null, '', nicePath);
       } catch (e) { /* ignore cross-origin issues */ }
     } catch (err) {

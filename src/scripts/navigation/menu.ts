@@ -15,8 +15,7 @@ const SECTION_KEYS: Record<string, string> = {
 
 /** The nav i18n key of the page being viewed, or null when the page is not in the menu. */
 export function currentPageKey(pathname: string): string | null {
-  const [, base, section = ''] = pathname.split('/');
-  if (base !== 'tymultiverse') return null;
+  const [, section = ''] = pathname.split('/');
   if (section === '' || section === 'index.html') return 'nav.home';
   return SECTION_KEYS[section] ?? null;
 }

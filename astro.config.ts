@@ -9,7 +9,7 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone',
   }),
-  base: '/tymultiverse',
+  base: '/',
   integrations: [react(), mdx(), sitemap()],
   markdown: {
     remarkPlugins: []
@@ -22,7 +22,7 @@ export default defineConfig({
       proxy: {
         // 原有的本地後端代理
         '/maya-sawa': {
-          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://peoplesystem.tatdvsonorth.com',
+          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://tymultiverse.cc',
           changeOrigin: true,
           secure: false,
           configure: (proxy, options) => {
@@ -39,7 +39,7 @@ export default defineConfig({
         },
         // 新增：代理遠端 API
         '/maya-v2': {
-          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://peoplesystem.tatdvsonorth.com',
+          target: process.env.MAYA_SAWA_PROXY_TARGET || 'https://tymultiverse.cc',
           changeOrigin: true,
           secure: false, // 如果是自簽證書可設為 false
           rewrite: (path) => path, // 保持路徑不變

@@ -132,7 +132,7 @@ const generateMobileContent = (aboutData: AboutData, skillsData: SkillsData) => 
   </head>
   <body>
       <h1>${name}</h1>
-      <p>tianyikao@peoplesystem.tatdvsonorth.com</p>
+      <p>tianyikao@tymultiverse.cc</p>
       <div class="section">
         <h2>Background</h2>
         <p>${aboutData.background.replace(/\n/g, '<br>')}</p>
@@ -258,7 +258,7 @@ const generateDesktopContent = (aboutData: AboutData, skillsData: SkillsData) =>
       <h2 class="section-title">Background</h2>
       <div class="name-section">
         <h1 class="majestic-name">${name}</h1>
-        <p class="email">tianyikao@peoplesystem.tatdvsonorth.com</p>
+        <p class="email">tianyikao@tymultiverse.cc</p>
       </div>
       <p>${aboutData.background.replace(/\n/g, '<br>')}</p>
     </div>

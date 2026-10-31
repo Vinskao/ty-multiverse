@@ -1095,7 +1095,7 @@
 .horizontal-icons {
 	display: flex;
 	position: relative;
-	background-image: url('/tymultiverse/assets/barchart-background.jpg');
+	background-image: url('/assets/barchart-background.jpg');
 	background-position: bottom;
 	border-radius: 20px;
 	margin-top: 1px;

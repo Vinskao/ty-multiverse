@@ -20,7 +20,7 @@ export const config = {
 
   // 路由配置
   routes: {
-    login: '/tymultiverse/login',
+    login: '/login',
   }
 };
 

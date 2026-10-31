@@ -44,7 +44,7 @@ const categoryConfig = {
 const categoryInfo = category ? categoryConfig[category] || { icon: '📚', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' } : null;
 ---
 
-<a class="portfolio-preview card" href={`/tymultiverse/work/${id}`}>
+<a class="portfolio-preview card" href={`/work/${id}`}>
 	<div class="header-container">
 		{categoryInfo && (
 			<span

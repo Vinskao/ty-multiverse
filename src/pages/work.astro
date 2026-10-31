@@ -17,12 +17,12 @@ const latest = projects[0];
       <p class="knowledge-eyebrow">TY MULTIVERSE / ENGINEERING</p>
       <h1 data-i18n="work.title">工程知識庫與開發紀錄</h1>
       <p class="knowledge-intro" data-i18n="work.tagline">記錄問題、架構選擇與驗證結果，讓每次開發都成為下一次決策的依據。</p>
-      <div class="knowledge-header-links"><a href="#article-library" data-i18n="work.browse">瀏覽知識庫 ↓</a><a href="/tymultiverse/work/manage" data-i18n="work.manage">文章管理 ↗</a></div>
+      <div class="knowledge-header-links"><a href="#article-library" data-i18n="work.browse">瀏覽知識庫 ↓</a><a href="/work/manage" data-i18n="work.manage">文章管理 ↗</a></div>
     </header>
     {unavailable && <p class="knowledge-notice" role="status" data-i18n="work.unavailable">文章服務暫時無法使用，請稍後再試。</p>}
     {latest && <section class="knowledge-feature" aria-labelledby="latest-title">
       <div><p class="knowledge-eyebrow" data-i18n="work.latest">最新紀錄</p><time datetime={latest.data.publishDate.toISOString()}>{latest.data.publishDate.toISOString().slice(0,10)}</time><p>{latest.data.category}</p></div>
-      <div><h2 id="latest-title"><a href={`/tymultiverse/work/${latest.id}`}>{latest.data.title}</a></h2><p>{latest.data.description}</p><div class="knowledge-tags">{latest.data.tags.map(tag => <span>{tag}</span>)}</div><a class="knowledge-read" href={`/tymultiverse/work/${latest.id}`} data-i18n="work.read">閱讀完整紀錄 →</a></div>
+      <div><h2 id="latest-title"><a href={`/work/${latest.id}`}>{latest.data.title}</a></h2><p>{latest.data.description}</p><div class="knowledge-tags">{latest.data.tags.map(tag => <span>{tag}</span>)}</div><a class="knowledge-read" href={`/work/${latest.id}`} data-i18n="work.read">閱讀完整紀錄 →</a></div>
     </section>}
     <section id="article-library" class="knowledge-library" aria-labelledby="library-title">
       <div class="knowledge-section-title"><h2 id="library-title" data-i18n="work.library">知識索引</h2><span data-i18n="work.articleCount" data-i18n-count={projects.length}>共 {projects.length} 篇文章</span></div>
@@ -34,8 +34,8 @@ const latest = projects[0];
       <ol class="knowledge-list">
         {projects.map(project => <li data-article-id={project.id}><article class="knowledge-row">
           <div class="knowledge-date"><time datetime={project.data.publishDate.toISOString()}>{project.data.publishDate.toISOString().slice(0,10)}</time><span>{project.data.category}</span></div>
-          <div><h3><a href={`/tymultiverse/work/${project.id}`}>{project.data.title}</a></h3><p>{project.data.description}</p><div class="knowledge-tags">{project.data.tags.map(tag => <span>{tag}</span>)}</div></div>
-          <a class="knowledge-arrow" href={`/tymultiverse/work/${project.id}`} aria-label={project.data.title}>↗</a>
+          <div><h3><a href={`/work/${project.id}`}>{project.data.title}</a></h3><p>{project.data.description}</p><div class="knowledge-tags">{project.data.tags.map(tag => <span>{tag}</span>)}</div></div>
+          <a class="knowledge-arrow" href={`/work/${project.id}`} aria-label={project.data.title}>↗</a>
         </article></li>)}
       </ol>
       <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>

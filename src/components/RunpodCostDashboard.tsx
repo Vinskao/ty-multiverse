@@ -21,7 +21,7 @@ interface RunpodCostOverview {
   pods: RunpodPod[];
 }
 
-// BASE_URL-aware path so the route resolves under the /tymultiverse base.
+// BASE_URL-aware path so the route resolves under the configured base.
 const apiPath = (path: string) => {
   const base = (import.meta as any).env?.BASE_URL || '/';
   return `${base.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;

@@ -7,7 +7,7 @@ export const API_CONFIG = {
   // 開發環境用代理，生產環境用完整 URL
   baseURL: isDev
     ? '' // 開發環境：相對路徑，走代理
-    : 'https://peoplesystem.tatdvsonorth.com', // 生產環境：完整 URL
+    : 'https://tymultiverse.cc', // 生產環境：完整 URL
 
   endpoints: {
     // Maya Sawa API (本地後端)

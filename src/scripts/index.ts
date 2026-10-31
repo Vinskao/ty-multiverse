@@ -2816,7 +2816,7 @@ async function fetchLeetCodeStats() {
     const username = 'Vinskao';
     try {
         // 使用 Maya Sawa 代理 API 来绕过 CORS 限制
-        // 生产环境：https://peoplesystem.tatdvsonorth.com/maya-sawa/proxy/leetcode-stats/{username}
+        // 生产环境：https://tymultiverse.cc/maya-sawa/proxy/leetcode-stats/{username}
         // 本地开发：http://localhost:8000/maya-sawa/proxy/leetcode-stats/{username}
         const response = await fetch(`/maya-sawa/proxy/leetcode-stats/${username}`);
         
@@ -3632,9 +3632,7 @@ async function fetchPortfolio() {
 // Call the function when the page loads - 支援 View Transitions
 function initIndexPage() {
     // 檢查是否在首頁，避免在其他頁面執行
-    const isIndexPage = window.location.pathname === '/tymultiverse/' ||
-                        window.location.pathname === '/tymultiverse' ||
-                        window.location.pathname === '/' ||
+    const isIndexPage = window.location.pathname === '/' ||
                         window.location.pathname.endsWith('/index.html');
 
     if (!isIndexPage) return;
@@ -3643,7 +3641,7 @@ function initIndexPage() {
     marketRoot.dataset.marketInitialized = 'true';
 
     // 登記各服務的健康檢查端點（idempotent）
-    const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://peoplesystem.tatdvsonorth.com';
+    const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'https://tymultiverse.cc';
     serviceAvailabilityManager.register(SERVICE_KEYS.LEETCODE,  `/maya-sawa/proxy/leetcode-stats/Vinskao`);
     serviceAvailabilityManager.register(SERVICE_KEYS.BACKEND,   `${config.api.backendUrl || apiBaseUrl + '/tymb'}/actuator/health`);
     serviceAvailabilityManager.register(SERVICE_KEYS.GATEWAY,   `${config.api.gatewayUrl || apiBaseUrl + '/tymg'}/tymg/actuator/health`);

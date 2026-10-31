@@ -12,7 +12,7 @@ const GATEWAY_URL = import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/ty
 const redirectUri = `${GATEWAY_URL}/keycloak/redirect`;
 
 // 確保所有必要的環境變數都有值（使用默認值）
-const safeSSO_URL = SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+const safeSSO_URL = SSO_URL || 'https://tymultiverse.cc/sso';
 const safeREALM = REALM || 'PeopleSystem';
 const safeCLIENT_ID = CLIENT_ID || 'peoplesystem';
 const safeRedirectUri = redirectUri || `${GATEWAY_URL}/keycloak/redirect`;
@@ -42,11 +42,11 @@ const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');
       // 攔截 replace 方法
       window.location.replace = function(url) {
         // 如果正在登入跳轉，且目標是主頁，則阻止
-        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url.includes('/tymultiverse/') || url === '/' || url.endsWith('/tymultiverse') || url.includes(window.location.origin + '/tymultiverse'))) {
+        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url === '/' || url === window.location.origin || url === window.location.origin + '/')) {
           return;
         }
         // 允許跳轉到 Keycloak
-        if (url && (url.includes('peoplesystem.tatdvsonorth.com') || url.includes('keycloak'))) {
+        if (url && (url.includes('tymultiverse.cc/sso') || url.includes('keycloak'))) {
           return originalReplace.call(this, url);
         }
         return originalReplace.call(this, url);
@@ -55,11 +55,11 @@ const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');
       // 攔截 assign 方法
       window.location.assign = function(url) {
         // 如果正在登入跳轉，且目標是主頁，則阻止
-        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url.includes('/tymultiverse/') || url === '/' || url.endsWith('/tymultiverse') || url.includes(window.location.origin + '/tymultiverse'))) {
+        if (window.__TYM_LOGIN_REDIRECTING__ && url && (url === '/' || url === window.location.origin || url === window.location.origin + '/')) {
           return;
         }
         // 允許跳轉到 Keycloak
-        if (url && (url.includes('peoplesystem.tatdvsonorth.com') || url.includes('keycloak'))) {
+        if (url && (url.includes('tymultiverse.cc/sso') || url.includes('keycloak'))) {
           return originalAssign.call(this, url);
         }
         return originalAssign.call(this, url);
@@ -142,7 +142,7 @@ const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');
         const target = new URL(requestedRedirect, window.location.origin);
         if (
           target.origin === window.location.origin &&
-          target.pathname.startsWith('/tymultiverse/')
+          target.pathname.startsWith('/') && !target.pathname.startsWith('//')
         ) {
           sessionStorage.setItem(
             'tym_post_login_redirect',

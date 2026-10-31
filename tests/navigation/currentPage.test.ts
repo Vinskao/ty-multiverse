@@ -5,25 +5,25 @@ import { currentPageKey } from '../../src/scripts/navigation/menu';
 describe('which page the nav brand says you are on', () => {
   // 2026-10-30: the owner wanted the current page shown next to "TY Multiverse" in the nav.
   it('maps each top-level section to its nav i18n key', () => {
-    expect(currentPageKey('/tymultiverse/')).toBe('nav.home');
-    expect(currentPageKey('/tymultiverse')).toBe('nav.home');
-    expect(currentPageKey('/tymultiverse/index.html')).toBe('nav.home');
-    expect(currentPageKey('/tymultiverse/about/')).toBe('nav.about');
-    expect(currentPageKey('/tymultiverse/work/some-article')).toBe('nav.work');
-    expect(currentPageKey('/tymultiverse/api-reference/')).toBe('nav.api');
-    expect(currentPageKey('/tymultiverse/learn/')).toBe('nav.learn');
-    expect(currentPageKey('/tymultiverse/palais/group')).toBe('nav.palais');
-    expect(currentPageKey('/tymultiverse/login')).toBe('nav.login');
+    expect(currentPageKey('/')).toBe('nav.home');
+    expect(currentPageKey('')).toBe('nav.home');
+    expect(currentPageKey('/index.html')).toBe('nav.home');
+    expect(currentPageKey('/about/')).toBe('nav.about');
+    expect(currentPageKey('/work/some-article')).toBe('nav.work');
+    expect(currentPageKey('/api-reference/')).toBe('nav.api');
+    expect(currentPageKey('/learn/')).toBe('nav.learn');
+    expect(currentPageKey('/palais/group')).toBe('nav.palais');
+    expect(currentPageKey('/login')).toBe('nav.login');
   });
 
   it('says nothing for pages outside the menu, instead of guessing', () => {
-    expect(currentPageKey('/tymultiverse/ai-usage/')).toBeNull();
+    expect(currentPageKey('/ai-usage/')).toBeNull();
     expect(currentPageKey('/elsewhere')).toBeNull();
   });
 
   it('does not mistake a page whose name merely starts like another', () => {
-    expect(currentPageKey('/tymultiverse/aboutus')).toBeNull();
-    expect(currentPageKey('/tymultiverse/worksheet')).toBeNull();
+    expect(currentPageKey('/aboutus')).toBeNull();
+    expect(currentPageKey('/worksheet')).toBeNull();
   });
 
   it('shows it in the brand area, translated like the rest of the nav', () => {

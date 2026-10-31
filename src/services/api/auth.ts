@@ -436,8 +436,6 @@ export class AuthService {
         const name = eqPos > -1 ? cookie.substring(0, eqPos) : cookie;
         // 清除多個路徑的 cookie
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse`;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/tymultiverse/`;
       }
 
       // 確保主題設置被保留
@@ -447,11 +445,11 @@ export class AuthService {
 
       // Step 3: 跳轉到 Keycloak 的 end_session_endpoint 清除服務器端 session
       // 這是關鍵步驟：Keycloak 需要瀏覽器級別的跳轉才能清除 session cookie
-      const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+      const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://tymultiverse.cc/sso';
       const realm = import.meta.env.PUBLIC_REALM || 'PeopleSystem';
       
       // 構建登出後要跳回來的網址（前端首頁）
-      const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/tymultiverse/');
+      const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/');
       
       // 構建 Keycloak end_session_endpoint URL
       let logoutUrl = `${ssoUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirectUri}`;
@@ -483,9 +481,9 @@ export class AuthService {
       
       // 嘗試跳轉到 Keycloak（即使出錯）
       try {
-        const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+        const ssoUrl = import.meta.env.PUBLIC_SSO_URL || 'https://tymultiverse.cc/sso';
         const realm = import.meta.env.PUBLIC_REALM || 'PeopleSystem';
-        const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/tymultiverse/');
+        const postLogoutRedirectUri = encodeURIComponent(window.location.origin + '/');
         window.location.href = `${ssoUrl}/realms/${realm}/protocol/openid-connect/logout?post_logout_redirect_uri=${postLogoutRedirectUri}`;
       } catch (redirectError) {
         console.error('跳轉失敗:', redirectError);

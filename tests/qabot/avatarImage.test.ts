@@ -5,7 +5,7 @@ import { createAvatarImageResponse, resolveAvatarImageBaseUrl } from '../../src/
 
 it('keeps the QABot browser away from the public image origin', () => {
   const component = readFileSync(resolve(process.cwd(), 'src/components/QABot.astro'), 'utf8');
-  expect(component).toContain('/tymultiverse/api/people/avatar');
+  expect(component).toContain("'/api/people/avatar'");
   expect(component).not.toContain('PUBLIC_PEOPLE_IMAGE_URL');
   expect(component).not.toContain('thumbnailService');
 });

@@ -62,7 +62,7 @@ describe('the API tab', () => {
   it('sits to the right of 關於, and the page says where tokens come from', () => {
     const nav = read('src/components/Nav.astro');
     expect(nav.indexOf('nav.api')).toBeGreaterThan(nav.indexOf('nav.about'));
-    expect(nav).toContain('/tymultiverse/api-reference/');
+    expect(nav).toContain('"/api-reference/"');
     const page = read('src/pages/api-reference.astro');
     expect(page).toContain('/maya-sawa/public-openapi.json');
     expect(page).toContain('可查詢行情、總體經濟資料、財報與研究報告');

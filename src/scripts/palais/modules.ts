@@ -6,14 +6,14 @@ const KEYS = ['fight', 'group', 'dance', 'party', 'live', 'levels'];
 
 export function palaisTools(): PalaisTool[] {
   return [
-    { key: 'admin', href: 'https://peoplesystem.tatdvsonorth.com/sso/admin/master/console/' },
+    { key: 'admin', href: 'https://tymultiverse.cc/sso/admin/master/console/' },
     { key: 'clutches', href: '#palais-file-tools' },
   ];
 }
 
 export function palaisModules(username: string): PalaisModule[] {
   const query = new URLSearchParams({ username }).toString();
-  return KEYS.map((key) => ({ key, href: `/tymultiverse/palais/${key}?${query}` }));
+  return KEYS.map((key) => ({ key, href: `/palais/${key}?${query}` }));
 }
 
 /** Inline display NavScript gives a Palais link: hidden without access; module cards drop the override so their CSS grid applies. */

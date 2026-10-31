@@ -10,7 +10,7 @@
     try {
       if (!(window as any).AppLang) {
         const s = document.createElement("script");
-        s.src = "/tymultiverse/scripts/lang.js";
+        s.src = "/scripts/lang.js";
         s.async = false;
         document.head.appendChild(s);
       }
@@ -607,7 +607,7 @@
 
     private async getAvatarUrl(name: string): Promise<string> {
       try {
-        const url = new URL('/tymultiverse/api/people/avatar', window.location.origin);
+        const url = new URL('/api/people/avatar', window.location.origin);
         url.searchParams.set('name', name);
         const token = localStorage.getItem('token');
         const response = await fetch(url, {
@@ -1352,7 +1352,7 @@
           sourceItem.className = "source-item";
 
           const link = document.createElement("a");
-          link.href = `/tymultiverse/work/${filePath.replace(".md", "")}`;
+          link.href = `/work/${filePath.replace(".md", "")}`;
           link.target = "_blank";
           link.className = "source-link";
           link.innerHTML = `📄 ${this.escapeHtml(filePath)}`;

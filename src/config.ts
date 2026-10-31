@@ -12,7 +12,7 @@ export const BACKEND_URL = import.meta.env.PUBLIC_TYMB_URL || 'http://localhost:
 export const GATEWAY_URL = import.meta.env.PUBLIC_TYMG_URL || 'http://localhost:8082/tymg';
 export const MAYA_SAWA_URL = import.meta.env.PUBLIC_MAYA_SAWA_URL || 'http://localhost:8000/maya-sawa';
 export const API_BASE_URL = import.meta.env.DEV ? '' : (import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000');
-export const SSO_URL = import.meta.env.PUBLIC_SSO_URL || 'https://peoplesystem.tatdvsonorth.com/sso';
+export const SSO_URL = import.meta.env.PUBLIC_SSO_URL || 'https://tymultiverse.cc/sso';
 export const CLIENT_ID = import.meta.env.PUBLIC_CLIENT_ID || 'peoplesystem';
 export const REALM = import.meta.env.PUBLIC_REALM || 'PeopleSystem';
 

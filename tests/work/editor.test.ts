@@ -27,7 +27,7 @@ describe('Markdown clipboard entry', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     document.getElementById('blog-markdown-form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await waitFor(() => expect(document.getElementById('blog-status')!.textContent).toContain('Markdown 已直接保存至 DB'));
-    expect(fetcher.mock.calls[0][0]).toBe('/tymultiverse/api/blog/admin/import');
+    expect(fetcher.mock.calls[0][0]).toBe('/api/blog/admin/import');
     expect(JSON.parse(fetcher.mock.calls[0][1].body)).toMatchObject({ markdown: text, operation: 'create', publish: false });
     expect(fetcher.mock.calls.every(([url]) => !url.includes('sync'))).toBe(true);
     expect(input.value).toContain('slug: engineering');

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 // llms.txt convention: tells AI agents where the machine-readable content lives.
 export const GET: APIRoute = async ({ url }) => {
-  const base = `${url.origin}/tymultiverse`;
+  const base = url.origin;
   const body = `# TY Multiverse
 
 > Personal dashboard of TY (Java backend engineer). The home page includes a daily Taiwan-market chip summary

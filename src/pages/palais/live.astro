@@ -9,7 +9,7 @@ const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 loca
 
 if (!isLoggedIn) {
   return Astro.redirect(
-    `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
   );
 }
 

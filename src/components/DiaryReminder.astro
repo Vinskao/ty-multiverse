@@ -1,6 +1,6 @@
 <aside id="diary-site-reminder" hidden role="status" style="margin:1rem;padding:1rem;border:1px solid #888;border-radius:.5rem">
   <span data-i18n="diary.reminder">本期整理已到期。請到手機原對話產生 MD，再回來匯入。</span>
-  <a href="/tymultiverse/palais/#private-diary" id="diary-site-link" data-i18n="diary.title">私人日記</a>
+  <a href="/palais/#private-diary" id="diary-site-link" data-i18n="diary.title">私人日記</a>
 </aside>
 <script>
   import { createDiaryClient } from '../scripts/diary/client';
@@ -19,7 +19,7 @@
       if (current !== version || token !== storageService.get<string>(storageService.KEYS.TOKEN)) return;
       const username = storageService.get<string>(storageService.KEYS.USERNAME) || new URLSearchParams(location.search).get('username');
       const link = document.getElementById('diary-site-link') as HTMLAnchorElement;
-      if (username) link.href = `/tymultiverse/palais/?${new URLSearchParams({ username })}#private-diary`;
+      if (username) link.href = `/palais/?${new URLSearchParams({ username })}#private-diary`;
       banner.hidden = !result.pending || !!document.getElementById('private-diary');
     } catch { /* A failed check leaves the persisted deadline intact for the next visit. */ }
   }

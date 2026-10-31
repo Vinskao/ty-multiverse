@@ -29,47 +29,47 @@ const textLinks: {
     label: "Home",
     i18nKey: "nav.home",
     href: isLoggedIn
-      ? `/tymultiverse/?username=${username}`
-      : "/tymultiverse/",
+      ? `/?username=${username}`
+      : "/",
     isActive:
-      currentPath === "/tymultiverse/" ||
-      currentPath === "/tymultiverse/index.html",
+      currentPath === "/" ||
+      currentPath === "/index.html",
   },
   {
     label: isLoggedIn ? "Logout" : "Login",
     i18nKey: isLoggedIn ? "nav.logout" : "nav.login",
     href: isLoggedIn
       ? "#"
-      : `/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
-    isActive: currentPath === "/tymultiverse/login",
+      : `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
+    isActive: currentPath === "/login",
   },
   {
     label: "Work",
     i18nKey: "nav.work",
     href: isLoggedIn
-      ? `/tymultiverse/work/?username=${username}`
-      : "/tymultiverse/work/",
-    isActive: currentPath.startsWith("/tymultiverse/work"),
+      ? `/work/?username=${username}`
+      : "/work/",
+    isActive: currentPath.startsWith("/work"),
   },
   {
     label: "About",
     i18nKey: "nav.about",
     href: isLoggedIn
-      ? `/tymultiverse/about/?username=${username}`
-      : "/tymultiverse/about/",
-    isActive: currentPath.startsWith("/tymultiverse/about"),
+      ? `/about/?username=${username}`
+      : "/about/",
+    isActive: currentPath.startsWith("/about"),
   },
   {
     label: "API",
     i18nKey: "nav.api",
-    href: "/tymultiverse/api-reference/",
-    isActive: currentPath.startsWith("/tymultiverse/api-reference"),
+    href: "/api-reference/",
+    isActive: currentPath.startsWith("/api-reference"),
   },
   {
     label: "Learn",
     i18nKey: "nav.learn",
-    href: isLoggedIn ? `/tymultiverse/learn/?username=${username}` : "/tymultiverse/learn/",
-    isActive: currentPath.startsWith("/tymultiverse/learn"),
+    href: isLoggedIn ? `/learn/?username=${username}` : "/learn/",
+    isActive: currentPath.startsWith("/learn"),
   },
   ...(isLoggedIn
     ? [
@@ -77,8 +77,8 @@ const textLinks: {
           label: "Palais",
           i18nKey: "nav.palais",
           adminOnly: true,
-          href: `/tymultiverse/palais/?username=${username}`,
-          isActive: currentPath.startsWith("/tymultiverse/palais"),
+          href: `/palais/?username=${username}`,
+          isActive: currentPath.startsWith("/palais"),
         },
       ]
     : []),
@@ -95,7 +95,7 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
   <div class="menu-header">
     <div class="site-brand">
     <a
-      href="/tymultiverse"
+      href="/"
       class="site-title section-title is-inline"
       onclick="localStorage.removeItem('lastVisitedPath');"
     >

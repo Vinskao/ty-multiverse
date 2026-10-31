@@ -18,11 +18,11 @@ const username = url.searchParams.get('username');
 const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 localStorage + 後端強制）
 
 if (!isLoggedIn) {
-  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+  return Astro.redirect(`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 
 const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
-const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'http://peoplesystem.tatdvsonorth.com';
+const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'https://tymultiverse.cc';
 ---
 
 <BaseLayout title="Dance | TY Multiverse" description="Dance video collection">

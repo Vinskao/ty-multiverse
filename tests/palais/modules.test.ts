@@ -6,11 +6,11 @@ describe('palais module cards', () => {
   it('lists the six modules in order with links that keep the username', () => {
     const modules = palaisModules('chiaki');
     expect(modules.map((m) => m.key)).toEqual(['fight', 'group', 'dance', 'party', 'live', 'levels']);
-    expect(modules[0].href).toBe('/tymultiverse/palais/fight?username=chiaki');
+    expect(modules[0].href).toBe('/palais/fight?username=chiaki');
   });
 
   it('encodes the username instead of letting it rewrite the link', () => {
-    expect(palaisModules('a&redirect=//evil.example')[1].href).toBe('/tymultiverse/palais/group?username=a%26redirect%3D%2F%2Fevil.example');
+    expect(palaisModules('a&redirect=//evil.example')[1].href).toBe('/palais/group?username=a%26redirect%3D%2F%2Fevil.example');
   });
 
   it('has an English and Chinese title and description for every card', () => {
@@ -47,7 +47,7 @@ describe('palais page placement', () => {
 describe('palais tools', () => {
   it('includes the admin console and file converter, with monitoring and Jenkins removed', () => {
     expect(palaisTools()).toEqual([
-      { key: 'admin', href: 'https://peoplesystem.tatdvsonorth.com/sso/admin/master/console/' },
+      { key: 'admin', href: 'https://tymultiverse.cc/sso/admin/master/console/' },
       { key: 'clutches', href: '#palais-file-tools' },
     ]);
   });

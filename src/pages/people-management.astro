@@ -11,7 +11,7 @@ const isLoggedIn = !!username; // #4: 不再依賴 URL token（機密改由 loca
 
 // 如果未登入，重定向到登入頁面
 if (!isLoggedIn) {
-  return Astro.redirect(`/tymultiverse/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
+  return Astro.redirect(`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 ---
 

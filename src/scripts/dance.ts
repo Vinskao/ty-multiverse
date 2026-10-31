@@ -43,7 +43,7 @@ const initDance = async function () {
     const peopleImageUrl =
       import.meta.env.PUBLIC_PEOPLE_IMAGE_URL ||
       config.peopleImageUrl ||
-      'http://peoplesystem.tatdvsonorth.com';
+      'https://tymultiverse.cc';
 
     try {
       updateLoadingStatus('loading', '正在獲取角色列表...');

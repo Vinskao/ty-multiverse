@@ -83,10 +83,10 @@ const headers: Text[] = [
 				<h5 id="ai-brief-title">{T(both('持股籌碼摘要', 'Holdings chip summary'))}</h5>
 				<p>
 					{brief ? <>{T(both('產生於', 'Generated'))} <time datetime={brief.generatedAt}>{brief.generatedAt.replace('T', ' ').slice(0, 16)}</time> {T(both('（台北）', '(Taipei)'))} · </> : null}
-					<a href="/tymultiverse/brief.md" lang="zh">Markdown</a><a href="/tymultiverse/brief.md?lang=en" lang="en">Markdown</a> · <a href="/tymultiverse/brief.json">JSON</a>
+					<a href="/brief.md" lang="zh">Markdown</a><a href="/brief.md?lang=en" lang="en">Markdown</a> · <a href="/brief.json">JSON</a>
 				</p>
 			</div>
-			{!brief && <p class="market-updated">{T(both('摘要暫時無法取得；請改讀 /tymultiverse/brief.md。', 'Summary temporarily unavailable; see /tymultiverse/brief.md.'))}</p>}
+			{!brief && <p class="market-updated">{T(both('摘要暫時無法取得；請改讀 /brief.md。', 'Summary temporarily unavailable; see /brief.md.'))}</p>}
 			{brief && stocks.length === 0 && overseas.length === 0 && <p class="market-updated">{T(both('目前沒有可摘要的股票持股。', 'No stock holdings to summarise.'))}</p>}
 			{(stocks.length > 0 || overseas.length > 0) && (
 				<div class="market-fin-table-wrap">

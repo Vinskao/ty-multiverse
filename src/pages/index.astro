@@ -47,15 +47,15 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 <BaseLayout
 	title="TY 市場研究室"
 	description="今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師。每天主動整理最新技術與可參考標的，連到標的背後的技術與供應鏈，並以總體經濟環境檢視個股風險；大家一起貢獻報告，研究圖像與推薦會更好。作者曾在避險基金交易室研究，由你決定買進、減碼或等待。"
-	canonical="https://peoplesystem.tatdvsonorth.com/tymultiverse"
+	canonical="https://tymultiverse.cc/"
 	lang="zh-Hant"
 >
 	<Fragment slot="head">
 		<meta name="google-adsense-account" content="ca-pub-7199302788563175" />
 		<link rel="stylesheet" href={indexCssUrl} />
 		<link rel="stylesheet" href={openSourceCssUrl} />
-		<link rel="alternate" type="text/markdown" href="/tymultiverse/brief.md" title="持股籌碼摘要" />
-		<link rel="alternate" type="application/json" href="/tymultiverse/brief.json" title="Holdings chip summary (JSON)" />
+		<link rel="alternate" type="text/markdown" href="/brief.md" title="持股籌碼摘要" />
+		<link rel="alternate" type="application/json" href="/brief.json" title="Holdings chip summary (JSON)" />
 	</Fragment>
 	<!-- Messenger Chat Plugin Code -->
 	<div id="fb-root"></div>
@@ -141,7 +141,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
 
 研究流程
-1. 讀本區「多國重要總體經濟資料」與 API（GET /tymultiverse/api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
+1. 讀本區「多國重要總體經濟資料」與 API（GET /api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
 2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
 3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
 4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
@@ -249,12 +249,12 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 											<p>先讀「研究」分頁的供應鏈與技術環節圖，再依循環、技術力、交貨三項判斷方向，明確給「買／中立／賣」與翻轉條件；總經、價格、籌碼只決定時機。提示位於輸入框外，所有模型都可讀。</p>
 											<pre id="market-ai-research-prompt-text">你是本標的的投資研究員。依最新、可核實資料更新下方「目前評論」：要寫出一條有因果的完整敘事，不是數字清單；不得沿用前一模型而不重新驗證。
 
-更新 Research 前必讀 https://peoplesystem.tatdvsonorth.com/tymultiverse/research-guide.md。先確認是否 ETF：一般 ETF 只顯示有日期、來源、分母及完整性標記的配置比例，不寫三軸或技術圖；有明確產業主題（如電動車）才在配置外另加 theme/themeResearch。其餘標的依證據帳、競爭 KPI、技術到財務因果橋與六項品質門檻逐項覆核。重要技術節點及箭頭要有直接文件來源；平行產品、系統零件、商業化進度不得畫成同一條演進。區分事實／公司指引／分析推論／未知，寫最強反方與可觀察的證偽條件。三軸產業偏向不代表估值或風險報酬已驗證；重要資料不足要明寫，不能用更多術語或節點代替研究。
+更新 Research 前必讀 https://tymultiverse.cc/research-guide.md。先確認是否 ETF：一般 ETF 只顯示有日期、來源、分母及完整性標記的配置比例，不寫三軸或技術圖；有明確產業主題（如電動車）才在配置外另加 theme/themeResearch。其餘標的依證據帳、競爭 KPI、技術到財務因果橋與六項品質門檻逐項覆核。重要技術節點及箭頭要有直接文件來源；平行產品、系統零件、商業化進度不得畫成同一條演進。區分事實／公司指引／分析推論／未知，寫最強反方與可觀察的證偽條件。三軸產業偏向不代表估值或風險報酬已驗證；重要資料不足要明寫，不能用更多術語或節點代替研究。
 
 每次先重新 GET dashboard、brief、macro、events 與本標的資料，比對現有評論截點與最新資料期間／交易日／公布日，同期間修訂也要重新判讀。下方「本次資料檢查」於每次開啟時重新讀取；fetchedAt 只是抓取時間，不是公布日。海外用 code + market 與 /api/market/dashboard/overseas/{'{code}'}?market=US|JP|KR，不得查同號台股。輸出首行必須是【結論】買、【結論】中立、【結論】賣之一。
 
 判斷核心：買／中立／賣的方向只由三項決定——循環（產業與需求循環位置）、技術力（技術路線與競爭門檻）、交貨（出貨、營收、產能與交期的實際證據）。每項標順風／中性／逆風：≥2 項順風且無逆風＝買；≥2 項逆風＝賣；其餘＝中立。總經、價格、籌碼只用來決定進場時機與風險，不推翻三項判斷；若要偏離規則必須寫明理由。
-研究圖：先 GET /tymultiverse/api/market/dashboard/analysis/{'{code}'}?productType=research（本頁「研究」分頁），讀供應鏈與技術環節 Mermaid 圖及三項判斷。若最新法說、財報或月營收改變了某一項，同步更新研究紀錄（同一筆、帶 expectedRevision，JSON 欄位：name、market、asOf、summary、supplyChain、technology、assessment.cycle/technology/delivery.view+note、lean、leanReason、watch、sources），研究紀錄永久保存、標的移除也不刪。
+研究圖：先 GET /api/market/dashboard/analysis/{'{code}'}?productType=research（本頁「研究」分頁），讀供應鏈與技術環節 Mermaid 圖及三項判斷。若最新法說、財報或月營收改變了某一項，同步更新研究紀錄（同一筆、帶 expectedRevision，JSON 欄位：name、market、asOf、summary、supplyChain、technology、assessment.cycle/technology/delivery.view+note、lean、leanReason、watch、sources），研究紀錄永久保存、標的移除也不刪。
 
 敘事主軸（擇一並寫明）
 • Top-down：美國總經（就業、通膨、聯準會利率、10 年期殖利率、零售消費）→ 資金與風險偏好 → 台股／產業景氣 → 公司營運 → 價格與籌碼。適用大型權值、景氣循環、指數期貨。
@@ -264,7 +264,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 研究流程
 1. 確認代號、公司、資料日期；先讀本頁現有評論、版本歷史、行情、法人、資券、持股結構、基本面。
 2. 公司技術實力（必做，不可省略）：查最近一次法說簡報／逐字稿、技術論壇、年報、重大訊息與官網新聞，寫出公司最新公布的技術路線與量產時程（製程節點、產品世代、規格、良率、產能擴充）、相對競爭者的技術位置與門檻、技術轉換對毛利率與資本支出的影響。區分「已量產」「驗證中」「規劃中」；法人或媒體推估要標明出處，題材不等於訂單或營收。若最新財報或法說剛公布，必須納入，不可沿用舊數字。
-3. 總經：先讀首頁「總經評論」（GET /tymultiverse/api/market/dashboard/analysis/US?productType=macro），把它當共同前提，不重寫利率、通膨、就業等總經數據。個股只寫本標的對該情境的敏感度與傳導路徑（估值、終端需求、匯率／資金流），以及研究期間內對本標的最關鍵的總經事件。若總經評論早於最新一次總經公布或與數據矛盾，先更新總經評論再寫個股。
+3. 總經：先讀首頁「總經評論」（GET /api/market/dashboard/analysis/US?productType=macro），把它當共同前提，不重寫利率、通膨、就業等總經數據。個股只寫本標的對該情境的敏感度與傳導路徑（估值、終端需求、匯率／資金流），以及研究期間內對本標的最關鍵的總經事件。若總經評論早於最新一次總經公布或與數據矛盾，先更新總經評論再寫個股。
 4. 價格技術面：最新日線與即時行情，標明時間及「盤中／收盤」；趨勢、量能、支撐壓力、近期高低點、5/10/20/60 日均線，資料足夠時算 RSI、MACD。盤中值不可當收盤確認。
 5. 基本面：最新月營收年增／月增、季營收、三率、EPS、現金流、資產負債；分清資料期間與公布日；評估成長延續性、基期／季節性／一次性因素與獲利品質。估值僅在口徑一致時比較，無可靠估值就明說，高成長不等於低估。
 6. 籌碼：外資、投信、自營商近 5/20 日買賣超與持股、融資融券、借券、TDCC 大戶／散戶週變化；說明一致或分歧及限制，單週變化不是趨勢。
@@ -515,7 +515,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						{
 							projects.map((project) => (
 								<li>
-									<article class="knowledge-note"><p>{project.publishDate.slice(0,10)} · {project.category}</p><h3><a href={`/tymultiverse/work/${project.id}`}>{project.title}</a></h3><p>{project.description}</p></article>
+									<article class="knowledge-note"><p>{project.publishDate.slice(0,10)} · {project.category}</p><h3><a href={`/work/${project.id}`}>{project.title}</a></h3><p>{project.description}</p></article>
 								</li>
 							))
 						}
@@ -523,7 +523,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				</div>
 
 				<div class="cta">
-					<a class="section-view-all" href="/tymultiverse/work/">
+					<a class="section-view-all" href="/work/">
 						<span data-i18n="home.viewAll">View All</span>
 						<Icon icon="arrow-right" size="1.2em" />
 					</a>

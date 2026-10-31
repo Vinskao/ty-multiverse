@@ -55,7 +55,7 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-		<script is:inline src="/tymultiverse/scripts/lang.js"></script>
+		<script is:inline src="/scripts/lang.js"></script>
 		<script is:inline>
 			// 🎨 主題初始化 - 在任何渲染之前執行，避免主題閃爍 (FOUC)
 			(function() {
@@ -81,7 +81,7 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 					const currentPath = window.location.pathname + window.location.search;
 
 					const isLoginPage = currentPath.startsWith('/login');
-					const isHomePage = currentPath === '/' || currentPath === '/tymultiverse' || currentPath === '/tymultiverse/' || currentPath.startsWith('/tymultiverse/index');
+					const isHomePage = currentPath === '/' || currentPath.startsWith('/index');
 
 					// 2) 非登入頁面且不含認證參數時，記錄乾淨路徑
 					if (!isLoginPage && !isHomePage) {

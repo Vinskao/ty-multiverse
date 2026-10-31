@@ -11,7 +11,7 @@ const catalog = [
 ];
 const page = () => `<input id="article-search" /><select id="article-category"><option value=""></option><option value="Concurrency">Concurrency</option><option value="React">React</option></select>
   <p id="article-results"></p><p id="article-empty" hidden></p>
-  <ol>${catalog.map((a) => `<li data-article-id="${a.id}"><a href="/tymultiverse/work/${a.id}"${a.id === 'thread-pool' ? ' aria-current="page"' : ''}>${a.data.title}</a></li>`).join('')}</ol>
+  <ol>${catalog.map((a) => `<li data-article-id="${a.id}"><a href="/work/${a.id}"${a.id === 'thread-pool' ? ' aria-current="page"' : ''}>${a.data.title}</a></li>`).join('')}</ol>
   <script type="application/json" id="article-catalog">${JSON.stringify(catalog)}</script>`;
 const visible = () => [...document.querySelectorAll<HTMLElement>('[data-article-id]')].filter((row) => !row.hidden).map((row) => row.dataset.articleId);
 
