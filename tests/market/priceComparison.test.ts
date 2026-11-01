@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import jp6857 from '../fixtures/overseas-pe-6857-jp.json';
 import usMeta from '../fixtures/overseas-pe-meta-us.json';
-import { priceCandles, comparisonAt, statementComparisons, overseasPePoints, PRICE_METRICS } from '../../src/scripts/market/priceComparison';
+import { priceCandles, comparisonAt, statementComparisons, overseasPePoints, forwardEpsAt, forwardPeSeries, PRICE_METRICS } from '../../src/scripts/market/priceComparison';
 
 it('pins existing daily OHLC and volume behavior and rejects invalid prices', () => {
   const points = [{ date: '2026-10-22', sources: { 'twse:daily-price': { open: 38.8, high: 39, low: 38.5, close: 38.55, volume_shares: 321 } } }];
@@ -102,4 +102,33 @@ it('preserves zero margins, rejects placeholders and invalid inventory, and sort
   expect(series.operatingMargin[0].value).toBe(0);
   expect(series.inventoryDays).toEqual([]);
   expect(PRICE_METRICS).toEqual(['pe', 'inventoryDays', 'operatingMargin', 'none']);
+});
+
+// GET /market/dashboard/targets/2330?market=TW epsEstimates (Yahoo earningsTrend 0y / +1y), 2026-11-01.
+const tsmcEps = [
+  { date: '2026-08-03', source: 'yahoo-trend', currency: 'TWD', years: [{ end: '2026-12-31', eps: 106.92136, analysts: null }, { end: '2027-12-31', eps: 138.26859, analysts: null }] },
+  { date: '2026-11-01', source: 'yahoo', currency: 'TWD', years: [{ end: '2026-12-31', eps: 110.54858, analysts: 35 }, { end: '2027-12-31', eps: 149.17497, analysts: 36 }] },
+];
+it('forward EPS blends this and next fiscal year by the time left in this one (next twelve months)', () => {
+  const ntm = forwardEpsAt(tsmcEps, '2026-11-01')!;
+  const weight = 60 / 365; // 2026-11-01 -> 2026-12-31
+  expect(ntm.eps).toBeCloseTo(weight * 110.54858 + (1 - weight) * 149.17497, 6);
+  expect(ntm).toMatchObject({ snapshot: '2026-11-01', analysts: 36, currency: 'TWD' });
+  // Before the 11-01 snapshot the 90-days-ago estimate applies; before any snapshot there is no forward EPS.
+  expect(forwardEpsAt(tsmcEps, '2026-10-30')!.snapshot).toBe('2026-08-03');
+  expect(forwardEpsAt(tsmcEps, '2026-08-02')).toBeNull();
+  // Once this fiscal year has ended the estimate is next year's; a snapshot older than 120 days is not reused.
+  expect(forwardEpsAt(tsmcEps, '2027-01-05')!.eps).toBeCloseTo(149.17497, 6);
+  expect(forwardEpsAt(tsmcEps, '2027-03-15')).toBeNull();
+  expect(forwardEpsAt([{ ...tsmcEps[1], years: [{ end: '2026-12-31', eps: -1, analysts: 3 }, { end: '2027-12-31', eps: -2, analysts: 3 }] }], '2026-11-01')).toBeNull();
+});
+it('forward PE is the close divided by that day\'s forward EPS, aligned to the candles', () => {
+  const candles = priceCandles([
+    { date: '2026-07-31', sources: { p: { open: 1, high: 1, low: 1, close: 2000 } } },
+    { date: '2026-11-02', sources: { p: { open: 1, high: 2400, low: 1, close: 2370 } } }], ['p'], 'volume');
+  const series = forwardPeSeries(candles, tsmcEps);
+  expect(series[0]).toBeNull();
+  const weight = 59 / 365;
+  expect(series[1]!.value).toBeCloseTo(2370 / (weight * 110.54858 + (1 - weight) * 149.17497), 6);
+  expect(forwardPeSeries(candles, undefined)).toEqual([null, null]);
 });

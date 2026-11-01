@@ -34,7 +34,7 @@ import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
-import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons } from './market/priceComparison';
+import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
 import { addedNotice } from './market/customSelection';
 import type { TargetAction, TargetView } from './market/priceTargets';
 import { watchBadge } from './market/watchBadge';
@@ -336,7 +336,7 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
 }
 
 // Each broker's target prices, drawn on the price chart as one line per broker (same axis as the price).
-type BrokerTargets = { actions: TargetAction[]; views: TargetView[] };
+type BrokerTargets = { actions: TargetAction[]; views: TargetView[]; epsEstimates?: EpsSnapshot[] };
 const brokerTargetCache = new Map<string, BrokerTargets>();
 let brokerDetailsKey = '';
 function brokerTargetIdentity(instrument: DashboardInstrument | null | undefined) {
@@ -355,7 +355,7 @@ async function ensureBrokerTargets(instrument: DashboardInstrument, redraw: () =
         const response = await fetch(astroApiPath(`/api/market/dashboard/targets/${encodeURIComponent(identity.code)}?market=${identity.market}`));
         if (!response.ok) { brokerTargetCache.set(key, none); return; }
         const data = await response.json();
-        brokerTargetCache.set(key, { actions: data.actions ?? [], views: data.views ?? [] });
+        brokerTargetCache.set(key, { actions: data.actions ?? [], views: data.views ?? [], epsEstimates: data.epsEstimates ?? [] });
         if (selectedMarketInstrument === instrument) redraw();
     } catch { brokerTargetCache.set(key, none); /* The chart simply stays without target lines. */ }
 }
@@ -374,6 +374,7 @@ function drawMarketOHLCVolumeChart(targetId: string, points: MarketHistoryPoint[
         comparisons, financialsLoading, futures,
         overlays: !crypto, volumeUnit: crypto ? { en: coin, zh: coin } : undefined,
         targets: futures || crypto || !identity ? undefined : brokerTargetCache.get(`${identity.market}:${identity.code}`)?.actions,
+        forwardEps: futures || crypto || !identity ? undefined : brokerTargetCache.get(`${identity.market}:${identity.code}`)?.epsEstimates,
     });
     // The broker table and report views under the chart; drawn once per instrument so a resize does not close an opened broker.
     const details = document.getElementById('market-targets-detail');

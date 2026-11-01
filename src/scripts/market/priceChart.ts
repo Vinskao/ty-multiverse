@@ -1,11 +1,13 @@
 import { formatNumber } from '../format/numbers';
 import { addChartControls, bindChartZoom, chartView, readChartPreference, visibleRows, writeChartPreference } from './chartViewport';
 import { brokerTargetLines, firmColors, type TargetAction } from './priceTargets';
-import { comparisonAt, PRICE_METRICS, priceCandles, type PriceMetric, type PricePoint, type StatementComparisons } from './priceComparison';
+import { comparisonAt, forwardPeSeries, PRICE_METRICS, priceCandles, type EpsSnapshot, type PriceMetric, type PricePoint, type StatementComparisons } from './priceComparison';
 
 type Options = { zh: boolean; currency: string; comparisons?: StatementComparisons; financialsLoading?: boolean; futures?: boolean; targets?: readonly TargetAction[];
     // Crypto: volume in the coin, and no P/E / inventory / margin overlay or broker targets.
-    overlays?: boolean; volumeUnit?: { en: string; zh: string } };
+    overlays?: boolean; volumeUnit?: { en: string; zh: string };
+    // Consensus EPS snapshots: with the P/E metric, forward P/E is drawn beside trailing P/E on the same axis.
+    forwardEps?: readonly EpsSnapshot[] };
 const TARGET_PALETTE = ['#d5ae4b', '#7198df', '#f08e82', '#55b8a8', '#b48ce0', '#e0a35c', '#8fc46a', '#e57fb0'];
 const TARGETS_KEY = 'market-price-targets-visible:v1';
 let showTargets: boolean | undefined;
@@ -13,6 +15,7 @@ const STORAGE_KEY = 'market-price-comparison:v1';
 let selected: PriceMetric | undefined;
 function storage() { try { return window.localStorage; } catch { return undefined; } }
 const metricColors = { pe: '#d5ae4b', inventoryDays: '#f08e82', operatingMargin: '#7198df', none: '#999' };
+const FORWARD_PE_COLOR = '#55b8a8';
 function element<K extends keyof SVGElementTagNameMap>(tag: K, attributes: Record<string, string | number> = {}, text?: string): SVGElementTagNameMap[K] {
     const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
     Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
@@ -65,7 +68,9 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
     }
     const comparisons = candles.map(candle => metric === 'pe' ? (candle.pe === null ? null : { value: candle.pe, period: candle.date, estimated: candle.peEstimated })
         : metric === 'none' ? null : comparisonAt(options.comparisons?.[metric] ?? [], candle.date));
-    const numbers = comparisons.flatMap(point => point ? [point.value] : []);
+    const forward = metric === 'pe' ? forwardPeSeries(candles, options.forwardEps) : [];
+    const hasForward = forward.some(Boolean);
+    const numbers = [...comparisons, ...forward].flatMap(point => point ? [point.value] : []);
     const width = Math.max(280, Math.min(1000, target.clientWidth || 900)), height = 390;
     const left = width < 480 ? 52 : 72, right = width - (metric === 'none' ? 16 : width < 480 ? 58 : 84);
     const top = 30, bottom = 246, volumeTop = 274, volumeBottom = 330;
@@ -119,6 +124,15 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         }).join(' ');
         svg.append(element('path', { d: path, fill: 'none', stroke: tone, 'stroke-width': 1.25, 'data-price-metric': metric }));
     }
+    if (hasForward) {
+        let previous = false;
+        const path = forward.map((point, i) => {
+            if (!point) { previous = false; return ''; }
+            const command = previous ? 'L' : 'M'; previous = true;
+            return `${command} ${x(i)} ${yMetric(point.value)}`;
+        }).join(' ');
+        svg.append(element('path', { d: path, fill: 'none', stroke: FORWARD_PE_COLOR, 'stroke-width': 1.25, 'stroke-dasharray': '5 3', 'data-price-metric': 'forward-pe' }));
+    }
     svg.append(element('text', { x: left, y: volumeTop - 8, class: 'market-history-axis-title' }, zh ? `成交量（${volumeUnit.zh}）` : `Volume (${volumeUnit.en})`));
     const ticks = Math.min(candles.length, width < 480 ? 2 : 5);
     for (let i = 0; i < ticks; i++) {
@@ -148,7 +162,14 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         }
         if (metric !== 'none') {
             const entry = document.createElement('span'); entry.style.color = tone;
-            entry.textContent = `${metricLabel} ${value ? metricText(value.value) : '—'}${value && metric !== 'pe' ? ` · ${value.period}${value.estimated ? (zh ? '（依估計公布日對齊）' : ' (estimated publication date)') : ''}` : ''}${value && metric === 'pe' && candle.peAdjusted ? (zh ? '（排除一次性項目）' : ' (excl. one-time items)') : ''}`;
+            entry.textContent = `${metric === 'pe' && hasForward ? (zh ? '落後本益比' : 'Trailing P/E') : metricLabel} ${value ? metricText(value.value) : '—'}${value && metric !== 'pe' ? ` · ${value.period}${value.estimated ? (zh ? '（依估計公布日對齊）' : ' (estimated publication date)') : ''}` : ''}${value && metric === 'pe' && candle.peAdjusted ? (zh ? '（排除一次性項目）' : ' (excl. one-time items)') : ''}`;
+            readout.append(entry);
+        }
+        if (hasForward) {
+            const ahead = forward[index], entry = document.createElement('span'); entry.style.color = FORWARD_PE_COLOR;
+            entry.textContent = `${zh ? '前瞻本益比' : 'Forward P/E'} ${ahead ? metricText(ahead.value) : '—'}`
+                + (ahead ? (zh ? `（未來 12 個月 EPS ${price(ahead.eps)}${ahead.analysts ? `，${ahead.analysts} 位分析師` : ''}，${ahead.snapshot} 預估）`
+                    : ` (next-12-month EPS ${price(ahead.eps)}${ahead.analysts ? `, ${ahead.analysts} analysts` : ''}, estimate of ${ahead.snapshot})`) : '');
             readout.append(entry);
         }
     };
@@ -192,6 +213,15 @@ export function renderPriceChart(targetId: string, points: readonly PricePoint[]
         note.textContent = options.financialsLoading && metric !== 'pe' ? (zh ? '正在載入財報指標…' : 'Loading financial metrics…')
             : zh ? `${metricLabel}在此期間沒有可用資料。` : `${metricLabel}: no available data in this range.`;
         target.append(note);
+    }
+    if (hasForward) {
+        const legend = document.createElement('p'); legend.className = 'market-target-legend';
+        for (const [color, text] of [[tone, zh ? '落後本益比（實線）：股價 ÷ 已公布的近四季 EPS' : 'Trailing P/E (solid): price ÷ reported last-four-quarter EPS'],
+            [FORWARD_PE_COLOR, zh ? '前瞻本益比（虛線）：股價 ÷ 分析師預估的未來 12 個月 EPS（Yahoo 共識；只有開始收集後的預估，最早回推 90 天）'
+                : 'Forward P/E (dashed): price ÷ consensus next-12-month EPS (Yahoo; estimates only from collection, at most 90 days back)']]) {
+            const item = document.createElement('span'); item.style.setProperty('--swatch', color); item.textContent = text; legend.append(item);
+        }
+        target.append(legend);
     }
     if (metric === 'pe' && candles.some(candle => candle.peAdjusted)) {
         const note = document.createElement('p'); note.className = 'market-updated';

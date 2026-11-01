@@ -72,3 +72,20 @@ it('crypto charts show volume in the coin and no financial overlay or broker tar
   expect(document.body.textContent).toContain('成交量（BTC）');
   expect(document.body.textContent).not.toContain('股');
 });
+it('with P/E selected, draws trailing and forward P/E on one axis and reads out both', () => {
+  const eps = [{ date: '2026-10-21', source: 'yahoo', currency: 'TWD', years: [{ end: '2026-12-31', eps: 9, analysts: 30 }, { end: '2027-12-31', eps: 12, analysts: 31 }] }];
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: 'TWD', forwardEps: eps });
+  const select = document.querySelector('select')!;
+  select.value = 'pe'; select.dispatchEvent(new Event('change'));
+  expect(document.querySelector('[data-price-metric="pe"]')).not.toBeNull();
+  expect(document.querySelector('[data-price-metric="forward-pe"]')).not.toBeNull();
+  const readout = document.querySelector('.market-chart-readout')!.textContent!;
+  expect(readout).toContain('落後本益比 11.00');
+  expect(readout).toMatch(/前瞻本益比 \d+\.\d{2} 倍（未來 12 個月 EPS .*31 位分析師，2026-10-21 預估）/);
+  expect(document.body.textContent).toContain('前瞻本益比（虛線）');
+});
+it('without estimates the P/E chart stays trailing only', () => {
+  renderPriceChart('price-test', points, ['price'], 'volume', { zh: true, currency: 'TWD' });
+  expect(document.querySelector('[data-price-metric="forward-pe"]')).toBeNull();
+  expect(document.body.textContent).not.toContain('前瞻本益比');
+});

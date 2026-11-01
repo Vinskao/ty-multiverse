@@ -119,3 +119,27 @@ export function overseasPePoints(daily: Array<{ date: string; close?: number | n
             ? [{ date: bar.date, value: close / eps.eps, period: eps.end, estimated: eps.release.estimated, adjusted: eps.adjusted }] : [];
     });
 }
+
+// Consensus EPS snapshots from GET /market/dashboard/targets/{code} (Yahoo earningsTrend, this and next fiscal year).
+export type EpsSnapshot = { date: string; source: string; currency: string; years: Array<{ end: string; eps: number; analysts: number | null }> };
+export type ForwardEps = { eps: number; snapshot: string; analysts: number | null; currency: string };
+const STALE_ESTIMATE_DAYS = 120;
+/**
+ * Next-twelve-months EPS on a date: this fiscal year's estimate weighted by the share of it still ahead, the rest
+ * from next year's. Uses the latest snapshot on or before the date and never an estimate made after it.
+ */
+export function forwardEpsAt(snapshots: readonly EpsSnapshot[] | undefined, date: string): ForwardEps | null {
+    let found: EpsSnapshot | null = null;
+    for (const snapshot of snapshots ?? []) if (snapshot.date <= date && (!found || snapshot.date > found.date)) found = snapshot;
+    if (!found || found.years.length < 2 || days(found.date, date) > STALE_ESTIMATE_DAYS) return null;
+    const [current, next] = found.years;
+    const weight = Math.min(1, Math.max(0, days(date, current.end) / 365));
+    const eps = weight * current.eps + (1 - weight) * next.eps;
+    return eps > 0 ? { eps, snapshot: found.date, analysts: next.analysts ?? current.analysts, currency: found.currency } : null;
+}
+export function forwardPeSeries(candles: readonly Candle[], snapshots: readonly EpsSnapshot[] | undefined): Array<(ForwardEps & { value: number }) | null> {
+    return candles.map(candle => {
+        const forward = forwardEpsAt(snapshots, candle.date);
+        return forward ? { ...forward, value: candle.close / forward.eps } : null;
+    });
+}
