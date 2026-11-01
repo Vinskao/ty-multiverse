@@ -13,8 +13,9 @@ import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
+import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
+import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
 import { holdingFilters, filterForReportTag, reportTagForFilter, type HoldingFilter, type HoldingRow } from './market/holdingsFilter';
 import { renderResearchContent } from './market/researchContent';
 import { addResearchDiagramZoom } from './market/researchDiagramZoom';
@@ -49,6 +50,18 @@ let _portfolioTimer: number | null = null;
 let _marketEventsTimer: number | null = null;
 let _macroRefreshTimer: number | null = null;
 let _marketLangCleanup: (() => void) | null = null;
+// Below-the-fold sections load when scrolled near (see lazy.ts); the refresh timers only touch sections that are already loaded.
+let _lazyLoaders: LazyLoader[] = [];
+let macroLoader: LazyLoader | null = null;
+let eventsLoader: LazyLoader | null = null;
+let reportsLoader: LazyLoader | null = null;
+// One request for every industry group, shared by all holdings (was one request per holding, repeated on every language switch).
+const loadAllIndustryGroups = memoizeAsync(async () => {
+    const response = await fetch(astroApiPath('/api/market/dashboard/industries'), { cache: 'no-store', signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const body = await response.json();
+    return (Array.isArray(body.groups) ? body.groups : []) as IndustryGroup[];
+});
 let selectedMarketInstrument: DashboardInstrument | null = null;
 const marketHistoryCache = new Map<string, { payload: MarketHistoryPayload; fetchedAt: number }>();
 const MARKET_HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -880,7 +893,10 @@ function renderIndustryPeers(target: HTMLElement, groups: IndustryGroup[], code:
                 tag.textContent = `${marketText('Related reports', '相關報告')} · ${researchTagLabel(tagId, marketLocale() === 'zh-TW' ? 'zh' : 'en')}`;
                 tag.addEventListener('click', () => {
                     document.getElementById('market-reports')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    document.querySelector<HTMLButtonElement>(`#market-report-filters [data-tag-id="${tagId}"]`)?.click();
+                    // the reports load lazily: load them first so the filter button exists
+                    void (reportsLoader && !reportsLoader.isLoaded() ? (reportsLoader.run(), loadMarketReports()) : Promise.resolve()).then(() => {
+                        document.querySelector<HTMLButtonElement>(`#market-report-filters [data-tag-id="${tagId}"]`)?.click();
+                    });
                 });
                 tags.append(tag);
             }
@@ -1377,7 +1393,8 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         const analysisLabel = document.createElement('span'); analysisLabel.className = 'market-row-analysis';
         analysisLabel.textContent = marketText('Checking analysis…', '檢查評論…');
         item.append(analysisLabel);
-        void loadRowAnalysisBadge(analysisLabel, instrument);
+        // the holdings panel hides this badge, so it is only fetched for the custom list
+        if (targetId !== 'market-auto-list') void loadRowAnalysisBadge(analysisLabel, instrument);
         const instrumentEvents = marketEventsForInstrument(instrument);
         if (instrumentEvents.length) {
             row.classList.add('market-watch-row--event');
@@ -1450,19 +1467,13 @@ async function fetchMarketDashboard() {
         marketAutoInstruments = data.automatic?.positions ?? [];
         marketCustomInstruments = data.custom ?? [];
         const codes = [...new Set(marketAutoInstruments.map(instrument => researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null })))];
-        const industries = await Promise.all(codes.map(async code => {
-            try {
-                const response = await fetch(astroApiPath(`/api/market/dashboard/industries?code=${encodeURIComponent(code)}`), { cache: 'no-store', signal: AbortSignal.timeout(6000) });
-                if (!response.ok) return [] as IndustryGroup[];
-                const body = await response.json(); return (Array.isArray(body.groups) ? body.groups : []) as IndustryGroup[];
-            } catch { return [] as IndustryGroup[]; }
-        }));
-        marketHoldingIndustries = new Map(codes.map((code, index) => [code, industries[index]]));
+        const allGroups = await loadAllIndustryGroups('all').catch(() => [] as IndustryGroup[]);
+        marketHoldingIndustries = new Map(codes.map((code) => [code, groupsForCode(allGroups, code)]));
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
-        await fetchMarketCompanyEvents();
+        if (eventsLoader?.isLoaded()) await fetchMarketCompanyEvents();
     } catch (error) {
         console.error('Market dashboard unavailable:', error);
         renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
@@ -1497,7 +1508,7 @@ async function fetchMarketCompanyEvents() {
             const underlyingCode = marketUnderlyingCode(instrument);
             if (underlyingCode) marketEventInstruments.set(underlyingCode, instrument);
         }
-        renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
+        // the holdings panel does not show event badges, so only the custom list is rebuilt
         renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
         body.replaceChildren();
         if (!events.length) {
@@ -2417,7 +2428,9 @@ function initMarketReports() {
             webForm.reset(); await loadMarketReports();
         });
     }
-    void loadMarketReports();
+    reportsLoader?.cancel();
+    reportsLoader = lazyLoader(document.getElementById('market-reports'), () => { void loadMarketReports(); });
+    _lazyLoaders.push(reportsLoader);
 }
 
 type PortfolioHistoryPoint = { date: string; valuedAt: string; totalAssets: number };
@@ -3702,6 +3715,8 @@ function initIndexPage() {
     _leetcodeAvailabilityCleanup = serviceAvailabilityManager.onChange(SERVICE_KEYS.LEETCODE, setLeetcodeVisible);
 
     // Always retry on page load so stale local availability state cannot keep this section hidden.
+    _lazyLoaders.forEach((loader) => loader.cancel());
+    _lazyLoaders = [];
     initMarketWatchlist();
     initMarketAiAnalysis();
     initMacroCommentary();
@@ -3709,12 +3724,13 @@ function initIndexPage() {
     initMarketReports();
     void loadMarketAutomation();
     void fetchMarketDashboard();
-    void fetchMacroDashboard();
-    void loadMacroCommentary();
+    macroLoader = lazyLoader(document.getElementById('macro-dashboard'), () => { void fetchMacroDashboard(); void loadMacroCommentary(); });
+    eventsLoader = lazyLoader(document.getElementById('market-company-events'), () => { void fetchMarketCompanyEvents(); });
+    _lazyLoaders.push(macroLoader, eventsLoader);
     fetchLeetCodeStats();
     fetchTxfQuote();
     fetchMarketUsage();
-    void loadPublicResearchEconomics();
+    _lazyLoaders.push(lazyLoader(document.getElementById('research-economics-panel'), () => { void loadPublicResearchEconomics(); }));
     fetchPortfolio();
     if (_marketQuoteTimer !== null) window.clearInterval(_marketQuoteTimer);
     _marketQuoteTimer = window.setInterval(() => {
@@ -3722,9 +3738,9 @@ function initIndexPage() {
         fetchMarketUsage();
     }, 600_000);
     if (_marketEventsTimer !== null) window.clearInterval(_marketEventsTimer);
-    _marketEventsTimer = window.setInterval(() => { void fetchMarketCompanyEvents(); }, 600_000);
+    _marketEventsTimer = window.setInterval(() => { if (eventsLoader?.isLoaded()) void fetchMarketCompanyEvents(); }, 600_000);
     if (_macroRefreshTimer !== null) window.clearInterval(_macroRefreshTimer);
-    _macroRefreshTimer = window.setInterval(() => { void fetchMacroDashboard(); }, 900_000);
+    _macroRefreshTimer = window.setInterval(() => { if (macroLoader?.isLoaded()) void fetchMacroDashboard(); }, 900_000);
     if (_portfolioTimer !== null) window.clearInterval(_portfolioTimer);
     _portfolioTimer = window.setInterval(fetchPortfolio, 3_600_000);
     if (_marketLangCleanup) _marketLangCleanup();
@@ -3739,7 +3755,7 @@ function refreshMarketLanguage() {
         selectMarketDetailTab(current);
     }
     void fetchMarketDashboard();
-    void fetchMacroDashboard();
+    if (macroLoader?.isLoaded()) void fetchMacroDashboard();
     fetchTxfQuote();
     fetchMarketUsage();
     fetchPortfolio();

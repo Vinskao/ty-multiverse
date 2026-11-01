@@ -130,3 +130,8 @@ export function industryPeers(groups: ReadonlyArray<IndustryGroup>, recordCode: 
     return groups.map((group) => ({ id: group.id, name: group.name, peers: group.members.map((member) => ({
         recordCode: member.recordCode, name: member.name, market: member.market, role: member.role, current: member.recordCode === recordCode })) }));
 }
+
+/** The groups one record belongs to, from the full group list (same result as the server's ?code= filter, without a request per holding). */
+export function groupsForCode(groups: ReadonlyArray<IndustryGroup>, recordCode: string): IndustryGroup[] {
+    return groups.filter((group) => group.members.some((member) => member.recordCode === recordCode));
+}
