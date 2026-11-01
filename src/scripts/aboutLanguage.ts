@@ -46,6 +46,30 @@ function showLanguageProgress(language: 'zh' | 'en') {
 }
 
 const SWITCH_TIMEOUT_MS = 20_000;
+const PROGRESS_DELAY_MS = 300;
+
+// The other language's server render takes 1-5 s, so it is fetched in the background once the page is idle; a switch then
+// swaps from this copy instantly. Cleared on reload (and a stale copy is replaced by the next prefetch).
+const prefetched = new Map<'zh' | 'en', string>();
+
+function languageUrl(language: 'zh' | 'en'): string {
+  const url = new URL(window.location.href);
+  url.searchParams.set('lang', language);
+  return url.toString();
+}
+
+export function clearAboutPrefetch(): void {
+  prefetched.clear();
+}
+
+export async function prefetchAboutLanguage(language: 'zh' | 'en'): Promise<void> {
+  try {
+    const response = await fetch(languageUrl(language), { cache: 'no-store', credentials: 'same-origin' });
+    if (response.ok) prefetched.set(language, await response.text());
+  } catch {
+    // best effort: a switch simply fetches on demand
+  }
+}
 
 /** Fetch the server-rendered language variant and replace only the About profile DOM. */
 export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolean> {
@@ -53,14 +77,17 @@ export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolea
   const nextUrl = new URL(window.location.href);
   nextUrl.searchParams.set('lang', language);
 
-  showLanguageProgress(language);
+  const cached = prefetched.get(language);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SWITCH_TIMEOUT_MS);
+  const progressTimer = cached ? undefined : setTimeout(() => showLanguageProgress(language), PROGRESS_DELAY_MS);
   try {
-    const response = await fetch(nextUrl.toString(), { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
-    if (!response.ok) return showLanguageFailure(language);
-
-    const html = await response.text();
+    let html = cached;
+    if (html === undefined) {
+      const response = await fetch(nextUrl.toString(), { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
+      if (!response.ok) return showLanguageFailure(language);
+      html = await response.text();
+    }
     const parsed = new DOMParser().parseFromString(html, 'text/html');
     const currentProfile = document.querySelector('main.about-mono');
     const nextProfile = parsed.querySelector('main.about-mono');
@@ -83,5 +110,6 @@ export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolea
     return showLanguageFailure(language);
   } finally {
     clearTimeout(timer);
+    clearTimeout(progressTimer);
   }
 }

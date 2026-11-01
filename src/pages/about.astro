@@ -892,7 +892,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <!-- Global language manager -->
     <script src="/scripts/lang.js" is:inline></script>
     <script>
-      import { bindAboutLanguage, replaceAboutContent } from "../scripts/aboutLanguage";
+      import { bindAboutLanguage, prefetchAboutLanguage, replaceAboutContent } from "../scripts/aboutLanguage";
 
       type AboutLanguageWindow = Window & {
         AppLang?: {
@@ -930,6 +930,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 
         const renderedLanguage = normalizeLang(document.documentElement.dataset.defaultLanguage);
         if (renderedLanguage !== targetLanguage) void replaceAboutContent(targetLanguage);
+        // fetch the other language now so the toggle swaps instantly (its server render takes 1-5 s)
+        const idle = (window as unknown as { requestIdleCallback?: (callback: () => void) => void }).requestIdleCallback;
+        const prefetchOther = () => void prefetchAboutLanguage(targetLanguage === "zh" ? "en" : "zh");
+        if (idle) idle(prefetchOther); else setTimeout(prefetchOther, 1500);
       }
 
       if (!state.pageLoadBound) {

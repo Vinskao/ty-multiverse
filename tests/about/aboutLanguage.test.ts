@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindAboutLanguage, replaceAboutContent } from '../../src/scripts/aboutLanguage';
+import { bindAboutLanguage, clearAboutPrefetch, prefetchAboutLanguage, replaceAboutContent } from '../../src/scripts/aboutLanguage';
 
 const markup = (language: string, label: string) => `<!doctype html><html lang="${language}"><body><main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>${label}</h1><section id="about-resume-preview">${label} resume</section></main></body></html>`;
 
 describe('About language content swap', () => {
   beforeEach(() => {
+    clearAboutPrefetch();
     document.documentElement.lang = 'en';
     document.body.innerHTML = '<main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>English</h1><section id="about-resume-preview">English resume</section></main>';
     window.history.replaceState(null, '', '/about/?lang=en');
@@ -80,22 +81,38 @@ describe('About language content swap', () => {
 
 describe('About language switch feedback (the server render can take seconds)', () => {
   beforeEach(() => {
+    clearAboutPrefetch();
     document.documentElement.lang = 'zh-Hant';
     document.body.innerHTML = '<main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>繁體中文</h1></main>';
     window.history.replaceState(null, '', '/about/?lang=zh');
   });
 
-  it('says it is switching, in the target language, while the page is still loading', async () => {
+  it('stays quiet for a fast swap and says it is switching only when the page is slow', async () => {
+    vi.useFakeTimers();
     let finish!: (value: unknown) => void;
     vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => { finish = resolve; })));
     const pending = replaceAboutContent('en');
     const status = document.querySelector<HTMLElement>('[data-about-language-status]')!;
+    expect(status.hidden).toBe(true);
+    await vi.advanceTimersByTimeAsync(400);
     expect(status.hidden).toBe(false);
     expect(status.textContent).toBe('Switching language…');
     expect(document.querySelector('main.about-mono')?.getAttribute('aria-busy')).toBe('true');
     finish({ ok: true, text: async () => markup('en', 'English') });
     await expect(pending).resolves.toBe(true);
-    expect(document.querySelector('.about h1, h1')?.textContent).toBe('English');
+    expect(document.querySelector('h1')?.textContent).toBe('English');
+    vi.useRealTimers();
+  });
+
+  it('swaps instantly from a prefetched copy without another request or any message', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => markup('en', 'English') });
+    vi.stubGlobal('fetch', fetchMock);
+    await prefetchAboutLanguage('en');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    await expect(replaceAboutContent('en')).resolves.toBe(true);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(document.querySelector('h1')?.textContent).toBe('English');
+    expect(document.documentElement.lang).toBe('en');
   });
 
   it('gives up with a visible message when the server never answers', async () => {
