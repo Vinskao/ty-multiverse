@@ -1,22 +1,18 @@
 <script>
   import { getMermaidConfig } from "../scripts/mermaid-theme";
+  import { prepareDiagrams } from "../scripts/mermaidPlan";
 
   let themeObserver: MutationObserver | null = null;
   let mermaidLoading: Promise<void> | null = null;
   let renderQueue: Promise<void> = Promise.resolve();
 
-  function renderMermaid(mermaidLib: any) {
+  function renderMermaid(mermaidLib: any, force = false) {
     // Initial load and Astro page-load can arrive together. Serialize redraws
     // so a second pass never mistakes the first pass's SVG for Mermaid source.
     renderQueue = renderQueue.then(async () => {
-      const diagrams = Array.from(document.querySelectorAll<HTMLElement>(".mermaid"));
-
-      diagrams.forEach((diagram) => {
-        const source = diagram.dataset.mermaidSource ?? diagram.textContent ?? "";
-        diagram.dataset.mermaidSource = source;
-        diagram.removeAttribute("data-processed");
-        diagram.textContent = source;
-      });
+      // Only visible diagrams that were not drawn yet (all of them when forced by a theme change); hidden ones draw on open.
+      const diagrams = prepareDiagrams(Array.from(document.querySelectorAll<HTMLElement>(".mermaid")), force);
+      if (!diagrams.length) return;
 
       await mermaidLib.run({ nodes: diagrams });
     });
@@ -55,7 +51,7 @@
           const isDark = document.documentElement.classList.contains("theme-dark");
           mermaidLib.initialize({ ...getMermaidConfig(isDark), startOnLoad: false });
 
-          void renderMermaid(mermaidLib);
+          void renderMermaid(mermaidLib, true);
         });
       });
 
@@ -67,6 +63,10 @@
   }
 
   document.addEventListener('tym:mermaid-refresh', loadMermaid);
+  // diagrams inside a collapsed <details> are drawn when it is opened
+  document.addEventListener('toggle', (event) => {
+    if (event.target instanceof HTMLDetailsElement && event.target.open) void loadMermaid();
+  }, true);
   loadMermaid();
   document.addEventListener("astro:page-load", loadMermaid);
 </script>
