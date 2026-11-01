@@ -2203,11 +2203,40 @@
 .home-transparency { padding: .85rem 1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999_40); }
 .home-transparency > summary { color: var(--gray-200); font-size: .95rem; font-weight: 650; }
 
-/* Recent company events beside the hero title (the empty space to its right). */
-.hero-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.25rem, 3vw, 2.5rem); align-items: start; }
-.hero-top .hero-header { min-width: 0; }
-@media (min-width: 1100px) { .hero-top { grid-template-columns: minmax(0, 1.15fr) minmax(19rem, .85fr); } }
-.hero-events { margin: .5rem 0 0; min-width: 0; }
+/* Recent company events sit to the right of the hero title (vertically centred in the empty space beside it). */
+.hero-title-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1rem, 3vw, 2.5rem); align-items: center; }
+.hero-title-block { min-width: 0; }
+@media (min-width: 700px) { .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem); } }
+.hero-events { margin: 0; min-width: 0; align-self: center; }
+.hero-events .market-company-events-heading { flex-wrap: wrap; }
 .hero-events .market-company-events-table { min-width: 0; font-size: .76rem; }
 .hero-events .market-company-events-table th, .hero-events .market-company-events-table td { padding: .4rem .45rem; }
 .hero-events .market-company-events-sources { display: none; }
+
+/* Narrow screens: nothing inside the zones may widen the page (the IB notice and watch rows used to push past the viewport). */
+.home-zone, .market-overview-grid, .market-instrument-layout, .market-watchlist, .market-chart-section { min-width: 0; max-width: 100%; }
+.market-automation, .market-automation code, .market-automation p { overflow-wrap: anywhere; white-space: pre-wrap; }
+.market-automation code { display: block; }
+
+/* 其他資訊 zone: usage and the chip summary side by side when there is room. */
+.home-other-info { margin: 0; padding: 0; border: 0; background: transparent; display: grid; gap: .85rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 900px) { .home-other-info { grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); } }
+.home-other-info .market-brief-disclosure { margin: 0; }
+
+/* Report upload: one tidy card per form instead of loose fields. */
+.market-report-upload { display: grid; grid-template-columns: minmax(0, 2fr) minmax(9rem, 1fr); gap: .9rem 1rem; align-items: start; padding: 1rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999_40); }
+.market-report-upload[hidden] { display: none; }
+.market-report-upload label { display: grid; gap: .35rem; color: var(--gray-300); font-size: .82rem; font-weight: 600; }
+.market-report-upload label small { color: var(--gray-400); font-weight: 400; }
+.market-report-upload input:not([type="file"]), .market-report-upload select { box-sizing: border-box; width: 100%; min-height: 2.5rem; }
+.market-report-upload input[type="file"] { box-sizing: border-box; width: 100%; padding: .5rem; border: 1px dashed var(--gray-600); border-radius: .5rem; background: var(--gray-999); color: var(--gray-200); font-weight: 400; }
+.market-report-upload .market-report-metadata, .market-report-upload .market-report-submit-row { grid-column: 1 / -1; }
+.market-report-metadata > summary { cursor: pointer; color: var(--gray-300); font-size: .82rem; }
+.market-report-metadata[open] { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .75rem; }
+.market-report-metadata[open] > summary { grid-column: 1 / -1; }
+.market-report-submit-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
+.market-report-submit-row p { margin: 0; color: var(--gray-300); font-size: .85rem; }
+.market-report-upload button[type="submit"] { padding: .55rem 1.1rem; font-weight: 650; color: var(--accent-text-over, #000); background: var(--accent-regular, #fff); border-color: var(--accent-regular, #fff); }
+#market-report-web { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+#market-report-web p { grid-column: 1 / -1; }
+@media (max-width: 640px) { .market-report-upload, #market-report-web { grid-template-columns: minmax(0, 1fr); } }

@@ -83,11 +83,19 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
-						<div class="hero-top">
 					<div class="hero-header">
+						<div class="hero-title-row">
+						<div class="hero-title-block">
 						<p class="home-product-brand" data-i18n="home.productBrand">TY Multiverse · TY 市場研究室</p>
 						<p class="home-product-name" data-i18n="home.productName">Birch Investments 樺樹資本工具</p>
 						<h1 class="home-product-title" data-i18n="home.heroTitle">今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師</h1>
+						</div>
+						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
+							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
+							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
+							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
+						</section>
+						</div>
 						<p data-i18n="home.heroTagline">每天主動為你整理研究資訊：最新的技術動向與可參考的標的，標的背後的技術與供應鏈，以及這些個股在總體經濟環境下現在的風險。我曾在避險基金交易室做研究，之後多年以個人投資人的身分自行研究與交易，這裡就是把那套工作交給系統每天做。買進、減碼或等待，最後由你決定。</p>
 						<p class="home-product-audience" data-i18n="home.productAudience">給需要快速掌握產業、技術與總經脈絡的基金經理人與專業投資人。資料由系統蒐集、核對並附上來源與日期，你直接閱讀結論，再把持倉集中度、槓桿和現金部位放進決策。</p>
 						<div class="home-product-actions">
@@ -96,12 +104,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<a href="#open-source" data-i18n="openSource.explore">參與開源協作</a>
 						</div>
 					</div>
-						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
-							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
-							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
-							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
-						</section>
-						</div>
 					<section class="home-product-intro" aria-labelledby="home-workflow-title">
 						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">網站主動提供最新標的與技術研究，社群報告讓推薦更好</h2>
 						<div class="home-product-steps">
@@ -318,19 +320,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</section>
 							</div>
 						</div>
-							<section class="home-other-info" aria-labelledby="home-other-info-title">
-								<h4 id="home-other-info-title" class="home-other-title" data-i18n="home.zoneOther">其他資訊</h4>
-							<section id="market-usage-section" class="market-usage-section market-usage-section--compact" aria-live="polite">
-								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
-								<div class="market-usage-content">
-									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
-								</div>
-							</section>
-					<details class="market-brief-disclosure">
-						<summary>持股籌碼摘要 <span>每日快照與完整明細</span></summary>
-						<MarketBrief brief={marketBrief} />
-					</details>
-							</section>
 						</section>
 						<section class="home-zone" id="zone-account" aria-labelledby="zone-account-title" data-account-only hidden>
 							<header class="home-zone-head"><h3 id="zone-account-title" class="home-zone-title" data-i18n="home.zoneAccount">帳戶</h3></header>
@@ -484,7 +473,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<label>出版者<input name="publisher" maxlength="200" /></label>
 								<label>發布日<input name="published_at" type="date" /></label>
 							</details>
-							<button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p>
+							<div class="market-report-submit-row"><button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p></div>
 						</form>
 						<form id="market-report-web" class="market-report-upload" hidden>
 							<label>SEC 申報網址（只收 sec.gov 的 EDGAR 頁面）<input name="url" type="url" maxlength="500" placeholder="https://www.sec.gov/Archives/edgar/data/…/….htm" required /></label>
@@ -503,6 +492,21 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</div>
 						</div>
 					</section>
+						</section>
+						<section class="home-zone" id="zone-other" aria-labelledby="zone-other-title">
+							<header class="home-zone-head"><h3 id="zone-other-title" class="home-zone-title" data-i18n="home.zoneOther">其他資訊</h3></header>
+							<div class="home-other-info">
+							<section id="market-usage-section" class="market-usage-section market-usage-section--compact" aria-live="polite">
+								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
+								<div class="market-usage-content">
+									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
+								</div>
+							</section>
+					<details class="market-brief-disclosure">
+						<summary>持股籌碼摘要 <span>每日快照與完整明細</span></summary>
+						<MarketBrief brief={marketBrief} />
+					</details>
+							</div>
 						</section>
 					</section>
 
