@@ -605,7 +605,20 @@
       return `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#404040"/><circle cx="32" cy="24" r="12" fill="#aaa"/><path d="M10 60c2-14 11-22 22-22s20 8 22 22" fill="#aaa"/></svg>')}`;
     }
 
-    private async getAvatarUrl(name: string): Promise<string> {
+    // The page asks for the same avatar several times (bot header, loading state, messages); one request per name, retried after a failure.
+    private static avatarRequests = new Map<string, Promise<string>>();
+
+    private getAvatarUrl(name: string): Promise<string> {
+      const key = `${name}|${localStorage.getItem('token') ? 'auth' : 'anon'}`;
+      const shared = QABot.avatarRequests.get(key);
+      if (shared) return shared;
+      const request = this.requestAvatarUrl(name);
+      QABot.avatarRequests.set(key, request);
+      void request.then((url) => { if (url === this.getDefaultAvatarUrl()) QABot.avatarRequests.delete(key); });
+      return request;
+    }
+
+    private async requestAvatarUrl(name: string): Promise<string> {
       try {
         const url = new URL('/api/people/avatar', window.location.origin);
         url.searchParams.set('name', name);
