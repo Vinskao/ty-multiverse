@@ -83,6 +83,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
+						<div class="hero-top">
 					<div class="hero-header">
 						<p class="home-product-brand" data-i18n="home.productBrand">TY Multiverse · TY 市場研究室</p>
 						<p class="home-product-name" data-i18n="home.productName">Birch Investments 樺樹資本工具</p>
@@ -95,6 +96,12 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<a href="#open-source" data-i18n="openSource.explore">參與開源協作</a>
 						</div>
 					</div>
+						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
+							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
+							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
+							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
+						</section>
+						</div>
 					<section class="home-product-intro" aria-labelledby="home-workflow-title">
 						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">網站主動提供最新標的與技術研究，社群報告讓推薦更好</h2>
 						<div class="home-product-steps">
@@ -123,6 +130,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</div>
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
+						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
+							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
 						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
 							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
 							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
@@ -177,14 +186,12 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</section>
 							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
 						</section>
-						<section id="market-company-events" class="market-company-events" aria-labelledby="market-company-events-title">
-							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
-							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
-							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
 						</section>
+						<section class="home-zone" id="zone-stocks" aria-labelledby="zone-stocks-title">
+							<header class="home-zone-head"><h3 id="zone-stocks-title" class="home-zone-title" data-i18n="home.zoneStocks">股票</h3></header>
 						<div class="market-overview-grid">
 							<div class="market-instrument-layout">
-							<section id="market-watchlist" class="market-watchlist market-quote-section" aria-label="Market watchlist">
+							<section id="market-watchlist" class="market-watchlist market-quote-section market-side-panel" aria-label="Market watchlist">
 								<div id="market-automation" class="market-automation" role="status" aria-live="polite" hidden></div>
 								<div class="market-watchlist-heading"><span>Instrument</span><span>Price / change</span><span>Data time</span></div>
 								<button id="txf-quote-section" class="market-watch-row" type="button" aria-expanded="false" aria-controls="market-instrument-detail" data-market-symbol="TXF" aria-live="polite">
@@ -193,7 +200,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 									<span id="txf-updated" class="market-updated">Loading...</span>
 									<span id="txf-market-status" class="market-status">Loading</span>
 								</button>
-								<div class="market-watch-group market-side-panel"><h5><span data-i18n="home.marketAutomaticHoldings">All holdings · largest positions first</span> <small id="market-auto-updated"></small></h5><div id="market-holding-filters" class="market-report-filters" role="group" aria-label="依產業篩選持倉與報告" hidden></div><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
+								<div class="market-watch-group"><h5><span data-i18n="home.marketAutomaticHoldings">All holdings · largest positions first</span> <small id="market-auto-updated"></small></h5><div id="market-holding-filters" class="market-report-filters" role="group" aria-label="依產業篩選持倉與報告" hidden></div><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
 								<div class="market-watch-group"><h5>Custom instruments <button id="market-custom-edit" class="mcd-edit" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg><span data-i18n="home.marketCustomEdit">Edit</span></button></h5><div id="market-custom-list" class="market-watch-list"><p class="market-updated">Loading...</p></div><p id="market-custom-notice" class="market-updated" role="status"></p></div>
 								<dialog id="market-custom-dialog" class="market-custom-dialog" aria-labelledby="market-custom-title">
 									<header class="mcd-head">
@@ -310,12 +317,23 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					<div id="market-chart-placeholder" class="market-chart-placeholder"><strong>選一檔持倉，開始研究</strong><span>價格、法人、資券、基本面、研究與 AI 分析都會集中在這裡。</span><small>從左側清單選擇標的</small></div>
 							</section>
 							</div>
+						</div>
+							<section class="home-other-info" aria-labelledby="home-other-info-title">
+								<h4 id="home-other-info-title" class="home-other-title" data-i18n="home.zoneOther">其他資訊</h4>
 							<section id="market-usage-section" class="market-usage-section market-usage-section--compact" aria-live="polite">
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
 								<div class="market-usage-content">
 									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>
 								</div>
 							</section>
+					<details class="market-brief-disclosure">
+						<summary>持股籌碼摘要 <span>每日快照與完整明細</span></summary>
+						<MarketBrief brief={marketBrief} />
+					</details>
+							</section>
+						</section>
+						<section class="home-zone" id="zone-account" aria-labelledby="zone-account-title" data-account-only hidden>
+							<header class="home-zone-head"><h3 id="zone-account-title" class="home-zone-title" data-i18n="home.zoneAccount">帳戶</h3></header>
 							<section id="portfolio-section" class="market-usage-section portfolio-section" aria-live="polite" data-account-only hidden>
 								<div class="market-quote-heading">
 									<div>
@@ -360,9 +378,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 									<p id="portfolio-access-message" class="market-updated" hidden></p>
 								</div>
 							</section>
-						</div>
-
-					<!-- Donut charts: full market-overview-grid width -->
 					<div class="portfolio-donuts-fullwidth" data-account-only hidden>
 						<!-- 台灣 region: Securities + Futures -->
 						<span class="portfolio-region-label" data-i18n="home.portfolioRegionTaiwan">台灣 Taiwan</span>
@@ -456,10 +471,9 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<svg id="portfolio-history-svg" class="is-hidden" viewBox="0 0 900 280" role="img" aria-label="Daily Taiwan portfolio total asset trend"></svg>
 						</div>
 					</section>
-					<details class="market-brief-disclosure">
-						<summary>持股籌碼摘要 <span>每日快照與完整明細</span></summary>
-						<MarketBrief brief={marketBrief} />
-					</details>
+						</section>
+						<section class="home-zone" id="zone-reports" aria-labelledby="zone-reports-title">
+							<header class="home-zone-head"><h3 id="zone-reports-title" class="home-zone-title" data-i18n="home.zoneReports">研究報告</h3></header>
 					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
 						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
 						<form id="market-report-upload" class="market-report-upload" hidden>
@@ -477,7 +491,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<button type="submit">從網址加入</button><p id="market-report-web-status" role="status" aria-live="polite"></p>
 						</form>
 						<div class="market-report-browser">
-							<aside class="market-report-sidebar" aria-label="報告種類選取">
+							<aside class="market-report-sidebar market-side-panel" aria-label="報告種類選取">
 								<h5>報告種類</h5>
 								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
 							</aside>
@@ -489,13 +503,15 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</div>
 						</div>
 					</section>
+						</section>
 					</section>
 
 				</div>
 
+				<section class="home-zone home-zone--operations" id="zone-operations" aria-labelledby="zone-operations-title"><header class="home-zone-head"><h3 id="zone-operations-title" class="home-zone-title" data-i18n="home.zoneOperations">產品運作</h3></header>
 				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
 					<details class="home-transparency"><summary data-i18n="home.operationsTitle">產品運作資訊 · AI 使用紀錄</summary><AiTokenUsageDashboard client:visible /></details>
-				</div>
+				</div></section>
 			</header>
 
 			<OpenSourceProjects />

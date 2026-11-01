@@ -37,7 +37,7 @@ import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, rep
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
-import { addedNotice } from './market/customSelection';
+import { addedNotice, canEditCustomSelection } from './market/customSelection';
 import type { TargetAction, TargetView } from './market/priceTargets';
 import { watchBadge } from './market/watchBadge';
 import { renderTargetDetails } from './market/targetDetails';
@@ -2208,7 +2208,12 @@ function initMarketCustomEditor() {
         if (notice) notice.textContent = addedNotice(await response.json().catch(() => null), marketLocale() === 'zh-TW');
         dialog.close(); await fetchMarketDashboard();
     });
-    void fetch(astroApiPath('/api/market/dashboard/custom'), { headers: marketAuthHeaders() }).then((response) => { if (response.ok) button.hidden = false; }).catch(() => undefined);
+    // owner-only endpoint: signed-out visitors (and signed-in non-owners) never see the Edit button
+    button.hidden = true;
+    if (hasMarketAuth()) {
+        void fetch(astroApiPath('/api/market/dashboard/candidates?limit=1'), { headers: marketAuthHeaders() })
+            .then((response) => { button.hidden = !canEditCustomSelection(true, response.ok); }).catch(() => undefined);
+    }
 }
 
 type ReportClaimsPayload = { reports: MarketReport[] };

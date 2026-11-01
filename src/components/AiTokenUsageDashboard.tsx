@@ -112,7 +112,7 @@ const styles = {
     fontWeight: 700,
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
-    color: '#61F6EA',
+    color: 'var(--gray-200)',
     margin: 0,
     display: 'flex',
     alignItems: 'center',
@@ -126,13 +126,12 @@ const styles = {
   },
 
   kpiCard: {
-    background: 'linear-gradient(135deg, rgba(79,70,229,0.25) 0%, rgba(79,70,229,0.12) 100%)',
-    border: '2px solid rgba(79,70,229,0.6)',
-    borderRadius: '12px',
+    background: 'var(--gray-999_40)',
+    border: '1px solid var(--gray-800)',
+    borderRadius: '.85rem',
     padding: '1rem clamp(0.75rem, 3vw, 1.5rem)',
     minWidth: 0,
     overflow: 'hidden',
-    boxShadow: '0 4px 16px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
   kpiLabel: {
@@ -140,7 +139,7 @@ const styles = {
     fontWeight: 600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    color: '#61F6EA',
+    color: 'var(--gray-400)',
     marginBottom: '0.5rem',
     opacity: 1,
   },
@@ -149,18 +148,17 @@ const styles = {
     fontSize: 'clamp(1rem, 4.5vw, 1.8rem)',
     fontWeight: 700,
     lineHeight: 1,
-    color: '#FFFFFF',
+    color: 'var(--gray-100)',
     letterSpacing: '-0.02em',
     minWidth: 0,
     overflowWrap: 'anywhere' as const,
   },
 
   panel: {
-    background: 'rgba(20,25,37,0.85)',
-    border: '1.5px solid rgba(79,70,229,0.5)',
-    borderRadius: '12px',
+    background: 'var(--gray-999_40)',
+    border: '1px solid var(--gray-800)',
+    borderRadius: '.85rem',
     padding: '1.25rem 1.5rem',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
   } as React.CSSProperties,
 
   panelLabel: {
@@ -168,7 +166,7 @@ const styles = {
     fontWeight: 600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    color: '#61F6EA',
+    color: 'var(--gray-400)',
     marginBottom: '0.75rem',
     opacity: 1,
   },
@@ -196,15 +194,15 @@ const styles = {
     fontSize: '0.6rem',
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
-    color: '#61F6EA',
+    color: 'var(--gray-400)',
     opacity: 1,
-    borderBottom: '2px solid rgba(79,70,229,0.5)',
+    borderBottom: '1px solid var(--gray-700)',
   },
 
   td: {
     padding: '4px 5px',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
-    color: '#E0E0E0',
+    borderBottom: '1px solid var(--gray-800)',
+    color: 'var(--gray-200)',
     fontSize: '0.7rem',
   },
 
@@ -238,12 +236,12 @@ const styles = {
   rangeInput: {
     flex: 1,
     minWidth: '180px',
-    accentColor: '#61F6EA',
+    accentColor: 'var(--accent-regular)',
   } as React.CSSProperties,
 
   rangeValue: {
     fontSize: '0.72rem',
-    color: '#FFD700',
+    color: 'var(--gray-200)',
     fontWeight: 700,
     minWidth: '72px',
     textAlign: 'right' as const,
@@ -286,7 +284,7 @@ function drawLineChart(svg: SVGSVGElement, data: AiTokenUsageSummary[]) {
         .tickFormat(() => '')
     )
     .call((g) => g.select('.domain').remove())
-    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(79,70,229,0.15)'));
+    .call((g) => g.selectAll('.tick line').attr('stroke', 'rgba(128,128,128,0.2)'));
 
   g.append('g')
     .attr('transform', `translate(0,${innerH})`)
@@ -699,7 +697,7 @@ export default function AiTokenUsageDashboard() {
                         </td>
                         <td style={{ ...styles.td, whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{model}</td>
                         <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
-                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#61F6EA', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
+                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: 'var(--gray-100)', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
                         <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
                       </tr>
                     ))
