@@ -193,7 +193,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 									<span id="txf-updated" class="market-updated">Loading...</span>
 									<span id="txf-market-status" class="market-status">Loading</span>
 								</button>
-								<div class="market-watch-group"><h5><span data-i18n="home.marketAutomaticHoldings">All holdings · largest positions first</span> <small id="market-auto-updated"></small></h5><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
+								<div class="market-watch-group market-side-panel"><h5><span data-i18n="home.marketAutomaticHoldings">All holdings · largest positions first</span> <small id="market-auto-updated"></small></h5><div id="market-holding-filters" class="market-report-filters" role="group" aria-label="依產業篩選持倉與報告" hidden></div><div id="market-auto-list" class="market-watch-list"><p class="market-updated">Waiting for a valid portfolio snapshot.</p></div></div>
 								<div class="market-watch-group"><h5>Custom instruments <button id="market-custom-edit" class="mcd-edit" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"></path></svg><span data-i18n="home.marketCustomEdit">Edit</span></button></h5><div id="market-custom-list" class="market-watch-list"><p class="market-updated">Loading...</p></div><p id="market-custom-notice" class="market-updated" role="status"></p></div>
 								<dialog id="market-custom-dialog" class="market-custom-dialog" aria-labelledby="market-custom-title">
 									<header class="mcd-head">
@@ -310,7 +310,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					<div id="market-chart-placeholder" class="market-chart-placeholder"><strong>選一檔持倉，開始研究</strong><span>價格、法人、資券、基本面、研究與 AI 分析都會集中在這裡。</span><small>從左側清單選擇標的</small></div>
 							</section>
 							</div>
-							<section id="market-usage-section" class="market-usage-section" aria-live="polite">
+							<section id="market-usage-section" class="market-usage-section market-usage-section--compact" aria-live="polite">
 								<div class="market-quote-heading"><div><h5 class="section-title" data-i18n="home.marketUsageTitle">Usage</h5></div><span id="market-usage-status" class="market-status">Loading</span></div>
 								<div class="market-usage-content">
 									<div class="market-usage-card"><div class="market-usage-hero"><strong id="market-usage-used">--</strong><span id="market-usage-limit">--</span></div><div class="market-usage-progress"><div id="market-usage-progress-bar"></div></div><dl class="market-metrics"><div><dt data-i18n="home.marketUsageRemaining">Remaining</dt><dd id="market-usage-remaining">--</dd></div><div><dt data-i18n="home.marketUsageConnections">Connections</dt><dd id="market-usage-connections">--</dd></div><div><dt data-i18n="home.marketUsageUpdated">Updated</dt><dd id="market-usage-updated">--</dd></div></dl></div>

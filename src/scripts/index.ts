@@ -15,6 +15,7 @@ import { analysisRating } from './market/analysisRating';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
+import { holdingFilters, filterForReportTag, reportTagForFilter, type HoldingFilter, type HoldingRow } from './market/holdingsFilter';
 import { renderResearchContent } from './market/researchContent';
 import { addResearchDiagramZoom } from './market/researchDiagramZoom';
 import { getMermaidConfig } from './mermaid-theme';
@@ -1304,6 +1305,44 @@ function setMarketDetailInstrument(instrument: DashboardInstrument) {
     }
 }
 
+// The holdings panel and the report list below share one industry choice (see market/holdingsFilter.ts).
+let holdingFilterList: HoldingFilter[] = [];
+let holdingFilterKey = 'all';
+let syncingIndustry = false;
+function applyHoldingFilter(key: string) {
+    holdingFilterKey = key;
+    document.querySelectorAll<HTMLElement>('#market-auto-list .market-holding-industry').forEach((section) => { section.hidden = key !== 'all' && section.dataset.groupKey !== key; });
+    document.querySelectorAll<HTMLButtonElement>('#market-holding-filters .market-report-filter').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.key === key)));
+}
+function renderHoldingFilters(filters: HoldingFilter[]) {
+    holdingFilterList = filters;
+    const bar = document.getElementById('market-holding-filters');
+    if (!bar) return;
+    bar.replaceChildren();
+    if (filters.length < 2) { bar.hidden = true; applyHoldingFilter('all'); return; }
+    bar.hidden = false;
+    const total = filters.reduce((sum, filter) => sum + filter.count, 0);
+    for (const filter of [{ key: 'all', label: marketText('All holdings', '全部'), count: total, tagIds: [] } as HoldingFilter, ...filters]) {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'market-report-filter';
+        button.textContent = `${filter.label} ${filter.count}`; button.dataset.key = filter.key;
+        button.addEventListener('click', () => {
+            applyHoldingFilter(filter.key);
+            const tag = filter.key === 'all' ? 'all' : reportTagForFilter(filter);
+            if (!tag) return;
+            syncingIndustry = true;
+            document.querySelector<HTMLButtonElement>(`#market-report-filters [data-tag-id="${tag}"]`)?.click();
+            syncingIndustry = false;
+        });
+        bar.append(button);
+    }
+    applyHoldingFilter(filters.some((filter) => filter.key === holdingFilterKey) ? holdingFilterKey : 'all');
+}
+document.addEventListener('market-report-category', (event) => {
+    if (syncingIndustry) return;
+    const category = (event as CustomEvent<string>).detail;
+    applyHoldingFilter(category === 'all' ? 'all' : filterForReportTag(holdingFilterList, category)?.key ?? 'all');
+});
+
 function renderDashboardRows(targetId: string, instruments: DashboardInstrument[], emptyText: string) {
     const target = document.getElementById(targetId);
     if (!target) return;
@@ -1319,6 +1358,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         return;
     }
     const groups = new Map<string, HTMLElement>();
+    const holdingRows: HoldingRow[] = [];
     for (const instrument of instruments) {
         const row = document.createElement('button');
         row.type = 'button';
@@ -1387,14 +1427,16 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             const key = holdingGroupKey(industries);
             let group = groups.get(key);
             if (!group) {
-                group = document.createElement('section'); group.className = 'market-holding-industry';
+                group = document.createElement('section'); group.className = 'market-holding-industry'; group.dataset.groupKey = key;
                 const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : marketText('Unclassified', '未分類');
                 const rows = document.createElement('div'); rows.className = 'market-holding-industry-rows';
                 group.append(heading, rows); groups.set(key, group); target.append(group);
             }
             group.querySelector('.market-holding-industry-rows')?.append(row);
+            holdingRows.push({ key, label: group.querySelector('h6')?.textContent ?? key, tagIds: industries[0] ? researchTagIdsForIndustryGroup({ id: industries[0].id, name: industries[0].name }) : [] });
         } else target.append(row);
     }
+    if (targetId === 'market-auto-list') renderHoldingFilters(holdingFilters(holdingRows));
     // Restore the open instrument after the rebuild, without scrolling the page.
     const reopened = openCode ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((row) => row.dataset.marketCode === openCode) : undefined;
     if (reopened) { reopened.setAttribute('aria-expanded', 'true'); placeMarketDetail(reopened, false); }
@@ -2199,6 +2241,7 @@ function renderMarketReports(reports: MarketReport[]) {
                 selectedCategory = category;
                 filters.querySelectorAll<HTMLButtonElement>('.market-report-filter').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
                 applyFilters();
+                document.dispatchEvent(new CustomEvent('market-report-category', { detail: category }));
             });
             filters.append(button);
         }

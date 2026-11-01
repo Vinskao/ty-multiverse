@@ -2157,3 +2157,26 @@
 .market-holding-industry .market-watch-row.market-holding-up { border-left:2px solid #e35b64; }
 .market-holding-industry .market-watch-row.market-holding-down { border-left:2px solid #3aa985; }
 .market-holding-industry-rows > .market-instrument-detail { grid-column:1 / -1; }
+
+/* Holdings by industry: same panel as 報告種類 (bordered heading + pill filters), shared with the report list below. */
+.market-side-panel { padding:.75rem; border:1px solid var(--gray-800); border-radius:.75rem; background:var(--gray-999_40); }
+.market-side-panel > h5 { margin:.1rem 0 .65rem; color:var(--gray-200); font-size:.85rem; }
+.market-side-panel .market-report-filters { display:grid; gap:.35rem; margin:0 0 .65rem; }
+.market-side-panel .market-report-filters[hidden] { display:none; }
+.market-side-panel .market-report-filter { width:100%; padding:.55rem .65rem; border-radius:.5rem; text-align:left; }
+.market-side-panel .market-holding-industry[hidden] { display:none; }
+.market-side-panel .market-holding-industry h6 { display:none; }
+@media (max-width: 700px) {
+  .market-side-panel .market-report-filters { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:.3rem; }
+  .market-side-panel .market-report-filter { width:auto; flex:0 0 auto; white-space:nowrap; }
+}
+
+/* Usage: one small block instead of a full-width card. */
+.market-usage-section--compact { width:auto; max-width:22rem; margin-top:.75rem; }
+.market-usage-section--compact .market-quote-heading { margin-bottom:.35rem; }
+.market-usage-section--compact .market-usage-card { gap:.5rem; padding:.6rem .75rem; border-radius:.6rem; }
+.market-usage-section--compact .market-usage-hero strong { font-size:1.05rem; }
+.market-usage-section--compact .market-usage-hero span { font-size:.75rem; }
+.market-usage-section--compact .market-usage-progress { height:6px; }
+.market-usage-section--compact .market-metrics { display:flex; flex-wrap:wrap; gap:.25rem .9rem; margin:0; font-size:.72rem; }
+.market-usage-section--compact .market-metrics dd { margin:0; }
