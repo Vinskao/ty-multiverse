@@ -104,6 +104,23 @@ describe('notification center', () => {
     other();
   });
 
+  it('keeps what was read before signing in: the signed-out owner receipts count for the account too', () => {
+    const saved = new Map<string, string>();
+    vi.spyOn(localStorage, 'getItem').mockImplementation(key => saved.get(key) ?? null);
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => { saved.set(key, value); });
+    document.body.innerHTML = `<div id="center"><button data-bell></button><span data-count></span><section data-panel hidden><button data-read-all></button><ul data-list></ul><p data-empty></p></section></div>`;
+    const root = document.querySelector<HTMLElement>('#center')!;
+    const items = [{ id: 'routine:1', title: '台股收盤後', body: '更新 17 檔', href: '' }, { id: 'routine:2', title: '美股', body: '結論皆維持', href: '' }];
+    let cleanup = mountNotifications(root, 'owner', items.slice(0, 1), 'zh');  // signed out
+    root.querySelector<HTMLButtonElement>('[data-read-all]')!.click();
+    cleanup();
+    cleanup = mountNotifications(root, 'alice', items, 'zh');  // signed in: only the new message is unread
+    expect(root.querySelector('[data-count]')!.textContent).toBe('1');
+    root.querySelector<HTMLButtonElement>('[data-read-all]')!.click();
+    expect(JSON.parse(saved.get('tym:notifications:read:alice')!)).toEqual(['routine:1', 'routine:2']);
+    expect(JSON.parse(saved.get('tym:notifications:read:owner')!)).toEqual(['routine:1']);  // signing out keeps its own
+    cleanup();
+  });
   it('turns a stored routine message into a notification that keeps its text and time', () => {
     const row = { id: 12, kind: 'update', title: '市場 AI 分析｜台股收盤後', body: '3008 賣→買：營收年增轉正', createdAt: '2026-10-27T13:25:50+00:00' };
     const item = routineNotification(row, 'zh');

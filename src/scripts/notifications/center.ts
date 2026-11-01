@@ -93,8 +93,13 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   let filter: 'all' | 'unread' = 'all';
   const open = new Set<string>();
   const key = `tym:notifications:read:${encodeURIComponent(username)}`;
-  let read: string[] = [];
-  try { const saved = JSON.parse(localStorage.getItem(key) || '[]'); if (Array.isArray(saved)) read = saved.filter(x => typeof x === 'string'); } catch { /* Storage can be unavailable. */ }
+  const stored = (storageKey: string) => {
+    try { const saved = JSON.parse(localStorage.getItem(storageKey) || '[]'); return Array.isArray(saved) ? saved.filter((x): x is string => typeof x === 'string') : []; }
+    catch { return []; /* Storage can be unavailable. */ }
+  };
+  // Signed out, receipts are kept under 'owner'; after signing in those messages stay read for the account too.
+  const ownerKey = `tym:notifications:read:${encodeURIComponent('owner')}`;
+  let read: string[] = [...new Set([...(key === ownerKey ? [] : stored(ownerKey)), ...stored(key)])];
   const notifications = [...new Map(items.map(item => [item.id, item])).values()];
   const abort = new AbortController();
   const signal = abort.signal;
