@@ -96,8 +96,10 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
 						</section>
 						</div>
+						<div class="hero-copy">
 						<p data-i18n="home.heroTagline">每天主動為你整理研究資訊：最新的技術動向與可參考的標的，標的背後的技術與供應鏈，以及這些個股在總體經濟環境下現在的風險。我曾在避險基金交易室做研究，之後多年以個人投資人的身分自行研究與交易，這裡就是把那套工作交給系統每天做。買進、減碼或等待，最後由你決定。</p>
 						<p class="home-product-audience" data-i18n="home.productAudience">給需要快速掌握產業、技術與總經脈絡的基金經理人與專業投資人。資料由系統蒐集、核對並附上來源與日期，你直接閱讀結論，再把持倉集中度、槓桿和現金部位放進決策。</p>
+						</div>
 						<div class="home-product-actions">
 							<a class="home-product-contact" href={mailtoHref('trial', 'zh')} data-contact-topic="trial" data-i18n="home.productContact">寄信申請試用</a>
 							<a href="#market-overview" data-i18n="home.productExplore">先看市場資料與圖表</a>

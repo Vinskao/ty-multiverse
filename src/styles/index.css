@@ -2240,3 +2240,9 @@
 #market-report-web { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
 #market-report-web p { grid-column: 1 / -1; }
 @media (max-width: 640px) { .market-report-upload, #market-report-web { grid-template-columns: minmax(0, 1fr); } }
+
+/* The tagline and the audience line sit together in one full-width block (no narrow text column beside empty space). */
+.home-page .hero-copy { box-sizing: border-box; width: 100%; max-width: none; margin: 1.25rem 0 1.5rem; padding: clamp(.9rem, 2vw, 1.4rem); border: 1px solid var(--gray-800); border-radius: 1rem; background: var(--gray-999_40); }
+.home-page .hero-copy p { max-width: none; }
+.home-page .hero-copy > p:first-child { margin: 0 0 .75rem; }
+.home-page .hero-copy > p:last-child { margin: 0; }

@@ -42,6 +42,15 @@ describe('home page zones', () => {
     expect(events.closest('#market-overview')).toBeNull();
   });
 
+  it('wraps the tagline and the audience line in one full-width block', () => {
+    const copy = document.querySelector('.hero-copy')!;
+    expect(copy.querySelector('[data-i18n="home.heroTagline"]')).not.toBeNull();
+    expect(copy.querySelector('.home-product-audience')).not.toBeNull();
+    expect(copy.querySelector('.home-product-actions')).toBeNull();
+    expect(css()).toMatch(/.home-page .hero-copy {[^}]*width: 100%; max-width: none;/);
+    expect(css()).toMatch(/.home-page .hero-copy p { max-width: none; }/);
+  });
+
   it('gives the holdings list and 報告種類 the same panel class, and one shared width', () => {
     expect(document.getElementById('market-watchlist')?.classList.contains('market-side-panel')).toBe(true);
     expect(document.querySelector('.market-report-sidebar')?.classList.contains('market-side-panel')).toBe(true);
