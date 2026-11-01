@@ -25,6 +25,7 @@ export function bindAboutLanguage(appLang: AboutLanguageController): () => void 
 }
 
 function showLanguageFailure(language: 'zh' | 'en'): false {
+  document.querySelector('main.about-mono')?.removeAttribute('aria-busy');
   const status = document.querySelector<HTMLElement>('[data-about-language-status]');
   if (status) {
     status.textContent = language === 'zh'
@@ -35,14 +36,28 @@ function showLanguageFailure(language: 'zh' | 'en'): false {
   return false;
 }
 
+function showLanguageProgress(language: 'zh' | 'en') {
+  const status = document.querySelector<HTMLElement>('[data-about-language-status]');
+  if (status) {
+    status.textContent = language === 'zh' ? '語言切換中…' : 'Switching language…';
+    status.hidden = false;
+  }
+  document.querySelector('main.about-mono')?.setAttribute('aria-busy', 'true');
+}
+
+const SWITCH_TIMEOUT_MS = 20_000;
+
 /** Fetch the server-rendered language variant and replace only the About profile DOM. */
 export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolean> {
   const requestId = ++latestSwap;
   const nextUrl = new URL(window.location.href);
   nextUrl.searchParams.set('lang', language);
 
+  showLanguageProgress(language);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SWITCH_TIMEOUT_MS);
   try {
-    const response = await fetch(nextUrl.toString(), { cache: 'no-store', credentials: 'same-origin' });
+    const response = await fetch(nextUrl.toString(), { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
     if (!response.ok) return showLanguageFailure(language);
 
     const html = await response.text();
@@ -66,5 +81,7 @@ export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolea
     return true;
   } catch {
     return showLanguageFailure(language);
+  } finally {
+    clearTimeout(timer);
   }
 }

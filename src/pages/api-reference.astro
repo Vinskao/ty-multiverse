@@ -20,7 +20,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 </BaseLayout>
 
 <script>
-  import { groupOperations, publicOperations } from "../scripts/api/publicSpec";
+  import { groupExamples, groupOperations, publicOperations, schemaRows } from "../scripts/api/publicSpec";
 
   const status = document.getElementById("api-status");
   const root = document.getElementById("api-groups");
@@ -50,11 +50,39 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           if (op.params.length) {
             const list = el("ul", "api-params");
             for (const param of op.params) {
-              list.append(el("li", undefined, `${param.name}（${param.where === "path" ? "路徑" : "查詢"}${param.required ? "、必填" : ""}）${param.description ? `：${param.description}` : ""}`));
+              const item = el("li");
+              // separate nodes so the English layer can translate the label and the (Chinese) description on their own
+              item.append(el("span", undefined, `${param.name}（${param.where === "path" ? "路徑" : "查詢"}${param.required ? "、必填" : ""}）`));
+              if (param.description) item.append(el("span", undefined, `：${param.description}`));
+              list.append(item);
             }
             card.append(list);
           }
           card.append(el("pre", "api-curl", op.curl));
+          for (const [venue, examples] of groupExamples(op.examples)) {
+            const block = el("div", "api-examples");
+            block.append(el("h4", undefined, `合法查詢範例・${venue}`));
+            for (const example of examples) {
+              block.append(el("p", "api-example-title", example.title), el("pre", "api-curl", example.curl));
+            }
+            card.append(block);
+          }
+          const rows = schemaRows(op.schema);
+          if (rows.length) {
+            const details = el("details", "api-schema");
+            details.append(el("summary", undefined, `回應結構（${rows.length} 個欄位）`));
+            const table = el("table", "api-schema-table");
+            const head = el("tr");
+            for (const label of ["欄位", "型別", "說明"]) head.append(el("th", undefined, label));
+            table.append(head);
+            for (const row of rows) {
+              const tr = el("tr");
+              tr.append(el("td", undefined, row.path), el("td", undefined, row.type), el("td", undefined, row.description));
+              table.append(tr);
+            }
+            details.append(table);
+            card.append(details);
+          }
           section.append(card);
         }
         root.append(section);
@@ -77,5 +105,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .api-path { word-break: break-all; }
   .api-summary { margin: 0 0 0.5rem; color: var(--gray-200); }
   .api-params { margin: 0 0 0.5rem; padding-left: 1.1rem; color: var(--gray-300); font-size: 0.88rem; }
+  .api-examples { margin-top: 0.75rem; }
+  .api-examples h4 { margin: 0 0 0.3rem; font-size: 0.85rem; color: var(--gray-200); }
+  .api-example-title { margin: 0.4rem 0 0.2rem; color: var(--gray-300); font-size: 0.82rem; }
+  .api-schema { margin-top: 0.75rem; }
+  .api-schema summary { cursor: pointer; color: var(--gray-200); font-size: 0.88rem; }
+  .api-schema-table { width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.8rem; }
+  .api-schema-table th, .api-schema-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid var(--gray-800); text-align: left; vertical-align: top; }
+  .api-schema-table td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
   .api-curl { margin: 0; padding: 0.55rem 0.75rem; border-radius: 8px; background: color-mix(in srgb, var(--gray-800) 40%, transparent); font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
 </style>

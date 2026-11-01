@@ -77,3 +77,37 @@ describe('About language content swap', () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 });
+
+describe('About language switch feedback (the server render can take seconds)', () => {
+  beforeEach(() => {
+    document.documentElement.lang = 'zh-Hant';
+    document.body.innerHTML = '<main class="wrapper about about-mono"><p data-about-language-status role="status" hidden></p><h1>繁體中文</h1></main>';
+    window.history.replaceState(null, '', '/about/?lang=zh');
+  });
+
+  it('says it is switching, in the target language, while the page is still loading', async () => {
+    let finish!: (value: unknown) => void;
+    vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => { finish = resolve; })));
+    const pending = replaceAboutContent('en');
+    const status = document.querySelector<HTMLElement>('[data-about-language-status]')!;
+    expect(status.hidden).toBe(false);
+    expect(status.textContent).toBe('Switching language…');
+    expect(document.querySelector('main.about-mono')?.getAttribute('aria-busy')).toBe('true');
+    finish({ ok: true, text: async () => markup('en', 'English') });
+    await expect(pending).resolves.toBe(true);
+    expect(document.querySelector('.about h1, h1')?.textContent).toBe('English');
+  });
+
+  it('gives up with a visible message when the server never answers', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+    })));
+    const pending = replaceAboutContent('en');
+    await vi.advanceTimersByTimeAsync(20_000);
+    await expect(pending).resolves.toBe(false);
+    expect(document.querySelector('[data-about-language-status]')?.textContent).toContain('Language could not be changed');
+    expect(document.querySelector('main.about-mono')?.hasAttribute('aria-busy')).toBe(false);
+    vi.useRealTimers();
+  });
+});

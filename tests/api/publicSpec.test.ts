@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { groupOperations, publicOperations } from '../../src/scripts/api/publicSpec';
+import { groupExamples, groupOperations, publicOperations, schemaRows } from '../../src/scripts/api/publicSpec';
 
 const read = (file: string) => readFileSync(resolve(process.cwd(), file), 'utf8');
 const spec = {
@@ -70,5 +70,48 @@ describe('the API tab', () => {
     expect(page).toContain('個人帳戶資料不提供匿名存取');
     expect(page).toContain('資料整合需求');
     expect(JSON.parse(read('src/storages/i18n.json')).nav.api.zh).toBe('API');
+  });
+});
+
+describe('response schema and per-venue examples', () => {
+  const schema = { type: 'object', properties: {
+    code: { type: 'string' }, collecting: { type: 'boolean', description: '尚無資料' },
+    points: { type: 'array', items: { type: 'object', properties: { date: { type: 'string' }, sources: { type: 'object', description: '鍵為來源' } } } },
+    tags: { type: 'array', items: { type: 'string' } },
+    analysis: { type: ['object', 'null'], description: '目前版本' },
+  } };
+  const withExtras = { servers: [{ url: '/maya-sawa' }], paths: { '/market/dashboard/overseas/{code}': { get: {
+    summary: '海外', parameters: [{ name: 'code', in: 'path', required: true }, { name: 'market', in: 'query', required: true }],
+    responses: { '200': { description: 'OK', content: { 'application/json': { schema } } } },
+    'x-examples': [{ venue: 'Binance', title: '比特幣', path: '/market/dashboard/overseas/BTC?market=CRYPTO' },
+      { venue: 'IBKR 美股', title: 'LITE', path: '/market/dashboard/overseas/LITE?market=US' }] } } } };
+  const [op] = publicOperations(withExtras as any, 'https://tymultiverse.cc');
+
+  it('turns each example into a runnable curl with the full URL', () => {
+    expect(op.examples[0]).toEqual({ venue: 'Binance', title: '比特幣', url: 'https://tymultiverse.cc/maya-sawa/market/dashboard/overseas/BTC?market=CRYPTO',
+      curl: "curl 'https://tymultiverse.cc/maya-sawa/market/dashboard/overseas/BTC?market=CRYPTO'" });
+  });
+
+  it('groups examples by venue in the order the server lists them', () => {
+    expect(groupExamples(op.examples).map(([venue, rows]) => [venue, rows.length])).toEqual([['Binance', 1], ['IBKR 美股', 1]]);
+  });
+
+  it('flattens the response schema into rows a reader can scan, arrays marked with []', () => {
+    expect(schemaRows(op.schema)).toEqual([
+      { path: 'code', type: 'string', description: '' },
+      { path: 'collecting', type: 'boolean', description: '尚無資料' },
+      { path: 'points', type: 'array', description: '' },
+      { path: 'points[].date', type: 'string', description: '' },
+      { path: 'points[].sources', type: 'object', description: '鍵為來源' },
+      { path: 'tags', type: 'string[]', description: '' },
+      { path: 'analysis', type: 'object | null', description: '目前版本' },
+    ]);
+  });
+
+  it('has no schema or examples when the route publishes none', () => {
+    const [plain] = publicOperations({ paths: { '/market/watch': { get: { summary: 'x', responses: {} } } } } as any, 'https://x');
+    expect(plain.schema).toBeNull();
+    expect(plain.examples).toEqual([]);
+    expect(schemaRows(plain.schema)).toEqual([]);
   });
 });
