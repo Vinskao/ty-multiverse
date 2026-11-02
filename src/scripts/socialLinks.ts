@@ -14,4 +14,9 @@ export const socialLinks = [
 		href: 'https://www.facebook.com/profile.php?id=61596064529255',
 		icon: 'facebook-logo',
 	},
+	{
+		label: 'LinkedIn',
+		href: 'https://www.linkedin.com/in/tianyi-kao/',
+		icon: 'linkedin-logo',
+	},
 ] as const;

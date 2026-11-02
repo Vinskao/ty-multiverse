@@ -31,6 +31,11 @@ describe('homepage social links and product identity', () => {
     expect(links).toContain("https://www.instagram.com/birch_investments/");
     expect(links).toContain("https://www.threads.com/@birch_investments");
     expect(links).toContain("https://www.facebook.com/profile.php?id=61596064529255");
+    // 2026-11-02: LinkedIn posts are published to the owner's personal profile, so the icon points there.
+    expect(links).toContain("https://www.linkedin.com/in/tianyi-kao/");
+    expect(links).toContain("icon: 'linkedin-logo'");
+    expect(source('src/components/IconPaths.ts')).toContain("'linkedin-logo'");
+    expect(links.indexOf('facebook.com')).toBeLessThan(links.indexOf('linkedin.com'));
     expect(links).not.toContain('https://twitter.com/wawiking');
     expect(source('src/components/Nav.astro')).toContain("from '../scripts/socialLinks'");
     expect(source('src/components/Footer.astro')).toContain("from '../scripts/socialLinks'");
