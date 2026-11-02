@@ -19,30 +19,30 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
         expect(home).toContain('title="TY 市場研究室"');
-        expect(home).toContain('data-i18n="home.heroTitle">今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師</h1>');
+        expect(home).toContain('data-i18n="home.heroTitle">一起貢獻報告，共建投資研究平台</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
-        expect(home).toMatch(/class="home-product-contact" href=\{mailtoHref\('trial', 'zh'\)\} data-contact-topic="trial"/);
+        expect(home).toContain('class="home-product-contact" href="#market-reports"');
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
         expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@tymultiverse.cc'");
-        expect(home).toContain('API 採用量計費');
+        expect(home).toContain('Miner · 選用的市場資料 API');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://tymultiverse.cc/"');
     });
 
-    it('describes the founder as a former desk researcher and independent investor', () => {
+    it('describes shared evidence and independent decisions rather than selling the founder', () => {
         const home = JSON.parse(source('src/storages/i18n.json')).home;
-        expect(home.heroTagline.zh).toContain('曾在避險基金交易室做研究');
-        expect(home.heroTagline.zh).toContain('之後多年以個人投資人的身分自行研究與交易');
-        expect(home.productAudience.zh).toContain('持倉集中度');
-        expect(home.heroTagline.en).toContain('then spent years researching and trading independently');
-        expect(home.productAudience.en).toContain('position risk');
+        expect(home.heroTagline.zh).toContain('共同研究平台');
+        expect(home.heroTagline.zh).toContain('互利共生');
+        expect(home.productAudience.zh).toContain('自行做出投資決策');
+        expect(home.heroTagline.en).toContain('shared research platform');
+        expect(home.productAudience.en).toContain('make your own investment decisions');
     });
 
     // 2026-10-29: the product is not a toolkit for building your own research method. It pushes research to the reader
     // (tickers, the technology behind them, the macro backdrop) and the reader's one job is adding reports to the library.
-    it('sells an active researcher and data processor for fund managers, not a DIY research method', () => {
+    it('presents community research, technology and macro evidence without a DIY burden', () => {
         const json = JSON.parse(source('src/storages/i18n.json')).home;
         const copy = ['heroTitle', 'heroTagline', 'productAudience', 'productWorkflow', 'productCollectTitle', 'productCollectBody',
             'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody',
@@ -51,8 +51,8 @@ describe('homepage search and contact contract', () => {
         for (const old of ['建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件', '你只要把報告加進來', '你唯一要做的事', '預計按使用量計費']) {
             expect(copy + page).not.toContain(old);
         }
-        expect(json.heroTitle.zh).toContain('大數據工程師');
-        expect(json.heroTitle.en).toContain('big-data engineer');
+        expect(json.heroTitle.zh).toContain('共建投資研究平台');
+        expect(json.heroTitle.en).toContain('research, together');
         expect(json.heroTagline.zh).toMatch(/標的/);
         expect(json.heroTagline.zh).toMatch(/技術/);
         expect(json.heroTagline.zh).toMatch(/總體經濟|總經/);
@@ -60,7 +60,7 @@ describe('homepage search and contact contract', () => {
         expect(json.productDecideBody.zh).toMatch(/研究圖像/);
         expect(json.productDecideBody.zh).toMatch(/標的/);
         expect(json.productFaqTitle.zh).toContain('研究方法');
-        expect(source('src/pages/index.astro')).toContain('description="今天起，用一頓飯的錢，雇用一位頂級機構研究員，以及一位大數據工程師');
+        expect(source('src/pages/index.astro')).toContain(`description="${json.heroTagline.zh}"`);
     });
 
     it('keeps the server-rendered Chinese identical to the i18n source, so the page does not flash different words on load', () => {
@@ -107,11 +107,11 @@ describe('community narrative and pricing scope', () => {
         expect(json.productDecideBody.zh).toContain('自己喜歡的報告');
         expect(json.productDecideBody.zh).toContain('社群');
         expect(json.productDecideBody.zh).not.toContain('唯一要做');
-        expect(json.productPricingTitle.zh).toBe('API 採用量計費');
+        expect(json.productPricingTitle.zh).toBe('Miner · 選用的市場資料 API');
         expect(json.productPricingBody.zh).toContain('免費開放');
         expect(json.productPricingBody.zh).toContain('廣告');
         expect(json.productPricingBody.zh).toContain('價格與開放方式尚未公布');
-        expect(page).toContain('data-i18n="home.productPricingTitle">API 採用量計費</h2>');
-        expect(page).toContain('data-i18n="home.productWorkflow">網站主動提供最新標的與技術研究');
+        expect(page).toContain('data-i18n="home.productPricingTitle">Miner · 選用的市場資料 API</summary>');
+        expect(page).toContain('data-i18n="home.productWorkflow">社群報告匯成證據，發掘最新標的與技術');
     });
 });

@@ -1,5 +1,7 @@
 # TY Multiverse Development Guidelines (AGENTS.md)
 
+共同研究平台與 AI 機會池的流程、開發方法與測試：[docs/COMMUNITY_RESEARCH_PLATFORM.md](docs/COMMUNITY_RESEARCH_PLATFORM.md)。
+
 ## Chart interaction standard
 
 - Every data chart must expose the exact value for each plotted point. Desktop users can hover; touch users can tap; keyboard users can focus point controls. Do not rely only on browser-native SVG `<title>` tooltips.

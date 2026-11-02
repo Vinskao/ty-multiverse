@@ -1524,6 +1524,9 @@
 .home-product-faq p { margin-top:.6rem; }
 .home-product-pricing { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:1.5rem; border-left:3px solid #b78b32; padding:.75rem 1rem; margin-top:.75rem; }
 .home-product-pricing-copy, .home-product-pricing-chart { min-width:0; text-align:left; }
+.home-miner { font-size:.85rem; color:var(--gray-400); }
+.home-miner summary { cursor:pointer; font-size:.9rem; font-weight:500; }
+.home-miner p { margin-top:.5rem; }
 .home-product-pricing-chart { box-sizing:border-box; width:100%; }
 #research-economics-panel:not([hidden]) + .research-economics-signin { display:none; }
 .research-economics-signin h3 { margin:0 0 .5rem; font-size:1rem; }
