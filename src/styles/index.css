@@ -245,7 +245,7 @@
   .market-report-sidebar .market-report-filter { width:auto; flex:0 0 auto; white-space:nowrap; }
 }
 
-.market-watchlist { display: grid; gap: .5rem; align-content: start; align-self: start; min-width: 0; position: static; max-height: none; overflow: visible; }
+.market-watchlist { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; align-content: start; align-self: start; min-width: 0; position: static; max-height: none; overflow: visible; }
 .market-watchlist-heading, .market-watch-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: .75rem; }
 .market-watchlist-heading { padding: 0 .9rem; color: var(--gray-400); font-size: .72rem; text-transform: uppercase; }
 .market-watch-row { position: relative; box-sizing: border-box; min-width: 0; overflow-wrap: anywhere; width: 100%; padding: 1rem; text-align: left; color: inherit; border: 1px solid var(--gray-800); border-radius: .9rem; background: var(--gradient-subtle); cursor: pointer; }
