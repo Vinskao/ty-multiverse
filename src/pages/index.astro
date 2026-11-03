@@ -267,6 +267,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 判斷核心：買／中立／賣的方向只由三項決定——循環（產業與需求循環位置）、技術力（技術路線與競爭門檻）、交貨（出貨、營收、產能與交期的實際證據）。每項標順風／中性／逆風：≥2 項順風且無逆風＝買；≥2 項逆風＝賣；其餘＝中立。總經、價格、籌碼只用來決定進場時機與風險，不推翻三項判斷；若要偏離規則必須寫明理由。
 研究圖：先 GET /api/market/dashboard/analysis/{'{code}'}?productType=research（本頁「研究」分頁），讀供應鏈與技術環節 Mermaid 圖及三項判斷。若最新法說、財報或月營收改變了某一項，同步更新研究紀錄（同一筆、帶 expectedRevision，JSON 欄位：name、market、asOf、summary、supplyChain、technology、assessment.cycle/technology/delivery.view+note、lean、leanReason、watch、sources），研究紀錄永久保存、標的移除也不刪。
 
+開頭 200 字（硬性）：評論前 200 字會被單獨發到 Threads，所以第一行只寫「【結論】買／中立／賣」（可括號寫維持或由X改為Y），第二行直接寫：哪一份報告、財報或總經數字（附數字與期間）帶來什麼新 insight，因此維持或改變建議。前 200 字不要先講股價漲跌、均線、RSI、成交量或籌碼，也不要以資料截點標題開頭；沒有新證據就直說並寫下一個證據與公布日。完整規則見 https://tymultiverse.cc/market-ai.md。
+
 敘事主軸（擇一並寫明）
 • Top-down：美國總經（就業、通膨、聯準會利率、10 年期殖利率、零售消費）→ 資金與風險偏好 → 台股／產業景氣 → 公司營運 → 價格與籌碼。適用大型權值、景氣循環、指數期貨。
 • Bottom-up：公司產品／客戶／訂單與財報 → 產業地位 → 總經是順風或逆風 → 價格與籌碼是否已反映。適用個股題材明確或與總經連動弱者。

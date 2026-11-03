@@ -2,6 +2,33 @@
 
 Open **AI analysis / AI 分析** after Fundamentals. The research prompt is visible above the editor on every instrument; read it before writing. The Copy button copies the full prompt.
 
+## 開頭 200 字規則（硬性）/ Opening 200 characters (hard rule)
+
+每份個股、期貨與總經評論的**前 200 個字會被單獨拿去發 Threads 等只收 200 字的地方**，所以這 200 字本身就要是完整的重點：**哪一份報告、財報或總經數字帶來什麼新的 insight，因此「維持」或「改變」買賣建議。** 不要在前面講股價波動。
+
+The first 200 characters of every analysis are published on their own (Threads accepts 200). They must state which new report, earnings figure or macro number gives what new insight, and therefore keeps or changes the rating. Do not open with price action.
+
+寫法（個股／期貨）：
+
+```
+【結論】買（維持）                       ← 或「中立（由買下調）」「賣（由中立下調）」
+重點：<報告／財報／總經數字（附數字與期間）>，<它對循環／技術力／交貨哪一項的新判斷>，因此維持／改變為<結論>。
+
+<標的名稱｜資料截點：…｜研究期間：…｜敘事主軸：…>      ← 原本的標題行往後移
+（之後才是時機、價格、籌碼、完整論述）
+```
+
+範例：`【結論】買（維持）` ⏎ `重點：Lumentum 11/2 公布 FY27Q1 營收 12.63 億美元、年增 136.5%，交貨證據比 8 月新聞稿更強；Marvell 全股票合併預計 2028 上半年完成，技術力順風不變，因此維持買進。`
+
+規則：
+
+1. 第一行照舊只放 `【結論】買／中立／賣`，可加括號寫「維持」或「由X改為Y」。
+2. 第二行（重點）必須有：**新證據**（報告、財報、法說、月營收、CPI／PMI／利率等）、**數字**（附期間或日期）、**決定**（維持或改變，改變要寫由舊結論到新結論）。數字只能用已查證的資料。
+3. 前 200 字**不得**出現：股價漲跌、收盤價、均線（MA）、RSI、成交量、支撐壓力、籌碼買賣超、融資借券，也不得以「資料截點／研究期間／敘事主軸」標題行開頭。這些是進場時機，放到重點之後。產品價格（例如 DRAM 合約價上漲）與營收創新高屬於證據，可以寫。
+4. 這輪沒有新報告、新財報或新總經數字時，直說「本輪沒有新證據」，並寫下一個證據是什麼、何時公布，以及判斷維持的理由；不要用股價動態填這 200 字。
+5. 總經評論沒有【結論】行，但前 200 字同樣要寫新公布的總經數字（附期間）與它對判斷的影響，不先講行情。
+6. **存檔前**用 `python3 maya_sawa/public_scripts/check_analysis_lead.py body.json`（總經評論加 `--kind macro`）檢查存檔內容的前 200 字；印出 `NG` 就重寫開頭再檢查，最多重寫兩次。細節見 maya-sawa 的 `docs/ANALYSIS_LEAD.md`。
+
 ## Research quality SOP / 產業研究品質準則
 
 General ETF Research shows allocation ratios only (holdings / sectors / regions / assets, each with its own date and source). Do not create company technology maps, three-axis assessments or a lean for a broad ETF. Add theme research only for an explicit industry theme, such as electric vehicles. Follow the ETF schema in the guide below.

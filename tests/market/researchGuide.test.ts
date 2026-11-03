@@ -40,3 +40,16 @@ it('gives general ETFs an allocation-only exception with an explicit theme opt-i
   expect(page).toContain('一般 ETF 只顯示');
   expect(aiGuide).toContain('一般 ETF');
 });
+
+it('makes the first 200 characters of an analysis lead with new evidence and the rating change, not price action', () => {
+  // 2026-11-03: the opening 200 characters are published on their own (Threads), and the live analyses opened with the data-cutoff header and price action.
+  const rule = aiGuide.slice(aiGuide.indexOf('## 開頭 200 字規則'), aiGuide.indexOf('## Research quality SOP'));
+  expect(rule.length).toBeGreaterThan(200);
+  for (const must of ['新證據', '數字', '維持', '改變', '【結論】', '股價', 'MA', 'RSI', 'check_analysis_lead.py', '本輪沒有新證據']) {
+    expect(rule, must).toContain(must);
+  }
+  expect(rule.indexOf('重點')).toBeLessThan(rule.indexOf('資料截點'));            // the insight line comes before the header line
+  const prompt = page.slice(page.indexOf('id="market-ai-research-prompt-text"'));
+  expect(prompt.slice(0, 9000)).toContain('開頭 200 字');                       // the copyable prompt points at the same rule
+  expect(prompt.slice(0, 9000)).toContain('https://tymultiverse.cc/market-ai.md');
+});
