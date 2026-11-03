@@ -27,6 +27,8 @@ describe('homepage search and contact contract', () => {
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
         expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@tymultiverse.cc'");
         expect(home).toContain('Miner · 選用的市場資料 API');
+        expect(home).toContain('Maya 主播每日精讀');
+        expect(home).toContain('api/market/daily-maya');
         expect(home).toContain('價格與開放方式尚未公布');
         expect(home).toContain('canonical="https://tymultiverse.cc/"');
     });
@@ -113,5 +115,7 @@ describe('community narrative and pricing scope', () => {
         expect(json.productPricingBody.zh).toContain('價格與開放方式尚未公布');
         expect(page).toContain('data-i18n="home.productPricingTitle">Miner · 選用的市場資料 API</summary>');
         expect(page).toContain('data-i18n="home.productWorkflow">社群報告匯成證據，發掘最新標的與技術');
+        expect(source('src/pages/learn.astro')).toContain('市場快報｜Maya 主播精讀');
+        expect(source('src/pages/learn.astro')).toContain('api/market/audio');
     });
 });

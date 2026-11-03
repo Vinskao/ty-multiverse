@@ -1,0 +1,12 @@
+import type { APIRoute } from 'astro';
+
+const MAYA_SAWA_URL = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa/maya-sawa';
+
+export const GET: APIRoute = async () => {
+  try {
+    const response = await fetch(`${MAYA_SAWA_URL}/market/daily-maya`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) });
+    return new Response(await response.text(), { status: response.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  } catch {
+    return Response.json({ error: 'Daily Maya unavailable' }, { status: 502 });
+  }
+};

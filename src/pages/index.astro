@@ -126,6 +126,10 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</aside>
 						</div>
 					</section>
+					<section class="market-ai-panel" aria-labelledby="home-daily-maya-title">
+						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">Maya 主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
+						<div id="home-daily-maya" aria-live="polite"><p class="market-updated">載入最新已審核精讀…</p></div>
+					</section>
 
 					<section id="market-overview" class="market-overview">
 						<div class="market-overview-header">
@@ -551,3 +555,17 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 	</div>
 	<script src="../scripts/index.ts"></script>
 </BaseLayout>
+
+<script>
+	const root = document.querySelector<HTMLElement>('#home-daily-maya');
+	if (root) fetch(`${import.meta.env.BASE_URL}api/market/daily-maya`, { headers: { Accept: 'application/json' } })
+		.then(response => response.ok ? response.json() : Promise.reject())
+		.then(({ items }) => {
+			const latest = Array.isArray(items) ? items[0] : null;
+			root.replaceChildren();
+			if (!latest) { root.textContent = '目前尚無已審核的每日精讀。'; return; }
+			const date = document.createElement('p'); date.textContent = latest.day || '';
+			const content = document.createElement('p'); content.textContent = latest.content || '';
+			root.append(date, content);
+		}).catch(() => { if (root) root.textContent = '每日精讀暫時無法載入。'; });
+</script>

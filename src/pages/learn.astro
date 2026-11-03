@@ -39,6 +39,10 @@ import { learnCatalog } from "../scripts/learn/catalog";
             </ul>
           </section>)}
         </div>
+        <section class="learn-catalog" aria-labelledby="market-audio-title">
+          <div class="learn-catalog-heading"><h2 id="market-audio-title">市場快報｜Maya 主播精讀</h2><span>完整語音</span></div>
+          <div id="market-audio-list" aria-live="polite"><p>載入已完成的市場快報…</p></div>
+        </section>
       </section>
 
       <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
@@ -114,6 +118,26 @@ import { learnCatalog } from "../scripts/learn/catalog";
     </main>
   </div>
 </BaseLayout>
+
+<script>
+  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string };
+  const list = document.querySelector<HTMLElement>('#market-audio-list');
+  if (list) fetch(`${import.meta.env.BASE_URL}api/market/audio`, { headers: { Accept: 'application/json' } })
+    .then(response => response.ok ? response.json() : Promise.reject())
+    .then(({ items }) => {
+      list.replaceChildren();
+      const entries = Array.isArray(items) ? items as AudioItem[] : [];
+      if (!entries.length) { list.textContent = '目前尚無已完成的市場快報語音。'; return; }
+      for (const item of entries) {
+        const card = document.createElement('article');
+        const label = item.productType === 'macro' ? '總經' : item.productType === 'daily' ? 'Maya 每日精讀' : '個股';
+        const title = document.createElement('h3'); title.textContent = `${label} ${item.code} · 第 ${item.revision} 版`;
+        const player = document.createElement('audio'); player.controls = true; player.preload = 'none';
+        player.src = `${import.meta.env.BASE_URL}api/market/audio/${encodeURIComponent(item.productType)}/${encodeURIComponent(item.code)}/${item.revision}`;
+        card.append(title, player); list.append(card);
+      }
+    }).catch(() => { if (list) list.textContent = '市場快報暫時無法載入。'; });
+</script>
 
 <script>
   import { GATEWAY_API_BASE } from "../common/constants/api";

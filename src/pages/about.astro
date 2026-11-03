@@ -211,7 +211,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
               <source src="/assets/media/founder-message.mp4" type="video/mp4" />
               {lang === "zh" ? "您的瀏覽器不支援影片播放。" : "Your browser does not support video playback."}
             </video>
-              <button class="founder-play" type="button" aria-label={lang === "zh" ? "????" : "Play video"}>?</button>
+              <button class="founder-play" type="button" aria-label={lang === "zh" ? "????" : "Play video"}><span aria-hidden="true">?</span></button>
             </div>
           </div>
         </section>
