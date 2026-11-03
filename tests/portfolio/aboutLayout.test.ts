@@ -24,3 +24,12 @@ it('re-runs the About language controller after Astro view transitions', () => {
   expect(page).toContain('bindAboutLanguage');
   expect(page).toContain('lang={lang === "zh" ? "zh-Hant" : "en"}');
 });
+
+it('places recruiting alongside the founder and uses a centered autoplay video', () => {
+  const page = readFileSync(resolve(__dirname, '../../src/pages/about.astro'), 'utf8');
+  expect(page.indexOf('class="team-recruitment"')).toBeGreaterThan(page.indexOf('id="team-section-title"'));
+  expect(page.indexOf('class="team-recruitment"')).toBeLessThan(page.indexOf('class="team-member"'));
+  expect(page).toContain('<video autoplay preload="auto" playsinline');
+  expect(page).toContain('class="founder-play"');
+  expect(page).not.toContain('<video controls');
+});

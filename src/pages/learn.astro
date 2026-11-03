@@ -674,7 +674,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
     const target = query("#learn-history-content");
     if (!target) return;
     try {
-      const history = await request<Array<{ submittedAt: string; score: number; totalQuestions: number; quizTitle: string }>>("/learn/attempts");
+      const history = await request<Array<{ displayName: string; submittedAt: string; score: number; totalQuestions: number; quizTitle: string }>>("/learn/attempts/recent");
       if (!history.length) {
         target.textContent = "尚無紀錄";
         return;
