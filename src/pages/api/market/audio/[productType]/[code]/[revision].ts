@@ -4,7 +4,10 @@ const MAYA_SAWA_URL = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA
 
 export const GET: APIRoute = async ({ params }) => {
   const { productType, code, revision } = params;
-  if (!['macro', 'stock'].includes(productType || '') || !/^[A-Z0-9-]{1,24}$/.test(code || '') || !/^\d+$/.test(revision || '')) return new Response(null, { status: 404 });
+  const validCode = productType === 'daily'
+    ? /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(code || '')
+    : ['macro', 'stock'].includes(productType || '') && /^[A-Z0-9-]{1,24}$/.test(code || '');
+  if (!validCode || !/^\d+$/.test(revision || '')) return new Response(null, { status: 404 });
   try {
     const response = await fetch(`${MAYA_SAWA_URL}/market/audio/${productType}/${encodeURIComponent(code!)}/${revision}`, { signal: AbortSignal.timeout(20000) });
     return new Response(response.body, { status: response.status, headers: { 'Content-Type': response.headers.get('Content-Type') || 'application/octet-stream', 'Cache-Control': 'public, max-age=3600' } });

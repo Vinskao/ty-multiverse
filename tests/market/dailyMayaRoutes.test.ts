@@ -18,4 +18,20 @@ describe('market audio proxy', () => {
     expect(response.headers.get('Content-Type')).toBe('audio/mpeg');
     expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([1, 2, 3]);
   });
+
+  it('proxies approved daily audio versions identified by UUID', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(new Uint8Array([7, 8, 9]), { headers: { 'Content-Type': 'audio/mpeg' } }),
+    );
+    const response = await getAudio({
+      params: { productType: 'daily', code: '16d80368-5fdd-40f9-a7e5-5e69e3ad49eb', revision: '1' },
+    } as never);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('audio/mpeg');
+    expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([7, 8, 9]);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/\/market\/audio\/daily\/16d80368-5fdd-40f9-a7e5-5e69e3ad49eb\/1$/),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+  });
 });
