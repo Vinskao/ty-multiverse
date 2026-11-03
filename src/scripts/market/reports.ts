@@ -1,6 +1,6 @@
 import { researchSegmentForText, researchTagIdForSegments, researchTagIdsForSegments, researchTagIdsForText, researchTagLabel, segmentsForResearchTags, type ResearchTagId } from './researchTaxonomy';
 
-export type ReportStatus = 'queued' | 'processing' | 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed';
+export type ReportStatus = 'queued' | 'processing' | 'extracted' | 'embedded' | 'claims_pending' | 'backlog' | 'ready' | 'failed' | 'quarantined';
 export const MAX_REPORT_BYTES = 40 * 1024 * 1024;
 export type ReportUploadMetadata = { title: string; publisher: string; publishedAt: string; visibility: 'public' | 'owner' };
 export type ReportUploadFile = { name: string; size: number; type: string };
@@ -42,6 +42,7 @@ export function reportFileAllowed(size: number, type: string, filename: string):
 }
 
 export function reportStatusLabel(status: ReportStatus, claimCount?: number, failureReason?: string | null): string {
+  if (status === 'quarantined') return '安全審查：已隔離';
   if (status === 'queued') return '後端排隊中';
   if (status === 'processing') return '後端處理中';
   if (status === 'extracted') return '已抽取文字，正在向量化';

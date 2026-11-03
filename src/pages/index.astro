@@ -471,17 +471,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
 						<form id="market-report-upload" class="market-report-upload" hidden>
 							<label class="market-report-file">選擇 PDF（可一次多選，每份最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /><small>檔名會自動作為報告標題；選完即可立即上傳。</small></label>
-							<label>可見範圍<select name="visibility"><option value="public">公開</option><option value="owner">只有自己</option></select></label>
-							<details class="market-report-metadata"><summary>補充資料（選填）</summary>
-								<label>自訂標題<input name="title" maxlength="300" placeholder="留白時使用 PDF 檔名" /></label>
-								<label>出版者<input name="publisher" maxlength="200" /></label>
-								<label>發布日<input name="published_at" type="date" /></label>
-							</details>
 							<div class="market-report-submit-row"><button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p></div>
-						</form>
-						<form id="market-report-web" class="market-report-upload" hidden>
-							<label>SEC 申報網址（只收 sec.gov 的 EDGAR 頁面）<input name="url" type="url" maxlength="500" placeholder="https://www.sec.gov/Archives/edgar/data/…/….htm" required /></label>
-							<button type="submit">從網址加入</button><p id="market-report-web-status" role="status" aria-live="polite"></p>
 						</form>
 						<div class="market-report-browser">
 							<aside class="market-report-sidebar market-side-panel" aria-label="報告種類選取">

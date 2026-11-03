@@ -186,3 +186,17 @@ describe('clicking inside the open panel', () => {
     cleanup();
   });
 });
+
+describe('server-backed bell', () => {
+  it('restores account receipts and saves newly read notifications', () => {
+    document.body.innerHTML = `<div id="c"><button data-bell></button><span data-count></span><section data-panel hidden><button data-read-all></button><ul data-list></ul><p data-empty></p></section></div>`;
+    const root = document.querySelector<HTMLElement>('#c')!;
+    const save = vi.fn();
+    const items = [{id:'routine:42', title:'Old', body:'', href:''}, {id:'routine:43', title:'New', body:'', href:''}];
+    const cleanup = mountNotifications(root, 'alice', items, 'en', undefined, {ids:['routine:42'], save});
+    expect(root.querySelector('[data-count]')!.textContent).toBe('1');
+    root.querySelector<HTMLButtonElement>('[data-read-all]')!.click();
+    expect(save).toHaveBeenCalledWith(['routine:42', 'routine:43']);
+    cleanup();
+  });
+});

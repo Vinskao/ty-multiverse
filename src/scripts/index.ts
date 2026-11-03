@@ -33,7 +33,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, secFilingUrlAllowed, webImportSummary, type WebImportResult, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
@@ -2343,8 +2343,6 @@ async function loadMarketReports() {
         owner = Boolean(auth?.ok);
     }
     form.hidden = !canUploadReports(Object.keys(headers).length > 0, owner);
-    const webForm = document.getElementById('market-report-web') as HTMLFormElement | null;
-    if (webForm) webForm.hidden = form.hidden;
     const response = await fetch(astroApiPath('/api/market/reports'), { headers, cache: 'no-store' }).catch(() => null);
     if (!response?.ok) { status.textContent = '報告列表暫時無法載入。'; return; }
     const payload = await response.json() as ReportClaimsPayload;
@@ -2373,12 +2371,6 @@ function initMarketReports() {
     form.dataset.bound = 'true';
     const fileInput = form.elements.namedItem('file') as HTMLInputElement;
     let uploadBatchSequence = 0;
-    fileInput.addEventListener('change', () => {
-        const title = form.elements.namedItem('title') as HTMLInputElement;
-        const count = fileInput.files?.length ?? 0;
-        if (count === 1 && !title.value) title.value = fileInput.files![0].name.replace(/\.pdf$/i, '');
-        if (count > 1) title.value = '';
-    });
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const files = Array.from(fileInput.files ?? []);
@@ -2386,13 +2378,7 @@ function initMarketReports() {
         if (files.length === 0 || !status) return;
         const invalid = files.find(file => !reportFileAllowed(file.size, file.type, file.name));
         if (invalid) { status.textContent = `${invalid.name}：請選擇 40 MB 以下的 PDF。`; return; }
-        const values = new FormData(form);
-        const plans = planReportUploads(files, {
-            title: String(values.get('title') || '').trim(),
-            publisher: String(values.get('publisher') || '').trim(),
-            publishedAt: String(values.get('published_at') || '').trim(),
-            visibility: String(values.get('visibility') || 'public') === 'owner' ? 'owner' : 'public',
-        });
+        const plans = planReportUploads(files, { title: '', publisher: '', publishedAt: '', visibility: 'public' });
         const batch = ++uploadBatchSequence;
         status.textContent = `已開始傳送 ${plans.length} 份 PDF；擷取與主張狀態由後端管理。`;
         form.reset();
@@ -2414,25 +2400,6 @@ function initMarketReports() {
         }
         if (results.some(Boolean)) await loadMarketReports();
     });
-    const webForm = document.getElementById('market-report-web') as HTMLFormElement | null;
-    if (webForm && !webForm.dataset.bound) {
-        webForm.dataset.bound = 'true';
-        webForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const status = document.getElementById('market-report-web-status'); if (!status) return;
-            const url = String(new FormData(webForm).get('url') || '').trim();
-            if (!secFilingUrlAllowed(url)) { status.textContent = '只收 https://www.sec.gov/Archives/edgar/data/… 的 .htm 頁面。'; return; }
-            status.textContent = '正在從 SEC 讀取並切成章節…（大型申報約需 1 分鐘）';
-            const headers = new Headers({ ...marketAuthHeaders(), 'Content-Type': 'application/json' });
-            const response = await fetch(astroApiPath('/api/market/reports/web'), { method: 'POST', headers, body: JSON.stringify({ url }) }).catch(() => null);
-            if (!response?.ok) {
-                const error = response ? await response.json().catch(() => ({})) as { detail?: string } : {};
-                status.textContent = error.detail || '加入失敗，請稍後重試。'; return;
-            }
-            status.textContent = webImportSummary(await response.json() as WebImportResult, marketLocale() === 'zh-TW');
-            webForm.reset(); await loadMarketReports();
-        });
-    }
     reportsLoader?.cancel();
     reportsLoader = lazyLoader(document.getElementById('market-reports'), () => { void loadMarketReports(); });
     _lazyLoaders.push(reportsLoader);

@@ -22,6 +22,7 @@
   import { config } from '../services/core/config';
   import { storageService } from '../services/core/storageService';
   import { mountNotifications, collectNotifications, emptyNotice } from '../scripts/notifications/center';
+  import { loadReceipts, saveReceipts } from '../scripts/notifications/receipts';
   let version = 0;
   let cleanup: (() => void) | undefined;
   async function check() {
@@ -40,8 +41,28 @@
       getDiary: () => createDiaryClient(config.api.backendUrl || '/tymb', () => token || '')<{ pending: boolean; triggeredAt: string | null; nextDueAt: string }>('/check-in', {}),
     });
     if (current !== version) return;
+    let receipts: { ids: string[]; save: (ids: string[]) => void } | undefined;
+    if (token) {
+      // The JWT is verified by the server; its identity is used here only to isolate the offline cache.
+      let cacheKey = '';
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (typeof payload.iss === 'string' && typeof payload.sub === 'string') cacheKey = `tym:receipt-cache:${encodeURIComponent(payload.iss)}:${encodeURIComponent(payload.sub)}`;
+      } catch { /* Without a usable identity, do not share a cache between accounts. */ }
+      let cached: string[] = [];
+      try { const value = JSON.parse(cacheKey ? localStorage.getItem(cacheKey) || '[]' : '[]'); if (Array.isArray(value)) cached = value.filter((id: unknown) => typeof id === 'string'); } catch { /* no cache */ }
+      let remote: string[] = [];
+      try { remote = await loadReceipts(token, fetch, import.meta.env.BASE_URL || '/'); } catch { /* cached receipts remain available for retry */ }
+      if (current !== version) return;
+      const save = (ids: string[]) => {
+        if (cacheKey) try { localStorage.setItem(cacheKey, JSON.stringify(ids)); } catch { /* server may still save */ }
+        void saveReceipts(token, ids, fetch, import.meta.env.BASE_URL || '/').catch(() => { /* retry on next refresh */ });
+      };
+      receipts = { ids: [...new Set([...remote, ...cached])], save };
+      if (cached.length) save(receipts.ids);
+    }
     cleanup?.();
-    cleanup = mountNotifications(root, username || 'owner', collected.items, lang, emptyNotice(collected.empty, lang));
+    cleanup = mountNotifications(root, username || 'owner', collected.items, lang, emptyNotice(collected.empty, lang), receipts);
   }
   let languageCleanup: (() => void) | undefined;
   function init() {

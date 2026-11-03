@@ -1,4 +1,4 @@
-# 共同研究平台與 AI 機會池
+﻿# 共同研究平台與 AI 機會池
 
 2026-11-02：首頁定位為互利共生的共同投資研究平台。社群貢獻重視的報告，AI 串接證據、技術、供應鏈與總經，形成可追蹤的研究圖與候選標的。
 主動作導向報告庫與研究圖；Miner 是選用的付費市場資料 API，以預設摺疊的小型區塊呈現。
@@ -7,7 +7,8 @@ Custom 改標示為 AI 機會池，保留既有擁有者手動自選功能及權
 
 ```mermaid
 flowchart LR
-    Community[社群貢獻報告] --> Library[公開研究報告庫]
+    Community[擁有者選擇 PDF 並上傳] --> Upload[檔名作標題，只能公開]
+    Upload --> Library[公開研究報告庫]
     Library --> AI[AI 萃取證據與分析]
     Macro[總經與市場資料] --> AI
     AI --> Graph[共享研究圖]
@@ -30,3 +31,5 @@ flowchart LR
 測試：以 Codex 隨附 Node 執行 `node_modules/vitest/vitest.mjs run tests/seo/communityPlatform.test.ts tests/seo/homeSeo.test.ts`。
 新增／調整：共同研究主軸、Miner 次要入口、AI 機會池標籤、中英文 SSR 同步與 SEO 契約。
 已知缺口：本機瀏覽器控制服務不可用，尚未做視覺驗證或正式部署。
+
+2026-11-03 上傳流程簡化：先以報告頁測試重現多餘欄位，再讓使用者只選擇 PDF 並上傳；每份報告使用檔名作標題，只能公開，原始 PDF 仍只開放上傳者下載。頁面移除 SEC 網址匯入入口，既有後端匯入能力與歷史資料保留。認證沿用既有登入 token，沒有新增憑證。後端拒絕非公開上傳；舊有私人資料不會自動公開。先以現有上傳功能為基準執行 `node_modules/vitest/vitest.mjs run tests/market/reports.test.ts`，再由 Jenkins 建置；部署後需實際驗證單份及多份 PDF、公開可見性和下載權限。未來簡化類似流程時先確認資料可見性規則，並保留明確說明。

@@ -81,7 +81,7 @@ export function diaryNotification(result: { pending: boolean; triggeredAt?: stri
 }
 
 /** Read receipts are scoped to the signed-in account and never contain diary content. */
-export function mountNotifications(root: HTMLElement, username: string, items: SiteNotification[], lang: string, emptyText?: string) {
+export function mountNotifications(root: HTMLElement, username: string, items: SiteNotification[], lang: string, emptyText?: string, receipts?: { ids: string[]; save: (ids: string[]) => void }) {
   const get = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const bell = get<HTMLButtonElement>('[data-bell]');
   const panel = get('[data-panel]');
@@ -99,7 +99,7 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   };
   // Signed out, receipts are kept under 'owner'; after signing in those messages stay read for the account too.
   const ownerKey = `tym:notifications:read:${encodeURIComponent('owner')}`;
-  let read: string[] = [...new Set([...(key === ownerKey ? [] : stored(ownerKey)), ...stored(key)])];
+  let read: string[] = receipts ? [...receipts.ids] : [...new Set([...(key === ownerKey ? [] : stored(ownerKey)), ...stored(key)])];
   const notifications = [...new Map(items.map(item => [item.id, item])).values()];
   const abort = new AbortController();
   const signal = abort.signal;
@@ -167,7 +167,8 @@ export function mountNotifications(root: HTMLElement, username: string, items: S
   };
   const mark = (ids: string[]) => {
     read = [...new Set([...read, ...ids])].slice(-200);
-    try { localStorage.setItem(key, JSON.stringify(read)); } catch { /* Retain session state. */ }
+    if (receipts) receipts.save(read);
+    else try { localStorage.setItem(key, JSON.stringify(read)); } catch { /* Retain session state. */ }
     render();
   };
   bell.addEventListener('click', () => {

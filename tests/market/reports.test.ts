@@ -249,3 +249,19 @@ describe('the SEC URL form layout', () => {
     expect(css).toMatch(/#market-report-web p \{[^}]*grid-column:\s*1 \/ -1/);
   });
 });
+
+describe('simple report upload', () => {
+  it('asks only for PDF files, with public visibility and filename titles', () => {
+    const page = readFileSync(resolve('src/pages/index.astro'), 'utf8');
+    const form = page.match(/<form id="market-report-upload"[\s\S]*?<\/form>/)?.[0] ?? '';
+    expect(form).toContain('name="file"');
+    expect(form).not.toMatch(/name="(?:title|publisher|published_at|visibility)"/);
+    expect(page).not.toContain('id="market-report-web"');
+    const script = readFileSync(resolve('src/scripts/index.ts'), 'utf8');
+    expect(script).toContain("title: '', publisher: '', publishedAt: '', visibility: 'public'");
+  });
+});
+
+it('explains when a PDF was quarantined for security review', () => {
+  expect(reportStatusLabel('quarantined' as any)).toContain('隔離');
+});
