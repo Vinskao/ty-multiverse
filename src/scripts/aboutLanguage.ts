@@ -98,10 +98,10 @@ export async function replaceAboutContent(language: 'zh' | 'en'): Promise<boolea
     window.history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
     document.documentElement.lang = language === 'zh' ? 'zh-Hant' : 'en';
     document.documentElement.dataset.defaultLanguage = language;
-    document.title = language === 'zh' ? '關於｜高天逸' : 'About | Tianyi Kao';
+    document.title = language === 'zh' ? '關於｜TY Multiverse' : 'About | TY Multiverse';
     const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (description) {
-      description.content = language === 'zh' ? 'TY Multiverse 創辦人高天逸的經歷與履歷。' : 'About Tianyi Kao and his experience.';
+      description.content = language === 'zh' ? 'TY Multiverse 的產品故事、創辦人與團隊。' : 'The story, founder and team behind TY Multiverse.';
     }
     document.dispatchEvent(new CustomEvent('about:content-updated', { detail: { language } }));
     document.dispatchEvent(new Event('tym:mermaid-refresh'));

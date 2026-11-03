@@ -43,7 +43,7 @@ Read the public endpoint after deployment; verify profile conid/company/exchange
   - 值為空（`xsi:nil`）的欄位是自我結束標籤，不能當成一般開關標籤解析，否則會吞掉後面的欄位。
   - 同一期間如果之後有訂正公告，以較晚的為準。
 - **限制**：TDnet 只保留約一個月，所以過去的季度改由 J-Quants 補（見下節）。持股是 Advantest（6857，IFRS，3 月制）和湖北工業 Kohoku Kogyo（6524，J-GAAP，12 月制）。
-- **測試**：`maya-sawa/tests/test_tdnet_financials.py`。fixture 是 2026-10-15 到 10-20 真實下載的 J-GAAP 半期、IFRS 年度、預測修正 XBRL，以及一頁日列表。前端是 `tests/market/overseasResearch.test.ts`。
+- **測試**：`maya-sawa/tests/integrations/test_tdnet_financials.py`。fixture 是 2026-10-15 到 10-20 真實下載的 J-GAAP 半期、IFRS 年度、預測修正 XBRL，以及一頁日列表。前端是 `tests/market/overseasResearch.test.ts`。
 
 ## 2026-10-20 韓國財報：OpenDART 定期報告
 
@@ -56,7 +56,7 @@ Read the public endpoint after deployment; verify profile conid/company/exchange
   - 同一季同時有申報值和推算值時，以申報值為準。這個合併邏輯和 TDnet 共用。
   - 流動資產與流動負債有申報，前端的流動比率因此有值。
 - **核對**：SK 海力士 2025Q4 推算營收 32.83 兆韓元，和 Yahoo 另外公布的季營收一致。
-- **測試**：`maya-sawa/tests/test_dart_financials.py`。fixture 是 2026-10-20 在正式 pod 內抓的 SK 海力士真實回應（2025Q3、2025 年報、2026Q1、2026 半年報、申報清單），只保留用到的科目，裡面不含 key。
+- **測試**：`maya-sawa/tests/integrations/test_dart_financials.py`。fixture 是 2026-10-20 在正式 pod 內抓的 SK 海力士真實回應（2025Q3、2025 年報、2026Q1、2026 半年報、申報清單），只保留用到的科目，裡面不含 key。
 
 ## 2026-10-21 日本歷史財報：J-Quants（JPX 官方）
 
@@ -84,7 +84,7 @@ TDnet 只保留約一個月，新加入的日本持股會沒有歷史。改用 J
 - **核對**：
   - Advantest 共 9 季（2024Q1～2026Q1）。2025 年度第四季推算營收 = 1,128,610 − 800,537 = 328,073 百萬日圓。
   - 6524 是湖北工業（Kohoku Kogyo，J-GAAP，12 月制），不是 Lasertec（Lasertec 是 6920）。
-- **測試**：`maya-sawa/tests/test_jquants_financials.py`。fixture 是 2026-10-21 在正式 pod 內抓的 6857、6524 真實回應，不含 key。
+- **測試**：`maya-sawa/tests/integrations/test_jquants_financials.py`。fixture 是 2026-10-21 在正式 pod 內抓的 6857、6524 真實回應，不含 key。
 
 ### 日本持股缺哪些圖、從哪裡補（2026-10-23）
 

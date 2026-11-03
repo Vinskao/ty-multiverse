@@ -585,3 +585,5 @@ GitLogCollector (local, read-only)
 Before changing product-facing pages, read [`docs/DESIGN_PRINCIPLES.md`](docs/DESIGN_PRINCIPLES.md) and keep its product and visual judgment intact. It records why the site uses restrained black/white/gray surfaces, when semantic color must remain, how to preserve information while reducing clutter, and the current About hierarchy. Treat it as design guidance, not a mandate to make every data visualization monochrome.
 
 For the current screen-by-screen scope, see [`docs/MONOCHROME_WORKSPACE_REDESIGN.md`](docs/MONOCHROME_WORKSPACE_REDESIGN.md). For the intended social publishing workflow, see [`docs/THREADS_LINKEDIN_AUTOMATION.md`](docs/THREADS_LINKEDIN_AUTOMATION.md).
+
+學習中心分類、既有多益流程與規劃中考試主題：[docs/LEARNING_CATALOG.md](docs/LEARNING_CATALOG.md)。

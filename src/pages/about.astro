@@ -185,8 +185,8 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
 ---
 
 <BaseLayout
-  title={lang === "zh" ? "關於｜高天逸" : "About | Tianyi Kao"}
-  description={lang === "zh" ? "TY Multiverse 創辦人高天逸的經歷與履歷。" : "About Tianyi Kao and his experience."}
+  title={lang === "zh" ? "關於｜TY Multiverse" : "About | TY Multiverse"}
+  description={lang === "zh" ? "TY Multiverse 的產品故事、創辦人與團隊。" : "The story, founder and team behind TY Multiverse."}
   lang={lang === "zh" ? "zh-Hant" : "en"}
 >
   <Fragment slot="head">
@@ -197,33 +197,22 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <main class="wrapper about about-mono">
 
       <div class="hero-section">
-        <Hero title={lang === "zh" ? "關於" : "About"} tagline={lang === "zh" ? "KTY 的旅程" : "KTY's Journey"} />
-        <div class="exp-badges">
-          <span class="exp-badge">
-            <span class="exp-badge-label">
-              {lang === "zh" ? "開發經驗" : "Software Development Experience"}
-            </span>
-            <strong>{swYears}{lang === "zh" ? " 年" : " yrs"}</strong>
-          </span>
-          <span class="exp-badge">
-            <span class="exp-badge-label">
-              {lang === "zh" ? "專案管理經驗" : "Project Management Experience"}
-            </span>
-            <strong>{pmYears}{lang === "zh" ? " 年" : " yrs"}</strong>
-          </span>
-          <span class="exp-badge">
-            <span class="exp-badge-label">
-              {lang === "zh" ? "金融經驗" : "Finance Experience"}
-            </span>
-            <strong>{financeYears}{lang === "zh" ? " 年" : " yrs"} ({formatNumber(financeMonths, "count")}{lang === "zh" ? " 個月" : " months"})</strong>
-          </span>
-          <span class="exp-badge exp-badge-total">
-            <span class="exp-badge-label">
-              {lang === "zh" ? "總工作經驗" : "Total Professional Experience"}
-            </span>
-            <strong>{totalYears}{lang === "zh" ? " 年" : " yrs"}</strong>
-          </span>
-        </div>
+        <Hero title={lang === "zh" ? "關於" : "About"} tagline={lang === "zh" ? "TY Multiverse 的旅程" : "The TY Multiverse Journey"} />
+        <section class="product-story" aria-labelledby="product-story-title">
+          <div class="product-story-copy">
+            <p class="about-eyebrow">THE STORY</p>
+            <h2 id="product-story-title">{lang === "zh" ? "從想法到共同研究" : "From an idea to shared research"}</h2>
+            <p>{lang === "zh" ? "TY Multiverse 源自一個想法：讓分散的市場數據、研究報告與個股觀點能在同一個地方相互對照，讓研究過程更容易追蹤。" : "TY Multiverse began with an idea: bring market data, research reports and company perspectives together so the reasoning behind research is easier to follow."}</p>
+            <p>{lang === "zh" ? "從整理自己的研究與打造工具出發，我們逐步把總經、產業與個股連成脈絡，希望它能成為大家一起探索、分享與驗證想法的平台。這段旅程仍在持續，也期待更多夥伴一起參與。" : "Starting with personal research and tools, the platform is gradually connecting macroeconomics, industries and companies. The aim is a place where people can explore, share and test ideas together. The journey continues, and we welcome others to help shape it."}</p>
+          </div>
+          <div class="founder-message">
+            <h2>{lang === "zh" ? "創辦人的話" : "A message from the founder"}</h2>
+            <video controls preload="none" playsinline aria-label={lang === "zh" ? "創辦人高天逸的話" : "A message from founder Tianyi Kao"}>
+              <source src="/assets/media/founder-message.mp4" type="video/mp4" />
+              {lang === "zh" ? "您的瀏覽器不支援影片播放。" : "Your browser does not support video playback."}
+            </video>
+          </div>
+        </section>
         <div class="work-photo-wrapper" style="position:relative; width:100%;">
           <div class="git-commit-ingest" data-admin-git-commit hidden>
             <div class="git-commit-toolbar">
@@ -254,7 +243,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
       <section class="team-section" aria-labelledby="team-section-title">
         <header class="team-section-heading">
           <p>{lang === "zh" ? "團隊介紹" : "TEAM"}</p>
-          <h2 id="team-section-title">{lang === "zh" ? "一人打造、一人營運" : "Built and run by one person."}</h2>
+          <h2 id="team-section-title">{lang === "zh" ? "一起打造未來" : "Building the future together"}</h2>
         </header>
         <article class="team-member" aria-labelledby="team-founder-title">
           <header class="team-member-heading">
@@ -263,6 +252,32 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
             <p>TY Multiverse · Maya Sawa</p>
           </header>
           <div class="founder-overview">
+        <div class="exp-badges">
+          <span class="exp-badge">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "開發經驗" : "Software Development Experience"}
+            </span>
+            <strong>{swYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+          <span class="exp-badge">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "專案管理經驗" : "Project Management Experience"}
+            </span>
+            <strong>{pmYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+          <span class="exp-badge">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "金融經驗" : "Finance Experience"}
+            </span>
+            <strong>{financeYears}{lang === "zh" ? " 年" : " yrs"} ({formatNumber(financeMonths, "count")}{lang === "zh" ? " 個月" : " months"})</strong>
+          </span>
+          <span class="exp-badge exp-badge-total">
+            <span class="exp-badge-label">
+              {lang === "zh" ? "總工作經驗" : "Total Professional Experience"}
+            </span>
+            <strong>{totalYears}{lang === "zh" ? " 年" : " yrs"}</strong>
+          </span>
+        </div>
       <section>
         <h2 class="section-title">{lang === "zh" ? "背景" : "Background"}</h2>
         <div class="content background-content">
@@ -275,6 +290,12 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
           <p set:html={aboutData.background[lang].replace(/\n/g, "<br>")} />
         </div>
       </section>
+      <aside class="team-recruitment" aria-labelledby="team-recruitment-title">
+        <p class="about-eyebrow">JOIN THE JOURNEY</p>
+        <h2 id="team-recruitment-title">{lang === "zh" ? "尋找 CEO 與行銷夥伴" : "Seeking CEO and marketing partners"}</h2>
+        <p>{lang === "zh" ? "我們正在尋找認同共同研究理念的領導與行銷人才，一起探索產品方向、建立團隊，讓更多人認識並使用 TY Multiverse。" : "We are looking for leadership and marketing talent who believe in shared research to help shape the product, build a team and introduce TY Multiverse to more people."}</p>
+        <a href="mailto:tianyikao@tymultiverse.cc?subject=TY%20Multiverse%20%E5%90%88%E4%BD%9C%E6%B4%BD%E8%A9%A2">{lang === "zh" ? "聯絡我們，一起聊聊 ↗" : "Get in touch ↗"}</a>
+      </aside>
       <section>
         <h2 class="section-title">{lang === "zh" ? "專長" : "Expertise"}</h2>
         <div class="content expertise-content">

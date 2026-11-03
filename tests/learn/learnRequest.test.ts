@@ -1,21 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { learningRequest } from '../../src/scripts/learn/learnRequest';
+import { learningRequest, LoginRequiredError } from '../../src/scripts/learn/learnRequest';
 
+// 2026-11-03: the guest quizzes (/learn/public/**) are gone. /learn needs a login; every registered member has one.
 describe('learning API routing', () => {
-  const guestId = 'f04a1da2-e305-4f17-a85e-f727cf52d3ab';
-
-  it('uses a stable public namespace and guest identity for signed-out learning', () => {
-    expect(learningRequest('/learn/topics', null, guestId)).toEqual({
-      path: '/learn/public/topics', headers: { 'X-Learn-Guest-Id': guestId },
-    });
+  it('sends a signed-in learner to the private routes, unchanged', () => {
+    expect(learningRequest('/learn/topics', 'token')).toEqual({ path: '/learn/topics', headers: {} });
+    expect(learningRequest('/learn/topics/q1/attempts', 'token')).toEqual({ path: '/learn/topics/q1/attempts', headers: {} });
+    expect(learningRequest('/learn/mentor/overview', 'token')).toEqual({ path: '/learn/mentor/overview', headers: {} });
   });
 
-  it('keeps authenticated learner and mentor APIs on the private routes', () => {
-    expect(learningRequest('/learn/topics', 'token', guestId)).toEqual({ path: '/learn/topics', headers: {} });
-    expect(learningRequest('/learn/mentor/overview', null, guestId)).toEqual({ path: '/learn/mentor/overview', headers: {} });
+  it('refuses to build a request without a login instead of falling back to an anonymous route', () => {
+    for (const token of [null, '', undefined]) {
+      expect(() => learningRequest('/learn/topics', token as string | null)).toThrow(LoginRequiredError);
+    }
+    expect(() => learningRequest('/learn/profile', null)).toThrow(LoginRequiredError);
   });
 
-  it('rejects malformed guest identities before sending a public request', () => {
-    expect(() => learningRequest('/learn/topics', null, 'unknown')).toThrow('Invalid learn guest ID');
+  it('never produces a public path, whatever the input', () => {
+    for (const path of ['/learn/topics', '/learn/attempts', '/learn/topics/q/session', '/learn/public/topics']) {
+      expect(learningRequest(path, 'token').path.startsWith('/learn/public/') && !path.startsWith('/learn/public/')).toBe(false);
+    }
+  });
+
+  it('tells the page what to show: the error is recognisable and its message asks for a login', () => {
+    const error = new LoginRequiredError();
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('LoginRequiredError');
+    expect(error.message).toContain('登入');
   });
 });

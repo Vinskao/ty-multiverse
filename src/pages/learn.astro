@@ -1,13 +1,15 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { learnCatalog } from "../scripts/learn/catalog";
 
 ---
 
-<BaseLayout title="Learn | TY Multiverse" description="TOEIC practice and learning history">
+<BaseLayout title="Learn | TY Multiverse" description="學習主題、考試規劃與多益練習">
   <div class="learn-shell">
     <aside class="learn-sidebar" aria-label="主題">
       <p class="learn-meta">LEARN</p>
-      <h2 class="learn-sidebar-title">主題</h2>
+      <button id="learn-home" class="learn-home-link" type="button">← 學習中心</button>
+      <h2 class="learn-sidebar-title">英文 <span class="learn-sidebar-separator">/</span> 多益 TOEIC</h2>
       <nav id="learn-topics" class="learn-topics">載入中…</nav>
       <button id="learn-mentor-open" class="learn-mentor-link" type="button" hidden>導師模式：全班作答狀況</button>
       <section class="learn-history" aria-labelledby="history-title">
@@ -19,11 +21,24 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     <main class="learn-main">
       <!-- 主題總覽：尚未進入任何主題時顯示 -->
       <section id="learn-overview" class="learn-overview">
-        <h1>選一個主題開始</h1>
-        <p class="learn-meta">
-          每個主題都分成四個難度階梯，題目與選項每次都會重新亂序。
-          一輪必須全部作答完才能送出並進入檢討；中途離開會保留進度，下次回來接著寫。
-        </p>
+        <header class="learn-overview-header">
+          <p class="learn-eyebrow">TY MULTIVERSE / LEARNING</p>
+          <h1>學習中心</h1>
+          <p>從英文到經濟與工程，依主題建立知識。多益練習已開放，其餘先規劃考試範圍。</p>
+        </header>
+        <div class="learn-catalog-heading"><h2>探索學習領域</h2><span>課程與考試主題</span></div>
+        <div class="learn-catalog">
+          {learnCatalog.map((subject, index) => <section class="learn-subject" aria-labelledby={`subject-${subject.id}`}>
+            <div class="learn-subject-head"><span class="learn-subject-number">0{index + 1}</span><span class="learn-subject-state">{subject.id === 'english' ? '可練習' : '規劃中'}</span></div>
+            <h3 id={`subject-${subject.id}`}>{subject.title}</h3><p class="learn-subject-intro">{subject.subtitle}</p>
+            <ul class="learn-course-list">
+              {subject.courses.map(course => <li class="learn-course">
+                <div><strong>{course.title}</strong><p>{course.topics.join(' · ')}</p></div>
+                {course.status === 'available' ? <a href={course.source}>開始練習 <span aria-hidden="true">↗</span></a> : <a href={course.source}>參考資料 <span aria-hidden="true">↗</span></a>}
+              </li>)}
+            </ul>
+          </section>)}
+        </div>
       </section>
 
       <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
@@ -102,8 +117,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <script>
   import { GATEWAY_API_BASE } from "../common/constants/api";
-  import { ensureLearnGuestId } from "../scripts/learn/guestIdentity";
-  import { learningRequest } from "../scripts/learn/learnRequest";
+  import { learningRequest, LoginRequiredError } from "../scripts/learn/learnRequest";
+  import { groupLearnTopics } from "../scripts/learn/catalog";
 
   type Topic = {
     id: string; title: string; description: string; partCode?: string; recommendedMinutes?: number;
@@ -184,9 +199,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const token = localStorage.getItem("token");
-    const guestId = token ? "" : ensureLearnGuestId(localStorage);
-    const route = learningRequest(path, token, guestId);
+    const route = learningRequest(path, localStorage.getItem("token"));   // throws LoginRequiredError when signed out
     const response = await fetch(`${GATEWAY_API_BASE}${route.path}`, {
       ...init, headers: { ...authHeaders(), ...route.headers, ...(init.headers || {}) }
     });
@@ -222,6 +235,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     status.hidden = false;
   }
 
+  // Quizzes need a login (2026-11-03): signed out, the page says so and links to the sign-in page instead of loading topics.
+  function showLoginRequired() {
+    const status = query("#learn-status");
+    if (!status) return;
+    status.textContent = "";
+    status.append("請先登入才能使用測驗。", " ", Object.assign(document.createElement("a"), { href: "/login", textContent: "前往登入" }));
+    status.hidden = false;
+    const topicList = query("#learn-topics");
+    if (topicList) topicList.textContent = "";
+  }
+
   // ------------------------------------------------------------- sidebar
 
   function difficultyBadges(topic: Topic) {
@@ -237,7 +261,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     if (!container) return;
     container.replaceChildren();
 
-    for (const topic of topics) {
+    const grouped = groupLearnTopics(topics);
+    for (const topic of [...grouped.toeic, ...grouped.other]) {
+      if (topic === grouped.other[0]) container.append(element("h3", "learn-other-heading", "其他練習"));
       const button = element("button", "learn-topic");
       button.type = "button";
       if (topic.id === activeId) button.classList.add("active");
@@ -676,6 +702,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       const button = (event.target as HTMLElement).closest<HTMLElement>("[data-topic-id]");
       if (button?.dataset.topicId) void openTopic(button.dataset.topicId);
     });
+    bindOnce(query("#learn-home"), "bound", "click", () => { stopTimer(); showPhase("overview"); renderTopics(); });
 
     bindOnce(query("#learn-form"), "bound", "submit", event => void submitAttempt(event as SubmitEvent));
 
@@ -703,6 +730,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     bindOnce(query("#learn-mentor-open"), "bound", "click", () => void loadMentor());
     bindOnce(query("#mentor-refresh"), "bound", "click", () => void loadMentor());
 
+    if (!localStorage.getItem("token")) {
+      showPhase("overview");
+      showLoginRequired();
+      return;
+    }
     try {
       showPhase("overview");
       await loadTopics();
@@ -713,6 +745,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (mentorButton) mentorButton.hidden = !profile?.mentor;
       if (profile?.mentor) await loadMentor();
     } catch (error) {
+      if (error instanceof LoginRequiredError) return showLoginRequired();
+      const topicList = query("#learn-topics");
+      if (topicList && !topics.length) topicList.textContent = "題庫暫時無法載入，請稍後重新整理。";
       showError(error instanceof Error ? error.message : "主題載入失敗");
     }
   }

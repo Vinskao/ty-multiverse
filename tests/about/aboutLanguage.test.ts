@@ -23,6 +23,7 @@ describe('About language content swap', () => {
     expect(document.querySelector('.about h1')?.textContent).toBe('繁體中文');
     expect(document.querySelector('#about-resume-preview')?.textContent).toContain('繁體中文 resume');
     expect(document.documentElement.lang).toBe('zh-Hant');
+    expect(document.title).toBe('關於｜TY Multiverse');
     expect(replaceState).toHaveBeenLastCalledWith(null, '', expect.stringContaining('lang=zh'));
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('lang=zh'), expect.objectContaining({ cache: 'no-store' }));
     expect(updated).toHaveBeenCalledOnce();

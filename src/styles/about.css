@@ -2457,7 +2457,19 @@ section:nth-child(3) {
 .about-mono .personality-overview > summary { color:var(--gray-200); font-weight:650; cursor:pointer; }
 .about-mono .personality-overview[open] > summary { margin-bottom:.8rem; }
 .about-mono .exp-badge { background:color-mix(in srgb,var(--gray-800) 45%,transparent); border-color:var(--gray-700); }
-.about-mono .exp-badge strong, .about-mono h3::after { color:var(--gray-100); background:var(--gray-500); }
+.about-mono .exp-badge strong { color:var(--gray-100); background:transparent; }
+.about-mono h3::after { background:var(--gray-500); }
+.about-mono .product-story { width:100%; display:grid; grid-template-columns:minmax(0, 1fr) minmax(15rem, 22rem); gap:clamp(1.5rem, 4vw, 3.5rem); align-items:start; padding:clamp(1.25rem, 3vw, 2.25rem); border:1px solid var(--gray-800); border-radius:1.2rem; background:var(--gray-999_40); box-sizing:border-box; }
+.about-mono .about-eyebrow { color:var(--gray-400); font-size:.72rem; font-weight:700; letter-spacing:.15em; margin:0 0 .7rem; }
+.about-mono .product-story-copy h2 { margin:0 0 1rem; color:var(--gray-100); font-size:clamp(1.55rem, 3vw, 2.5rem); line-height:1.2; }
+.about-mono .product-story-copy > p:not(.about-eyebrow), .about-mono .team-recruitment > p:not(.about-eyebrow) { color:var(--gray-300); line-height:1.85; max-width:56ch; }
+.about-mono .founder-message h2 { color:var(--gray-100); font-size:1.1rem; margin:0 0 .8rem; }
+.about-mono .founder-message video { display:block; width:100%; max-height:32rem; aspect-ratio:9 / 16; object-fit:contain; background:#111; border:1px solid var(--gray-800); border-radius:.8rem; }
+.about-mono .team-recruitment { padding:clamp(1.2rem, 3vw, 2rem); border:1px solid var(--gray-700); border-radius:1rem; background:color-mix(in srgb, var(--gray-800) 35%, transparent); }
+.about-mono .team-recruitment h2 { margin:.2rem 0 .7rem; color:var(--gray-100); font-size:clamp(1.3rem, 2.5vw, 1.8rem); }
+.about-mono .team-recruitment a { display:inline-block; margin-top:.5rem; color:var(--gray-100); font-weight:700; text-decoration:underline; text-underline-offset:.2em; }
+.about-mono .team-recruitment a:focus-visible { outline:2px solid var(--accent-regular); outline-offset:4px; }
+@media (max-width: 700px) { .about-mono .product-story { grid-template-columns:minmax(0, 1fr); } .about-mono .founder-message video { width:min(100%, 22rem); } }
 .about-mono .experience-item, .about-mono .education-item, .about-mono .technical-experience-item { border-color:var(--gray-800); }
 .about-mono .btn.is-accent, .about-mono .btn.is-primary, .about-mono .btn.is-success { color:var(--accent-text-over); background:var(--accent-regular); border-color:var(--gray-600); }
 .about-mono .btn.is-outline { color:var(--gray-100); background:transparent; border-color:var(--gray-600); }

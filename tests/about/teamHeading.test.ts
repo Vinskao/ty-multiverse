@@ -1,16 +1,28 @@
-import { readFileSync } from 'node:fs';
+﻿import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-// The site is a one-person team; the About heading must not suggest a larger one.
-describe('About team heading', () => {
+describe('About founder, story and future team', () => {
   const page = readFileSync('src/pages/about.astro', 'utf8');
-  const heading = page.match(/id="team-section-title">\{lang === "zh" \? "([^"]*)" : "([^"]*)"\}/);
-
-  it('says the team is one person in both languages', () => {
-    expect(heading?.[1]).toBe('一人打造、一人營運');
-    expect(heading?.[2]).toBe('Built and run by one person.');
+  it('presents a product journey and a founder video near the top', () => {
+    expect(page).toContain('TY Multiverse 的旅程');
+    expect(page).toContain('創辦人的話');
+    expect(page).toContain('founder-message.mp4');
+    expect(page).toContain('preload="none"');
+    expect(page.indexOf('founder-message.mp4')).toBeLessThan(page.indexOf('class="team-section"'));
+    expect(page).not.toContain('KTY 的旅程');
   });
-  it('no longer claims a growing or open team', () => {
-    expect(page).not.toMatch(/Open to many|持續擴大|Built by one\./);
+  it('keeps the personal experience figures in the founder panel', () => {
+    const founder = page.indexOf('<article class="team-member"');
+    expect(page.indexOf('class="exp-badges"')).toBeGreaterThan(founder);
+    expect(page.indexOf('class="exp-badges"')).toBeLessThan(page.indexOf('</article>', founder));
+    for (const label of ['開發經驗', '專案管理經驗', '金融經驗', '總工作經驗']) expect(page).toContain(label);
+  });
+  it('invites leadership and marketing talent without framing a one-person team as the goal', () => {
+    expect(page).not.toContain('一人打造、一人營運');
+    expect(page).not.toContain('Built and run by one person.');
+    expect(page).toContain('CEO');
+    expect(page).toContain('行銷');
+    expect(page).toContain('mailto:tianyikao@tymultiverse.cc');
+    expect(page.indexOf('team-recruitment')).toBeGreaterThan(page.indexOf('team-founder-title'));
   });
 });

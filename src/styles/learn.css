@@ -10,7 +10,32 @@
 .learn-status { padding: 1rem; border: 1px solid var(--gray-800); border-radius: .75rem; background: var(--gray-999-basis); }
 
 /* Sidebar topic list */
-.learn-topics { display: grid; gap: .6rem; }
+.learn-topics { display: grid; grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); gap: .6rem; overflow: visible; min-width: 0; }
+#learn-topics { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); overflow: visible; }
+.learn-other-heading { margin: .8rem 0 0; font-size: .9rem; }
+.learn-sidebar-separator { color: var(--gray-500); font-weight: 400; padding-inline: .2rem; }
+.learn-home-link { align-self: flex-start; border: 0; padding: 0; background: transparent; color: var(--gray-100); font: inherit; font-size: .85rem; cursor: pointer; }
+.learn-home-link:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 4px; }
+.learn-overview-header { max-width: 50rem; padding: .35rem 0 2rem; }
+.learn-overview-header h1 { margin: .35rem 0 .75rem; font-size: clamp(2.25rem, 4vw, 3.8rem); line-height: 1.12; letter-spacing: -.035em; }
+.learn-overview-header > p:last-child { color: var(--gray-400, var(--gray-500)); line-height: 1.8; max-width: 40rem; margin: 0; }
+.learn-eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .14em; color: var(--gray-500); }
+.learn-catalog-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--gray-800); padding-bottom: .75rem; }
+.learn-catalog-heading h2 { margin: 0; font-size: 1.15rem; }
+.learn-catalog-heading span { color: var(--gray-500); font-size: .8rem; }
+.learn-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.learn-subject { min-width: 0; border: 1px solid var(--gray-800); border-radius: 1rem; padding: 1.25rem; background: var(--gray-999-basis); }
+.learn-subject-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.learn-subject-number { color: var(--gray-500); font-size: .75rem; letter-spacing: .12em; }
+.learn-subject-state { border: 1px solid var(--gray-800); border-radius: 2rem; padding: .2rem .6rem; color: var(--gray-500); font-size: .72rem; }
+.learn-subject h3 { margin: .85rem 0 .25rem; font-size: 1.35rem; }
+.learn-subject-intro { color: var(--gray-500); margin: 0 0 1rem; font-size: .88rem; line-height: 1.55; }
+.learn-course-list { list-style: none; margin: 0; padding: 0; }
+.learn-course { display: flex; gap: .75rem; justify-content: space-between; align-items: center; border-top: 1px solid var(--gray-800); padding: .75rem 0; }
+.learn-course strong { font-size: .9rem; }
+.learn-course p { color: var(--gray-500); font-size: .78rem; line-height: 1.5; margin: .2rem 0 0; }
+.learn-course a { flex: none; color: var(--gray-100); font-size: .78rem; text-decoration: underline; text-underline-offset: .2em; }
+.learn-course a:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 3px; }
 .learn-topic { display: grid; gap: .35rem; justify-items: start; width: 100%; padding: .85rem .9rem; text-align: left; border: 1px solid var(--gray-800); border-radius: .7rem; background: var(--gray-999-basis); cursor: pointer; color: inherit; font: inherit; }
 .learn-topic:hover { border-color: var(--accent-regular); }
 .learn-topic.active { border-color: var(--accent-regular); box-shadow: inset 3px 0 0 var(--accent-regular); }
@@ -87,10 +112,11 @@
 @media (max-width: 900px) {
   .learn-shell { grid-template-columns: 1fr; gap: 1.25rem; }
   .learn-sidebar { position: static; }
-  .learn-topics { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .learn-topics { grid-template-columns: minmax(0, 1fr); }
   .learn-header { align-items: flex-start; flex-direction: column; }
   .learn-question { padding: 1rem; }
 }
+@media (max-width: 600px) { .learn-catalog { grid-template-columns: minmax(0, 1fr); } .learn-course { align-items: flex-start; } }
 
 /* ranking ------------------------------------------------------------- */
 .learn-ranking { padding: 1rem 1.25rem 1.25rem; margin-bottom: 1.25rem; border: 1px solid var(--gray-800); border-radius: .8rem; background: var(--gray-999-basis); overflow-x: auto; }

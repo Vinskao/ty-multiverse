@@ -151,7 +151,7 @@
     "zoneReports": { "en": "Research reports", "zh": "研究報告" },
     "zoneOperations": { "en": "Product operations", "zh": "產品運作" },
     "marketOverviewTitle": { "en": "Market Overview", "zh": "市場總覽" },
-    "marketAutomaticHoldings": { "en": "Holdings by industry", "zh": "持倉 · 產業分類" },
+    "marketAutomaticHoldings": { "en": "Owner's Choice", "zh": "創辦人精選" },
     "marketOverviewNote": { "en": "Refreshed every 10 minutes", "zh": "每 10 分鐘更新一次" },
     "macroTitle": { "en": "Key macro data · U.S., Taiwan and more", "zh": "多國重要總體經濟資料" },
     "macroDescription": { "en": "Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.", "zh": "美國、台灣與主要經濟體的就業、通膨、利率、消費、匯率與貿易資料，並提醒即將公布的日程。" },
