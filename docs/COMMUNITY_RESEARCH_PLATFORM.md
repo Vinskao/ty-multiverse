@@ -12,7 +12,9 @@ flowchart LR
     Library --> AI[AI 萃取證據與分析]
     Macro[總經與市場資料] --> AI
     AI --> Graph[共享研究圖]
-    AI --> Pool[持股之外的 AI 機會池]
+    AI --> Candidates[持股之外的候選標的]
+    Candidates --> Rating{最新分析結論為買？}
+    Rating -->|是| Pool[AI 機會池]
     Graph --> People[所有參與者閱讀與判斷]
     Pool --> People
     People --> Community
@@ -20,6 +22,8 @@ flowchart LR
 ```
 
 ## 開發方法
+
+2026-11-03：先用 2454 中立、3037 買及賣出／無分析／讀取失敗的測試確認機會池只顯示最新結論為「買」的標的；沿用既有分析結論解析器，載入及重新整理時重新篩選，儲存分析後重新載入。候選仍保留在後端，供首次分析及後續重評；未分析、無評級或無法讀取者暫不顯示，避免中立或未知標的進入機會池。這是顯示篩選，並未改寫提名或資料收集流程。憑證沿用既有配置，不新增金鑰。先跑 `node_modules/vitest/vitest.mjs run tests/market/opportunities.test.ts tests/market/analysisRating.test.ts tests/market/watchBadge.test.ts`，部署與實機驗證待 Jenkins 建置後進行；未來變更準入規則時應同時核對來源資料、失敗狀態與重新評級。
 
 1. 先新增首頁行為契約測試，重現主要動作仍導向試用、平台精神不明與 Miner 過度醒目的現況。
 2. 更新中英文 i18n 與 Astro SSR 的相同文字，避免載入時閃出舊文案。新定位取代舊版以創辦人背景為主的 hero 契約，保留 SEO、聯絡入口與語言同步測試。

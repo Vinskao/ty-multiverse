@@ -12,6 +12,7 @@ import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, macroCommonStar
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
 import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
+import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
@@ -98,6 +99,7 @@ let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
 let marketHoldingIndustries = new Map<string, IndustryGroup[]>();
 let marketCustomInstruments: DashboardInstrument[] = [];
+let marketDashboardSequence = 0;
 
 function placeMarketDetail(row: HTMLElement | null, scroll = true) {
     const detail = document.getElementById('market-instrument-detail');
@@ -1260,6 +1262,7 @@ function initMarketAiAnalysis() {
             const payload = await response.json() as { analysis: MarketAiComment; saved: boolean };
             if (!payload.saved || !payload.analysis?.revision) throw new Error('marketAiSaveError');
             marketAiDrafts.delete(key);
+            void fetchMarketDashboard();
             if (form.dataset.key === key && selectedMarketInstrument) {
                 await loadMarketAiAnalysis(selectedMarketInstrument);
                 if (form.dataset.key === key) {
@@ -1460,21 +1463,37 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
 }
 
 async function fetchMarketDashboard() {
+    const sequence = ++marketDashboardSequence;
     try {
         const response = await fetch(astroApiPath('/api/market/dashboard'));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json() as MarketDashboardPayload;
         marketAutoInstruments = data.automatic?.positions ?? [];
-        marketCustomInstruments = data.custom ?? [];
+        const custom = data.custom ?? [];
+        if (sequence !== marketDashboardSequence) return;
+        marketCustomInstruments = [];
+        renderDashboardRows('market-custom-list', [], marketText('Checking buy ratings…', '正在確認買入評級…'));
+        const eligible = buyOpportunities(custom, async instrument => {
+            const code = marketUnderlyingCode(instrument) || analysisRecordCode(instrument);
+            const kind = marketUnderlyingCode(instrument) ? 'stock' : instrument.productType;
+            const reply = await fetch(astroApiPath(`/api/market/dashboard/analysis/${encodeURIComponent(code)}?productType=${kind}`), { cache: 'no-store' });
+            if (!reply.ok) throw new Error('Analysis unavailable');
+            const payload = await reply.json();
+            return payload.analysis?.content ?? null;
+        });
         const codes = [...new Set(marketAutoInstruments.map(instrument => researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null })))];
         const allGroups = await loadAllIndustryGroups('all').catch(() => [] as IndustryGroup[]);
         marketHoldingIndustries = new Map(codes.map((code) => [code, groupsForCode(allGroups, code)]));
+        const buys = await eligible;
+        if (sequence !== marketDashboardSequence) return;
+        marketCustomInstruments = buys;
         renderDashboardRows('market-auto-list', marketAutoInstruments, 'No complete valid holdings snapshot is available yet.');
-        renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
+        renderDashboardRows('market-custom-list', marketCustomInstruments, marketText('No buy-rated opportunities, or ratings are unavailable.', '目前沒有買入評級的機會標的，或評級暫時無法讀取。'));
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
         if (eventsLoader?.isLoaded()) await fetchMarketCompanyEvents();
     } catch (error) {
+        if (sequence !== marketDashboardSequence) return;
         console.error('Market dashboard unavailable:', error);
         renderDashboardRows('market-auto-list', [], 'Automatic selections are temporarily unavailable.');
         renderDashboardRows('market-custom-list', [], 'Custom selections are temporarily unavailable.');
@@ -1509,7 +1528,7 @@ async function fetchMarketCompanyEvents() {
             if (underlyingCode) marketEventInstruments.set(underlyingCode, instrument);
         }
         // the holdings panel does not show event badges, so only the custom list is rebuilt
-        renderDashboardRows('market-custom-list', marketCustomInstruments, 'No custom instruments selected.');
+        renderDashboardRows('market-custom-list', marketCustomInstruments, marketText('No buy-rated opportunities, or ratings are unavailable.', '目前沒有買入評級的機會標的，或評級暫時無法讀取。'));
         body.replaceChildren();
         if (!events.length) {
             const row = document.createElement('tr'); const cell = document.createElement('td');
