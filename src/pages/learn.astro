@@ -12,9 +12,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
       <nav class="learn-subject-menu" aria-label="學習領域">
         {learnCatalog.map(subject => <div class="learn-sidebar-section">
           <button type="button" class="learn-topic learn-subject-button" data-subject-id={subject.id}>{subject.title}</button>
-          {subject.id === 'english' && <nav id="learn-topics" class="learn-topics" aria-label="多益題目">載入中…</nav>}
-          {subject.id === 'macroeconomics' && <button id="learn-maya-open" class="learn-topic learn-topic-link" type="button">市場快報｜Maya 主播精讀</button>}
-          {subject.id === 'microeconomics' && <button type="button" class="learn-topic learn-topic-link" data-subject-id="microeconomics" data-course-id="semiconductor">半導體</button>}
+          {subject.id === 'english' && <nav id="learn-topics" class="learn-topics" data-submenu="english" aria-label="多益題目" hidden>載入中…</nav>}
+          {subject.id === 'macroeconomics' && <button id="learn-maya-open" class="learn-topic learn-topic-link" data-submenu="macroeconomics" type="button" hidden>市場快報｜Maya 主播精讀</button>}
+          {subject.id === 'microeconomics' && <button type="button" class="learn-topic learn-topic-link" data-submenu="microeconomics" data-subject-id="microeconomics" data-course-id="semiconductor" hidden>半導體</button>}
         </div>)}
       </nav>
       <button id="learn-mentor-open" class="learn-mentor-link" type="button" hidden>導師模式：全班作答狀況</button>
@@ -777,11 +777,15 @@ import { learnCatalog } from "../scripts/learn/catalog";
     bindOnce(query("#learn-home"), "bound", "click", () => {
       stopTimer(); showPhase("overview"); renderTopics();
       document.querySelectorAll<HTMLElement>("[data-catalog-subject], [data-catalog-course]").forEach(node => { node.hidden = false; });
+      document.querySelectorAll<HTMLElement>("[data-submenu]").forEach(node => { node.hidden = true; });
+      document.querySelectorAll<HTMLElement>(".learn-subject-button").forEach(node => node.removeAttribute("aria-current"));
     });
     bindOnce(query(".learn-subject-menu"), "bound", "click", event => {
       const button = (event.target as HTMLElement).closest<HTMLElement>("[data-subject-id]");
       if (!button?.dataset.subjectId) return;
       stopTimer(); showPhase("overview");
+      document.querySelectorAll<HTMLElement>("[data-submenu]").forEach(node => { node.hidden = node.dataset.submenu !== button.dataset.subjectId; });
+      document.querySelectorAll<HTMLElement>(".learn-subject-button").forEach(node => { node.setAttribute("aria-current", node.dataset.subjectId === button.dataset.subjectId ? "page" : "false"); });
       document.querySelectorAll<HTMLElement>("[data-catalog-subject]").forEach(node => { node.hidden = node.dataset.catalogSubject !== button.dataset.subjectId; });
       document.querySelectorAll<HTMLElement>("[data-catalog-course]").forEach(node => { node.hidden = !!button.dataset.courseId && node.dataset.catalogCourse !== button.dataset.courseId; });
     });

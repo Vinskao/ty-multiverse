@@ -11,6 +11,12 @@ it('puts Maya audio in its own selectable view outside the course overview', () 
   expect(page).toContain('"audio"');
 });
 
+it('keeps the sidebar tabs in a single column despite global navigation styles', () => {
+  const css = readFileSync(resolve(__dirname, '../../src/styles/learn.css'), 'utf8');
+  expect(css).toMatch(/\.learn-sidebar\s+\.learn-subject-menu\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  expect(css).toMatch(/\.learn-sidebar\s+\.learn-subject-menu\s*\{[^}]*position:\s*static/s);
+});
+
 it('offers each catalog subject and nests Maya and semiconductors under their subjects', () => {
   const page = readFileSync(resolve(__dirname, '../../src/pages/learn.astro'), 'utf8');
   expect(page).toContain('learnCatalog.map(subject =>');

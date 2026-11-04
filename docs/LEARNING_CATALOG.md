@@ -29,6 +29,8 @@ flowchart TD
 
 ## Learn sidebar navigation
 
+側欄的四個分類按鈕使用單欄排列；只有選取某分類時，才展開該分類的多益題目、Maya 或半導體次選單。`learn.css` 明確覆寫全站 `nav` 的桌面三欄與 sticky 設定，避免側欄文字重疊；回總覽會收起次選單。回歸檢查：`node_modules/vitest/vitest.mjs run tests/learn`。
+
 ```mermaid
 flowchart LR
   A[TOEIC topic selected] --> B[Existing quiz session]
