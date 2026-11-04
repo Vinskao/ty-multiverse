@@ -168,7 +168,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
     document.querySelectorAll<HTMLElement>('.market-audio-card-title').forEach(node => {
       const type = node.dataset.productType;
       node.textContent = type === 'daily'
-        ? `${node.dataset.presenterName || 'Maya'} ${zh ? '每日精讀' : 'Daily Reading'}`
+        ? `${node.dataset.presenterName || 'Maya'} ${node.dataset.test === 'true' ? (zh ? '試音' : 'Voice Test') : (zh ? '每日精讀' : 'Daily Reading')}`
         : type === 'macro' ? (zh ? '總經' : 'Macro') : (zh ? '個股' : 'Stock');
     });
   }
@@ -190,7 +190,8 @@ import { learnCatalog } from "../scripts/learn/catalog";
         const title = document.createElement('h3');
         title.className = 'market-audio-card-title';
         title.dataset.productType = item.productType;
-        const presenter = presenterForAudio(item.createdAt);
+        title.dataset.test = String(item.voice?.startsWith('test:') || false);
+        const presenter = presenterForAudio(item.createdAt, item.voice);
         title.dataset.presenterName = item.productType === 'daily'
           ? ({ maya: 'Maya', uiobbeci: 'Uiobbeci', duo: 'Maya & Uiobbeci' }[presenter])
           : '';

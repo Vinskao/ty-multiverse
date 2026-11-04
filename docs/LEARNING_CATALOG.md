@@ -61,6 +61,22 @@ Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音
 
 ## 主播影片銜接與開發方法
 
+### 主播試音與歷史音檔
+
+```mermaid
+flowchart LR
+  A[公開音訊清單的 voice] --> B{辨識錄製聲音}
+  B -->|test:uiobbeci| U[Uiobbeci 試音與 Uiobbeci 影片]
+  B -->|test:duo| D[雙人試音與 Duo 影片]
+  B -->|既有 voice| M[Maya 音檔與 Maya 影片]
+  B -->|無 voice| S[依台北日期排班]
+  D --> T[前半 Maya 後半 Uiobbeci 等長合併]
+```
+
+## 開發方法
+
+先以測試確認已記錄聲音優先於建立日期，舊 Maya 音檔不會在其他星期顯示成另一位主播；再將真實 voice 欄位傳入顯示邏輯。2026-11-05 使用既有 Kubernetes Secret 在伺服器內一次合成標示為示範的市場情境，Uiobbeci 單人與雙人各建立一筆 `test:` 音訊；雙人分段以 FFmpeg 調整成約 9.58 秒各半，再合併。合成前短暫鎖住音訊工作表並確認無工作執行中，計費字元透過既有資料庫帳本預留，無新增憑證或變更常駐排程。正式公開 API 兩筆均 HTTP 200，FFmpeg 完整解碼音訊與兩支影片成功；實際瀏覽器播放仍需部署後確認。測試：`node_modules/vitest/vitest.mjs run tests/learn --maxWorkers=1`。這是兩筆一次性試音；例行雙人自動合成仍需另外實作。
+
 ```mermaid
 flowchart LR
   A[音訊播放] --> B[影片正播]
