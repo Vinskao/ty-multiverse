@@ -36,22 +36,25 @@ describe('market audio playback', () => {
     expect(pairs[1].pauseVideo).toHaveBeenCalledTimes(pausesBeforeEnd + 1);
   });
 
-  it('cycles both presenter clips and does not start a clip while audio is paused', () => {
+});
+
+  it('keeps the current frame visible until the preloaded next clip is playing', async () => {
     const list = document.createElement('div');
     const audio = document.createElement('audio');
+    const frame = document.createElement('div');
     const video = document.createElement('video');
-    list.append(audio, video);
-    const playVideo = vi.spyOn(video, 'play').mockResolvedValue();
-    const paused = vi.spyOn(audio, 'paused', 'get').mockReturnValue(false);
+    frame.append(video); list.append(audio, frame);
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    vi.spyOn(audio, 'paused', 'get').mockReturnValue(false);
     bindMarketAudioPlayback(list, audio, video);
-    expect(video.src).toContain('/reporter.mp4');
+    const next = frame.querySelectorAll('video')[1];
+    expect(next?.src).toContain('/reporter2.mp4');
     audio.dispatchEvent(new Event('playing'));
     video.dispatchEvent(new Event('ended'));
-    expect(video.src).toContain('/reporter2.mp4');
-    expect(playVideo).toHaveBeenCalledTimes(2);
-    paused.mockReturnValue(true);
-    video.dispatchEvent(new Event('ended'));
-    expect(video.src).toContain('/reporter.mp4');
-    expect(playVideo).toHaveBeenCalledTimes(2);
+    expect(video.style.visibility).not.toBe('hidden');
+    next.dispatchEvent(new Event('playing'));
+    expect(video.style.visibility).toBe('hidden');
+    expect(next.style.visibility).not.toBe('hidden');
   });
-});
+

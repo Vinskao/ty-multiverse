@@ -58,3 +58,18 @@ Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音
 2. Moved the existing audio list intact into its own phase and added the Maya sidebar action. Existing quiz topic buttons continue to open their matching quiz workflow; the home control returns to the catalog.
 3. No credentials or external services are involved. Audio fetching remains read-only and uses the existing public API.
 4. Verified with `node_modules/vitest/vitest.mjs run tests/learn tests/portfolio/aboutLayout.test.ts` (13 passed). No deployment run in this change; deploy through the existing Jenkins frontend pipeline and confirm selecting Maya hides the course overview, while selecting a TOEIC topic opens only that quiz.
+
+## 主播影片銜接與開發方法
+
+```mermaid
+flowchart LR
+  A[音訊播放] --> B[播放目前影片]
+  B --> C[預載下一段影片]
+  B -->|結束| D[啟動下一段]
+  D -->|playing| E[顯示新畫面並重置前一段]
+  E --> B
+```
+
+## 開發方法
+
+先以測試重現切換來源造成的空畫面，再以兩個靜音影片元素預載並等待下一段播放後交接；音訊暫停或緩衝時兩者一起暫停。此流程不使用憑證；以既有影片來源先驗證，再隨前端正常部署。未來更換片段應確認畫面內容本身的首尾連續性，並在行動瀏覽器檢查實際解碼與播放。測試：`vitest run tests/learn/marketAudioPlayback.test.ts`；自動測試不涵蓋真實影片解碼及行動瀏覽器畫面。
