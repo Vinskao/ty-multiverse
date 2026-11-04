@@ -39,10 +39,15 @@ flowchart LR
   C[Maya briefing selected] --> D[Audio-only view]
   D --> G[Each audio controls its own looping silent presenter]
   G --> H[Starting another audio pauses the previous audio and video]
+  G --> I[Crop upper half by default]
+  I --> J[Backend confirms manage-users role]
+  J --> K[Show the complete presenter frame]
   E[Home selected] --> F[Course catalog]
 ```
 
 ## 開發方法
+
+主播影片先以原始影片尺寸的上半部顯示；持有 token 的使用者經 Gateway 的 `/auth/admin` 成功驗證 `manage-users` 後顯示完整畫面。登出、跨分頁 token 變化、請求失敗均回到裁切狀態，並防止舊請求覆蓋新登入狀態。先測未登入、授權成功、403 與網路錯誤，再實作並執行 `node_modules/vitest/vitest.mjs run tests/learn`。此為前端呈現限制，影片來源是公開網址，不能防止直接取得完整影片；需要真正存取控管時必須改用後端授權的媒體來源。部署後須用實際管理員與一般使用者及不同尺寸影片驗證，現有影片網址先前回傳 404。
 
 Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音訊 playing、waiting、pause 與 ended 事件控制；開始另一筆音訊時暫停其他音訊。先以 `tests/learn/marketAudioPlayback.test.ts` 重現多播放器需求，再抽出事件控制並測試；媒體資源使用公開 URL，不需新增憑證。執行 `node_modules/vitest/vitest.mjs run tests/learn`。2026-11-04 檢查指定的 `https://tymultiverse.cc/images/people/reporter.mp4` 回傳 404，影片檔案需上傳後才能驗證實際播放；部署後還須以瀏覽器測試音訊切換與窄螢幕版面。
 

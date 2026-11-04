@@ -133,8 +133,21 @@ import { learnCatalog } from "../scripts/learn/catalog";
 <script>
   import { marketAudioDateTime } from '../scripts/learn/marketAudioPresentation';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
+  import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
+  import { GATEWAY_API_BASE } from '../common/constants/api';
   type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string };
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
+  let presenterAccessVersion = 0;
+  async function updatePresenterAccess() {
+    const version = ++presenterAccessVersion;
+    const token = localStorage.getItem('token');
+    document.querySelectorAll<HTMLElement>('.presenter-frame').forEach(frame => { frame.dataset.full = 'false'; });
+    const allowed = await canShowFullPresenter(token, fetch, GATEWAY_API_BASE);
+    if (version !== presenterAccessVersion || token !== localStorage.getItem('token')) return;
+    document.querySelectorAll<HTMLElement>('.presenter-frame').forEach(frame => { frame.dataset.full = allowed ? 'true' : 'false'; });
+  }
+  document.addEventListener('tym:auth-changed', updatePresenterAccess);
+  window.addEventListener('storage', event => { if (event.key === 'token') void updatePresenterAccess(); });
   function localizeMarketAudio() {
     const zh = language() === 'zh';
     const heading = document.querySelector<HTMLElement>('#market-audio-heading');
@@ -189,13 +202,21 @@ import { learnCatalog } from "../scripts/learn/catalog";
         video.src = 'https://tymultiverse.cc/images/people/reporter.mp4';
         video.loop = true; video.muted = true; video.playsInline = true; video.preload = 'metadata';
         video.setAttribute('aria-hidden', 'true');
+        const frame = document.createElement('div');
+        frame.className = 'presenter-frame';
+        frame.dataset.full = 'false';
+        video.addEventListener('loadedmetadata', () => {
+          if (video.videoWidth && video.videoHeight) frame.style.setProperty('--presenter-half-ratio', `${video.videoWidth} / ${video.videoHeight / 2}`);
+        });
+        frame.append(video);
         const player = document.createElement('audio'); player.controls = true; player.preload = 'none';
         player.src = `${import.meta.env.BASE_URL}api/market/audio/${encodeURIComponent(item.productType)}/${encodeURIComponent(item.code)}/${item.revision}`;
         bindMarketAudioPlayback(list, player, video);
-        media.append(video, player);
+        media.append(frame, player);
         card.append(details, media); list.append(card);
       }
       localizeMarketAudio();
+      void updatePresenterAccess();
     }).catch(() => { list.textContent = '市場快報暫時無法載入。'; });
   }
   document.addEventListener("astro:page-load", loadMarketAudio);
