@@ -35,4 +35,23 @@ describe('market audio playback', () => {
     pairs[1].audio.dispatchEvent(new Event('ended'));
     expect(pairs[1].pauseVideo).toHaveBeenCalledTimes(pausesBeforeEnd + 1);
   });
+
+  it('cycles both presenter clips and does not start a clip while audio is paused', () => {
+    const list = document.createElement('div');
+    const audio = document.createElement('audio');
+    const video = document.createElement('video');
+    list.append(audio, video);
+    const playVideo = vi.spyOn(video, 'play').mockResolvedValue();
+    const paused = vi.spyOn(audio, 'paused', 'get').mockReturnValue(false);
+    bindMarketAudioPlayback(list, audio, video);
+    expect(video.src).toContain('/reporter.mp4');
+    audio.dispatchEvent(new Event('playing'));
+    video.dispatchEvent(new Event('ended'));
+    expect(video.src).toContain('/reporter2.mp4');
+    expect(playVideo).toHaveBeenCalledTimes(2);
+    paused.mockReturnValue(true);
+    video.dispatchEvent(new Event('ended'));
+    expect(video.src).toContain('/reporter.mp4');
+    expect(playVideo).toHaveBeenCalledTimes(2);
+  });
 });
