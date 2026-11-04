@@ -2254,3 +2254,7 @@
 .home-page .hero-copy p { max-width: none; }
 .home-page .hero-copy > p:first-child { margin: 0 0 .75rem; }
 .home-page .hero-copy > p:last-child { margin: 0; }
+
+.learn-topic-link { width:100%; text-align:left; margin-block:.35rem; }
+.learn-topic-link[aria-current="page"] { border-color:var(--gray-500); background:var(--gray-800); color:var(--gray-100); }
+.learn-audio-view > .learn-catalog { margin-top:1.5rem; }

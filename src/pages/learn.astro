@@ -10,7 +10,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
       <p class="learn-meta">LEARN</p>
       <button id="learn-home" class="learn-home-link" type="button">← 學習中心</button>
       <h2 class="learn-sidebar-title">英文 <span class="learn-sidebar-separator">/</span> 多益 TOEIC</h2>
+      <h3 class="learn-sidebar-group">TOEIC</h3>
       <nav id="learn-topics" class="learn-topics">載入中…</nav>
+      <button id="learn-maya-open" class="learn-topic learn-topic-link" type="button">&#x5E02;&#x5834;&#x5FEB;&#x5831;&#xFF5C;Maya &#x4E3B;&#x64AD;&#x7CBE;&#x8B80;</button>
       <button id="learn-mentor-open" class="learn-mentor-link" type="button" hidden>導師模式：全班作答狀況</button>
       <section class="learn-history" aria-labelledby="history-title">
         <h3 id="history-title">最近作答</h3>
@@ -39,13 +41,18 @@ import { learnCatalog } from "../scripts/learn/catalog";
             </ul>
           </section>)}
         </div>
+
+      </section>
+
+      <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
+      <section id="learn-audio" class="learn-phase learn-audio-view" hidden>
+        <header class="learn-header"><div><p class="learn-eyebrow">MARKET BRIEFING</p><h1>&#x5E02;&#x5834;&#x5FEB;&#x5831;&#xFF5C;Maya &#x4E3B;&#x64AD;&#x7CBE;&#x8B80;</h1><p class="learn-meta">Completed daily reading and market analysis audio</p></div></header>
         <section class="learn-catalog" aria-labelledby="market-audio-title">
           <div class="learn-catalog-heading"><h2 id="market-audio-title">市場快報｜Maya 主播精讀</h2><span>完整語音</span></div>
           <div id="market-audio-list" aria-live="polite"><p>載入已完成的市場快報…</p></div>
         </section>
       </section>
 
-      <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
       <section id="learn-answering" class="learn-phase" hidden>
         <header class="learn-header">
           <div>
@@ -243,11 +250,13 @@ import { learnCatalog } from "../scripts/learn/catalog";
     return document.querySelector<T>(selector);
   }
 
-  function showPhase(id: "overview" | "answering" | "review" | "scorecard" | "mentor") {
-    for (const name of ["overview", "answering", "review", "scorecard", "mentor"] as const) {
+  function showPhase(id: "overview" | "answering" | "review" | "scorecard" | "mentor" | "audio") {
+    for (const name of ["overview", "answering", "review", "scorecard", "mentor", "audio"] as const) {
       const node = query(`#learn-${name}`);
       if (node) node.hidden = name !== id;
     }
+    const mayaButton = query<HTMLButtonElement>("#learn-maya-open");
+    if (mayaButton) mayaButton.setAttribute("aria-current", id === "audio" ? "page" : "false");
     const status = query("#learn-status");
     if (status) status.hidden = true;
   }
@@ -727,6 +736,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
       if (button?.dataset.topicId) void openTopic(button.dataset.topicId);
     });
     bindOnce(query("#learn-home"), "bound", "click", () => { stopTimer(); showPhase("overview"); renderTopics(); });
+    bindOnce(query("#learn-maya-open"), "bound", "click", () => { stopTimer(); showPhase("audio"); });
 
     bindOnce(query("#learn-form"), "bound", "submit", event => void submitAttempt(event as SubmitEvent));
 
