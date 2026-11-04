@@ -1,6 +1,19 @@
+const clipUrls = [
+  'https://tymultiverse.cc/images/people/reporter.mp4',
+  'https://tymultiverse.cc/images/people/reporter2.mp4',
+];
+
+/** Clip indices: 1, 2, 3, 1, 4, 5, 1, 6, 7, 1... */
+export function marketClipOrder(sequenceIndex: number): number {
+  if (!Number.isInteger(sequenceIndex) || sequenceIndex < 0) throw new RangeError('sequenceIndex must be a non-negative integer');
+  if (sequenceIndex === 0) return 0;
+  const group = Math.floor((sequenceIndex - 1) / 3);
+  const position = (sequenceIndex - 1) % 3;
+  return position === 2 ? 0 : group * 2 + position + 1;
+}
+
 /** Keep the presenter visible while the next silent clip starts. */
 export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement) {
-  const clips = ['https://tymultiverse.cc/images/people/reporter.mp4', 'https://tymultiverse.cc/images/people/reporter2.mp4'];
   video.poster = 'https://tymultiverse.cc/images/people/reporter.png';
   const next = video.cloneNode(false) as HTMLVideoElement;
   next.muted = true;
@@ -16,6 +29,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   let audioPlaying = false;
   let reversing = false;
   let switching = false;
+  let sequenceIndex = 0;
   let reverseTimer: ReturnType<typeof setTimeout> | undefined;
   let lastReverseTime = 0;
   function stopReverse() {
@@ -33,6 +47,10 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
     if (current.currentTime <= 0) {
       reversing = false;
       switching = true;
+      sequenceIndex += 1;
+      const upcoming = players[1 - active];
+      upcoming.src = clipUrls[marketClipOrder(sequenceIndex) % clipUrls.length];
+      upcoming.load();
       void players[1 - active].play().catch(() => {});
     } else {
       reverseTimer = setTimeout(reverseFrame, 50);
@@ -43,8 +61,8 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
     lastReverseTime = performance.now();
     reverseTimer = setTimeout(reverseFrame, 50);
   }
-  video.src = clips[0];
-  next.src = clips[1];
+  video.src = clipUrls[marketClipOrder(sequenceIndex) % clipUrls.length];
+  next.src = clipUrls[marketClipOrder(sequenceIndex + 1) % clipUrls.length];
   players.forEach((player, index) => {
     player.loop = false;
     player.addEventListener('ended', () => {
@@ -64,6 +82,9 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       active = index;
       switching = false;
       previous.currentTime = 0;
+      sequenceIndex += 1;
+      previous.src = clipUrls[marketClipOrder(sequenceIndex + 1) % clipUrls.length];
+      previous.load();
     });
   });
   audio.addEventListener('play', () => {

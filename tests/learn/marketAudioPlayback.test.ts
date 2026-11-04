@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindMarketAudioPlayback } from '../../src/scripts/learn/marketAudioPlayback';
+import { bindMarketAudioPlayback, marketClipOrder } from '../../src/scripts/learn/marketAudioPlayback';
 
 describe('market audio playback', () => {
   beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('uses clip order 1-2-3-1-4-5-1-6-7 and continues for any index', () => {
+    expect(Array.from({ length: 9 }, (_, index) => marketClipOrder(index))).toEqual([0, 1, 2, 0, 3, 4, 0, 5, 6]);
+    expect(marketClipOrder(100)).toBe(67);
+  });
 
   it('retains the presenter poster on both video elements', () => {
     const list = document.createElement('div');
