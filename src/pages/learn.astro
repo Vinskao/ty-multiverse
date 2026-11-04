@@ -13,7 +13,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         {learnCatalog.map(subject => <div class="learn-sidebar-section">
           <button type="button" class="learn-topic learn-subject-button" data-subject-id={subject.id}>{subject.title}</button>
           {subject.id === 'english' && <nav id="learn-topics" class="learn-topics" data-submenu="english" aria-label="多益題目" hidden>載入中…</nav>}
-          {subject.id === 'macroeconomics' && <button id="learn-maya-open" class="learn-topic learn-topic-link" data-submenu="macroeconomics" type="button" hidden>市場快報｜Maya 主播精讀</button>}
+          {subject.id === 'macroeconomics' && <button id="learn-maya-open" class="learn-topic learn-topic-link" data-submenu="macroeconomics" type="button" hidden>市場快報｜主播精讀</button>}
           {subject.id === 'microeconomics' && <button type="button" class="learn-topic learn-topic-link" data-submenu="microeconomics" data-subject-id="microeconomics" data-course-id="semiconductor" hidden>半導體</button>}
         </div>)}
       </nav>
@@ -50,9 +50,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
 
       <!-- 作答階段：只有題目，沒有任何答案或歷史數據 -->
       <section id="learn-audio" class="learn-phase learn-audio-view" hidden>
-        <header class="learn-header market-audio-header"><div><p class="learn-eyebrow">MARKET BRIEFING</p><h1 id="market-audio-heading">Maya 每日精讀</h1><p class="learn-meta" id="market-audio-description">每日市場分析語音</p></div></header>
+        <header class="learn-header market-audio-header"><div><p class="learn-eyebrow">MARKET BRIEFING</p><h1 id="market-audio-heading">每日市場精讀</h1><p class="learn-meta" id="market-audio-description">每日市場分析語音</p></div></header>
         <section class="learn-catalog" aria-labelledby="market-audio-title">
-          <div class="learn-catalog-heading"><h2 id="market-audio-title">市場快報｜Maya 主播精讀</h2><span>完整語音</span></div>
+          <div class="learn-catalog-heading"><h2 id="market-audio-title">市場快報｜主播精讀</h2><span>完整語音</span></div>
           <div id="market-audio-list" aria-live="polite"><p>載入已完成的市場快報…</p></div>
         </section>
       </section>
@@ -133,9 +133,10 @@ import { learnCatalog } from "../scripts/learn/catalog";
 <script>
   import { marketAudioDateTime } from '../scripts/learn/marketAudioPresentation';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
+  import { applyMarketPresenterSettings, MARKET_PRESENTER_CONFIG } from '../scripts/learn/marketPresenterConfig';
   import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
   import { GATEWAY_API_BASE } from '../common/constants/api';
-  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string };
+  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string; presenterName?: string };
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
   let presenterAccessVersion = 0;
   async function updatePresenterAccess() {
@@ -154,9 +155,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
     const description = document.querySelector<HTMLElement>('#market-audio-description');
     const catalogTitle = document.querySelector<HTMLElement>('#market-audio-title');
     const catalogType = document.querySelector<HTMLElement>('.learn-audio-view .learn-catalog-heading span');
-    if (heading) heading.textContent = zh ? 'Maya 每日精讀' : 'Maya Daily Reading';
+    if (heading) heading.textContent = zh ? '每日市場精讀' : 'Daily Market Reading';
     if (description) description.textContent = zh ? '每日市場分析語音' : 'Daily market analysis audio';
-    if (catalogTitle) catalogTitle.textContent = zh ? '市場快報｜Maya 主播精讀' : 'Market Briefing | Maya Daily Reading';
+    if (catalogTitle) catalogTitle.textContent = zh ? '市場快報｜主播精讀' : 'Market Briefing | Daily Reading';
     if (catalogType) catalogType.textContent = zh ? '完整語音' : 'Full audio';
     document.querySelectorAll<HTMLElement>('.market-audio-date').forEach(node => {
       const value = marketAudioDateTime(node.dataset.createdAt, language());
@@ -166,7 +167,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
     document.querySelectorAll<HTMLElement>('.market-audio-card-title').forEach(node => {
       const type = node.dataset.productType;
       node.textContent = type === 'daily'
-        ? (zh ? 'Maya 每日精讀' : 'Maya Daily Reading')
+        ? `${node.dataset.presenterName || 'Maya'} ${zh ? '每日精讀' : 'Daily Reading'}`
         : type === 'macro' ? (zh ? '總經' : 'Macro') : (zh ? '個股' : 'Stock');
     });
   }
@@ -177,7 +178,8 @@ import { learnCatalog } from "../scripts/learn/catalog";
     localizeMarketAudio();
     fetch(`${import.meta.env.BASE_URL}api/market/audio`, { headers: { Accept: 'application/json' } })
     .then(response => response.ok ? response.json() : Promise.reject())
-    .then(({ items }) => {
+    .then(({ items, presenterSettings }) => {
+      applyMarketPresenterSettings(presenterSettings);
       list.replaceChildren();
       const entries = Array.isArray(items) ? items as AudioItem[] : [];
       if (!entries.length) { list.textContent = '目前尚無已完成的市場快報語音。'; return; }
@@ -187,6 +189,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
         const title = document.createElement('h3');
         title.className = 'market-audio-card-title';
         title.dataset.productType = item.productType;
+        title.dataset.presenterName = item.productType === 'daily'
+          ? (item.presenterName || (item.voice === MARKET_PRESENTER_CONFIG.uiobbeci.voice ? 'Uiobbeci' : 'Maya'))
+          : '';
         const date = document.createElement('p');
         date.className = 'market-audio-date';
         date.dataset.createdAt = item.createdAt ?? '';
@@ -210,7 +215,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         frame.append(video);
         const player = document.createElement('audio'); player.controls = true; player.preload = 'none';
         player.src = `${import.meta.env.BASE_URL}api/market/audio/${encodeURIComponent(item.productType)}/${encodeURIComponent(item.code)}/${item.revision}`;
-        bindMarketAudioPlayback(list, player, video);
+        bindMarketAudioPlayback(list, player, video, item.voice);
         media.append(frame, player);
         card.append(details, media); list.append(card);
       }

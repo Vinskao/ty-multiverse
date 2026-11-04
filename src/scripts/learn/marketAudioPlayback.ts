@@ -1,7 +1,4 @@
-const clipUrls = [
-  'https://tymultiverse.cc/images/people/reporter.mp4',
-  'https://tymultiverse.cc/images/people/reporter2.mp4',
-];
+import { MARKET_PRESENTER_CONFIG, marketPresenterForVoice } from './marketPresenterConfig';
 
 /** Clip indices: 1, 2, 3, 1, 4, 5, 1, 6, 7, 1... */
 export function marketClipOrder(sequenceIndex: number): number {
@@ -13,7 +10,15 @@ export function marketClipOrder(sequenceIndex: number): number {
 }
 
 /** Keep the presenter visible while the next silent clip starts. */
-export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement) {
+export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement, voice?: string) {
+  const presenter = marketPresenterForVoice(voice);
+  if (!presenter.videoFile) return;
+  const presenterVideoUrl = `https://tymultiverse.cc/images/people/${presenter.videoFile}`;
+  const presenterClipUrls = [
+    presenterVideoUrl,
+    `https://tymultiverse.cc/images/people/${presenter.id === 'maya' ? MARKET_PRESENTER_CONFIG.uiobbeci.videoFile : MARKET_PRESENTER_CONFIG.maya.videoFile}`,
+  ];
+  const getClipUrl = (sequence: number) => presenterClipUrls[marketClipOrder(sequence) % presenterClipUrls.length];
   video.poster = 'https://tymultiverse.cc/images/people/reporter.png';
   const next = video.cloneNode(false) as HTMLVideoElement;
   next.muted = true;
@@ -49,7 +54,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       switching = true;
       sequenceIndex += 1;
       const upcoming = players[1 - active];
-      upcoming.src = clipUrls[marketClipOrder(sequenceIndex) % clipUrls.length];
+      upcoming.src = getClipUrl(sequenceIndex);
       upcoming.load();
       void players[1 - active].play().catch(() => {});
     } else {
@@ -61,8 +66,8 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
     lastReverseTime = performance.now();
     reverseTimer = setTimeout(reverseFrame, 50);
   }
-  video.src = clipUrls[marketClipOrder(sequenceIndex) % clipUrls.length];
-  next.src = clipUrls[marketClipOrder(sequenceIndex + 1) % clipUrls.length];
+  video.src = getClipUrl(sequenceIndex);
+  next.src = getClipUrl(sequenceIndex + 1);
   players.forEach((player, index) => {
     player.loop = false;
     player.addEventListener('ended', () => {
@@ -83,7 +88,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       switching = false;
       previous.currentTime = 0;
       sequenceIndex += 1;
-      previous.src = clipUrls[marketClipOrder(sequenceIndex + 1) % clipUrls.length];
+      previous.src = getClipUrl(sequenceIndex + 1);
       previous.load();
     });
   });

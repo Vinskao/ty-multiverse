@@ -1,12 +1,45 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { bindMarketAudioPlayback, marketClipOrder } from '../../src/scripts/learn/marketAudioPlayback';
+import { applyMarketPresenterSettings, MARKET_PRESENTER_CONFIG, marketPresenterForDate, marketPresenterForVoice, type MarketPresenterSettings } from '../../src/scripts/learn/marketPresenterConfig';
+
+const settings: MarketPresenterSettings = {
+  maya: { id: 'maya', name: 'Maya', videoFile: 'reporterMaya.mp4', voice: 'zh-CN-Xiaoyu:DragonHDFlashLatestNeural' },
+  uiobbeci: { id: 'uiobbeci', name: 'Uiobbeci', videoFile: 'reporterUiobbeci.mp4', voice: 'zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural' },
+  weeklyPresenterIds: ['maya', 'uiobbeci', 'maya', 'uiobbeci', 'maya', 'uiobbeci', 'maya'],
+};
 
 describe('market audio playback', () => {
-  beforeEach(() => { document.body.innerHTML = ''; });
+  beforeEach(() => { document.body.innerHTML = ''; applyMarketPresenterSettings(settings); });
 
   it('uses clip order 1-2-3-1-4-5-1-6-7 and continues for any index', () => {
     expect(Array.from({ length: 9 }, (_, index) => marketClipOrder(index))).toEqual([0, 1, 2, 0, 3, 4, 0, 5, 6]);
     expect(marketClipOrder(100)).toBe(67);
+  });
+
+  it('centralizes presenter media and voice settings and maps weekdays to presenters', () => {
+    expect(MARKET_PRESENTER_CONFIG.maya.videoFile).toBe('reporterMaya.mp4');
+    expect(MARKET_PRESENTER_CONFIG.uiobbeci.videoFile).toBe('reporterUiobbeci.mp4');
+    expect(MARKET_PRESENTER_CONFIG.uiobbeci.voice).toBe('zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural');
+    for (const day of [1, 3, 5]) expect(marketPresenterForDate(new Date(2026, 10, day)).id).toBe('maya');
+    for (const day of [2, 4, 6]) expect(marketPresenterForDate(new Date(2026, 10, day)).id).toBe('uiobbeci');
+    expect(marketPresenterForDate(new Date(2026, 10, 8)).id).toBe('maya');
+    expect(marketPresenterForVoice(undefined).id).toBe('maya');
+    expect(marketPresenterForVoice(MARKET_PRESENTER_CONFIG.uiobbeci.voice).id).toBe('uiobbeci');
+  });
+
+  it('uses updated shared presenter settings for the next player binding', () => {
+    const list = document.createElement('div');
+    const audio = document.createElement('audio');
+    const video = document.createElement('video');
+    list.append(audio, video);
+    applyMarketPresenterSettings({
+      ...settings,
+      maya: { ...settings.maya, videoFile: 'maya-alt.mp4' },
+    });
+    bindMarketAudioPlayback(list, audio, video);
+    expect(video.src).toContain('/maya-alt.mp4');
+    expect(list.querySelectorAll('video')[1]?.src).toContain('/reporterUiobbeci.mp4');
+    applyMarketPresenterSettings(settings);
   });
 
   it('retains the presenter poster on both video elements', () => {
@@ -68,7 +101,7 @@ describe('market audio playback', () => {
     bindMarketAudioPlayback(list, audio, video);
     const next = frame.querySelectorAll('video')[1];
     const playNext = vi.spyOn(next, 'play').mockResolvedValue();
-    expect(next?.src).toContain('/reporter2.mp4');
+    expect(next?.src).toContain('/reporterUiobbeci.mp4');
     audio.dispatchEvent(new Event('playing'));
     playNext.mockClear();
     video.currentTime = 0.1;
