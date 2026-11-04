@@ -602,7 +602,7 @@ export class NavController {
     const allLinks = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
 
     // 查找 Login/Logout 鏈接：可能是 /login 或 href="#"
-    const loginLogoutLink = allLinks.find(link => {
+    const loginLogoutLink = document.querySelector<HTMLAnchorElement>('[data-auth-link]') ?? allLinks.find(link => {
       const href = link.getAttribute('href') || '';
       const text = link.textContent?.trim() || '';
       return href.includes('/login') ||
@@ -623,6 +623,10 @@ export class NavController {
     const isOnLoginPage = window.location.pathname === '/login';
 
     if (loginLogoutLink) {
+      const authContainer = loginLogoutLink.closest<HTMLElement>('.nav-auth');
+      if (authContainer) authContainer.dataset.authLoggedIn = this.isLoggedIn ? 'true' : 'false';
+      const googleLink = authContainer?.querySelector<HTMLAnchorElement>('[data-google-login]');
+      if (googleLink) googleLink.href = `/login?provider=google&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       if (this.isLoggedIn && !isOnLoginPage) {
         // 已登入：顯示為 Logout，href 設為 #
         loginLogoutLink.href = '#';

@@ -1,5 +1,7 @@
 # TY Multiverse Development Guidelines (AGENTS.md)
 
+Google 登入與電子郵件驗證流程：[docs/GOOGLE_SIGN_IN.md](docs/GOOGLE_SIGN_IN.md)。
+
 共同研究平台與 AI 機會池的流程、開發方法與測試：[docs/COMMUNITY_RESEARCH_PLATFORM.md](docs/COMMUNITY_RESEARCH_PLATFORM.md)。
 
 ## Chart interaction standard

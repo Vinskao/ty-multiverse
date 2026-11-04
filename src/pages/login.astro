@@ -18,9 +18,10 @@ const safeCLIENT_ID = CLIENT_ID || 'peoplesystem';
 const safeRedirectUri = redirectUri || `${GATEWAY_URL}/keycloak/redirect`;
 
 // 生成 Keycloak 的授權 URL（確保始終有值）
+const googleProvider = Astro.url.searchParams.get('provider') === 'google';
 const authorizationUrl = `${safeSSO_URL}/realms/${safeREALM}/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${safeCLIENT_ID}&redirect_uri=${encodeURIComponent(
   safeRedirectUri
-)}`;
+)}${googleProvider ? '&kc_idp_hint=google' : ''}`;
 
 // 驗證 authorizationUrl 是否有效
 const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');

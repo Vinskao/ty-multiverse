@@ -36,14 +36,6 @@ const textLinks: {
       currentPath === "/index.html",
   },
   {
-    label: isLoggedIn ? "Logout" : "Login",
-    i18nKey: isLoggedIn ? "nav.logout" : "nav.login",
-    href: isLoggedIn
-      ? "#"
-      : `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`,
-    isActive: currentPath === "/login",
-  },
-  {
     label: "Work",
     i18nKey: "nav.work",
     href: isLoggedIn
@@ -200,6 +192,12 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
           <span class="lang-toggle-option" data-lang-option="en" aria-hidden="true">EN</span>
         </button>
         <NotificationCenter />
+        <div class="nav-auth" data-auth-logged-in={isLoggedIn ? "true" : "false"}>
+          <a class="link nav-auth-trigger" data-auth-link href={isLoggedIn ? "#" : `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} data-i18n={isLoggedIn ? "nav.logout" : "nav.login"}>{isLoggedIn ? "Logout" : "Login"}</a>
+          <div class="nav-auth-popover">
+            <a data-google-login href={`/login?provider=google&redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`}><span class="nav-google-mark" aria-hidden="true">G</span><span>使用 Google 登入</span></a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
