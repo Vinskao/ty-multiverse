@@ -167,7 +167,8 @@ nav {
 }
 
 .nav-auth { position: relative; flex: none; }
-.nav-auth-trigger { display: inline-flex; align-items: center; padding: .45rem .85rem; border: 1px solid var(--gray-700); border-radius: 999px; white-space: nowrap; }
+.nav-auth-trigger { display: inline-flex; align-items: center; padding: .45rem .85rem; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); font-weight: 700; white-space: nowrap; }
+.nav-auth-trigger:hover, .nav-auth-trigger:focus-visible { background: var(--gray-300); color: var(--gray-999); outline-offset: 3px; }
 .nav-auth-popover { position: absolute; right: 0; top: 100%; padding-top: .4rem; min-width: 14rem; visibility: hidden; opacity: 0; pointer-events: none; z-index: 10000; }
 .nav-auth:hover .nav-auth-popover, .nav-auth:focus-within .nav-auth-popover { visibility: visible; opacity: 1; pointer-events: auto; }
 .nav-auth[data-auth-logged-in="true"] .nav-auth-popover { display: none; }

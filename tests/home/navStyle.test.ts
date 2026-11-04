@@ -14,3 +14,9 @@ it('draws the nav bar with a translucent blurred glass background', () => {
 it('keeps the opened mobile menu solid so its links stay readable', () => {
     expect(css).toMatch(/\.menu-content \{[^}]*background-color: color-mix\(in srgb, var\(--gray-999\) 98%, transparent\)/);
 });
+
+it('keeps the account control a monochrome pill in both login states', () => {
+    expect(css).toMatch(/\.nav-auth-trigger\s*\{[^}]*border-radius:\s*999px/s);
+    expect(css).toMatch(/\.nav-auth-trigger\s*\{[^}]*background:\s*var\(--gray-100\)/s);
+    expect(css).toMatch(/\.nav-auth-trigger\s*\{[^}]*color:\s*var\(--gray-999\)/s);
+});

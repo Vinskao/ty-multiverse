@@ -38,7 +38,7 @@ flowchart LR
   A[TOEIC topic selected] --> B[Existing quiz session]
   C[Maya briefing selected] --> D[Audio-only view]
   D --> G[Each audio controls its own silent presenter sequence]
-  G --> L[reporter.mp4 then reporter2.mp4 and repeat]
+  G --> L[Clip 1 forward and reverse, clip 2 forward and reverse, repeat]
   G --> H[Starting another audio pauses the previous audio and video]
   G --> I[Crop upper half by default]
   I --> J[Backend confirms manage-users role]
@@ -48,7 +48,7 @@ flowchart LR
 
 ## 開發方法
 
-每筆 Maya 音訊的獨立影片依序播放 `reporter.mp4` 與 `reporter2.mp4`，第二段播完再回到第一段；音訊等待、暫停或結束時不啟動下一段。先測兩段循環與暫停狀態，再修改播放事件；沿用既有公開媒體及角色檢查，不新增憑證。測試命令為 `node_modules/vitest/vitest.mjs run tests/learn`；部署後確認兩段影片都存在、可播放，以及切換音訊時各自暫停。
+每筆 Maya 音訊的獨立影片依序正播、倒播 `reporter.mp4`，再正播、倒播 `reporter2.mp4`，之後重複。倒播以計時 seek 實作，音訊等待、暫停或結束時停止；兩個影片以 `reporter.png` 作為 poster，畫面容器也使用同圖作背景。先測倒播結束才切換以及倒播途中暫停，再修改播放事件；沿用既有公開媒體及角色檢查，不新增憑證。測試命令為 `node_modules/vitest/vitest.mjs run tests/learn tests/home/navStyle.test.ts`；部署後須在瀏覽器確認倒播流暢度、圖片與兩段影片可用，以及切換音訊時各自暫停。
 
 主播影片先以原始影片尺寸的上半部顯示；持有 token 的使用者經 Gateway 的 `/auth/admin` 成功驗證 `manage-users` 後顯示完整畫面。登出、跨分頁 token 變化、請求失敗均回到裁切狀態，並防止舊請求覆蓋新登入狀態。先測未登入、授權成功、403 與網路錯誤，再實作並執行 `node_modules/vitest/vitest.mjs run tests/learn`。此為前端呈現限制，影片來源是公開網址，不能防止直接取得完整影片；需要真正存取控管時必須改用後端授權的媒體來源。部署後須用實際管理員與一般使用者及不同尺寸影片驗證，現有影片網址先前回傳 404。
 

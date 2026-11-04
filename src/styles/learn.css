@@ -38,9 +38,9 @@
 #market-audio-list { display: grid; gap: .8rem; margin-top: 1rem; }
 .market-audio-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); gap: 1.25rem; align-items: start; min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999-basis); }
 .market-audio-media { min-width: 0; width: 100%; }
-.presenter-frame { overflow: hidden; border-radius: .65rem; }
+.presenter-frame { overflow: hidden; border-radius: .65rem; background: #111 url('https://tymultiverse.cc/images/people/reporter.png') center top / 100% auto no-repeat; }
 .presenter-frame[data-full="false"] { aspect-ratio: var(--presenter-half-ratio, 1 / 1); }
-.market-audio-media video { display: block; width: 100%; height: auto; border-radius: .65rem; background: #111; }
+.market-audio-media video { display: block; width: 100%; height: auto; border-radius: .65rem; background: transparent; }
 .market-audio-card h3 { margin: 0; font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
 .market-audio-date { margin: .25rem 0 .75rem; color: var(--gray-500); font-size: .82rem; line-height: 1.5; }
 .market-audio-card audio { display: block; width: 100%; min-width: 0; }
