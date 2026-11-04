@@ -1,6 +1,10 @@
 /* Two-column shell: topic sidebar + the active phase */
 .learn-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 2rem; max-width: 1240px; margin-inline: auto; padding: 1.5rem 1rem 4rem; align-items: start; }
 .learn-sidebar { position: sticky; top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.learn-subject-menu { display: grid; grid-auto-flow: row; gap: .7rem; }
+.learn-sidebar-section { display: grid; gap: .4rem; min-width: 0; }
+.learn-sidebar-section > .learn-topics, .learn-sidebar-section > .learn-topic-link { margin-left: .75rem; width: calc(100% - .75rem); }
+.learn-course[hidden], .learn-subject[hidden] { display: none; }
 .learn-sidebar-title { margin: .25rem 0 0; font-size: 1.1rem; }
 .learn-main { min-width: 0; }
 

@@ -6,7 +6,9 @@ flowchart TD
   English --> TOEIC[多益 TOEIC]
   TOEIC --> Quiz[既有文法、短文、閱讀練習]
   Learn --> Macro[總體經濟：通膨、利率、就業、貿易]
+  Macro --> Maya[市場快報與 Maya 精讀]
   Learn --> Micro[個體經濟：供需、財報、產業]
+  Micro --> Semiconductor[半導體：規劃中]
   Learn --> OOP[物件導向：繼承、多型、介面、SOLID]
   Macro --> Plan[考試範圍規劃中]
   Micro --> Plan
@@ -15,6 +17,8 @@ flowchart TD
 ```
 
 ## 開發方法
+
+側欄依既有 `learnCatalog` 產生英文、總體經濟、個體經濟與物件導向；選取分類時只顯示對應的課程，半導體只顯示該規劃項目，Maya 則開啟既有音訊畫面。先以目錄測試固定半導體為規劃中，再檢查選單歸屬及隱藏樣式；沿用原登入 token 與公開音訊 API。先在本機以 `node_modules/vitest/vitest.mjs run tests/learn` 驗證，經 Jenkins 部署後需再檢查桌面及手機切換。沒有新增題庫或半導體教材；新增教材時應先定義來源和可用狀態。
 
 1. 檢查正式 `/learn/`，發現側欄題目清單被全域導覽樣式排成橫向，造成裁切；先新增單欄回歸測試，並以既有 TOEIC ID 與未知 ID 測試題庫分類。
 2. 依首頁總經與股票資料、`/work/` 的繼承多型、抽象類別與介面、SOLID、Java 存取修飾詞訂出第一批主題。新增獨立目錄資料，規劃中的主題只連參考資料，不建立題庫、題目或測驗 API。既有多益主題仍由後端載入，維持作答、續寫、歷史與權限流程。未識別的新題庫保留在其他練習，不因分類遺失。

@@ -14,6 +14,10 @@ describe('learning catalog', () => {
     expect(groupLearnTopics(topics).toeic).toEqual(topics.slice(0, 2));
     expect(groupLearnTopics(topics).other).toEqual(topics.slice(2));
   });
+  it('includes semiconductors under microeconomics', () => {
+    expect(learnCatalog.find(subject => subject.id === 'microeconomics')?.courses)
+      .toEqual(expect.arrayContaining([expect.objectContaining({ id: 'semiconductor', status: 'planned' })]));
+  });
   it('forces the sidebar topic list to remain a single column', () => {
     const css = readFileSync('src/styles/learn.css', 'utf8');
     expect(css).toMatch(/\.learn-topics\s*\{[^}]*grid-auto-flow:\s*row/s);

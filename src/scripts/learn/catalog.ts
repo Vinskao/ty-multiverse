@@ -13,6 +13,7 @@ export const learnCatalog: LearnSubject[] = [
     { id: 'trade', title: '貿易與匯率', status: 'planned', topics: ['進出口', '匯率與美元'], source: '/#zone-macro' },
   ] },
   { id: 'microeconomics', title: '個體經濟', subtitle: '企業、產業與市場決策', courses: [
+    { id: 'semiconductor', title: '半導體', status: 'planned', topics: ['半導體供應鏈', '產業與企業'], source: '/#zone-reports' },
     { id: 'supply-demand', title: '供需與價格', status: 'planned', topics: ['供需變動', '價格彈性'], source: '/#zone-stocks' },
     { id: 'firm', title: '企業營運與財報', status: 'planned', topics: ['營收與獲利', '成本與毛利'], source: '/#zone-stocks' },
     { id: 'industry', title: '產業與競爭', status: 'planned', topics: ['供應鏈', '市場競爭'], source: '/#zone-reports' },
