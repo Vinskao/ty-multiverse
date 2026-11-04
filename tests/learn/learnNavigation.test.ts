@@ -11,6 +11,13 @@ it('puts Maya audio in its own selectable view outside the course overview', () 
   expect(page).toContain('"audio"');
 });
 
+it('opens TOEIC from the catalog and reloads audio after page navigation', () => {
+  const page = readFileSync(resolve(__dirname, '../../src/pages/learn.astro'), 'utf8');
+  expect(page).toContain('data-learn-toeic');
+  expect(page).toContain('openTopic(toeic[0].id)');
+  expect(page).toContain('document.addEventListener("astro:page-load", loadMarketAudio)');
+});
+
 it('keeps the sidebar tabs in a single column despite global navigation styles', () => {
   const css = readFileSync(resolve(__dirname, '../../src/styles/learn.css'), 'utf8');
   expect(css).toMatch(/\.learn-sidebar\s+\.learn-subject-menu\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);

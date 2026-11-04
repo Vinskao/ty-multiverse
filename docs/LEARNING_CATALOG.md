@@ -29,6 +29,8 @@ flowchart TD
 
 ## Learn sidebar navigation
 
+多益的「開始練習」會在登入且題庫載入後開啟第一個多益主題；未登入則顯示登入提示。Maya 音訊清單在每次 Astro 頁面切換完成後重新讀取，避免回到 Learn 時播放器空白。2026-11-04 驗證正式音訊清單回傳四筆，第一筆音檔的 HEAD 請求回傳 200、`audio/mpeg`；後端原始題庫檔案仍存在。測試 `node_modules/vitest/vitest.mjs run tests/learn`（19 passed）；部署後仍需實際登入確認完整作答和瀏覽器播放。
+
 側欄的四個分類按鈕使用單欄排列；只有選取某分類時，才展開該分類的多益題目、Maya 或半導體次選單。`learn.css` 明確覆寫全站 `nav` 的桌面三欄與 sticky 設定，避免側欄文字重疊；回總覽會收起次選單。回歸檢查：`node_modules/vitest/vitest.mjs run tests/learn`。
 
 ```mermaid

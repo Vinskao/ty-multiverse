@@ -40,7 +40,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
             <ul class="learn-course-list">
               {subject.courses.map(course => <li class="learn-course" data-catalog-course={course.id}>
                 <div><strong>{course.title}</strong><p>{course.topics.join(' · ')}</p></div>
-                {course.status === 'available' ? <a href={course.source}>開始練習 <span aria-hidden="true">↗</span></a> : <a href={course.source}>參考資料 <span aria-hidden="true">↗</span></a>}
+                {course.status === 'available' ? <a href={course.source} data-learn-toeic>開始練習 <span aria-hidden="true">↗</span></a> : <a href={course.source}>參考資料 <span aria-hidden="true">↗</span></a>}
               </li>)}
             </ul>
           </section>)}
@@ -133,7 +133,6 @@ import { learnCatalog } from "../scripts/learn/catalog";
 <script>
   import { marketAudioDateTime } from '../scripts/learn/marketAudioPresentation';
   type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string };
-  const list = document.querySelector<HTMLElement>('#market-audio-list');
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
   function localizeMarketAudio() {
     const zh = language() === 'zh';
@@ -158,8 +157,11 @@ import { learnCatalog } from "../scripts/learn/catalog";
     });
   }
   window.AppLang?.onChange?.(localizeMarketAudio);
-  localizeMarketAudio();
-  if (list) fetch(`${import.meta.env.BASE_URL}api/market/audio`, { headers: { Accept: 'application/json' } })
+  function loadMarketAudio() {
+    const list = document.querySelector<HTMLElement>('#market-audio-list');
+    if (!list) return;
+    localizeMarketAudio();
+    fetch(`${import.meta.env.BASE_URL}api/market/audio`, { headers: { Accept: 'application/json' } })
     .then(response => response.ok ? response.json() : Promise.reject())
     .then(({ items }) => {
       list.replaceChildren();
@@ -182,7 +184,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
         card.append(title, date, player); list.append(card);
       }
       localizeMarketAudio();
-    }).catch(() => { if (list) list.textContent = '市場快報暫時無法載入。'; });
+    }).catch(() => { list.textContent = '市場快報暫時無法載入。'; });
+  }
+  document.addEventListener("astro:page-load", loadMarketAudio);
 </script>
 
 <script>
@@ -790,6 +794,15 @@ import { learnCatalog } from "../scripts/learn/catalog";
       document.querySelectorAll<HTMLElement>("[data-catalog-course]").forEach(node => { node.hidden = !!button.dataset.courseId && node.dataset.catalogCourse !== button.dataset.courseId; });
     });
     bindOnce(query("#learn-maya-open"), "bound", "click", () => { stopTimer(); showPhase("audio"); });
+    bindOnce(query("#learn-overview"), "toeicBound", "click", event => {
+      const target = (event.target as HTMLElement).closest("[data-learn-toeic]");
+      if (!target) return;
+      event.preventDefault();
+      if (!localStorage.getItem("token")) { showLoginRequired(); return; }
+      const toeic = groupLearnTopics(topics).toeic;
+      if (toeic.length) void openTopic(toeic[0].id);
+      else showError("題庫尚未載入，請稍後再試。");
+    });
 
     bindOnce(query("#learn-form"), "bound", "submit", event => void submitAttempt(event as SubmitEvent));
 
