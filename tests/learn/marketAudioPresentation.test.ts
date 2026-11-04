@@ -20,4 +20,10 @@ describe('market audio presentation', () => {
     expect(page).not.toMatch(/title\.textContent\s*=\s*`\$\{label\}\s+\$\{item\.code\}/);
     expect(page).not.toMatch(/第\s*\$\{item\.revision\}\s*版/);
   });
+
+  it('uses a single-column catalogue for the audio view layout', () => {
+    const css = readFileSync(resolve(__dirname, '../../src/styles/learn.css'), 'utf8');
+    expect(css).toContain('.learn-audio-view .learn-catalog { display: block; }');
+    expect(css).not.toContain('.market-audio-view .learn-catalog');
+  });
 });

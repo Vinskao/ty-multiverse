@@ -26,7 +26,7 @@
 .learn-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
 .market-audio-header { align-items: flex-start; margin-bottom: 1.5rem; }
 .market-audio-header h1 { margin: .4rem 0; font-size: clamp(1.65rem, 3vw, 2.35rem); line-height: 1.2; letter-spacing: -.02em; overflow-wrap: anywhere; }
-.market-audio-view .learn-catalog { display: block; }
+.learn-audio-view .learn-catalog { display: block; }
 #market-audio-list { display: grid; gap: .8rem; margin-top: 1rem; }
 .market-audio-card { min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999-basis); }
 .market-audio-card h3 { margin: 0; font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
