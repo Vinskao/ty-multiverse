@@ -36,10 +36,13 @@
 .market-audio-header h1 { margin: .4rem 0; font-size: clamp(1.65rem, 3vw, 2.35rem); line-height: 1.2; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .learn-audio-view .learn-catalog { display: block; }
 #market-audio-list { display: grid; gap: .8rem; margin-top: 1rem; }
-.market-audio-card { min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999-basis); }
+.market-audio-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); gap: 1.25rem; align-items: start; min-width: 0; padding: 1rem 1.1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999-basis); }
+.market-audio-media { min-width: 0; width: 100%; }
+.market-audio-media video { display: block; width: 100%; height: auto; border-radius: .65rem; background: #111; }
 .market-audio-card h3 { margin: 0; font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
 .market-audio-date { margin: .25rem 0 .75rem; color: var(--gray-500); font-size: .82rem; line-height: 1.5; }
 .market-audio-card audio { display: block; width: 100%; min-width: 0; }
+@media (max-width: 600px) { .market-audio-card { grid-template-columns: minmax(0, 1fr); } }
 .learn-subject { min-width: 0; border: 1px solid var(--gray-800); border-radius: 1rem; padding: 1.25rem; background: var(--gray-999-basis); }
 .learn-subject-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .learn-subject-number { color: var(--gray-500); font-size: .75rem; letter-spacing: .12em; }

@@ -37,10 +37,14 @@ flowchart TD
 flowchart LR
   A[TOEIC topic selected] --> B[Existing quiz session]
   C[Maya briefing selected] --> D[Audio-only view]
+  D --> G[Each audio controls its own looping silent presenter]
+  G --> H[Starting another audio pauses the previous audio and video]
   E[Home selected] --> F[Course catalog]
 ```
 
-## ????
+## 開發方法
+
+Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音訊 playing、waiting、pause 與 ended 事件控制；開始另一筆音訊時暫停其他音訊。先以 `tests/learn/marketAudioPlayback.test.ts` 重現多播放器需求，再抽出事件控制並測試；媒體資源使用公開 URL，不需新增憑證。執行 `node_modules/vitest/vitest.mjs run tests/learn`。2026-11-04 檢查指定的 `https://tymultiverse.cc/images/people/reporter.mp4` 回傳 404，影片檔案需上傳後才能驗證實際播放；部署後還須以瀏覽器測試音訊切換與窄螢幕版面。
 
 1. Reproduced the mixed view: the course catalog and Maya audio list were both rendered inside the initial overview. Added a regression test requiring a separate audio view and sidebar control.
 2. Moved the existing audio list intact into its own phase and added the Maya sidebar action. Existing quiz topic buttons continue to open their matching quiz workflow; the home control returns to the catalog.
