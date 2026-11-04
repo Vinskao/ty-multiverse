@@ -27,7 +27,7 @@ describe('market audio playback', () => {
     expect(marketPresenterForVoice(MARKET_PRESENTER_CONFIG.uiobbeci.voice).id).toBe('uiobbeci');
   });
 
-  it('uses updated shared presenter settings for the next player binding', () => {
+  it('keeps numbered clips available when presenter settings change', () => {
     const list = document.createElement('div');
     const audio = document.createElement('audio');
     const video = document.createElement('video');
@@ -37,8 +37,8 @@ describe('market audio playback', () => {
       maya: { ...settings.maya, videoFile: 'maya-alt.mp4' },
     });
     bindMarketAudioPlayback(list, audio, video);
-    expect(video.src).toContain('/maya-alt.mp4');
-    expect(list.querySelectorAll('video')[1]?.src).toContain('/reporterUiobbeci.mp4');
+    expect(video.src).toContain('/reporter.mp4');
+    expect(list.querySelectorAll('video')[1]?.src).toContain('/reporter2.mp4');
     applyMarketPresenterSettings(settings);
   });
 
@@ -101,7 +101,7 @@ describe('market audio playback', () => {
     bindMarketAudioPlayback(list, audio, video);
     const next = frame.querySelectorAll('video')[1];
     const playNext = vi.spyOn(next, 'play').mockResolvedValue();
-    expect(next?.src).toContain('/reporterUiobbeci.mp4');
+    expect(next?.src).toContain('/reporter2.mp4');
     audio.dispatchEvent(new Event('playing'));
     playNext.mockClear();
     video.currentTime = 0.1;

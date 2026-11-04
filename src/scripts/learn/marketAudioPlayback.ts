@@ -1,5 +1,3 @@
-import { MARKET_PRESENTER_CONFIG, marketPresenterForVoice } from './marketPresenterConfig';
-
 /** Clip indices: 1, 2, 3, 1, 4, 5, 1, 6, 7, 1... */
 export function marketClipOrder(sequenceIndex: number): number {
   if (!Number.isInteger(sequenceIndex) || sequenceIndex < 0) throw new RangeError('sequenceIndex must be a non-negative integer');
@@ -9,16 +7,15 @@ export function marketClipOrder(sequenceIndex: number): number {
   return position === 2 ? 0 : group * 2 + position + 1;
 }
 
+/** Numbered clips belong to the same presenter; clip 1 has no numeric suffix. */
+export function marketClipUrl(sequenceIndex: number): string {
+  const clip = marketClipOrder(sequenceIndex) + 1;
+  return `https://tymultiverse.cc/images/people/reporter${clip === 1 ? '' : clip}.mp4`;
+}
+
 /** Keep the presenter visible while the next silent clip starts. */
 export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement, voice?: string) {
-  const presenter = marketPresenterForVoice(voice);
-  if (!presenter.videoFile) return;
-  const presenterVideoUrl = `https://tymultiverse.cc/images/people/${presenter.videoFile}`;
-  const presenterClipUrls = [
-    presenterVideoUrl,
-    `https://tymultiverse.cc/images/people/${presenter.id === 'maya' ? MARKET_PRESENTER_CONFIG.uiobbeci.videoFile : MARKET_PRESENTER_CONFIG.maya.videoFile}`,
-  ];
-  const getClipUrl = (sequence: number) => presenterClipUrls[marketClipOrder(sequence) % presenterClipUrls.length];
+  const getClipUrl = marketClipUrl;
   video.poster = 'https://tymultiverse.cc/images/people/reporter.png';
   const next = video.cloneNode(false) as HTMLVideoElement;
   next.muted = true;
@@ -54,8 +51,6 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       switching = true;
       sequenceIndex += 1;
       const upcoming = players[1 - active];
-      upcoming.src = getClipUrl(sequenceIndex);
-      upcoming.load();
       void players[1 - active].play().catch(() => {});
     } else {
       reverseTimer = setTimeout(reverseFrame, 50);
@@ -69,6 +64,9 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   video.src = getClipUrl(sequenceIndex);
   next.src = getClipUrl(sequenceIndex + 1);
   players.forEach((player, index) => {
+    player.addEventListener('error', () => {
+      if (player.src !== marketClipUrl(0)) { player.src = marketClipUrl(0); player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
+    });
     player.loop = false;
     player.addEventListener('ended', () => {
       if (index !== active) return;
@@ -87,7 +85,6 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       active = index;
       switching = false;
       previous.currentTime = 0;
-      sequenceIndex += 1;
       previous.src = getClipUrl(sequenceIndex + 1);
       previous.load();
     });
