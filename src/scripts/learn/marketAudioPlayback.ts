@@ -1,3 +1,5 @@
+import type { PresenterId } from './presenterSchedule';
+
 /** Clip indices: 1, 2, 3, 1, 4, 5, 1, 6, 7, 1... */
 export function marketClipOrder(sequenceIndex: number): number {
   if (!Number.isInteger(sequenceIndex) || sequenceIndex < 0) throw new RangeError('sequenceIndex must be a non-negative integer');
@@ -8,15 +10,16 @@ export function marketClipOrder(sequenceIndex: number): number {
 }
 
 /** Numbered clips belong to the same presenter; clip 1 has no numeric suffix. */
-export function marketClipUrl(sequenceIndex: number): string {
+export function marketClipUrl(sequenceIndex: number, presenter: PresenterId = 'maya'): string {
+  if (presenter !== 'maya') return `https://tymultiverse.cc/images/people/reporter${presenter === 'duo' ? 'Duo' : 'Uiobbeci'}.mp4`;
   const clip = marketClipOrder(sequenceIndex) + 1;
   return `https://tymultiverse.cc/images/people/reporter${clip === 1 ? '' : clip}.mp4`;
 }
 
 /** Keep the presenter visible while the next silent clip starts. */
-export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement, voice?: string) {
-  const getClipUrl = marketClipUrl;
-  video.poster = 'https://tymultiverse.cc/images/people/reporter.png';
+export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioElement, video: HTMLVideoElement, presenter: PresenterId = 'maya') {
+  const getClipUrl = (sequence: number) => marketClipUrl(sequence, presenter);
+  if (presenter === 'maya') video.poster = 'https://tymultiverse.cc/images/people/reporter.png';
   const next = video.cloneNode(false) as HTMLVideoElement;
   next.muted = true;
   next.playsInline = true;
@@ -65,7 +68,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   next.src = getClipUrl(sequenceIndex + 1);
   players.forEach((player, index) => {
     player.addEventListener('error', () => {
-      if (player.src !== marketClipUrl(0)) { player.src = marketClipUrl(0); player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
+      if (presenter === 'maya' && player.src !== getClipUrl(0)) { player.src = getClipUrl(0); player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
     });
     player.loop = false;
     player.addEventListener('ended', () => {

@@ -132,8 +132,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
 
 <script>
   import { marketAudioDateTime } from '../scripts/learn/marketAudioPresentation';
+  import { presenterForAudio } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
-  import { applyMarketPresenterSettings, MARKET_PRESENTER_CONFIG } from '../scripts/learn/marketPresenterConfig';
+  import { applyMarketPresenterSettings } from '../scripts/learn/marketPresenterConfig';
   import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
   import { GATEWAY_API_BASE } from '../common/constants/api';
   type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string; presenterName?: string };
@@ -189,8 +190,9 @@ import { learnCatalog } from "../scripts/learn/catalog";
         const title = document.createElement('h3');
         title.className = 'market-audio-card-title';
         title.dataset.productType = item.productType;
+        const presenter = presenterForAudio(item.createdAt);
         title.dataset.presenterName = item.productType === 'daily'
-          ? (item.presenterName || (item.voice === MARKET_PRESENTER_CONFIG.uiobbeci.voice ? 'Uiobbeci' : 'Maya'))
+          ? ({ maya: 'Maya', uiobbeci: 'Uiobbeci', duo: 'Maya & Uiobbeci' }[presenter])
           : '';
         const date = document.createElement('p');
         date.className = 'market-audio-date';
@@ -209,13 +211,23 @@ import { learnCatalog } from "../scripts/learn/catalog";
         const frame = document.createElement('div');
         frame.className = 'presenter-frame';
         frame.dataset.full = 'false';
+        frame.dataset.presenter = presenter;
         video.addEventListener('loadedmetadata', () => {
           if (video.videoWidth && video.videoHeight) frame.style.setProperty('--presenter-half-ratio', `${video.videoWidth} / ${video.videoHeight / 2}`);
         });
         frame.append(video);
+        if (presenter !== 'maya') {
+          const unavailable = document.createElement('span');
+          unavailable.className = 'presenter-unavailable';
+          unavailable.hidden = true;
+          unavailable.textContent = `${title.dataset.presenterName} video unavailable`;
+          video.addEventListener('error', () => { unavailable.hidden = false; });
+          video.addEventListener('playing', () => { unavailable.hidden = true; });
+          frame.append(unavailable);
+        }
         const player = document.createElement('audio'); player.controls = true; player.preload = 'none';
         player.src = `${import.meta.env.BASE_URL}api/market/audio/${encodeURIComponent(item.productType)}/${encodeURIComponent(item.code)}/${item.revision}`;
-        bindMarketAudioPlayback(list, player, video, item.voice);
+        bindMarketAudioPlayback(list, player, video, presenter);
         media.append(frame, player);
         card.append(details, media); list.append(card);
       }
