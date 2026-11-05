@@ -18,6 +18,8 @@ flowchart TD
   Dialog -->|Save with advertising off| SaveOff
   SaveOn --> Ads
   SaveOff --> Remove[Stop pending requests and remove ad scripts/frames]
+  Ads -->|Learn In-Page Push injected| Position[Move high-layer Monetag frame to bottom safe area]
+  Position --> Controls[Keep menu and bottom corner controls clear]
 ```
 
 ```mermaid
@@ -39,9 +41,11 @@ Necessary storage is always on. The optional analytics choice is stored but no t
 2. Stored consent as a versioned object under `tym-cookie-consent-v1`; malformed or obsolete data is ignored. Required storage is fixed on, analytics defaults off, and advertising defaults on.
 3. Kept provider keys in `src/scripts/ads/consentAds.ts` and responsive size selection in `src/scripts/ads/responsiveBanner.ts`. The ad component contains placeholders only; the loader adds third-party scripts at runtime and listens for preference changes.
 4. Turning advertising off invalidates in-flight loader generations, removes provider scripts and frames, and clears the loaded state. Re-enabling it lets the normal page-load hook mount the tags again.
-5. No credentials or secrets are needed. Rollout is a frontend build and site deploy; after release, check a clean browser for the notice, verify ads appear by default, then choose necessary-only and confirm the provider tags/frames disappear. Re-open settings from the bell-side gear to confirm preferences persist.
+5. Monetag's Learn In-Page Push injects a top-level, high-z-index fixed iframe after its tag loads. `src/scripts/ads/monetagPosition.ts` recognizes that frame by its observed dimensions and inline position, then uses important inline offsets plus a MutationObserver to keep it 112px above the viewport bottom (including the device safe area). This leaves the bottom theme and AI controls clear while keeping the navigation clear. Other iframes are not modified.
+6. No credentials or secrets are needed. Rollout is a frontend build and site deploy; after release, verify ads appear by default, the Learn push sits above bottom controls, and unrelated frames are unchanged. Choose necessary-only and confirm provider tags/frames disappear. Re-open settings from the bell-side gear to confirm preferences persist.
 
 ## Tests and checks
 
 - `& $node node_modules\vitest\vitest.mjs run tests/cookies tests/ads tests/home/adPlacements.test.ts tests/about/teamHeading.test.ts`
+- Targeted placement regression: `& $node node_modules\vitest\vitest.mjs run tests/ads/monetagPosition.test.ts`
 - Build and browser rollout checks are recorded with the release commit.

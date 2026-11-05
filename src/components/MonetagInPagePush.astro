@@ -3,6 +3,7 @@
 </section>
 <script>
 	import { mountPublisherAds } from '../scripts/ads/consentAds';
+	import { observeMonetagFloatingAds } from '../scripts/ads/monetagPosition';
 	import { COOKIE_CONSENT_STORAGE_KEY, hasAdvertisingConsent } from '../scripts/cookies/consent';
 	const syncPublisherAds = () => mountPublisherAds(document, hasAdvertisingConsent(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)));
 	document.addEventListener('astro:page-load', syncPublisherAds);
@@ -11,4 +12,5 @@
 		void mountPublisherAds(document, allowed);
 	});
 	syncPublisherAds();
+	observeMonetagFloatingAds();
 </script>
