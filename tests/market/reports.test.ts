@@ -75,6 +75,12 @@ it('places category navigation on the left and searchable reports on the right',
   expect(home.indexOf('market-report-sidebar')).toBeLessThan(home.indexOf('id="market-report-list"'));
 });
 
+it('wraps long and unspaced report titles inside narrow mobile cards', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/styles/index.css'), 'utf8');
+  expect(css).toMatch(/\.market-report-card\s*\{[^}]*min-width:\s*0[^}]*overflow-wrap:\s*anywhere/);
+  expect(css).toMatch(/\.market-report-card h5\s*\{[^}]*overflow-wrap:\s*anywhere/);
+});
+
 describe('market research reports', () => {
   it('shows upload controls only to an authenticated owner', () => {
     expect(canUploadReports(false, false)).toBe(false);
