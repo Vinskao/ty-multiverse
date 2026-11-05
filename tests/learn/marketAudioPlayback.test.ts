@@ -42,6 +42,16 @@ describe('market audio playback', () => {
     applyMarketPresenterSettings(settings);
   });
 
+  it('accepts the shared schedule with duo days and the pending speaker video', () => {
+    applyMarketPresenterSettings({
+      ...settings,
+      duo: { id: 'duo', name: 'Maya & Uiobbeci', videoFile: 'reporterDuoUiobbeci.mp4', speaker: 'uiobbeci', mayaStatus: 'pending' },
+      weeklyPresenterIds: ['maya', 'duo', 'maya', 'uiobbeci', 'maya', 'uiobbeci', 'duo'],
+    });
+    expect(MARKET_PRESENTER_CONFIG.duo.videoFile).toBe('reporterDuoUiobbeci.mp4');
+    expect(MARKET_PRESENTER_CONFIG.duo.voice).toBe(settings.uiobbeci.voice);
+  });
+
   it('retains the presenter poster on both video elements', () => {
     const list = document.createElement('div');
     const audio = document.createElement('audio');
