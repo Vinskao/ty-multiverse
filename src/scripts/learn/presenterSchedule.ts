@@ -1,5 +1,10 @@
 export type PresenterId = 'maya' | 'uiobbeci' | 'duo';
 
+export function dailyReadingTitle(presenterNames: string[], language: 'zh' | 'en' = 'en'): string {
+  const names = presenterNames.filter(Boolean).join(language === 'zh' ? '與' : ' & ');
+  return language === 'zh' ? `${names}主播每日精讀` : `${names} Daily Reading`;
+}
+
 // Date is the audio record creation time, interpreted in Taipei.
 export function presenterForAudio(createdAt?: string, voice?: string): PresenterId {
   if (voice === 'duo:maya+uiobbeci' || voice === 'test:duo' || voice === 'duo:uiobbeci:maya-pending') return 'duo';
