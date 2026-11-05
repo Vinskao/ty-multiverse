@@ -18,6 +18,8 @@ describe('homepage advertising test placements', () => {
     expect(slots).toContain('06e9cf3d5469a7e1c33e98da08c56876');
     expect(slots).toContain('https://bauval.org/22/');
     expect(slots).toContain('https://bauval.org/21/');
+    expect(slots).toContain("s.dataset.zone='12196776'");
+    expect(slots).toContain('https://nap5k.com/tag.min.js');
     expect(styles).toContain('.home-advertising-grid');
   });
 });
