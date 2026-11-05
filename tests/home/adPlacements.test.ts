@@ -5,9 +5,10 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 describe('homepage advertising test placements', () => {
-  it('places clearly labelled 300x250 and Native Banner Adsterra slots on the homepage', () => {
+  it('keeps disruptive In-Page Push off the homepage and reserves it for Learn', () => {
     const index = read('src/pages/index.astro');
     const slots = read('src/components/HomeAdPlacements.astro');
+    const push = read('src/components/MonetagInPagePush.astro');
     const styles = read('src/styles/index.css');
     const loader = read('src/scripts/ads/consentAds.ts');
 
@@ -20,11 +21,13 @@ describe('homepage advertising test placements', () => {
     expect(loader).toContain('https://bauval.org/22/');
     expect(loader).toContain('https://bauval.org/21/');
     expect(loader).toContain('https://nap5k.com/tag.min.js');
-    expect(slots).toContain('data-monetag-zone="12196776"');
+    expect(index).not.toContain('<MonetagInPagePush />');
+    expect(slots).not.toContain('data-monetag-zone="12196776"');
+    expect(read('src/pages/learn.astro')).toContain('<MonetagInPagePush />');
+    expect(push).toContain('data-monetag-zone="12196776"');
     expect(slots).toContain('id="adsterra-responsive-banner"');
     expect(slots).toContain('data-adsterra="responsive"');
     expect(slots).toContain('data-adsterra="native"');
-    expect(slots).toContain('data-monetag-zone="12196776"');
     expect(styles).toContain('.home-advertising-grid');
   });
 
@@ -34,5 +37,12 @@ describe('homepage advertising test placements', () => {
       expect(read(path), path).toContain("import HomeAdPlacements from");
     }
     expect(read('src/components/ArticleSidebar.astro')).toContain('<AdsterraSidebarBanner />');
+  });
+
+  it('allows article index cards to shrink and wrap on narrow screens', () => {
+    const styles = read('src/styles/knowledge.css');
+    expect(styles).toContain('.knowledge-library,.knowledge-list,.knowledge-row{box-sizing:border-box;min-width:0;max-width:100%}');
+    expect(styles).toContain('grid-template-columns:minmax(0,1fr) 24px');
+    expect(styles).toContain('overflow-wrap:anywhere');
   });
 });

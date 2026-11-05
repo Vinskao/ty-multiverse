@@ -1,0 +1,14 @@
+<section class="learn-in-page-push" aria-label="Monetag In-Page Push">
+	<div id="monetag-ipp" data-monetag-zone="12196776"></div>
+</section>
+<script>
+	import { mountPublisherAds } from '../scripts/ads/consentAds';
+	import { COOKIE_CONSENT_STORAGE_KEY, hasAdvertisingConsent } from '../scripts/cookies/consent';
+	const syncPublisherAds = () => mountPublisherAds(document, hasAdvertisingConsent(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)));
+	document.addEventListener('astro:page-load', syncPublisherAds);
+	window.addEventListener('cookie-consent:changed', (event) => {
+		const allowed = (event as CustomEvent<{ advertising?: boolean }>).detail?.advertising === true;
+		void mountPublisherAds(document, allowed);
+	});
+	syncPublisherAds();
+</script>
