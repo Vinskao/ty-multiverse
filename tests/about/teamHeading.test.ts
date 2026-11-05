@@ -7,7 +7,11 @@ describe('About founder, story and future team', () => {
     expect(page).toContain('TY Multiverse 的旅程');
     expect(page).toContain('創辦人的話');
     expect(page).toContain('founder-message.mp4');
-    expect(page).toContain('preload="none"');
+    expect(page).toContain('preload="auto"');
+    expect(page).toContain('lang === "zh" ? "播放影片" : "Play video"');
+    expect(page).toContain('<svg aria-hidden="true"');
+    expect(page).not.toContain('"????"');
+    expect(page).not.toContain('aria-hidden="true">?</span>');
     expect(page.indexOf('founder-message.mp4')).toBeLessThan(page.indexOf('class="team-section"'));
     expect(page).not.toContain('KTY 的旅程');
   });
@@ -23,6 +27,6 @@ describe('About founder, story and future team', () => {
     expect(page).toContain('CEO');
     expect(page).toContain('行銷');
     expect(page).toContain('mailto:tianyikao@tymultiverse.cc');
-    expect(page.indexOf('team-recruitment')).toBeGreaterThan(page.indexOf('team-founder-title'));
+    expect(page.indexOf('class="team-recruitment"')).toBeGreaterThan(page.indexOf('class="team-section"'));
   });
 });

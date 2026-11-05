@@ -8,6 +8,7 @@ import ResumePreview from "../components/ResumePreview.astro";
 import Briefing from "../components/Briefing.astro";
 import aboutCssUrl from "../styles/about.css?url";
 import briefingCssUrl from "../styles/briefing.css?url";
+import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 
 // Import the JSON data
 import aboutData from "../storages/about.json";
@@ -211,7 +212,9 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
               <source src="/assets/media/founder-message.mp4" type="video/mp4" />
               {lang === "zh" ? "您的瀏覽器不支援影片播放。" : "Your browser does not support video playback."}
             </video>
-              <button class="founder-play" type="button" aria-label={lang === "zh" ? "????" : "Play video"}><span aria-hidden="true">?</span></button>
+              <button class="founder-play" type="button" aria-label={lang === "zh" ? "播放影片" : "Play video"}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M8 5.8c0-.8.9-1.3 1.6-.9l10 6.2a1.1 1.1 0 0 1 0 1.8l-10 6.2c-.7.4-1.6-.1-1.6-.9z" fill="currentColor" /></svg>
+              </button>
             </div>
           </div>
         </section>
@@ -912,6 +915,7 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
         </article>
       </section>
     </main>
+    <HomeAdPlacements />
     <!-- Global language manager -->
     <script>
       function initFounderVideo() {

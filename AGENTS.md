@@ -8,6 +8,8 @@ Google 登入與電子郵件驗證流程：[docs/GOOGLE_SIGN_IN.md](docs/GOOGLE_
 
 技術 SEO、canonical、索引政策、SSR sitemap 與分享預覽：[docs/SEO.md](docs/SEO.md)。
 
+Cookie 偏好、隱私權說明與廣告載入控制：[docs/COOKIE_CONSENT.md](docs/COOKIE_CONSENT.md)。
+
 ## Chart interaction standard
 
 - Every data chart must expose the exact value for each plotted point. Desktop users can hover; touch users can tap; keyboard users can focus point controls. Do not rely only on browser-native SVG `<title>` tooltips.

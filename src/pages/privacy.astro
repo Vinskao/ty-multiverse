@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="隱私權與 Cookie 說明 | TY Multiverse" description="了解 TY Multiverse 使用的必要儲存、廣告 Cookie、第三方廣告服務與偏好設定方式。" lang="zh-TW">
+  <article class="wrapper privacy-page">
+    <p class="knowledge-eyebrow">TY MULTIVERSE / PRIVACY</p>
+    <h1>隱私權與 Cookie 說明</h1>
+    <p>本頁說明 TY Multiverse 網站如何使用瀏覽器儲存及第三方廣告服務。你可以使用導覽列鈴鐺旁的齒輪開啟「變更 Cookie 設定」，隨時調整選擇。</p>
+
+    <h2>必要儲存</h2>
+    <p>必要 Cookie 與瀏覽器儲存用於登入狀態、網站安全、介面偏好及記錄 Cookie 選擇。必要項目維持網站功能，無法在偏好面板中關閉。</p>
+
+    <h2>廣告 Cookie 與第三方服務</h2>
+    <p>網站目前使用 Adsterra 與 Monetag 廣告程式，在首頁、關於、學習及部落格頁面顯示版位。廣告偏好預設開啟；你可以在 Cookie 設定中關閉。關閉後網站會停止載入新的廣告程式，並移除本網站版位中的廣告框架；已經載入的第三方素材可能需要重新整理頁面才完全消失。第三方已經寫入瀏覽器的 Cookie，可能仍需透過瀏覽器設定清除。</p>
+    <p>廣告程式由服務供應商載入，其 Cookie 與資料處理依各供應商政策辦理。請參閱 <a href="https://adsterra.com/privacy-policy-managed/" target="_blank" rel="noopener noreferrer">Adsterra 隱私權政策</a>及 <a href="https://monetag.com/privacy/" target="_blank" rel="noopener noreferrer">Monetag 隱私權政策</a>。</p>
+
+    <h2>統計 Cookie</h2>
+    <p>本網站目前沒有載入第三方分析 Cookie。統計偏好選項保留於設定面板，若日後加入分析工具，會在更新本說明後再載入。</p>
+
+    <h2>偏好保存</h2>
+    <p>你的 Cookie 選擇會以版本化設定儲存在目前瀏覽器。清除網站資料或更換瀏覽器後，網站會重新顯示提示並套用預設值。</p>
+
+    <h2>English summary</h2>
+    <p>Necessary storage supports sign-in, security and site preferences. Adsterra and Monetag tags are used for ads and are enabled by default; you can turn them off in Cookie settings from the gear beside the notification bell. Disabling ads stops new ad tags and removes frames inside the site’s ad slots; already-rendered third-party creatives may need a page refresh to disappear. Third-party cookies already stored may need to be cleared in your browser. No third-party analytics tool is currently loaded.</p>
+  </article>
+</BaseLayout>
+<style>
+  .privacy-page { max-width: 56rem; padding-block: 3rem 6rem; color: var(--gray-100); line-height: 1.75; }
+  .privacy-page h1 { margin: .4rem 0 1.5rem; }
+  .privacy-page h2 { margin: 2rem 0 .5rem; font-size: 1.25rem; }
+  .privacy-page a { color: inherit; text-underline-offset: 4px; }
+</style>

@@ -1,6 +1,7 @@
 ---
 import { Icon } from "./Icon";
 import NotificationCenter from "./NotificationCenter.astro";
+import CookieConsent from "./CookieConsent.astro";
 import { ThemeToggle } from "./ThemeToggle";
 import type { iconPaths } from "./IconPaths";
 import { socialLinks } from '../scripts/socialLinks';
@@ -192,6 +193,7 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
           <span class="lang-toggle-option" data-lang-option="en" aria-hidden="true">EN</span>
         </button>
         <NotificationCenter />
+        <CookieConsent />
         <div class="nav-auth" data-auth-logged-in={isLoggedIn ? "true" : "false"}>
           <a class="link nav-auth-trigger" data-auth-link href={isLoggedIn ? "#" : `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} data-i18n={isLoggedIn ? "nav.logout" : "nav.login"}>{isLoggedIn ? "Logout" : "Login"}</a>
           <div class="nav-auth-popover">

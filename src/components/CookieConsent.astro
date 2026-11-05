@@ -1,0 +1,37 @@
+---
+import cookieConsentCssUrl from '../styles/cookieConsent.css?url';
+---
+<link rel="stylesheet" href={cookieConsentCssUrl} />
+<div class="cookie-consent" data-cookie-consent>
+  <button type="button" class="cookie-gear" data-cookie-gear aria-label="Cookie 設定" aria-expanded="false" aria-controls="cookie-settings-menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-.9l-1.6.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.6.7a8 8 0 0 1 1.7-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1-.1 1.8Z" transform="translate(-1 -1)"/></svg>
+  </button>
+  <section class="cookie-settings-menu" id="cookie-settings-menu" data-cookie-menu hidden aria-label="Cookie 設定選單">
+    <button type="button" data-cookie-open-preferences><span data-cookie-copy="change">變更 Cookie 設定</span></button>
+    <a href="/privacy/"><span data-cookie-copy="privacy">隱私權說明</span></a>
+  </section>
+  <aside class="cookie-notice" data-cookie-banner hidden aria-label="Cookie 提示">
+    <p data-cookie-copy="banner">網站使用必要 Cookie 與廣告 Cookie。你可以開啟設定查看、變更或關閉非必要 Cookie。</p>
+    <div class="cookie-notice-actions">
+      <button type="button" class="cookie-secondary" data-cookie-reject><span data-cookie-copy="reject">僅必要 Cookie</span></button>
+      <button type="button" class="cookie-secondary" data-cookie-open-preferences><span data-cookie-copy="customize">設定</span></button>
+      <button type="button" class="cookie-primary" data-cookie-accept><span data-cookie-copy="accept">知道了</span></button>
+    </div>
+  </aside>
+  <dialog class="cookie-dialog" data-cookie-dialog aria-labelledby="cookie-dialog-title">
+    <header><h2 id="cookie-dialog-title" data-cookie-copy="title">Cookie 與隱私選擇</h2><button type="button" data-cookie-close aria-label="關閉">×</button></header>
+    <p data-cookie-copy="intro">必要 Cookie 用於登入、網站安全與保存你的選擇。廣告 Cookie 預設開啟；你可在這裡關閉。</p>
+    <label class="cookie-choice"><input type="checkbox" checked disabled /><span data-cookie-copy="necessary">必要 Cookie（固定開啟）</span></label>
+    <label class="cookie-choice"><input type="checkbox" data-cookie-analytics /><span data-cookie-copy="analytics">統計 Cookie（目前未使用）</span></label>
+    <label class="cookie-choice"><input type="checkbox" data-cookie-advertising /><span data-cookie-copy="advertising">廣告 Cookie（預設開啟）</span></label>
+    <footer>
+      <a href="/privacy/"><span data-cookie-copy="privacy">隱私權說明</span></a>
+      <button type="button" class="cookie-primary" data-cookie-save><span data-cookie-copy="save">儲存偏好</span></button>
+    </footer>
+  </dialog>
+</div>
+<script>
+  import { mountCookieConsent } from '../scripts/cookies/manager';
+  mountCookieConsent();
+  document.addEventListener('astro:page-load', () => mountCookieConsent());
+</script>

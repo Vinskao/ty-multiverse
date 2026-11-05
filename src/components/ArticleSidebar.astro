@@ -1,6 +1,7 @@
 ---
 // The filterable article list beside an open article. Ids match the index page so ../scripts/work/articleFilter.ts drives both.
 import type { Article } from '../scripts/work/catalog';
+import AdsterraSidebarBanner from './AdsterraSidebarBanner.astro';
 interface Props { projects: Article[]; currentId?: string }
 const { projects, currentId } = Astro.props;
 const categories = [...new Set(projects.map(({ data }) => data.category).filter(Boolean))].sort();
@@ -22,6 +23,7 @@ const catalog = projects.map(({ id, data }) => ({ id, data: { title: data.title,
     </li>)}
   </ol>
   <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>
+  <AdsterraSidebarBanner />
   <script type="application/json" id="article-catalog" set:html={JSON.stringify(catalog).replace(/</g, '\\u003c')} />
 </aside>
 <script>

@@ -4,6 +4,7 @@ import { readBlog } from '../../services/server/blog';
 import { renderArticle } from '../../scripts/work/markdown';
 import ArticleSidebar from '../../components/ArticleSidebar.astro';
 import { sortArticles } from '../../scripts/work/catalog';
+import HomeAdPlacements from '../../components/HomeAdPlacements.astro';
 const slug = Astro.params.slug || '';
 let article;
 let status = 200;
@@ -26,5 +27,6 @@ const html = article ? renderArticle(article.content) : '';
       <article class="knowledge-prose" set:html={html} />
     </> : <h1>{status === 404 ? '找不到文章' : '文章服務暫時無法使用，請稍後再試。'}</h1>}
     </div>
+    <HomeAdPlacements />
   </div>
 </BaseLayout>

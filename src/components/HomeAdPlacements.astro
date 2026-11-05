@@ -3,27 +3,32 @@
 	<div class="home-advertising-grid">
 		<article class="home-advertising-slot" aria-label="Adsterra 300 by 250 display ad">
 			<h3>Adsterra · 300 × 250</h3>
-			<div id="adsterra-300x250" class="home-advertising-display">
-				<script is:inline>
-					atOptions = {
-						key: '2143d97a1a273993069cffe00f798381',
-						format: 'iframe',
-						height: 250,
-						width: 300,
-						params: {},
-					};
-				</script>
-				<script is:inline src="https://bauval.org/22/2143d97a1a273993069cffe00f798381"></script>
-			</div>
+			<div id="adsterra-300x250" class="home-advertising-display" data-adsterra="300x250"></div>
+		</article>
+		<article class="home-advertising-slot home-advertising-responsive-slot" aria-label="Adsterra responsive banner">
+			<h3>Adsterra · Responsive Banner</h3>
+			<div id="adsterra-responsive-banner" class="home-advertising-responsive" data-adsterra="responsive"></div>
 		</article>
 		<article class="home-advertising-slot" aria-label="Adsterra native banner">
 			<h3>Adsterra · Native Banner</h3>
-			<script is:inline async data-cfasync="false" src="https://bauval.org/21/06e9cf3d5469a7e1c33e98da08c56876"></script>
+			<div data-adsterra="native">
 			<div id="container-06e9cf3d5469a7e1c33e98da08c56876"></div>
+			</div>
 		</article>
 		<article class="home-advertising-slot" aria-label="Monetag In-Page Push banner">
 			<h3>Monetag · In-Page Push</h3>
-			<script is:inline>(function(s){s.dataset.zone='12196776',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+			<div id="monetag-ipp" data-monetag-zone="12196776"></div>
 		</article>
 	</div>
 </section>
+<script>
+	import { mountPublisherAds } from '../scripts/ads/consentAds';
+	import { COOKIE_CONSENT_STORAGE_KEY, hasAdvertisingConsent } from '../scripts/cookies/consent';
+	const syncPublisherAds = () => mountPublisherAds(document, hasAdvertisingConsent(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)));
+	document.addEventListener('astro:page-load', syncPublisherAds);
+	window.addEventListener('cookie-consent:changed', (event) => {
+		const allowed = (event as CustomEvent<{ advertising?: boolean }>).detail?.advertising === true;
+		void mountPublisherAds(document, allowed);
+	});
+	syncPublisherAds();
+</script>
