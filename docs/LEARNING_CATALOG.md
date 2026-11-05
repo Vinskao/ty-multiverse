@@ -63,6 +63,8 @@ Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音
 
 ### 主播試音與歷史音檔
 
+2026-11-05 主播排班改由後端設定：Maya 使用 Xiaoqi，Uiobbeci 使用 Xiaoyi；週二和週日為 Duo，先播放 Uiobbeci 市場分析並標記 Maya 待定。音訊清單使用日報原日期而不是合成日期，`duo:uiobbeci:maya-pending` 會顯示 Duo 及待定狀態。Duo 優先使用 `reporterDuoUiobbeci.mp4`，檔案尚未提供時退回既有 `reporterDuo.mp4`；兩人的逐段播放待 Maya 講稿定義後再做。先測 Duo metadata 與原日期，再實作 UI；`node_modules/vitest/vitest.mjs run tests/learn --maxWorkers=1`。正式影片來源為公開路徑，不新增憑證。
+
 2026-11-05：依使用者 Speech Studio「曉伊」截圖將 Uiobbeci 新音色辨識為 `zh-CN-XiaoyiNeural`，仍辨識先前 `Xiaoxiao2` 的歷史音檔。先測明確音色映射和測試音檔重製後的版本篩選，再修改前端；只有 `test:` 音檔依同一 productType 和 code 顯示最新 revision，一般歷史音檔照舊。兩筆試音 revision 2 以正式 Azure 和 FFmpeg 合成並全檔解碼；測試 `node_modules/vitest/vitest.mjs run tests/learn --maxWorkers=1`。部署後須實際聽辨曉伊及確認頁面顯示最新版。
 
 ```mermaid

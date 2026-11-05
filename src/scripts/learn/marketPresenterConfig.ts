@@ -1,5 +1,5 @@
 export type MarketPresenter = {
-  id: 'maya' | 'uiobbeci';
+  id: 'maya' | 'uiobbeci' | 'duo';
   displayName: string;
   videoFile: string;
   voice: string;
@@ -8,12 +8,14 @@ export type MarketPresenter = {
 export type MarketPresenterSettings = {
   maya: { id: 'maya'; name: string; videoFile: string; voice: string };
   uiobbeci: { id: 'uiobbeci'; name: string; videoFile: string; voice: string };
+  duo?: { id: 'duo'; name: string; videoFile: string; speaker: 'uiobbeci'; mayaStatus: string };
   weeklyPresenterIds: string[];
 };
 
-export const MARKET_PRESENTER_CONFIG: Record<'maya' | 'uiobbeci', MarketPresenter> = {
+export const MARKET_PRESENTER_CONFIG: Record<'maya' | 'uiobbeci' | 'duo', MarketPresenter> = {
   maya: { id: 'maya', displayName: 'Maya', videoFile: '', voice: '' },
   uiobbeci: { id: 'uiobbeci', displayName: 'Uiobbeci', videoFile: '', voice: '' },
+  duo: { id: 'duo', displayName: 'Maya & Uiobbeci', videoFile: '', voice: '' },
 };
 export const WEEKLY_PRESENTER_IDS: string[] = [];
 
@@ -23,6 +25,7 @@ export function applyMarketPresenterSettings(settings?: MarketPresenterSettings)
   for (const id of ['maya', 'uiobbeci'] as const) {
     Object.assign(MARKET_PRESENTER_CONFIG[id], { displayName: settings[id].name, videoFile: settings[id].videoFile, voice: settings[id].voice });
   }
+  if (settings.duo) Object.assign(MARKET_PRESENTER_CONFIG.duo, { displayName: settings.duo.name, videoFile: settings.duo.videoFile, voice: settings.uiobbeci.voice });
   WEEKLY_PRESENTER_IDS.splice(0, WEEKLY_PRESENTER_IDS.length, ...settings.weeklyPresenterIds);
 }
 

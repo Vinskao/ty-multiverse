@@ -9,7 +9,7 @@ describe('presenter schedule', () => {
   });
   it('keeps each presenter on their own clips', () => {
     expect(marketClipUrl(1, 'uiobbeci')).toContain('reporterUiobbeci.mp4');
-    expect(marketClipUrl(1, 'duo')).toContain('reporterDuo.mp4');
+    expect(marketClipUrl(1, 'duo')).toContain('reporterDuoUiobbeci.mp4');
     expect(marketClipUrl(2, 'maya')).toContain('reporter3.mp4');
   });
   it('uses the recorded voice to identify old and new audio regardless of upload day', () => {
@@ -19,5 +19,6 @@ describe('presenter schedule', () => {
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'duo:maya+uiobbeci')).toBe('duo');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'test:uiobbeci')).toBe('uiobbeci');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'test:duo')).toBe('duo');
+    expect(presenterForAudio('2026-11-04T04:00:00Z', 'duo:uiobbeci:maya-pending')).toBe('duo');
   });
 });

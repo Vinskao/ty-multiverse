@@ -131,13 +131,13 @@ import { learnCatalog } from "../scripts/learn/catalog";
 </BaseLayout>
 
 <script>
-  import { marketAudioDateTime, latestTestAudioRevisions } from '../scripts/learn/marketAudioPresentation';
+  import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions } from '../scripts/learn/marketAudioPresentation';
   import { presenterForAudio } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
   import { applyMarketPresenterSettings } from '../scripts/learn/marketPresenterConfig';
   import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
   import { GATEWAY_API_BASE } from '../common/constants/api';
-  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; voice?: string; presenterName?: string };
+  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; day?: string; voice?: string; presenterName?: string };
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
   let presenterAccessVersion = 0;
   async function updatePresenterAccess() {
@@ -161,7 +161,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
     if (catalogTitle) catalogTitle.textContent = zh ? '市場快報｜主播精讀' : 'Market Briefing | Daily Reading';
     if (catalogType) catalogType.textContent = zh ? '完整語音' : 'Full audio';
     document.querySelectorAll<HTMLElement>('.market-audio-date').forEach(node => {
-      const value = marketAudioDateTime(node.dataset.createdAt, language());
+      const value = marketAudioDay(node.dataset.day, language()) ?? marketAudioDateTime(node.dataset.createdAt, language());
       node.textContent = value ?? '';
       node.hidden = !value;
     });
@@ -170,6 +170,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
       node.textContent = type === 'daily'
         ? `${node.dataset.presenterName || 'Maya'} ${node.dataset.test === 'true' ? (zh ? '試音' : 'Voice Test') : (zh ? '每日精讀' : 'Daily Reading')}`
         : type === 'macro' ? (zh ? '總經' : 'Macro') : (zh ? '個股' : 'Stock');
+      if (node.dataset.mayaPending === 'true') node.textContent += zh ? '（Uiobbeci 市場分析，Maya 待定）' : ' (Uiobbeci market analysis; Maya pending)';
     });
   }
   window.AppLang?.onChange?.(localizeMarketAudio);
@@ -191,6 +192,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         title.className = 'market-audio-card-title';
         title.dataset.productType = item.productType;
         title.dataset.test = String(item.voice?.startsWith('test:') || false);
+        title.dataset.mayaPending = String(item.voice === 'duo:uiobbeci:maya-pending');
         const presenter = presenterForAudio(item.createdAt, item.voice);
         title.dataset.presenterName = item.productType === 'daily'
           ? ({ maya: 'Maya', uiobbeci: 'Uiobbeci', duo: 'Maya & Uiobbeci' }[presenter])
@@ -198,7 +200,8 @@ import { learnCatalog } from "../scripts/learn/catalog";
         const date = document.createElement('p');
         date.className = 'market-audio-date';
         date.dataset.createdAt = item.createdAt ?? '';
-        const createdAt = marketAudioDateTime(item.createdAt, language());
+        date.dataset.day = item.day ?? '';
+        const createdAt = marketAudioDay(item.day, language()) ?? marketAudioDateTime(item.createdAt, language());
         date.textContent = createdAt ?? '';
         date.hidden = !createdAt;
         const details = document.createElement('div');
@@ -224,6 +227,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
           unavailable.textContent = `${title.dataset.presenterName} video unavailable`;
           video.addEventListener('error', () => { unavailable.hidden = false; });
           video.addEventListener('playing', () => { unavailable.hidden = true; });
+          video.addEventListener('loadedmetadata', () => { unavailable.hidden = true; });
           frame.append(unavailable);
         }
         const player = document.createElement('audio'); player.controls = true; player.preload = 'none';

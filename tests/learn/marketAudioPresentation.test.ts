@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { marketAudioDateTime, latestTestAudioRevisions } from '../../src/scripts/learn/marketAudioPresentation';
+import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions } from '../../src/scripts/learn/marketAudioPresentation';
 
 describe('market audio presentation', () => {
+  it('shows the original report date without inventing a creation time', () => {
+    expect(marketAudioDay('2026-11-03', 'zh')).toBe('2026年11月3日（台北時間）');
+  });
   it('shows the newest revision of each test recording and keeps all ordinary recordings', () => {
     const recordings = [
       { productType: 'daily', code: 'demo', revision: 2, voice: 'test:duo' },

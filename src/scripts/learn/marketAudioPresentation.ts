@@ -1,5 +1,19 @@
 type AudioRevision = { productType: string; code: string; revision: number; voice?: string };
 
+export function marketAudioDay(day: string | undefined, language: 'zh' | 'en'): string | null {
+  if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const date = new Date(`${day}T00:00:00+08:00`);
+  if (!Number.isFinite(date.getTime())) return null;
+  const formatter = new Intl.DateTimeFormat(language === 'zh' ? 'zh-TW' : 'en-US', {
+    timeZone: 'Asia/Taipei', year: 'numeric', month: language === 'zh' ? 'numeric' : 'short', day: 'numeric',
+  });
+  if (language === 'zh') {
+    const parts = Object.fromEntries(formatter.formatToParts(date).map(part => [part.type, part.value]));
+    return `${parts.year}年${parts.month}月${parts.day}日（台北時間）`;
+  }
+  return `${formatter.format(date)} (Taipei time)`;
+}
+
 /** Only collapse versions of explicitly marked demo recordings. */
 export function latestTestAudioRevisions<T extends AudioRevision>(items: T[]): T[] {
   const latest = new Map<string, number>();

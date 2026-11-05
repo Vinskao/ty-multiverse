@@ -11,7 +11,7 @@ export function marketClipOrder(sequenceIndex: number): number {
 
 /** Numbered clips belong to the same presenter; clip 1 has no numeric suffix. */
 export function marketClipUrl(sequenceIndex: number, presenter: PresenterId = 'maya'): string {
-  if (presenter !== 'maya') return `https://tymultiverse.cc/images/people/reporter${presenter === 'duo' ? 'Duo' : 'Uiobbeci'}.mp4`;
+  if (presenter !== 'maya') return `https://tymultiverse.cc/images/people/reporter${presenter === 'duo' ? 'DuoUiobbeci' : 'Uiobbeci'}.mp4`;
   const clip = marketClipOrder(sequenceIndex) + 1;
   return `https://tymultiverse.cc/images/people/reporter${clip === 1 ? '' : clip}.mp4`;
 }
@@ -69,6 +69,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   players.forEach((player, index) => {
     player.addEventListener('error', () => {
       if (presenter === 'maya' && player.src !== getClipUrl(0)) { player.src = getClipUrl(0); player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
+      if (presenter === 'duo' && player.src !== 'https://tymultiverse.cc/images/people/reporterDuo.mp4') { player.src = 'https://tymultiverse.cc/images/people/reporterDuo.mp4'; player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
     });
     player.loop = false;
     player.addEventListener('ended', () => {
