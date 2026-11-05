@@ -398,6 +398,8 @@ nav {
     margin-bottom: 0;
     padding: 0;
     overflow: visible;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .menu-header {
@@ -432,18 +434,30 @@ nav {
   }
 
   .menu-content {
-    top: 100%;
-    max-height: calc(100dvh - 3.5rem);
-    overflow-y: auto;
+    position: fixed;
+    z-index: 1;
+    top: 3.5rem;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: none;
+    overflow: hidden;
     overscroll-behavior: contain;
-    background-color: color-mix(in srgb, var(--gray-999) 98%, transparent);
+    background-color: var(--gray-999);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
   }
 
+  .menu-content[hidden] { display: none; }
+
   .nav-items {
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: visible;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     white-space: normal;
     padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) 0.5rem max(0.75rem, env(safe-area-inset-left));
     gap: 0.125rem;
@@ -467,6 +481,7 @@ nav {
   }
 
   .menu-footer {
+    flex: 0 0 auto;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
