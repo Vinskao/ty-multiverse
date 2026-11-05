@@ -90,7 +90,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
     player.addEventListener('playing', () => {
       if (index === active || !audioPlaying || audio.paused || audio.ended) return;
       const previous = players[active];
-      player.style.position = 'relative';
+      player.style.position = 'absolute';
       player.style.visibility = 'visible';
       previous.style.position = 'absolute';
       previous.style.inset = '0';
