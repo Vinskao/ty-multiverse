@@ -3,6 +3,11 @@ import { bindMarketAudioPlayback, marketClipUrl } from '../../src/scripts/learn/
 import { readFileSync } from 'node:fs';
 
 describe('presenter regression', () => {
+  it('does not show a second presenter poster behind a contained video', () => {
+    const css = readFileSync('src/styles/learn.css', 'utf8');
+    const frame = css.match(/\.presenter-frame\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(frame).not.toContain('url(');
+  });
   it('selects the numbered clips in the requested order even without server settings', () => {
     expect(Array.from({ length: 9 }, (_, i) => marketClipUrl(i))).toEqual([1,2,3,1,4,5,1,6,7].map(n => `https://tymultiverse.cc/images/people/reporter${n === 1 ? '' : n}.mp4`));
   });
