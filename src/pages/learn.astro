@@ -216,9 +216,6 @@ import { learnCatalog } from "../scripts/learn/catalog";
         frame.className = 'presenter-frame';
         frame.dataset.full = 'false';
         frame.dataset.presenter = presenter;
-        video.addEventListener('loadedmetadata', () => {
-          if (video.videoWidth && video.videoHeight) frame.style.setProperty('--presenter-half-ratio', `${video.videoWidth} / ${video.videoHeight / 2}`);
-        });
         frame.append(video);
         if (presenter !== 'maya') {
           const unavailable = document.createElement('span');

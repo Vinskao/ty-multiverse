@@ -31,6 +31,14 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   video.after(next);
   const players = [video, next];
   let active = 0;
+  const frame = video.closest<HTMLElement>('.presenter-frame');
+  if (frame) frame.dataset.metadataReady = 'false';
+  function updateFrameDimensions(player: HTMLVideoElement) {
+    if (!frame) return;
+    const ready = player.videoWidth > 0 && player.videoHeight > 0;
+    frame.dataset.metadataReady = String(ready);
+    if (ready) frame.style.setProperty('--presenter-half-ratio', `${player.videoWidth} / ${player.videoHeight / 2}`);
+  }
   let audioPlaying = false;
   let reversing = false;
   let switching = false;
@@ -67,6 +75,8 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   video.src = getClipUrl(sequenceIndex);
   next.src = getClipUrl(sequenceIndex + 1);
   players.forEach((player, index) => {
+    player.addEventListener('loadedmetadata', () => { if (index === active) updateFrameDimensions(player); });
+    player.addEventListener('emptied', () => { if (index === active && frame) frame.dataset.metadataReady = 'false'; });
     player.addEventListener('error', () => {
       if (presenter === 'maya' && player.src !== getClipUrl(0)) { player.src = getClipUrl(0); player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
       if (presenter === 'duo' && player.src !== 'https://tymultiverse.cc/images/people/reporterDuo.mp4') { player.src = 'https://tymultiverse.cc/images/people/reporterDuo.mp4'; player.load(); if (audioPlaying && (index === active || switching)) void player.play().catch(() => {}); }
@@ -87,6 +97,7 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
       previous.style.inset = '0';
       previous.style.visibility = 'hidden';
       active = index;
+      updateFrameDimensions(player);
       switching = false;
       previous.currentTime = 0;
       previous.src = getClipUrl(sequenceIndex + 1);

@@ -43,6 +43,8 @@
 .presenter-frame[data-presenter="duo"], .presenter-frame[data-presenter="uiobbeci"] { background-image: none; }
 .presenter-frame[data-full="false"] { position: relative; aspect-ratio: var(--presenter-half-ratio, 1 / 1); }
 .presenter-frame[data-full="false"] video { position: absolute !important; top: 0; left: 0; }
+.presenter-frame[data-full="false"][data-metadata-ready="false"] { background-image: none; }
+.presenter-frame[data-full="false"][data-metadata-ready="false"] video { visibility: hidden !important; }
 .market-audio-media video { display: block; width: 100%; height: auto; border-radius: .65rem; background: transparent; }
 .market-audio-card h3 { margin: 0; font-size: 1.05rem; line-height: 1.4; overflow-wrap: anywhere; }
 .market-audio-date { margin: .25rem 0 .75rem; color: var(--gray-500); font-size: .82rem; line-height: 1.5; }
