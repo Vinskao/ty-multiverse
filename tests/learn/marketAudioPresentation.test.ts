@@ -38,4 +38,11 @@ describe('market audio presentation', () => {
     expect(css).toContain('.learn-audio-view .learn-catalog { display: block; }');
     expect(css).not.toContain('.market-audio-view .learn-catalog');
   });
+
+  it('gives every presenter the same video height and scales narrower sources proportionally', () => {
+    const css = readFileSync(resolve(__dirname, '../../src/styles/learn.css'), 'utf8');
+    expect(css).toMatch(/\.presenter-frame\s*\{[^}]*aspect-ratio:\s*16\s*\/\s*9/);
+    expect(css).toMatch(/\.market-audio-media \.presenter-frame video\s*\{[^}]*height:\s*100%[^}]*object-fit:\s*contain/);
+    expect(css).not.toContain('aspect-ratio: var(--presenter-half-ratio');
+  });
 });

@@ -6,12 +6,13 @@ describe('presenter regression', () => {
   it('selects the numbered clips in the requested order even without server settings', () => {
     expect(Array.from({ length: 9 }, (_, i) => marketClipUrl(i))).toEqual([1,2,3,1,4,5,1,6,7].map(n => `https://tymultiverse.cc/images/people/reporter${n === 1 ? '' : n}.mp4`));
   });
-  it('constrains the cropped frame and keeps controls below it', () => {
+  it('uses a shared frame with proportional video fitting and keeps controls below it', () => {
     const css = readFileSync('src/styles/learn.css', 'utf8');
-    expect(css).toMatch(/\.presenter-frame\[data-full="false"\] video\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/\.presenter-frame\s*\{[^}]*aspect-ratio:\s*16\s*\/\s*9/);
+    expect(css).toMatch(/\.market-audio-media \.presenter-frame video\s*\{[^}]*object-fit:\s*contain/);
     expect(css).toMatch(/\.market-audio-card audio\s*\{[^}]*margin-top:/);
   });
-  it('waits for the active clip dimensions and updates cropping on clip changes', () => {
+  it('waits for the active clip metadata and follows the active clip on changes', () => {
     const list = document.createElement('div');
     const frame = document.createElement('div'); frame.className = 'presenter-frame';
     const audio = document.createElement('audio');
@@ -22,17 +23,16 @@ describe('presenter regression', () => {
     expect(frame.dataset.metadataReady).toBe('false');
     video.dispatchEvent(new Event('loadedmetadata'));
     expect(frame.dataset.metadataReady).toBe('true');
-    expect(frame.style.getPropertyValue('--presenter-half-ratio')).toBe('400 / 400');
     const next = frame.querySelectorAll('video')[1];
     Object.defineProperty(next, 'videoWidth', { configurable: true, value: 900 });
     Object.defineProperty(next, 'videoHeight', { configurable: true, value: 600 });
     next.dispatchEvent(new Event('loadedmetadata'));
-    expect(frame.style.getPropertyValue('--presenter-half-ratio')).toBe('400 / 400');
+    expect(frame.style.getPropertyValue('--presenter-half-ratio')).toBe('');
     const play = vi.spyOn(video, 'play').mockResolvedValue();
     const paused = vi.spyOn(audio, 'paused', 'get').mockReturnValue(false);
     audio.dispatchEvent(new Event('playing'));
     next.dispatchEvent(new Event('playing'));
-    expect(frame.style.getPropertyValue('--presenter-half-ratio')).toBe('900 / 300');
+    expect(frame.style.getPropertyValue('--presenter-half-ratio')).toBe('');
     play.mockRestore(); paused.mockRestore();
   });
   it('hides video and poster before dimensions are known for restricted viewers', () => {

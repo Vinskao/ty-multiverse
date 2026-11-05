@@ -37,7 +37,6 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
     if (!frame) return;
     const ready = player.videoWidth > 0 && player.videoHeight > 0;
     frame.dataset.metadataReady = String(ready);
-    if (ready) frame.style.setProperty('--presenter-half-ratio', `${player.videoWidth} / ${player.videoHeight / 2}`);
   }
   let audioPlaying = false;
   let reversing = false;
