@@ -2255,6 +2255,44 @@
 .home-page .hero-copy > p:first-child { margin: 0 0 .75rem; }
 .home-page .hero-copy > p:last-child { margin: 0; }
 
+.home-advertising {
+	margin: 1.5rem auto;
+	padding: 1rem;
+	max-width: 76rem;
+	border: 1px solid var(--gray-800, #303030);
+	border-radius: 0.75rem;
+	background: var(--gray-999, #111);
+}
+.home-advertising > h2 {
+	margin: 0 0 0.75rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.home-advertising-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+	align-items: start;
+	gap: 1rem;
+}
+.home-advertising-slot {
+	min-width: 0;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	background: var(--gray-1000, #080808);
+}
+.home-advertising-slot h3 {
+	margin: 0 0 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 500;
+}
+.home-advertising-display {
+	min-height: 250px;
+	max-width: 100%;
+	overflow: hidden;
+}
+
 .learn-topic-link { width:100%; text-align:left; margin-block:.35rem; }
 .learn-topic-link[aria-current="page"] { border-color:var(--gray-500); background:var(--gray-800); color:var(--gray-100); }
 .learn-audio-view > .learn-catalog { margin-top:1.5rem; }

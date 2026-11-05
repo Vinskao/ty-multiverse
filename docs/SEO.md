@@ -24,24 +24,39 @@ flowchart TD
   Metadata --> Indexable{允許索引？}
   Indexable -->|是| Search[索引候選頁]
   Indexable -->|否| Excluded[不收錄 canonical 與 sitemap]
+  subgraph Advertising[首頁測試廣告版位]
+    Adsterra[Adsterra 已核准代碼]
+    Slots[首頁標示廣告版位]
+    Display[300×250 iframe]
+    Native[Native Banner]
+    Monetag[Monetag 網站驗證]
+    Adsterra --> Slots
+    Slots --> Display
+    Slots --> Native
+    Monetag -->|驗證通過後再建立代碼| Slots
+  end
 ```
+
+Monetag 網站驗證依序為「待驗證 → 驗證中 → 已驗證／未通過」。Adsterra 目前只使用平台已建立並核准的 300×250 與 Native Banner 代碼；不在未核准時假設 Monetag 廣告代碼已可用。
 
 ## 開發方法
 
 1. 先盤點 Astro 輸出模式、共用 head、公開與登入後路由，以及既有 SEO 測試。本站使用 Node adapter 與 SSR；官方 sitemap integration 不會列出 SSR 動態路由，因此 sitemap 改由明確的 endpoint 產生。
 2. 先新增 `tests/seo/technicalSeo.test.ts`，確認正式 canonical、query 清除、noindex、XML escape/去重、SSR 文章收錄與分享 metadata；先執行測試並確認在缺少 helper 時失敗，再實作。
-3. SEO 主機名只從程式碼中的正式網域常數取得，不讀取任意 Host header，也不需要憑證或其他 secret。公開文章清單失敗時保留固定 sitemap 頁面。
-4. 部署前跑 SEO 測試與全套 Vitest；上線後先確認 `/robots.txt`、`/sitemap.xml`、首頁 head、公開文章與一個 noindex 頁，再用 Search Console URL Inspection 及 sitemap 提交確認 Google 實際抓取結果。搜尋引擎重抓與排名需要時間，不以 metadata 存在作為索引成功的證據。
-5. 下次增加 SSR 公開路由時，先決定它是否可被索引；可索引頁需有可讀的伺服器輸出、描述與 canonical，並同步納入 sitemap；登入／管理頁則設 `indexable={false}`。
+3. 首頁廣告版位先新增 `tests/home/adPlacements.test.ts`，確認平台識別碼、標示、容器與實際首頁掛載，再建立 `HomeAdPlacements.astro`。只將已核准的 Adsterra 代碼載入首頁，不把第三方廣告腳本放進共用 head；尚未驗證的 Monetag 網站在取得平台代碼前不載入廣告。
+4. SEO 主機名只從程式碼中的正式網域常數取得，不讀取任意 Host header，也不需要憑證或其他 secret。公開文章清單失敗時保留固定 sitemap 頁面。
+5. 部署前跑 SEO、首頁廣告與語系測試及全套 Vitest；上線後先確認 `/robots.txt`、`/sitemap.xml`、首頁 head、公開文章與一個 noindex 頁，再用 Search Console URL Inspection 及 sitemap 提交確認 Google 實際抓取結果。搜尋引擎重抓與排名需要時間，不以 metadata 存在作為索引成功的證據。
+6. Monetag 驗證需等正式站公開正確的 meta 標籤，再在平台按 Verify；驗證通過後建立廣告代碼，於首頁加入第二步整合並人工確認版位。廣告版位不代表 Search Console 驗證成功。
+7. 下次增加 SSR 公開路由時，先決定它是否可被索引；可索引頁需有可讀的伺服器輸出、描述與 canonical，並同步納入 sitemap；登入／管理頁則設 `indexable={false}`。
 
 ## 驗證
 
-- 測試：`tests/seo/technicalSeo.test.ts`、`tests/seo/sitemap.test.ts`、`tests/seo/homeSeo.test.ts`、`tests/seo/homeLayout.test.ts`、`tests/lang/literalCoverage.test.ts`。
+- 測試：`tests/seo/technicalSeo.test.ts`、`tests/seo/sitemap.test.ts`、`tests/seo/homeSeo.test.ts`、`tests/seo/homeLayout.test.ts`、`tests/home/adPlacements.test.ts`、`tests/lang/literalCoverage.test.ts`。
 - 命令（Windows，從前端專案目錄）：
 
   ```powershell
   $node = Get-ChildItem "$env:LOCALAPPDATA\OpenAI\Codex\bin\*\node.exe" | Select-Object -First 1 -ExpandProperty FullName
-  & $node node_modules\vitest\vitest.mjs run tests/seo tests/lang/literalCoverage.test.ts
+  & $node node_modules\vitest\vitest.mjs run tests/seo tests/home/adPlacements.test.ts tests/lang/literalCoverage.test.ts
   ```
 
 - 目前尚未由 Search Console 驗證索引狀態，也未取得真實使用者 Core Web Vitals 報告；發布 sitemap 只會提供抓取線索，不保證收錄或排名。

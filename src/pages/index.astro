@@ -20,6 +20,7 @@ import { mailtoHref } from '../scripts/contact';
 import indexCssUrl from '../styles/index.css?url';
 import openSourceCssUrl from '../styles/open-source.css?url';
 import MarketBrief from '../components/MarketBrief.astro';
+import HomeAdPlacements from '../components/HomeAdPlacements.astro';
 import { getMarketBrief } from '../services/server/marketBrief';
 
 // Server-rendered so AI agents that read raw HTML (no JS) still see the holdings' chip summary.
@@ -126,6 +127,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</aside>
 						</div>
 					</section>
+					<HomeAdPlacements />
 					<section class="market-ai-panel" aria-labelledby="home-daily-maya-title">
 						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">Maya 主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
 						<div id="home-daily-maya" aria-live="polite"><p class="market-updated">載入最新已審核精讀…</p></div>
