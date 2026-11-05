@@ -18,4 +18,10 @@ describe('site cookie settings entry points', () => {
     expect(consent).toContain('href="/privacy/"');
     expect(read('src/pages/privacy.astro')).toContain('Monetag 隱私權政策');
   });
+
+  it('keeps the fixed cookie notice anchored to the viewport on desktop', () => {
+    const navCss = read('src/styles/nav.css');
+    const navRule = navCss.match(/nav\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(navRule).not.toMatch(/backdrop-filter:\s*blur/);
+  });
 });
