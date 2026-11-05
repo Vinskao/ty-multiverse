@@ -3,6 +3,7 @@ import { visibleNavItems } from './navigation/menu';
 import { updateAuthNavLabel } from './navigation/authNavLanguage';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
+import { clearStoragePreservingConsent } from './cookies/consent';
 
 // Nav 組件的 JavaScript 邏輯
 export class NavController {
@@ -218,7 +219,7 @@ export class NavController {
 
       // 清除所有 localStorage（除了主題）
       const currentTheme = localStorage.getItem('theme');
-      localStorage.clear();
+      clearStoragePreservingConsent(localStorage);
       if (currentTheme) {
         localStorage.setItem('theme', currentTheme);
       }
@@ -263,7 +264,7 @@ export class NavController {
       // 即使出錯，也盡可能清除數據
       try {
         const currentTheme = localStorage.getItem('theme');
-        localStorage.clear();
+        clearStoragePreservingConsent(localStorage);
         if (currentTheme) {
           localStorage.setItem('theme', currentTheme);
         }

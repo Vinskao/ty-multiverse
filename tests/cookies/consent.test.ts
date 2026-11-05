@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { hasAdvertisingConsent, readCookieConsent, saveCookieConsent, type CookieConsent } from '../../src/scripts/cookies/consent';
+import { COOKIE_CONSENT_STORAGE_KEY, clearStoragePreservingConsent, hasAdvertisingConsent, readCookieConsent, saveCookieConsent, type CookieConsent } from '../../src/scripts/cookies/consent';
 
 describe('cookie consent preferences', () => {
+  it('preserves the visitor choice when application storage is cleared', () => {
+    const store = new Map<string, string>([[COOKIE_CONSENT_STORAGE_KEY, saveCookieConsent({ analytics: false, advertising: false })], ['token', 'private-token']]);
+    const storage = { getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => { store.set(key, value); }, clear: () => store.clear() };
+    clearStoragePreservingConsent(storage);
+    expect(readCookieConsent(store.get(COOKIE_CONSENT_STORAGE_KEY) ?? null)?.advertising).toBe(false);
+    expect(store.has('token')).toBe(false);
+  });
   it('keeps advertising on until a visitor saves an off preference', () => {
     expect(readCookieConsent(null)).toBeNull();
     expect(hasAdvertisingConsent(null)).toBe(true);

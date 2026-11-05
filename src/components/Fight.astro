@@ -156,6 +156,7 @@
 </div>
 
 <script>
+  import { clearStoragePreservingConsent } from '../scripts/cookies/consent';
 import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
   // 定義類型
@@ -491,7 +492,7 @@ import { applyWeaponDamage, calculateWeaponDamage } from "../scripts/weapon";
 
     // 如果是選擇第一個角色，清空所有 localStorage 數據
     if (!fighters.left.main.image && !fighters.right.main.image) {
-      localStorage.clear();
+      clearStoragePreservingConsent(localStorage);
       console.log('Cleared all localStorage data before selecting first character');
     }
 

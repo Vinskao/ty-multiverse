@@ -10,6 +10,12 @@ export interface CookieConsent {
 
 export type CookieConsentChoice = Pick<CookieConsent, 'analytics' | 'advertising'>;
 
+export function clearStoragePreservingConsent(storage: Pick<Storage, 'getItem' | 'setItem' | 'clear'>): void {
+  const consent = storage.getItem(COOKIE_CONSENT_STORAGE_KEY);
+  storage.clear();
+  if (consent !== null) storage.setItem(COOKIE_CONSENT_STORAGE_KEY, consent);
+}
+
 export function readCookieConsent(raw: string | null): CookieConsent | null {
   if (!raw) return null;
   try {

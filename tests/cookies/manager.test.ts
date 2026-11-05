@@ -41,4 +41,24 @@ describe('cookie consent controls', () => {
     expect(changed).toHaveBeenCalledOnce();
     expect(document.querySelector('[data-cookie-banner]')?.hidden).toBe(true);
   });
+
+  it('does not show the notice again when an unsigned-in visitor returns', () => {
+    const markup = document.body.innerHTML;
+    mountCookieConsent();
+    document.querySelector<HTMLButtonElement>('[data-cookie-reject]')!.click();
+    document.body.innerHTML = markup;
+    mountCookieConsent();
+    expect(document.querySelector<HTMLElement>('[data-cookie-banner]')!.hidden).toBe(true);
+    expect(JSON.parse(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)!).advertising).toBe(false);
+  });
+
+  it('remembers the acknowledged notice on a subsequent visit', () => {
+    const markup = document.body.innerHTML;
+    mountCookieConsent();
+    document.querySelector<HTMLButtonElement>('[data-cookie-accept]')!.click();
+    document.body.innerHTML = markup;
+    mountCookieConsent();
+    expect(document.querySelector<HTMLElement>('[data-cookie-banner]')!.hidden).toBe(true);
+    expect(JSON.parse(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)!).advertising).toBe(true);
+  });
 });

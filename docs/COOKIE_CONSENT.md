@@ -16,6 +16,8 @@ flowchart TD
   Menu -->|Privacy notice| Privacy[Privacy page]
   Dialog -->|Save with advertising on| SaveOn
   Dialog -->|Save with advertising off| SaveOff
+  Logout[Log out or reset fight data] --> Preserve[Preserve saved browser preference]
+  Preserve --> Read
   SaveOn --> Ads
   SaveOff --> Remove[Stop pending requests and remove ad scripts/frames]
   Ads -->|Learn In-Page Push injected| Position[Move high-layer Monetag frame to bottom safe area]
@@ -43,6 +45,7 @@ Necessary storage is always on. The optional analytics choice is stored but no t
 4. Turning advertising off invalidates in-flight loader generations, removes provider scripts and frames, and clears the loaded state. Re-enabling it lets the normal page-load hook mount the tags again.
 5. Monetag's Learn In-Page Push injects a top-level, high-z-index fixed iframe after its tag loads. `src/scripts/ads/monetagPosition.ts` recognizes that frame by its observed dimensions and inline position, then uses important inline offsets plus a MutationObserver to keep it 112px above the viewport bottom (including the device safe area). This leaves the bottom theme and AI controls clear while keeping the navigation clear. Other iframes are not modified.
 6. No credentials or secrets are needed. Rollout is a frontend build and site deploy; after release, verify ads appear by default, the Learn push sits above bottom controls, and unrelated frames are unchanged. Choose necessary-only and confirm provider tags/frames disappear. Re-open settings from the bell-side gear to confirm preferences persist.
+7. A returning visitor does not need an account: saved choices remain in the browser. Tests first covered returning visits and cleanup; logout (including failure recovery) and the fight reset preserve the consent record while clearing the other data. Clearing browser site data or using another browser starts a new choice.
 
 ## Tests and checks
 

@@ -2,6 +2,7 @@ import { storageService } from '../core/storageService';
 import { config } from '../core/config';
 import { serviceAvailabilityManager } from '../core/serviceAvailabilityManager';
 import { SERVICE_KEYS } from '../../common/constants/serviceKeys';
+import { COOKIE_CONSENT_STORAGE_KEY, clearStoragePreservingConsent } from '../../scripts/cookies/consent';
 
 // 為了兼容性，添加環境變量訪問
 const TYMB_URL = import.meta.env.PUBLIC_TYMB_URL;
@@ -420,7 +421,7 @@ export class AuthService {
 
       // Step 2: 清除本地存儲（除了主題）
       Object.keys(localStorage).forEach(key => {
-        if (key !== 'theme') {
+        if (key !== 'theme' && key !== COOKIE_CONSENT_STORAGE_KEY) {
           localStorage.removeItem(key);
         }
       });
@@ -470,7 +471,7 @@ export class AuthService {
       // 即使出錯，也清除本地數據
       try {
         const currentTheme = localStorage.getItem('theme');
-        localStorage.clear();
+        clearStoragePreservingConsent(localStorage);
         if (currentTheme) {
           localStorage.setItem('theme', currentTheme);
         }
