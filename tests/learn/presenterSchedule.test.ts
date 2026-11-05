@@ -15,6 +15,7 @@ describe('presenter schedule', () => {
   it('uses the recorded voice to identify old and new audio regardless of upload day', () => {
     expect(presenterForAudio('2026-11-05T04:00:00Z', 'zh-CN-Xiaoyu:DragonHDFlashLatestNeural')).toBe('maya');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural')).toBe('uiobbeci');
+    expect(presenterForAudio('2026-11-04T04:00:00Z', 'zh-CN-XiaoyiNeural')).toBe('uiobbeci');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'duo:maya+uiobbeci')).toBe('duo');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'test:uiobbeci')).toBe('uiobbeci');
     expect(presenterForAudio('2026-11-04T04:00:00Z', 'test:duo')).toBe('duo');

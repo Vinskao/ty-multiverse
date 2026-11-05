@@ -63,6 +63,8 @@ Maya 音訊卡片右側放置主播影片，各卡片建立獨立影片並由音
 
 ### 主播試音與歷史音檔
 
+2026-11-05：依使用者 Speech Studio「曉伊」截圖將 Uiobbeci 新音色辨識為 `zh-CN-XiaoyiNeural`，仍辨識先前 `Xiaoxiao2` 的歷史音檔。先測明確音色映射和測試音檔重製後的版本篩選，再修改前端；只有 `test:` 音檔依同一 productType 和 code 顯示最新 revision，一般歷史音檔照舊。兩筆試音 revision 2 以正式 Azure 和 FFmpeg 合成並全檔解碼；測試 `node_modules/vitest/vitest.mjs run tests/learn --maxWorkers=1`。部署後須實際聽辨曉伊及確認頁面顯示最新版。
+
 ```mermaid
 flowchart LR
   A[公開音訊清單的 voice] --> B{辨識錄製聲音}

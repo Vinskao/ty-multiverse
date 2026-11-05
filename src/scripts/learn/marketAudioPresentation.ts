@@ -1,3 +1,17 @@
+type AudioRevision = { productType: string; code: string; revision: number; voice?: string };
+
+/** Only collapse versions of explicitly marked demo recordings. */
+export function latestTestAudioRevisions<T extends AudioRevision>(items: T[]): T[] {
+  const latest = new Map<string, number>();
+  for (const item of items) {
+    if (!item.voice?.startsWith('test:')) continue;
+    const key = `${item.productType}\0${item.code}`;
+    latest.set(key, Math.max(latest.get(key) ?? 0, item.revision));
+  }
+  return items.filter(item => !item.voice?.startsWith('test:')
+    || item.revision === latest.get(`${item.productType}\0${item.code}`));
+}
+
 export function marketAudioDateTime(createdAt: string | undefined, language: 'zh' | 'en'): string | null {
   if (!createdAt) return null;
   const date = new Date(createdAt);

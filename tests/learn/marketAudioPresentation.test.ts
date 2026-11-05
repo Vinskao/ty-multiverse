@@ -1,9 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { marketAudioDateTime } from '../../src/scripts/learn/marketAudioPresentation';
+import { marketAudioDateTime, latestTestAudioRevisions } from '../../src/scripts/learn/marketAudioPresentation';
 
 describe('market audio presentation', () => {
+  it('shows the newest revision of each test recording and keeps all ordinary recordings', () => {
+    const recordings = [
+      { productType: 'daily', code: 'demo', revision: 2, voice: 'test:duo' },
+      { productType: 'daily', code: 'ordinary', revision: 2, voice: 'voice' },
+      { productType: 'daily', code: 'demo', revision: 1, voice: 'test:duo' },
+      { productType: 'daily', code: 'ordinary', revision: 1, voice: 'voice' },
+    ];
+    expect(latestTestAudioRevisions(recordings)).toEqual([recordings[0], recordings[1], recordings[3]]);
+  });
   it('formats the audio creation timestamp in Taipei time for Chinese and English', () => {
     const value = '2026-11-04T01:05:00Z';
     expect(marketAudioDateTime(value, 'zh')).toBe('2026年11月4日 09:05（台北時間）');
