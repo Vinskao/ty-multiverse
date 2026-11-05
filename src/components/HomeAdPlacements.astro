@@ -1,16 +1,17 @@
-<section class="home-advertising" aria-labelledby="home-advertising-title">
-	<h2 id="home-advertising-title">Advertisement · 廣告</h2>
+---
+import advertisingCssUrl from '../styles/homeAdvertising.css?url';
+---
+<link rel="stylesheet" href={advertisingCssUrl} />
+<section class="home-advertising" aria-label="廣告">
+	<p class="home-advertising-label">廣告 · Advertisement</p>
 	<div class="home-advertising-grid">
 		<article class="home-advertising-slot" aria-label="Adsterra 300 by 250 display ad">
-			<h3>Adsterra · 300 × 250</h3>
 			<div id="adsterra-300x250" class="home-advertising-display" data-adsterra="300x250"></div>
 		</article>
 		<article class="home-advertising-slot home-advertising-responsive-slot" aria-label="Adsterra responsive banner">
-			<h3>Adsterra · Responsive Banner</h3>
 			<div id="adsterra-responsive-banner" class="home-advertising-responsive" data-adsterra="responsive"></div>
 		</article>
 		<article class="home-advertising-slot" aria-label="Adsterra native banner">
-			<h3>Adsterra · Native Banner</h3>
 			<div data-adsterra="native">
 			<div id="container-06e9cf3d5469a7e1c33e98da08c56876"></div>
 			</div>

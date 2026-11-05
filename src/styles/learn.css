@@ -1,6 +1,6 @@
 /* Two-column shell: topic sidebar + the active phase */
 .learn-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 2rem; max-width: 1240px; margin-inline: auto; padding: 1.5rem 1rem 4rem; align-items: start; }
-.learn-sidebar { position: sticky; top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.learn-sidebar { position: sticky; z-index: 2; top: 4.5rem; display: flex; flex-direction: column; gap: 1.25rem; background: var(--gray-999); }
 .learn-sidebar .learn-subject-menu { position: static; display: grid; grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); align-items: stretch; width: 100%; min-height: 0; padding: 0; margin: 0; gap: .7rem; overflow: visible; border: 0; background: transparent; backdrop-filter: none; }
 .learn-sidebar #learn-topics { position: static; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 0; margin-block: 0; border: 0; background: transparent; backdrop-filter: none; }
 .learn-sidebar [data-submenu][hidden] { display: none; }
