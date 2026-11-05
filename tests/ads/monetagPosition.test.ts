@@ -11,6 +11,8 @@ describe('Monetag floating ad placement', () => {
     expect(frame.style.getPropertyValue('top')).toBe('auto');
     expect(frame.style.getPropertyValue('bottom')).toBe('calc(112px + env(safe-area-inset-bottom))');
     expect(frame.style.getPropertyPriority('bottom')).toBe('important');
+    expect(frame.style.getPropertyValue('width')).toBe('360px');
+    expect(frame.style.getPropertyValue('max-width')).toBe('100vw');
   });
 
   it('leaves regular fixed frames and inline banner frames unchanged', () => {
