@@ -1850,6 +1850,9 @@
 .market-company-events-table th,.market-company-events-table td { padding:.5rem .6rem; border-bottom:1px solid var(--gray-800); text-align:left; }
 .market-company-events-table th { color:var(--gray-400); font-size:.7rem; font-weight:600; }
 .market-company-events-table tbody tr:last-child td { border-bottom:0; }
+.market-company-event-note,.market-company-event-source { display:inline-block; margin-top:.2rem; font-size:.68rem; line-height:1.35; }
+.market-company-event-note { color:var(--gray-400); }
+.market-company-event-source { color:var(--accent-color, #7db8ff); text-decoration:underline; text-underline-offset:2px; }
 .market-company-event-link { padding:0; border:0; color:inherit; background:none; text-align:left; font:inherit; cursor:pointer; }
 .market-company-event-link:hover { color:#f0c66a; text-decoration:underline; }
 .market-event-badges { display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem; }

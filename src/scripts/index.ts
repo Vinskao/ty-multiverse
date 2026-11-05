@@ -14,6 +14,7 @@ import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedD
 import { analysisRating } from './market/analysisRating';
 import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
+import { companyEventSourceUrl, conferenceOtherScheduleCounts } from './market/companyEventPresentation';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
 import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
@@ -1516,6 +1517,7 @@ async function fetchMarketCompanyEvents() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = await response.json() as { events?: MarketCompanyEvent[]; checkedAt?: string };
         const events = payload.events || [];
+        const otherConferenceSchedules = conferenceOtherScheduleCounts(events);
         marketEventsByCode = new Map();
         for (const event of events) {
             const group = marketEventsByCode.get(event.code) || [];
@@ -1540,6 +1542,23 @@ async function fetchMarketCompanyEvents() {
             const row = document.createElement('tr');
             const dateCell = document.createElement('td'); dateCell.textContent = event.dateTime || event.date;
             const typeCell = document.createElement('td'); typeCell.textContent = marketEventLabel(event.type);
+            const otherSchedules = event.type === 'investor_conference' ? otherConferenceSchedules.get(event.code) : undefined;
+            if (otherSchedules) {
+                const note = document.createElement('small');
+                note.className = 'market-company-event-note';
+                note.textContent = marketI18n('marketEventsOtherSchedules', 'Same company has {count} other listed time(s)').replace('{count}', String(otherSchedules));
+                typeCell.append(document.createElement('br'), note);
+            }
+            const sourceUrl = companyEventSourceUrl(event);
+            if (sourceUrl) {
+                const sourceLink = document.createElement('a');
+                sourceLink.className = 'market-company-event-source';
+                sourceLink.href = sourceUrl;
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener noreferrer';
+                sourceLink.textContent = marketI18n('marketEventsOfficialSource', 'Official source');
+                typeCell.append(document.createElement('br'), sourceLink);
+            }
             const codeCell = document.createElement('td');
             const target = document.createElement('button'); target.type = 'button'; target.className = 'market-company-event-link';
             target.textContent = `${event.code} ${event.name}`;
@@ -1557,7 +1576,7 @@ async function fetchMarketCompanyEvents() {
             codeCell.append(target);
             const periodCell = document.createElement('td'); periodCell.textContent = event.period || (event.status === 'upcoming' ? marketI18n('marketEventsScheduled', 'Scheduled') : marketI18n('marketEventsReleased', 'Released'));
             row.append(dateCell, typeCell, codeCell, periodCell);
-            if (event.sourceUrl) row.title = `${event.source || ''} ? ${event.sourceUrl}`;
+            if (event.source && event.sourceUrl) row.title = `${event.source}: ${event.sourceUrl}`;
             body.append(row);
         }
         if (updated) updated.textContent = payload.checkedAt ? `${marketI18n('marketEventsUpdated', 'Updated')} ${new Date(payload.checkedAt).toLocaleString()}` : '';

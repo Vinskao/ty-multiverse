@@ -213,6 +213,8 @@
     "marketEventRevenue": { "en": "Revenue released", "zh": "\u6708\u71df\u6536\u516c\u5e03" },
     "marketEventFinancialReport": { "en": "Financial report", "zh": "\u8ca1\u5831\u516c\u5e03" },
     "marketEventConference": { "en": "Investor conference", "zh": "\u6cd5\u8aaa\u6703" },
+    "marketEventsOtherSchedules": { "en": "Same company has {count} other listed time(s)", "zh": "\u540c\u516c\u53f8\u53e6\u5217 {count} \u500b\u6642\u9593" },
+    "marketEventsOfficialSource": { "en": "Official source", "zh": "\u5b98\u65b9\u4f86\u6e90" },
     "marketEventsEmpty": { "en": "No recent releases or upcoming conferences for selected targets.", "zh": "\u76ee\u524d\u6301\u80a1\u6c92\u6709\u8fd1\u671f\u516c\u544a\u6216\u5373\u5c07\u8209\u884c\u7684\u6cd5\u8aaa\u6703\u3002" },
     "marketEventsUnavailable": { "en": "Company events are temporarily unavailable.", "zh": "\u4e8b\u4ef6\u8cc7\u6599\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\u3002" },
     "marketEventsScheduled": { "en": "Scheduled", "zh": "\u9810\u5b9a" },
