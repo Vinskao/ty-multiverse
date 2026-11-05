@@ -30,6 +30,7 @@ const isValidUrl = authorizationUrl && authorizationUrl.startsWith('http');
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
   <title>Redirecting to Login...</title>
   <script is:inline>
     // 在頁面加載的最早階段攔截 window.location.replace 和 assign，防止跳轉到主頁

@@ -17,5 +17,5 @@ export const GET: APIRoute = async ({ url }) => {
 - [持股籌碼摘要 (JSON)](${base}/brief.json): same data, structured.
 - [Home page](${base}): the summary is server-rendered in the "籌碼摘要" section near the top.
 `;
-  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600', 'X-Robots-Tag': 'noindex, nofollow' } });
 };

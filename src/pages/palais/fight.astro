@@ -13,7 +13,7 @@ if (!isLoggedIn) {
   return Astro.redirect(`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 ---
-<BaseLayout title="Palais 模組1 | Wavo Yuropha" description="Fight module within Palais">
+<BaseLayout title="Palais 模組1 | Wavo Yuropha" description="Fight module within Palais" indexable={false}>
   <Fragment slot="head">
     <link rel="stylesheet" href={palaisCssUrl} />
     <link rel="stylesheet" href={fightCssUrl} />

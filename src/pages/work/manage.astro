@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WritingGuide from '../../components/WritingGuide.astro';
 ---
-<BaseLayout title="文章管理 | TY Multiverse" description="知識庫文章草稿、發布與索引管理" lang="zh-TW">
+<BaseLayout title="文章管理 | TY Multiverse" description="知識庫文章草稿、發布與索引管理" lang="zh-TW" indexable={false}>
   <div class="wrapper knowledge-page knowledge-detail">
     <a href="/work/">← 知識庫 / Knowledge base</a>
     <header class="knowledge-header"><p class="knowledge-eyebrow">EDITORIAL WORKSPACE</p><h1>文章管理 / Articles</h1><p class="knowledge-intro">保存草稿 → 檢查內容 → 發布 → 更新搜尋索引。編輯已發布文章時，公開版本維持到下次發布。</p><p>需要管理者登入 / Administrator access required · <a href="/login">登入 / Sign in</a></p></header>

@@ -15,7 +15,7 @@ if (!isLoggedIn) {
   return Astro.redirect(`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`);
 }
 ---
-<BaseLayout title="Palais Levels | Wavo Yuropha" description="Level list within Palais">
+<BaseLayout title="Palais Levels | Wavo Yuropha" description="Level list within Palais" indexable={false}>
   <Fragment slot="head">
     <link rel="stylesheet" href={palaisCssUrl} />
     <link rel="stylesheet" href={levellistCssUrl} />

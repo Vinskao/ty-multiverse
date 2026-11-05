@@ -24,6 +24,7 @@ import researchZoneCssUrl from '../styles/research-zone.css?url';
 import knowledgeCssUrl from '../styles/knowledge.css?url';
 import learnCssUrl from '../styles/learn.css?url';
 import marketMacroCssUrl from '../styles/market-macro.css?url';
+import { resolvePageMetadata } from '../scripts/seo/siteMetadata';
 
 // Component Imports
 import MainHead from '../components/MainHead.astro';
@@ -42,9 +43,20 @@ interface Props {
 	description?: string | undefined;
 	canonical?: string;
 	lang?: string;
+	indexable?: boolean;
 }
 
-const { title, description, canonical, lang = 'en' } = Astro.props;
+const { title, description, canonical, lang = 'en', indexable = true } = Astro.props;
+const pageMetadata = resolvePageMetadata(Astro.url.pathname, { canonical, indexable });
+const websiteStructuredData = Astro.url.pathname === '/' ? {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	'@id': 'https://tymultiverse.cc/#website',
+	url: 'https://tymultiverse.cc/',
+	name: 'TY 市場研究室',
+	alternateName: ['TY Market Lab', 'TY Multiverse'],
+	inLanguage: ['zh-Hant', 'en'],
+} : undefined;
 
 
 
@@ -54,7 +66,7 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 <html lang={lang} data-default-language={lang.startsWith('zh') ? 'zh' : 'en'}>
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 		<script is:inline src="/scripts/lang.js"></script>
 		<script is:inline>
 			// 🎨 主題初始化 - 在任何渲染之前執行，避免主題閃爍 (FOUC)
@@ -199,7 +211,8 @@ const { title, description, canonical, lang = 'en' } = Astro.props;
 		<link rel="stylesheet" href={learnCssUrl} />
 		<link rel="stylesheet" href={marketMacroCssUrl} />
 		<slot name="head" />
-		<MainHead title={title} description={description} canonical={canonical} />
+		<MainHead title={title} description={description} canonical={pageMetadata.canonical} robots={pageMetadata.robots} lang={lang} />
+		{websiteStructuredData && <script type="application/ld+json" set:html={JSON.stringify(websiteStructuredData).replace(/</g, '\\u003c')} />}
 		<ClientRouter />
 	</head>
 	<body>

@@ -17,7 +17,7 @@ else {
 Astro.response.status = status;
 const html = article ? renderArticle(article.content) : '';
 ---
-<BaseLayout title={`${article?.title || (status === 404 ? '找不到文章' : '文章服務暫時無法使用')} | TY Multiverse`} description={article?.description} lang="zh-TW">
+<BaseLayout title={`${article?.title || (status === 404 ? '找不到文章' : '文章服務暫時無法使用')} | TY Multiverse`} description={article?.description} lang="zh-TW" indexable={status === 200 && !!article}>
   <div class="wrapper knowledge-page knowledge-detail knowledge-split">
     <ArticleSidebar projects={catalog} currentId={slug} />
     <div class="knowledge-article">

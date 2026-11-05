@@ -4,6 +4,8 @@
 
 > The main frontend application unifying multiple project domains through a modern Astro and React hybrid architecture.
 
+Technical SEO policy and SSR sitemap workflow: [docs/SEO.md](docs/SEO.md).
+
 ## Table of Contents
 
 - [Background](#background)

@@ -11,7 +11,7 @@ try {
 const categories = [...new Set(projects.map(({data}) => data.category).filter(Boolean))].sort();
 const latest = projects[0];
 ---
-<BaseLayout title="工程知識庫與開發紀錄 | TY Multiverse" description="TY Multiverse 的架構決策、實作紀錄與技術知識：從資料整合、AI 研究到部署驗證。" lang="zh-TW">
+<BaseLayout title="工程知識庫與開發紀錄 | TY Multiverse" description="TY Multiverse 的架構決策、實作紀錄與技術知識：從資料整合、AI 研究到部署驗證。" lang="zh-TW" indexable={!unavailable}>
   <div class="wrapper knowledge-page">
     <header class="knowledge-header">
       <p class="knowledge-eyebrow">TY MULTIVERSE / ENGINEERING</p>

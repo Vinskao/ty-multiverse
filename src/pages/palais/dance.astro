@@ -25,7 +25,7 @@ const tymbUrl = import.meta.env.PUBLIC_TYMB_URL;
 const peopleImageUrl = import.meta.env.PUBLIC_PEOPLE_IMAGE_URL || 'https://tymultiverse.cc';
 ---
 
-<BaseLayout title="Dance | TY Multiverse" description="Dance video collection">
+<BaseLayout title="Dance | TY Multiverse" description="Dance video collection" indexable={false}>
   <Fragment slot="head">
     <link rel="stylesheet" href={danceCssUrl} />
   </Fragment>

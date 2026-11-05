@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /md-exporter
+Disallow: /maya-sawa/
+
+Sitemap: https://tymultiverse.cc/sitemap.xml

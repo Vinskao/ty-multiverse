@@ -2145,7 +2145,7 @@
 .home-page .market-instrument-layout { grid-column:1 / -1; display:grid; grid-template-columns:minmax(17rem,.85fr) minmax(0,2fr); align-items:start; gap:clamp(.75rem,1.6vw,1.4rem); min-width:0; }
 @media (max-width:900px) { .home-page .market-instrument-layout { grid-template-columns:minmax(0,1fr); } }
 @media (min-width: 901px) {
-  .home-page .market-watchlist { position:sticky; top:4.5rem; max-height:calc(100vh - 5rem); overflow-y:auto; scrollbar-width:thin; }
+  .home-page .market-watchlist { position:static; max-height:none; overflow:visible; }
 }
 .market-holding-industry { min-width:0; margin:.45rem 0; }
 .market-holding-industry h6 { margin:0 0 .25rem; color:var(--gray-400); font-size:.72rem; font-weight:650; }

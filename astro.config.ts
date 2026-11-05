@@ -2,15 +2,16 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
-import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
+  site: 'https://tymultiverse.cc',
   output: 'server',
   adapter: node({
     mode: 'standalone',
   }),
   base: '/',
-  integrations: [react(), mdx(), sitemap()],
+  // This site is server-rendered; src/pages/sitemap.xml.ts includes the public SSR routes and articles.
+  integrations: [react(), mdx()],
   markdown: {
     remarkPlugins: []
   },

@@ -15,15 +15,7 @@ if (!isLoggedIn) {
 }
 ---
 
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>角色管理系統 | TY Multiverse</title>
-</head>
-<body>
-  <BaseLayout title="角色管理系統" description="管理角色和武器的系統">
+<BaseLayout title="角色管理系統 | TY Multiverse" description="管理角色和武器的系統" lang="zh-TW" indexable={false}>
     <Fragment slot="head">
       <link rel="stylesheet" href={peopleManagementCssUrl} />
     </Fragment>
@@ -46,5 +38,3 @@ if (!isLoggedIn) {
       }
     });
   </script>
-</body>
-</html>
