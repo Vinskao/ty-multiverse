@@ -20,3 +20,4 @@
 .cookie-dialog footer { margin-top:1.2rem; }
 .cookie-dialog a { color:inherit; text-underline-offset:3px; }
 @media(max-width:600px) { .cookie-notice { right:.5rem; bottom:max(.5rem,env(safe-area-inset-bottom)); width:calc(100vw - 1rem); padding:.85rem; } .cookie-notice-actions { justify-content:stretch; } .cookie-notice-actions button { flex:1 1 auto; } }
+.cookie-consent [hidden] { display: none !important; }
