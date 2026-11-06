@@ -82,7 +82,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 		<div class="wrapper stack gap-20 lg:gap-50">
 
-			<HomeAdPlacements compact />
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
 					<div class="hero-header">
@@ -486,6 +485,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
 							</aside>
 							<div class="market-report-results">
+								<HomeAdPlacements compact />
 								<label class="market-report-search" for="market-report-search">搜尋報告
 									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
 								</label>
@@ -516,7 +516,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				<section class="home-zone home-zone--operations" id="zone-operations" aria-labelledby="zone-operations-title"><header class="home-zone-head"><h3 id="zone-operations-title" class="home-zone-title" data-i18n="home.zoneOperations">產品運作</h3></header>
 				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
 					<details class="home-transparency"><summary data-i18n="home.operationsTitle">產品運作資訊 · AI 使用紀錄</summary><AiTokenUsageDashboard client:visible /></details>
-				</div></section>
+				</div>
+				</section>
 			</header>
 
 			<OpenSourceProjects />
