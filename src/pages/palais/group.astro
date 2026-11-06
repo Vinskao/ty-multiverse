@@ -47,6 +47,7 @@ if (!isLoggedIn) {
   <div class="cart-header">
     <span class="cart-title">菜籃<span class="cart-count" id="cart-count">0</span></span>
     <span class="cart-header-right">
+      <button id="cart-business" class="btn is-outline is-sm" type="button" aria-pressed="false" title="菜籃中的人改用商務圖（沒有商務圖的維持原圖）">商務</button>
       <button id="cart-download" class="btn is-primary is-sm" type="button" title="把菜籃中的人合併成單排圖片下載" disabled>下載</button>
       <button id="cart-clear" class="btn is-danger is-sm" type="button">清空</button>
       <button id="cart-toggle" class="btn is-outline is-sm" type="button" title="最小化">收合</button>
@@ -405,8 +406,16 @@ if (!isLoggedIn) {
     color: rgba(255, 255, 255, 0.85);
   }
 
+  /* 商務模式開啟：實心亮底，一眼看出目前是商務圖 */
+  #palais-cart .cart-header #cart-business[aria-pressed="true"] {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.92);
+    color: #080908;
+  }
+
   /* 最小化：滿版橫幅只留標題列 */
   #palais-cart.minimized #cart-items,
+  #palais-cart.minimized #cart-business,
   #palais-cart.minimized #cart-download,
   #palais-cart.minimized #cart-clear {
     display: none;
@@ -661,6 +670,7 @@ if (!isLoggedIn) {
   import '../../scripts/palaisMediaZoom';
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
   import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
+  import { resolveImageUrl } from '../../scripts/palais/businessImage';
   import {
     buildIndex,
     buildIndexFromFiles,
@@ -688,6 +698,47 @@ if (!isLoggedIn) {
 
   let draggedCard: HTMLElement | null = null;
   const CART_KEY = 'palais-cart-v1';
+  const BUSINESS_KEY = 'palais-cart-business';
+  // 商務模式：菜籃內的人改用 ${name}Business.png；沒有商務圖的維持原圖。只影響菜籃（預覽與下載）。
+  let businessMode = false;
+  try { businessMode = localStorage.getItem(BUSINESS_KEY) === '1'; } catch { /* storage blocked */ }
+  const imageExistsCache = new Map<string, Promise<boolean>>();
+  // 用載入圖片的方式確認圖是否存在（而不是直接換 src）：卡片圖片的 onerror 會把整張卡移除，
+  // 所以絕不能把 src 指到可能 404 的商務圖網址。
+  function imageExists(url: string): Promise<boolean> {
+    let result = imageExistsCache.get(url);
+    if (!result) {
+      result = new Promise<boolean>((resolve) => {
+        const probe = new Image();
+        probe.onload = () => resolve(true);
+        probe.onerror = () => resolve(false);
+        probe.src = url;
+      });
+      imageExistsCache.set(url, result);
+    }
+    return result;
+  }
+  // 讓一張卡的圖片切到商務圖（存在才換）或還原成原圖。
+  async function syncCardImage(card: HTMLElement, business: boolean) {
+    const img = card.querySelector<HTMLImageElement>(':scope > img');
+    const name = card.dataset.name;
+    if (!img || !name) return;
+    if (!card.dataset.originalSrc) card.dataset.originalSrc = img.src;
+    const original = card.dataset.originalSrc;
+    const target = business
+      ? await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp: characterService.getMediaTimestamp(), business: true, exists: imageExists })
+      : original;
+    // 等待期間若使用者已切換模式、或這張卡已離開菜籃，就不要再套用
+    if (business && (!businessMode || card.parentElement?.id !== 'cart-items')) return;
+    if (img.src !== target) img.src = target;
+  }
+  function applyBusinessMode() {
+    document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable').forEach((card) => {
+      void syncCardImage(card, businessMode);
+    });
+    const button = document.getElementById('cart-business');
+    if (button) button.setAttribute('aria-pressed', businessMode ? 'true' : 'false');
+  }
   const GROUP_ORDER_KEY = 'palais-group-order-v1';
 
   function getGroupOrders(): Record<string, string[]> {
@@ -794,10 +845,12 @@ if (!isLoggedIn) {
     syncArmyEmptyState(prevParent?.closest('.army-container') || null);
     updateCartCount();
     refreshPlaybackNeighbours();
+    if (businessMode) void syncCardImage(card, true);
   }
   function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
     const grid = armyContainer.querySelector('.box-container');
     if (!grid || !card) return;
+    void syncCardImage(card, false);
     grid.appendChild(card);
     scheduleCharacterInfoLayout();
     const set = getCartSet();
@@ -821,6 +874,7 @@ if (!isLoggedIn) {
     scheduleCharacterInfoLayout();
     document.querySelectorAll('.army-container').forEach(syncArmyEmptyState);
     updateCartCount();
+    applyBusinessMode();
   }
   // 依隊伍名稱找到對應的 .army-container（用標題文字比對）
   function findArmyContainer(army: string): HTMLElement | null {
@@ -857,7 +911,8 @@ if (!isLoggedIn) {
     try {
       const timestamp = characterService.getMediaTimestamp();
       const images = await Promise.all(names.map(async (name) => {
-        const response = await fetch(`${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png?t=${timestamp}`);
+        const url = await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp, business: businessMode, exists: imageExists });
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`${name}: image download failed (${response.status})`);
         return loadImageFromBlob(await response.blob());
       }));
@@ -904,6 +959,7 @@ if (!isLoggedIn) {
     if (!items) return;
     Array.from(items.children).forEach((node) => {
       const card = node as HTMLElement;
+      void syncCardImage(card, false);
       const container = findArmyContainer(card.dataset.army || '');
       const grid = container?.querySelector('.box-container');
       if (grid) grid.appendChild(card);
@@ -952,6 +1008,12 @@ if (!isLoggedIn) {
       if (draggedCard) moveCardToCart(draggedCard);
     });
     document.getElementById('cart-download')?.addEventListener('click', () => { void downloadCartRow(); });
+    document.getElementById('cart-business')?.addEventListener('click', () => {
+      businessMode = !businessMode;
+      try { localStorage.setItem(BUSINESS_KEY, businessMode ? '1' : '0'); } catch { /* storage blocked */ }
+      applyBusinessMode();
+    });
+    applyBusinessMode();
     const clearBtn = document.getElementById('cart-clear');
     if (clearBtn) clearBtn.addEventListener('click', clearCart);
     const toggle = document.getElementById('cart-toggle');

@@ -34,3 +34,22 @@ flowchart LR
 - 實際合併圖尚未在瀏覽器目視確認（build 與部署由 Jenkins）。
 - 圖片來源需允許 CORS 才能匯出 canvas（與既有下載功能相同的來源）。
 - 2026-11-06 第二次修正：第一版依「相鄰重疊 20%、兩側各切 10%」做，間距遠比預覽鬆（約 80% 圖寬），改為比照預覽步距。舊規則與裁切已移除。
+
+## 商務圖按鈕
+
+菜籃標題列的「商務」按鈕：按下後菜籃中的人改用 `${name}Business.png`，再按一次還原。**沒有商務圖的人維持原圖**。
+
+```mermaid
+flowchart LR
+  A[按下 商務] --> B{菜籃每張卡}
+  B --> C[用載入圖片探測 NameBusiness.png 是否存在]
+  C -->|存在| D[img.src 換成商務圖]
+  C -->|不存在或探測失敗| E[維持原圖]
+  F[下載] --> G[同樣的解析：商務圖優先，缺圖回退原圖]
+```
+
+- 只影響菜籃（預覽與下載）；人從菜籃移回隊伍或清空時會還原原圖。狀態記在 `localStorage`（`palais-cart-business`），重整後保持。
+- 不直接把 `src` 換成商務網址：卡片圖片的 `onerror` 會把整張卡移除，圖片不存在會害人從畫面消失。所以先用探測確認存在才換。
+- 邏輯在 `src/scripts/palais/businessImage.ts`（`peopleImageUrl`、`resolveImageUrl`），測試 `tests/palais/businessImage.test.ts`（含缺圖回退與探測失敗回退）。
+- 已知缺口：目前 `WavoBusiness.png`、`MayaBusiness.png` 都不存在（404），尚未有實際商務圖可驗證畫面，只驗證了回退邏輯；實際商務圖上傳後請在部署後的菜籃確認。
+
