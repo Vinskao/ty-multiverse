@@ -484,7 +484,9 @@ nav {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 0.625rem max(0.75rem, env(safe-area-inset-right)) calc(0.625rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    padding: 0.625rem max(0.75rem, env(safe-area-inset-right)) 0.625rem max(0.75rem, env(safe-area-inset-left));
+    /* Leave room for the fixed Maya chat button (bottom-left) and theme toggle (bottom-right). */
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
   }
 
   .socials {
