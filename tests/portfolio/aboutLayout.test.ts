@@ -30,8 +30,8 @@ it('places recruiting alongside the founder and uses a centered autoplay video',
   expect(page.indexOf('class="team-recruitment"')).toBeGreaterThan(page.indexOf('id="team-section-title"'));
   expect(page.indexOf('class="team-recruitment"')).toBeLessThan(page.indexOf('class="team-member"'));
   expect(page).toContain('<video autoplay preload="auto" playsinline');
-  expect(page).toContain('class="founder-play"');
-  expect(page).toContain('<span aria-hidden="true">?</span>');
+  expect(page).not.toContain('founder-play');
+  expect(page).not.toMatch(/<video[^>]*loop/);
   expect(page).not.toContain('>?</button>');
   expect(page).not.toContain('<video controls');
 });

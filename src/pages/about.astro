@@ -212,9 +212,6 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
               <source src="/assets/media/founder-message.mp4" type="video/mp4" />
               {lang === "zh" ? "您的瀏覽器不支援影片播放。" : "Your browser does not support video playback."}
             </video>
-              <button class="founder-play" type="button" aria-label={lang === "zh" ? "播放影片" : "Play video"}>
-                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M8 5.8c0-.8.9-1.3 1.6-.9l10 6.2a1.1 1.1 0 0 1 0 1.8l-10 6.2c-.7.4-1.6-.1-1.6-.9z" fill="currentColor" /></svg>
-              </button>
             </div>
           </div>
         </section>
@@ -920,16 +917,10 @@ function formatForResume(job: ExperienceItem, l: LangKey): string {
     <script>
       function initFounderVideo() {
         const video = document.querySelector<HTMLVideoElement>(".founder-video video");
-        const button = document.querySelector<HTMLButtonElement>(".founder-play");
-        if (!video || !button || button.dataset.bound) return;
-        button.dataset.bound = "true";
-        const sync = () => { button.hidden = !video.paused && !video.ended; };
-        video.addEventListener("play", sync);
-        video.addEventListener("pause", sync);
-        video.addEventListener("ended", sync);
-        button.addEventListener("click", () => { if (video.ended) video.currentTime = 0; void video.play(); sync(); });
-        void video.play().catch(sync);
-        sync();
+        if (!video || video.dataset.bound) return;
+        video.dataset.bound = "true";
+        // Autoplay once, no controls. Browsers block unmuted autoplay, so retry muted.
+        video.play().catch(() => { video.muted = true; void video.play().catch(() => {}); });
       }
       document.addEventListener("astro:page-load", initFounderVideo);
     </script>

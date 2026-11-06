@@ -45,4 +45,13 @@ describe('homepage advertising test placements', () => {
     expect(styles).toContain('grid-template-columns:minmax(0,1fr) 24px');
     expect(styles).toContain('overflow-wrap:anywhere');
   });
+
+  it('keeps article ads outside the sticky sidebar grid and adds a top banner above the article', () => {
+    const page = read('src/pages/work/[...slug].astro');
+    const gridEnd = page.search(/<\/div>\r?\n  <HomeAdPlacements \/>/);
+    expect(gridEnd).toBeGreaterThan(-1);
+    expect(page.indexOf('<HomeAdPlacements compact />')).toBeGreaterThan(page.indexOf('class="knowledge-article"'));
+    expect(page.indexOf('<HomeAdPlacements compact />')).toBeLessThan(page.indexOf('<header class="knowledge-header">'));
+    expect(read('src/components/HomeAdPlacements.astro')).toContain('id="adsterra-article-top-banner"');
+  });
 });

@@ -1,9 +1,18 @@
 ---
 import advertisingCssUrl from '../styles/homeAdvertising.css?url';
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
 ---
 <link rel="stylesheet" href={advertisingCssUrl} />
-<section class="home-advertising" aria-label="廣告">
+<section class:list={["home-advertising", { "home-advertising--compact": compact }]} aria-label="廣告">
 	<p class="home-advertising-label">廣告 · Advertisement</p>
+	{compact ? (
+	<div class="home-advertising-grid">
+		<article class="home-advertising-slot home-advertising-responsive-slot" aria-label="Adsterra responsive banner">
+			<div id="adsterra-article-top-banner" class="home-advertising-responsive" data-adsterra="responsive"></div>
+		</article>
+	</div>
+	) : (
 	<div class="home-advertising-grid">
 		<article class="home-advertising-slot" aria-label="Adsterra 300 by 250 display ad">
 			<div id="adsterra-300x250" class="home-advertising-display" data-adsterra="300x250"></div>
@@ -17,6 +26,7 @@ import advertisingCssUrl from '../styles/homeAdvertising.css?url';
 			</div>
 		</article>
 	</div>
+	)}
 </section>
 <script>
 	import { mountPublisherAds } from '../scripts/ads/consentAds';
