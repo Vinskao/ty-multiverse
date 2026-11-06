@@ -4,8 +4,8 @@
 // no double-covered strip.
 
 const COVER_RATIO = 0.1; // 10% of an image's own width is covered per neighbouring side
-const MAX_CANVAS_PX = 16000; // stay well under browsers' maximum canvas dimension
-const DEFAULT_EXPORT_SCALE = 2; // keep the export crisp
+const MAX_CANVAS_SIDE_PX = 16000; // stay well under browsers' maximum canvas dimension (32767 / 16384 on some)
+const MAX_CANVAS_AREA_PX = 200_000_000; // and under the total-pixel limit (about 268M in Chromium)
 
 export interface SingleRowItem {
   /** left edge of the full (uncropped) image */
@@ -38,8 +38,16 @@ export function layoutSingleRow(widths: readonly number[]): { items: SingleRowIt
   return { items, totalWidth: xs[last] + widths[last] };
 }
 
-/** Export scale: 2x normally, smaller for a very long row so the canvas never exceeds the browser limit. */
-export function singleRowExportScale(totalWidth: number): number {
-  if (totalWidth <= 0) return DEFAULT_EXPORT_SCALE;
-  return Math.min(DEFAULT_EXPORT_SCALE, MAX_CANVAS_PX / totalWidth);
+/**
+ * Export scale: 1 = the characters' original resolution. It only shrinks when the finished row would be
+ * larger than a browser canvas allows (side length or total pixels), and never enlarges.
+ */
+export function singleRowExportScale(totalWidth: number, height: number): number {
+  if (totalWidth <= 0 || height <= 0) return 1;
+  return Math.min(
+    1,
+    MAX_CANVAS_SIDE_PX / totalWidth,
+    MAX_CANVAS_SIDE_PX / height,
+    Math.sqrt(MAX_CANVAS_AREA_PX / (totalWidth * height)),
+  );
 }

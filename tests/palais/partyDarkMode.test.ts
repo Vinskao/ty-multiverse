@@ -28,3 +28,13 @@ it('adds a download button to the group page basket that merges everyone into on
   expect(page).toMatch(/downloadBtn\.disabled\s*=\s*items\.children\.length === 0/);
   expect(page).toMatch(/#palais-cart\.minimized #cart-download/);
 });
+
+it('merges the basket at the original image resolution instead of a small fixed height', () => {
+  const page = read('src/pages/palais/group.astro');
+  const fn = page.slice(page.indexOf('async function downloadCartRow'));
+  expect(fn).toContain('img.naturalHeight');
+  expect(fn).not.toMatch(/rowHeight\s*=\s*400/);
+  expect(fn).toMatch(/singleRowExportScale\(totalWidth, rowHeight\)/);
+  expect(fn).toContain("imageSmoothingQuality = 'high'");
+});
+

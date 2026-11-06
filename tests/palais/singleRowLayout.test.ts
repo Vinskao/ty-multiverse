@@ -47,13 +47,26 @@ describe('single-row merged layout', () => {
 });
 
 describe('single-row export scale', () => {
-  it('keeps the crisp 2x scale for a normal row', () => {
-    expect(singleRowExportScale(1000)).toBe(2);
+  it('exports at the original resolution (scale 1) when the canvas is within browser limits', () => {
+    // four 3478x6423 originals: about 11.8k wide, well under the limits
+    const { totalWidth } = layoutSingleRow([3478, 3478, 3478, 3478]);
+    expect(singleRowExportScale(totalWidth, 6423)).toBe(1);
   });
 
-  it('shrinks the scale so a very long row stays under the canvas size limit', () => {
-    const scale = singleRowExportScale(40000);
+  it('never upscales a small row', () => {
+    expect(singleRowExportScale(1000, 400)).toBe(1);
+  });
+
+  it('shrinks only as much as needed when the row is too wide for a canvas', () => {
+    const scale = singleRowExportScale(40000, 6423);
     expect(scale).toBeLessThan(1);
     expect(40000 * scale).toBeLessThanOrEqual(16000);
+  });
+
+  it('also keeps the total pixel count under the canvas area limit', () => {
+    const width = 15000;
+    const height = 15000;
+    const scale = singleRowExportScale(width, height);
+    expect(width * scale * height * scale).toBeLessThanOrEqual(200_000_000);
   });
 });

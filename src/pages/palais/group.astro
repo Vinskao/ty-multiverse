@@ -861,17 +861,20 @@ if (!isLoggedIn) {
         return loadImageFromBlob(await response.blob());
       }));
 
-      // Every character is scaled to the same height first, so huge source images can't blow the canvas.
-      const rowHeight = 400;
+      // Merge at the ORIGINAL resolution: the row is as tall as the tallest source image, and shorter ones are
+      // scaled up to match it. Only shrink (below) when the result would exceed what a canvas can hold.
+      const rowHeight = Math.max(...images.map((img) => img.naturalHeight || img.height));
       const widths = images.map((img) => (img.naturalWidth || img.width) * (rowHeight / (img.naturalHeight || img.height)));
       const { items: placed, totalWidth } = layoutSingleRow(widths);
-      const scale = singleRowExportScale(totalWidth);
+      const scale = singleRowExportScale(totalWidth, rowHeight);
 
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.ceil(totalWidth * scale));
       canvas.height = Math.max(1, Math.ceil(rowHeight * scale));
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas 2D context unavailable');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.scale(scale, scale);
       placed.forEach((item, index) => {
         ctx.save();
