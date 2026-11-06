@@ -36,5 +36,8 @@ it('merges the basket at the original image resolution instead of a small fixed 
   expect(fn).not.toMatch(/rowHeight\s*=\s*400/);
   expect(fn).toMatch(/singleRowExportScale\(totalWidth, rowHeight\)/);
   expect(fn).toContain("imageSmoothingQuality = 'high'");
+  // spacing follows the basket preview (step = height / 3), later characters drawn over earlier ones, no cropping
+  expect(fn).toMatch(/layoutSingleRow\(widths, rowHeight\)/);
+  expect(fn).not.toContain('visibleLeft');
 });
 
