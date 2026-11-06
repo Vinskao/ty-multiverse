@@ -54,4 +54,12 @@ describe('homepage advertising test placements', () => {
     expect(page.indexOf('<HomeAdPlacements compact />')).toBeLessThan(page.indexOf('<header class="knowledge-header">'));
     expect(read('src/components/HomeAdPlacements.astro')).toContain('id="adsterra-article-top-banner"');
   });
+
+  it('gives index, blog list and learn a second (compact) ad at the top', () => {
+    for (const path of ['src/pages/index.astro', 'src/pages/work.astro', 'src/pages/learn.astro']) {
+      const page = read(path);
+      expect(page, path).toContain('<HomeAdPlacements compact />');
+      expect(page, path).toMatch(/<HomeAdPlacements \/>/);
+    }
+  });
 });
