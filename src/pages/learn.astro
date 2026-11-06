@@ -34,6 +34,9 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
           <h1>學習中心</h1>
           <p>從英文到經濟與工程，依主題建立知識。多益練習已開放，其餘先規劃考試範圍。</p>
         </header>
+        <div class="learn-catalog-video" aria-hidden="true">
+          <video src="https://tymultiverse.cc/images/people/walking.mp4" autoplay loop muted playsinline preload="auto" disablepictureinpicture tabindex="-1" onerror="this.parentElement.style.display='none'"></video>
+        </div>
         <div class="learn-catalog-heading"><h2>探索學習領域</h2><span>課程與考試主題</span></div>
         <div class="learn-catalog">
           {learnCatalog.map((subject, index) => <section class="learn-subject" data-catalog-subject={subject.id} aria-labelledby={`subject-${subject.id}`}>

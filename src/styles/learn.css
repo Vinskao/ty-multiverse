@@ -28,6 +28,10 @@
 .learn-overview-header h1 { margin: .35rem 0 .75rem; font-size: clamp(2.25rem, 4vw, 3.8rem); line-height: 1.12; letter-spacing: -.035em; }
 .learn-overview-header > p:last-child { color: var(--gray-400, var(--gray-500)); line-height: 1.8; max-width: 40rem; margin: 0; }
 .learn-eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .14em; color: var(--gray-500); }
+.learn-catalog-video { margin: 0 0 1rem; border: 1px solid var(--gray-800); border-radius: .8rem; overflow: hidden; background: #111; line-height: 0; }
+.learn-catalog-video video { display: block; width: 100%; height: clamp(9rem, 22vw, 16rem); object-fit: cover; pointer-events: none; }
+.learn-catalog-video video::-webkit-media-controls { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .learn-catalog-video { display: none; } }
 .learn-catalog-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--gray-800); padding-bottom: .75rem; }
 .learn-catalog-heading h2 { margin: 0; font-size: 1.15rem; }
 .learn-catalog-heading span { color: var(--gray-500); font-size: .8rem; }
