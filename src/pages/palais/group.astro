@@ -47,6 +47,7 @@ if (!isLoggedIn) {
   <div class="cart-header">
     <span class="cart-title">菜籃<span class="cart-count" id="cart-count">0</span></span>
     <span class="cart-header-right">
+      <button id="cart-download" class="btn is-primary is-sm" type="button" title="把菜籃中的人合併成單排圖片下載" disabled>下載</button>
       <button id="cart-clear" class="btn is-danger is-sm" type="button">清空</button>
       <button id="cart-toggle" class="btn is-outline is-sm" type="button" title="最小化">收合</button>
     </span>
@@ -406,6 +407,7 @@ if (!isLoggedIn) {
 
   /* 最小化：滿版橫幅只留標題列 */
   #palais-cart.minimized #cart-items,
+  #palais-cart.minimized #cart-download,
   #palais-cart.minimized #cart-clear {
     display: none;
   }
@@ -658,6 +660,7 @@ if (!isLoggedIn) {
 <script>
   import '../../scripts/palaisMediaZoom';
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
+  import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
   import {
     buildIndex,
     buildIndexFromFiles,
@@ -741,6 +744,8 @@ if (!isLoggedIn) {
     if (count && items) count.textContent = String(items.children.length);
     const clearBtn = document.getElementById('cart-clear') as HTMLButtonElement | null;
     if (clearBtn && items) clearBtn.disabled = items.children.length === 0;
+    const downloadBtn = document.getElementById('cart-download') as HTMLButtonElement | null;
+    if (downloadBtn && items) downloadBtn.disabled = items.children.length === 0;
   }
   function flashCartFull() {
     const cart = document.getElementById('palais-cart');
@@ -825,6 +830,74 @@ if (!isLoggedIn) {
     }
     return null;
   }
+  // 菜籃合併下載：依菜籃由左到右的順序，把所有人並排成「單一 row」，不換行、不限人數。
+  // 相鄰兩張重疊 20%，每張圖被相鄰者蓋到的那一側各被切掉 10%（版面計算見 scripts/palais/singleRow.ts）。
+  function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image decode failed')); };
+      img.src = url;
+    });
+  }
+
+  async function downloadCartRow() {
+    const items = document.getElementById('cart-items');
+    const btn = document.getElementById('cart-download') as HTMLButtonElement | null;
+    if (!items) return;
+    const names = Array.from(items.querySelectorAll<HTMLElement>(':scope > .pg-draggable'))
+      .map((card) => card.dataset.name || '')
+      .filter(Boolean);
+    if (names.length === 0) return;
+
+    const originalText = btn?.textContent ?? '下載';
+    if (btn) { btn.textContent = '合併中…'; btn.disabled = true; }
+    try {
+      const timestamp = characterService.getMediaTimestamp();
+      const images = await Promise.all(names.map(async (name) => {
+        const response = await fetch(`${PEOPLE_IMAGE_URL}/${encodeURIComponent(name)}.png?t=${timestamp}`);
+        if (!response.ok) throw new Error(`${name}: image download failed (${response.status})`);
+        return loadImageFromBlob(await response.blob());
+      }));
+
+      // Every character is scaled to the same height first, so huge source images can't blow the canvas.
+      const rowHeight = 400;
+      const widths = images.map((img) => (img.naturalWidth || img.width) * (rowHeight / (img.naturalHeight || img.height)));
+      const { items: placed, totalWidth } = layoutSingleRow(widths);
+      const scale = singleRowExportScale(totalWidth);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.ceil(totalWidth * scale));
+      canvas.height = Math.max(1, Math.ceil(rowHeight * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas 2D context unavailable');
+      ctx.scale(scale, scale);
+      placed.forEach((item, index) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(item.visibleLeft, 0, item.visibleRight - item.visibleLeft, rowHeight);
+        ctx.clip();
+        ctx.drawImage(images[index]!, item.x, 0, item.width, rowHeight);
+        ctx.restore();
+      });
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('PNG export failed');
+      const link = document.createElement('a');
+      link.download = 'palais-cart-row.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+    } catch (error) {
+      console.error('Cart row export failed:', error);
+      alert('合併下載失敗：' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      if (btn) btn.textContent = originalText;
+      updateCartCount();
+    }
+  }
+
   // 清空菜籃：把所有人放回原隊伍
   function clearCart() {
     const items = document.getElementById('cart-items');
@@ -878,6 +951,7 @@ if (!isLoggedIn) {
       if (cart.classList.contains('minimized')) setMinimized(false);
       if (draggedCard) moveCardToCart(draggedCard);
     });
+    document.getElementById('cart-download')?.addEventListener('click', () => { void downloadCartRow(); });
     const clearBtn = document.getElementById('cart-clear');
     if (clearBtn) clearBtn.addEventListener('click', clearCart);
     const toggle = document.getElementById('cart-toggle');

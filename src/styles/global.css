@@ -416,6 +416,41 @@ h5 {
   color: #080908;
 }
 
+/* Dark mode: the base .btn text is near-black, so buttons without a filled background need their own. */
+:root.theme-dark .btn.is-outline {
+  color: var(--gray-0);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--gray-0) 45%, transparent);
+}
+
+:root.theme-dark .btn.is-outline:hover {
+  color: var(--gray-0);
+  background: color-mix(in srgb, var(--gray-0) 14%, transparent);
+  border-color: var(--gray-0);
+}
+
+:root.theme-dark .btn.is-danger {
+  color: #ffffff;
+}
+
+:root.theme-dark .btn.is-danger:hover {
+  color: #ffffff;
+}
+
+/* A disabled button must not react to hover (it used to light up like an enabled one). */
+.btn:disabled:hover,
+.btn[aria-disabled="true"]:hover {
+  background: var(--btn-bg-current);
+  transform: none;
+  box-shadow: none;
+}
+
+:root.theme-dark .btn.is-outline:disabled:hover {
+  background: transparent;
+  color: var(--gray-0);
+  border-color: color-mix(in srgb, var(--gray-0) 45%, transparent);
+}
+
 @media (min-width: 50em) {
   .lg\:gap-2 {
     gap: 0.5rem;

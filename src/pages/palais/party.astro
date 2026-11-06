@@ -73,8 +73,8 @@ const peopleImageUrl =
                             style="display: flex; gap: 1rem; align-items: center; width: 100%;"
                         >
                             <div class="row-selector-container">
-                                <label for="active-row-select" style="font-size: 0.9rem; color: var(--gray-300);">Select Row:</label>
-                                <select id="active-row-select" style="padding: 0.5rem; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">
+                                <label for="active-row-select" class="party-select-label">Select Row:</label>
+                                <select id="active-row-select" class="party-select">
                                     <option value="5">Front Row (Row 5)</option>
                                     <option value="4">Row 4</option>
                                     <option value="3">Row 3</option>
@@ -84,7 +84,7 @@ const peopleImageUrl =
                             </div>
                             <div id="selection-status" class="selection-status" style="flex-grow: 1;">
                             </div>
-                            <button id="download-btn" class="btn is-outline" style="margin-right: 0.5rem;">Download (No BG)</button>
+                            <button id="download-btn" class="btn is-outline">Download (No BG)</button>
                             <button id="download-gif-btn" class="btn is-accent">Download GIF</button>
                         </div>
                     </div>

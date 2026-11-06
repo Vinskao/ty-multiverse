@@ -179,3 +179,34 @@
 
 /* Row Styling helpers - Logic moved to TS for margins, kept strictly for reference or overrides */
 /* We remove fixed bottom/transform from CSS as it will be calculated inline for dynamic flow */
+
+/* Party controls follow the theme instead of fixed dark colors */
+.party-select-label {
+  font-size: 0.9rem;
+  color: var(--gray-300);
+}
+
+.party-select {
+  padding: 0.5rem 0.75rem;
+  background: var(--gray-999);
+  color: var(--gray-0);
+  border: 1px solid var(--gray-600);
+  border-radius: 0.5rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.party-select:focus-visible {
+  outline: 2px solid var(--accent-regular);
+  outline-offset: 2px;
+}
+
+.row-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-actions .btn + .btn {
+  margin-left: 0.5rem;
+}
