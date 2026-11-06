@@ -137,6 +137,11 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 </BaseLayout>
 
 <script>
+  import { keepCatalogVideoPlaying } from "../scripts/learn/catalogVideo";
+  document.addEventListener("astro:page-load", () => keepCatalogVideoPlaying());
+</script>
+
+<script>
   import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions } from '../scripts/learn/marketAudioPresentation';
   import { presenterForAudio, dailyReadingTitle } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';

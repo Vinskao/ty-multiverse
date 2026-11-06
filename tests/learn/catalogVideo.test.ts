@@ -22,3 +22,22 @@ describe('learn catalog looping video', () => {
     expect(css).toContain('pointer-events: none');
   });
 });
+
+describe('learn catalog video autoplay fallback (iOS low power mode)', () => {
+  const page = readFileSync('src/pages/learn.astro', 'utf8');
+  const script = readFileSync('src/scripts/learn/catalogVideo.ts', 'utf8');
+  const css = readFileSync('src/styles/learn.css', 'utf8');
+
+  it('forces muted playback and retries on the first user gesture', () => {
+    expect(page).toContain('keepCatalogVideoPlaying');
+    expect(script).toContain('video.muted = true');
+    expect(script).toContain('video.play()');
+    expect(script).toContain("'touchstart'");
+    expect(script).toContain("'visibilitychange'");
+  });
+
+  it('hides the WebKit start-playback overlay', () => {
+    expect(css).toContain('::-webkit-media-controls-start-playback-button');
+    expect(css).toContain('::-webkit-media-controls-overlay-play-button');
+  });
+});
