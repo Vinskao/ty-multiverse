@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions } from '../../src/scripts/learn/marketAudioPresentation';
+import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../../src/scripts/learn/marketAudioPresentation';
 
 describe('market audio presentation', () => {
   it('shows the original report date without inventing a creation time', () => {
@@ -44,5 +44,23 @@ describe('market audio presentation', () => {
     expect(css).toMatch(/\.presenter-frame\s*\{[^}]*aspect-ratio:\s*16\s*\/\s*9/);
     expect(css).toMatch(/\.market-audio-media \.presenter-frame video\s*\{[^}]*height:\s*100%[^}]*object-fit:\s*contain/);
     expect(css).not.toContain('aspect-ratio: var(--presenter-half-ratio');
+  });
+});
+
+describe('newestMarketAudioFirst', () => {
+  it('lists the newest report day first even when all rows were regenerated at the same time', () => {
+    const t = '2026-11-05T04:58:11Z';
+    const items = [
+      { code: 'a', day: '2026-11-03', createdAt: t },
+      { code: 'b', day: '2026-11-07', createdAt: t },
+      { code: 'c', day: '2026-11-04', createdAt: t },
+      { code: 'd', day: '2026-11-04', createdAt: '2026-11-05T05:00:00Z' },
+    ];
+    expect(newestMarketAudioFirst(items).map(i => i.code)).toEqual(['b', 'd', 'c', 'a']);
+  });
+  it('puts undated rows last and does not mutate the input', () => {
+    const items = [{ code: 'x', createdAt: '2026-11-09T00:00:00Z' }, { code: 'y', day: '2026-11-01', createdAt: '2026-11-01T00:00:00Z' }];
+    expect(newestMarketAudioFirst(items).map(i => i.code)).toEqual(['y', 'x']);
+    expect(items[0].code).toBe('x');
   });
 });

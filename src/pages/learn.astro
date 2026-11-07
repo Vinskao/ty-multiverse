@@ -142,7 +142,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 </script>
 
 <script>
-  import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions } from '../scripts/learn/marketAudioPresentation';
+  import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../scripts/learn/marketAudioPresentation';
   import { presenterForAudio, dailyReadingTitle } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
   import { applyMarketPresenterSettings } from '../scripts/learn/marketPresenterConfig';
@@ -194,7 +194,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
     .then(({ items, presenterSettings }) => {
       applyMarketPresenterSettings(presenterSettings);
       list.replaceChildren();
-      const entries = Array.isArray(items) ? latestTestAudioRevisions(items as AudioItem[]) : [];
+      const entries = Array.isArray(items) ? newestMarketAudioFirst(latestTestAudioRevisions(items as AudioItem[])) : [];
       if (!entries.length) { list.textContent = '目前尚無已完成的市場快報語音。'; return; }
       for (const item of entries) {
         const card = document.createElement('article');

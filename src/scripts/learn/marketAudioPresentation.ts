@@ -41,3 +41,9 @@ export function marketAudioDateTime(createdAt: string | undefined, language: 'zh
   }
   return `${formatter.format(date)} (Taipei time)`;
 }
+
+/** Newest report day first; ties by creation time. Undated rows go last. */
+export function newestMarketAudioFirst<T extends { day?: string; createdAt?: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => (b.day ?? '').localeCompare(a.day ?? '')
+    || (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+}
