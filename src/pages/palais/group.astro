@@ -498,6 +498,17 @@ if (!isLoggedIn) {
     cursor: grab;
   }
 
+  /* 手機長按拖曳：不要跳出「儲存圖片」選單、不要選取文字 */
+  .pg-draggable,
+  .pg-draggable img {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .pg-draggable.touch-dragging {
+    opacity: 0.35;
+  }
+
   /* hover 時顯示在人物身上的總戰力徽章 */
   .power-badge {
     position: absolute;
@@ -671,6 +682,7 @@ if (!isLoggedIn) {
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
   import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
   import { resolveImageUrl } from '../../scripts/palais/businessImage';
+  import { enableTouchDrag } from '../../scripts/palais/touchDrag';
   import {
     buildIndex,
     buildIndexFromFiles,
@@ -996,6 +1008,48 @@ if (!isLoggedIn) {
       toggle.setAttribute('title', min ? '展開' : '最小化');
     }
     localStorage.setItem(MIN_KEY, min ? '1' : '0');
+  }
+  // 同一排內：把 card 插到 targetCard 的前或後（依落點在目標左半 / 右半）
+  function reorderCard(card: HTMLElement, targetCard: HTMLElement, clientX: number) {
+    const grid = targetCard.parentElement as HTMLElement | null;
+    if (!grid || card === targetCard || card.parentElement !== grid) return;
+    const rect = targetCard.getBoundingClientRect();
+    const insertAfter = clientX >= rect.left + rect.width / 2;
+    grid.insertBefore(card, insertAfter ? targetCard.nextSibling : targetCard);
+    saveGroupOrder(grid);
+    scheduleCharacterInfoLayout();
+    refreshPlaybackNeighbours();
+  }
+  // 手機長按拖曳放開時，依手指下的元素決定去向（與 HTML5 的 drop 行為一致）
+  function dropCardAt(card: HTMLElement, target: Element | null, clientX: number) {
+    if (!target) return;
+    const cart = target.closest('#palais-cart');
+    if (cart) {
+      if (cart.classList.contains('minimized')) setMinimized(false);
+      moveCardToCart(card);
+      return;
+    }
+    const targetCard = target.closest<HTMLElement>('.pg-draggable');
+    if (
+      targetCard &&
+      targetCard !== card &&
+      targetCard.parentElement?.classList.contains('box-container') &&
+      card.parentElement === targetCard.parentElement
+    ) {
+      reorderCard(card, targetCard, clientX);
+      return;
+    }
+    const army = target.closest<HTMLElement>('.army-container');
+    if (army) moveCardToArmy(card, army);
+  }
+  function initTouchDrag() {
+    const cart = document.getElementById('palais-cart');
+    enableTouchDrag({
+      cardSelector: '.pg-draggable',
+      onHover: (target) => cart?.classList.toggle('drag-over', !!target?.closest('#palais-cart')),
+      onDrop: (card, target, x) => dropCardAt(card, target, x),
+      onEnd: () => cart?.classList.remove('drag-over'),
+    });
   }
   function initCart() {
     const cart = document.getElementById('palais-cart');
@@ -1841,15 +1895,7 @@ if (!isLoggedIn) {
       if (draggedCard.parentElement !== grid || draggedCard === characterContainer) return;
       e.preventDefault();
       e.stopPropagation();
-      const targetRect = characterContainer.getBoundingClientRect();
-      const insertAfter = e.clientX >= targetRect.left + targetRect.width / 2;
-      grid.insertBefore(
-        draggedCard,
-        insertAfter ? characterContainer.nextSibling : characterContainer,
-      );
-      saveGroupOrder(grid);
-      scheduleCharacterInfoLayout();
-      refreshPlaybackNeighbours();
+      reorderCard(draggedCard, characterContainer, e.clientX);
       draggedCard = null;
     });
 
@@ -2594,6 +2640,7 @@ if (!isLoggedIn) {
     groupContainer.dataset.initialized = 'true';
 
     initCart();
+    initTouchDrag();
     loadData();
 
     const refreshBtn = document.getElementById('refresh-data');
