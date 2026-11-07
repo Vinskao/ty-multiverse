@@ -504,6 +504,23 @@ nav {
   .theme-toggle {
     margin-top: 0;
   }
+
+  /* 手機版 .link 會把背景設成 transparent，登入鈕字色又是深色 → 整顆變黑；用更高優先權還原 */
+  .link.nav-auth-trigger {
+    display: inline-flex;
+    justify-content: center;
+    width: auto;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: var(--gray-100);
+    color: var(--gray-999);
+  }
+
+  .link.nav-auth-trigger:hover,
+  .link.nav-auth-trigger:focus-visible {
+    background: var(--gray-300);
+    color: var(--gray-999);
+  }
 }
 
 /* 小螢幕手機版 RWD 樣式 */
