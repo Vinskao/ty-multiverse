@@ -52,24 +52,19 @@ TY-Multiverse 前端為多維度管理系統，包含：
 
 ```mermaid
 graph TD
-    Client[客戶端/瀏覽器] --> |請求| Router[路由層]
-    Router --> |重定向| SSO[SSO Server 認證]
-    SSO --> |驗證| API[TY-Multiverse-Backend]
-    API --> |查詢| DB[(數據庫)]
-    
-    Client --> |請求圖片| Nginx[Nginx Static File Server]
-    Nginx --> |提供| Images[角色圖片]
-    
-    subgraph 客戶端緩存
-        BrowserCache[瀏覽器緩存]
-        BrowserCache --> |localStorage| CharacterData[角色戰力數據]
-        BrowserCache --> |localStorage| ThemeData[主題設置]
-        BrowserCache --> |localStorage| EditorContent[編輯器內容]
-        BrowserCache --> |localStorage| FightData[戰鬥數據]
-    end
-    
-    Client --> |讀取/寫入| BrowserCache
-    API --> |返回數據| Client
+    Browser["瀏覽器"] --> Astro["Astro 6 SSR（Node，src/pages）"]
+    Astro --> MW["middleware.ts 舊網址轉址"]
+    Astro --> Islands["React islands（src/components/*.tsx）"]
+    Astro --> Scripts["前端腳本（src/scripts/*）"]
+    Scripts --> LS["瀏覽器 localStorage / 快取"]
+    Scripts --> Services["Service 層（src/services/api）"]
+    Services -->|"HTTP /tymg"| Gateway["TY-Multiverse-Gateway"]
+    Gateway --> Backend["TY-Multiverse-Backend"]
+    Services -->|"OIDC 登入"| SSO["Keycloak SSO（/sso）"]
+    Scripts -->|"HTTP /maya-sawa"| Maya["Maya-Sawa FastAPI"]
+    Astro --> ApiRoutes["Astro API 路由（src/pages/api）"]
+    ApiRoutes -->|"market、runpod、blog 代理"| Maya
+    Docker["Dockerfile（node:22-alpine）"] --> Astro
 ```
 
 ### Astro 組件架構
