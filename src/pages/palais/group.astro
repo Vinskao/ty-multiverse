@@ -433,6 +433,15 @@ if (!isLoggedIn) {
   }
 
 
+  /* 手機橫向：視窗只剩 ~320–430px 高，滿尺寸菜籃（330px+）會蓋住整個畫面、頁面根本看不到也滑不動。
+     縮小菜籃卡片（!important 才蓋得過 palaisMediaZoom 寫在 style 屬性上的 scale），讓出上方空間。
+     下載走原圖合併、不受這個縮放影響。 */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #palais-cart {
+      --palais-media-scale: 0.32 !important;
+    }
+  }
+
   /* 菜籃放不下時的提示動畫 */
   #palais-cart.cart-full {
     border-color: #ff5757 !important;

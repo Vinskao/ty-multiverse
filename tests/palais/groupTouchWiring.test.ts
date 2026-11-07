@@ -29,4 +29,11 @@ describe('palais group page: touch drag wiring', () => {
     expect(call).toMatch(/holdMs:\s*(5\d\d|[6-9]\d\d)/);
     expect(page).toContain('army && !army.contains(card)');
   });
+
+  it('shrinks the basket on short landscape phones so it cannot cover the whole screen', () => {
+    const rule = page.match(/@media \(max-height: (\d+)px\) and \(orientation: landscape\)\s*\{\s*#palais-cart\s*\{[^}]*--palais-media-scale:\s*([\d.]+)\s*!important/);
+    expect(rule).not.toBeNull();
+    expect(Number(rule![1])).toBeGreaterThanOrEqual(430);
+    expect(Number(rule![2])).toBeLessThanOrEqual(0.4);
+  });
 });
