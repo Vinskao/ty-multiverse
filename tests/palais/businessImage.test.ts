@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { BUSINESS_SUFFIX, peopleImageUrl, resolveImageUrl } from '../../src/scripts/palais/businessImage';
+import { BUSINESS_SUFFIX, HIKING_SUFFIX, peopleImageUrl, resolveImageUrl } from '../../src/scripts/palais/businessImage';
 
 const BASE = 'https://img.example/images/people';
 
@@ -66,5 +66,61 @@ describe('group page basket business button', () => {
     const fn = page.slice(page.indexOf('async function downloadCartRow'));
     expect(fn).toContain('resolveImageUrl(');
     expect(fn).not.toMatch(/fetch\(`\$\{PEOPLE_IMAGE_URL\}\/\$\{encodeURIComponent\(name\)\}\.png/);
+  });
+});
+
+describe('hiking ("越野") image variant', () => {
+  it('uses ${name}Hiking.png for the hiking version', () => {
+    expect(HIKING_SUFFIX).toBe('Hiking');
+    expect(peopleImageUrl(BASE, 'Wavo', '123', 'hiking')).toBe(`${BASE}/WavoHiking.png?t=123`);
+  });
+
+  it('keeps boolean true meaning the business version', () => {
+    expect(peopleImageUrl(BASE, 'Wavo', '1', true)).toBe(`${BASE}/WavoBusiness.png?t=1`);
+    expect(peopleImageUrl(BASE, 'Wavo', '1', null)).toBe(`${BASE}/Wavo.png?t=1`);
+  });
+
+  it('returns the hiking image when it exists and falls back to the original when it does not', async () => {
+    const found = await resolveImageUrl({ base: BASE, name: 'Wavo', timestamp: '1', variant: 'hiking', exists: async () => true });
+    expect(found).toBe(`${BASE}/WavoHiking.png?t=1`);
+    const missing = await resolveImageUrl({ base: BASE, name: 'Wavo', timestamp: '1', variant: 'hiking', exists: async () => false });
+    expect(missing).toBe(`${BASE}/Wavo.png?t=1`);
+    const failing = await resolveImageUrl({
+      base: BASE, name: 'Wavo', timestamp: '1', variant: 'hiking',
+      exists: async () => { throw new Error('network'); },
+    });
+    expect(failing).toBe(`${BASE}/Wavo.png?t=1`);
+  });
+
+  it('does not look for variants when none is selected', async () => {
+    const exists = vi.fn(async () => true);
+    expect(await resolveImageUrl({ base: BASE, name: 'Wavo', timestamp: '1', variant: null, exists })).toBe(`${BASE}/Wavo.png?t=1`);
+    expect(exists).not.toHaveBeenCalled();
+  });
+});
+
+describe('group page basket hiking button', () => {
+  const page = readFileSync(resolve(process.cwd(), 'src/pages/palais/group.astro'), 'utf8');
+
+  it('has a 越野 toggle next to 商務, hidden when the basket is minimized, with a lit state', () => {
+    expect(page).toMatch(/id="cart-hiking"[^>]*aria-pressed="false"[^>]*>越野</);
+    expect(page.indexOf('id="cart-business"')).toBeLessThan(page.indexOf('id="cart-hiking"'));
+    expect(page.indexOf('id="cart-hiking"')).toBeLessThan(page.indexOf('id="cart-download"'));
+    expect(page).toMatch(/#palais-cart\.minimized #cart-hiking/);
+    expect(page).toMatch(/#cart-hiking\[aria-pressed="true"\]/);
+  });
+
+  it('makes 商務 and 越野 mutually exclusive and remembers the choice', () => {
+    expect(page).toContain("'palais-cart-hiking'");
+    expect(page).toMatch(/getElementById\('cart-hiking'\)\?\.addEventListener\('click'/);
+    const click = page.slice(page.indexOf("getElementById('cart-business')?.addEventListener"), page.indexOf('applyVariantMode();', page.indexOf("getElementById('cart-hiking')?.addEventListener")));
+    expect(click).toContain("'business'");
+    expect(click).toContain("'hiking'");
+    expect(click).toMatch(/cartVariant === 'hiking' \? null : 'hiking'/);
+  });
+
+  it('uses the selected variant for the basket download too', () => {
+    const fn = page.slice(page.indexOf('async function downloadCartRow'));
+    expect(fn).toMatch(/variant: cartVariant/);
   });
 });
