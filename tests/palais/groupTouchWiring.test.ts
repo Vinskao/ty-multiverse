@@ -23,4 +23,10 @@ describe('palais group page: touch drag wiring', () => {
     expect(page).toContain('reorderCard(draggedCard, characterContainer, e.clientX)');
     expect(page).toContain('-webkit-touch-callout: none');
   });
+
+  it('does not hijack scrolling: long hold, and a press that never moves is not a move', () => {
+    const call = page.slice(page.indexOf('function initTouchDrag'), page.indexOf('function initCart'));
+    expect(call).toMatch(/holdMs:\s*(5\d\d|[6-9]\d\d)/);
+    expect(page).toContain('army && !army.contains(card)');
+  });
 });

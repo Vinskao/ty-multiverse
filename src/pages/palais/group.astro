@@ -1040,12 +1040,16 @@ if (!isLoggedIn) {
       return;
     }
     const army = target.closest<HTMLElement>('.army-container');
-    if (army) moveCardToArmy(card, army);
+    // 已經在這個隊伍裡又沒放在別張卡上 = 沒有要搬，別把卡片丟到隊伍最後面
+    if (army && !army.contains(card)) moveCardToArmy(card, army);
   }
   function initTouchDrag() {
     const cart = document.getElementById('palais-cart');
     enableTouchDrag({
       cardSelector: '.pg-draggable',
+      // 橫向時卡片鋪滿整個畫面，太短的長按會把「停一下再滑」的捲動誤判成拖曳
+      holdMs: 550,
+      tolerance: 8,
       onHover: (target) => cart?.classList.toggle('drag-over', !!target?.closest('#palais-cart')),
       onDrop: (card, target, x) => dropCardAt(card, target, x),
       onEnd: () => cart?.classList.remove('drag-over'),
