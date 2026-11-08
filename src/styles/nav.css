@@ -1,11 +1,16 @@
 /* Nav 組件樣式 */
-nav {
-  --nav-height: 3.5rem;
+/* Other <nav> elements (sidebar menus, breadcrumbs) must size to their content; only the site header bar is fixed. */
+:root { --nav-height: 3.5rem; }
+
+nav:has(> .menu-header) {
   box-sizing: content-box; /* the 1px border sits outside the fixed height */
   height: var(--nav-height);
   min-height: var(--nav-height);
   max-height: var(--nav-height);
   flex-wrap: nowrap;
+}
+
+nav {
   z-index: 9999;
   position: sticky;
   top: 0;

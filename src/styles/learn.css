@@ -32,6 +32,9 @@
 .learn-catalog-video video { display: block; width: 100%; height: auto; aspect-ratio: 832 / 544; max-height: 70vh; object-fit: contain; pointer-events: none; }
 .learn-catalog-video video + video { position: absolute; inset: 0; height: 100%; }
 .learn-catalog-video video { transition: opacity 1s ease-in-out; }
+/* Not logged in as an allowed viewer: show only the top half, same as the 每日市場精讀 presenter frames. */
+.learn-catalog-video[data-full="false"] { aspect-ratio: 32 / 9; }
+.learn-catalog-video[data-full="false"] video, .learn-catalog-video[data-full="false"] video + video { position: absolute; top: 0; left: 0; width: 100%; height: auto; aspect-ratio: 832 / 544; }
 .learn-catalog-video video::-webkit-media-controls { display: none !important; }
 .learn-catalog-video video::-webkit-media-controls-start-playback-button, .learn-catalog-video video::-webkit-media-controls-overlay-play-button, .learn-catalog-video video::-webkit-media-controls-panel, .learn-catalog-video video::-webkit-media-controls-enclosure { display: none !important; -webkit-appearance: none; opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .learn-catalog-video { display: none; } }

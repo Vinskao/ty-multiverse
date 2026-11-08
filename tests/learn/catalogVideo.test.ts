@@ -136,3 +136,18 @@ describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
     vi.useRealTimers();
   });
 });
+
+describe('catalog videos follow the same login rule as 每日市場精讀', () => {
+  const page = readFileSync('src/pages/learn.astro', 'utf8');
+  const css = readFileSync('src/styles/learn.css', 'utf8');
+
+  it('starts cropped and is switched to full by the shared presenter-access check', () => {
+    expect(page).toMatch(/class="learn-catalog-video"[^>]*data-full="false"/);
+    expect(page).toMatch(/querySelectorAll<HTMLElement>\('\.presenter-frame, \.learn-catalog-video'\)/);
+  });
+
+  it('crops to the top half when not full and shows the whole frame when full', () => {
+    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*32\s*\/\s*9/);
+    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\] video[^{]*\{[^}]*top:\s*0/);
+  });
+});

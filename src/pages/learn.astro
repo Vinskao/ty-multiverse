@@ -34,7 +34,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
           <h1>學習中心</h1>
           <p>從英文到經濟與工程，依主題建立知識。多益練習已開放，其餘先規劃考試範圍。</p>
         </header>
-        <div class="learn-catalog-video" aria-hidden="true">
+        <div class="learn-catalog-video" data-full="false" aria-hidden="true">
           <video src="https://tymultiverse.cc/images/people/walking.mp4" autoplay muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
           <video src="https://tymultiverse.cc/images/people/hiking.mp4" muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
         </div>
@@ -159,10 +159,10 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
   async function updatePresenterAccess() {
     const version = ++presenterAccessVersion;
     const token = localStorage.getItem('token');
-    document.querySelectorAll<HTMLElement>('.presenter-frame').forEach(frame => { frame.dataset.full = 'false'; });
+    document.querySelectorAll<HTMLElement>('.presenter-frame, .learn-catalog-video').forEach(frame => { frame.dataset.full = 'false'; });
     const allowed = await canShowFullPresenter(token, fetch, GATEWAY_API_BASE);
     if (version !== presenterAccessVersion || token !== localStorage.getItem('token')) return;
-    document.querySelectorAll<HTMLElement>('.presenter-frame').forEach(frame => { frame.dataset.full = allowed ? 'true' : 'false'; });
+    document.querySelectorAll<HTMLElement>('.presenter-frame, .learn-catalog-video').forEach(frame => { frame.dataset.full = allowed ? 'true' : 'false'; });
   }
   document.addEventListener('tym:auth-changed', updatePresenterAccess);
   window.addEventListener('storage', event => { if (event.key === 'token') void updatePresenterAccess(); });
@@ -254,6 +254,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
     }).catch(() => { list.textContent = '市場快報暫時無法載入。'; });
   }
   document.addEventListener("astro:page-load", loadMarketAudio);
+  document.addEventListener("astro:page-load", () => { void updatePresenterAccess(); });
 </script>
 
 <script>
