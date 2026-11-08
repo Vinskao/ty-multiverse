@@ -49,6 +49,8 @@ FROM base AS runtime
 COPY --from=prod-deps /app/node_modules ./node_modules
 # Copy built files
 COPY --from=build /app/dist ./dist
+# Cache-Control policy for static files (see server/cache-headers.mjs)
+COPY --from=build /app/server ./server
 # Copy storages JSON for static access
 COPY --from=build /app/src/storages ./dist/client/storages
 # Copy content directory for API access
@@ -62,4 +64,4 @@ ENV PORT=4321
 EXPOSE 4321
 
 ENTRYPOINT []
-CMD ["node", "./dist/server/entry.mjs"]
+CMD ["node", "--import", "./server/cache-headers.mjs", "./dist/server/entry.mjs"]

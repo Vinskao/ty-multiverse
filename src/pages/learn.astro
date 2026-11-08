@@ -13,9 +13,9 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
       <nav class="learn-subject-menu" aria-label="學習領域">
         {learnCatalog.map(subject => <div class="learn-sidebar-section">
           <button type="button" class="learn-topic learn-subject-button" data-subject-id={subject.id}>{subject.title}</button>
+          {subject.courses.map(course => <button type="button" class="learn-topic learn-topic-link" data-submenu={subject.id} data-subject-id={subject.id} data-course-id={course.id} hidden>{course.title}</button>)}
           {subject.id === 'english' && <nav id="learn-topics" class="learn-topics" data-submenu="english" aria-label="多益題目" hidden>載入中…</nav>}
           {subject.id === 'macroeconomics' && <button id="learn-maya-open" class="learn-topic learn-topic-link" data-submenu="macroeconomics" type="button" hidden>市場快報｜主播精讀</button>}
-          {subject.id === 'microeconomics' && <button type="button" class="learn-topic learn-topic-link" data-submenu="microeconomics" data-subject-id="microeconomics" data-course-id="semiconductor" hidden>半導體</button>}
         </div>)}
       </nav>
       <button id="learn-mentor-open" class="learn-mentor-link" type="button" hidden>導師模式：全班作答狀況</button>

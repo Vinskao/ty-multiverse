@@ -28,9 +28,29 @@ it('offers each catalog subject and nests Maya and semiconductors under their su
   const page = readFileSync(resolve(__dirname, '../../src/pages/learn.astro'), 'utf8');
   expect(page).toContain('learnCatalog.map(subject =>');
   expect(page).toContain("subject.id === 'macroeconomics' && <button id=\"learn-maya-open\"");
-  expect(page).toContain("subject.id === 'microeconomics' && <button");
   expect(page).toContain('node.dataset.catalogSubject !== button.dataset.subjectId');
   expect(page).toContain('node.dataset.catalogCourse !== button.dataset.courseId');
   const css = readFileSync(resolve(__dirname, '../../src/styles/learn.css'), 'utf8');
   expect(css).toMatch(/\.learn-course\[hidden\],\s*\.learn-subject\[hidden\]\s*\{\s*display:\s*none/);
+});
+
+it('opens every subject into same-level sub-items generated from the catalog, with 市場快報 beside the macro courses', () => {
+  const page = readFileSync(resolve(__dirname, '../../src/pages/learn.astro'), 'utf8');
+  // one sidebar sub-item per catalog course, for every subject (英文 → TOEIC, 總體經濟 → 通膨… , 個體經濟, 物件導向)
+  expect(page).toMatch(/subject\.courses\.map\(course => <button[^>]*data-submenu=\{subject\.id\}[^>]*data-course-id=\{course\.id\}/);
+  // the market briefing is a sibling of the macro courses, not a child of anything else
+  const macro = page.indexOf("subject.id === 'macroeconomics' && <button id=\"learn-maya-open\"");
+  const courses = page.indexOf('subject.courses.map(course => <button');
+  expect(courses).toBeGreaterThan(-1);
+  expect(macro).toBeGreaterThan(courses);
+  expect(page.slice(macro, macro + 260)).toContain('data-submenu="macroeconomics"');
+  // 英文 keeps the loaded TOEIC topics under its TOEIC item
+  expect(page).toContain('id="learn-topics"');
+});
+
+it('lists the sub-items the user named', async () => {
+  const { learnCatalog } = await import('../../src/scripts/learn/catalog');
+  const titles = (id: string) => learnCatalog.find(subject => subject.id === id)!.courses.map(course => course.title);
+  expect(titles('english')).toContain('多益 TOEIC');
+  expect(titles('macroeconomics')).toEqual(['通膨與物價', '利率與貨幣政策', '就業與消費', '貿易與匯率']);
 });
