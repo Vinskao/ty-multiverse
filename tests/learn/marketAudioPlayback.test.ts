@@ -137,3 +137,30 @@ describe('market audio playback', () => {
     vi.useRealTimers();
   });
 
+
+describe('video never stays stopped while the narration is playing', () => {
+  it('restarts a stalled clip within a few seconds and stops watching when the audio ends', () => {
+    vi.useFakeTimers();
+    const list = document.createElement('div');
+    const audio = document.createElement('audio');
+    const frame = document.createElement('div');
+    const video = document.createElement('video');
+    frame.append(video); list.append(audio, frame);
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    vi.spyOn(audio, 'paused', 'get').mockReturnValue(false);
+    bindMarketAudioPlayback(list, audio, video);
+    audio.dispatchEvent(new Event('playing'));
+    // the browser silently stopped the clip (no 'ended', no reverse): nothing moves while the audio plays
+    video.currentTime = 5;
+    play.mockClear();
+    vi.advanceTimersByTime(4000);
+    expect(video.currentTime).toBe(0);
+    expect(play).toHaveBeenCalled();
+    audio.dispatchEvent(new Event('ended'));
+    play.mockClear();
+    vi.advanceTimersByTime(10000);
+    expect(play).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+});

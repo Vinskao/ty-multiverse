@@ -44,6 +44,33 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   let sequenceIndex = 0;
   let reverseTimer: ReturnType<typeof setTimeout> | undefined;
   let lastReverseTime = 0;
+  // Watchdog: while the narration plays, a video that has not moved for ~2 s is restarted from the top.
+  let watchdog: ReturnType<typeof setInterval> | undefined;
+  let lastSignature = '';
+  let idleTicks = 0;
+  function stopWatchdog() {
+    if (watchdog !== undefined) clearInterval(watchdog);
+    watchdog = undefined;
+    idleTicks = 0;
+  }
+  function startWatchdog() {
+    if (watchdog !== undefined) return;
+    lastSignature = '';
+    watchdog = setInterval(() => {
+      if (!audioPlaying || audio.paused || audio.ended) { stopWatchdog(); return; }
+      const current = players[active];
+      const signature = `${active}:${current.currentTime.toFixed(2)}`;
+      idleTicks = signature === lastSignature ? idleTicks + 1 : 0;
+      lastSignature = signature;
+      if (idleTicks < 2) return;
+      idleTicks = 0;
+      stopReverse();
+      reversing = false;
+      switching = false;
+      current.currentTime = 0;
+      void current.play().catch(() => {});
+    }, 1000);
+  }
   function stopReverse() {
     if (reverseTimer !== undefined) clearTimeout(reverseTimer);
     reverseTimer = undefined;
@@ -108,11 +135,12 @@ export function bindMarketAudioPlayback(list: HTMLElement, audio: HTMLAudioEleme
   });
   audio.addEventListener('playing', () => {
     audioPlaying = true;
+    startWatchdog();
     const current = players[active];
     if (reversing) startReverse();
     else void (switching ? players[1 - active] : current).play().catch(() => {});
   });
   for (const event of ['pause', 'waiting', 'ended', 'error']) {
-    audio.addEventListener(event, () => { audioPlaying = false; stopReverse(); players.forEach(player => player.pause()); });
+    audio.addEventListener(event, () => { audioPlaying = false; stopReverse(); stopWatchdog(); players.forEach(player => player.pause()); });
   }
 }
