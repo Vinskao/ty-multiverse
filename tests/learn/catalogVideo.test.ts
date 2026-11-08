@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
 
 describe('learn catalog looping video', () => {
   const page = readFileSync('src/pages/learn.astro', 'utf8');
@@ -11,7 +12,9 @@ describe('learn catalog looping video', () => {
     expect(video).toBeLessThan(page.indexOf('<h2>探索學習領域</h2>'));
     const tag = page.slice(page.lastIndexOf('<video', video), page.indexOf('</video>', video));
     expect(tag).toContain('autoplay');
-    expect(tag).toContain('loop');
+    expect(tag).not.toContain(' loop');
+    expect(page).toContain('images/people/hiking.mp4');
+    expect(page.indexOf('walking.mp4')).toBeLessThan(page.indexOf('hiking.mp4'));
     expect(tag).toContain('muted');
     expect(tag).toContain('playsinline');
     expect(tag).not.toContain('controls');
@@ -39,5 +42,52 @@ describe('learn catalog video autoplay fallback (iOS low power mode)', () => {
   it('hides the WebKit start-playback overlay', () => {
     expect(css).toContain('::-webkit-media-controls-start-playback-button');
     expect(css).toContain('::-webkit-media-controls-overlay-play-button');
+  });
+});
+
+
+describe('walking -> hiking cross-fade playlist', () => {
+  function setup(durations = [10, 8]) {
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
+    const [a, b] = Array.from(document.querySelectorAll('video'));
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    [a, b].forEach((v, i) => Object.defineProperty(v, 'duration', { value: durations[i], configurable: true }));
+    keepCatalogVideoPlaying(document, 1);
+    return { a, b, play };
+  }
+  const at = (v: HTMLVideoElement, t: number) => { v.currentTime = t; v.dispatchEvent(new Event('timeupdate')); };
+
+  it('starts hiking under walking one second before walking ends, fading walking out', () => {
+    vi.useFakeTimers();
+    const { a, b } = setup();
+    expect(a.style.opacity).toBe('1');
+    expect(b.style.opacity).toBe('0');
+    at(a, 8);
+    expect(b.style.opacity).toBe('0');
+    at(a, 9.2);
+    expect(b.style.opacity).toBe('1');
+    expect(a.style.opacity).toBe('0');
+    vi.advanceTimersByTime(1100);
+    expect(a.currentTime).toBe(0);
+    vi.useRealTimers();
+  });
+
+  it('repeats: after hiking comes walking again', () => {
+    vi.useFakeTimers();
+    const { a, b } = setup();
+    at(a, 9.5); vi.advanceTimersByTime(1100);
+    at(b, 7.5);
+    expect(a.style.opacity).toBe('1');
+    expect(b.style.opacity).toBe('0');
+    vi.useRealTimers();
+  });
+
+  it('keeps looping walking alone when hiking.mp4 cannot be loaded', () => {
+    const { a, b } = setup();
+    b.dispatchEvent(new Event('error'));
+    at(a, 9.5);
+    expect(a.style.opacity).toBe('1');
+    expect(a.currentTime).toBe(0);
   });
 });
