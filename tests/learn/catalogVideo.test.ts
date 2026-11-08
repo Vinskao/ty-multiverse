@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { discoverNumberedClips, keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
+import { clipExists, discoverNumberedClips, keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
 
 describe('learn catalog looping video', () => {
   const page = readFileSync('src/pages/learn.astro', 'utf8');
@@ -94,10 +94,21 @@ describe('walking -> hiking cross-fade playlist', () => {
 
 
 describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
-  it('discovers numbered clips until the first missing one', async () => {
-    const have = new Set(['https://x/w2.mp4', 'https://x/w3.mp4', 'https://x/w5.mp4']);
-    const urls = await discoverNumberedClips(async url => have.has(url.replace('https://x/walking', 'https://x/w')), 'https://x/walking', 20);
-    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4']);
+  it('discovers every numbered clip that exists, even with gaps, in numeric order', async () => {
+    const have = new Set(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking5.mp4', 'https://x/walking12.mp4']);
+    const urls = await discoverNumberedClips(async url => have.has(url), 'https://x/walking', 30);
+    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking5.mp4', 'https://x/walking12.mp4']);
+  });
+
+  it('accepts the text/plain the image server labels mp4 files with, but not an HTML error page', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch');
+    spy.mockResolvedValueOnce(new Response(null, { status: 200, headers: { 'Content-Type': 'text/plain' } }));
+    expect(await clipExists('https://x/walking2.mp4')).toBe(true);
+    spy.mockResolvedValueOnce(new Response(null, { status: 200, headers: { 'Content-Type': 'text/html' } }));
+    expect(await clipExists('https://x/walking3.mp4')).toBe(false);
+    spy.mockResolvedValueOnce(new Response(null, { status: 404, headers: { 'Content-Type': 'text/html' } }));
+    expect(await clipExists('https://x/walking4.mp4')).toBe(false);
+    spy.mockRestore();
   });
 
   it('finds nothing (and does not throw) when probing fails', async () => {

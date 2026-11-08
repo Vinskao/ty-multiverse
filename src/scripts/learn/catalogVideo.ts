@@ -5,28 +5,23 @@
 export const CATALOG_FADE_SECONDS = 1;
 
 export const CATALOG_CLIP_BASE = 'https://tymultiverse.cc/images/people/walking';
-export const CATALOG_MAX_NUMBERED_CLIPS = 20;
+export const CATALOG_MAX_NUMBERED_CLIPS = 30;
 
-/** walking2.mp4, walking3.mp4 ... : keep going until the first one that does not exist. */
+/** walking2.mp4, walking3.mp4 ... up to the maximum: every one that exists joins, gaps do not stop the search. */
 export async function discoverNumberedClips(
   exists: (url: string) => Promise<boolean>,
   base = CATALOG_CLIP_BASE,
   max = CATALOG_MAX_NUMBERED_CLIPS,
 ): Promise<string[]> {
-  const found: string[] = [];
-  for (let number = 2; number <= max; number += 1) {
-    const url = `${base}${number}.mp4`;
-    let ok = false;
-    try { ok = await exists(url); } catch { ok = false; }
-    if (!ok) break;
-    found.push(url);
-  }
-  return found;
+  const urls = Array.from({ length: Math.max(0, max - 1) }, (_, index) => `${base}${index + 2}.mp4`);
+  const results = await Promise.all(urls.map(async url => { try { return await exists(url); } catch { return false; } }));
+  return urls.filter((_, index) => results[index]);
 }
 
+/** The image server labels mp4 files text/plain, so only a missing file or an HTML error page counts as absent. */
 export async function clipExists(url: string): Promise<boolean> {
   const response = await fetch(url, { method: 'HEAD' });
-  return response.ok && /^video\//.test(response.headers.get('Content-Type') || '');
+  return response.ok && !/html/i.test(response.headers.get('Content-Type') || '');
 }
 
 export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds = CATALOG_FADE_SECONDS): { add(url: string): void } | undefined {
