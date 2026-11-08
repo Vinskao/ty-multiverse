@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
+import { discoverNumberedClips, keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
 
 describe('learn catalog looping video', () => {
   const page = readFileSync('src/pages/learn.astro', 'utf8');
@@ -89,5 +89,39 @@ describe('walking -> hiking cross-fade playlist', () => {
     at(a, 9.5);
     expect(a.style.opacity).toBe('1');
     expect(a.currentTime).toBe(0);
+  });
+});
+
+
+describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
+  it('discovers numbered clips until the first missing one', async () => {
+    const have = new Set(['https://x/w2.mp4', 'https://x/w3.mp4', 'https://x/w5.mp4']);
+    const urls = await discoverNumberedClips(async url => have.has(url.replace('https://x/walking', 'https://x/w')), 'https://x/walking', 20);
+    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4']);
+  });
+
+  it('finds nothing (and does not throw) when probing fails', async () => {
+    expect(await discoverNumberedClips(async () => { throw new Error('offline'); })).toEqual([]);
+  });
+
+  it('plays an added clip after the existing ones, then wraps around to the first', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const playlist = keepCatalogVideoPlaying(document, 1)!;
+    playlist.add('https://x/walking2.mp4');
+    const [a, b, c] = Array.from(document.querySelectorAll('video'));
+    [a, b, c].forEach(v => Object.defineProperty(v, 'duration', { value: 10, configurable: true }));
+    const at = (v: HTMLVideoElement, t: number) => { v.currentTime = t; v.dispatchEvent(new Event('timeupdate')); };
+    at(a, 9.5); vi.advanceTimersByTime(1100);
+    expect(b.style.opacity).toBe('1');
+    at(b, 9.5); vi.advanceTimersByTime(1100);
+    expect(c.src).toContain('walking2.mp4');
+    expect(c.style.opacity).toBe('1');
+    expect(b.style.opacity).toBe('0');
+    at(c, 9.5);
+    expect(a.style.opacity).toBe('1');
+    vi.useRealTimers();
   });
 });

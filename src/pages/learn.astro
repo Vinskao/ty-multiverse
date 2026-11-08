@@ -138,8 +138,12 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 </BaseLayout>
 
 <script>
-  import { keepCatalogVideoPlaying } from "../scripts/learn/catalogVideo";
-  document.addEventListener("astro:page-load", () => keepCatalogVideoPlaying());
+  import { keepCatalogVideoPlaying, discoverNumberedClips, clipExists } from "../scripts/learn/catalogVideo";
+  document.addEventListener("astro:page-load", () => {
+    const playlist = keepCatalogVideoPlaying();
+    // walking2.mp4, walking3.mp4 ... join the playlist automatically as they are uploaded
+    if (playlist) void discoverNumberedClips(clipExists).then(urls => urls.forEach(url => playlist.add(url)));
+  });
 </script>
 
 <script>
