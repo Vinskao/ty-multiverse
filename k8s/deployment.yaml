@@ -24,8 +24,14 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 3
+  # 滾動更新：新 pod readiness 通過後才關舊 pod，部署期間不中斷。
+  # 2026-11-08 Recreate 讓舊 pod 先停、新 pod 卡 CreateContainerError，全站 503 約一小時。
+  # Jenkins 以 kubectl patch 強制套用同樣設定（Jenkinsfile 的 Deploy stage）。
   strategy:
-    type: Recreate  # 先刪除舊 pod，再建立新 pod，確保同時只有一個 pod
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: ty-multiverse-frontend
@@ -51,6 +57,13 @@ spec:
         image: papakao/ty-multiverse-frontend:latest
         ports:
         - containerPort: 4321
+        readinessProbe:
+          httpGet:
+            path: /robots.txt
+            port: 4321
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 3
         resources:
           requests:
             cpu: "30m"

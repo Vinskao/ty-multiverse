@@ -194,6 +194,10 @@ pipeline {
                                 kubectl patch deployment ty-multiverse-frontend -n default --type=strategic -p \
                                   '{"spec":{"template":{"spec":{"containers":[{"name":"ty-multiverse-frontend","env":[{"name":"MARKET_INTERNAL_SECRET","valueFrom":{"secretKeyRef":{"name":"market-internal-secret","key":"MARKET_INTERNAL_SECRET"}}},{"name":"MAYA_SAWA_INTERNAL_URL","value":"http://maya-sawa/maya-sawa"}]}]}}}}'
 
+                                # 滾動更新 + readiness：新 pod 就緒後才關舊 pod（2026-11-08 Recreate 造成全站 503 約一小時）
+                                kubectl patch deployment ty-multiverse-frontend -n default --type=strategic -p \
+                                  '{"spec":{"strategy":{"type":"RollingUpdate","rollingUpdate":{"maxSurge":1,"maxUnavailable":0}},"template":{"spec":{"containers":[{"name":"ty-multiverse-frontend","readinessProbe":{"httpGet":{"path":"/robots.txt","port":4321},"initialDelaySeconds":5,"periodSeconds":5,"failureThreshold":3}}]}}}}'
+
                                 # 更新部署
                                 kubectl set image deployment/ty-multiverse-frontend ty-multiverse-frontend=${DOCKER_IMAGE}:${DOCKER_TAG} -n default
 
