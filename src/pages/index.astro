@@ -561,6 +561,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 </BaseLayout>
 
 <script>
+	import { dailyReadingTitle } from '../scripts/home/dailyReading';
 	const root = document.querySelector<HTMLElement>('#home-daily-maya');
 	if (root) fetch(`${import.meta.env.BASE_URL}api/market/daily-maya`, { headers: { Accept: 'application/json' } })
 		.then(response => response.ok ? response.json() : Promise.reject())
@@ -568,8 +569,10 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 			const latest = Array.isArray(items) ? items[0] : null;
 			root.replaceChildren();
 			if (!latest) { root.textContent = '目前尚無已審核的每日精讀。'; return; }
+			const title = dailyReadingTitle(latest);
+			const heading = document.createElement('h4'); heading.textContent = title || '';
 			const date = document.createElement('p'); date.textContent = latest.day || '';
 			const content = document.createElement('p'); content.textContent = latest.content || '';
-			root.append(date, content);
+			root.append(...(title ? [heading] : []), date, content);
 		}).catch(() => { if (root) root.textContent = '每日精讀暫時無法載入。'; });
 </script>
