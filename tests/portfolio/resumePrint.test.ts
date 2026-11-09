@@ -64,3 +64,47 @@ describe('resume print content', () => {
     source.remove();
   });
 });
+
+describe('resume print content when the resume sections are wrapped in another section', () => {
+  // Live /about structure (2026-11): Background / Expertise / Project Experience / Education
+  // sit inside a "team-section" whose own heading is not a resume heading. The old filter
+  // removed that wrapper and, with it, every resume section - so Preview Resume was blank.
+  let source: HTMLElement;
+  beforeEach(() => {
+    source = document.createElement('main');
+    source.className = 'about';
+    source.innerHTML = `<section class="product-story"><h2>From idea to shared research</h2><p>Story</p></section>
+      <section class="team-section"><h2>Build the future together</h2>
+        <section><h2>Background</h2><div class="name-section"><h1>KAO TIAN YI</h1></div><p>Enterprise backend engineer.</p></section>
+        <section><h2>Expertise</h2><p>Python, Spring Boot</p></section>
+        <section><h2>Project Experience</h2><details class="experience-item"><summary class="job-header"><h3>Software Engineer</h3></summary><ul><li>2026/10 - Accounting reference data</li></ul></details></section>
+        <section><h2>Education</h2><h3>Hong Kong Polytechnic University</h3></section>
+        <section><h2>Tech Experience</h2><p>Duplicate skill diagrams</p></section>
+      </section>
+      <section class="founder-resume-tools"><h2>Architecture Diagrams</h2><div class="pdf-export-section"><button>Preview Resume</button></div></section>`;
+  });
+
+  it('keeps the resume sections that live inside a non-resume wrapper section', () => {
+    const result = prepareResumeContent(source);
+    expect(result.textContent).toContain('KAO TIAN YI');
+    expect(result.textContent).toContain('Enterprise backend engineer.');
+    expect(result.textContent).toContain('Python, Spring Boot');
+    expect(result.textContent).toContain('2026/10 - Accounting reference data');
+    expect(result.textContent).toContain('Hong Kong Polytechnic University');
+  });
+
+  it('still drops the wrapper heading, the story, diagrams and the tech section', () => {
+    const result = prepareResumeContent(source);
+    expect(result.textContent).not.toContain('Build the future together');
+    expect(result.textContent).not.toContain('From idea to shared research');
+    expect(result.textContent).not.toContain('Architecture Diagrams');
+    expect(result.textContent).not.toContain('Duplicate skill diagrams');
+  });
+
+  it('keeps the resume sections in page order and never produces an empty document', () => {
+    const result = prepareResumeContent(source);
+    const headings = Array.from(result.querySelectorAll('section > h2')).map(h => h.textContent);
+    expect(headings).toEqual(['Expertise', 'Project Experience', 'Education']);
+    expect(result.textContent?.trim().length).toBeGreaterThan(100);
+  });
+});

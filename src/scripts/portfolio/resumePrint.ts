@@ -8,9 +8,14 @@ export function prepareResumeContent(source: HTMLElement): HTMLElement {
   }).filter(Boolean);
   clone.querySelectorAll('button, script, style, nav, [data-admin-git-commit], .hero-section, .briefing-section, .briefing-inline, .pdf-export-section').forEach(node => node.remove());
   const headings = new Set(['Background', '背景', 'Expertise', '專長', 'Project Experience', '專案經歷', 'Education', '教育']);
-  clone.querySelectorAll('section').forEach(section => {
-    if (!headings.has(section.querySelector('h2')?.textContent?.trim() || '')) section.remove();
-  });
+  // Resume sections may be nested inside a wrapper section whose own heading is not a
+  // resume heading (the live page wraps them in "team-section"). Removing non-matching
+  // sections one by one would delete the wrapper together with every resume section, so
+  // pick the matching sections first and rebuild the document from them in page order.
+  const headingOf = (section: Element) => section.querySelector(':scope > h2')?.textContent?.trim() || '';
+  const wanted = Array.from(clone.querySelectorAll('section')).filter(section => headings.has(headingOf(section)));
+  const resumeSections = wanted.filter(section => !wanted.some(other => other !== section && other.contains(section)));
+  clone.replaceChildren(...resumeSections);
   clone.querySelectorAll('details').forEach(details => {
     const article = doc.createElement('article');
     article.className = details.className;
