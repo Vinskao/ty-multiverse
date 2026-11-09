@@ -35,14 +35,14 @@
       "period": "2024/3~2025/12",
       "projectExperience": {
         "en": [
-          "2025/04 ~ Present - Document Management System: Built Spring Boot backend with Redis Session, Spring Security, WebSocket, retry handling, and PostgreSQL optimization. Implemented REST APIs, ACL/versioning workflows, and real-time notification systems. Added JUnit5/Mockito testing and Grafana/Prometheus monitoring.",
+          "2025/04 ~ 2025/12 - Document Management System: Built Spring Boot backend with Redis Session, Spring Security, WebSocket, retry handling, and PostgreSQL optimization. Implemented REST APIs, ACL/versioning workflows, and real-time notification systems. Added JUnit5/Mockito testing and Grafana/Prometheus monitoring.",
           "2025/01 ~ 2025/03 - External Portal & Website: Implemented Redis TTL caching, distributed locking, session fixation protection, and concurrency-control workflows. Tuned high-load endpoints through cache optimization and request-flow analysis. Built ordered global exception handling for enterprise backend APIs.",
           "2024/08 ~ 2024/09 - DevOps Management Portal: Configured Spring Security, JWT, OAuth2 Resource Server, Keycloak/RedHat SSO, and RBAC authorization workflows. Designed secure authentication/session-management strategies for enterprise systems.",
           "2024/06 ~ 2024/07 - Cloud Infrastructure & Kubernetes Deployment: Designed OCI infrastructure including VCN, OKE, subnets, bastion, and load balancers using Terraform. Automated infrastructure provisioning and Kubernetes deployment workflows.",
           "2024/03 ~ 2024/05 - System Modernization & Deployment: Built JBoss WAR CI/CD pipelines supporting 10+ servers and containerized legacy applications. Upgraded Java applications from Java 8/11 to Java 17 and migrated 20+ RHEL servers."
         ],
         "zh": [
-          "2025/04 ~ Present - 文件管理系統：建置含 Redis Session、Spring Security、WebSocket、重試處理與 PostgreSQL 優化的 Spring Boot 後端。實作 REST API、ACL/版本控管工作流程與即時通知系統。導入 JUnit5/Mockito 測試與 Grafana/Prometheus 監控。",
+          "2025/04 ~ 2025/12 - 文件管理系統：建置含 Redis Session、Spring Security、WebSocket、重試處理與 PostgreSQL 優化的 Spring Boot 後端。實作 REST API、ACL/版本控管工作流程與即時通知系統。導入 JUnit5/Mockito 測試與 Grafana/Prometheus 監控。",
           "2025/01 ~ 2025/03 - 外部專區與入口網站：實作 Redis TTL 快取、分散式鎖、Session 固定攻擊防護與並發控制工作流程。透過快取優化與請求流程分析調校高負載端點。為企業後端 API 建置有序的全域例外處理機制。",
           "2024/08 ~ 2024/09 - DevOps 管理後台：配置 Spring Security、JWT、OAuth2 Resource Server、Keycloak/RedHat SSO 與 RBAC 授權工作流程。設計企業系統的安全驗證與 Session 管理策略。",
           "2024/06 ~ 2024/07 - 雲端基礎架構與 Kubernetes 部署：以 Terraform 設計 OCI 基礎架構，包含 VCN、OKE、子網路、Bastion 與負載平衡器。自動化基礎設施佈建與 Kubernetes 部署工作流程。",

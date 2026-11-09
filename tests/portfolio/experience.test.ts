@@ -34,3 +34,15 @@ describe('employment experience months', () => {
     expect(() => experienceMonths([{ title: 'A', period: '2019/9~2020/3', durationMonths: 70 }])).toThrow('Invalid confirmed duration');
   });
 });
+
+describe('about.json project periods', () => {
+  it('does not mark projects as Present under a job that already ended', () => {
+    const ended = about.experience.filter(job => !/Present/i.test(job.period));
+    expect(ended.length).toBeGreaterThan(0);
+    for (const job of ended) {
+      const entries = Object.values(job.projectExperience ?? {}).flat() as string[];
+      const stale = entries.filter(entry => /~\s*Present/i.test(entry));
+      expect(stale, `${job.company} (${job.period})`).toEqual([]);
+    }
+  });
+});
