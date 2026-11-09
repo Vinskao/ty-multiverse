@@ -147,13 +147,13 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 </script>
 
 <script>
-  import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../scripts/learn/marketAudioPresentation';
+  import { marketAudioCardTitle, marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../scripts/learn/marketAudioPresentation';
   import { presenterForAudio, dailyReadingTitle } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
   import { applyMarketPresenterSettings } from '../scripts/learn/marketPresenterConfig';
   import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
   import { GATEWAY_API_BASE } from '../common/constants/api';
-  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; day?: string; voice?: string; presenterName?: string };
+  type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; day?: string; voice?: string; presenterName?: string; title?: string | null };
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
   let presenterAccessVersion = 0;
   async function updatePresenterAccess() {
@@ -182,11 +182,14 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
       node.hidden = !value;
     });
     document.querySelectorAll<HTMLElement>('.market-audio-card-title').forEach(node => {
-      const type = node.dataset.productType;
-      node.textContent = type === 'daily'
-        ? `${node.dataset.presenterName || 'Maya'} ${node.dataset.test === 'true' ? (zh ? '試音' : 'Voice Test') : (zh ? '每日精讀' : 'Daily Reading')}`
-        : type === 'macro' ? (zh ? '總經' : 'Macro') : (zh ? '個股' : 'Stock');
-      if (node.dataset.mayaPending === 'true') node.textContent += zh ? '（Uiobbeci 市場分析，Maya 待定）' : ' (Uiobbeci market analysis; Maya pending)';
+      node.textContent = marketAudioCardTitle({
+        productType: node.dataset.productType || '',
+        language: zh ? 'zh' : 'en',
+        title: node.dataset.episodeTitle,
+        presenterName: node.dataset.presenterName,
+        test: node.dataset.test === 'true',
+        mayaPending: node.dataset.mayaPending === 'true',
+      });
     });
   }
   window.AppLang?.onChange?.(localizeMarketAudio);
@@ -209,6 +212,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
         title.dataset.productType = item.productType;
         title.dataset.test = String(item.voice?.startsWith('test:') || false);
         title.dataset.mayaPending = String(item.voice === 'duo:uiobbeci:maya-pending');
+        title.dataset.episodeTitle = item.title ?? '';
         const presenter = presenterForAudio(item.createdAt, item.voice);
         title.dataset.presenterName = item.productType === 'daily'
           ? ({ maya: 'Maya', uiobbeci: 'Uiobbeci', duo: 'Maya & Uiobbeci' }[presenter])

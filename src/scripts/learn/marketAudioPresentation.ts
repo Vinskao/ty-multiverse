@@ -1,5 +1,27 @@
 type AudioRevision = { productType: string; code: string; revision: number; voice?: string };
 
+export type MarketAudioCardTitleInput = {
+  productType: string;
+  language: 'zh' | 'en';
+  title?: string | null;
+  presenterName?: string;
+  test?: boolean;
+  mayaPending?: boolean;
+};
+
+/** Heading of one Learn audio card. Daily episodes show their own title; older ones fall back to the presenter label. */
+export function marketAudioCardTitle(input: MarketAudioCardTitleInput): string {
+  const zh = input.language === 'zh';
+  if (input.productType === 'macro') return zh ? '總經' : 'Macro';
+  if (input.productType !== 'daily') return zh ? '個股' : 'Stock';
+  const presenter = input.presenterName || 'Maya';
+  const episodeTitle = input.title?.trim();
+  const heading = !input.test && episodeTitle
+    ? episodeTitle
+    : `${presenter} ${input.test ? (zh ? '試音' : 'Voice Test') : (zh ? '每日精讀' : 'Daily Reading')}`;
+  return input.mayaPending ? heading + (zh ? '（Uiobbeci 市場分析，Maya 待定）' : ' (Uiobbeci market analysis; Maya pending)') : heading;
+}
+
 export function marketAudioDay(day: string | undefined, language: 'zh' | 'en'): string | null {
   if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
   const date = new Date(`${day}T00:00:00+08:00`);

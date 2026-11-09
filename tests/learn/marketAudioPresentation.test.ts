@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../../src/scripts/learn/marketAudioPresentation';
+import { marketAudioCardTitle, marketAudioDateTime, marketAudioDay, latestTestAudioRevisions, newestMarketAudioFirst } from '../../src/scripts/learn/marketAudioPresentation';
 
 describe('market audio presentation', () => {
   it('shows the original report date without inventing a creation time', () => {
@@ -62,5 +62,29 @@ describe('newestMarketAudioFirst', () => {
     const items = [{ code: 'x', createdAt: '2026-11-09T00:00:00Z' }, { code: 'y', day: '2026-11-01', createdAt: '2026-11-01T00:00:00Z' }];
     expect(newestMarketAudioFirst(items).map(i => i.code)).toEqual(['y', 'x']);
     expect(items[0].code).toBe('x');
+  });
+});
+
+describe('market audio card title', () => {
+  const daily = { productType: 'daily', presenterName: 'Maya', test: false, mayaPending: false };
+
+  it('shows the episode title instead of the generic presenter label', () => {
+    expect(marketAudioCardTitle({ ...daily, title: '淨流動性與聯發科的出貨驗證', language: 'zh' })).toBe('淨流動性與聯發科的出貨驗證');
+    expect(marketAudioCardTitle({ ...daily, title: 'Net liquidity and MediaTek shipments', language: 'en' })).toBe('Net liquidity and MediaTek shipments');
+  });
+
+  it('falls back to the presenter label for episodes that were published without a title', () => {
+    expect(marketAudioCardTitle({ ...daily, title: null, language: 'zh' })).toBe('Maya 每日精讀');
+    expect(marketAudioCardTitle({ ...daily, title: '   ', language: 'en' })).toBe('Maya Daily Reading');
+  });
+
+  it('keeps voice tests labelled as tests and the Maya-pending note on titled episodes', () => {
+    expect(marketAudioCardTitle({ ...daily, test: true, title: 'ignored', language: 'zh' })).toBe('Maya 試音');
+    expect(marketAudioCardTitle({ ...daily, mayaPending: true, title: '標題', language: 'zh' })).toBe('標題（Uiobbeci 市場分析，Maya 待定）');
+  });
+
+  it('keeps the existing labels for macro and stock audio, which have no episode title', () => {
+    expect(marketAudioCardTitle({ productType: 'macro', title: '不該出現', language: 'zh' })).toBe('總經');
+    expect(marketAudioCardTitle({ productType: 'stock', language: 'en' })).toBe('Stock');
   });
 });
