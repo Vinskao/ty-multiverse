@@ -389,7 +389,8 @@ if (!isLoggedIn) {
   #palais-cart .cart-count {
     font-size: 11px;
     font-weight: 700;
-    color: #fff;
+    /* 深色主題 accent 是白色，數字若固定白字會白底白字看不到；用與 accent 反向的 gray-999 */
+    color: var(--gray-999, #fff);
     background: var(--accent-regular, #255187);
     border-radius: 999px;
     min-width: 20px;
