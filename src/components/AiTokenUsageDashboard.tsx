@@ -5,6 +5,7 @@ import {
   type AiTokenUsageOverview,
   type AiTokenUsageSummary,
 } from '../services/api/aiUsageService';
+import { groupUsage } from '../scripts/aiUsage/modelGroups';
 
 const PROVIDER_COLORS: Record<string, string> = {
   codex: '#00D084',    // OpenAI - 亮綠
@@ -210,6 +211,25 @@ const styles = {
     whiteSpace: 'nowrap' as const,
   } as React.CSSProperties,
 
+  treeButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    margin: 0,
+    color: 'inherit',
+    font: 'inherit',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+  },
+  chevron: {
+    display: 'inline-block',
+    width: '0.9em',
+    opacity: 0.6,
+    fontSize: '0.8em',
+  },
   providerBadge: (color: string) => ({
     display: 'inline-flex',
     alignItems: 'center',
@@ -463,6 +483,9 @@ export default function AiTokenUsageDashboard() {
   const [daily, setDaily] = useState<AiTokenUsageSummary[]>([]);
   const [visibleWeeks, setVisibleWeeks] = useState(0);
   const [loading, setLoading] = useState(true);
+  // Provider / Model tree: vendors start open (showing generations), generations start closed.
+  const [closedVendors, setClosedVendors] = useState<ReadonlySet<string>>(new Set());
+  const [openGenerations, setOpenGenerations] = useState<ReadonlySet<string>>(new Set());
   const svgRef = useRef<SVGSVGElement>(null);
   const weeklyCostSvgRef = useRef<SVGSVGElement>(null);
   const linePanelRef = useRef<HTMLDivElement>(null);
@@ -558,20 +581,12 @@ export default function AiTokenUsageDashboard() {
     };
   }, [chartDaily, weeklyTrendDaily]);
 
-  const byProvider = d3.rollup(
-    weeklyTrendDaily,
-    (rows) => ({
-      totalInputTokens: d3.sum(rows, (r) => r.totalInputTokens),
-      totalOutputTokens: d3.sum(rows, (r) => r.totalOutputTokens),
-      totalCacheCreationInputTokens: d3.sum(rows, (r) => r.totalCacheCreationInputTokens ?? 0),
-      totalCacheReadInputTokens: d3.sum(rows, (r) => r.totalCacheReadInputTokens ?? 0),
-      totalTokens: d3.sum(rows, (r) => r.totalTokens),
-      totalCost: d3.sum(rows, (r) => r.totalEstimatedCostUsd),
-      calls: d3.sum(rows, (r) => r.callCount),
-    }),
-    (r) => r.aiProvider,
-    (r) => r.modelName,
-  );
+  const usageTree = groupUsage(weeklyTrendDaily);
+  const toggle = (set: ReadonlySet<string>, key: string): Set<string> => {
+    const next = new Set(set);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    return next;
+  };
   const trailingWow = trailingGrowthFromDaily(daily, 7);
   const trailingMom = trailingGrowthFromDaily(daily, 30);
   const trailingYoy = trailingGrowthFromDaily(daily, 365);
@@ -668,40 +683,82 @@ export default function AiTokenUsageDashboard() {
         {/* Provider breakdown table */}
         <div style={{ ...styles.panel, minWidth: 0 }}>
           <div style={styles.panelLabel}>Provider / Model · {selectedRangeLabel}</div>
-          {byProvider.size === 0
+          {usageTree.length === 0
             ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem' }}>No data</div>
             : (
               <table style={styles.table}>
                 <colgroup>
-                  <col style={{ width: '20%' }} />
-                  <col style={{ width: '24%' }} />
+                  <col style={{ width: '46%' }} />
                   <col style={{ width: '14%' }} />
                   <col style={{ width: '20%' }} />
-                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '20%' }} />
                 </colgroup>
                 <thead>
                   <tr>
-                    {['Provider', 'Model', 'Calls', 'Tokens', 'Cost'].map((h) => (
-                      <th key={h} style={styles.th}>{h}</th>
+                    {['Vendor / Generation / Version', 'Calls', 'Tokens', 'Cost'].map((h, i) => (
+                      <th key={h} style={{ ...styles.th, ...(i > 0 ? { textAlign: 'right' as const } : {}) }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {[...byProvider.entries()].flatMap(([provider, models]) =>
-                    [...models.entries()].map(([model, stats]) => (
-                      <tr key={`${provider}-${model}`}>
+                  {usageTree.flatMap((vendor) => {
+                    const vendorOpen = !closedVendors.has(vendor.vendor);
+                    const rows = [
+                      <tr key={vendor.vendor}>
                         <td style={styles.td}>
-                          <span style={styles.providerBadge(getProviderColor(provider))}>
-                            {PROVIDER_LABELS[provider.toLowerCase()] ?? provider}
-                          </span>
+                          <button
+                            type="button"
+                            aria-expanded={vendorOpen}
+                            onClick={() => setClosedVendors((prev) => toggle(prev, vendor.vendor))}
+                            style={styles.treeButton}
+                          >
+                            <span aria-hidden="true" style={styles.chevron}>{vendorOpen ? '▾' : '▸'}</span>
+                            <span style={styles.providerBadge(getProviderColor(vendor.vendor))}>
+                              {PROVIDER_LABELS[vendor.vendor] ?? vendor.vendor}
+                            </span>
+                          </button>
                         </td>
-                        <td style={{ ...styles.td, whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{model}</td>
-                        <td style={{ ...styles.td, textAlign: 'right' as const }}>{stats.calls.toLocaleString()}</td>
-                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: 'var(--gray-100)', fontWeight: 600 }}>{formatTokens(stats.totalTokens)}</td>
-                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(stats.totalCost)}</td>
-                      </tr>
-                    ))
-                  )}
+                        <td style={{ ...styles.td, textAlign: 'right' as const }}>{vendor.calls.toLocaleString()}</td>
+                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: 'var(--gray-100)', fontWeight: 700 }}>{formatTokens(vendor.totalTokens)}</td>
+                        <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', fontWeight: 700 }}>{formatCost(vendor.totalCost)}</td>
+                      </tr>,
+                    ];
+                    if (!vendorOpen) return rows;
+                    for (const generation of vendor.generations) {
+                      const genKey = `${vendor.vendor}/${generation.generation}`;
+                      const genOpen = openGenerations.has(genKey);
+                      rows.push(
+                        <tr key={genKey}>
+                          <td style={{ ...styles.td, paddingLeft: '1.1rem' }}>
+                            <button
+                              type="button"
+                              aria-expanded={genOpen}
+                              onClick={() => setOpenGenerations((prev) => toggle(prev, genKey))}
+                              style={styles.treeButton}
+                            >
+                              <span aria-hidden="true" style={styles.chevron}>{genOpen ? '▾' : '▸'}</span>
+                              <span>{generation.generation}</span>
+                            </button>
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'right' as const }}>{generation.calls.toLocaleString()}</td>
+                          <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: 'var(--gray-100)', fontWeight: 600 }}>{formatTokens(generation.totalTokens)}</td>
+                          <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', fontWeight: 600 }}>{formatCost(generation.totalCost)}</td>
+                        </tr>,
+                      );
+                      if (!genOpen) continue;
+                      for (const version of generation.versions) {
+                        rows.push(
+                          <tr key={`${genKey}/${version.version}`}>
+                            <td style={{ ...styles.td, paddingLeft: '2.4rem', whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.7 }}>{version.version}</td>
+                            <td style={{ ...styles.td, textAlign: 'right' as const, opacity: 0.7 }}>{version.calls.toLocaleString()}</td>
+                            <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: 'var(--gray-100)', opacity: 0.8 }}>{formatTokens(version.totalTokens)}</td>
+                            <td style={{ ...styles.td, ...styles.tdNum, textAlign: 'right' as const, color: '#FFD700', opacity: 0.8 }}>{formatCost(version.totalCost)}</td>
+                          </tr>,
+                        );
+                      }
+                    }
+                    return rows;
+                  })}
                 </tbody>
               </table>
             )
