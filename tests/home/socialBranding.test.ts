@@ -26,6 +26,14 @@ describe('homepage social links and product identity', () => {
     expect(source('src/components/OpenSourceProjects.astro')).not.toMatch(/gRPC/i);
   });
 
+  it('adds the Spotify show as the last shared social icon (2026-11-09)', () => {
+    const links = source('src/scripts/socialLinks.ts');
+    expect(links).toContain('https://open.spotify.com/show/6c674Xq9as5ugqva8aqimV');
+    expect(links).toContain("icon: 'spotify-logo'");
+    expect(links.indexOf('linkedin.com')).toBeLessThan(links.indexOf('spotify.com'));
+    expect(source('src/components/IconPaths.ts')).toContain("'spotify-logo'");
+  });
+
   it('links the shared social entry points to Instagram, Threads, and the Facebook Page', () => {
     const links = source('src/scripts/socialLinks.ts');
     expect(links).toContain("https://www.instagram.com/birch_investments/");

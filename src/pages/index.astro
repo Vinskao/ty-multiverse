@@ -91,6 +91,9 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						<p class="home-product-name" data-i18n="home.productName">Birch Investments 樺樹資本工具</p>
 						<h1 class="home-product-title" data-i18n="home.heroTitle">一起貢獻報告，共建投資研究平台</h1>
 						</div>
+						<div class="hero-podcast">
+							<iframe data-testid="embed-iframe" title="Birch Investments 每日市場精讀 Spotify Podcast" src="https://open.spotify.com/embed/show/6c674Xq9as5ugqva8aqimV" width="100%" height="352" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+						</div>
 						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
 							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
 							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>

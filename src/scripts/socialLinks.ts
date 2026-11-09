@@ -19,4 +19,9 @@ export const socialLinks = [
 		href: 'https://www.linkedin.com/in/tianyi-kao/',
 		icon: 'linkedin-logo',
 	},
+	{
+		label: 'Spotify',
+		href: 'https://open.spotify.com/show/6c674Xq9as5ugqva8aqimV',
+		icon: 'spotify-logo',
+	},
 ] as const;

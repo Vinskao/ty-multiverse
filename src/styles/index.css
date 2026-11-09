@@ -2215,6 +2215,12 @@
 @media (min-width: 700px) { .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem); } }
 /* Balance the row: a wider title (fewer lines, no 13ch column leaving a void) and a card that hugs the right edge. */
 @media (min-width: 700px) { .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); } }
+.hero-podcast { min-width: 0; width: 100%; max-width: 30rem; justify-self: center; }
+.hero-podcast iframe { display: block; width: 100%; height: 232px; border: 0; border-radius: 12px; }
+@media (min-width: 1200px) {
+  .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem) minmax(18rem, 26rem); }
+  .hero-podcast iframe { height: 352px; }
+}
 .hero-title-block .home-product-title { max-width: 18ch; font-size: clamp(2.25rem, 5vw, 5rem); line-height: 1.05; }
 .hero-events { margin: 0; min-width: 0; align-self: center; justify-self: end; width: 100%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--home-accent, #fff) 12%, transparent); }
 .hero-events .market-company-events-heading { margin-bottom: .5rem; }
