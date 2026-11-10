@@ -55,16 +55,16 @@ flowchart TD
 flowchart TB
   subgraph s0["材料與矽晶圓"]
     direction LR
-    a["公司 A"] ~~~ b["公司 B"]
+    a["公司 A"] --> b["公司 B"]
   end
   subgraph s1["晶圓製造與廠務"]
     direction LR
-    c["公司 C"] ~~~ d["公司 D"]
+    c["公司 C"] --> d["公司 D"]
   end
   s0 --> s1
 ```
 
-開發方法：同一環節內用隱形連結 `~~~` 讓公司排成一列；箭頭只連環節（subgraph）。若節點直接連到別的 subgraph，Mermaid 會忽略該 subgraph 自己的 `direction`，整張圖又會擠成一長條。
+開發方法：同一環節內的公司用箭頭依序相連、排成一列；跨環節的箭頭只連環節（subgraph）。若節點直接連到別的 subgraph，Mermaid 會忽略該 subgraph 自己的 `direction`，整張圖又會擠成一長條。
 
 ## 主選單（2026-11-10）
 

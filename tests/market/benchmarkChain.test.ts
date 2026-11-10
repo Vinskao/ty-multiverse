@@ -22,8 +22,18 @@ describe('benchmark supply chain diagram layout', () => {
   });
 
   it('keeps a stage in one row without linking companies across stages', () => {
-    expect(diagram).toContain('c1785 ~~~ c6488');
-    expect(diagram).not.toMatch(/c\d+ --> c\d+/);
+    expect(diagram).toContain('c1785 --> c6488');
+    expect(diagram).not.toContain('c6488 --> c2330');
+  });
+
+  it('files equipment makers under equipment, not wafer fabrication', () => {
+    const lines = supplyChainDiagram([
+      { code: '2330', company_name: '台積電', segment: '專業晶圓代工與 CoWoS' },
+      { code: '3583', company_name: '辛耘', segment: '晶圓濕蝕刻' },
+      { code: '6937', company_name: '天虹', segment: 'PVD、PECVD、ALD 薄膜設備' },
+    ]);
+    expect(lines).toContain('c3583 --> c6937');
+    expect(lines).not.toContain('c2330 --> c3583');
   });
 
   it('is what the benchmark component draws', () => {
