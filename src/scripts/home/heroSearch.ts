@@ -17,14 +17,19 @@ export function initHeroSearch(doc: Document = document, onEvent: (event: 'hero_
   };
 
   const form = doc.getElementById('home-hero-search') as HTMLFormElement | null;
+  // Every keystroke goes straight to the report search, so the list below narrows while the visitor types.
+  const apply = () => {
+    const search = doc.getElementById('market-report-search') as HTMLInputElement | null;
+    if (!search || !form) return '';
+    search.value = (form.querySelector<HTMLInputElement>('input[type="search"]')?.value ?? '').trim();
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    return search.value;
+  };
+  const box = form?.querySelector<HTMLInputElement>('input[type="search"]');
+  if (box) on(box, 'input', () => { apply(); });
   if (form) on(form, 'submit', (event) => {
     event.preventDefault();
-    const search = doc.getElementById('market-report-search') as HTMLInputElement | null;
-    if (search) {
-      search.value = (form.querySelector<HTMLInputElement>('input[type="search"]')?.value ?? '').trim();
-      search.dispatchEvent(new Event('input', { bubbles: true }));
-      if (search.value) onEvent('hero_search'); // the typed words are never reported, only that a search happened
-    }
+    if (apply()) onEvent('hero_search'); // the typed words are never reported, only that a search happened
     showReports(doc);
   });
 

@@ -163,6 +163,63 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 					</section>
 						</section>
+						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
+							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
+						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
+							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
+							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
+							<p class="market-updated" data-i18n="home.macroPeriodNote">Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.</p>
+							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
+							<div id="macro-chains" class="macro-chains" role="tabpanel"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
+							<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
+							<div id="macro-event-list" class="macro-other-list" hidden></div>
+							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
+								<div class="macro-commentary-heading"><h5 id="macro-commentary-title">總經評論｜所有個股分析共用</h5><span id="macro-commentary-meta" class="market-updated"></span></div>
+								<div id="macro-commentary-body" class="macro-commentary-body"><p class="market-updated">載入總經評論中…</p></div>
+								<details>
+									<summary>更新總經評論（AI 提示、編輯、版本歷史）</summary>
+									<section class="market-ai-research-prompt" aria-labelledby="macro-ai-prompt-title">
+										<div class="market-ai-prompt-heading"><h5 id="macro-ai-prompt-title">總經 AI 研究提示</h5><button type="button" id="macro-ai-copy-prompt">複製完整提示</button></div>
+										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
+
+研究流程
+1. 讀本區「多國重要總體經濟資料」與 API（GET /api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
+2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
+3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
+4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
+5. 事件時間線：未來 2–8 週總經公布日與 FOMC，寫出每個事件的上行／下行情境。
+
+輸出格式
+• 標題：總經評論｜資料截點｜研究期間
+• 結論：台股科技股總經環境「順風／中性／逆風」，一句話理由。
+• 利率與通膨：數據（期間、數值、來源）、方向判斷。
+• 就業與消費：數據、需求面含義。
+• 對台股傳導：需求面 vs. 評價面，哪些產業最敏感（高本益比、利率敏感、內需、出口）。
+• 事件時間線：日期（台北時間）、事件、可能衝擊。
+• 翻轉條件：哪些數據會讓結論轉為順風或逆風。
+
+寫作與儲存
+繁體中文，數字附期間、單位、來源。區分事實、推論、未知，不捏造。說明本次相較前版改了什麼。總經數據公布後要更新本評論，個股分析會引用版本號。填入自己的 AI／模型名稱；版本衝突就重新載入整合。這是一般研究觀點，不是個人化投資建議。</pre>
+									</section>
+									<p id="macro-ai-status" role="status" aria-live="polite"></p>
+									<form id="macro-ai-form" data-ai-action="update-macro-commentary">
+										<fieldset id="macro-ai-fields" disabled>
+											<label for="macro-ai-model" data-i18n="home.marketAiModel">AI / model</label>
+											<input id="macro-ai-model" name="model" type="text" maxlength="120" required autocomplete="off" placeholder="AI or model name" />
+											<label for="macro-ai-content">目前總經評論 · 編輯後更新</label>
+											<textarea id="macro-ai-content" name="content" rows="10" maxlength="20000" required></textarea>
+											<input id="macro-ai-revision" name="expectedRevision" type="hidden" value="0" />
+											<div class="market-ai-actions"><button type="submit" id="macro-ai-save">更新總經評論</button><button type="button" id="macro-ai-reload" data-i18n="home.marketAiReload">Reload saved version</button></div>
+										</fieldset>
+									</form>
+									<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
+									<p class="market-updated">API：GET／PUT <code id="macro-ai-endpoint"></code></p>
+									<h5 data-i18n="home.marketAiHistory">Revision history</h5><div id="macro-ai-history"></div>
+								</details>
+							</section>
+							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
+						</section>
+						</section>
 						<section class="home-zone" id="zone-stocks" aria-labelledby="zone-stocks-title">
 							<header class="home-zone-head"><h3 id="zone-stocks-title" class="home-zone-title" data-i18n="home.zoneStocks">股票</h3></header>
 						<div class="market-overview-grid">
@@ -437,63 +494,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 					</section>
 						</section>
-						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
-							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
-						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
-							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
-							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
-							<p class="market-updated" data-i18n="home.macroPeriodNote">Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.</p>
-							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
-							<div id="macro-chains" class="macro-chains" role="tabpanel"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
-							<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
-							<div id="macro-event-list" class="macro-other-list" hidden></div>
-							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
-								<div class="macro-commentary-heading"><h5 id="macro-commentary-title">總經評論｜所有個股分析共用</h5><span id="macro-commentary-meta" class="market-updated"></span></div>
-								<div id="macro-commentary-body" class="macro-commentary-body"><p class="market-updated">載入總經評論中…</p></div>
-								<details>
-									<summary>更新總經評論（AI 提示、編輯、版本歷史）</summary>
-									<section class="market-ai-research-prompt" aria-labelledby="macro-ai-prompt-title">
-										<div class="market-ai-prompt-heading"><h5 id="macro-ai-prompt-title">總經 AI 研究提示</h5><button type="button" id="macro-ai-copy-prompt">複製完整提示</button></div>
-										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
-
-研究流程
-1. 讀本區「多國重要總體經濟資料」與 API（GET /api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
-2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
-3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
-4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
-5. 事件時間線：未來 2–8 週總經公布日與 FOMC，寫出每個事件的上行／下行情境。
-
-輸出格式
-• 標題：總經評論｜資料截點｜研究期間
-• 結論：台股科技股總經環境「順風／中性／逆風」，一句話理由。
-• 利率與通膨：數據（期間、數值、來源）、方向判斷。
-• 就業與消費：數據、需求面含義。
-• 對台股傳導：需求面 vs. 評價面，哪些產業最敏感（高本益比、利率敏感、內需、出口）。
-• 事件時間線：日期（台北時間）、事件、可能衝擊。
-• 翻轉條件：哪些數據會讓結論轉為順風或逆風。
-
-寫作與儲存
-繁體中文，數字附期間、單位、來源。區分事實、推論、未知，不捏造。說明本次相較前版改了什麼。總經數據公布後要更新本評論，個股分析會引用版本號。填入自己的 AI／模型名稱；版本衝突就重新載入整合。這是一般研究觀點，不是個人化投資建議。</pre>
-									</section>
-									<p id="macro-ai-status" role="status" aria-live="polite"></p>
-									<form id="macro-ai-form" data-ai-action="update-macro-commentary">
-										<fieldset id="macro-ai-fields" disabled>
-											<label for="macro-ai-model" data-i18n="home.marketAiModel">AI / model</label>
-											<input id="macro-ai-model" name="model" type="text" maxlength="120" required autocomplete="off" placeholder="AI or model name" />
-											<label for="macro-ai-content">目前總經評論 · 編輯後更新</label>
-											<textarea id="macro-ai-content" name="content" rows="10" maxlength="20000" required></textarea>
-											<input id="macro-ai-revision" name="expectedRevision" type="hidden" value="0" />
-											<div class="market-ai-actions"><button type="submit" id="macro-ai-save">更新總經評論</button><button type="button" id="macro-ai-reload" data-i18n="home.marketAiReload">Reload saved version</button></div>
-										</fieldset>
-									</form>
-									<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
-									<p class="market-updated">API：GET／PUT <code id="macro-ai-endpoint"></code></p>
-									<h5 data-i18n="home.marketAiHistory">Revision history</h5><div id="macro-ai-history"></div>
-								</details>
-							</section>
-							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
-						</section>
-						</section>
 						<section class="home-zone" id="zone-other" aria-labelledby="zone-other-title">
 							<header class="home-zone-head"><h3 id="zone-other-title" class="home-zone-title" data-i18n="home.zoneOther">其他資訊</h3></header>
 							<div class="home-other-info">
@@ -513,7 +513,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					<section class="home-zone" id="zone-briefing" aria-labelledby="zone-briefing-title">
 						<header class="home-zone-head"><h3 id="zone-briefing-title" class="home-zone-title" data-i18n="home.zoneBriefing">每日精讀與公司事件</h3></header>
 					<section class="market-ai-panel" aria-labelledby="home-daily-maya-title">
-						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">Maya 主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
+						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
 						<div id="home-daily-maya" aria-live="polite"><p class="market-updated">載入最新已審核精讀…</p></div>
 					</section>
 						<div class="home-briefing-row">
@@ -599,7 +599,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 </BaseLayout>
 
 <script>
-	import { dailyReadingTitle } from '../scripts/home/dailyReading';
+	import { dailyReadingTitle, dailyPresenterName } from '../scripts/home/dailyReading';
 	const root = document.querySelector<HTMLElement>('#home-daily-maya');
 	if (root) fetch(`${import.meta.env.BASE_URL}api/market/daily-maya`, { headers: { Accept: 'application/json' } })
 		.then(response => response.ok ? response.json() : Promise.reject())
@@ -608,6 +608,8 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 			root.replaceChildren();
 			if (!latest) { root.textContent = '目前尚無已審核的每日精讀。'; return; }
 			const title = dailyReadingTitle(latest);
+			const heading0 = document.getElementById('home-daily-maya-title');
+			if (heading0) heading0.textContent = `${dailyPresenterName(latest.day)} 主播每日精讀`;
 			const heading = document.createElement('h4'); heading.textContent = title || '';
 			const date = document.createElement('p'); date.textContent = latest.day || '';
 			const content = document.createElement('p'); content.textContent = latest.content || '';

@@ -33,9 +33,9 @@ describe('home page zones', () => {
     expect(document.getElementById('zone-reports')!.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  // 2026-11-10: the first screen is title, search and library numbers; research reports lead the dashboard.
-  it('orders the dashboard as reports, stocks, account, macro, other info', () => {
-    const order = ['zone-reports', 'zone-stocks', 'zone-account', 'zone-macro', 'zone-other'].map((id) => document.getElementById(id)!);
+  // 2026-11-10: macro sits above stocks (top-down: environment first, then the instrument). The first screen is title, search and library numbers; research reports lead the dashboard.
+  it('orders the dashboard top-down: reports, macro, stocks, account, other info', () => {
+    const order = ['zone-reports', 'zone-macro', 'zone-stocks', 'zone-account', 'zone-other'].map((id) => document.getElementById(id)!);
     for (let i = 1; i < order.length; i += 1) {
       expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING, order[i].id).toBeTruthy();
     }

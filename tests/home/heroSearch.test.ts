@@ -28,6 +28,21 @@ describe('homepage hero search', () => {
     expect(scrolled).toHaveBeenCalledTimes(1);
   });
 
+  it('filters on every keystroke without scrolling away from the box, and scrolls only on submit', () => {
+    const search = document.getElementById('market-report-search') as HTMLInputElement;
+    const filtered = vi.fn(); search.oninput = filtered;
+    const scrolled = vi.fn(); document.getElementById('market-reports')!.scrollIntoView = scrolled;
+    cleanup = initHeroSearch();
+    const box = document.querySelector('#home-hero-search input') as HTMLInputElement;
+    for (const typed of ['2', '23', '233']) { box.value = typed; box.dispatchEvent(new Event('input', { bubbles: true })); expect(search.value).toBe(typed); }
+    expect(filtered).toHaveBeenCalledTimes(3);
+    expect(scrolled).not.toHaveBeenCalled();
+    box.value = ''; box.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(search.value).toBe('');
+    document.getElementById('home-hero-search')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(scrolled).toHaveBeenCalledTimes(1);
+  });
+
   it('applies a ranked topic through the existing category button', () => {
     const filter = document.createElement('button'); filter.dataset.tagId = 'cooling';
     const picked = vi.fn(); filter.addEventListener('click', picked);
