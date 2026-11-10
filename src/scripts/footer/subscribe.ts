@@ -18,8 +18,15 @@ export function initSubscribeForm(
     const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (button) button.disabled = true;
     fetcher('/api/market/subscriptions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
-      .then((response) => {
-        if (response.ok) { say('已收到。請到信箱點確認連結，確認後才會開始每天寄送。'); if (input) input.value = ''; return; }
+      .then(async (response) => {
+        if (response.ok) {
+          // Until the server can send mail it says so, and the form must not promise a confirmation mail.
+          const body = await response.json().catch(() => ({}));
+          say(body.mail_enabled === false ? '已登記。寄信功能尚未啟用，啟用後會補寄確認信到這個地址。'
+            : '已收到。請到信箱點確認連結，確認後才會開始每天寄送。');
+          if (input) input.value = '';
+          return;
+        }
         say(response.status === 422 ? '這個 Email 地址格式不正確。'
           : response.status === 429 ? '今天的訂閱申請已達上限，請明天再試。'
           : '訂閱暫時無法送出，請稍後再試。');
