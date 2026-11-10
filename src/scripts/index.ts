@@ -36,6 +36,8 @@ import { automationNotice, type AutomationStatus } from './market/automationStat
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { initHeroSearch } from './home/heroSearch';
+import { trackReaderEvent } from './analytics/readerEvents';
+import { northStarLine, type NorthStarWeek } from './analytics/northStar';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
@@ -842,8 +844,9 @@ function selectMarketDetailTab(tabName: string) {
     document.querySelectorAll<HTMLButtonElement>('[data-market-tab]').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.marketTab === tabName)));
     document.querySelectorAll<HTMLElement>('[data-market-panel]').forEach((panel) => { panel.hidden = panel.dataset.marketPanel !== tabName; });
     if (selectedMarketInstrument) {
-        if (tabName === 'ai-analysis') void loadMarketAiAnalysis(selectedMarketInstrument);
-        else if (tabName === 'research') void loadMarketResearch(selectedMarketInstrument);
+        // North star (docs/NORTH_STAR.md): opening research or an AI analysis counts as reading research.
+        if (tabName === 'ai-analysis') { trackReaderEvent('analysis_open', analysisRecordCode(selectedMarketInstrument)); void loadMarketAiAnalysis(selectedMarketInstrument); }
+        else if (tabName === 'research') { trackReaderEvent('research_open', analysisRecordCode(selectedMarketInstrument)); void loadMarketResearch(selectedMarketInstrument); }
         else void loadMarketHistory(selectedMarketInstrument, tabName);
     }
 }
@@ -2348,6 +2351,7 @@ function renderMarketReports(reports: MarketReport[]) {
         const claims = group.reports.flatMap((document) => document.claims ?? []);
         if (claims.length) {
             const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = `報告主張（${claims.length}）`;
+            details.addEventListener('toggle', () => { if (details.open) trackReaderEvent('claims_open', report.id); });
             details.append(summary);
             const groups = new Map<string, MarketReport['claims']>();
             for (const claim of claims) groups.set(claim.segment, [...(groups.get(claim.segment) ?? []), claim]);
@@ -2371,6 +2375,19 @@ function renderMarketReports(reports: MarketReport[]) {
         list.append(card);
     }
     applyFilters(); // words typed in the hero search before the list loaded apply as soon as it renders
+}
+
+/** Owner only: the north star readout in the operations zone; everyone else gets a 401/403 and sees nothing. */
+async function loadNorthStar() {
+    const readout = document.getElementById('north-star-readout');
+    if (!readout) return;
+    readout.hidden = true;
+    if (!hasMarketAuth()) return;
+    const response = await fetch(astroApiPath('/api/market/north-star?weeks=2'), { headers: marketAuthHeaders(), cache: 'no-store' }).catch(() => null);
+    if (!response?.ok) return;
+    const payload = await response.json().catch(() => null) as { weeks?: NorthStarWeek[] } | null;
+    readout.textContent = northStarLine(payload?.weeks ?? [], marketLocale() === 'zh-TW' ? 'zh' : 'en');
+    readout.hidden = false;
 }
 
 async function loadMarketReports() {
@@ -3738,7 +3755,8 @@ function initIndexPage() {
     initMarketCustomEditor();
     initMarketReports();
     _heroSearchCleanup?.();
-    _heroSearchCleanup = initHeroSearch();
+    _heroSearchCleanup = initHeroSearch(document, trackReaderEvent);
+    void loadNorthStar();
     void loadMarketAutomation();
     void fetchMarketDashboard();
     macroLoader = lazyLoader(document.getElementById('macro-dashboard'), () => { void fetchMacroDashboard(); void loadMacroCommentary(); });

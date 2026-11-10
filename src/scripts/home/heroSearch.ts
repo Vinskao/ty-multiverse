@@ -9,7 +9,7 @@ function showReports(doc: Document) {
 }
 
 /** Binds the hero controls; returns a cleanup so a view transition can rebind without stacking listeners. */
-export function initHeroSearch(doc: Document = document): () => void {
+export function initHeroSearch(doc: Document = document, onEvent: (event: 'hero_search' | 'topic_pick', target?: string) => void = () => {}): () => void {
   const undo: Array<() => void> = [];
   const on = (target: EventTarget, type: string, handler: EventListener) => {
     target.addEventListener(type, handler);
@@ -23,6 +23,7 @@ export function initHeroSearch(doc: Document = document): () => void {
     if (search) {
       search.value = (form.querySelector<HTMLInputElement>('input[type="search"]')?.value ?? '').trim();
       search.dispatchEvent(new Event('input', { bubbles: true }));
+      if (search.value) onEvent('hero_search'); // the typed words are never reported, only that a search happened
     }
     showReports(doc);
   });
@@ -37,6 +38,7 @@ export function initHeroSearch(doc: Document = document): () => void {
       return Boolean(filter);
     };
     waiting?.disconnect();
+    onEvent('topic_pick', button.dataset.reportTopic ?? '');
     // The report list loads when it scrolls into view, so its category buttons may not exist yet.
     if (!pick() && filters) {
       waiting = new MutationObserver(() => { if (pick()) waiting?.disconnect(); });

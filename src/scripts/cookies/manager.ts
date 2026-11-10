@@ -1,19 +1,19 @@
-import { COOKIE_CONSENT_STORAGE_KEY, readCookieConsent, saveCookieConsent, type CookieConsentChoice } from './consent';
+import { COOKIE_CONSENT_STORAGE_KEY, READER_ID_KEY, readCookieConsent, saveCookieConsent, type CookieConsentChoice } from './consent';
 
 const copy = {
   zh: {
     settings: 'Cookie 設定', change: '變更 Cookie 設定', privacy: '隱私權說明', title: 'Cookie 與隱私選擇',
-    intro: '必要 Cookie 用於登入、網站安全與保存你的選擇。廣告 Cookie 預設開啟，讓廣告正常顯示；你可在這裡關閉。統計 Cookie 目前不載入第三方工具。',
-    necessary: '必要 Cookie（固定開啟）', analytics: '統計 Cookie（目前未使用）', advertising: '廣告 Cookie（預設開啟）',
+    intro: '必要 Cookie 用於登入、網站安全與保存你的選擇。廣告 Cookie 預設開啟，讓廣告正常顯示；你可在這裡關閉。匿名使用統計預設開啟，只記錄一組隨機代號與讀了哪些研究，不載入第三方分析工具，也可在這裡關閉。',
+    necessary: '必要 Cookie（固定開啟）', analytics: '匿名使用統計（預設開啟）', advertising: '廣告 Cookie（預設開啟）',
     accept: '知道了', reject: '僅必要 Cookie', customize: '設定', save: '儲存偏好', close: '關閉',
-    banner: '網站使用必要 Cookie 與廣告 Cookie。你可以開啟設定查看、變更或關閉非必要 Cookie。',
+    banner: '網站使用必要 Cookie、廣告 Cookie 與匿名使用統計。你可以開啟設定查看、變更或關閉非必要項目。',
   },
   en: {
     settings: 'Cookie settings', change: 'Change cookie settings', privacy: 'Privacy notice', title: 'Cookie and privacy choices',
-    intro: 'Necessary cookies support sign-in, site security and saving your choices. Advertising cookies are on by default so ads can display; you can turn them off here. No third-party analytics tool is currently loaded.',
-    necessary: 'Necessary cookies (always on)', analytics: 'Analytics cookies (not currently used)', advertising: 'Advertising cookies (on by default)',
+    intro: 'Necessary cookies support sign-in, site security and saving your choices. Advertising cookies are on by default so ads can display; you can turn them off here. Anonymous usage statistics are on by default: a random code and which research was opened, with no third-party analytics tool. You can turn them off here too.',
+    necessary: 'Necessary cookies (always on)', analytics: 'Anonymous usage statistics (on by default)', advertising: 'Advertising cookies (on by default)',
     accept: 'Got it', reject: 'Necessary only', customize: 'Settings', save: 'Save preferences', close: 'Close',
-    banner: 'This site uses necessary and advertising cookies. Open settings to review, change or turn off optional cookies.',
+    banner: 'This site uses necessary cookies, advertising cookies and anonymous usage statistics. Open settings to review, change or turn off the optional ones.',
   },
 };
 
@@ -41,7 +41,7 @@ export function mountCookieConsent(root: ParentNode = document): void {
   const saved = () => readCookieConsent(localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY));
   const openPreferences = () => {
     const state = saved();
-    analytics.checked = state?.analytics ?? false;
+    analytics.checked = state?.analytics ?? true;
     advertising.checked = state?.advertising ?? true;
     menu.hidden = true;
     gear.setAttribute('aria-expanded', 'false');
@@ -49,6 +49,7 @@ export function mountCookieConsent(root: ParentNode = document): void {
   };
   const persist = (choice: CookieConsentChoice) => {
     localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, saveCookieConsent(choice));
+    if (!choice.analytics) localStorage.removeItem(READER_ID_KEY); // turning statistics off forgets the reader id at once
     banner.hidden = true;
     menu.hidden = true;
     gear.setAttribute('aria-expanded', 'false');
@@ -63,7 +64,7 @@ export function mountCookieConsent(root: ParentNode = document): void {
   panel.querySelectorAll('[data-cookie-open-preferences]').forEach(button => button.addEventListener('click', openPreferences));
   panel.addEventListener('click', event => {
     const action = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-cookie-accept], [data-cookie-reject]');
-    if (action?.matches('[data-cookie-accept]')) persist({ analytics: false, advertising: true });
+    if (action?.matches('[data-cookie-accept]')) persist({ analytics: true, advertising: true });
     if (action?.matches('[data-cookie-reject]')) persist({ analytics: false, advertising: false });
   });
   panel.querySelector('[data-cookie-save]')?.addEventListener('click', () => persist({ analytics: analytics.checked, advertising: advertising.checked }));

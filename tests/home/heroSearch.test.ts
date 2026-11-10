@@ -67,6 +67,19 @@ describe('homepage hero search', () => {
     expect(stop).toHaveBeenCalledTimes(1);
   });
 
+  it('reports that a search or a topic pick happened, without the words typed', () => {
+    const events = vi.fn();
+    cleanup = initHeroSearch(document, events);
+    const input = document.querySelector<HTMLInputElement>('#home-hero-search input')!;
+    input.value = '';
+    document.getElementById('home-hero-search')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(events).not.toHaveBeenCalled(); // clearing the box is not a search
+    input.value = '我的持股 2330';
+    document.getElementById('home-hero-search')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    document.querySelector<HTMLElement>('[data-report-topic]')!.click();
+    expect(events.mock.calls).toEqual([['hero_search'], ['topic_pick', 'cooling']]);
+  });
+
   it('does not bind twice when the page script runs again after a view transition', () => {
     const search = document.getElementById('market-report-search') as HTMLInputElement;
     const filtered = vi.fn(); search.oninput = filtered;

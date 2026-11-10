@@ -35,7 +35,7 @@ stateDiagram-v2
   SavedOff --> DefaultOn: clear site storage
 ```
 
-Necessary storage is always on. The optional analytics choice is stored but no third-party analytics tool is currently loaded. The privacy page describes current providers and explains that turning ads off stops new requests; third-party cookies already stored may need to be removed through browser settings.
+Necessary storage is always on. Since 2026-11-10 the analytics choice controls first-party anonymous usage statistics for the north star metric (see [NORTH_STAR.md](NORTH_STAR.md)): it is on by default, "Got it" saves it on, "Necessary only" saves it off, and turning it off deletes the reader id (`tym-reader-id-v1`) at once. No third-party analytics tool is loaded. Preferences saved before that date have analytics off, because the notice used to save it that way. The privacy page describes current providers and explains that turning ads off stops new requests; third-party cookies already stored may need to be removed through browser settings.
 
 ## 開發方法
 

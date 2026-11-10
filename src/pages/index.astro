@@ -552,6 +552,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 				<section class="home-zone home-zone--operations" id="zone-operations" aria-labelledby="zone-operations-title"><header class="home-zone-head"><h3 id="zone-operations-title" class="home-zone-title" data-i18n="home.zoneOperations">產品運作</h3></header>
 				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
+					<p id="north-star-readout" class="market-updated north-star-readout" role="status" hidden></p>
 					<details class="home-transparency"><summary data-i18n="home.operationsTitle">產品運作資訊 · AI 使用紀錄</summary><AiTokenUsageDashboard client:visible /></details>
 				</div>
 				</section>

@@ -35,6 +35,6 @@ it('shows library numbers and the topic ranking only from server data, never inv
   expect(page).toContain('data-report-topic={topic.tagId}');
   expect(page).not.toMatch(/class="home-report-stats"[\s\S]{0,400}<dd>\d/); // no hard-coded numbers
   const script = readFileSync('src/scripts/index.ts', 'utf8');
-  expect(script).toContain('initHeroSearch()');
+  expect(script).toContain('initHeroSearch(document');
   expect(script).toContain("'[data-report-owner-only]'");
 });

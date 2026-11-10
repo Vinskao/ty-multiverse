@@ -24,7 +24,11 @@
 
 次指標：第 1 週到第 4 週留存、每週被展開的主張數、每週新入庫且完成萃取的報告數、來源推薦與 Miner 的來信數。
 
-**目前算不出這個指標。** 量測需要第一方事件紀錄（會動到 maya-sawa 與隱私說明），尚未實作。使用者還很少的階段，先直接找十位會讀台股供應鏈研究的人試用，手動記錄誰隔週回來。
+**量測（2026-11-10 起）。** 瀏覽器產生一組隨機代號，讀者開啟研究或 AI 分析分頁、展開報告主張時，把「代號、事件、對象」經前端伺服器送到 maya-sawa；擁有者登入後在首頁「產品運作」區看到本週回訪與活躍讀者數。統計預設開啟，讀者可在 Cookie 設定關閉，關閉後代號立即刪除。後端的資料表、計算方式與限制見 [maya-sawa 的 NORTH_STAR_METRIC.md](../../maya-sawa/docs/NORTH_STAR_METRIC.md)。
+
+前端相關檔案：`src/scripts/analytics/readerEvents.ts`（代號、去重、送出）、`src/pages/api/market/track.ts`（檢查格式後帶內部密鑰轉送）、`src/pages/api/market/north-star.ts`（擁有者讀取）、`src/scripts/analytics/northStar.ts`（讀數文字）。事件掛在 `selectMarketDetailTab`、報告主張的 `details` 展開、以及首頁搜尋與主題排行。測試：`tests/analytics/readerEvents.test.ts`、`tests/cookies/manager.test.ts`。
+
+數字剛開始會很小。使用者還很少的階段，仍然建議直接找十位會讀台股供應鏈研究的人試用，對照這個數字看誰隔週回來。
 
 ## 「券商報告版 OpenRouter」的取捨
 
@@ -80,7 +84,6 @@ flowchart TD
 
 ## 還沒做
 
-- 北極星的量測（第一方事件、匿名回訪判斷、隱私說明更新）。
 - 來源目錄頁、觀點翻轉、來源命中率。
 - 「近 7 日」以外的時間區間排行；目前排行是全部累計。
 - 投顧法規與著作權的法律確認。

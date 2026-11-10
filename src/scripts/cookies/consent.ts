@@ -1,4 +1,6 @@
 export const COOKIE_CONSENT_STORAGE_KEY = 'tym-cookie-consent-v1';
+/** The anonymous reader id used for usage statistics (src/scripts/analytics/readerEvents.ts). */
+export const READER_ID_KEY = 'tym-reader-id-v1';
 
 export interface CookieConsent {
   version: 1;
@@ -29,6 +31,11 @@ export function readCookieConsent(raw: string | null): CookieConsent | null {
 
 export function saveCookieConsent(choice: CookieConsentChoice, updatedAt = new Date().toISOString()): string {
   return JSON.stringify({ version: 1, necessary: true, analytics: choice.analytics, advertising: choice.advertising, updatedAt } satisfies CookieConsent);
+}
+
+/** Anonymous usage statistics are on until the reader turns them off (docs/NORTH_STAR.md). */
+export function hasAnalyticsConsent(raw: string | null): boolean {
+  return readCookieConsent(raw)?.analytics ?? true;
 }
 
 export function hasAdvertisingConsent(raw: string | null): boolean {
