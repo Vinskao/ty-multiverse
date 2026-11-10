@@ -105,6 +105,14 @@ describe('versioned benchmark line-up', () => {
   });
 });
 
+describe('market overview text size', () => {
+  // 2026-11-10: the benchmark text inherited a 26px display size from the page wrapper.
+  it('sets its own body size instead of inheriting the wrapper display size', () => {
+    expect(read('src/styles/index.css')).toMatch(/\.home-page \.market-overview \{[^}]*font-size:1rem/);
+    expect(read('src/components/SemiconductorBenchmark.astro')).toMatch(/h4 \{[^}]*font-size: 1\.1rem/);
+  });
+});
+
 describe('research method on the page', () => {
   it('states the route: benchmark, then macro, then single stocks', () => {
     const component = read('src/components/SemiconductorBenchmark.astro');
