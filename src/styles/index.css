@@ -2209,18 +2209,47 @@
 .home-transparency { padding: .85rem 1rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-999_40); }
 .home-transparency > summary { color: var(--gray-200); font-size: .95rem; font-weight: 650; }
 
-/* Recent company events sit to the right of the hero title (vertically centred in the empty space beside it). */
-.hero-title-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1rem, 3vw, 2.5rem); align-items: center; }
+/* 2026-11-10: the hero is title, copy, search and library numbers. The podcast player and the recent company
+   events moved to the briefing zone, side by side when there is room. */
 .hero-title-block { min-width: 0; }
-@media (min-width: 700px) { .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem); } }
-/* Balance the row: a wider title (fewer lines, no 13ch column leaving a void) and a card that hugs the right edge. */
-@media (min-width: 700px) { .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem); } }
+/* The briefing zone sits in the centered .hero, outside the left-aligned market overview. */
+.home-page #zone-briefing { text-align: left; }
+.home-briefing-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1rem, 3vw, 2rem); align-items: start; margin-top: 1rem; }
+@media (min-width: 900px) { .home-briefing-row { grid-template-columns: minmax(18rem, 28rem) minmax(0, 1fr); } }
 .hero-podcast { min-width: 0; width: 100%; max-width: 30rem; justify-self: center; }
 .hero-podcast iframe { display: block; width: 100%; height: 232px; border: 0; border-radius: 12px; }
-@media (min-width: 1200px) {
-  .hero-title-row { grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem) minmax(18rem, 26rem); }
-  .hero-podcast iframe { height: 352px; }
-}
+@media (min-width: 900px) { .hero-podcast iframe { height: 352px; } }
+
+/* Hero search: the main action. It writes into the report library search below, so it shares that field's look. */
+.home-page .hero-header { text-align: left; }
+.home-hero-search { display: flex; gap: .6rem; width: 100%; max-width: 46rem; margin: 0 0 1.25rem; }
+.home-hero-search input { flex: 1 1 auto; box-sizing: border-box; min-width: 0; padding: .85rem 1rem; color: var(--gray-100); border: 1px solid var(--gray-600); border-radius: .7rem; background: var(--gray-999); font: inherit; font-size: 1.05rem; }
+.home-hero-search input:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 2px; }
+.home-hero-search button { flex: 0 0 auto; padding: .85rem 1.4rem; border: 1px solid var(--home-accent); border-radius: .7rem; color: var(--gray-999); background: var(--home-accent); font: inherit; font-weight: 700; cursor: pointer; }
+.home-hero-search button:hover, .home-hero-search button:focus-visible { filter: brightness(1.15); }
+.home-report-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; max-width: 46rem; margin: 0 0 1.25rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-800); overflow: hidden; }
+.home-report-stats > div { display: flex; flex-direction: column; gap: .2rem; padding: .8rem 1rem; background: var(--gray-999); }
+.home-report-stats dd { margin: 0; color: var(--home-ink); font-size: clamp(1.25rem, 2.6vw, 1.9rem); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.home-report-stats dt { color: var(--home-muted); font-size: .8rem; }
+@media (max-width: 520px) { .home-report-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-hero-search { flex-wrap: wrap; } .home-hero-search button { flex: 1 1 100%; } }
+/* The search button is the filled primary action, so every link below it is an outline. */
+.home-page .home-product-actions { margin-top: 0; justify-content: flex-start; }
+.home-page .home-product-actions a:first-child { color: var(--gray-100); background: transparent; }
+.home-page .home-product-actions a[hidden] { display: none; }
+
+/* Topic ranking: one row per research topic; the bar is the tailwind share of directional claims. */
+.home-topic-ranking { text-align: left; }
+.home-topic-ranking-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem 1rem; margin-bottom: .75rem; }
+.home-topic-ranking-head h2 { margin: 0; color: var(--home-ink); font-size: 1.15rem; line-height: 1.4; }
+.home-topic-ranking-head p { margin: 0; color: var(--home-muted); font-size: .82rem; line-height: 1.5; }
+.home-topic-ranking-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.home-topic-ranking-list button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .3rem .75rem; align-items: baseline; box-sizing: border-box; width: 100%; padding: .8rem .9rem; color: var(--gray-200); text-align: left; border: 1px solid var(--gray-800); border-radius: .75rem; background: var(--gray-999_40); font: inherit; cursor: pointer; }
+.home-topic-ranking-list button:hover, .home-topic-ranking-list button:focus-visible { border-color: var(--gray-500); }
+.home-topic-ranking-list strong { min-width: 0; color: var(--home-ink); font-size: 1rem; overflow-wrap: anywhere; }
+.home-topic-share { color: var(--gray-300); font-size: .82rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.home-topic-counts { grid-column: 1 / -1; color: var(--home-muted); font-size: .8rem; }
+.home-topic-bar { grid-column: 1 / -1; display: block; height: 4px; border-radius: 2px; background: var(--gray-800); overflow: hidden; }
+.home-topic-bar > span { display: block; height: 100%; background: var(--home-accent); }
 .hero-title-block .home-product-title { max-width: 18ch; font-size: clamp(2.25rem, 5vw, 5rem); line-height: 1.05; }
 .hero-events { margin: 0; min-width: 0; align-self: center; justify-self: end; width: 100%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--home-accent, #fff) 12%, transparent); }
 .hero-events .market-company-events-heading { margin-bottom: .5rem; }

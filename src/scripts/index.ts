@@ -35,6 +35,7 @@ import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthM
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
+import { initHeroSearch } from './home/heroSearch';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
@@ -52,6 +53,7 @@ let _portfolioTimer: number | null = null;
 let _marketEventsTimer: number | null = null;
 let _macroRefreshTimer: number | null = null;
 let _marketLangCleanup: (() => void) | null = null;
+let _heroSearchCleanup: (() => void) | null = null;
 // Below-the-fold sections load when scrolled near (see lazy.ts); the refresh timers only touch sections that are already loaded.
 let _lazyLoaders: LazyLoader[] = [];
 let macroLoader: LazyLoader | null = null;
@@ -2368,6 +2370,7 @@ function renderMarketReports(reports: MarketReport[]) {
         }
         list.append(card);
     }
+    applyFilters(); // words typed in the hero search before the list loaded apply as soon as it renders
 }
 
 async function loadMarketReports() {
@@ -2381,6 +2384,8 @@ async function loadMarketReports() {
         owner = Boolean(auth?.ok);
     }
     form.hidden = !canUploadReports(Object.keys(headers).length > 0, owner);
+    // The hero's upload link follows the same rule, so visitors are never sent to a form they cannot see.
+    document.querySelectorAll<HTMLElement>('[data-report-owner-only]').forEach((item) => { item.hidden = form.hidden; });
     const response = await fetch(astroApiPath('/api/market/reports'), { headers, cache: 'no-store' }).catch(() => null);
     if (!response?.ok) { status.textContent = '報告列表暫時無法載入。'; return; }
     const payload = await response.json() as ReportClaimsPayload;
@@ -3732,6 +3737,8 @@ function initIndexPage() {
     initMacroCommentary();
     initMarketCustomEditor();
     initMarketReports();
+    _heroSearchCleanup?.();
+    _heroSearchCleanup = initHeroSearch();
     void loadMarketAutomation();
     void fetchMarketDashboard();
     macroLoader = lazyLoader(document.getElementById('macro-dashboard'), () => { void fetchMacroDashboard(); void loadMacroCommentary(); });

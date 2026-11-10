@@ -8,8 +8,8 @@ const css = () => readFileSync(resolve(process.cwd(), 'src/styles/index.css'), '
 describe('home page zones', () => {
   beforeEach(() => { document.body.innerHTML = html(); });
 
-  it('puts every area in a labelled zone: macro, stocks, account, reports, other info, operations', () => {
-    for (const id of ['zone-macro', 'zone-stocks', 'zone-account', 'zone-reports', 'zone-other', 'zone-operations']) {
+  it('puts every area in a labelled zone: reports, stocks, account, macro, other info, briefing, operations', () => {
+    for (const id of ['zone-macro', 'zone-stocks', 'zone-account', 'zone-reports', 'zone-other', 'zone-briefing', 'zone-operations']) {
       const zone = document.getElementById(id);
       expect(zone?.classList.contains('home-zone'), id).toBe(true);
       expect(zone?.querySelector('.home-zone-title')?.textContent?.trim(), id).toBeTruthy();
@@ -33,13 +33,28 @@ describe('home page zones', () => {
     expect(document.getElementById('zone-reports')!.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('shows the recent company events to the right of the hero title, in the same row, not between the macro and stock areas', () => {
+  // 2026-11-10: the first screen is title, search and library numbers; research reports lead the dashboard.
+  it('orders the dashboard as reports, stocks, account, macro, other info', () => {
+    const order = ['zone-reports', 'zone-stocks', 'zone-account', 'zone-macro', 'zone-other'].map((id) => document.getElementById(id)!);
+    for (let i = 1; i < order.length; i += 1) {
+      expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING, order[i].id).toBeTruthy();
+    }
+  });
+
+  it('keeps the hero to the title, copy, search and actions; the podcast, daily reading and company events share a later zone', () => {
+    const header = document.querySelector('.hero-header')!;
+    expect(header.querySelector('.home-product-title')).not.toBeNull();
+    expect(header.querySelector('#home-hero-search')).not.toBeNull();
+    expect(header.querySelector('iframe')).toBeNull();
+    expect(header.querySelector('#market-company-events')).toBeNull();
+    const briefing = document.getElementById('zone-briefing')!;
+    expect(briefing.querySelector('#home-daily-maya')).not.toBeNull();
+    expect(briefing.querySelector('.hero-podcast iframe')).not.toBeNull();
     const events = document.getElementById('market-company-events')!;
-    const row = events.closest('.hero-title-row');
-    expect(row).not.toBeNull();
-    expect(row!.querySelector('.home-product-title')).not.toBeNull();
-    expect(row!.querySelector('.home-product-actions')).toBeNull();
+    expect(events.closest('.home-briefing-row')).not.toBeNull();
     expect(events.closest('#market-overview')).toBeNull();
+    expect(document.getElementById('market-overview')!.compareDocumentPosition(briefing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(briefing.compareDocumentPosition(document.querySelector('.home-product-intro')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('wraps the tagline and the audience line in one full-width block', () => {

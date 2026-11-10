@@ -19,11 +19,13 @@ describe('homepage search and contact contract', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
         expect(home).toContain('title="TY 市場研究室"');
-        expect(home).toContain('data-i18n="home.heroTitle">一起貢獻報告，共建投資研究平台</h1>');
+        // 2026-11-10: one entry point for public research; the main hero action is a search box, not a contribute link.
+        expect(home).toContain('data-i18n="home.heroTitle">公開投資研究的統一入口</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
         expect(home).toContain('<HomeContact />');
         expect(home).not.toContain('mailto:'); // every email link goes through src/scripts/contact.ts
-        expect(home).toContain('class="home-product-contact" href="#market-reports"');
+        expect(home).toContain('<form id="home-hero-search"');
+        expect(home).not.toContain('class="home-product-contact" href="#market-reports"');
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
         expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@tymultiverse.cc'");
         expect(home).toContain('Miner · 選用的市場資料 API');
@@ -33,18 +35,19 @@ describe('homepage search and contact contract', () => {
         expect(home).toContain('canonical="https://tymultiverse.cc/"');
     });
 
-    it('describes shared evidence and independent decisions rather than selling the founder', () => {
+    it('describes sourced evidence and independent decisions rather than selling the founder', () => {
         const home = JSON.parse(source('src/storages/i18n.json')).home;
-        expect(home.heroTagline.zh).toContain('共同研究平台');
-        expect(home.heroTagline.zh).toContain('互利共生');
+        expect(home.heroTagline.zh).toContain('來源');
+        expect(home.heroTagline.zh).toContain('頁碼');
+        expect(home.heroTagline.zh).not.toContain('互利共生'); // visitors cannot upload, so the page no longer promises a contributor community
         expect(home.productAudience.zh).toContain('自行做出投資決策');
-        expect(home.heroTagline.en).toContain('shared research platform');
+        expect(home.heroTagline.en).toContain('source and page number');
         expect(home.productAudience.en).toContain('make your own investment decisions');
     });
 
     // 2026-10-29: the product is not a toolkit for building your own research method. It pushes research to the reader
     // (tickers, the technology behind them, the macro backdrop) and the reader's one job is adding reports to the library.
-    it('presents community research, technology and macro evidence without a DIY burden', () => {
+    it('presents public research, technology and macro evidence without a DIY burden', () => {
         const json = JSON.parse(source('src/storages/i18n.json')).home;
         const copy = ['heroTitle', 'heroTagline', 'productAudience', 'productWorkflow', 'productCollectTitle', 'productCollectBody',
             'productJudgeTitle', 'productJudgeBody', 'productDecideTitle', 'productDecideBody', 'productFaqTitle', 'productFaqBody',
@@ -53,8 +56,8 @@ describe('homepage search and contact contract', () => {
         for (const old of ['建立自己的', '自己的量化研究', '不會寫程式', '改變看法的條件', '你只要把報告加進來', '你唯一要做的事', '預計按使用量計費']) {
             expect(copy + page).not.toContain(old);
         }
-        expect(json.heroTitle.zh).toContain('共建投資研究平台');
-        expect(json.heroTitle.en).toContain('research, together');
+        expect(json.heroTitle.zh).toContain('統一入口');
+        expect(json.heroTitle.en).toContain('public investment research');
         expect(json.heroTagline.zh).toMatch(/標的/);
         expect(json.heroTagline.zh).toMatch(/技術/);
         expect(json.heroTagline.zh).toMatch(/總體經濟|總經/);
@@ -96,25 +99,26 @@ describe('page language defaults', () => {
     });
 });
 
-// 2026-10-30: the site proactively brings the latest tickers and technology research; reports people contribute are an
-// optional, shared community supplement. Ads run on the homepage, so only the API is described as paid.
-describe('community narrative and pricing scope', () => {
-    it('frames user reports as a shared community supplement, and the API as the only paid part', () => {
+// 2026-11-10: supply is collected from public sources (plus uploads by the owner), so the copy no longer asks visitors
+// to contribute reports; they can suggest a public source by email. Ads run on the homepage, so only the API is paid.
+describe('public-source narrative and pricing scope', () => {
+    it('frames the library as public sources read by everyone, and the API as the only paid part', () => {
         const json = JSON.parse(source('src/storages/i18n.json')).home;
         const page = source('src/pages/index.astro');
         expect(json.productWorkflow.zh).toContain('最新');
         expect(json.productWorkflow.zh).toContain('標的');
-        expect(json.productWorkflow.zh).toContain('社群報告');
-        expect(json.productDecideTitle.zh).toContain('一起貢獻');
-        expect(json.productDecideBody.zh).toContain('自己喜歡的報告');
-        expect(json.productDecideBody.zh).toContain('社群');
+        expect(json.productWorkflow.zh).toContain('公開報告');
+        expect(json.productCollectTitle.zh).not.toContain('貢獻');
+        expect(json.productDecideTitle.zh).toContain('自行判斷');
+        expect(json.productDecideBody.zh).toContain('推薦');
+        expect(json.productDecideBody.zh).toContain('公開來源');
         expect(json.productDecideBody.zh).not.toContain('唯一要做');
         expect(json.productPricingTitle.zh).toBe('Miner · 選用的市場資料 API');
         expect(json.productPricingBody.zh).toContain('免費開放');
         expect(json.productPricingBody.zh).toContain('廣告');
         expect(json.productPricingBody.zh).toContain('價格與開放方式尚未公布');
         expect(page).toContain('data-i18n="home.productPricingTitle">Miner · 選用的市場資料 API</summary>');
-        expect(page).toContain('data-i18n="home.productWorkflow">社群報告匯成證據，發掘最新標的與技術');
+        expect(page).toContain('data-i18n="home.productWorkflow">公開報告匯成證據，發掘最新標的與技術');
         expect(source('src/pages/learn.astro')).toContain('市場快報｜主播精讀');
         expect(source('src/pages/learn.astro')).toContain('api/market/audio');
     });

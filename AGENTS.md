@@ -6,6 +6,8 @@ Google 登入與電子郵件驗證流程：[docs/GOOGLE_SIGN_IN.md](docs/GOOGLE_
 
 共同研究平台與 AI 機會池的流程、開發方法與測試：[docs/COMMUNITY_RESEARCH_PLATFORM.md](docs/COMMUNITY_RESEARCH_PLATFORM.md)。
 
+北極星指標（每週回訪的研究讀者數）、「公開投資研究的統一入口」定位與首頁搜尋／主題排行的流程：[docs/NORTH_STAR.md](docs/NORTH_STAR.md)。改首頁文案或版面前先讀。
+
 技術 SEO、canonical、索引政策、SSR sitemap 與分享預覽：[docs/SEO.md](docs/SEO.md)。
 
 Cookie 偏好、隱私權說明與廣告載入控制：[docs/COOKIE_CONSENT.md](docs/COOKIE_CONSENT.md)。

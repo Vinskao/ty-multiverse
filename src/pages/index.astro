@@ -22,9 +22,14 @@ import openSourceCssUrl from '../styles/open-source.css?url';
 import MarketBrief from '../components/MarketBrief.astro';
 import HomeAdPlacements from '../components/HomeAdPlacements.astro';
 import { getMarketBrief } from '../services/server/marketBrief';
+import { getReportStats } from '../services/server/reportStats';
+import { tailwindShare } from '../scripts/market/reportStats';
+import { researchTagLabel } from '../scripts/market/researchTaxonomy';
+import { formatNumber } from '../scripts/format/numbers';
 
 // Server-rendered so AI agents that read raw HTML (no JS) still see the holdings' chip summary.
-const marketBrief = await getMarketBrief();
+const [marketBrief, reportStats] = await Promise.all([getMarketBrief(), getReportStats()]);
+const ranking = reportStats?.ranking ?? [];
 
 // Latest articles are read from the PostgreSQL article service at request time.
 let projects = [];
@@ -47,7 +52,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 ---
 <BaseLayout
 	title="TY 市場研究室"
-	description="把你重視的報告放進共同研究平台。AI 整合證據，連結技術、供應鏈與總體經濟，萃取值得研究的標的，建立持續累積的研究圖。每個人的貢獻，都成為所有人更好的判斷依據，形成互利共生的研究社群。"
+	description="法說、財報、SEC 申報與公開研究頻道，由 AI 整理成附來源與頁碼的主張，連到標的、技術、供應鏈與總體經濟。"
 	canonical="https://tymultiverse.cc/"
 	lang="zh-Hant"
 >
@@ -85,57 +90,49 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 			<header class="hero stack hero-layout">
 				<div class="hero-main">
 					<div class="hero-header">
-						<div class="hero-title-row">
 						<div class="hero-title-block">
 						<p class="home-product-brand" data-i18n="home.productBrand">TY Multiverse · TY 市場研究室</p>
 						<p class="home-product-name" data-i18n="home.productName">Birch Investments 樺樹資本工具</p>
-						<h1 class="home-product-title" data-i18n="home.heroTitle">一起貢獻報告，共建投資研究平台</h1>
-						</div>
-						<div class="hero-podcast">
-							<iframe data-testid="embed-iframe" title="Birch Investments 每日市場精讀 Spotify Podcast" src="https://open.spotify.com/embed/show/6c674Xq9as5ugqva8aqimV" width="100%" height="352" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-						</div>
-						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
-							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
-							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
-							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
-						</section>
+						<h1 class="home-product-title" data-i18n="home.heroTitle">公開投資研究的統一入口</h1>
 						</div>
 						<div class="hero-copy">
-						<p data-i18n="home.heroTagline">把你重視的報告放進共同研究平台。AI 整合證據，連結技術、供應鏈與總體經濟，萃取值得研究的標的，建立持續累積的研究圖。每個人的貢獻，都成為所有人更好的判斷依據，形成互利共生的研究社群。</p>
-						<p class="home-product-audience" data-i18n="home.productAudience">給重視證據、願意分享研究的每一位投資人。閱讀報告、市場資料與研究圖，貢獻不同觀點，讓社群共同受惠，再自行做出投資決策。</p>
+						<p data-i18n="home.heroTagline">法說、財報、SEC 申報與公開研究頻道，由 AI 整理成附來源與頁碼的主張，連到標的、技術、供應鏈與總體經濟。</p>
+						<p class="home-product-audience" data-i18n="home.productAudience">每項主張都能回到原文核對。先搜尋代號或主題，讀完證據，再自行做出投資決策。</p>
 						</div>
+						<form id="home-hero-search" class="home-hero-search" role="search" action="#market-reports">
+							<label class="sr-only" for="home-hero-search-input" data-i18n="home.heroSearchLabel">搜尋研究主張</label>
+							<input id="home-hero-search-input" name="q" type="search" autocomplete="off" placeholder="輸入代號或主題，例如 2330、CPO" data-placeholder-zh="輸入代號或主題，例如 2330、CPO" data-placeholder-en="Ticker or topic, e.g. 2330, CPO" />
+							<button type="submit" data-i18n="home.heroSearchButton">搜尋</button>
+						</form>
+						{reportStats && reportStats.reports > 0 &&
+						<dl class="home-report-stats">
+							<div><dd>{formatNumber(reportStats.reports, 'count')}</dd><dt data-i18n="home.statReports">份報告</dt></div>
+							<div><dd>{formatNumber(reportStats.claims, 'count')}</dd><dt data-i18n="home.statClaims">項主張</dt></div>
+							<div><dd>{formatNumber(reportStats.sources, 'count')}</dd><dt data-i18n="home.statSources">個來源</dt></div>
+							<div><dd>{formatNumber(reportStats.addedLast7Days, 'count')}</dd><dt data-i18n="home.statAdded">近 7 日新增</dt></div>
+						</dl>}
 						<div class="home-product-actions">
-							<a class="home-product-contact" href="#market-reports" data-i18n="home.productCollectTitle">貢獻你重視的報告</a>
-							<a href="#research-zone" data-i18n="home.productExplore">探索共同研究平台</a>
+							<a href="#research-zone" data-i18n="home.productExplore">探索研究圖</a>
+							<a href={mailtoHref('data', 'zh')} data-contact-topic="data" data-i18n="home.heroSuggestSource">推薦來源</a>
+							<a href="#market-reports" data-report-owner-only hidden data-i18n="home.heroUpload">上傳報告</a>
 							<a href="#open-source" data-i18n="openSource.explore">參與開源協作</a>
 						</div>
 					</div>
-					<section class="home-product-intro" aria-labelledby="home-workflow-title">
-						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">社群報告匯成證據，發掘最新標的與技術，共建研究圖</h2>
-						<div class="home-product-steps">
-							<article><h3 data-i18n="home.productCollectTitle">貢獻你重視的報告</h3><p data-i18n="home.productCollectBody">把值得閱讀的研究放進資料庫。公開報告供社群共同研究，私人資料依原有權限使用。</p></article>
-							<article><h3 data-i18n="home.productJudgeTitle">AI 連結證據與總經環境</h3><p data-i18n="home.productJudgeBody">AI 把報告證據連到公司、技術與供應鏈，再對照總經環境、催化因素與風險，讓研究結論有來源可核對。</p></article>
-							<article><h3 data-i18n="home.productDecideTitle">一起貢獻，共享研究成果</h3><p data-i18n="home.productDecideBody">你可以加入自己喜歡的報告，與社群一起累積研究圖像，找出持股之外值得研究的標的。每份貢獻都讓共同研究更完整，所有人共享成果、改善投資判斷。</p></article>
-						</div>
-						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">需要自己設計研究方法或寫程式嗎？</summary><p data-i18n="home.productFaqBody">不需要。研究資訊由系統主動整理，每項都附來源與資料日期，你可以直接閱讀、核對，再自行判斷。想把自己的報告或資料接進來，請以 email 說明需求與目前的做法。</p></details>
-						<div class="home-product-pricing">
-							<div class="home-product-pricing-copy"><details class="home-miner"><summary data-i18n="home.productPricingTitle">Miner · 選用的市場資料 API</summary><p data-i18n="home.productPricingBody">共同研究平台、市場資料與研究圖持續免費開放，首頁以廣告支持營運。Miner 是額外付費的市場資料 API，供需要程式串接的人選用。價格與開放方式尚未公布。</p><a href={mailtoHref('trial', 'zh')} data-contact-topic="trial" data-i18n="home.productContact">Email 洽詢 Miner API</a></details></div>
-							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">
-								<section id="research-economics-panel" aria-labelledby="research-economics-title">
-									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value. Account values are never shown.</p></div></div>
-									<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
-									<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
-									<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Dashed amber line and right axis: cumulative token cost of the scheduled research routines in USD (estimated). The line appears once the routines start reporting usage.</p>
-								</section>
-							</aside>
-						</div>
-					</section>
+					{ranking.length > 0 &&
+					<section class="home-topic-ranking" aria-labelledby="home-topic-ranking-title">
+						<div class="home-topic-ranking-head"><h2 id="home-topic-ranking-title" data-i18n="home.topicRankingTitle">研究主題排行</h2><p data-i18n="home.topicRankingNote">依主張數排序；順風比例只計有方向的主張。點選主題可篩選下方報告。</p></div>
+						<ol class="home-topic-ranking-list">
+							{ranking.map((topic) => { const share = tailwindShare(topic); return (
+							<li><button type="button" data-report-topic={topic.tagId} data-label-zh={researchTagLabel(topic.tagId, 'zh')} data-label-en={researchTagLabel(topic.tagId, 'en')}>
+								<strong data-topic-label>{researchTagLabel(topic.tagId, 'zh')}</strong>
+								<span class="home-topic-counts">{formatNumber(topic.claims, 'count')} <span data-i18n="home.statClaims">項主張</span> · {formatNumber(topic.reports, 'count')} <span data-i18n="home.statReports">份報告</span></span>
+								<span class="home-topic-share">{share === null ? '—' : <Fragment><span data-i18n="home.topicTailwind">順風</span> {share}%</Fragment>}</span>
+								<span class="home-topic-bar" aria-hidden="true"><span style={`width:${share ?? 0}%`}></span></span>
+							</button></li>
+							); })}
+						</ol>
+					</section>}
 					<HomeAdPlacements />
-					<section class="market-ai-panel" aria-labelledby="home-daily-maya-title">
-						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">Maya 主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
-						<div id="home-daily-maya" aria-live="polite"><p class="market-updated">載入最新已審核精讀…</p></div>
-					</section>
-
 					<section id="market-overview" class="market-overview">
 						<div class="market-overview-header">
 							<div>
@@ -143,62 +140,28 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							</div>
 							<p class="market-overview-note" data-i18n="home.marketOverviewNote">Refreshed every 10 minutes</p>
 						</div>
-						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
-							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
-						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
-							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
-							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
-							<p class="market-updated" data-i18n="home.macroPeriodNote">Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.</p>
-							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
-							<div id="macro-chains" class="macro-chains" role="tabpanel"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
-							<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
-							<div id="macro-event-list" class="macro-other-list" hidden></div>
-							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
-								<div class="macro-commentary-heading"><h5 id="macro-commentary-title">總經評論｜所有個股分析共用</h5><span id="macro-commentary-meta" class="market-updated"></span></div>
-								<div id="macro-commentary-body" class="macro-commentary-body"><p class="market-updated">載入總經評論中…</p></div>
-								<details>
-									<summary>更新總經評論（AI 提示、編輯、版本歷史）</summary>
-									<section class="market-ai-research-prompt" aria-labelledby="macro-ai-prompt-title">
-										<div class="market-ai-prompt-heading"><h5 id="macro-ai-prompt-title">總經 AI 研究提示</h5><button type="button" id="macro-ai-copy-prompt">複製完整提示</button></div>
-										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
-
-研究流程
-1. 讀本區「多國重要總體經濟資料」與 API（GET /api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
-2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
-3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
-4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
-5. 事件時間線：未來 2–8 週總經公布日與 FOMC，寫出每個事件的上行／下行情境。
-
-輸出格式
-• 標題：總經評論｜資料截點｜研究期間
-• 結論：台股科技股總經環境「順風／中性／逆風」，一句話理由。
-• 利率與通膨：數據（期間、數值、來源）、方向判斷。
-• 就業與消費：數據、需求面含義。
-• 對台股傳導：需求面 vs. 評價面，哪些產業最敏感（高本益比、利率敏感、內需、出口）。
-• 事件時間線：日期（台北時間）、事件、可能衝擊。
-• 翻轉條件：哪些數據會讓結論轉為順風或逆風。
-
-寫作與儲存
-繁體中文，數字附期間、單位、來源。區分事實、推論、未知，不捏造。說明本次相較前版改了什麼。總經數據公布後要更新本評論，個股分析會引用版本號。填入自己的 AI／模型名稱；版本衝突就重新載入整合。這是一般研究觀點，不是個人化投資建議。</pre>
-									</section>
-									<p id="macro-ai-status" role="status" aria-live="polite"></p>
-									<form id="macro-ai-form" data-ai-action="update-macro-commentary">
-										<fieldset id="macro-ai-fields" disabled>
-											<label for="macro-ai-model" data-i18n="home.marketAiModel">AI / model</label>
-											<input id="macro-ai-model" name="model" type="text" maxlength="120" required autocomplete="off" placeholder="AI or model name" />
-											<label for="macro-ai-content">目前總經評論 · 編輯後更新</label>
-											<textarea id="macro-ai-content" name="content" rows="10" maxlength="20000" required></textarea>
-											<input id="macro-ai-revision" name="expectedRevision" type="hidden" value="0" />
-											<div class="market-ai-actions"><button type="submit" id="macro-ai-save">更新總經評論</button><button type="button" id="macro-ai-reload" data-i18n="home.marketAiReload">Reload saved version</button></div>
-										</fieldset>
-									</form>
-									<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
-									<p class="market-updated">API：GET／PUT <code id="macro-ai-endpoint"></code></p>
-									<h5 data-i18n="home.marketAiHistory">Revision history</h5><div id="macro-ai-history"></div>
-								</details>
-							</section>
-							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
-						</section>
+						<section class="home-zone" id="zone-reports" aria-labelledby="zone-reports-title">
+							<header class="home-zone-head"><h3 id="zone-reports-title" class="home-zone-title" data-i18n="home.zoneReports">研究報告</h3></header>
+					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
+						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
+						<form id="market-report-upload" class="market-report-upload" hidden>
+							<label class="market-report-file">選擇 PDF（可一次多選，每份最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /><small>檔名會自動作為報告標題；選完即可立即上傳。</small></label>
+							<div class="market-report-submit-row"><button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p></div>
+						</form>
+						<div class="market-report-browser">
+							<aside class="market-report-sidebar market-side-panel" aria-label="報告種類選取">
+								<h5>報告種類</h5>
+								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
+							</aside>
+							<div class="market-report-results">
+								<HomeAdPlacements compact />
+								<label class="market-report-search" for="market-report-search">搜尋報告
+									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
+								</label>
+								<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
+							</div>
+						</div>
+					</section>
 						</section>
 						<section class="home-zone" id="zone-stocks" aria-labelledby="zone-stocks-title">
 							<header class="home-zone-head"><h3 id="zone-stocks-title" class="home-zone-title" data-i18n="home.zoneStocks">股票</h3></header>
@@ -474,28 +437,62 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						</div>
 					</section>
 						</section>
-						<section class="home-zone" id="zone-reports" aria-labelledby="zone-reports-title">
-							<header class="home-zone-head"><h3 id="zone-reports-title" class="home-zone-title" data-i18n="home.zoneReports">研究報告</h3></header>
-					<section id="market-reports" class="market-reports" aria-labelledby="market-reports-title">
-						<div class="market-reports-heading"><div><h4 id="market-reports-title">研究報告</h4><p>公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。</p></div><span id="market-reports-status" class="market-updated" role="status" aria-live="polite">載入報告中…</span></div>
-						<form id="market-report-upload" class="market-report-upload" hidden>
-							<label class="market-report-file">選擇 PDF（可一次多選，每份最多 40 MB）<input name="file" type="file" accept="application/pdf,.pdf" multiple required /><small>檔名會自動作為報告標題；選完即可立即上傳。</small></label>
-							<div class="market-report-submit-row"><button type="submit">上傳研究報告</button><p id="market-report-upload-status" role="status" aria-live="polite"></p></div>
-						</form>
-						<div class="market-report-browser">
-							<aside class="market-report-sidebar market-side-panel" aria-label="報告種類選取">
-								<h5>報告種類</h5>
-								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
-							</aside>
-							<div class="market-report-results">
-								<HomeAdPlacements compact />
-								<label class="market-report-search" for="market-report-search">搜尋報告
-									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
-								</label>
-								<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
-							</div>
-						</div>
-					</section>
+						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
+							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
+						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
+							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
+							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
+							<p class="market-updated" data-i18n="home.macroPeriodNote">Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.</p>
+							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
+							<div id="macro-chains" class="macro-chains" role="tabpanel"><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
+							<div id="macro-indicator-grid" class="macro-group-grid" role="tabpanel" hidden><p class="market-updated" data-i18n="home.macroLoading">Loading macro data…</p></div>
+							<div id="macro-event-list" class="macro-other-list" hidden></div>
+							<section id="macro-commentary" class="market-ai-panel macro-commentary" aria-labelledby="macro-commentary-title">
+								<div class="macro-commentary-heading"><h5 id="macro-commentary-title">總經評論｜所有個股分析共用</h5><span id="macro-commentary-meta" class="market-updated"></span></div>
+								<div id="macro-commentary-body" class="macro-commentary-body"><p class="market-updated">載入總經評論中…</p></div>
+								<details>
+									<summary>更新總經評論（AI 提示、編輯、版本歷史）</summary>
+									<section class="market-ai-research-prompt" aria-labelledby="macro-ai-prompt-title">
+										<div class="market-ai-prompt-heading"><h5 id="macro-ai-prompt-title">總經 AI 研究提示</h5><button type="button" id="macro-ai-copy-prompt">複製完整提示</button></div>
+										<pre id="macro-ai-prompt-text">你是總經研究員。這份評論是本站所有個股與期貨分析共用的總經前提，個股分析只引用、不重寫總經數據。依最新已公布資料更新下方「目前總經評論」，不得沿用前版而不重新驗證。
+
+研究流程
+1. 讀本區「多國重要總體經濟資料」與 API（GET /api/market/dashboard/macro）：美國與台灣的就業／失業率、CPI／核心 CPI、PPI、聯邦基金與台灣央行利率、10 年期殖利率、零售銷售、匯率（新台幣、日圓、美元指數）、台灣進出口與 PMI 的最新值、前期、市場共識與實際值、下次公布日。
+2. 查 Federal Reserve 聲明、會議紀錄、主席談話與點陣圖；BLS／FRED 原始數據。只用已公布數據，不預測未公布數字。
+3. 判斷：通膨與利率方向、就業與消費強弱、風險偏好與美元資金流。
+4. 傳導到台股：AI／資料中心資本支出、半導體與電子供應鏈需求、評價（殖利率對本益比）、新台幣匯率與外資流向。
+5. 事件時間線：未來 2–8 週總經公布日與 FOMC，寫出每個事件的上行／下行情境。
+
+輸出格式
+• 標題：總經評論｜資料截點｜研究期間
+• 結論：台股科技股總經環境「順風／中性／逆風」，一句話理由。
+• 利率與通膨：數據（期間、數值、來源）、方向判斷。
+• 就業與消費：數據、需求面含義。
+• 對台股傳導：需求面 vs. 評價面，哪些產業最敏感（高本益比、利率敏感、內需、出口）。
+• 事件時間線：日期（台北時間）、事件、可能衝擊。
+• 翻轉條件：哪些數據會讓結論轉為順風或逆風。
+
+寫作與儲存
+繁體中文，數字附期間、單位、來源。區分事實、推論、未知，不捏造。說明本次相較前版改了什麼。總經數據公布後要更新本評論，個股分析會引用版本號。填入自己的 AI／模型名稱；版本衝突就重新載入整合。這是一般研究觀點，不是個人化投資建議。</pre>
+									</section>
+									<p id="macro-ai-status" role="status" aria-live="polite"></p>
+									<form id="macro-ai-form" data-ai-action="update-macro-commentary">
+										<fieldset id="macro-ai-fields" disabled>
+											<label for="macro-ai-model" data-i18n="home.marketAiModel">AI / model</label>
+											<input id="macro-ai-model" name="model" type="text" maxlength="120" required autocomplete="off" placeholder="AI or model name" />
+											<label for="macro-ai-content">目前總經評論 · 編輯後更新</label>
+											<textarea id="macro-ai-content" name="content" rows="10" maxlength="20000" required></textarea>
+											<input id="macro-ai-revision" name="expectedRevision" type="hidden" value="0" />
+											<div class="market-ai-actions"><button type="submit" id="macro-ai-save">更新總經評論</button><button type="button" id="macro-ai-reload" data-i18n="home.marketAiReload">Reload saved version</button></div>
+										</fieldset>
+									</form>
+									<p data-i18n="home.marketAiLogin">Sign in to save. Your commentary and AI/model name will be publicly visible.</p>
+									<p class="market-updated">API：GET／PUT <code id="macro-ai-endpoint"></code></p>
+									<h5 data-i18n="home.marketAiHistory">Revision history</h5><div id="macro-ai-history"></div>
+								</details>
+							</section>
+							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
+						</section>
 						</section>
 						<section class="home-zone" id="zone-other" aria-labelledby="zone-other-title">
 							<header class="home-zone-head"><h3 id="zone-other-title" class="home-zone-title" data-i18n="home.zoneOther">其他資訊</h3></header>
@@ -512,6 +509,43 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					</details>
 							</div>
 						</section>
+					</section>
+					<section class="home-zone" id="zone-briefing" aria-labelledby="zone-briefing-title">
+						<header class="home-zone-head"><h3 id="zone-briefing-title" class="home-zone-title" data-i18n="home.zoneBriefing">每日精讀與公司事件</h3></header>
+					<section class="market-ai-panel" aria-labelledby="home-daily-maya-title">
+						<div class="macro-commentary-heading"><h3 id="home-daily-maya-title">Maya 主播每日精讀</h3><a href={`${import.meta.env.BASE_URL}learn`}>前往市場快報</a></div>
+						<div id="home-daily-maya" aria-live="polite"><p class="market-updated">載入最新已審核精讀…</p></div>
+					</section>
+						<div class="home-briefing-row">
+						<div class="hero-podcast">
+							<iframe data-testid="embed-iframe" title="Birch Investments 每日市場精讀 Spotify Podcast" src="https://open.spotify.com/embed/show/6c674Xq9as5ugqva8aqimV" width="100%" height="352" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+						</div>
+						<section id="market-company-events" class="market-company-events hero-events" aria-labelledby="market-company-events-title">
+							<div class="market-company-events-heading"><div><h4 id="market-company-events-title" data-i18n="home.marketEventsTitle">Recent company events</h4><p data-i18n="home.marketEventsDescription">Official revenue and financial report releases, plus upcoming investor conferences.</p></div><span id="market-company-events-updated" class="market-updated" aria-live="polite" data-i18n="home.marketEventsLoading">Loading events…</span></div>
+							<p class="market-company-events-sources">Sources: <a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">TWSE OpenAPI</a> &middot; <a href="https://mops.twse.com.tw/mops/" target="_blank" rel="noopener noreferrer">MOPS</a> &middot; <a href="https://irplatform.tdcc.com.tw/ir/event/list?lang=zh" target="_blank" rel="noopener noreferrer">TDCC IR Platform</a></p>
+							<div class="market-company-events-scroll"><table class="market-company-events-table"><thead><tr><th scope="col" data-i18n="home.marketEventsDate">Date</th><th scope="col" data-i18n="home.marketEventsType">Event</th><th scope="col" data-i18n="home.marketEventsInstrument">Instrument</th><th scope="col" data-i18n="home.marketEventsPeriod">Period</th></tr></thead><tbody id="market-company-events-rows"><tr><td colspan="4" class="market-updated"><span data-i18n="home.marketEventsLoadingRows">Loading selected holdings’ events…</span></td></tr></tbody></table></div>
+						</section>
+						</div>
+					</section>
+					<section class="home-product-intro" aria-labelledby="home-workflow-title">
+						<h2 id="home-workflow-title" data-i18n="home.productWorkflow">公開報告匯成證據，發掘最新標的與技術，建立研究圖</h2>
+						<div class="home-product-steps">
+							<article><h3 data-i18n="home.productCollectTitle">公開來源收進同一個資料庫</h3><p data-i18n="home.productCollectBody">法說簡報、財報、SEC 申報、公開頻道與擁有者上傳的報告進入同一個資料庫。對外只顯示主張與出處連結，不提供原始檔案。</p></article>
+							<article><h3 data-i18n="home.productJudgeTitle">AI 連結證據與總經環境</h3><p data-i18n="home.productJudgeBody">AI 把報告證據連到公司、技術與供應鏈，再對照總經環境、催化因素與風險，讓研究結論有來源可核對。</p></article>
+							<article><h3 data-i18n="home.productDecideTitle">讀證據，自行判斷</h3><p data-i18n="home.productDecideBody">依主題與標的瀏覽主張、研究圖像與機會池，找出持股之外值得研究的標的。想推薦值得收錄的公開來源，歡迎來信。</p></article>
+						</div>
+						<details class="home-product-faq"><summary data-i18n="home.productFaqTitle">需要自己設計研究方法或寫程式嗎？</summary><p data-i18n="home.productFaqBody">不需要。研究資訊由系統主動整理，每項都附來源與資料日期，你可以直接閱讀、核對，再自行判斷。想把自己的報告或資料接進來，請以 email 說明需求與目前的做法。</p></details>
+						<div class="home-product-pricing">
+							<div class="home-product-pricing-copy"><details class="home-miner"><summary data-i18n="home.productPricingTitle">Miner · 選用的市場資料 API</summary><p data-i18n="home.productPricingBody">研究主張、市場資料與研究圖持續免費開放，首頁以廣告支持營運。Miner 是額外付費的市場資料 API，供需要程式串接的人選用。價格與開放方式尚未公布。</p><a href={mailtoHref('trial', 'zh')} data-contact-topic="trial" data-i18n="home.productContact">Email 洽詢 Miner API</a></details></div>
+							<aside class="home-product-pricing-chart research-economics-panel" aria-label="Research cost and portfolio return">
+								<section id="research-economics-panel" aria-labelledby="research-economics-title">
+									<div class="research-economics-heading"><div><h6 id="research-economics-title" data-i18n="home.portfolioReturnTitle">Portfolio return since first snapshot</h6><p data-i18n="home.portfolioReturnDescription">Return is rebased to 0% on the earliest recorded portfolio value. Account values are never shown.</p></div></div>
+									<svg id="research-economics-return-chart" class="research-economics-chart" role="group" aria-label="Portfolio return history"></svg>
+									<output id="research-economics-return-readout" class="market-chart-readout" aria-live="polite">Loading portfolio history…</output>
+									<p class="research-economics-cost-note" data-i18n="home.researchTokenCostPending">Dashed amber line and right axis: cumulative token cost of the scheduled research routines in USD (estimated). The line appears once the routines start reporting usage.</p>
+								</section>
+							</aside>
+						</div>
 					</section>
 
 				</div>
