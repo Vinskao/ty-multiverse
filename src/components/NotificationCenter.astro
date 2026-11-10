@@ -78,7 +78,7 @@
 </script>
 <style>
   .notification-center { position: relative; }
-  .notification-bell { position: relative; display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; min-width: 2rem; padding: 0; cursor: pointer; }
+  .notification-bell { position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--nav-control-size, 2.5rem); height: var(--nav-control-size, 2.5rem); min-width: var(--nav-control-size, 2.5rem); padding: 0; cursor: pointer; }
   .notification-bell:focus-visible { outline: 2px solid var(--accent-regular); outline-offset: 2px; }
   .notification-count { position: absolute; top: -6px; right: -6px; min-width: 16px; padding: 0 4px; border-radius: 20px; background: #c83d55; color: white; font: 600 10px/16px system-ui; }
   .notification-count[hidden], .notification-panel[hidden] { display: none !important; }

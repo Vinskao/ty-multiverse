@@ -1,6 +1,6 @@
 /* Nav 組件樣式 */
 /* Other <nav> elements (sidebar menus, breadcrumbs) must size to their content; only the site header bar is fixed. */
-:root { --nav-height: 3.5rem; }
+:root { --nav-height: 3.5rem; --nav-control-size: 2.5rem; }
 
 nav:has(> .menu-header) {
   box-sizing: content-box; /* the 1px border sits outside the fixed height */
@@ -179,7 +179,7 @@ nav {
 }
 
 .nav-auth { position: relative; flex: none; }
-.nav-auth-trigger { display: inline-flex; align-items: center; padding: .45rem .85rem; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); font-weight: 700; white-space: nowrap; }
+.nav-auth-trigger { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: var(--nav-control-size); padding: 0 .85rem; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); font-weight: 700; white-space: nowrap; }
 .nav-auth-trigger:hover, .nav-auth-trigger:focus-visible { background: var(--gray-300); color: var(--gray-999); outline-offset: 3px; }
 .nav-auth-popover { position: absolute; right: 0; top: 100%; padding-top: .4rem; min-width: 14rem; visibility: hidden; opacity: 0; pointer-events: none; z-index: 10000; }
 .nav-auth:hover .nav-auth-popover, .nav-auth:focus-within .nav-auth-popover { visibility: visible; opacity: 1; pointer-events: auto; }
@@ -193,7 +193,8 @@ nav {
   display: inline-flex;
   align-items: center;
   gap: 0.1rem;
-  height: 2rem;
+  box-sizing: border-box;
+  height: var(--nav-control-size);
   padding: 0.18rem;
   border: 1px solid var(--gray-800);
   border-radius: 999px;
@@ -210,7 +211,7 @@ nav {
   align-items: center;
   justify-content: center;
   min-width: 1.7rem;
-  height: 1.55rem;
+  height: calc(var(--nav-control-size) - 0.5rem);
   padding: 0 0.45rem;
   border: 0;
   border-radius: 999px;
@@ -278,6 +279,8 @@ nav {
   transition: all var(--theme-transition);
   flex-shrink: 0;
 }
+
+/* The floating theme switch is not in the header row. */
 
 .theme-toggle button:hover {
   color: var(--gray-100);
