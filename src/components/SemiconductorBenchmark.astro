@@ -1,4 +1,6 @@
 ---
+import { supplyChainDiagram } from '../scripts/market/benchmarkChain';
+
 type BenchmarkRow = {
   code: string;
   company_name: string;
@@ -10,43 +12,6 @@ type BenchmarkRow = {
   financial_url: string | null;
 };
 
-const nodeId = (code: string) => `c${code.replace(/\D/g, '')}`;
-const chainGroups: { title: string; matches: RegExp[] }[] = [
-  { title: '材料與矽晶圓', matches: [/矽晶圓/, /靶材/, /特殊氣體/] },
-  { title: '晶圓製造與廠務', matches: [/晶圓製造/, /晶圓代工/, /晶圓濕蝕刻/, /薄膜設備/, /無塵室/, /廠務/] },
-  { title: '製程設備、檢測與耗材', matches: [/設備/, /檢測/, /良率/, /CMP/, /鑽石碟/, /材料分析/, /可靠度/, /精密零件/] },
-  { title: 'IC 設計', matches: [/IC 設計/] },
-  { title: '封裝與測試', matches: [/封裝/, /測試/, /異質整合/] },
-];
-
-function supplyChainDiagram(companies: BenchmarkRow[]) {
-  const used = new Set<string>();
-  const groups = chainGroups.map(group => ({
-    ...group,
-    companies: companies.filter(company => group.matches.some(match => match.test(company.segment)) && !used.has(company.code))
-      .filter(company => { used.add(company.code); return true; }),
-  })).filter(group => group.companies.length);
-  const unassigned = companies.filter(company => !used.has(company.code));
-  if (unassigned.length) groups.push({ title: '其他半導體環節', matches: [], companies: unassigned });
-  const lines = ['flowchart LR'];
-  const orderedCompanies = groups.flatMap(group => group.companies);
-  groups.forEach((group, index) => {
-    lines.push(`  subgraph stage${index}["${group.title}"]`);
-    group.companies.forEach(company => {
-      const label = `${company.company_name} ${company.code}<br/>${company.segment}`
-        .replaceAll('&', '&amp;').replaceAll('"', '#quot;').replaceAll('[', '&#91;').replaceAll(']', '&#93;');
-      lines.push(`    ${nodeId(company.code)}["${label}"]`);
-    });
-    lines.push('  end');
-  });
-  orderedCompanies.slice(1).forEach((company, index) => {
-    lines.push(`  ${nodeId(orderedCompanies[index].code)} --> ${nodeId(company.code)}`);
-  });
-  lines.push('  classDef company fill:#102b42,stroke:#58c5d8,color:#fff');
-  companies.forEach(company => lines.push(`  class ${nodeId(company.code)} company`));
-  return lines.join('\n');
-}
-
 const base = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa/maya-sawa';
 let rows: BenchmarkRow[] | null = null;
 try {
@@ -57,7 +22,7 @@ try {
 
 <section id="benchmark" aria-labelledby="benchmark-title">
   <h4 id="benchmark-title">台灣半導體 Benchmark</h4>
-  <p>以台灣上市櫃公司的業務對照半導體供應鏈。年報與年度財務報告分開查閱。</p>
+  <p>這份 Benchmark 是選讀研究報告的骨幹：先定出半導體供應鏈每一環的代表公司，再依這些公司與環節去找、去讀下方的研究報告。年報與年度財務報告分開查閱。</p>
   {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{supplyChainDiagram(rows)}</pre></details> : null}
   {rows?.length ? <div class="benchmark-table" role="region" aria-label="公司比較表" tabindex="0">
     <table>
@@ -84,7 +49,8 @@ try {
   section { margin-block: 1rem; }
   .overview { margin: .75rem 0 1rem; border: 1px solid #8885; border-radius: .6rem; }
   .overview summary { cursor: pointer; padding: .7rem 1rem; font-weight: 650; }
-  .overview pre.mermaid { min-width: 56rem; overflow-x: auto; margin: 0; padding: .75rem; background: transparent; }
+  .overview pre.mermaid { overflow-x: auto; margin: 0; padding: .75rem; background: transparent; }
+  .overview pre.mermaid :global(svg) { display: block; min-width: 52rem; max-width: 100%; height: auto; margin-inline: auto; }
   .benchmark-table { overflow-x: auto; }
   table { width: 100%; min-width: 44rem; border-collapse: collapse; }
   th, td { padding: .65rem; text-align: start; vertical-align: top; border-bottom: 1px solid #8885; }

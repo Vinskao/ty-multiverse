@@ -44,3 +44,28 @@ flowchart TD
 2. 用結構測試鎖住版面意圖：`tests/home/zones.test.ts`（分區存在與順序、帳戶分區登入才顯示、Hero 只有標題與搜尋、事件與播放器在每日精讀分區、兩個側欄同類別與同寬）、`tests/market/watchlistBoundary.test.ts`（sticky 側欄不蓋住後面的區塊）。
 3. 先改版面、再改樣式；樣式集中在 `src/styles/index.css` 檔尾的區塊，舊的重複規則一併移除，避免兩套寬度。
 4. 部署後在實站用 1100px 以上與手機寬度各看一次（尚待驗證）。
+
+## Benchmark 是研究報告的骨幹（2026-11-10）
+
+研究報告區先放「台灣半導體 Benchmark」，再放報告清單：先定出供應鏈每一環的代表公司，再依這些公司與環節找報告來讀。兩段的說明文字都寫明這層關係。
+
+供應鏈圖由 `src/scripts/market/benchmarkChain.ts` 的 `supplyChainDiagram()` 產生，公司清單來自 `/market/benchmark`（不寫死）。排版是每個環節一列、環節由上往下：
+
+```mermaid
+flowchart TB
+  subgraph s0["材料與矽晶圓"]
+    direction LR
+    a["公司 A"] ~~~ b["公司 B"]
+  end
+  subgraph s1["晶圓製造與廠務"]
+    direction LR
+    c["公司 C"] ~~~ d["公司 D"]
+  end
+  s0 --> s1
+```
+
+開發方法：同一環節內用隱形連結 `~~~` 讓公司排成一列；箭頭只連環節（subgraph）。若節點直接連到別的 subgraph，Mermaid 會忽略該 subgraph 自己的 `direction`，整張圖又會擠成一長條。
+
+## 主選單（2026-11-10）
+
+順序為 Reports、Macro、Stocks、Blog、About、API、Learn。沒有 Home：品牌字樣本身連回首頁。`/work/` 的英文標籤是 Blog。桌面版 nav 格線為 `minmax(max-content, 1fr) auto minmax(max-content, 1fr)`，兩側不會被擠到中間連結底下；社群圖示 80em 以上才顯示且不換行，50em–80em 之間隱藏頁名與搜尋鈕文字。

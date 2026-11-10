@@ -46,17 +46,7 @@ const textLinks: {
     isActive: currentPath.startsWith("/stocks"),
   },
   {
-    label: "Home",
-    i18nKey: "nav.home",
-    href: isLoggedIn
-      ? `/?username=${username}`
-      : "/",
-    isActive:
-      currentPath === "/" ||
-      currentPath === "/index.html",
-  },
-  {
-    label: "Work",
+    label: "Blog",
     i18nKey: "nav.work",
     href: isLoggedIn
       ? `/work/?username=${username}`
