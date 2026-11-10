@@ -74,6 +74,11 @@ try {
     </table>
   </div> : <p>Benchmark 資料暫未載入。</p>}
 </section>
+<script>
+  import { initBenchmarkDiagram } from '../scripts/market/benchmarkDiagram';
+  initBenchmarkDiagram();
+  document.addEventListener('astro:page-load', () => initBenchmarkDiagram());
+</script>
 
 <style>
   section { margin-block: 1rem; }

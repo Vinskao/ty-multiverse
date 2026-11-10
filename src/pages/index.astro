@@ -110,11 +110,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 						<p data-i18n="home.heroTagline">法說、財報、SEC 申報與公開研究頻道，由 AI 整理成附來源與頁碼的主張，連到標的、技術、供應鏈與總體經濟。</p>
 						<p class="home-product-audience" data-i18n="home.productAudience">每項主張都能回到原文核對。先搜尋代號或主題，讀完證據，再自行做出投資決策。</p>
 						</div>
-						<form id="home-hero-search" class="home-hero-search" role="search" action="#market-reports">
-							<label class="sr-only" for="home-hero-search-input" data-i18n="home.heroSearchLabel">搜尋研究主張</label>
-							<input id="home-hero-search-input" name="q" type="search" autocomplete="off" placeholder="輸入代號或主題，例如 2330、CPO" data-placeholder-zh="輸入代號或主題，例如 2330、CPO" data-placeholder-en="Ticker or topic, e.g. 2330, CPO" />
-							<button type="submit" data-i18n="home.heroSearchButton">搜尋</button>
-						</form>
 						{reportStats && reportStats.reports > 0 &&
 						<dl class="home-report-stats">
 							<div><dd>{formatNumber(reportStats.reports, 'count')}</dd><dt data-i18n="home.statReports">份報告</dt></div>

@@ -2221,18 +2221,13 @@
 .hero-podcast iframe { display: block; width: 100%; height: 232px; border: 0; border-radius: 12px; }
 @media (min-width: 900px) { .hero-podcast iframe { height: 352px; } }
 
-/* Hero search: the main action. It writes into the report library search below, so it shares that field's look. */
+/* The home hero keeps report totals visible without duplicating the navigation search. */
 .home-page .hero-header { text-align: left; }
-.home-hero-search { display: flex; gap: .6rem; width: 100%; max-width: 46rem; margin: 0 0 1.25rem; }
-.home-hero-search input { flex: 1 1 auto; box-sizing: border-box; min-width: 0; padding: .85rem 1rem; color: var(--gray-100); border: 1px solid var(--gray-600); border-radius: .7rem; background: var(--gray-999); font: inherit; font-size: 1.05rem; }
-.home-hero-search input:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 2px; }
-.home-hero-search button { flex: 0 0 auto; padding: .85rem 1.4rem; border: 1px solid var(--home-accent); border-radius: .7rem; color: var(--gray-999); background: var(--home-accent); font: inherit; font-weight: 700; cursor: pointer; }
-.home-hero-search button:hover, .home-hero-search button:focus-visible { filter: brightness(1.15); }
 .home-report-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; max-width: 46rem; margin: 0 0 1.25rem; border: 1px solid var(--gray-800); border-radius: .85rem; background: var(--gray-800); overflow: hidden; }
 .home-report-stats > div { display: flex; flex-direction: column; gap: .2rem; padding: .8rem 1rem; background: var(--gray-999); }
 .home-report-stats dd { margin: 0; color: var(--home-ink); font-size: clamp(1.25rem, 2.6vw, 1.9rem); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .home-report-stats dt { color: var(--home-muted); font-size: .8rem; }
-@media (max-width: 520px) { .home-report-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-hero-search { flex-wrap: wrap; } .home-hero-search button { flex: 1 1 100%; } }
+@media (max-width: 520px) { .home-report-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* The search button is the filled primary action, so every link below it is an outline. */
 .home-page .home-product-actions { margin-top: 0; justify-content: flex-start; }
 .home-page .home-product-actions a:first-child { color: var(--gray-100); background: transparent; }
