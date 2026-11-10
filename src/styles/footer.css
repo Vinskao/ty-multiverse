@@ -44,7 +44,15 @@ footer .footer-column h2 {
 	font-weight: 600;
 }
 
+footer .footer-column {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	min-width: 0;
+}
+
 footer .footer-column ul {
+	width: 100%;
 	display: flex;
 	flex-direction: column;
 	gap: 0.6rem;
