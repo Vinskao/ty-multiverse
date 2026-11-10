@@ -54,3 +54,12 @@ it('lists the sub-items the user named', async () => {
   expect(titles('english')).toContain('多益 TOEIC');
   expect(titles('macroeconomics')).toEqual(['通膨與物價', '利率與貨幣政策', '就業與消費', '貿易與匯率']);
 });
+
+it('shows semiconductor chapter headings and their subtopics without lesson content', async () => {
+  const { learnCatalog } = await import('../../src/scripts/learn/catalog');
+  const semiconductor = learnCatalog.flatMap(subject => subject.courses).find(course => course.id === 'semiconductor');
+  expect(semiconductor?.outline?.flatMap(chapter => chapter.titles)).toEqual(expect.arrayContaining([
+    '離子植入與摻雜', 'CMP 化學機械平坦化', 'AI 晶片、HBM 與 CoWoS',
+  ]));
+  expect(semiconductor?.status).toBe('planned');
+});

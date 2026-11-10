@@ -45,7 +45,13 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
             <h3 id={`subject-${subject.id}`}>{subject.title}</h3><p class="learn-subject-intro">{subject.subtitle}</p>
             <ul class="learn-course-list">
               {subject.courses.map(course => <li class="learn-course" data-catalog-course={course.id}>
-                <div><strong>{course.title}</strong><p>{course.topics.join(' · ')}</p></div>
+                <div>
+                  {course.outline ? <h4>{course.title}</h4> : <strong>{course.title}</strong>}
+                  {course.outline ? course.outline.map(chapter => <section>
+                    <h5>{chapter.title}</h5>
+                    <ul>{chapter.titles.map(title => <li>{title}</li>)}</ul>
+                  </section>) : <p>{course.topics.join(' · ')}</p>}
+                </div>
                 {course.status === 'available' ? <a href={course.source} data-learn-toeic>開始練習 <span aria-hidden="true">↗</span></a> : <a href={course.source}>參考資料 <span aria-hidden="true">↗</span></a>}
               </li>)}
             </ul>

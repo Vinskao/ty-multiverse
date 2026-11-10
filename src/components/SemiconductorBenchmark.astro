@@ -1,0 +1,47 @@
+---
+type BenchmarkRow = {
+  code: string;
+  company_name: string;
+  segment: string;
+  significance: string;
+  report_year: number | null;
+  report_url: string;
+  financial_year: number | null;
+  financial_url: string | null;
+};
+
+const base = process.env.MAYA_SAWA_INTERNAL_URL || import.meta.env.MAYA_SAWA_INTERNAL_URL || 'http://maya-sawa/maya-sawa';
+let rows: BenchmarkRow[] | null = null;
+try {
+  const response = await fetch(`${base}/market/benchmark`, { signal: AbortSignal.timeout(2000) });
+  if (response.ok) rows = await response.json();
+} catch { /* A failed benchmark request leaves the research library usable. */ }
+---
+
+<section id="benchmark" aria-labelledby="benchmark-title">
+  <h4 id="benchmark-title">台灣半導體 Benchmark</h4>
+  <p>以台灣上市櫃公司的業務對照半導體供應鏈。年報與年度財務報告分開查閱。</p>
+  {rows?.length ? <div class="benchmark-table" role="region" aria-label="公司比較表" tabindex="0">
+    <table>
+      <thead><tr><th scope="col">公司名稱</th><th scope="col">Benchmark 環節</th><th scope="col">Benchmark 意義</th><th scope="col">年度報告書位置</th></tr></thead>
+      <tbody>{rows.map(row => <tr>
+        <th scope="row">{row.company_name}（{row.code}）</th>
+        <td>{row.segment}</td>
+        <td>{row.significance}</td>
+        <td>
+          <a href={row.report_url}>{row.report_year ? `${row.report_year} 年股東會年報` : 'MOPS 年報查詢'}</a>
+          {row.financial_url && <div><a href={row.financial_url}>{row.financial_year} 年財務報告（含附註）</a></div>}
+        </td>
+      </tr>)}</tbody>
+    </table>
+  </div> : <p>Benchmark 資料暫未載入。</p>}
+</section>
+
+<style>
+  section { margin-block: 1rem; }
+  .benchmark-table { overflow-x: auto; }
+  table { width: 100%; min-width: 44rem; border-collapse: collapse; }
+  th, td { padding: .65rem; text-align: start; vertical-align: top; border-bottom: 1px solid #8885; }
+  th:first-child { min-width: 8rem; }
+  td:last-child { min-width: 10rem; }
+</style>
