@@ -44,6 +44,16 @@ try {
 }
 
 // 檢查是否需要顯示登入提示
+// /reports, /macro and /stocks render this same page narrowed to one zone (see those pages).
+const view = (Astro.props as { view?: 'reports' | 'macro' | 'stocks' }).view;
+const viewMeta = {
+	reports: { title: '研究報告｜TY 市場研究室', canonical: 'https://tymultiverse.cc/reports/' },
+	macro: { title: '總體經濟｜TY 市場研究室', canonical: 'https://tymultiverse.cc/macro/' },
+	stocks: { title: '個股｜TY 市場研究室', canonical: 'https://tymultiverse.cc/stocks/' },
+};
+const pageTitle = view ? viewMeta[view].title : 'TY 市場研究室';
+const pageCanonical = view ? viewMeta[view].canonical : 'https://tymultiverse.cc/';
+
 const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 
 
@@ -51,9 +61,9 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 // https://docs.astro.build/core-concepts/astro-components/
 ---
 <BaseLayout
-	title="TY 市場研究室"
+	title={pageTitle}
 	description="法說、財報、SEC 申報與公開研究頻道，由 AI 整理成附來源與頁碼的主張，連到標的、技術、供應鏈與總體經濟。"
-	canonical="https://tymultiverse.cc/"
+	canonical={pageCanonical}
 	lang="zh-Hant"
 >
 	<Fragment slot="head">
@@ -83,7 +93,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 			});
 		</script>
 	}
-	<div class="home-page stack gap-20 lg:gap-48">
+	<div class="home-page stack gap-20 lg:gap-48" data-view={view}>
 
 		<div class="wrapper stack gap-20 lg:gap-50">
 

@@ -3731,10 +3731,7 @@ async function fetchPortfolio() {
 // Call the function when the page loads - 支援 View Transitions
 function initIndexPage() {
     // 檢查是否在首頁，避免在其他頁面執行
-    const isIndexPage = window.location.pathname === '/' ||
-                        window.location.pathname.endsWith('/index.html');
-
-    if (!isIndexPage) return;
+    // Runs wherever the dashboard is rendered: the homepage and its one-zone pages (/reports, /macro, /stocks).
     const marketRoot = document.getElementById('market-overview');
     if (!marketRoot || marketRoot.dataset.marketInitialized === 'true') return;
     marketRoot.dataset.marketInitialized = 'true';

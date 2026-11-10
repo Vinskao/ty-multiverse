@@ -33,6 +33,15 @@ export function initHeroSearch(doc: Document = document, onEvent: (event: 'hero_
     showReports(doc);
   });
 
+  // A search opened from the nav bar arrives as /reports/?q=...; apply it to the report library.
+  const preset = new URLSearchParams(doc.defaultView?.location.search ?? '').get('q')?.trim();
+  const library = doc.getElementById('market-report-search') as HTMLInputElement | null;
+  if (preset && library) {
+    library.value = preset;
+    library.dispatchEvent(new Event('input', { bubbles: true }));
+    if (box) box.value = preset;
+  }
+
   let waiting: MutationObserver | null = null;
   undo.push(() => waiting?.disconnect());
   for (const button of doc.querySelectorAll<HTMLElement>('[data-report-topic]')) on(button, 'click', () => {

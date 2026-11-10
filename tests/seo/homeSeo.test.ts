@@ -18,7 +18,7 @@ describe('homepage search and contact contract', () => {
     it('explains the product in server HTML and sends enquiries to email', () => {
         const home = source('src/pages/index.astro');
         // 2026-10-28: the browser tab shows just the site name; the one-line pitch is the page heading, not the tab title.
-        expect(home).toContain('title="TY 市場研究室"');
+        expect(home).toContain(": 'TY 市場研究室';"); // the one-zone pages (/reports, /macro, /stocks) add their own prefix
         // 2026-11-10: one entry point for public research; the main hero action is a search box, not a contribute link.
         expect(home).toContain('data-i18n="home.heroTitle">公開投資研究的統一入口</h1>');
         expect(home).not.toContain('免寫程式的量化研究');
@@ -29,10 +29,10 @@ describe('homepage search and contact contract', () => {
         expect(source('src/components/HomeContact.astro')).toContain('id="contact"');
         expect(source('src/scripts/contact.ts')).toContain("CONTACT_EMAIL = 'tianyikao@tymultiverse.cc'");
         expect(home).toContain('Miner · 選用的市場資料 API');
-        expect(home).toContain('Maya 主播每日精讀');
+        expect(home).toContain('主播每日精讀'); // the presenter name is filled in by weekday (dailyPresenterName)
         expect(home).toContain('api/market/daily-maya');
         expect(home).toContain('價格與開放方式尚未公布');
-        expect(home).toContain('canonical="https://tymultiverse.cc/"');
+        expect(home).toContain(": 'https://tymultiverse.cc/';");
     });
 
     it('describes sourced evidence and independent decisions rather than selling the founder', () => {

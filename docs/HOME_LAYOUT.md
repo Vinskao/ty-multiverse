@@ -21,6 +21,10 @@ flowchart TD
 - **Hero 搜尋框每打一字就篩選報告列表**（輸入事件寫入報告區的搜尋欄，不捲動頁面）；按 Enter／搜尋才捲到報告區。除了標題與主張，也會查報告全文（停頓 250ms 後問伺服器，命中的卡片顯示「全文 p.N」摘錄）；流程圖與規則見 `maya-sawa/docs/REPORT_FULLTEXT_SEARCH.md`。
 - **每日精讀卡片的主播名稱依該篇 `day` 的星期決定**（`dailyPresenterName`，對照 maya-sawa `market-presenters.json`；雙人日由 Uiobbeci 朗讀，與語音開場一致），不再寫死 Maya。
 
+- **導覽列以報告為首（2026-11-10）：報告、總體、個股各有一頁**（`/reports/`、`/macro/`、`/stocks/`）。三頁都是 `index.astro` 加上 `view` 屬性：同一份標記與腳本，用 CSS（`.home-page[data-view=...]`）只顯示該分區，隱藏的分區不會觸發延遲載入。首頁維持完整儀表板。要改某一區的內容，改 `index.astro` 一處即可。
+- **導覽列搜尋（Ctrl/⌘+K）**：`SiteSearch.astro` + `scripts/search/sitePalette.ts`。輸入時篩選頁面連結並查報告全文；點結果開 `/reports/?q=…`，報告頁會自動套用同一組字。首頁 Hero 的搜尋框保留。
+- **頁尾**：品牌、產品、關於、開發者、追蹤五欄（只放已存在的頁面），加每日精讀 Email 訂閱表單。訂閱流程見 `maya-sawa/docs/BRIEF_SUBSCRIPTIONS.md`。
+
 ## 規則
 
 - **兩個側欄同款同寬。** 持股清單（`#market-watchlist`）與「報告種類」都用 `.market-side-panel`，寬度都是 `--side-panel-w`（`clamp(15rem, 20vw, 18rem)`）；手機版改為橫向捲動的膠囊。

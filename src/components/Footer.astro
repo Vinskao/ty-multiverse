@@ -5,18 +5,64 @@ import { socialLinks } from '../scripts/socialLinks';
 import type { iconPaths } from './IconPaths';
 const currentYear = new Date().getFullYear();
 const revision = buildRevision(import.meta.env.PUBLIC_BUILD_REVISION);
+
+// Link columns: only pages that already exist.
+const columns = [
+	{ key: 'footer.product', title: '產品', links: [
+		{ href: '/reports/', key: 'nav.reports', label: '報告' },
+		{ href: '/macro/', key: 'nav.macro', label: '總體' },
+		{ href: '/stocks/', key: 'nav.stocks', label: '個股' },
+		{ href: '/learn/', key: 'footer.dailyReading', label: '每日精讀' },
+		{ href: '/#research-zone', key: 'footer.researchGraph', label: '研究圖' },
+	] },
+	{ key: 'footer.about', title: '關於', links: [
+		{ href: '/about/', key: 'nav.about', label: '關於' },
+		{ href: '/work/', key: 'nav.work', label: '部落格' },
+		{ href: '/ai-usage/', key: 'footer.aiUsage', label: 'AI 使用紀錄' },
+		{ href: '/privacy/', key: 'footer.privacy', label: '隱私權政策' },
+	] },
+	{ key: 'footer.developer', title: '開發者', links: [
+		{ href: '/api-reference/', key: 'footer.apiReference', label: 'API 文件' },
+		{ href: '/llms.txt', key: 'footer.llms', label: 'AI 網站地圖' },
+		{ href: '/brief.json', key: 'footer.briefJson', label: '持股摘要 JSON' },
+		{ href: '/podcast.xml', key: 'footer.podcastRss', label: 'Podcast RSS' },
+		{ href: '/sitemap.xml', key: 'footer.sitemap', label: 'Sitemap' },
+	] },
+];
 ---
 
 <footer>
-	<div class="group">
-		<p><span data-i18n="home.productBrand">TY Multiverse · TY 市場研究室</span> · <span data-i18n="home.productName">Birch Investments 樺樹資本工具</span></p>
-		<p>&copy; {currentYear} TY Multiverse</p>
+	<div class="footer-columns">
+		<div class="footer-brand">
+			<p class="footer-brand-name"><span data-i18n="home.productBrand">TY Multiverse · TY 市場研究室</span></p>
+			<p data-i18n="home.productName">Birch Investments 樺樹資本工具</p>
+			<p>&copy; {currentYear} TY Multiverse</p>
+			{revision && <p class="version"><span data-i18n="home.buildVersion">版本</span> {revision}</p>}
+		</div>
+		{columns.map(({ key, title, links }) => <nav class="footer-column" aria-label={title}>
+			<h2 data-i18n={key}>{title}</h2>
+			<ul>{links.map(({ href, key: linkKey, label }) => <li><a href={href} data-i18n={linkKey}>{label}</a></li>)}</ul>
+		</nav>)}
+		<nav class="footer-column social-links" aria-label="Connect">
+			<h2 data-i18n="footer.connect">追蹤</h2>
+			<ul>{socialLinks.map(({ href, icon, label }) => <li><a href={href} target="_blank" rel="noopener noreferrer">
+				<Icon icon={icon as keyof typeof iconPaths} />
+				<span>{label}</span>
+			</a></li>)}</ul>
+		</nav>
 	</div>
-	<div class="social-links">
-		{socialLinks.map(({ href, icon, label }) => <a href={href} target="_blank" rel="noopener noreferrer">
-			<Icon icon={icon as keyof typeof iconPaths} />
-			<span>{label}</span>
-		</a>)}
+	<div class="footer-subscribe">
+		<form id="footer-subscribe">
+			<label class="sr-only" for="footer-subscribe-email" data-i18n="footer.subscribeLabel">Email</label>
+			<input id="footer-subscribe-email" name="email" type="email" required maxlength="254" autocomplete="email" placeholder="you@example.com" />
+			<button type="submit" data-i18n="footer.subscribe">訂閱</button>
+		</form>
+		<p id="footer-subscribe-status" role="status" aria-live="polite"></p>
+		<p class="footer-subscribe-note"><span data-i18n="footer.subscribeNote">訂閱後每天收到一封信：當日每日市場精讀的文字稿，以及上方追蹤連結。需先點確認信裡的連結才會開始寄送；每封信都有取消訂閱連結。</span> <a href="/privacy/" data-i18n="footer.privacy">隱私權政策</a></p>
 	</div>
-	{revision && <div class="version"><span data-i18n="home.buildVersion">版本</span> {revision}</div>}
 </footer>
+<script>
+	import { initSubscribeForm } from '../scripts/footer/subscribe';
+	initSubscribeForm();
+	document.addEventListener('astro:page-load', () => initSubscribeForm());
+</script>

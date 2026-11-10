@@ -6,6 +6,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import type { iconPaths } from "./IconPaths";
 import { socialLinks } from '../scripts/socialLinks';
 import { currentPageKey } from '../scripts/navigation/menu';
+import SiteSearch from "./SiteSearch.astro";
 
 // 鐛插彇 URL 鍙冩暩
 const url = new URL(Astro.request.url);
@@ -26,6 +27,24 @@ const textLinks: {
   i18nKey: string;
   adminOnly?: boolean;
 }[] = [
+  {
+    label: "Reports",
+    i18nKey: "nav.reports",
+    href: isLoggedIn ? `/reports/?username=${username}` : "/reports/",
+    isActive: currentPath.startsWith("/reports"),
+  },
+  {
+    label: "Macro",
+    i18nKey: "nav.macro",
+    href: isLoggedIn ? `/macro/?username=${username}` : "/macro/",
+    isActive: currentPath.startsWith("/macro"),
+  },
+  {
+    label: "Stocks",
+    i18nKey: "nav.stocks",
+    href: isLoggedIn ? `/stocks/?username=${username}` : "/stocks/",
+    isActive: currentPath.startsWith("/stocks"),
+  },
   {
     label: "Home",
     i18nKey: "nav.home",
@@ -104,6 +123,7 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
       <span class="site-page" aria-current="page" data-i18n={pageKey}>{pageLabel}</span>
     )}
     </div>
+    <SiteSearch />
     <menu-button>
       <template>
         <button class="menu-button" aria-expanded="false">

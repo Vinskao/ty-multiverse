@@ -2335,3 +2335,8 @@
 .learn-topic-link { width:100%; text-align:left; margin-block:.35rem; }
 .learn-topic-link[aria-current="page"] { border-color:var(--gray-500); background:var(--gray-800); color:var(--gray-100); }
 .learn-audio-view > .learn-catalog { margin-top:1.5rem; }
+
+/* /reports, /macro, /stocks: the same dashboard showing one zone. Everything that is not the zone, inside it, or around it is hidden. */
+.home-page[data-view="reports"] *:not(#zone-reports):not(#zone-reports *):not(:has(#zone-reports)),
+.home-page[data-view="macro"] *:not(#zone-macro):not(#zone-macro *):not(:has(#zone-macro)),
+.home-page[data-view="stocks"] *:not(:is(#zone-stocks, #zone-account)):not(:is(#zone-stocks, #zone-account) *):not(:has(#zone-stocks)) { display: none !important; }

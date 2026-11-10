@@ -5,6 +5,9 @@ export function visibleNavItems(access: { isLoggedIn: boolean; isAdmin: boolean 
 }
 
 const SECTION_KEYS: Record<string, string> = {
+  reports: 'nav.reports',
+  macro: 'nav.macro',
+  stocks: 'nav.stocks',
   login: 'nav.login',
   work: 'nav.work',
   about: 'nav.about',
