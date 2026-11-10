@@ -44,7 +44,7 @@ describe('benchmark supply chain diagram layout', () => {
 describe('benchmark leads into the research reports', () => {
   // The owner picks reports to read from the benchmark backbone; the page has to say so.
   it('explains that the reports below are chosen from the benchmark', () => {
-    expect(read('src/components/SemiconductorBenchmark.astro')).toContain('研究報告的骨幹');
+    expect(read('src/components/SemiconductorBenchmark.astro')).toContain('依這條路線');
     expect(read('src/pages/index.astro')).toContain('依上方 Benchmark 骨幹');
   });
 });
@@ -62,5 +62,53 @@ describe('main menu', () => {
     expect(css).toMatch(/grid-template-columns: minmax\(max-content, 1fr\) auto minmax\(max-content, 1fr\)/);
     expect(css).toMatch(/\.site-title \{[^}]*white-space: nowrap/);
     expect(css).toMatch(/@media \(min-width: 80em\) \{\s*\.socials \{[^}]*flex-wrap: nowrap/);
+  });
+});
+
+// 2026-11-10: the line-up became versioned; version 2 pairs a leader with a peer in every stage.
+describe('versioned benchmark line-up', () => {
+  const lineup = {
+    version: 2, name: 'n', rationale: 'r', is_current: true,
+    layers: [
+      { key: 'design', title: '設計', stages: [
+        { title: 'IC 設計', companies: [{ code: '2454', company_name: '聯發科', segment: 's', role: '龍頭' }, { code: '2379', company_name: '瑞昱', segment: 's', role: '對照' }] },
+        { title: '矽智財', companies: [{ code: '3443', company_name: '創意', segment: 's', role: '龍頭' }] },
+      ] },
+      { key: 'inputs', title: '材料', stages: [{ title: '矽晶圓', companies: [{ code: '6488', company_name: '環球晶', segment: 's', role: '龍頭' }] }] },
+      { key: 'fab', title: '製造', stages: [{ title: '晶圓代工', companies: [{ code: '2330', company_name: '台積電', segment: 's', role: '龍頭' }] }] },
+    ],
+    flows: [{ from: 'design', to: 'fab', label: '委託製造' }, { from: 'inputs', to: 'fab', label: '供應' }],
+  };
+
+  it('draws one row per layer, joined by labelled arrows between rows', async () => {
+    const { lineupDiagram } = await import('../../src/scripts/market/benchmarkChain');
+    const diagram = lineupDiagram(lineup);
+    expect(diagram.match(/direction LR/g)).toHaveLength(3);
+    expect(diagram).toContain('L_design -->|委託製造| L_fab');
+    expect(diagram).toContain('L_design ~~~ L_inputs'); // no flow between them, still stacked
+    expect(diagram).not.toContain('L_inputs ~~~ L_fab');
+  });
+
+  it('joins a leader to its peer and leaves different stages unjoined', async () => {
+    const { lineupDiagram } = await import('../../src/scripts/market/benchmarkChain');
+    const diagram = lineupDiagram(lineup);
+    expect(diagram).toContain('c2454 --- c2379');
+    expect(diagram).toContain('c2379 ~~~ c3443');
+    expect(diagram).toContain('class c2454,c3443,c6488,c2330 leader');
+  });
+
+  it('is shown with its version, its reason and the earlier versions', () => {
+    const component = read('src/components/SemiconductorBenchmark.astro');
+    expect(component).toContain('/market/benchmark/versions');
+    expect(component).toContain('lineupDiagram');
+    expect(component).toContain('benchmark-versions');
+  });
+});
+
+describe('research method on the page', () => {
+  it('states the route: benchmark, then macro, then single stocks', () => {
+    const component = read('src/components/SemiconductorBenchmark.astro');
+    expect(component).toContain('benchmark-method');
+    expect(component).toMatch(/Benchmark[\s\S]*href="\/macro\/"[\s\S]*href="\/stocks\/"/);
   });
 });

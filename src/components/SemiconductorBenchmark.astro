@@ -1,5 +1,5 @@
 ---
-import { supplyChainDiagram } from '../scripts/market/benchmarkChain';
+import { lineupDiagram, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
 
 type BenchmarkRow = {
   code: string;
@@ -18,18 +18,48 @@ try {
   const response = await fetch(`${base}/market/benchmark`, { signal: AbortSignal.timeout(2000) });
   if (response.ok) rows = await response.json();
 } catch { /* A failed benchmark request leaves the research library usable. */ }
+
+// Line-up versions, newest first. Without them (older backend, request failed) the diagram falls back
+// to grouping the active companies by segment.
+let versions: LineupVersion[] = [];
+try {
+  const response = await fetch(`${base}/market/benchmark/versions`, { signal: AbortSignal.timeout(2000) });
+  if (response.ok) versions = await response.json();
+} catch { /* fall back below */ }
+const current = versions.find(version => version.is_current) ?? null;
+const earlier = versions.filter(version => version !== current);
+const roleOf = new Map((current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage =>
+  stage.companies.map((company, order) => [company.code, { stage: stage.title, role: company.role, order }] as const))));
+const stageOrder = (current?.layers ?? []).flatMap(layer => layer.stages.map(stage => stage.title));
+const ordered = rows && current ? [...rows].sort((a, b) => {
+  const [x, y] = [roleOf.get(a.code), roleOf.get(b.code)];
+  if (!x || !y) return Number(!x) - Number(!y) || a.code.localeCompare(b.code);
+  return stageOrder.indexOf(x.stage) - stageOrder.indexOf(y.stage) || x.order - y.order;
+}) : rows;
 ---
 
 <section id="benchmark" aria-labelledby="benchmark-title">
   <h4 id="benchmark-title">台灣半導體 Benchmark</h4>
-  <p>這份 Benchmark 是選讀研究報告的骨幹：先定出半導體供應鏈每一環的代表公司，再依這些公司與環節去找、去讀下方的研究報告。年報與年度財務報告分開查閱。</p>
-  {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{supplyChainDiagram(rows)}</pre></details> : null}
+  <ol class="benchmark-method">
+    <li><strong>Benchmark</strong>先定出產業每個環節的龍頭與對照公司，讀它們的年報，建立「這個產業怎麼分工、各環節靠什麼賺錢」的基準。</li>
+    <li><strong><a href="/macro/">總體</a></strong>用利率、流動性與景氣循環判斷產業現在走到哪個階段，決定該偏重哪些環節。</li>
+    <li><strong><a href="/stocks/">個體</a></strong>回到單一公司，拿它和同環節的 Benchmark 比較，判斷它比基準好還是差、差在哪裡。</li>
+  </ol>
+  <p>下方的研究報告依這條路線蒐集與選讀。年報與年度財務報告分開查閱。</p>
+  {current && <p class="benchmark-version"><strong>第 {current.version} 版・{current.name}</strong>　{current.rationale}</p>}
+  {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{current ? lineupDiagram(current) : supplyChainDiagram(rows)}</pre></details> : null}
+  {earlier.length ? <details class="benchmark-versions"><summary>先前版本</summary>
+    {earlier.map(version => <div>
+      <p><strong>第 {version.version} 版・{version.name}</strong>　{version.rationale}</p>
+      <p>{version.layers.flatMap(layer => layer.stages.flatMap(stage => stage.companies.map(company => `${company.company_name} ${company.code}`))).join('、')}</p>
+    </div>)}
+  </details> : null}
   {rows?.length ? <div class="benchmark-table" role="region" aria-label="公司比較表" tabindex="0">
     <table>
       <thead><tr><th scope="col">公司名稱</th><th scope="col">Benchmark 環節</th><th scope="col">Benchmark 意義</th><th scope="col">年度報告書位置</th></tr></thead>
-      <tbody>{rows.map(row => <tr>
+      <tbody>{(ordered ?? rows).map(row => <tr>
         <th scope="row">{row.company_name}（{row.code}）</th>
-        <td>{row.segment}</td>
+        <td>{roleOf.get(row.code) ? `${roleOf.get(row.code)!.stage}・${roleOf.get(row.code)!.role}：` : ''}{row.segment}</td>
         <td>{row.significance}</td>
         <td>
           <a href={row.report_url}>{row.report_year ? `${row.report_year} 年股東會年報` : 'MOPS 年報查詢'}</a>
@@ -47,6 +77,12 @@ try {
 
 <style>
   section { margin-block: 1rem; }
+  .benchmark-method { margin: .5rem 0; padding-inline-start: 1.4rem; line-height: 1.7; }
+  .benchmark-method strong { margin-inline-end: .5rem; }
+  .benchmark-version { line-height: 1.7; }
+  .benchmark-versions { margin-block: .5rem 1rem; }
+  .benchmark-versions summary { cursor: pointer; }
+  .benchmark-versions p { margin: .5rem 0; line-height: 1.7; }
   .overview { margin: .75rem 0 1rem; border: 1px solid #8885; border-radius: .6rem; }
   .overview summary { cursor: pointer; padding: .7rem 1rem; font-weight: 650; }
   .overview pre.mermaid { overflow-x: auto; margin: 0; padding: .75rem; background: transparent; }

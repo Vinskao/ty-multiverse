@@ -41,3 +41,46 @@ export function supplyChainDiagram(companies: ChainCompany[]): string {
   companies.forEach(company => lines.push(`  class ${nodeId(company.code)} company`));
   return lines.join('\n');
 }
+
+export type LineupCompany = { code: string; company_name: string; segment: string; role: string };
+export type LineupVersion = {
+  version: number; name: string; rationale: string; is_current: boolean;
+  layers: { key: string; title: string; stages: { title: string; companies: LineupCompany[] }[] }[];
+  flows: { from: string; to: string; label: string }[];
+};
+
+const escapeLabel = (label: string) => label
+  .replaceAll('&', '&amp;').replaceAll('"', '#quot;').replaceAll('[', '&#91;').replaceAll(']', '&#93;').replaceAll('|', '/');
+
+// A versioned line-up: one row per layer. Inside a row a plain line joins a stage's leader to its peer,
+// and nothing visible joins different stages, because they do not supply each other. Arrows run between rows.
+export function lineupDiagram(lineup: LineupVersion): string {
+  const lines = ['flowchart TB'];
+  const leaders: string[] = [];
+  const peers: string[] = [];
+  for (const layer of lineup.layers) {
+    lines.push(`  subgraph L_${layer.key}["${escapeLabel(layer.title)}"]`, '    direction LR');
+    let previous: string | null = null;
+    for (const stage of layer.stages) {
+      stage.companies.forEach((company, at) => {
+        const id = nodeId(company.code);
+        (at === 0 ? leaders : peers).push(id);
+        lines.push(`    ${id}["${escapeLabel(`${company.company_name} ${company.code}`)}<br/>${escapeLabel(`${stage.title}・${company.role}`)}"]`);
+        if (previous) lines.push(`    ${previous} ${at === 0 ? '~~~' : '---'} ${id}`);
+        previous = id;
+      });
+    }
+    lines.push('  end');
+  }
+  const linked = (a: string, b: string) => lineup.flows.some(flow => (flow.from === a && flow.to === b) || (flow.from === b && flow.to === a));
+  // Rows with no arrow between them still have to stack, or Mermaid lays them side by side.
+  lineup.layers.slice(1).forEach((layer, at) => {
+    const above = lineup.layers[at].key;
+    if (!linked(above, layer.key)) lines.push(`  L_${above} ~~~ L_${layer.key}`);
+  });
+  for (const flow of lineup.flows) lines.push(`  L_${flow.from} -->|${escapeLabel(flow.label)}| L_${flow.to}`);
+  lines.push('  classDef leader fill:#14506b,stroke:#7fe0f0,color:#fff', '  classDef peer fill:#102b42,stroke:#58c5d8,color:#fff');
+  if (leaders.length) lines.push(`  class ${leaders.join(',')} leader`);
+  if (peers.length) lines.push(`  class ${peers.join(',')} peer`);
+  return lines.join('\n');
+}
