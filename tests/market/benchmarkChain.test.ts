@@ -117,6 +117,7 @@ describe('research method on the page', () => {
   it('states the route: benchmark, then macro, then single stocks', () => {
     const component = read('src/components/SemiconductorBenchmark.astro');
     expect(component).toContain('benchmark-method');
+    expect(component).toContain('不是買進標的'); // benchmarks set guidance; they are not purchase candidates
     expect(component).toMatch(/Benchmark[\s\S]*href="\/macro\/"[\s\S]*href="\/stocks\/"/);
   });
 });

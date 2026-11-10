@@ -72,6 +72,6 @@ flowchart TB
 
 ## 研究路線與 Benchmark 版本（2026-11-10）
 
-Benchmark 區塊開頭寫明研究路線三步：Benchmark（建立產業基準）→ 總體（判斷循環階段，連到 `/macro/`）→ 個體（個股對照同環節 Benchmark，連到 `/stocks/`）。
+Benchmark 區塊開頭寫明研究路線三步：Benchmark（建立產業基準）→ 總體（判斷循環階段，連到 `/macro/`）→ 個體（用 Benchmark 定下的指引與景氣位置檢查預計買進的公司，連到 `/stocks/`）。
 
-名單有版本，資料來自 maya-sawa `GET /market/benchmark/versions`（定義與換版方法見 maya-sawa `docs/TW_SEMICONDUCTOR_BENCHMARK.md`）。頁面顯示目前版號、名稱與理由，「先前版本」可展開。圖由 `lineupDiagram()` 依版本的分層與流向產生：每層一列；同環節的龍頭與對照公司以實線相連，不同環節之間不連線；列與列之間是帶說明的箭頭。兩列之間若沒有流向，補一條隱形連結讓它們仍然上下排列。版本資料取不到時退回 `supplyChainDiagram()`。
+名單有版本，資料來自 maya-sawa `GET /market/benchmark/versions`（定義與換版方法見 maya-sawa `docs/TW_SEMICONDUCTOR_BENCHMARK.md`）。頁面顯示目前版號、名稱與理由，「先前版本」可展開。圖由 `lineupDiagram()` 依版本的分層與流向產生：每層一列；第三版起每個環節只有龍頭一家（Benchmark 只用來定調指引與景氣，不是買進標的），環節之間不連線；列與列之間是帶說明的箭頭。兩列之間若沒有流向，補一條隱形連結讓它們仍然上下排列。版本資料取不到時退回 `supplyChainDiagram()`。
