@@ -47,6 +47,8 @@ export type LineupVersion = {
   version: number; name: string; rationale: string; is_current: boolean;
   layers: { key: string; title: string; stages: { title: string; companies: LineupCompany[] }[] }[];
   flows: { from: string; to: string; label: string }[];
+  links?: { from: string; to: string; label: string }[];
+  terminals?: { key: string; title: string }[];
 };
 
 const escapeLabel = (label: string) => label
@@ -55,6 +57,7 @@ const escapeLabel = (label: string) => label
 // A versioned line-up: one row per layer. Inside a row a plain line joins a stage's leader to its peer,
 // and nothing visible joins different stages, because they do not supply each other. Arrows run between rows.
 export function lineupDiagram(lineup: LineupVersion): string {
+  if (lineup.links?.length) return relationDiagram(lineup);
   const lines = ['flowchart TB'];
   const leaders: string[] = [];
   const peers: string[] = [];
@@ -82,5 +85,28 @@ export function lineupDiagram(lineup: LineupVersion): string {
   lines.push('  classDef leader fill:#14506b,stroke:#7fe0f0,color:#fff', '  classDef peer fill:#102b42,stroke:#58c5d8,color:#fff');
   if (leaders.length) lines.push(`  class ${leaders.join(',')} leader`);
   if (peers.length) lines.push(`  class ${peers.join(',')} peer`);
+  return lines.join('\n');
+}
+
+// A line-up that names company-to-company relations: every arrow says what one company hands to another,
+// which is why each of them matters. Each node carries its stage, so no rows or boxes are needed.
+function relationDiagram(lineup: LineupVersion): string {
+  const lines = ['flowchart LR'];
+  const ids = new Map<string, string>();
+  for (const layer of lineup.layers) for (const stage of layer.stages) for (const company of stage.companies) {
+    ids.set(company.code, nodeId(company.code));
+    lines.push(`  ${nodeId(company.code)}["${escapeLabel(stage.title)}<br/><b>${escapeLabel(`${company.company_name} ${company.code}`)}</b>"]`);
+  }
+  for (const terminal of lineup.terminals ?? []) {
+    ids.set(terminal.key, `t_${terminal.key}`);
+    lines.push(`  t_${terminal.key}(["${escapeLabel(terminal.title)}"])`);
+  }
+  for (const link of lineup.links ?? []) {
+    const [from, to] = [ids.get(link.from), ids.get(link.to)];
+    if (from && to) lines.push(`  ${from} -->|${escapeLabel(link.label)}| ${to}`);
+  }
+  lines.push('  classDef leader fill:#14506b,stroke:#7fe0f0,color:#fff');
+  const companies = [...ids.values()].filter(id => id.startsWith('c'));
+  if (companies.length) lines.push(`  class ${companies.join(',')} leader`);
   return lines.join('\n');
 }

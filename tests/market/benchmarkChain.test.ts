@@ -121,3 +121,34 @@ describe('research method on the page', () => {
     expect(component).toMatch(/Benchmark[\s\S]*href="\/macro\/"[\s\S]*href="\/stocks\/"/);
   });
 });
+
+// 2026-11-10: leaders sat side by side with no line between them. A line-up with links draws what each
+// company hands to another, so the picture says why each one matters.
+describe('company relations in the line-up diagram', () => {
+  it('draws labelled arrows between companies and to the end market', async () => {
+    const { lineupDiagram } = await import('../../src/scripts/market/benchmarkChain');
+    const diagram = lineupDiagram({
+      version: 3, name: 'n', rationale: 'r', is_current: true, flows: [],
+      layers: [
+        { key: 'design', title: '設計', stages: [
+          { title: '自有產品 IC 設計', companies: [{ code: '2454', company_name: '聯發科', segment: 's', role: '龍頭' }] },
+          { title: '代客設計（ASIC）', companies: [{ code: '3443', company_name: '創意', segment: 's', role: '龍頭' }] },
+        ] },
+        { key: 'fab', title: '製造', stages: [{ title: '先進製程晶圓代工', companies: [{ code: '2330', company_name: '台積電', segment: 's', role: '龍頭' }] }] },
+      ],
+      terminals: [{ key: 'market', title: '終端產品' }],
+      links: [
+        { from: '2454', to: '2330', label: '先進製程投片' },
+        { from: '3443', to: '2330', label: '替雲端客戶設計後投片' },
+        { from: '2330', to: 'market', label: '晶片' },
+        { from: '9999', to: '2330', label: '不在名單' },
+      ],
+    });
+    expect(diagram.startsWith('flowchart LR')).toBe(true);
+    expect(diagram).toContain('c2454 -->|先進製程投片| c2330');
+    expect(diagram).toContain('c2330 -->|晶片| t_market');
+    expect(diagram).toContain('自有產品 IC 設計<br/><b>聯發科 2454</b>');
+    expect(diagram).not.toContain('不在名單');
+    expect(diagram).not.toContain('subgraph');
+  });
+});
