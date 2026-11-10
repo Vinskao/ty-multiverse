@@ -231,6 +231,7 @@
 .market-report-industry { display:inline-block; margin-bottom:.4rem; padding:.15rem .5rem; color:var(--gray-300); border:1px solid var(--gray-700); border-radius:999px; font-size:.68rem; }
 .market-report-card h5 { min-width: 0; margin: 0; overflow-wrap: anywhere; word-break: break-word; }
 .market-report-card p { margin: .3rem 0; color: var(--gray-400); font-size: .85rem; }
+.market-report-card .market-report-fulltext { padding-left: .6rem; border-left: 2px solid var(--home-accent); color: var(--gray-300); }
 .market-report-card details { margin-top: .5rem; }
 .market-report-sections { display:grid; gap:.35rem; margin:.45rem 0 0; padding-left:1.4rem; color:var(--gray-300); font-size:.84rem; }
 .market-report-sections li { padding:.35rem .4rem; border-left:2px solid var(--gray-700); }

@@ -102,10 +102,11 @@ export function reportSearchMatches(report: Pick<MarketReport, 'title' | 'publis
   return terms.every((term) => content.includes(term));
 }
 
-export function filterMarketReports(reports: MarketReport[], categoryId: string, query: string): MarketReport[] {
+/** `bodyMatches`: ids of reports whose full text matched on the server, so words outside the title and claims still find them. */
+export function filterMarketReports(reports: MarketReport[], categoryId: string, query: string, bodyMatches?: ReadonlySet<string>): MarketReport[] {
   return reports.filter((report) => reportHasAnalyzableText(report)
     && (categoryId === 'all' || reportTagIdForReport(report) === categoryId)
-    && reportSearchMatches(report, query));
+    && (reportSearchMatches(report, query) || Boolean(bodyMatches?.has(report.id))));
 }
 
 export type ReportDocumentSection = { report: MarketReport; title: string };

@@ -38,6 +38,7 @@ import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { initHeroSearch } from './home/heroSearch';
 import { trackReaderEvent } from './analytics/readerEvents';
 import { northStarLine, type NorthStarWeek } from './analytics/northStar';
+import { createFulltextSearch } from './market/reportFulltext';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
@@ -2281,12 +2282,21 @@ function renderMarketReports(reports: MarketReport[]) {
     let selectedCategory = allCategory;
     const search = document.getElementById('market-report-search') as HTMLInputElement | null;
     const applyFilters = () => {
-        const matches = new Set(filterMarketReports(reports, selectedCategory, search?.value ?? '').map((report) => report.id));
+        const body = fulltext.matches();
+        const matches = new Set(filterMarketReports(reports, selectedCategory, search?.value ?? '', new Set(body.keys())).map((report) => report.id));
         list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => {
             const ids = (card.dataset.reportIds ?? '').split(' ').filter(Boolean);
             card.hidden = !ids.some((id) => matches.has(id));
+            // Where in the body the words were found, so a card that matched outside its title explains itself.
+            const hit = ids.map((id) => body.get(id)).find(Boolean);
+            let note = card.querySelector<HTMLElement>('.market-report-fulltext');
+            if (!hit) { note?.remove(); return; }
+            if (!note) { note = document.createElement('p'); note.className = 'market-report-fulltext'; card.append(note); }
+            note.textContent = `${marketText('Full text', '全文')} p.${hit.page}：…${hit.snippet}…`;
         });
     };
+    const fulltext = createFulltextSearch((url) => fetch(astroApiPath(url), { cache: 'no-store' }), () => applyFilters());
+    if (search?.value) fulltext.query(search.value);
     if (filters) {
         const counts = new Map<string, number>();
         for (const { tagId } of categorized) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
@@ -2305,7 +2315,7 @@ function renderMarketReports(reports: MarketReport[]) {
             filters.append(button);
         }
     }
-    if (search) search.oninput = applyFilters;
+    if (search) search.oninput = () => { fulltext.query(search.value); applyFilters(); };
     for (const { group, industry, tagId } of categorized) {
         const report = group.reports[0];
         const card = document.createElement('article'); card.className = 'market-report-card'; card.dataset.industry = industry; card.dataset.tagId = tagId; card.dataset.reportIds = group.reports.map(({ id }) => id).join(' ');

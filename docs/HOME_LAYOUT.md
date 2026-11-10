@@ -18,7 +18,7 @@ flowchart TD
 ```
 
 - **總體經濟分區在股票之前（2026-11-10）。** 使用者是由上而下投資：先看總經環境，再看個股。11-10 早上曾被排到帳戶之後，已移回；順序由 `tests/home/zones.test.ts` 鎖住。
-- **Hero 搜尋框每打一字就篩選報告列表**（輸入事件寫入報告區的搜尋欄，不捲動頁面）；按 Enter／搜尋才捲到報告區。
+- **Hero 搜尋框每打一字就篩選報告列表**（輸入事件寫入報告區的搜尋欄，不捲動頁面）；按 Enter／搜尋才捲到報告區。除了標題與主張，也會查報告全文（停頓 250ms 後問伺服器，命中的卡片顯示「全文 p.N」摘錄）；流程圖與規則見 `maya-sawa/docs/REPORT_FULLTEXT_SEARCH.md`。
 - **每日精讀卡片的主播名稱依該篇 `day` 的星期決定**（`dailyPresenterName`，對照 maya-sawa `market-presenters.json`；雙人日由 Uiobbeci 朗讀，與語音開場一致），不再寫死 Maya。
 
 ## 規則
