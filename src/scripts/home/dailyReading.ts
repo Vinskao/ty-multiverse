@@ -18,3 +18,30 @@ export function dailyPresenterName(day: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return 'Maya';
   return WEEKDAY_PRESENTERS[(date.getUTCDay() + 6) % 7];
 }
+
+export type DailyReadingBlock = { kind: 'heading' | 'paragraph'; text: string };
+
+const SENTENCES_PER_PARAGRAPH = 3;
+
+/**
+ * Body of the homepage daily reading. The approved piece has two versions: `reading` is laid out for readers
+ * (blank-line paragraphs, one-line `## ` headings) and `content` is the speech script (commas and full stops only,
+ * no paragraphs). Older pieces have no reading version, so their script is cut every few sentences.
+ */
+export function dailyReadingBlocks(item: { reading?: string | null; content?: string | null } | null | undefined): DailyReadingBlock[] {
+  const reading = item?.reading?.replace(/\r\n/g, '\n').trim();
+  if (reading) {
+    return reading.split(/\n\s*\n/).map(block => block.trim()).filter(Boolean).map(block =>
+      block.startsWith('## ') && !block.includes('\n')
+        ? { kind: 'heading' as const, text: block.slice(3).trim() }
+        : { kind: 'paragraph' as const, text: block });
+  }
+  const content = item?.content?.trim();
+  if (!content) return [];
+  const sentences = content.match(/[^。]+。?/g) ?? [content];
+  const blocks: DailyReadingBlock[] = [];
+  for (let index = 0; index < sentences.length; index += SENTENCES_PER_PARAGRAPH) {
+    blocks.push({ kind: 'paragraph', text: sentences.slice(index, index + SENTENCES_PER_PARAGRAPH).join('') });
+  }
+  return blocks;
+}

@@ -45,3 +45,34 @@ describe('presenter named on the homepage card', () => {
     expect(page).toContain('dailyPresenterName');
   });
 });
+
+describe('homepage daily reading body', () => {
+  it('lays out the reader version as headings and paragraphs', async () => {
+    const { dailyReadingBlocks } = await import('../../src/scripts/home/dailyReading');
+    const reading = '## 總經：淨流動性\n\n淨流動性較上月增加 1.2%。\n這支撐評價倍數。\n\n## 個股：聯發科\n\n10 月營收年增 12.5%。';
+    expect(dailyReadingBlocks({ reading, content: '朗讀稿。' })).toEqual([
+      { kind: 'heading', text: '總經：淨流動性' },
+      { kind: 'paragraph', text: '淨流動性較上月增加 1.2%。\n這支撐評價倍數。' },
+      { kind: 'heading', text: '個股：聯發科' },
+      { kind: 'paragraph', text: '10 月營收年增 12.5%。' },
+    ]);
+  });
+
+  it('breaks an older speech-only script into short paragraphs instead of one glued block', async () => {
+    const { dailyReadingBlocks } = await import('../../src/scripts/home/dailyReading');
+    const content = '第一句。第二句。第三句。第四句。第五句。第六句。第七句。';
+    const blocks = dailyReadingBlocks({ content, reading: null });
+    expect(blocks.map(block => block.kind)).toEqual(['paragraph', 'paragraph', 'paragraph']);
+    expect(blocks.map(block => block.text).join('')).toBe(content);
+    expect(dailyReadingBlocks({ content: '百分之一點五。' })).toEqual([{ kind: 'paragraph', text: '百分之一點五。' }]);
+    expect(dailyReadingBlocks(null)).toEqual([]);
+  });
+
+  it('is wired into the homepage script', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+    const page = readFileSync(resolve(__dirname, '../../src/pages/index.astro'), 'utf8');
+    expect(page).toContain('dailyReadingBlocks');
+    expect(page).not.toContain('content.textContent = latest.content');
+  });
+});

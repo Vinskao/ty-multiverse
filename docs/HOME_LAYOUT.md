@@ -77,3 +77,9 @@ Benchmark 區塊開頭寫明研究路線三步：Benchmark（建立產業基準�
 名單有版本，資料來自 maya-sawa `GET /market/benchmark/versions`（定義與換版方法見 maya-sawa `docs/TW_SEMICONDUCTOR_BENCHMARK.md`）。頁面顯示目前版號、名稱與理由，「先前版本」可展開。圖由 `lineupDiagram()` 依版本的分層與流向產生：每層一列；第三版起每個環節只有龍頭一家（Benchmark 只用來定調指引與景氣，不是買進標的），環節之間不連線；列與列之間是帶說明的箭頭。兩列之間若沒有流向，補一條隱形連結讓它們仍然上下排列。版本資料取不到時退回 `supplyChainDiagram()`。
 
 版本定義帶有 `links` 時（第三版起），`lineupDiagram()` 改畫公司關係圖：由左到右，每個節點是「環節＋公司」，箭頭上寫一家公司交給另一家什麼（投片、矽晶圓、機台、晶圓送封測），`terminals` 是終端產品這類非公司終點。沒有 `links` 的舊版本仍用分層畫法。
+
+## 2026-11-11 每日精讀顯示閱讀版
+
+首頁「主播每日精讀」原本把朗讀稿（只有逗號與句號、沒有分段）整塊放進一個段落，很難讀。現在 `dailyReadingBlocks`（`src/scripts/home/dailyReading.ts`）優先用 API 的 `reading` 閱讀版：空行分段、單獨一行的 `## 小標` 變成小標題；舊稿沒有閱讀版時，把朗讀稿每三句切成一段。語音仍只用 `content`。兩版的來源、檢查與流程圖見 maya-sawa `docs/DAILY_MAYA_BRIEF.md`「朗讀稿與閱讀版分開」。
+
+開發方法：先在 `tests/home/dailyReading.test.ts` 寫閱讀版切塊、舊稿切段（切完接回去等於原文）與首頁接線三個測試，確認紅再實作；文字一律用 `textContent` 放進節點，不解析 HTML。測試：`node node_modules/vitest/vitest.mjs run tests/home/dailyReading.test.ts`。

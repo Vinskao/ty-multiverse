@@ -606,7 +606,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 </BaseLayout>
 
 <script>
-	import { dailyReadingTitle, dailyPresenterName } from '../scripts/home/dailyReading';
+	import { dailyReadingTitle, dailyPresenterName, dailyReadingBlocks } from '../scripts/home/dailyReading';
 	const root = document.querySelector<HTMLElement>('#home-daily-maya');
 	if (root) fetch(`${import.meta.env.BASE_URL}api/market/daily-maya`, { headers: { Accept: 'application/json' } })
 		.then(response => response.ok ? response.json() : Promise.reject())
@@ -619,7 +619,13 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 			if (heading0) heading0.textContent = `${dailyPresenterName(latest.day)} 主播每日精讀`;
 			const heading = document.createElement('h4'); heading.textContent = title || '';
 			const date = document.createElement('p'); date.textContent = latest.day || '';
-			const content = document.createElement('p'); content.textContent = latest.content || '';
-			root.append(...(title ? [heading] : []), date, content);
+			// The reader version when the piece has one; the speech script is only for audio.
+			const body = dailyReadingBlocks(latest).map(block => {
+				const node = document.createElement(block.kind === 'heading' ? 'h5' : 'p');
+				node.textContent = block.text;
+				if (block.kind === 'paragraph') node.style.whiteSpace = 'pre-line';
+				return node;
+			});
+			root.append(...(title ? [heading] : []), date, ...body);
 		}).catch(() => { if (root) root.textContent = '每日精讀暫時無法載入。'; });
 </script>
