@@ -182,8 +182,10 @@ nav {
 .nav-auth-trigger { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: var(--nav-control-size); padding: 0 .85rem; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); font-weight: 700; white-space: nowrap; }
 .nav-auth-trigger:hover, .nav-auth-trigger:focus-visible { background: var(--gray-300); color: var(--gray-999); outline-offset: 3px; }
 /* 通用 .link 在行動選單會覆寫為 block / 左對齊 / 圓角 .25rem，這裡用更高權重固定登入鈕的樣式 */
-.nav-auth .nav-auth-trigger.link { display: inline-flex; align-items: center; justify-content: center; width: auto; height: var(--nav-control-size); margin: 0; padding: 0 .85rem; line-height: 1; text-align: center; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); }
-.nav-auth .nav-auth-trigger.link:hover, .nav-auth .nav-auth-trigger.link:focus-visible { background: var(--gray-300); color: var(--gray-999); }
+.nav-auth .nav-auth-trigger.link { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 4.5rem; height: var(--nav-control-size); margin: 0; padding: 0 1.1rem; font-size: .95rem; font-weight: 600; letter-spacing: .04em; line-height: 1; text-align: center; border: 1px solid var(--gray-100); border-radius: 999px; background: var(--gray-100); color: var(--gray-999); box-shadow: 0 1px 2px #0003; transition: background-color .15s ease, border-color .15s ease, transform .15s ease; }
+.nav-auth .nav-auth-trigger.link:hover { background: var(--gray-300); border-color: var(--gray-300); color: var(--gray-999); transform: translateY(-1px); }
+.nav-auth .nav-auth-trigger.link:active { transform: translateY(0); }
+.nav-auth .nav-auth-trigger.link:focus-visible { background: var(--gray-300); color: var(--gray-999); outline: 2px solid var(--accent-regular); outline-offset: 2px; }
 .nav-auth-popover { position: absolute; right: 0; top: 100%; padding-top: .4rem; min-width: 14rem; visibility: hidden; opacity: 0; pointer-events: none; z-index: 10000; }
 .nav-auth:hover .nav-auth-popover, .nav-auth:focus-within .nav-auth-popover { visibility: visible; opacity: 1; pointer-events: auto; }
 .nav-auth[data-auth-logged-in="true"] .nav-auth-popover { display: none; }

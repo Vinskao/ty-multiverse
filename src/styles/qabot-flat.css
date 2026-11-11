@@ -42,6 +42,62 @@
   color: var(--gray-0) !important;
 }
 
+/* Header controls: one size, one shape, icon dead-centre. The four buttons came from different themes (the page
+   analysis one was still a green circle with an inline svg), so they differ in size, radius and background. */
+.header-controls {
+  --qa-ctl-size: 36px;
+  gap: 8px !important;
+  top: 12px !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button) {
+  display: inline-grid !important;
+  place-items: center !important;
+  box-sizing: border-box !important;
+  width: var(--qa-ctl-size) !important;
+  height: var(--qa-ctl-size) !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  border: 1px solid var(--gray-700) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--gray-800) 35%, transparent) !important;
+  color: var(--gray-200) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button)::before {
+  content: none !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button) svg {
+  display: block !important;
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 1.75 !important;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: none !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button):hover {
+  background: color-mix(in srgb, var(--accent-regular) 18%, transparent) !important;
+  border-color: var(--accent-regular) !important;
+  color: var(--gray-0) !important;
+  transform: none !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button):active {
+  background: color-mix(in srgb, var(--accent-regular) 28%, transparent) !important;
+}
+.header-controls :is(.fullscreen-button, .history-button, .page-analysis-button, .close-button):focus-visible {
+  outline: 2px solid var(--accent-regular) !important;
+  outline-offset: 2px !important;
+}
+.header-controls .close-button:hover {
+  border-color: #e5534b !important;
+  background: color-mix(in srgb, #e5534b 18%, transparent) !important;
+}
+@media (max-width: 480px) {
+  .header-controls { --qa-ctl-size: 32px; gap: 6px !important; }
+}
+
 .chat-messages {
   background: transparent !important;
 }
