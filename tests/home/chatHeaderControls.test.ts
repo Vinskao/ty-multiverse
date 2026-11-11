@@ -7,7 +7,9 @@ const group = ':is(.fullscreen-button, .history-button, .page-analysis-button, .
 
 // 2026-11-11: the four chat header buttons mixed sizes, radii and backgrounds (the page-analysis one was a leftover green circle).
 it('gives all four chat header buttons one size, one radius and a centred icon', () => {
-  const rule = css.match(new RegExp(`\.header-controls ${group.replace(/[().,]/g, '\$&')} \{([^}]*)\}`))![1];
+  const start = css.indexOf(`.header-controls ${group} {`);
+  expect(start).toBeGreaterThan(-1);
+  const rule = css.slice(start, css.indexOf('}', start));
   expect(rule).toMatch(/width:\s*var\(--qa-ctl-size\)/);
   expect(rule).toMatch(/height:\s*var\(--qa-ctl-size\)/);
   expect(rule).toMatch(/place-items:\s*center/);
