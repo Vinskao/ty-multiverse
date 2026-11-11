@@ -93,11 +93,11 @@ describe('walking -> hiking cross-fade playlist', () => {
 });
 
 
-describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
-  it('discovers every numbered clip that exists, even with gaps, in numeric order', async () => {
+describe('walking2.mp4 through the final consecutive numbered clip join the playlist', () => {
+  it('stops at the first missing clip', async () => {
     const have = new Set(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking5.mp4', 'https://x/walking12.mp4']);
     const urls = await discoverNumberedClips(async url => have.has(url), 'https://x/walking', 30);
-    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking5.mp4', 'https://x/walking12.mp4']);
+    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4']);
   });
 
   it('accepts the text/plain the image server labels mp4 files with, but not an HTML error page', async () => {
@@ -115,7 +115,7 @@ describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
     expect(await discoverNumberedClips(async () => { throw new Error('offline'); })).toEqual([]);
   });
 
-  it('plays an added clip after the existing ones, then wraps around to the first', () => {
+  it('randomly plays an added clip without immediately repeating the active one', () => {
     vi.useFakeTimers();
     document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
@@ -124,15 +124,52 @@ describe('walking2.mp4, walking3.mp4 ... join the playlist', () => {
     playlist.add('https://x/walking2.mp4');
     const [a, b, c] = Array.from(document.querySelectorAll('video'));
     [a, b, c].forEach(v => Object.defineProperty(v, 'duration', { value: 10, configurable: true }));
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0);
     const at = (v: HTMLVideoElement, t: number) => { v.currentTime = t; v.dispatchEvent(new Event('timeupdate')); };
     at(a, 9.5); vi.advanceTimersByTime(1100);
     expect(b.style.opacity).toBe('1');
     at(b, 9.5); vi.advanceTimersByTime(1100);
-    expect(c.src).toContain('walking2.mp4');
-    expect(c.style.opacity).toBe('1');
-    expect(b.style.opacity).toBe('0');
-    at(c, 9.5);
     expect(a.style.opacity).toBe('1');
+    expect(b.style.opacity).toBe('0');
+    random.mockRestore();
+    vi.useRealTimers();
+  });
+});
+
+describe('catalog clips stop at the first missing number and play randomly', () => {
+  it('discovers clips only through the last consecutive numbered clip', async () => {
+    const checked: string[] = [];
+    const urls = await discoverNumberedClips(async url => {
+      checked.push(url);
+      return url.endsWith('walking2.mp4') || url.endsWith('walking3.mp4') || url.endsWith('walking4.mp4') || url.endsWith('walking7.mp4');
+    }, 'https://x/walking', 30);
+
+    expect(urls).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking4.mp4']);
+    expect(checked).toEqual(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking4.mp4', 'https://x/walking5.mp4']);
+  });
+
+  it('checks all numbered clips through walking200 when the full sequence exists', async () => {
+    const checked: string[] = [];
+    const urls = await discoverNumberedClips(async url => { checked.push(url); return true; });
+    expect(urls).toHaveLength(199);
+    expect(checked.at(-1)).toBe('https://tymultiverse.cc/images/people/walking200.mp4');
+  });
+
+  it('selects a random next clip without immediately replaying the active clip', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video><video></video><video></video></div>';
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const videos = Array.from(document.querySelectorAll('video'));
+    videos.forEach(video => Object.defineProperty(video, 'duration', { value: 10, configurable: true }));
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+    keepCatalogVideoPlaying(document, 1);
+    videos[0].currentTime = 9.5;
+    videos[0].dispatchEvent(new Event('timeupdate'));
+    expect(videos[0].style.opacity).toBe('0');
+    expect(videos[1].style.opacity).toBe('1');
+    vi.advanceTimersByTime(1100);
+    random.mockRestore();
     vi.useRealTimers();
   });
 });
@@ -146,8 +183,8 @@ describe('catalog videos follow the same login rule as 每日市場精讀', () =
     expect(page).toMatch(/querySelectorAll<HTMLElement>\('\.presenter-frame, \.learn-catalog-video'\)/);
   });
 
-  it('crops to the top half when not full and shows the whole frame when full', () => {
-    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*32\s*\/\s*9/);
+  it('crops to the top two fifths when not full and shows the whole frame when full', () => {
+    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*832\s*\/\s*217\.6/);
     expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\] video[^{]*\{[^}]*top:\s*0/);
   });
 });

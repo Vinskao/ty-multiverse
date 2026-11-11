@@ -5,17 +5,24 @@
 export const CATALOG_FADE_SECONDS = 1;
 
 export const CATALOG_CLIP_BASE = 'https://tymultiverse.cc/images/people/walking';
-export const CATALOG_MAX_NUMBERED_CLIPS = 30;
+export const CATALOG_MAX_NUMBERED_CLIPS = 200;
 
-/** walking2.mp4, walking3.mp4 ... up to the maximum: every one that exists joins, gaps do not stop the search. */
+/** Finds the consecutive numbered playlist (walking2.mp4 through the first missing number). */
 export async function discoverNumberedClips(
   exists: (url: string) => Promise<boolean>,
   base = CATALOG_CLIP_BASE,
   max = CATALOG_MAX_NUMBERED_CLIPS,
 ): Promise<string[]> {
-  const urls = Array.from({ length: Math.max(0, max - 1) }, (_, index) => `${base}${index + 2}.mp4`);
-  const results = await Promise.all(urls.map(async url => { try { return await exists(url); } catch { return false; } }));
-  return urls.filter((_, index) => results[index]);
+  const clips: string[] = [];
+  for (let number = 2; number <= max; number += 1) {
+    try {
+      if (!await exists(`${base}${number}.mp4`)) break;
+      clips.push(`${base}${number}.mp4`);
+    } catch {
+      break;
+    }
+  }
+  return clips;
 }
 
 /** The image server labels mp4 files text/plain, so only a missing file or an HTML error page counts as absent. */
@@ -49,11 +56,10 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     if (result && typeof result.catch === 'function') result.catch(() => {});
   };
   const nextPlayable = (): HTMLVideoElement => {
-    const start = all.indexOf(active);
-    for (let step = 1; step <= all.length; step += 1) {
-      const candidate = all[(start + step) % all.length];
-      if (!broken.has(candidate)) return candidate;
-    }
+    const candidates = all.filter(video => video !== active && !broken.has(video));
+    if (!candidates.length) return active;
+    const candidate = candidates[Math.floor(Math.random() * candidates.length)];
+    if (candidate) return candidate;
     return active;
   };
   const advance = () => {
