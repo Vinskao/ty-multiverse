@@ -1,5 +1,5 @@
 import { formatNumber } from '../format/numbers';
-import { RESEARCH_DIMENSIONS, researchLeanTone, researchViewTone, type ResearchRecord } from './researchMap';
+import { RESEARCH_DIMENSIONS, researchLeanTone, researchViewTone, markEvidenceGaps, type ResearchRecord } from './researchMap';
 
 /** Render saved, validated content. Returns only diagram nodes that actually need Mermaid. */
 export function renderResearchContent(target: HTMLElement, record: ResearchRecord, lang: 'en' | 'zh'): HTMLElement[] {
@@ -63,8 +63,11 @@ export function renderResearchContent(target: HTMLElement, record: ResearchRecor
             grid.append(card);
         }
         const diagram = (title: string, source: string) => {
-            const section = el('section', 'market-research-diagram'); const pre = el('pre', 'mermaid', source);
-            diagrams.push(pre); section.append(el('h5', '', title), pre); return section;
+            const { diagram: marked, gaps } = markEvidenceGaps(source);
+            const section = el('section', 'market-research-diagram'); const pre = el('pre', 'mermaid', marked);
+            diagrams.push(pre); section.append(el('h5', '', title), pre);
+            if (gaps) section.append(el('p', 'market-research-gap-note', t('Dashed grey boxes are evidence gaps: no source was found, so they are not judgments.', '灰色虛線框是資料缺口：還沒找到原始資料，所以只列出待查項目，不代表判斷。')));
+            return section;
         };
         target.append(head, el('p', 'market-research-summary', analysis.summary), grid,
             el('p', 'market-research-reason', analysis.leanReason),

@@ -135,3 +135,19 @@ export function industryPeers(groups: ReadonlyArray<IndustryGroup>, recordCode: 
 export function groupsForCode(groups: ReadonlyArray<IndustryGroup>, recordCode: string): IndustryGroup[] {
     return groups.filter((group) => group.members.some((member) => member.recordCode === recordCode));
 }
+
+/** Words a routine uses for a node that records missing evidence ("未取得原文", "待核實"…). Such a node is a data gap
+ * the map admits to, not a judgment, so it is drawn dashed and grey and the page says so. */
+const GAP_WORDS = /未取得原文|未取得|待核實|未核實|待驗證|未知|未擷取/;
+
+export function markEvidenceGaps(source: string): { diagram: string; gaps: number } {
+    const ids: string[] = [];
+    for (const match of source.matchAll(/^\s*([A-Za-z][\w-]*)\s*\[\s*"([^"]*)"\s*\]/gm)) {
+        if (GAP_WORDS.test(match[2]) && !ids.includes(match[1])) ids.push(match[1]);
+    }
+    if (!ids.length) return { diagram: source, gaps: 0 };
+    return {
+        diagram: `${source}\n  classDef gap fill:transparent,stroke:#8b8b8b,stroke-dasharray:4 3,color:#9a9a9a\n  class ${ids.join(',')} gap`,
+        gaps: ids.length,
+    };
+}

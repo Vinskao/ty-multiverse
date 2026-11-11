@@ -1,4 +1,4 @@
-export type ResearchTagId = 'cpo' | 'semiconductor' | 'pcb-electronics' | 'ai-models' | 'ai-server-cloud' | 'cooling' | 'optical' | 'other';
+export type ResearchTagId = 'cpo' | 'semiconductor' | 'pcb-electronics' | 'ai-models' | 'ai-server-cloud' | 'cooling' | 'optical' | 'macro' | 'other';
 export type ResearchLanguage = 'zh' | 'en';
 
 type ResearchTag = {
@@ -18,6 +18,7 @@ export const RESEARCH_TAGS: ResearchTag[] = [
   { id: 'ai-server-cloud', label: { zh: 'AI 伺服器與雲端', en: 'AI Servers & Cloud' }, segments: ['odm', 'csp'], pattern: /\bodm\b|\bcsp\b|cloud service|hyperscaler|server|rack|ai server|組裝|伺服器|雲端/, groups: ['dc-power-rack', 'ai-server', 'cloud'] },
   { id: 'cooling', label: { zh: '散熱', en: 'Thermal & Cooling' }, segments: ['thermal'], pattern: /thermal|cooling|liquid cooling|散熱|液冷/, groups: ['liquid-cooling', 'thermal'] },
   { id: 'optical', label: { zh: '光通訊', en: 'Optical Communications' }, segments: ['optical'], pattern: /optical|photonics|transceiver|光通訊|光模組|光收發/, groups: ['optical', 'optical-communications'] },
+  { id: 'macro', label: { zh: '總經與市場', en: 'Macro & Markets' }, segments: ['macro'], pattern: /聯準會|升息|降息|殖利率|通膨|美債|期中選舉|bcpib|bfomcb|federal reserve/ },
   { id: 'other', label: { zh: '其他產業', en: 'Other Industries' }, segments: [], pattern: /$^/ },
 ];
 

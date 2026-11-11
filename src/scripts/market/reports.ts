@@ -65,7 +65,23 @@ export function reportSegmentForText(text: string): string | null {
   return researchSegmentForText(text);
 }
 
+/** Benchmark companies' roles in the supply chain (benchmark_versions.py), so an annual report is filed by what the
+ * company does even before its claims are extracted. Keyed by the company name the title starts with. */
+const BENCHMARK_ROLE: Record<string, ResearchTagId> = Object.fromEntries([
+  ...['Alphabet', 'Meta', 'Microsoft', 'Amazon', '台達電'].map((name) => [name, 'ai-server-cloud']),
+  ...['欣興', '台光電', '村田製作所'].map((name) => [name, 'pcb-electronics']),
+  ['Lumentum', 'optical'],
+]);
+const BENCHMARK_ANNUAL = /^(.+?) \d{4} 年股東(?:會)?年報[|｜]/;
+
+/** A benchmark company's shareholder annual report (stored by the benchmark sync, titled "<公司> <年> 年股東(會)年報｜…"). */
+export function reportIsBenchmarkAnnual(report: Pick<MarketReport, 'title'>): boolean {
+  return BENCHMARK_ANNUAL.test(report.title);
+}
+
 export function reportTagIdForReport(report: Pick<MarketReport, 'title' | 'claims'>): ResearchTagId {
+  const company = BENCHMARK_ANNUAL.exec(report.title)?.[1];
+  if (company) return BENCHMARK_ROLE[company] ?? 'semiconductor';
   const text = `${report.title} ${(report.claims ?? []).map(({ claim, segment }) => `${segment} ${claim}`).join(' ')}`;
   if (researchTagIdsForText(text).includes('cpo')) return 'cpo';
   const claimTags = researchTagIdsForSegments((report.claims ?? []).map(({ segment }) => segment));
@@ -105,7 +121,7 @@ export function reportSearchMatches(report: Pick<MarketReport, 'title' | 'publis
 /** `bodyMatches`: ids of reports whose full text matched on the server, so words outside the title and claims still find them. */
 export function filterMarketReports(reports: MarketReport[], categoryId: string, query: string, bodyMatches?: ReadonlySet<string>): MarketReport[] {
   return reports.filter((report) => reportHasAnalyzableText(report)
-    && (categoryId === 'all' || reportTagIdForReport(report) === categoryId)
+    && (categoryId === 'all' || (categoryId === 'benchmark' ? reportIsBenchmarkAnnual(report) : reportTagIdForReport(report) === categoryId))
     && (reportSearchMatches(report, query) || Boolean(bodyMatches?.has(report.id))));
 }
 
@@ -185,6 +201,9 @@ export function reportIsWebArticle(report: { source_url?: string | null }): bool
 
 export function reportMetaLine(report: MarketReport): string {
   const head = `${report.publisher || '出版者未填'} · ${reportDateLabel(report)}`;
+  if (reportIsBenchmarkAnnual(report)) {
+    return `${report.publisher || '出版者未填'} · 入庫 ${(report.received_at ?? '').slice(0, 10)} · 股東年報 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`;
+  }
   if (reportIsWebArticle(report)) {
     return `${head} · 網路文章 · ${report.claim_count} 項主張${report.status === 'ready' ? '' : ` · ${reportStatusLabel(report.status, report.claim_count, report.failure_reason)}`}`;
   }

@@ -39,7 +39,7 @@ import { initHeroSearch } from './home/heroSearch';
 import { trackReaderEvent } from './analytics/readerEvents';
 import { northStarLine, type NorthStarWeek } from './analytics/northStar';
 import { createFulltextSearch } from './market/reportFulltext';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, reportIsBenchmarkAnnual, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
@@ -1455,7 +1455,7 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             let group = groups.get(key);
             if (!group) {
                 group = document.createElement('section'); group.className = 'market-holding-industry'; group.dataset.groupKey = key;
-                const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : marketText('Unclassified', '未分類');
+                const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : marketText('Awaiting classification (filed by the next AI run)', '待分類（下次 AI 排程自動歸組）');
                 const rows = document.createElement('div'); rows.className = 'market-holding-industry-rows';
                 group.append(heading, rows); groups.set(key, group); target.append(group);
             }
@@ -2300,10 +2300,13 @@ function renderMarketReports(reports: MarketReport[]) {
     if (filters) {
         const counts = new Map<string, number>();
         for (const { tagId } of categorized) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
-        const categories = [allCategory, ...[...counts.keys()].sort((a, b) => a.localeCompare(b, 'zh-TW'))];
+        // Benchmark annual reports cut across industries: one extra filter lists all of them together.
+        const benchmarkCount = reportGroups.filter((group) => reportIsBenchmarkAnnual(group)).length;
+        if (benchmarkCount) counts.set('benchmark', benchmarkCount);
+        const categories = [allCategory, ...[...counts.keys()].filter((key) => key !== 'benchmark').sort((a, b) => a.localeCompare(b, 'zh-TW')), ...(benchmarkCount ? ['benchmark'] : [])];
         for (const category of categories) {
             const button = document.createElement('button'); button.type = 'button'; button.className = 'market-report-filter';
-            const label = category === allCategory ? marketText('All reports', '全部') : researchTagLabel(category, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+            const label = category === allCategory ? marketText('All reports', '全部') : category === 'benchmark' ? marketText('Benchmark annual reports', 'Benchmark 股東年報') : researchTagLabel(category, marketLocale() === 'zh-TW' ? 'zh' : 'en');
             button.textContent = `${label} ${category === allCategory ? reportGroups.length : counts.get(category)}`;
             button.setAttribute('aria-pressed', String(category === allCategory)); button.dataset.category = category; button.dataset.tagId = category;
             button.addEventListener('click', () => {
@@ -2331,6 +2334,10 @@ function renderMarketReports(reports: MarketReport[]) {
                 const source = document.createElement('a'); source.href = report.source_url; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看 SEC 原文';
                 extractionNote.append(source);
             }
+        } else if (reportIsBenchmarkAnnual(report) && report.source_url) {
+            extractionNote.textContent = 'Benchmark 公司的官方股東年報；主張只取產業與技術段落。';
+            const source = document.createElement('a'); source.href = report.source_url; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看原文';
+            extractionNote.append(source);
         } else if (reportIsWebArticle(report)) {
             extractionNote.textContent = '來自頻道連結的網路文章；主張依文章文字整理。';
             const source = document.createElement('a'); source.href = report.source_url!; source.target = '_blank'; source.rel = 'noopener noreferrer'; source.textContent = ' 查看原文';

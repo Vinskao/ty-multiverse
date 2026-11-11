@@ -1873,6 +1873,7 @@
 .market-research-tone--down { color:#f87171; }
 .market-research-summary, .market-research-reason { font-size:.85rem; line-height:1.65; overflow-wrap:anywhere; }
 .market-research-reason { color:var(--gray-300, #cbd5e1); }
+.market-research-gap-note { font-size:.78rem; color:var(--gray-400, #94a3b8); margin:.35rem 0 0; }
 .market-research-dimensions { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.6rem; margin:.75rem 0; }
 .market-research-allocation { margin:1rem 0; min-width:0; overflow-x:auto; }
 .market-research-allocation table { width:100%; border-collapse:collapse; font-size:.82rem; }
