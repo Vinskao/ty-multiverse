@@ -632,7 +632,6 @@ export class NavController {
         // 已登入：顯示為 Logout，href 設為 #
         loginLogoutLink.href = '#';
         updateAuthNavLabel(loginLogoutLink, true, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
-        loginLogoutLink.style.display = 'block';
         loginLogoutLink.style.visibility = 'visible';
         loginLogoutLink.style.opacity = '1';
       } else {
@@ -640,7 +639,6 @@ export class NavController {
         const currentPath = window.location.pathname + window.location.search;
         loginLogoutLink.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
         updateAuthNavLabel(loginLogoutLink, false, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
-        loginLogoutLink.style.display = 'block';
         loginLogoutLink.style.visibility = 'visible';
         loginLogoutLink.style.opacity = '1';
       }
