@@ -22,7 +22,7 @@ flowchart TD
 - **每日精讀卡片的主播名稱依該篇 `day` 的星期決定**（`dailyPresenterName`，對照 maya-sawa `market-presenters.json`；雙人日由 Uiobbeci 朗讀，與語音開場一致），不再寫死 Maya。
 
 - **導覽列以報告為首（2026-11-10）：報告、總體、個股各有一頁**（`/reports/`、`/macro/`、`/stocks/`）。三頁都是 `index.astro` 加上 `view` 屬性：同一份標記與腳本，用 CSS（`.home-page[data-view=...]`）只顯示該分區，隱藏的分區不會觸發延遲載入。首頁維持完整儀表板。要改某一區的內容，改 `index.astro` 一處即可。
-- **導覽列搜尋（Ctrl/⌘+K）**：`SiteSearch.astro` + `scripts/search/sitePalette.ts`。輸入時篩選頁面連結並查報告全文；點結果開 `/reports/?q=…`，報告頁會自動套用同一組字。首頁 Hero 的搜尋框保留。
+- **導覽列搜尋（Ctrl/⌘+K）**：`SiteSearch.astro` + `scripts/search/sitePalette.ts`。輸入時篩選頁面連結並查報告全文；點結果開 `/reports/?q=…`，報告頁會自動套用同一組字。首頁 Hero 的搜尋框已在 2026-11-10 移除，避免與導覽列搜尋重複。
 - **頁尾**：品牌、產品、關於、開發者、追蹤五欄（只放已存在的頁面），加每日精讀 Email 訂閱表單。訂閱流程見 `maya-sawa/docs/BRIEF_SUBSCRIPTIONS.md`。
 
 ## 規則

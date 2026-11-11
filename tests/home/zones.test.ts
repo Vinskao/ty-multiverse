@@ -41,10 +41,12 @@ describe('home page zones', () => {
     }
   });
 
-  it('keeps the hero to the title, copy, search and actions; the podcast, daily reading and company events share a later zone', () => {
+  // 2026-11-10: the hero search box was removed so it does not duplicate the nav bar search (Ctrl/⌘+K).
+  it('keeps the hero to the title, copy and actions, without a second search box; the podcast, daily reading and company events share a later zone', () => {
     const header = document.querySelector('.hero-header')!;
     expect(header.querySelector('.home-product-title')).not.toBeNull();
-    expect(header.querySelector('#home-hero-search')).not.toBeNull();
+    expect(header.querySelector('.home-product-actions')).not.toBeNull();
+    expect(document.querySelector('#home-hero-search')).toBeNull();
     expect(header.querySelector('iframe')).toBeNull();
     expect(header.querySelector('#market-company-events')).toBeNull();
     const briefing = document.getElementById('zone-briefing')!;
