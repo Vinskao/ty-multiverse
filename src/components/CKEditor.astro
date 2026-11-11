@@ -255,14 +255,18 @@ const username = url.searchParams.get('username');
     }
 
     .overlay-buttons a {
+        min-width: 96px;
         padding: 10px 20px;
         border-radius: 6px;
         text-decoration: none;
         font-weight: 600;
         font-size: 14px;
+        line-height: 1.2;
         transition: all 0.3s ease;
         border: 2px solid transparent;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         text-align: center;
         background: linear-gradient(135deg, #2196f3, #1976d2);
         color: white;
