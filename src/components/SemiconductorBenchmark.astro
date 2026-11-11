@@ -1,5 +1,5 @@
 ---
-import { lineupDiagram, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
+import { lineupDiagram, lineupLegend, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
 
 type BenchmarkRow = {
   code: string;
@@ -27,6 +27,13 @@ try {
   if (response.ok) versions = await response.json();
 } catch { /* fall back below */ }
 const current = versions.find(version => version.is_current) ?? null;
+
+// The year's AI long-term outlook, set from these companies' annual reports; daily readings and analyses build on it.
+let outlook: { content: string; revision: number; updated_at?: string } | null = null;
+try {
+  const response = await fetch(`${base}/market/dashboard/analysis/AI?productType=outlook`, { signal: AbortSignal.timeout(2000) });
+  if (response.ok) outlook = (await response.json()).analysis ?? null;
+} catch { /* the outlook is optional context */ }
 const earlier = versions.filter(version => version !== current);
 const roleOf = new Map((current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage =>
   stage.companies.map((company, order) => [company.code, { stage: stage.title, role: company.role, order }] as const))));
@@ -47,7 +54,13 @@ const ordered = rows && current ? [...rows].sort((a, b) => {
   </ol>
   <p>下方的研究報告依這條路線蒐集與選讀。年報與年度財務報告分開查閱。</p>
   {current && <p class="benchmark-version"><strong>第 {current.version} 版・{current.name}</strong>　{current.rationale}</p>}
-  {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{current ? lineupDiagram(current) : supplyChainDiagram(rows)}</pre></details> : null}
+  {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{current ? lineupDiagram(current) : supplyChainDiagram(rows)}</pre>
+    {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
+  </details> : null}
+  {outlook ? <details class="benchmark-outlook"><summary>年度 AI 長線格局（第 {outlook.revision} 版）</summary>
+    <p class="benchmark-outlook-note">由上方龍頭的股東年報定調；每日精讀與個股 AI 分析都用「長線格局對照」把短線資料放回這些主軸。</p>
+    <div class="benchmark-outlook-body">{outlook.content}</div>
+  </details> : null}
   {earlier.length ? <details class="benchmark-versions"><summary>先前版本</summary>
     {earlier.map(version => <div>
       <p><strong>第 {version.version} 版・{version.name}</strong>　{version.rationale}</p>
@@ -77,6 +90,8 @@ const ordered = rows && current ? [...rows].sort((a, b) => {
 
 <style>
   section { margin-block: 1rem; font-size: .95rem; }
+  .benchmark-outlook-body { white-space: pre-line; line-height: 1.7; }
+  .benchmark-outlook-note, .benchmark-legend { color: var(--gray-400); font-size: .85rem; }
   h4 { margin: 0 0 .5rem; font-size: 1.1rem; }
   table { font-size: .9rem; }
   .benchmark-method { margin: .5rem 0; padding-inline-start: 1.4rem; line-height: 1.7; }

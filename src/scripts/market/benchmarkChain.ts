@@ -44,11 +44,26 @@ export function supplyChainDiagram(companies: ChainCompany[]): string {
 }
 
 export type LineupCompany = { code: string; company_name: string; segment: string; role: string };
+// What a link hands over. Every arrow runs supplier -> customer; the line style says which of these it is.
+export const LINK_KINDS = {
+  supply: { arrow: '-->', label: '實線：供應材料、設備與元件' },
+  manufacture: { arrow: '==>', label: '粗線：代工製造與封裝測試' },
+  service: { arrow: '-.->', label: '虛線：設計、工程與驗證服務' },
+  product: { arrow: '-->', label: '綠線：產品賣給客戶' },
+} as const;
+export type LinkKind = keyof typeof LINK_KINDS;
+
+/** The legend entries a line-up actually uses, in LINK_KINDS order; empty for line-ups without kinds. */
+export function lineupLegend(lineup: Pick<LineupVersion, 'links'>): { kind: LinkKind; label: string }[] {
+  const used = new Set((lineup.links ?? []).map(link => link.kind).filter(Boolean));
+  return (Object.keys(LINK_KINDS) as LinkKind[]).filter(kind => used.has(kind)).map(kind => ({ kind, label: LINK_KINDS[kind].label }));
+}
+
 export type LineupVersion = {
   version: number; name: string; rationale: string; is_current: boolean;
   layers: { key: string; title: string; stages: { title: string; companies: LineupCompany[] }[] }[];
   flows: { from: string; to: string; label: string }[];
-  links?: { from: string; to: string; label: string }[];
+  links?: { from: string; to: string; label: string; kind?: LinkKind }[];
   terminals?: { key: string; title: string }[];
 };
 
@@ -94,18 +109,35 @@ export function lineupDiagram(lineup: LineupVersion): string {
 function relationDiagram(lineup: LineupVersion): string {
   const lines = ['flowchart LR'];
   const ids = new Map<string, string>();
-  for (const layer of lineup.layers) for (const stage of layer.stages) for (const company of stage.companies) {
-    ids.set(company.code, nodeId(company.code));
-    lines.push(`  ${nodeId(company.code)}["${escapeLabel(stage.title)}<br/><b>${escapeLabel(`${company.company_name} ${company.code}`)}</b>"]`);
+  // A link may point at a whole layer (e.g. 創意 sells to the cloud providers as a group): that layer becomes a box.
+  const grouped = new Set((lineup.links ?? []).flatMap(link => [link.from, link.to]));
+  for (const layer of lineup.layers) {
+    const boxed = grouped.has(layer.key);
+    if (boxed) {
+      ids.set(layer.key, `L_${layer.key}`);
+      lines.push(`  subgraph L_${layer.key}["${escapeLabel(layer.title)}"]`);
+    }
+    for (const stage of layer.stages) for (const company of stage.companies) {
+      ids.set(company.code, nodeId(company.code));
+      lines.push(`  ${boxed ? '  ' : ''}${nodeId(company.code)}["${escapeLabel(stage.title)}<br/><b>${escapeLabel(`${company.company_name} ${company.code}`)}</b>"]`);
+    }
+    if (boxed) lines.push('  end');
   }
   for (const terminal of lineup.terminals ?? []) {
     ids.set(terminal.key, `t_${terminal.key}`);
     lines.push(`  t_${terminal.key}(["${escapeLabel(terminal.title)}"])`);
   }
+  const productEdges: number[] = [];
+  let edge = 0;
   for (const link of lineup.links ?? []) {
     const [from, to] = [ids.get(link.from), ids.get(link.to)];
-    if (from && to) lines.push(`  ${from} -->|${escapeLabel(link.label)}| ${to}`);
+    if (!from || !to) continue;
+    const arrow = link.kind ? LINK_KINDS[link.kind]?.arrow ?? '-->' : '-->';
+    lines.push(`  ${from} ${arrow}|${escapeLabel(link.label)}| ${to}`);
+    if (link.kind === 'product') productEdges.push(edge);
+    edge += 1;
   }
+  if (productEdges.length) lines.push(`  linkStyle ${productEdges.join(',')} stroke:#3fb950,stroke-width:2px`);
   lines.push('  classDef leader fill:#14506b,stroke:#7fe0f0,color:#fff');
   const companies = [...ids.values()].filter(id => id.startsWith('c'));
   if (companies.length) lines.push(`  class ${companies.join(',')} leader`);

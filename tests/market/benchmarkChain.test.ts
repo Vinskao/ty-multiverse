@@ -189,3 +189,57 @@ describe('benchmark diagram with overseas companies', () => {
     expect(component).toContain('股東年報');
   });
 });
+
+// 2026-11-11: arrows mixed "orders from" with "ships to", and 創意 had no line to its cloud customers.
+describe('benchmark diagram link kinds and group endpoints', () => {
+  it('draws each kind with its own line style, boxes a group that a link points at, and exposes a legend', async () => {
+    const { lineupDiagram, LINK_KINDS, lineupLegend } = await import('../../src/scripts/market/benchmarkChain');
+    const company = (code: string, name: string) => ({ code, company_name: name, segment: 's', role: '龍頭' });
+    const lineup = {
+      version: 5, name: 'n', rationale: 'r', is_current: true, flows: [],
+      layers: [
+        { key: 'design', title: '設計', stages: [{ title: '代客設計（ASIC）', companies: [company('3443', '創意')] }] },
+        { key: 'fab', title: '製造', stages: [{ title: '先進製程晶圓代工', companies: [company('2330', '台積電')] }] },
+        { key: 'support', title: '廠務', stages: [{ title: '無塵室', companies: [company('2404', '漢唐')] }] },
+        { key: 'demand', title: '需求端：雲端資本支出', stages: [{ title: '雲端服務商', companies: [company('GOOGL-US', 'Alphabet'), company('META-US', 'Meta')] }] },
+      ],
+      terminals: [{ key: 'market', title: '終端產品' }],
+      links: [
+        { from: '2330', to: '3443', kind: 'manufacture', label: 'ASIC 晶圓' },
+        { from: '2404', to: '2330', kind: 'service', label: '無塵室' },
+        { from: '3443', to: 'demand', kind: 'service', label: '自研 AI ASIC' },
+        { from: '2330', to: 'market', kind: 'product', label: '晶片' },
+      ],
+    };
+    const diagram = lineupDiagram(lineup);
+    expect(diagram).toContain('c2330 ==>|ASIC 晶圓| c3443');
+    expect(diagram).toContain('c2404 -.->|無塵室| c2330');
+    expect(diagram).toContain('c3443 -.->|自研 AI ASIC| L_demand');
+    expect(diagram).toContain('subgraph L_demand["需求端：雲端資本支出"]');
+    expect(diagram).toMatch(/subgraph L_demand[^]*cGOOGL_US[^]*cMETA_US[^]*\n  end/);
+    expect(Object.keys(LINK_KINDS)).toEqual(['supply', 'manufacture', 'service', 'product']);
+    expect(lineupLegend(lineup).map(item => item.kind)).toEqual(['manufacture', 'service', 'product']);
+    expect(lineupLegend({ ...lineup, links: [{ from: '2330', to: '3443', label: 'x' }] })).toEqual([]);
+  });
+
+  it('shows the legend under the diagram', () => {
+    const component = read('src/components/SemiconductorBenchmark.astro');
+    expect(component).toContain('lineupLegend');
+    expect(component).toContain('箭頭從供應者指向客戶');
+  });
+});
+
+// 2026-11-11: the annual AI outlook set from the benchmark is shown with it, and the public rules tell analysts to read it.
+describe('annual AI outlook', () => {
+  it('is fetched and shown in the benchmark section when it exists', () => {
+    const component = read('src/components/SemiconductorBenchmark.astro');
+    expect(component).toContain('/market/dashboard/analysis/AI?productType=outlook');
+    expect(component).toContain('年度 AI 長線格局');
+  });
+
+  it('is part of the public analysis rules', () => {
+    const rules = read('public/market-ai.md');
+    expect(rules).toContain('productType=outlook');
+    expect(rules).toContain('長線格局對照');
+  });
+});
