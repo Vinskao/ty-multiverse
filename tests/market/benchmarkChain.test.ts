@@ -152,3 +152,40 @@ describe('company relations in the line-up diagram', () => {
     expect(diagram).not.toContain('subgraph');
   });
 });
+
+// 2026-11-11: version 4 adds overseas leaders. Ids kept only digits, so every US ticker became the same node `c`.
+describe('benchmark diagram with overseas companies', () => {
+  it('gives each overseas company its own node and keeps Taiwan ids unchanged', async () => {
+    const { lineupDiagram } = await import('../../src/scripts/market/benchmarkChain');
+    const company = (code: string, name: string) => ({ code, company_name: name, segment: 's', role: '龍頭' });
+    const diagram = lineupDiagram({
+      version: 4, name: 'n', rationale: 'r', is_current: true, flows: [],
+      layers: [
+        { key: 'design', title: '設計', stages: [{ title: 'AI 加速器', companies: [company('NVDA-US', 'NVIDIA')] }] },
+        { key: 'fab', title: '製造', stages: [
+          { title: '先進製程晶圓代工', companies: [company('2330', '台積電')] },
+          { title: 'AI 記憶體（HBM）', companies: [company('000660-KR', 'SK 海力士')] },
+        ] },
+        { key: 'demand', title: '需求端', stages: [{ title: '雲端服務商', companies: [company('GOOGL-US', 'Alphabet'), company('META-US', 'Meta')] }] },
+      ],
+      links: [
+        { from: 'NVDA-US', to: '2330', label: '投片' },
+        { from: '000660-KR', to: '2330', label: 'HBM' },
+        { from: 'NVDA-US', to: 'GOOGL-US', label: 'AI 加速器' },
+        { from: 'NVDA-US', to: 'META-US', label: 'AI 加速器' },
+      ],
+    });
+    expect(diagram).toContain('cNVDA_US -->|投片| c2330');
+    expect(diagram).toContain('c000660_KR -->|HBM| c2330');
+    expect(diagram).toContain('cNVDA_US -->|AI 加速器| cGOOGL_US');
+    expect(diagram).toContain('cNVDA_US -->|AI 加速器| cMETA_US');
+    const ids = [...diagram.matchAll(/^\s+(c\w+)\[/gm)].map(match => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('labels the section and report links for a mixed line-up', () => {
+    const component = read('src/components/SemiconductorBenchmark.astro');
+    expect(component).not.toContain('>台灣半導體 Benchmark<');
+    expect(component).toContain('股東年報');
+  });
+});

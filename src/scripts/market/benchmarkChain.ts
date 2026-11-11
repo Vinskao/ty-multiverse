@@ -2,7 +2,8 @@
 // Companies come from the benchmark API, so the picture follows whichever companies are active.
 export type ChainCompany = { code: string; company_name: string; segment: string };
 
-const nodeId = (code: string) => `c${code.replace(/\D/g, '')}`;
+// Taiwan codes stay c2330; overseas record codes keep their letters (NVDA-US -> cNVDA_US) so each one is its own node.
+const nodeId = (code: string) => `c${/^\d+$/.test(code) ? code : code.replace(/[^A-Za-z0-9]/g, '_')}`;
 const chainGroups: { title: string; matches: RegExp[] }[] = [
   { title: '材料與矽晶圓', matches: [/矽晶圓/, /靶材/, /特殊氣體/] },
   { title: '晶圓製造與廠務', matches: [/晶圓製造/, /晶圓代工/, /無塵室/, /廠務/] },
