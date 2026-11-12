@@ -6,6 +6,27 @@ export const CATALOG_FADE_SECONDS = 1;
 
 export const CATALOG_CLIP_BASE = 'https://tymultiverse.cc/images/people/walking';
 export const CATALOG_MAX_NUMBERED_CLIPS = 200;
+/** prison.mp4, prison2.mp4 ... only join the rotation for viewers allowed to see the full presenter (data-full="true"). */
+export const RESTRICTED_CLIP_BASE = 'https://tymultiverse.cc/images/people/prison';
+
+/** Finds the restricted playlist: prison.mp4, then prison2.mp4 through the first missing number. */
+export async function discoverRestrictedClips(
+  exists: (url: string) => Promise<boolean>,
+  base = RESTRICTED_CLIP_BASE,
+  max = CATALOG_MAX_NUMBERED_CLIPS,
+): Promise<string[]> {
+  const clips: string[] = [];
+  for (let number = 1; number <= max; number += 1) {
+    const url = number === 1 ? `${base}.mp4` : `${base}${number}.mp4`;
+    try {
+      if (!await exists(url)) break;
+      clips.push(url);
+    } catch {
+      break;
+    }
+  }
+  return clips;
+}
 
 /** Finds the consecutive numbered playlist (walking2.mp4 through the first missing number). */
 export async function discoverNumberedClips(
@@ -31,11 +52,13 @@ export async function clipExists(url: string): Promise<boolean> {
   return response.ok && !/html/i.test(response.headers.get('Content-Type') || '');
 }
 
-export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds = CATALOG_FADE_SECONDS): { add(url: string): void } | undefined {
+export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds = CATALOG_FADE_SECONDS): { add(url: string, options?: { restricted?: boolean }): void } | undefined {
   const all = Array.from(root.querySelectorAll<HTMLVideoElement>('.learn-catalog-video video'));
   if (!all.length) return undefined;
   const container = all[0].parentElement;
   const broken = new Set<HTMLVideoElement>();
+  const restricted = new Set<HTMLVideoElement>();
+  const allowed = (video: HTMLVideoElement) => !restricted.has(video) || (container as HTMLElement | null)?.dataset.full === 'true';
   let active = all[0];
   let fading = false;
 
@@ -56,7 +79,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     if (result && typeof result.catch === 'function') result.catch(() => {});
   };
   const nextPlayable = (): HTMLVideoElement => {
-    const candidates = all.filter(video => video !== active && !broken.has(video));
+    const candidates = all.filter(video => video !== active && !broken.has(video) && allowed(video));
     if (!candidates.length) return active;
     const candidate = candidates[Math.floor(Math.random() * candidates.length)];
     if (candidate) return candidate;
@@ -98,11 +121,12 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
   }
 
   return {
-    add(url: string) {
+    add(url: string, options: { restricted?: boolean } = {}) {
       if (!container) return;
       const video = document.createElement('video');
       video.src = url;
-      video.preload = 'auto';
+      video.preload = options.restricted ? 'metadata' : 'auto';
+      if (options.restricted) restricted.add(video);
       video.setAttribute('disablepictureinpicture', '');
       video.tabIndex = -1;
       prepare(video, false);

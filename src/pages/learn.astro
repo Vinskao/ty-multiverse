@@ -144,11 +144,22 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 </BaseLayout>
 
 <script>
-  import { keepCatalogVideoPlaying, discoverNumberedClips, clipExists } from "../scripts/learn/catalogVideo";
+  import { keepCatalogVideoPlaying, discoverNumberedClips, discoverRestrictedClips, clipExists } from "../scripts/learn/catalogVideo";
   document.addEventListener("astro:page-load", () => {
     const playlist = keepCatalogVideoPlaying();
     // walking2.mp4, walking3.mp4 ... join the playlist automatically as they are uploaded
     if (playlist) void discoverNumberedClips(clipExists).then(urls => urls.forEach(url => playlist.add(url)));
+    // prison.mp4 series: only fetched and played while the viewer has full-presenter permission (data-full="true")
+    const frame = document.querySelector<HTMLElement>('.learn-catalog-video');
+    if (!playlist || !frame) return;
+    let restrictedLoaded = false;
+    const loadRestricted = () => {
+      if (restrictedLoaded || frame.dataset.full !== 'true') return;
+      restrictedLoaded = true;
+      void discoverRestrictedClips(clipExists).then(urls => urls.forEach(url => playlist.add(url, { restricted: true })));
+    };
+    new MutationObserver(loadRestricted).observe(frame, { attributes: true, attributeFilter: ['data-full'] });
+    loadRestricted();
   });
 </script>
 

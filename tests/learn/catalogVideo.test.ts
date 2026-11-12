@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { clipExists, discoverNumberedClips, keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
+import { clipExists, discoverNumberedClips, discoverRestrictedClips, keepCatalogVideoPlaying } from '../../src/scripts/learn/catalogVideo';
 
 describe('learn catalog looping video', () => {
   const page = readFileSync('src/pages/learn.astro', 'utf8');
@@ -186,5 +186,32 @@ describe('catalog videos follow the same login rule as 每日市場精讀', () =
   it('crops to the top two fifths when not full and shows the whole frame when full', () => {
     expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*832\s*\/\s*217\.6/);
     expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\] video[^{]*\{[^}]*top:\s*0/);
+  });
+});
+
+describe('prison.mp4 series needs permission to play', () => {
+  it('discovers prison.mp4, prison2.mp4 ... through the first gap', async () => {
+    const have = new Set(['https://x/prison.mp4', 'https://x/prison2.mp4', 'https://x/prison4.mp4']);
+    expect(await discoverRestrictedClips(async url => have.has(url), 'https://x/prison', 30))
+      .toEqual(['https://x/prison.mp4', 'https://x/prison2.mp4']);
+  });
+
+  it('keeps restricted clips out of the rotation unless data-full is true', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video" data-full="false"><video></video></div>';
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const playlist = keepCatalogVideoPlaying(document, 1)!;
+    playlist.add('https://x/prison.mp4', { restricted: true });
+    const [a, p] = Array.from(document.querySelectorAll('video'));
+    [a, p].forEach(v => Object.defineProperty(v, 'duration', { value: 10, configurable: true }));
+    const at = (v: HTMLVideoElement, t: number) => { v.currentTime = t; v.dispatchEvent(new Event('timeupdate')); };
+    at(a, 9.5); vi.advanceTimersByTime(1100);
+    expect(p.style.opacity).toBe('0');
+    expect(a.style.opacity).toBe('1');
+    (document.querySelector('.learn-catalog-video') as HTMLElement).dataset.full = 'true';
+    at(a, 9.5); vi.advanceTimersByTime(1100);
+    expect(p.style.opacity).toBe('1');
+    vi.useRealTimers();
   });
 });
