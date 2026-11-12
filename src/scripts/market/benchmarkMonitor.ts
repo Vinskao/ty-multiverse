@@ -6,8 +6,19 @@ export type MonitorNode = { code: string; annual: { direction: string }; claims?
   validation?: { supportPercent: number | null; headwindPercent: number | null;
   unknownPercent: number | null; counts?: { support: number; headwind: number; unknown: number; total: number }; checks?: { code: string; metric: string; value: number | null;
     period: string; source: string; threshold: number; rationale: string; outcome: string }[] } };
+export type HoldingPace = { benchmark: string; verdict: 'ahead' | 'inline' | 'behind' | 'unknown'; metric: string | null;
+  period: string | null; holdingValue: number | null; benchmarkValue: number | null; gapPp: number | null };
+const PACE: Record<string, string> = { ahead: '超前', inline: '同步', behind: '落後' };
+
+/** "超前 台達電 +30.0pp（2026-10 月營收年增率）"; unknown stays explicit instead of passing as in line. */
+export function paceLabel(pace: HoldingPace, name = pace.benchmark): string {
+  if (pace.verdict === 'unknown' || pace.gapPp === null) return `對照 ${name}：資料不足`;
+  const sign = pace.gapPp > 0 ? '+' : '';
+  return `${PACE[pace.verdict]} ${name} ${sign}${pace.gapPp.toFixed(1)}pp（${pace.period ?? ''} ${pace.metric ?? ''}）`;
+}
+
 export type BenchmarkMonitor = { nodes: MonitorNode[]; holdings: {
-  code: string; name: string; role: string; benchmarks?: string[] }[]; revision: string; holdingsSnapshotAt?: string | null };
+  code: string; name: string; role: string; benchmarks?: string[]; pace?: HoldingPace[] }[]; revision: string; holdingsSnapshotAt?: string | null };
 
 const safe = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
   .replaceAll('"', '#quot;').replaceAll('[', '&#91;').replaceAll(']', '&#93;').replaceAll('|', '/').replace(/[\r\n]/g, ' ');
@@ -42,8 +53,12 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
   // A holding is drawn only when it is tied to a benchmark node; an unattached box cannot be read against anything.
   for (const holding of positionedHoldings(monitor, companyCodes)) {
     const holdingId = `h${id(holding.code)}`;
-    additions.push(`  ${holdingId}["★ 持股 ${safe(holding.name)} ${safe(holding.code)}<br/>${safe(holding.role)}"]`);
-    additions.push(`  style ${holdingId} fill:#302b16,stroke:#d4a72c,color:#fff,stroke-width:3px`);
+    const names = new Map(companies.map(company => [company.code, company.company_name]));
+    const pace = (holding.pace ?? []).map(item => `<br/>${safe(paceLabel(item, names.get(item.benchmark) ?? item.benchmark))}`).join('');
+    additions.push(`  ${holdingId}["★ 持股 ${safe(holding.name)} ${safe(holding.code)}<br/>${safe(holding.role)}${pace}"]`);
+    const verdicts = new Set((holding.pace ?? []).map(item => item.verdict));
+    const stroke = verdicts.has('behind') ? '#f47067' : verdicts.has('ahead') ? '#3fb950' : '#d4a72c';
+    additions.push(`  style ${holdingId} fill:#302b16,stroke:${stroke},color:#fff,stroke-width:3px`);
     for (const code of holding.benchmarks ?? []) {
       if (companyCodes.has(code)) additions.push(`  ${holdingId} -.->|對照| c${id(code)}`);
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { monitorCoverage, monitorDiagram } from '../../src/scripts/market/benchmarkMonitor';
+import { monitorCoverage, monitorDiagram, paceLabel } from '../../src/scripts/market/benchmarkMonitor';
 import { initBenchmarkMonitor } from '../../src/scripts/market/benchmarkMonitorClient';
 import type { LineupVersion } from '../../src/scripts/market/benchmarkChain';
 
@@ -74,5 +74,14 @@ describe('benchmark monitor diagram', () => {
       holdings: [{ code: '6834-JP', name: 'SEIKOH', role: '尚未定位' }, { code: '8996', name: '高力', role: 'AI 液冷', benchmarks: [] }] });
     expect(coverage.withClaims).toEqual(['2330']);
     expect(coverage.unplaced.map(holding => holding.code)).toEqual(['6834-JP', '8996']);
+  });
+  it('labels a holding ahead of or behind its benchmark with the gap, period and metric', () => {
+    const diagram = monitorDiagram(lineup, { revision: '4', nodes: [], holdings: [
+      { code: '8996', name: '高力', role: 'AI 液冷', benchmarks: ['2330'], pace: [{ benchmark: '2330', verdict: 'ahead',
+        metric: '月營收年增率', period: '2026-10', holdingValue: 60, benchmarkValue: 30, gapPp: 30 }] }] });
+    expect(diagram).toContain('超前 台積電 +30.0pp（2026-10 月營收年增率）');
+    expect(diagram).toContain('stroke:#3fb950');
+    expect(paceLabel({ benchmark: '2330', verdict: 'unknown', metric: null, period: null, holdingValue: null, benchmarkValue: null, gapPp: null }))
+      .toBe('對照 2330：資料不足');
   });
 });

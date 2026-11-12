@@ -56,7 +56,7 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
   {(current || rows?.length) ? <details class="overview"><summary>供應鏈綜觀研究圖・產業風向與持股定位</summary><pre class="mermaid">{current ? monitorDiagram(current, monitor) : supplyChainDiagram(rows ?? [])}</pre>
     {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
   </details> : null}
-  <p>用途：龍頭年報定出各環節的成長敘事（綠＝順風、紅＝逆風、黃＝多空並存，灰＝尚無已審核主張）；持股以虛線「對照」接到它該比較的龍頭，再用持股自己的財報與高頻數據看是超前還是落後這個敘事。</p>
+  <p>用途：龍頭年報定出各環節的成長敘事（綠＝順風、紅＝逆風、黃＝多空並存，灰＝尚無已審核主張）；持股以虛線「對照」接到它該比較的龍頭，並用同一期月營收（沒有則季營收）年增率比較：差距 ≥10 個百分點為超前（綠框）、≤−10 為落後（紅框），其餘同步；期別對不上就標資料不足。</p>
   {coverage && <p class="benchmark-coverage">目前 {coverage.total} 家龍頭中 {coverage.withClaims.length} 家已有審核過的年報主張、{coverage.withChecks} 家有驗證條件；{coverage.withClaims.length === 0 ? '主張由每日美股與總經 Opus 排程逐批從年報萃取（每次最多 6 家），經 20:30 審核後才上色，所以現在全是灰色、也沒有紅色。' : '其餘仍待排程萃取。'}</p>}
   {coverage?.unplaced.length ? <p class="benchmark-coverage">尚未對照到龍頭的持股（不畫在圖上）：{coverage.unplaced.map(holding => `${holding.name} ${holding.code}`).join('、')}。下次排程歸組後自動接上。</p> : null}
   {coverage?.withClaims.length ? <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
