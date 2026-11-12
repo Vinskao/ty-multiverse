@@ -1,6 +1,7 @@
 import { palaisLinkDisplay } from './palais/modules';
 import { visibleNavItems } from './navigation/menu';
-import { updateAuthNavLabel } from './navigation/authNavLanguage';
+import { isLoggedInAuthLink, updateAuthNavLabel } from './navigation/authNavLanguage';
+import { userDisplayNameFromToken } from './navigation/userDisplayName';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
 import { clearStoragePreservingConsent } from './cookies/consent';
@@ -100,6 +101,16 @@ export class NavController {
 
     // 判斷是否登入：有 username 和 token 就認為已登入
     this.isLoggedIn = !!(this.username && this.token);
+    if (this.isLoggedIn) {
+      const identityToken = idToken || localStorage.getItem('id_token');
+      const fullName = userDisplayNameFromToken(this.token, null) ||
+        userDisplayNameFromToken(identityToken, null) ||
+        this.username || '';
+      if (fullName) localStorage.setItem('userFullName', fullName);
+      else localStorage.removeItem('userFullName');
+    } else {
+      localStorage.removeItem('userFullName');
+    }
 
     // 將 token 儲存到 localStorage 中，供其他組件使用（如果 URL 中有新值，更新 localStorage）
     if (urlParams.get('token')) {
@@ -176,8 +187,7 @@ export class NavController {
       const target = e.target as HTMLElement;
       const link = target.closest('a') as HTMLAnchorElement;
 
-      if (link && (link.href === '#' || link.href.endsWith('#')) &&
-        (link.textContent?.trim() === 'Logout' || link.textContent?.trim() === '登出')) {
+      if (isLoggedInAuthLink(link)) {
         e.preventDefault();
         await this.handleLogout();
       }
@@ -631,7 +641,7 @@ export class NavController {
       if (this.isLoggedIn && !isOnLoginPage) {
         // 已登入：顯示為 Logout，href 設為 #
         loginLogoutLink.href = '#';
-        updateAuthNavLabel(loginLogoutLink, true, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
+        updateAuthNavLabel(loginLogoutLink, true, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'), localStorage.getItem('userFullName') || undefined);
         loginLogoutLink.style.visibility = 'visible';
         loginLogoutLink.style.opacity = '1';
       } else {
