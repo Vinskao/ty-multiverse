@@ -64,6 +64,9 @@ export function initBenchmarkMonitor(doc: Document = document): void {
         const panel = root.querySelector<HTMLDetailsElement>('details.overview');
         const old = panel?.querySelector('pre.mermaid');
         if (old && panel) {
+          const viewport = panel.querySelector('.market-research-diagram-viewport');
+          if (viewport) viewport.replaceWith(old);
+          panel.querySelector('.market-research-diagram-controls')?.remove();
           const pre = doc.createElement('pre');
           pre.className = 'mermaid';
           pre.textContent = monitorDiagram(lineup, next);

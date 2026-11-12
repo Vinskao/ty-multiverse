@@ -37,4 +37,15 @@ describe('Taiwan semiconductor benchmark diagram', () => {
   it('is wired into the benchmark component', () => {
     expect(readFileSync(resolve(process.cwd(), 'src/components/SemiconductorBenchmark.astro'), 'utf8')).toContain('initBenchmarkDiagram');
   });
+
+  it('adds readable zoom controls after rendering the dense benchmark graph', async () => {
+    const run = vi.fn(async ({ nodes }: { nodes: HTMLElement[] }) => {
+      nodes[0].innerHTML = '<svg width="1800"></svg>';
+      nodes[0].setAttribute('data-processed', 'true');
+    });
+    initBenchmarkDiagram(document, async () => ({ initialize: vi.fn(), run }));
+    await open();
+    expect(document.querySelector('button[aria-label="放大圖表"]')).not.toBeNull();
+    expect((document.querySelector('svg') as SVGSVGElement).style.maxWidth).toBe('none');
+  });
 });

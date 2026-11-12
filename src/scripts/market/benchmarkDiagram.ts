@@ -1,6 +1,7 @@
 // Draws the benchmark supply chain diagram when its <details> panel is opened. Mermaid is loaded only then,
 // from the same pinned CDN build the About page uses, so the homepage does not pay for it up front.
 import { getMermaidConfig } from '../mermaid-theme';
+import { addResearchDiagramZoom } from './researchDiagramZoom';
 
 type MermaidLib = { initialize(config: unknown): void; run(options: { nodes: HTMLElement[] }): Promise<void> };
 
@@ -29,6 +30,7 @@ export function initBenchmarkDiagram(doc: Document = document, load: () => Promi
         const mermaid = await load();
         mermaid.initialize({ ...getMermaidConfig(doc.documentElement.classList.contains('theme-dark')), startOnLoad: false });
         await mermaid.run({ nodes });
+        addResearchDiagramZoom(panel, 'zh');
       } catch {
         for (const node of nodes) {
           const note = doc.createElement('p');

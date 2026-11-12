@@ -44,8 +44,18 @@ describe('benchmark monitor diagram', () => {
       initBenchmarkMonitor();
       await vi.advanceTimersByTimeAsync(0);
       expect(root.querySelector('pre')!.textContent).not.toContain('★ 持股');
+      const panel = root.querySelector('details')!;
+      const viewport = document.createElement('div');
+      viewport.className = 'market-research-diagram-viewport';
+      viewport.append(panel.querySelector('pre')!);
+      panel.append(viewport);
+      const controls = document.createElement('div');
+      controls.className = 'market-research-diagram-controls';
+      panel.append(controls);
       await vi.advanceTimersByTimeAsync(60000);
       expect(root.querySelector('pre')!.textContent).toContain('★ 持股');
+      expect(panel.querySelector('.market-research-diagram-controls')).toBeNull();
+      expect(panel.querySelector('.market-research-diagram-viewport')).toBeNull();
       document.dispatchEvent(new Event('astro:before-swap'));
       await vi.advanceTimersByTimeAsync(60000);
       expect(fetcher).toHaveBeenCalledTimes(2);
