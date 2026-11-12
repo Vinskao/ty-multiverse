@@ -39,7 +39,8 @@ export function initBenchmarkMonitor(doc: Document = document): void {
         'quarterly.revenueYoYPercent': '季營收年增率', 'quarterly.grossMarginPercent': '毛利率',
         'quarterly.grossMarginYoYPp': '毛利率年變動', 'quarterly.operatingMarginPercent': '營業利益率' };
       const kind = check.metric.endsWith('Pp') ? 'pp' : 'percent';
-      const outcome = { support: '符合條件', headwind: '不符條件', unknown: '資料不足或過期' }[check.outcome] ?? '未知';
+      const outcomes: Record<string, string> = { support: '符合條件', headwind: '不符條件', unknown: '資料不足或過期' };
+      const outcome = outcomes[check.outcome] ?? '未知';
       paragraph(`${check.code}・${labels[check.metric] ?? check.metric}・${check.period ?? '缺期別'}：${formatNumber(check.value, kind)}，門檻 ${formatNumber(check.threshold, kind)}。${check.rationale}。${check.source ?? '缺來源'}。${outcome}`);
     }
   };
