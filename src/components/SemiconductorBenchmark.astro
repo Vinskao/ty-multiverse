@@ -1,5 +1,6 @@
 ---
-import { lineupDiagram, lineupLegend, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
+import { lineupLegend, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
+import { monitorDiagram, type BenchmarkMonitor } from '../scripts/market/benchmarkMonitor';
 
 type BenchmarkRow = {
   code: string;
@@ -35,17 +36,14 @@ try {
   if (response.ok) outlook = (await response.json()).analysis ?? null;
 } catch { /* the outlook is optional context */ }
 const earlier = versions.filter(version => version !== current);
-const roleOf = new Map((current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage =>
-  stage.companies.map((company, order) => [company.code, { stage: stage.title, role: company.role, order }] as const))));
-const stageOrder = (current?.layers ?? []).flatMap(layer => layer.stages.map(stage => stage.title));
-const ordered = rows && current ? [...rows].sort((a, b) => {
-  const [x, y] = [roleOf.get(a.code), roleOf.get(b.code)];
-  if (!x || !y) return Number(!x) - Number(!y) || a.code.localeCompare(b.code);
-  return stageOrder.indexOf(x.stage) - stageOrder.indexOf(y.stage) || x.order - y.order;
-}) : rows;
+let monitor: BenchmarkMonitor = { nodes: [], holdings: [], revision: '' };
+try {
+  const response = await fetch(`${base}/market/benchmark/monitor`, { signal: AbortSignal.timeout(3000) });
+  if (response.ok) monitor = await response.json();
+} catch { /* unavailable evidence stays explicitly unknown */ }
 ---
 
-<section id="benchmark" aria-labelledby="benchmark-title">
+<section id="benchmark" aria-labelledby="benchmark-title" data-lineup={current ? JSON.stringify(current) : ''}>
   <h4 id="benchmark-title">半導體供應鏈 Benchmark</h4>
   <ol class="benchmark-method">
     <li><strong>Benchmark</strong>每個環節只選龍頭一家，只讀它的股東會年報，用經營階層對需求、產能與資本支出的說法定調產業指引與景氣位置。這些公司是量尺，不是買進標的。</li>
@@ -54,9 +52,18 @@ const ordered = rows && current ? [...rows].sort((a, b) => {
   </ol>
   <p>下方的研究報告依這條路線蒐集與選讀。年報與年度財務報告分開查閱。</p>
   {current && <p class="benchmark-version"><strong>第 {current.version} 版・{current.name}</strong>　{current.rationale}</p>}
-  {rows?.length ? <details class="overview"><summary>供應鏈綜觀研究圖</summary><pre class="mermaid">{current ? lineupDiagram(current) : supplyChainDiagram(rows)}</pre>
+  {(current || rows?.length) ? <details class="overview"><summary>供應鏈綜觀研究圖・產業風向與持股定位</summary><pre class="mermaid">{current ? monitorDiagram(current, monitor) : supplyChainDiagram(rows ?? [])}</pre>
     {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
   </details> : null}
+  <p>綠色為年報順風，紅色為逆風，黃色為多空並存，灰色為缺資料。金框與星號標示持股。年報說法與近期驗證分開呈現。</p>
+  <p>支持／反駁占比只計已審核條件的權重，未知也留在分母，並非報酬率或預測機率。持股的整體營收僅為代理指標，不能直接證明 AI 產品需求。</p>
+  <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
+    <option value="">選擇圖上的公司</option>
+    {(current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage => stage.companies)).map(company =>
+      <option value={company.code}>{company.company_name} {company.code}</option>)}
+  </select></label>
+  <div data-benchmark-readout aria-live="polite">選擇公司查看年報頁碼、原文、實際值與門檻理由。</div>
+  <p data-benchmark-status role="status"></p>
   {outlook ? <details class="benchmark-outlook"><summary>年度 AI 長線格局（第 {outlook.revision} 版）</summary>
     <p class="benchmark-outlook-note">由上方龍頭的股東年報定調；每日精讀與個股 AI 分析都用「長線格局對照」把短線資料放回這些主軸。</p>
     <div class="benchmark-outlook-body">{outlook.content}</div>
@@ -67,25 +74,14 @@ const ordered = rows && current ? [...rows].sort((a, b) => {
       <p>{version.layers.flatMap(layer => layer.stages.flatMap(stage => stage.companies.map(company => `${company.company_name} ${company.code}`))).join('、')}</p>
     </div>)}
   </details> : null}
-  {rows?.length ? <div class="benchmark-table" role="region" aria-label="公司比較表" tabindex="0">
-    <table>
-      <thead><tr><th scope="col">公司名稱</th><th scope="col">Benchmark 環節</th><th scope="col">Benchmark 意義</th><th scope="col">年度報告書位置</th></tr></thead>
-      <tbody>{(ordered ?? rows).map(row => <tr>
-        <th scope="row">{row.company_name}（{row.code}）</th>
-        <td>{roleOf.get(row.code) ? `${roleOf.get(row.code)!.stage}・${roleOf.get(row.code)!.role}：` : ''}{row.segment}</td>
-        <td>{row.significance}</td>
-        <td>
-          <a href={row.report_url}>{row.report_year ? `${row.report_year} 年${/^\d+$/.test(row.code) ? '股東會年報' : '股東年報'}` : (/^\d+$/.test(row.code) ? 'MOPS 年報查詢' : '股東年報查詢')}</a>
-          {row.financial_url && <div><a href={row.financial_url}>{row.financial_year} 年財務報告（含附註）</a></div>}
-        </td>
-      </tr>)}</tbody>
-    </table>
-  </div> : <p>Benchmark 資料暫未載入。</p>}
+  {!current && !rows?.length && <p>Benchmark 資料暫未載入。</p>}
 </section>
 <script>
   import { initBenchmarkDiagram } from '../scripts/market/benchmarkDiagram';
+  import { initBenchmarkMonitor } from '../scripts/market/benchmarkMonitorClient';
   initBenchmarkDiagram();
-  document.addEventListener('astro:page-load', () => initBenchmarkDiagram());
+  initBenchmarkMonitor();
+  document.addEventListener('astro:page-load', () => { initBenchmarkDiagram(); initBenchmarkMonitor(); });
 </script>
 
 <style>

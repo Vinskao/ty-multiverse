@@ -100,7 +100,8 @@ describe('versioned benchmark line-up', () => {
   it('is shown with its version, its reason and the earlier versions', () => {
     const component = read('src/components/SemiconductorBenchmark.astro');
     expect(component).toContain('/market/benchmark/versions');
-    expect(component).toContain('lineupDiagram');
+    expect(component).toContain('monitorDiagram(current, monitor)');
+    expect(read('src/scripts/market/benchmarkMonitor.ts')).toContain('lineupDiagram(lineup)');
     expect(component).toContain('benchmark-versions');
   });
 });

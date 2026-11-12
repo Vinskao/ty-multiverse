@@ -1,5 +1,7 @@
 # TY Multiverse Development Guidelines (AGENTS.md)
 
+Benchmark 產業強弱與持股研究圖：[流程與開發方法](docs/BENCHMARK_MONITOR.md)。
+
 User preference: after completing changes and relevant checks, commit and push to the appropriate existing branch by default. Preserve unrelated work and report the commit and branch; this applies to Codex and Claude.
 
 Google 登入與電子郵件驗證流程：[docs/GOOGLE_SIGN_IN.md](docs/GOOGLE_SIGN_IN.md)。
