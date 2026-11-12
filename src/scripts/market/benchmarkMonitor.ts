@@ -3,7 +3,8 @@ import { formatNumber } from '../format/numbers';
 
 export type MonitorNode = { code: string; annual: { direction: string }; claims?: {
   report_id: string; page: number; claim: string; evidence: string; source: string; year: number;
-}[]; validation?: { supportPercent: number | null; headwindPercent: number | null;
+}[]; filing?: { fiscal_year: number; source_url: string; analysis_status: string | null } | null;
+  validation?: { supportPercent: number | null; headwindPercent: number | null;
   unknownPercent: number | null; checks?: { code: string; metric: string; value: number | null;
     period: string; source: string; threshold: number; rationale: string; outcome: string }[] } };
 export type BenchmarkMonitor = { nodes: MonitorNode[]; holdings: {

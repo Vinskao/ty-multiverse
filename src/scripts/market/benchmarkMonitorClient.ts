@@ -23,6 +23,12 @@ export function initBenchmarkMonitor(doc: Document = document): void {
       readout.append(element);
     };
     if (!node?.claims?.length) paragraph('尚無最新年報的已審核主張，不判為中性或順風。');
+    if (node?.filing?.source_url.startsWith('https://')) {
+      const link = doc.createElement('a');
+      link.href = node.filing.source_url;
+      link.textContent = `${node.filing.fiscal_year} 年報原始來源`;
+      readout.append(link);
+    }
     for (const claim of node?.claims ?? []) {
       paragraph(`${claim.year} 年報，第 ${claim.page} 頁：${claim.claim}`);
       paragraph(claim.evidence);
