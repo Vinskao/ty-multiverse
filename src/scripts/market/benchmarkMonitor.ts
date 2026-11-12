@@ -26,24 +26,26 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     const direction = node?.annual.direction ?? 'unknown';
     const validation = node?.validation;
     const held = monitor.holdings.some(holding => holding.code === company.code);
-    const label = directions[direction] ?? directions.unknown;
+    // Only real evidence goes on a node: an empty "待審／缺資料" line on every box says nothing.
+    const parts: string[] = [];
+    if (held) parts.push('★ 持股');
+    if (direction !== 'unknown' && directions[direction]) parts.push(directions[direction]);
     // Counts, not percentages: with a handful of checks "50%" reads as far more certain than "2 of 4".
     const counts = validation?.counts;
-    const score = counts?.total
-      ? `驗證 支持 ${counts.support}・反駁 ${counts.headwind}・未知 ${counts.unknown}（共 ${counts.total} 條）`
-      : '近期驗證待設定／缺資料';
+    if (counts?.total) parts.push(`驗證 支持 ${counts.support}・反駁 ${counts.headwind}・未知 ${counts.unknown}`);
     const nodeId = `c${id(company.code)}`;
     const index = lines.findIndex(line => line.trimStart().startsWith(`${nodeId}[`));
-    if (index >= 0) lines[index] = lines[index].replace(/"\]$/, `<br/>${held ? '★ 持股・' : ''}${label}<br/>${score}"]`);
+    if (index >= 0 && parts.length) lines[index] = lines[index].replace(/"\]$/, `<br/>${parts.join('・')}"]`);
     additions.push(`  class ${nodeId} strength_${Object.hasOwn(directions, direction) ? direction : 'unknown'}`);
     if (held) additions.push(`  style ${nodeId} stroke:#d4a72c,stroke-width:4px`);
   }
-  for (const holding of monitor.holdings.filter(holding => !companyCodes.has(holding.code))) {
+  // A holding is drawn only when it is tied to a benchmark node; an unattached box cannot be read against anything.
+  for (const holding of positionedHoldings(monitor, companyCodes)) {
     const holdingId = `h${id(holding.code)}`;
     additions.push(`  ${holdingId}["★ 持股 ${safe(holding.name)} ${safe(holding.code)}<br/>${safe(holding.role)}"]`);
     additions.push(`  style ${holdingId} fill:#302b16,stroke:#d4a72c,color:#fff,stroke-width:3px`);
     for (const code of holding.benchmarks ?? []) {
-      if (companyCodes.has(code)) additions.push(`  ${holdingId} -.->|研究定位，非供貨關係| c${id(code)}`);
+      if (companyCodes.has(code)) additions.push(`  ${holdingId} -.->|對照| c${id(code)}`);
     }
   }
   additions.push('  classDef strength_tailwind fill:#173c2c,stroke:#3fb950,color:#fff',
@@ -52,4 +54,18 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     '  classDef strength_neutral fill:#213b50,stroke:#58a6ff,color:#fff',
     '  classDef strength_unknown fill:#30363d,stroke:#8b949e,color:#fff');
   return [...lines, ...additions].join('\n');
+}
+
+const positionedHoldings = (monitor: BenchmarkMonitor, companyCodes: Set<string>) => monitor.holdings
+  .filter(holding => !companyCodes.has(holding.code) && (holding.benchmarks ?? []).some(code => companyCodes.has(code)));
+
+/** Holdings the diagram cannot place yet, and how many benchmark nodes have any reviewed annual-report claim. */
+export function monitorCoverage(lineup: LineupVersion, monitor: BenchmarkMonitor) {
+  const companyCodes = new Set(lineup.layers.flatMap(layer => layer.stages.flatMap(stage => stage.companies.map(company => company.code))));
+  const placed = new Set(positionedHoldings(monitor, companyCodes).map(holding => holding.code));
+  const unplaced = monitor.holdings.filter(holding => !companyCodes.has(holding.code) && !placed.has(holding.code));
+  const withClaims = monitor.nodes.filter(node => companyCodes.has(node.code) && (node.claims?.length ?? 0) > 0);
+  const withChecks = monitor.nodes.filter(node => companyCodes.has(node.code) && (node.validation?.counts?.total ?? 0) > 0);
+  return { total: companyCodes.size, withClaims: withClaims.map(node => node.code),
+    withChecks: withChecks.length, unplaced };
 }

@@ -1,6 +1,6 @@
 ---
 import { lineupLegend, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
-import { monitorDiagram, type BenchmarkMonitor } from '../scripts/market/benchmarkMonitor';
+import { monitorCoverage, monitorDiagram, type BenchmarkMonitor } from '../scripts/market/benchmarkMonitor';
 
 type BenchmarkRow = {
   code: string;
@@ -41,6 +41,7 @@ try {
   const response = await fetch(`${base}/market/benchmark/monitor`, { signal: AbortSignal.timeout(3000) });
   if (response.ok) monitor = await response.json();
 } catch { /* unavailable evidence stays explicitly unknown */ }
+const coverage = current ? monitorCoverage(current, monitor) : null;
 ---
 
 <section id="benchmark" aria-labelledby="benchmark-title" data-lineup={current ? JSON.stringify(current) : ''}>
@@ -55,13 +56,14 @@ try {
   {(current || rows?.length) ? <details class="overview"><summary>供應鏈綜觀研究圖・產業風向與持股定位</summary><pre class="mermaid">{current ? monitorDiagram(current, monitor) : supplyChainDiagram(rows ?? [])}</pre>
     {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
   </details> : null}
-  <p>綠色為年報順風，紅色為逆風，黃色為多空並存，灰色為缺資料。金框與星號標示持股。年報說法與近期驗證分開呈現。</p>
-  <p>每家公司下方列出已審核驗證條件的支持、反駁、未知條數；每條條件都對應年度格局的一條主軸，並優先用客戶或供應商的數據交叉驗證。條數不是報酬率或預測機率。持股的整體營收僅為代理指標，不能直接證明 AI 產品需求。</p>
-  <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
-    <option value="">選擇圖上的公司</option>
-    {(current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage => stage.companies)).map(company =>
+  <p>用途：龍頭年報定出各環節的成長敘事（綠＝順風、紅＝逆風、黃＝多空並存，灰＝尚無已審核主張）；持股以虛線「對照」接到它該比較的龍頭，再用持股自己的財報與高頻數據看是超前還是落後這個敘事。</p>
+  {coverage && <p class="benchmark-coverage">目前 {coverage.total} 家龍頭中 {coverage.withClaims.length} 家已有審核過的年報主張、{coverage.withChecks} 家有驗證條件；{coverage.withClaims.length === 0 ? '主張由每日美股與總經 Opus 排程逐批從年報萃取（每次最多 6 家），經 20:30 審核後才上色，所以現在全是灰色、也沒有紅色。' : '其餘仍待排程萃取。'}</p>}
+  {coverage?.unplaced.length ? <p class="benchmark-coverage">尚未對照到龍頭的持股（不畫在圖上）：{coverage.unplaced.map(holding => `${holding.name} ${holding.code}`).join('、')}。下次排程歸組後自動接上。</p> : null}
+  {coverage?.withClaims.length ? <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
+    <option value="">選擇已有年報主張的公司</option>
+    {(current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage => stage.companies)).filter(company => coverage.withClaims.includes(company.code)).map(company =>
       <option value={company.code}>{company.company_name} {company.code}</option>)}
-  </select></label>
+  </select></label> : null}
   <div data-benchmark-readout aria-live="polite">選擇公司查看年報頁碼、原文、實際值與門檻理由。</div>
   <p data-benchmark-status role="status"></p>
   {outlook ? <details class="benchmark-outlook"><summary>年度 AI 長線格局（第 {outlook.revision} 版）</summary>
@@ -87,6 +89,7 @@ try {
 <style>
   section { margin-block: 1rem; font-size: .95rem; }
   .benchmark-outlook-body { white-space: pre-line; line-height: 1.7; }
+  .benchmark-coverage { color: var(--gray-400); font-size: .85rem; }
   .benchmark-outlook-note, .benchmark-legend { color: var(--gray-400); font-size: .85rem; }
   h4 { margin: 0 0 .5rem; font-size: 1.1rem; }
   table { font-size: .9rem; }
