@@ -17,13 +17,14 @@ describe('benchmark monitor diagram', () => {
   });
   it('marks holdings without publishing position sizes and separates research links from supply', () => {
     const diagram = monitorDiagram(lineup, { revision: '2', nodes: [{ code: '2330', annual: { direction: 'mixed' },
-      validation: { supportPercent: 50, headwindPercent: 25, unknownPercent: 25 } }], holdings: [
+      validation: { supportPercent: 50, headwindPercent: 25, unknownPercent: 25, counts: { support: 2, headwind: 1, unknown: 1, total: 4 } } }], holdings: [
       { code: '2330', name: '台積電', role: '代工', benchmarks: ['2330'] },
       { code: '6857-JP', name: '愛德萬', role: '測試', benchmarks: ['2330'] },
       { code: '6857', name: '宏碁智醫', role: '尚未定位' },
     ] });
     expect(diagram).toContain('年報多空並存');
-    expect(diagram).toContain('證據支持 50.00%');
+    expect(diagram).toContain('驗證 支持 2・反駁 1・未知 1（共 4 條）');
+    expect(diagram).not.toContain('%');
     expect(diagram).toContain('持股');
     expect(diagram).toContain('研究定位，非供貨關係');
     expect(diagram).toContain('h6857_JP');
@@ -60,5 +61,10 @@ describe('benchmark monitor diagram', () => {
       await vi.advanceTimersByTimeAsync(60000);
       expect(fetcher).toHaveBeenCalledTimes(2);
     } finally { vi.useRealTimers(); vi.unstubAllGlobals(); }
+  });
+  it('shows counts, never a percentage, when only one or two checks exist', () => {
+    const diagram = monitorDiagram(lineup, { revision: '3', holdings: [], nodes: [{ code: '2330', annual: { direction: 'tailwind' },
+      validation: { supportPercent: null, headwindPercent: null, unknownPercent: null, counts: { support: 1, headwind: 0, unknown: 1, total: 2 } } }] });
+    expect(diagram).toContain('驗證 支持 1・反駁 0・未知 1（共 2 條）');
   });
 });

@@ -1,11 +1,10 @@
 import { lineupDiagram, type LineupVersion } from './benchmarkChain';
-import { formatNumber } from '../format/numbers';
 
 export type MonitorNode = { code: string; annual: { direction: string }; claims?: {
   report_id: string; page: number; claim: string; evidence: string; source: string; year: number;
 }[]; filing?: { fiscal_year: number; source_url: string; analysis_status: string | null } | null;
   validation?: { supportPercent: number | null; headwindPercent: number | null;
-  unknownPercent: number | null; checks?: { code: string; metric: string; value: number | null;
+  unknownPercent: number | null; counts?: { support: number; headwind: number; unknown: number; total: number }; checks?: { code: string; metric: string; value: number | null;
     period: string; source: string; threshold: number; rationale: string; outcome: string }[] } };
 export type BenchmarkMonitor = { nodes: MonitorNode[]; holdings: {
   code: string; name: string; role: string; benchmarks?: string[] }[]; revision: string; holdingsSnapshotAt?: string | null };
@@ -28,8 +27,10 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     const validation = node?.validation;
     const held = monitor.holdings.some(holding => holding.code === company.code);
     const label = directions[direction] ?? directions.unknown;
-    const score = validation?.supportPercent != null
-      ? `證據支持 ${formatNumber(validation.supportPercent, 'percent')}／反駁 ${formatNumber(validation.headwindPercent, 'percent')}／未知 ${formatNumber(validation.unknownPercent, 'percent')}`
+    // Counts, not percentages: with a handful of checks "50%" reads as far more certain than "2 of 4".
+    const counts = validation?.counts;
+    const score = counts?.total
+      ? `驗證 支持 ${counts.support}・反駁 ${counts.headwind}・未知 ${counts.unknown}（共 ${counts.total} 條）`
       : '近期驗證待設定／缺資料';
     const nodeId = `c${id(company.code)}`;
     const index = lines.findIndex(line => line.trimStart().startsWith(`${nodeId}[`));

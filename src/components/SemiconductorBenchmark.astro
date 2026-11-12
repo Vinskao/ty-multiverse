@@ -56,7 +56,7 @@ try {
     {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
   </details> : null}
   <p>綠色為年報順風，紅色為逆風，黃色為多空並存，灰色為缺資料。金框與星號標示持股。年報說法與近期驗證分開呈現。</p>
-  <p>支持／反駁占比只計已審核條件的權重，未知也留在分母，並非報酬率或預測機率。持股的整體營收僅為代理指標，不能直接證明 AI 產品需求。</p>
+  <p>每家公司下方列出已審核驗證條件的支持、反駁、未知條數；每條條件都對應年度格局的一條主軸，並優先用客戶或供應商的數據交叉驗證。條數不是報酬率或預測機率。持股的整體營收僅為代理指標，不能直接證明 AI 產品需求。</p>
   <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
     <option value="">選擇圖上的公司</option>
     {(current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage => stage.companies)).map(company =>
