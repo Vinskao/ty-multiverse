@@ -31,6 +31,7 @@ export function initBenchmarkDiagram(doc: Document = document, load: () => Promi
         mermaid.initialize({ ...getMermaidConfig(doc.documentElement.classList.contains('theme-dark')), startOnLoad: false });
         await mermaid.run({ nodes });
         addResearchDiagramZoom(panel, 'zh');
+        highlightSearchTarget(panel, doc);
       } catch {
         for (const node of nodes) {
           const note = doc.createElement('p');
@@ -40,6 +41,27 @@ export function initBenchmarkDiagram(doc: Document = document, load: () => Promi
       }
     };
     panel.addEventListener('toggle', () => { void draw(); });
+    // A nav bar search hit links here as /?benchmark=CODE#benchmark: open the diagram straight away.
+    if (searchTarget(doc)) panel.open = true;
     void draw();
   }
+}
+
+export function searchTarget(doc: Document = document, search = doc.defaultView?.location.search ?? ''): string | null {
+  return new URLSearchParams(search).get('benchmark');
+}
+
+/** Outlines the searched company's node (Mermaid ids look like "flowchart-c2330-12") and scrolls it into view. */
+export function highlightSearchTarget(panel: HTMLElement, doc: Document = document,
+  search = doc.defaultView?.location.search ?? ''): HTMLElement | null {
+  const code = searchTarget(doc, search);
+  if (!code) return null;
+  const nodeId = `c${code.replace(/[^A-Za-z0-9]/g, '_')}`;
+  const node = [...panel.querySelectorAll<HTMLElement>('g.node, g[id]')]
+    .find(item => new RegExp(`(^|-)${nodeId}(-|$)`).test(item.id)) ?? null;
+  if (node) {
+    node.classList.add('is-search-target');
+    node.scrollIntoView?.({ block: 'center', inline: 'center' });
+  }
+  return node;
 }

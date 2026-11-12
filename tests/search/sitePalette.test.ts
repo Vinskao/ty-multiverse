@@ -41,7 +41,7 @@ describe('nav bar search palette', () => {
     type('矽');
     type('矽光子');
     await vi.advanceTimersByTimeAsync(100);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls.filter(([url]) => String(url).includes('/fulltext'))).toHaveLength(1);
     const hit = document.querySelector<HTMLAnchorElement>('#site-search-results a')!;
     expect(hit.getAttribute('href')).toBe('/reports/?q=' + encodeURIComponent('矽光子'));
     expect(hit.textContent).toContain('Q3 法說');

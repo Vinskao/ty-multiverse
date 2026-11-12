@@ -1,7 +1,10 @@
 // Nav bar search (Ctrl/Cmd+K): filters the site's page links and searches the full text of public reports
 // through /api/market/reports/fulltext. A hit opens the report page with the same words already applied.
 
+import { searchBenchmark, type BenchmarkEntry } from './benchmarkIndex';
+
 type Hit = { report_id: string; title?: string; publisher?: string; page: number; snippet: string };
+const KIND = { company: '研究圖・龍頭', holding: '研究圖・持股', claim: '研究圖・年報主張', theme: '研究圖・年度格局' } as const;
 
 export function initSitePalette(
   doc: Document = document,
@@ -36,8 +39,26 @@ export function initSitePalette(
   let latest = 0;
   undo.push(() => clearTimeout(timer));
 
-  const render = (q: string, hits: Hit[]) => {
+  // The supply-chain diagram index is fetched once, on the first query, and filtered locally after that.
+  let benchmark: Promise<BenchmarkEntry[]> | undefined;
+  const benchmarkIndex = () => (benchmark ??= fetcher('/api/search/benchmark')
+    .then((response) => response.ok ? response.json() : { entries: [] })
+    .then((payload: { entries?: BenchmarkEntry[] }) => payload.entries ?? [])
+    .catch(() => { benchmark = undefined; return [] as BenchmarkEntry[]; }));
+
+  const render = (q: string, hits: Hit[], diagram: BenchmarkEntry[] = []) => {
     results.replaceChildren();
+    for (const entry of diagram) {
+      const link = doc.createElement('a');
+      link.href = entry.href;
+      link.className = 'site-search-hit';
+      link.dataset.searchKind = entry.kind;
+      const title = doc.createElement('strong'); title.textContent = entry.title;
+      const meta = doc.createElement('span'); meta.textContent = KIND[entry.kind];
+      const detail = doc.createElement('small'); detail.textContent = entry.detail;
+      link.append(title, meta, detail);
+      results.append(link);
+    }
     for (const hit of hits.slice(0, 30)) {
       const link = doc.createElement('a');
       link.href = `/reports/?q=${encodeURIComponent(q)}`;
@@ -49,7 +70,7 @@ export function initSitePalette(
       results.append(link);
     }
     const anyPage = entries().some((link) => link.hasAttribute('data-search-page'));
-    say(hits.length || anyPage ? '' : (zh() ? '找不到符合的報告或頁面。' : 'No matching reports or pages.'));
+    say(hits.length || diagram.length || anyPage ? '' : (zh() ? '找不到符合的報告或頁面。' : 'No matching reports or pages.'));
   };
 
   on(input, 'input', () => {
@@ -65,10 +86,13 @@ export function initSitePalette(
     if (!q) { results.replaceChildren(); say(''); return; }
     say(zh() ? '搜尋報告全文中…' : 'Searching report text…');
     timer = setTimeout(() => {
-      fetcher(`/api/market/reports/fulltext?q=${encodeURIComponent(q)}`)
+      const reports = fetcher(`/api/market/reports/fulltext?q=${encodeURIComponent(q)}`)
         .then((response) => response.ok ? response.json() : { results: [] })
-        .then((payload: { results?: Hit[] }) => { if (ticket === latest) render(q, payload.results ?? []); })
-        .catch(() => { if (ticket === latest) render(q, []); });
+        .then((payload: { results?: Hit[] }) => payload.results ?? [])
+        .catch(() => [] as Hit[]);
+      void Promise.all([reports, benchmarkIndex()]).then(([hits, entries]) => {
+        if (ticket === latest) render(q, hits, searchBenchmark(entries, q));
+      });
     }, delayMs);
   });
 
