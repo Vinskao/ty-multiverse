@@ -1,8 +1,8 @@
 import i18nData from '../../storages/i18n.json';
 
-export function isLoggedInAuthLink(link: Element | null): boolean {
-  return link?.matches('[data-auth-link]') === true &&
-    link.closest<HTMLElement>('.nav-auth')?.dataset.authLoggedIn === 'true';
+export function isLogoutButton(button: Element | null): boolean {
+  return button?.matches('[data-auth-logout]') === true &&
+    button.closest<HTMLElement>('.nav-auth')?.dataset.authLoggedIn === 'true';
 }
 
 export function updateAuthNavLabel(link: HTMLElement, loggedIn: boolean, language: string, fullName?: string) {
@@ -25,4 +25,28 @@ export function updateAuthNavLabel(link: HTMLElement, loggedIn: boolean, languag
     link.removeAttribute('aria-label');
     link.removeAttribute('title');
   }
+}
+
+export function syncAuthNavControls(
+  container: HTMLElement,
+  loggedIn: boolean,
+  language: string,
+  fullName = '',
+) {
+  const loginLink = container.querySelector<HTMLElement>('[data-auth-link]');
+  const name = container.querySelector<HTMLElement>('[data-auth-user-name]');
+  const logoutButton = container.querySelector<HTMLButtonElement>('[data-auth-logout]');
+  if (!loginLink || !name || !logoutButton) return;
+
+  container.dataset.authLoggedIn = String(loggedIn);
+  loginLink.hidden = loggedIn;
+  name.hidden = !loggedIn;
+  logoutButton.hidden = !loggedIn;
+  name.textContent = fullName;
+  updateAuthNavLabel(loginLink, false, language);
+
+  const locale = language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  const logoutLabel = i18nData.nav.logout[locale];
+  logoutButton.setAttribute('aria-label', logoutLabel);
+  logoutButton.setAttribute('title', logoutLabel);
 }

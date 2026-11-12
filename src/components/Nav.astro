@@ -205,7 +205,11 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
         <NotificationCenter />
         <CookieConsent />
         <div class="nav-auth" data-auth-logged-in={isLoggedIn ? "true" : "false"}>
-          <a class="link nav-auth-trigger" data-auth-link href={isLoggedIn ? "#" : `/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} data-i18n={isLoggedIn ? "nav.logout" : "nav.login"}>{isLoggedIn ? "Logout" : "Login"}</a>
+          <a class="link nav-auth-trigger" data-auth-link href={`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} data-i18n="nav.login" hidden={isLoggedIn}>Login</a>
+          <span class="nav-user-name" data-auth-user-name hidden={!isLoggedIn}>{isLoggedIn ? username : ""}</span>
+          <button class="nav-logout-button" data-auth-logout type="button" aria-label="Logout" title="Logout" hidden={!isLoggedIn}>
+            <Icon icon="sign-out" size="1.15em" />
+          </button>
           <div class="nav-auth-popover">
             <a data-google-login href={`/login?provider=google&redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`}><span class="nav-google-mark" aria-hidden="true">G</span><span>使用 Google 登入</span></a>
           </div>
@@ -258,6 +262,13 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
           el.textContent = text;
         }
       });
+
+      const logoutButton = document.querySelector<HTMLButtonElement>("[data-auth-logout]");
+      if (logoutButton) {
+        const label = i18nData.nav.logout[code.toLowerCase().startsWith("zh") ? "zh" : "en"];
+        logoutButton.setAttribute("aria-label", label);
+        logoutButton.setAttribute("title", label);
+      }
     };
 
     const updateBtn = (lang: string) => {

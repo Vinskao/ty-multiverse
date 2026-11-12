@@ -1,6 +1,6 @@
 import { palaisLinkDisplay } from './palais/modules';
 import { visibleNavItems } from './navigation/menu';
-import { isLoggedInAuthLink, updateAuthNavLabel } from './navigation/authNavLanguage';
+import { isLogoutButton, syncAuthNavControls } from './navigation/authNavLanguage';
 import { userDisplayNameFromToken } from './navigation/userDisplayName';
 import { storageService } from '../services/core/storageService';
 import { verifyToken, startTokenVerification, stopTokenVerification, logout } from '../services/api/auth';
@@ -185,9 +185,9 @@ export class NavController {
     // 使用事件委派，因為按鈕可能會動態更新
     document.addEventListener('click', async (e) => {
       const target = e.target as HTMLElement;
-      const link = target.closest('a') as HTMLAnchorElement;
+      const button = target.closest('[data-auth-logout]');
 
-      if (isLoggedInAuthLink(link)) {
+      if (isLogoutButton(button)) {
         e.preventDefault();
         await this.handleLogout();
       }
@@ -608,50 +608,24 @@ export class NavController {
   }
 
   private updateNavLinks() {
-    // 更新登入/登出按鈕
-    // Nav.astro 中 Login/Logout 是同一個鏈接，根據 isLoggedIn 狀態顯示不同文本
-    const allLinks = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
-
-    // 查找 Login/Logout 鏈接：可能是 /login 或 href="#"
-    const loginLogoutLink = document.querySelector<HTMLAnchorElement>('[data-auth-link]') ?? allLinks.find(link => {
-      const href = link.getAttribute('href') || '';
-      const text = link.textContent?.trim() || '';
-      return href.includes('/login') ||
-        href === '#' ||
-        href.endsWith('#') ||
-        text === 'Login' ||
-        text === 'Logout' ||
-        text === '登入' ||
-        text === '登出';
-    }) as HTMLAnchorElement;
+    const language = String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en');
+    const fullName = localStorage.getItem('userFullName') || this.username || '';
+    const authContainer = document.querySelector<HTMLElement>('.nav-auth');
+    if (authContainer) {
+      syncAuthNavControls(authContainer, this.isLoggedIn && window.location.pathname !== '/login', language, fullName);
+    }
 
     const workLink = document.querySelector('a[href^="/work"]') as HTMLAnchorElement;
     const aboutLink = document.querySelector('a[href^="/about"]') as HTMLAnchorElement;
     const learnLink = document.querySelector('a[href^="/learn"]') as HTMLElement;
     const palaisLink = document.querySelector('a[href*="/palais"]') as HTMLAnchorElement;
 
-    // 在登入頁面上始終顯示登入鏈接，不隱藏
-    const isOnLoginPage = window.location.pathname === '/login';
-
-    if (loginLogoutLink) {
-      const authContainer = loginLogoutLink.closest<HTMLElement>('.nav-auth');
-      if (authContainer) authContainer.dataset.authLoggedIn = this.isLoggedIn ? 'true' : 'false';
-      const googleLink = authContainer?.querySelector<HTMLAnchorElement>('[data-google-login]');
-      if (googleLink) googleLink.href = `/login?provider=google&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-      if (this.isLoggedIn && !isOnLoginPage) {
-        // 已登入：顯示為 Logout，href 設為 #
-        loginLogoutLink.href = '#';
-        updateAuthNavLabel(loginLogoutLink, true, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'), localStorage.getItem('userFullName') || undefined);
-        loginLogoutLink.style.visibility = 'visible';
-        loginLogoutLink.style.opacity = '1';
-      } else {
-        // 未登入：顯示為 Login，href 設為登入頁面
-        const currentPath = window.location.pathname + window.location.search;
-        loginLogoutLink.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-        updateAuthNavLabel(loginLogoutLink, false, String((window as any).AppLang?.get?.() || localStorage.getItem('site_language') || 'en'));
-        loginLogoutLink.style.visibility = 'visible';
-        loginLogoutLink.style.opacity = '1';
-      }
+    if (authContainer) {
+      const loginLink = authContainer.querySelector<HTMLAnchorElement>('[data-auth-link]');
+      const googleLink = authContainer.querySelector<HTMLAnchorElement>('[data-google-login]');
+      const currentPath = window.location.pathname + window.location.search;
+      if (loginLink) loginLink.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      if (googleLink) googleLink.href = `/login?provider=google&redirect=${encodeURIComponent(currentPath)}`;
     }
     if (workLink && this.isLoggedIn) {
       workLink.href = `/work/?username=${this.username}`;
