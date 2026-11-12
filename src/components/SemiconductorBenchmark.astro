@@ -98,8 +98,10 @@ try {
   .benchmark-versions p { margin: .5rem 0; line-height: 1.7; }
   .overview { margin: .75rem 0 1rem; border: 1px solid #8885; border-radius: .6rem; }
   .overview summary { cursor: pointer; padding: .7rem 1rem; font-weight: 650; }
-  .overview pre.mermaid { overflow-x: auto; margin: 0; padding: .75rem; background: transparent; }
-  .overview pre.mermaid :global(svg) { display: block; min-width: 52rem; max-width: 100%; height: auto; margin-inline: auto; }
+  .overview pre.mermaid { overflow: visible; margin: 0; padding: .75rem; background: transparent; }
+  .overview pre.mermaid :global(svg) { display: block; height: auto; }
+  .overview :global(.market-research-diagram-controls) { padding-inline: .75rem; }
+  .overview :global(.market-research-diagram-viewport) { margin: 0 .75rem .75rem; height: 70vh; }
   .benchmark-table { overflow-x: auto; }
   table { width: 100%; min-width: 44rem; border-collapse: collapse; }
   th, td { padding: .65rem; text-align: start; vertical-align: top; border-bottom: 1px solid #8885; }

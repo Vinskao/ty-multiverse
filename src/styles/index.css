@@ -1893,6 +1893,9 @@
 .market-research-diagram-viewport { max-width:100%; max-height:70vh; overflow:auto; border:1px solid rgba(148,163,184,.2); border-radius:8px; }
 .market-research-diagram-viewport pre.mermaid { width:max-content; min-width:100%; text-align:left; }
 .market-research-diagram-viewport svg { display:block; }
+.market-research-diagram-viewport { cursor:grab; user-select:none; }
+.market-research-diagram-viewport.is-dragging { cursor:grabbing; }
+.market-research-diagram-hint { margin-inline-end:auto; align-self:center; font-size:.75rem; color:var(--gray-400, #94a3b8); }
 .market-research-diagram--source { white-space:pre-wrap; text-align:left !important; font-size:.75rem; }
 .market-research-watch { margin:.25rem 0 .75rem 1.1rem; font-size:.82rem; }
 .market-research-industry { margin-top:1.25rem; }

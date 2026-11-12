@@ -27,4 +27,37 @@ describe('research diagram zoom controls', () => {
         section.querySelector<HTMLButtonElement>('[aria-label="Zoom in diagram"]')!.click();
         expect(section.querySelector('svg')!.style.width).toBe('1500px');
     });
+
+    it('zooms with ctrl + wheel around the cursor and leaves a plain wheel to scroll the page', () => {
+        const section = document.createElement('section');
+        section.innerHTML = '<h5>Benchmark</h5><pre class="mermaid"><svg width="800" viewBox="0 0 800 400"></svg></pre>';
+        addResearchDiagramZoom(section, 'zh');
+        const viewport = section.querySelector<HTMLElement>('.market-research-diagram-viewport')!;
+        const plain = new WheelEvent('wheel', { deltaY: -100, cancelable: true });
+        viewport.dispatchEvent(plain);
+        expect(plain.defaultPrevented).toBe(false);
+        expect(viewport.dataset.zoom).toBe('1');
+        const zoomIn = new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, cancelable: true, clientX: 0, clientY: 0 });
+        viewport.dispatchEvent(zoomIn);
+        expect(zoomIn.defaultPrevented).toBe(true);
+        expect(Number(viewport.dataset.zoom)).toBeGreaterThan(1);
+        viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, ctrlKey: true, cancelable: true }));
+        viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, ctrlKey: true, cancelable: true }));
+        expect(Number(viewport.dataset.zoom)).toBeLessThan(1);
+    });
+
+    it('pans the diagram by dragging with the mouse', () => {
+        const section = document.createElement('section');
+        section.innerHTML = '<h5>Benchmark</h5><pre class="mermaid"><svg width="800" viewBox="0 0 800 400"></svg></pre>';
+        addResearchDiagramZoom(section, 'zh');
+        const viewport = section.querySelector<HTMLElement>('.market-research-diagram-viewport')!;
+        viewport.scrollLeft = 300; viewport.scrollTop = 200;
+        viewport.dispatchEvent(new MouseEvent('pointerdown', { button: 0, clientX: 100, clientY: 100, bubbles: true }));
+        viewport.dispatchEvent(new MouseEvent('pointermove', { clientX: 60, clientY: 70, bubbles: true }));
+        expect(viewport.scrollLeft).toBe(340);
+        expect(viewport.scrollTop).toBe(230);
+        expect(viewport.classList.contains('is-dragging')).toBe(true);
+        viewport.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
+        expect(viewport.classList.contains('is-dragging')).toBe(false);
+    });
 });
