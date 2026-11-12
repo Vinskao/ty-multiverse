@@ -10,7 +10,7 @@ describe('macro chart layout', () => {
         const card = MACRO_MERGED_CHARTS['fx-trade'];
         expect(card).toBeDefined();
         // 2026-10-29: Taiwan, Japan, Korea, the euro and the dollar index on one strength-vs-dollar chart.
-        expect(card).toEqual([['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']]);
+        expect(card).toEqual([['CBC_USD_TWD', 'USD_JPY', 'USD_KRW|DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']]);
         expect(MACRO_GROWTH_CHARTS.trade.group).toBe('fx-trade');
         expect(MACRO_MERGED_CHARTS['taiwan-fx']).toBeUndefined();
         expect(MACRO_MERGED_CHARTS['taiwan-trade']).toBeUndefined();
@@ -32,7 +32,7 @@ describe('macro chart layout', () => {
     });
 
     it('compares commodity price histories in one chart', () => {
-        expect(MACRO_MERGED_CHARTS.commodities).toEqual([['COMEX_GOLD_USD|WORLD_GOLD_USD', 'DCOILWTICO']]);
+        expect(MACRO_MERGED_CHARTS.commodities).toEqual([['COMEX_GOLD_USD|WORLD_GOLD_USD', 'WTI_CRUDE_USD|DCOILWTICO']]);
     });
 
     it('splits rates into policy, yield-curve, spread, real-yield and foreign-central-bank charts', () => {
@@ -45,7 +45,7 @@ describe('macro chart layout', () => {
     it('splits the Fed balance sheet from its drains and keeps weekly and monthly balance sheets in separate charts', () => {
         // Total assets (~6,800B) on one axis with ON RRP (~0B) flattened every line; the drains get their own scale.
         // Weekly (YYYY-MM-DD) and monthly (YYYY-MM) periods on one date axis would interleave out of order.
-        expect(MACRO_MERGED_CHARTS.liquidity).toEqual([['WALCL', 'US_NET_LIQUIDITY'], ['WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']]);
+        expect(MACRO_MERGED_CHARTS.liquidity).toEqual([['WALCL', 'US_NET_LIQUIDITY_DAILY|US_NET_LIQUIDITY'], ['TGA_DAILY|WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']]);
         expect(macroChartNeedsSeparateAxes(['WTREGEN', 'RRPONTSYD'].map(() => ({ format: 'raw', unit: 'USD billion' })))).toBe(false);
     });
 

@@ -67,7 +67,9 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('TW_M1B', 'Taiwan M1B · annual', '台灣 M1B 年增率', 'yoy'),
         m('WALCL', 'Fed total assets', 'Fed 資產負債表總資產', 'raw'),
         m('US_NET_LIQUIDITY', 'Fed net liquidity', 'Fed 淨流動性', 'raw'),
+        m('US_NET_LIQUIDITY_DAILY', 'Fed net liquidity (daily)', 'Fed 淨流動性（每日）', 'raw'),
         m('WTREGEN', 'Treasury General Account', '美國財政部 TGA 帳戶', 'raw'),
+        m('TGA_DAILY', 'Treasury General Account (daily)', '美國財政部 TGA 帳戶（每日）', 'raw'),
         m('RRPONTSYD', 'Overnight reverse repo', 'Fed 隔夜逆回購', 'raw'),
         m('ECBASSETSW', 'Eurosystem total assets', '歐洲央行體系總資產', 'raw'),
         m('JPNASSETS', 'Bank of Japan total assets', '日本央行總資產', 'raw'),
@@ -90,6 +92,7 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('COMEX_GOLD_USD', 'COMEX gold futures', '美國 COMEX 黃金期貨', 'raw'),
         m('WORLD_GOLD_USD', 'World gold monthly average', '國際黃金月均價', 'raw'),
         m('DCOILWTICO', 'WTI crude oil', 'WTI 原油', 'raw'),
+        m('WTI_CRUDE_USD', 'WTI crude oil futures', 'WTI 原油期貨', 'raw'),
     ] },
     // Leverage, activity and fear in one card: margin loan balance (MI_MARGN) and trading value (FMTQIK), both NT$ 100
     // million, beside the CBOE VIX close. TWSE publishes no market-wide margin ratio, so maya-sawa computes it daily
@@ -111,6 +114,7 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('TW_EXPORTS', 'Exports', '出口總值', 'yoy'),
         m('TW_IMPORTS', 'Imports', '進口總值', 'yoy'),
         m('DEXKOUS', 'Won vs USD', '韓元對美元強弱', 'fx-strength'),
+        m('USD_KRW', 'Won vs USD', '韓元對美元強弱', 'fx-strength'),
         m('XTEXVA01JPM667S', 'Japan exports (USD, SA)', '日本商品出口（美元、季調）', 'yoy'),
         m('XTIMVA01JPM667S', 'Japan imports (USD, SA)', '日本商品進口（美元、季調）', 'yoy'),
         m('XTEXVA01KRM667S', 'Korea exports (USD, SA)', '韓國商品出口（美元、季調）', 'yoy'),

@@ -4,14 +4,14 @@
 // 'fx-strength': a currency's strength against the U.S. dollar, 100 on a start date shared by every line in the chart;
 // quotes per dollar (MACRO_FX_PER_USD) are inverted so up always means that currency gained.
 export type MacroSeriesFormat = 'jobs' | 'claims' | 'percent' | 'mom' | 'yoy' | 'sales' | 'raw' | 'rebased' | 'fx-strength';
-export const MACRO_FX_PER_USD = new Set(['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS']);
+export const MACRO_FX_PER_USD = new Set(['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'USD_KRW']);
 export type MacroHistoryRow = { period: string; value: string };
 export type MacroPoint = { period: string; value: number; raw?: number };
 
 // Money and liquidity levels move slowly; maya-sawa sends them since 2019 and charts keep all of it, so the 2020
 // expansion, the 2022-23 contraction and the reverse repo draining to zero stay visible.
 export const MACRO_LONG_HISTORY_CODES = new Set(['M2SL', 'EZ_M2_INDEX', 'JP_M2', 'TW_M2', 'TW_M1B', 'WALCL', 'US_NET_LIQUIDITY',
-    'WTREGEN', 'RRPONTSYD', 'ECBASSETSW', 'JPNASSETS']);
+    'WTREGEN', 'RRPONTSYD', 'ECBASSETSW', 'JPNASSETS', 'US_NET_LIQUIDITY_DAILY', 'TGA_DAILY']);
 export const MACRO_REBASE_PERIOD = '2020-01';
 
 export const MACRO_FOREIGN_EVENT = /^(UK|EU|Euro(zone|pe)?|ECB|BoE|BoJ|Japan|China|Germany|Canada|Australia)\b/i;

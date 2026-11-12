@@ -14,17 +14,17 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
         ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']],
     // Fed total assets with net liquidity, then the two drains (TGA, ON RRP) on their own scale: on one axis the
     // ~6,800B balance sheet flattened a 0-2,500B reverse repo. Money supply is the "money" growth chart.
-    liquidity: [['WALCL', 'US_NET_LIQUIDITY'], ['WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
+    liquidity: [['WALCL', 'US_NET_LIQUIDITY_DAILY|US_NET_LIQUIDITY'], ['TGA_DAILY|WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
     credit: [['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y'], ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'], ['STLFSI4', 'NFCI']],
     'taiwan-employment': [['TW_EMPLOYED', 'TW_UNEMPLOYED']],
     pmi: [['TW_PMI', 'TW_NMI']],
     // Gold and oil histories in one chart. TPEx publishes only the latest Taiwan spot quote (tile only), so gold's
     // trend comes from COMEX futures, or the World Bank monthly average if COMEX is unavailable.
-    commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD', 'DCOILWTICO']],
+    commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD', 'WTI_CRUDE_USD|DCOILWTICO']],
     // Exchange rates and Taiwan trade sit in one card: this currency chart, plus the export/import growth chart
     // with its MoM/YoY toggle (macroGrowth.ts, chart "trade").
     // Taiwan, Japan, Korea, the euro and the dollar index as strength against the dollar on one shared start (100).
-    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']],
+    'fx-trade': [['CBC_USD_TWD', 'USD_JPY', 'USD_KRW|DEXKOUS', 'EUR_USD', 'US_DOLLAR_INDEX']],
     // All daily, one shared time axis, one y-axis per unit (macroAxisPlan): margin balance and trading value (NT$ 100m,
     // left), VIX (right), the TX roll spread above fair carry (TAIEX points, outer right), maintenance ratio (%, outer
     // left). The raw calendar spread is drawn alone: it shares its unit with the excess but a series is drawn only once.
