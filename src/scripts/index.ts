@@ -9,9 +9,9 @@ import { serviceAvailabilityManager } from '../services/core/serviceAvailability
 import { SERVICE_KEYS } from '../common/constants/serviceKeys';
 import { config } from '../services/core/config';
 import i18nData from '../storages/i18n.json';
-import { shiftMacroPeriod, macroHistoryLimit, macroSeriesPoints, macroCommonStart, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, macroPeriodLabel, type MacroSeriesTone, type MacroSeriesFormat } from './market/macroSeries';
+import { shiftMacroPeriod, macroSeriesPoints, macroCommonStart, resolveMacroCode, dedupeMacroEvents, macroEventInstant, MACRO_FOREIGN_EVENT, macroAxisRange, MACRO_SERIES_TONES, macroValueAtOrBefore, macroPeriodLabel, type MacroSeriesTone, type MacroSeriesFormat } from './market/macroSeries';
 import { TDCC_BUCKETS, tdccBuckets, tdccChangeSeries } from './market/tdcc';
-import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits, type NumberKind } from './format/numbers';
+import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedDigits } from './format/numbers';
 import { analysisRating } from './market/analysisRating';
 import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
@@ -32,7 +32,7 @@ import macroLogicGraph from '../storages/macroLogicGraph.json';
 import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
 import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainView';
 import { foreignPositionSummary, OPEN_INTEREST_FIELDS, OPEN_INTEREST_SOURCE } from './market/futuresPositions';
-import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock, type MacroGrowthMode } from './market/macroGrowth';
+import { MACRO_GROWTH_CHARTS, macroGrowthMode, macroGrowthModes, setMacroGrowthMode, macroMoneyStock } from './market/macroGrowth';
 import { automationNotice, type AutomationStatus } from './market/automationStatus';
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
@@ -42,7 +42,7 @@ let _searchLandingCleanup: (() => void) | undefined;
 import { trackReaderEvent } from './analytics/readerEvents';
 import { northStarLine, type NorthStarWeek } from './analytics/northStar';
 import { createFulltextSearch } from './market/reportFulltext';
-import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, reportIsBenchmarkAnnual, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
+import { canUploadReports, claimDateLabel, reportClaimTone, reportFileAllowed, reportIsChannelPost, reportIsWebArticle, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, reportIsBenchmarkAnnual, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
@@ -2825,85 +2825,6 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } {
         g: (bigint >> 8) & 255,
         b: bigint & 255,
     };
-}
-
-// RGB to HSL 顏色轉換
-function rgbToHsl(r: number, g: number, b: number): { h: number, s: number, l: number } {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const delta = max - min;
-
-    let h = 0;
-    let s = 0;
-    const l = (max + min) / 2;
-
-    if (delta !== 0) {
-        s = delta / (1 - Math.abs(2 * l - 1));
-        switch (max) {
-            case r:
-                h = ((g - b) / delta + (g < b ? 6 : 0)) % 6;
-                break;
-            case g:
-                h = (b - r) / delta + 2;
-                break;
-            case b:
-                h = (r - g) / delta + 4;
-                break;
-        }
-        h *= 60;
-    }
-
-    return { h, s: s * 100, l: l * 100 };
-}
-
-// HSL to HEX 顏色轉換
-function hslToHex(h: number, s: number, l: number): string {
-    s /= 100;
-    l /= 100;
-
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-    const m = l - c / 2;
-
-    let r = 0,
-        g = 0,
-        b = 0;
-
-    if (h >= 0 && h < 60) {
-        r = c;
-        g = x;
-        b = 0;
-    } else if (h >= 60 && h < 120) {
-        r = x;
-        g = c;
-        b = 0;
-    } else if (h >= 120 && h < 180) {
-        r = 0;
-        g = c;
-        b = x;
-    } else if (h >= 180 && h < 240) {
-        r = 0;
-        g = x;
-        b = c;
-    } else if (h >= 240 && h < 300) {
-        r = x;
-        g = 0;
-        b = c;
-    } else if (h >= 300 && h < 360) {
-        r = c;
-        g = 0;
-        b = x;
-    }
-
-    r = Math.round((r + m) * 255);
-    g = Math.round((g + m) * 255);
-    b = Math.round((b + m) * 255);
-
-    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 
 // 調整顏色的函數 (從原色到黑色漸層)
