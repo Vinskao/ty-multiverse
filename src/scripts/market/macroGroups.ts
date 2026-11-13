@@ -56,6 +56,11 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('CBC_REDISCOUNT', 'Taiwan CBC rediscount rate', '台灣央行重貼現率', 'percent'),
         m('CBC_SECURED_LOAN', 'Taiwan CBC secured loan rate', '台灣央行擔保放款利率', 'percent'),
         m('CBC_SHORT_TERM_LOAN', 'Taiwan CBC short-term loan rate', '台灣央行短期融通利率', 'percent'),
+        // Borrowing to invest in Taiwan (2026-11-13): drawn at the top of the macro page.
+        m('TW_INTERBANK_OVERNIGHT', 'Taiwan interbank overnight rate', '台灣金融業隔夜拆款利率', 'percent'),
+        m('TW_CONSUMER_LOAN_RATE', 'Five major banks · new consumer loans', '五大銀行新承做消費性貸款利率', 'percent'),
+        m('TW_WORKING_CAPITAL_LOAN_RATE', 'Five major banks · new working-capital loans', '五大銀行新承做週轉金貸款利率', 'percent'),
+        m('TW_BANK_LOAN_RATE', 'Five major banks · all new loans', '五大銀行新承做放款加權平均利率', 'percent'),
     ] },
     // Money stocks are compared as growth rates (levels are in four currencies); balance sheets and the Fed's
     // net liquidity (total assets − Treasury General Account − overnight reverse repo) are levels.

@@ -146,3 +146,11 @@
 .macro-country-coverage button { font: inherit; cursor: pointer; }
 .macro-country-coverage button[aria-pressed="true"] { background: var(--gray-100); color: var(--gray-900); border-color: var(--gray-100); }
 .macro-country-coverage button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* 2026-11-13: 場內／場外 borrowing rates side by side at the top of the macro page; stacked on narrow screens. */
+.macro-borrowing { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:.75rem 0 1rem; }
+.macro-borrowing:empty { display:none; }
+.macro-borrowing-card { min-width:0; padding:.75rem .9rem; border:1px solid var(--gray-700); border-radius:12px; }
+.macro-borrowing-card h5 { margin:0 0 .25rem; font-size:1rem; }
+.macro-borrowing-note { margin:0 0 .5rem; color:var(--gray-400); font-size:.8rem; line-height:1.5; }
+@media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }

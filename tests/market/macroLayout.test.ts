@@ -38,8 +38,11 @@ describe('macro chart layout', () => {
     it('splits rates into policy, yield-curve, spread, real-yield and foreign-central-bank charts', () => {
         expect(MACRO_MERGED_CHARTS.rates).toEqual([
             ['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'],
-            ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']]);   // five economies, 2026-10-29
+            ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'],
+            ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR'],   // five economies, 2026-10-29
+            // 2026-11-13: Taiwan borrowing rates, 場內 (daily, absorbs the CBC policy-rate chart) and 場外 (monthly)
+            ['TW_INTERBANK_OVERNIGHT', 'CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'],
+            ['TW_CONSUMER_LOAN_RATE', 'TW_WORKING_CAPITAL_LOAN_RATE', 'TW_BANK_LOAN_RATE']]);
     });
 
     it('splits the Fed balance sheet from its drains and keeps weekly and monthly balance sheets in separate charts', () => {

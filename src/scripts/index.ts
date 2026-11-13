@@ -26,7 +26,7 @@ import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
-import { MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
+import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
 import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
@@ -1987,6 +1987,28 @@ function bindMacroCountryControls() {
     });
 }
 
+// Top of the macro page: what borrowing to invest costs, 場內 (left) and 場外 (right). See MACRO_BORROWING_CHARTS.
+function renderMacroBorrowing(byCode: Map<string, MacroIndicator>) {
+    const target = document.getElementById('macro-borrowing');
+    if (!target) return;
+    const rates = MACRO_GROUPS.find((group) => group.id === 'rates');
+    const spec = new Map((rates?.metrics ?? []).map(([code, label, format]) => [code, { label, format }]));
+    target.replaceChildren();
+    for (const chart of MACRO_BORROWING_CHARTS) {
+        const card = document.createElement('article'); card.className = 'macro-borrowing-card'; card.dataset.macroCodes = chart.codes.join(' ');
+        const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
+        const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
+        card.append(title, note);
+        const [base, ...rest] = chart.codes.flatMap((code) => {
+            const indicator = byCode.get(code); const meta = spec.get(code);
+            return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
+        });
+        if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest));
+        else { const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。'); card.append(empty); }
+        target.append(card);
+    }
+}
+
 function renderMacroDashboard(snapshot: MacroSnapshot) {
     macroSnapshot = snapshot;
     bindMacroCountryControls();
@@ -1997,6 +2019,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     if (!list || !grid) return;
     grid.replaceChildren(); list.replaceChildren();
     const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
+    renderMacroBorrowing(byCode);
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
     for (const groupSpec of prioritizeMacroGroups(MACRO_GROUP_SPECS, macroCountry)) {

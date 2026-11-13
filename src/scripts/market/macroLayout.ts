@@ -3,15 +3,32 @@
 // Related series are compared in one chart: the first code is the base line, the rest are comparison lines with
 // every value in one readout (AGENTS.md: one chart per shape). Cards listed here draw their charts below the
 // metric tiles instead of one chart per tile. "a|b" means the first code that has data.
+/** 2026-11-13: the two charts that open the macro page, left 場內 and right 場外. Each stays one frequency
+ *  (left daily, right monthly) per the rule below. Broker margin rates have no official series, so 場內 shows the
+ *  money-market rates brokers fund margin loans against. */
+export const MACRO_BORROWING_CHARTS = [
+    { id: 'exchange', title: { zh: '場內｜券商融資的資金基準（日）', en: 'On-exchange · margin funding benchmarks (daily)' },
+      note: { zh: '券商融資利率由各券商自訂，沒有官方統計；這裡畫它的資金成本：金融業隔夜拆款利率與央行重貼現率、擔保放款、短期融通利率。',
+        en: 'Brokers set their own margin rates and no official series exists; this shows their funding cost: the interbank overnight rate and the CBC rediscount, secured-loan and short-term-loan rates.' },
+      codes: ['TW_INTERBANK_OVERNIGHT', 'CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'] },
+    { id: 'off-exchange', title: { zh: '場外｜銀行借款實際利率（月）', en: 'Off-exchange · bank borrowing rates (monthly)' },
+      note: { zh: '五大銀行新承做放款加權平均利率（央行）。消費性貸款最接近信貸與股票質押借款；實際利率依個人條件而定。',
+        en: 'Five major banks, new loans, weighted average (CBC). Consumer loans are the closest public proxy for personal and stock-pledge loans; actual rates depend on the borrower.' },
+      codes: ['TW_CONSUMER_LOAN_RATE', 'TW_WORKING_CAPITAL_LOAN_RATE', 'TW_BANK_LOAN_RATE'] },
+] as const;
+
 export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]> = {
     // U.S. and Taiwan unemployment rates (both percent of the labour force) share one chart.
     employment: [['CES0000000001'], ['LNS14000000', 'TW_UNEMPLOYMENT_RATE', 'LRUNTTTTJPM156S', 'LRUNTTTTKRM156S'], ['ICSA']],
     // Daily series only share a chart with daily series: monthly (YYYY-MM) periods would interleave out of order
     // with dates, so Japan's monthly call rate and the BoJ balance sheet get their own charts.
     rates: [['DFEDTARU', 'DFEDTARL', 'SOFR'], ['DGS3MO', 'DGS2', 'DGS10'], ['T10Y2Y', 'T10Y3M'], ['DFII10', 'T10YIE'],
-        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'], ['CBC_REDISCOUNT', 'CBC_SECURED_LOAN', 'CBC_SHORT_TERM_LOAN'],
+        ['ECBDFR', 'IUDSOIA'], ['IRSTCI01JPM156N', 'IRSTCI01KRM156N'],
         // Five-economy policy rates on one daily axis: rate gaps show where carry money is pulled (2026-10-29).
-        ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR']],
+        ['POLICY_RATE_TW', 'POLICY_RATE_US', 'POLICY_RATE_EZ', 'POLICY_RATE_JP', 'POLICY_RATE_KR'],
+        // What borrowing to invest costs in Taiwan, also drawn side by side at the top of the page (MACRO_BORROWING_CHARTS).
+        // The 場內 chart carries the three CBC policy rates, which had a chart of their own until 2026-11-13.
+        ...MACRO_BORROWING_CHARTS.map((chart) => chart.codes)],
     // Fed total assets with net liquidity, then the two drains (TGA, ON RRP) on their own scale: on one axis the
     // ~6,800B balance sheet flattened a 0-2,500B reverse repo. Money supply is the "money" growth chart.
     liquidity: [['WALCL', 'US_NET_LIQUIDITY_DAILY|US_NET_LIQUIDITY'], ['TGA_DAILY|WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
