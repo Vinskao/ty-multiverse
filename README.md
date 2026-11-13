@@ -52,97 +52,108 @@ TY-Multiverse 前端為多維度管理系統，包含：
 
 ```mermaid
 graph TD
-    Client[客戶端/瀏覽器] --> |請求| Router[路由層]
-    Router --> |重定向| SSO[SSO Server 認證]
-    SSO --> |驗證| API[TY-Multiverse-Backend]
-    API --> |查詢| DB[(數據庫)]
-    
-    Client --> |請求圖片| Nginx[Nginx Static File Server]
-    Nginx --> |提供| Images[角色圖片]
-    
-    subgraph 客戶端緩存
-        BrowserCache[瀏覽器緩存]
-        BrowserCache --> |localStorage| CharacterData[角色戰力數據]
-        BrowserCache --> |localStorage| ThemeData[主題設置]
-        BrowserCache --> |localStorage| EditorContent[編輯器內容]
-        BrowserCache --> |localStorage| FightData[戰鬥數據]
-    end
-    
-    Client --> |讀取/寫入| BrowserCache
-    API --> |返回數據| Client
+    Browser["瀏覽器"] --> Pages["Astro SSR 頁面 (src/pages/*.astro)"]
+    Browser --> Islands["React islands (src/components/*.tsx)"]
+    Browser --> Scripts["前端腳本 (src/scripts/)"]
+    Browser --> Storage["localStorage (主題、語言、token、快取)"]
+
+    Pages --> Middleware["middleware.ts (舊網址 301 轉址)"]
+    Pages --> Layout["BaseLayout.astro + Nav / Footer"]
+    Pages --> Feeds["sitemap.xml / llms.txt / podcast.xml / brief.json"]
+
+    Scripts --> ApiRoutes["Astro API routes (src/pages/api/)"]
+    Islands --> ApiRoutes
+    ApiRoutes --> MarketApi["/api/market/* 市場、報告、通知、訂閱"]
+    ApiRoutes --> BlogApi["/api/blog/*"]
+    ApiRoutes --> SearchApi["/api/search/benchmark"]
+    ApiRoutes --> RunpodApi["/api/runpod/cost"]
+    ApiRoutes --> AvatarApi["/api/people/avatar"]
+
+    MarketApi -->|"HTTP (MAYA_SAWA_INTERNAL_URL)"| MayaSawa["maya-sawa (FastAPI)"]
+    BlogApi -->|HTTP| MayaSawa
+    SearchApi -->|HTTP| MayaSawa
+    RunpodApi -->|HTTP| MayaSawa
+    Feeds -->|HTTP| MayaSawa
+
+    Scripts -->|"HTTP (PUBLIC_TYMG_URL)"| Gateway["ty-multiverse-gateway"]
+    Scripts -->|"QA: /maya-sawa/qa/query"| Gateway
+    AvatarApi -->|"HTTP (TYMG_INTERNAL_URL)"| Gateway
+    Gateway --> Backend["ty-multiverse-backend"]
+    Gateway --> MayaSawa
+    Browser -->|"登入轉址 (PUBLIC_SSO_URL)"| Keycloak["Keycloak SSO"]
+    Scripts -->|"角色圖片 (PUBLIC_PEOPLE_IMAGE_URL)"| ImageServer["靜態圖片伺服器"]
+    Pages --> Ads["廣告 (Adsterra / Monetag)"]
+```
+
+### 市場儀表板資料流（src/pages/api/market/、src/scripts/market/）
+
+```mermaid
+sequenceDiagram
+    participant B as 瀏覽器 (src/scripts/index.ts)
+    participant M as src/scripts/market/* 純邏輯模組
+    participant A as Astro API /api/market/*
+    participant S as maya-sawa /market/*
+    B->>A: GET /api/market/dashboard、history、reports …
+    A->>S: HTTP（伺服器端，必要時帶 MARKET_INTERNAL_SECRET）
+    S-->>A: JSON
+    A-->>B: JSON（Cache-Control）
+    B->>M: 計算月增率／年增率、TDCC、數字格式化
+    M-->>B: 圖表與讀數
 ```
 
 ### Astro 組件架構
 
 ```mermaid
 graph TD
-    A[Astro Pages<br/>src/pages/*.astro<br/>File-based routing] --> B[BaseLayout.astro<br/>Global app shell]
-    B --> C[Static Astro Components<br/>Nav.astro / Footer.astro]
-    B --> D[Page Content Slot]
-
-    C --> E[ThemeToggle.tsx<br/>React island in Nav]
-    D --> F[Client Islands<br/>client:load React components]
-    F --> G[SkillsBubbleChart.tsx<br/>React + D3]
-    F --> H[PeopleManagement.tsx<br/>Interactive React UI]
+    A["Astro Pages (src/pages/*.astro)"] --> B["BaseLayout.astro"]
+    B --> C["Nav.astro / Footer.astro"]
+    B --> D["Page Content Slot"]
+    C --> E["ThemeToggle.tsx (client:load)"]
+    D --> F["React islands"]
+    F --> G["SkillsBubbleChart.tsx (React + D3, client:visible)"]
+    F --> H["ResearchZone.tsx (client:visible)"]
+    F --> I["AiTokenUsageDashboard.tsx (client:load)"]
+    F --> J["RunpodCostDashboard.tsx (client:load)"]
+    D --> K["PeopleManagement.tsx (createRoot, people-management.astro)"]
 ```
 
 ### API Gateway 路由架構
 
 ```mermaid
 graph TD
-    A[Frontend Request<br/>http://localhost:8082/tymg/*] --> B{Spring Cloud Gateway}
-    B --> C[Backend REST API<br/>Port 8080]
-
-    subgraph "Spring Cloud Gateway Routes (/tymg/**)"
-        D["/people/**<br/>People Management"]
-        E["/weapons/**<br/>Weapon Management"]
-        F["/gallery/**<br/>Gallery Management"]
-        G["/deckofcards/**<br/>Game APIs"]
-        H["/auth/** & /keycloak/**<br/>Authentication"]
-    end
-
-    B --> D
-    B --> E
-    B --> F
-    B --> G
-    B --> H
-
-    D --> C
+    A["Frontend Request (PUBLIC_TYMG_URL)"] --> B{"ty-multiverse-gateway"}
+    B --> D["/people/** 角色管理"]
+    B --> E["/weapons/** 武器管理"]
+    B --> F["/gallery/** 圖庫"]
+    B --> H["/auth/** 與 /keycloak/** 認證"]
+    B --> Q["/maya-sawa/qa/** 問答"]
+    D --> C["ty-multiverse-backend"]
     E --> C
     F --> C
-    G --> C
     H --> C
+    Q --> MS["maya-sawa"]
 ```
 
 ### 問答系統架構
 
 ```mermaid
 graph TD
-    A[前端 MD 文件集<br/>src/content/work/] --> B[定期同步]
-    B --> C[後端 Paprika<br/>Laravel API]
-    C --> D[PostgreSQL<br/>向量資料庫]
-    
-    E[FastAPI Maya-Sawa<br/>定期任務] --> F[從 Paprika API<br/>取得 MD 文章]
-    F --> G[Embedding 處理]
-    G --> D
-    
-    H[前端 Astro<br/>QABot 組件] --> I[後端 Maya-Sawa<br/>FastAPI]
-    I --> J[Redis<br/>聊天記錄緩存]
-    I --> K[OpenAI API<br/>GPT-3.5-turbo]
-    K --> L[回答生成]
-    L --> I
-    I --> H
+    H["QABot.astro / QABotV2.astro"] --> S["qaService.ts (src/services/api/)"]
+    S --> R["qaRateLimiter.ts (localStorage 限流)"]
+    S -->|"POST /maya-sawa/qa/query"| G["ty-multiverse-gateway"]
+    G --> M["maya-sawa (回答生成)"]
+    M --> G
+    G --> S
 ```
 
 ### CI/CD Pipeline
 
 ```mermaid
 graph LR
-    A[GitHub Repository] --> B[Clone and Setup]
-    B --> C[Build with Node.js]
-    C --> D[Build Docker Image with BuildKit]
-    D --> E[Push to Docker Hub]
-    E --> F[Deploy to Kubernetes]
+    A["GitHub Repository"] --> B["Jenkins: Clone and Setup"]
+    B --> D["Build Docker Image (npm build 於 Dockerfile 內)"]
+    D --> E["Push to Docker Hub"]
+    E --> F["Deploy to Kubernetes (kubectl set image)"]
 ```
 
 ## Design Patterns
