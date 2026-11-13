@@ -1,3 +1,4 @@
+import { stockDeepLink } from './market/stockDeepLink';
 import { prioritizeMacroGroups, type MacroCountry } from './market/macroCountry';
 import type { Portfolio, PortfolioPosition } from '../types/portfolio';
 import { taiwanPortfolio } from '../services/core/taiwanPortfolio';
@@ -1467,7 +1468,18 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
     // Restore the open instrument after the rebuild, without scrolling the page.
     const reopened = openCode ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((row) => row.dataset.marketCode === openCode) : undefined;
     if (reopened) { reopened.setAttribute('aria-expanded', 'true'); placeMarketDetail(reopened, false); }
+    if (targetId === 'market-auto-list' && !stockDeepLinkDone) {
+        const link = stockDeepLink(window.location.search);
+        const row = link ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((item) => item.dataset.marketCode === link.code) : undefined;
+        if (link && row) {
+            stockDeepLinkDone = true;
+            if (link.tab) preferredMarketTab = link.tab;
+            if (row.getAttribute('aria-expanded') !== 'true') row.click();
+            row.scrollIntoView?.({ block: 'center' });
+        }
+    }
 }
+let stockDeepLinkDone = false;
 
 async function fetchMarketDashboard() {
     const sequence = ++marketDashboardSequence;

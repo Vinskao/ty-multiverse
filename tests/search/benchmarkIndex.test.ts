@@ -22,6 +22,7 @@ describe('supply-chain diagram search index', () => {
   it('indexes companies with their layer and stage, holdings, claims and outlook themes', () => {
     expect(searchBenchmark(entries, '台達電').map(e => e.kind)).toEqual(['company', 'holding', 'theme']);
     expect(searchBenchmark(entries, '散熱')[0].href).toBe('/?benchmark=2308#benchmark');
+    expect(searchBenchmark(entries, '高力')[0].href).toBe('/stocks/?stock=8996&tab=research');
     expect(searchBenchmark(entries, '高力')[0].detail).toContain('對照 台達電');
     expect(searchBenchmark(entries, 'cowos').map(e => e.kind)).toEqual(['claim']);
     expect(searchBenchmark(entries, '液冷').some(e => e.kind === 'theme' && e.title.includes('T2 機櫃液冷'))).toBe(true);

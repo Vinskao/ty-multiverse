@@ -28,7 +28,7 @@ export function buildBenchmarkIndex(lineup: LineupVersion | null, monitor: Bench
     const against = (holding.benchmarks ?? []).map(code => names.get(code) ?? code);
     entries.push({ kind: 'holding', title: `★ ${holding.name} ${holding.code}`,
       detail: [holding.role, against.length ? `對照 ${against.join('、')}` : '尚未對照龍頭'].join('・'),
-      text: [holding.name, holding.code, holding.role, ...against].join(' '), href: href(holding.benchmarks?.[0]) });
+      text: [holding.name, holding.code, holding.role, ...against].join(' '), href: `/stocks/?stock=${encodeURIComponent(holding.code)}&tab=research` });
   }
   for (const node of monitor?.nodes ?? []) {
     for (const claim of node.claims ?? []) {
