@@ -20,9 +20,9 @@ describe('supply-chain diagram search index', () => {
   const entries = buildBenchmarkIndex(lineup, monitor, outlook);
 
   it('indexes companies with their layer and stage, holdings, claims and outlook themes', () => {
-    expect(searchBenchmark(entries, '台達電').map(e => e.kind)).toEqual(['company', 'holding', 'theme']);
+    expect(searchBenchmark(entries, '台達電').map(e => e.kind)).toEqual(['company', 'stock', 'holding', 'theme']);
     expect(searchBenchmark(entries, '散熱')[0].href).toBe('/?benchmark=2308#benchmark');
-    expect(searchBenchmark(entries, '高力')[0].href).toBe('/stocks/?stock=8996&tab=research');
+    expect(searchBenchmark(entries, '高力')[0].href).toBe(`/stocks/?${new URLSearchParams({ stock: '8996', name: '高力', tab: 'research' })}`);
     expect(searchBenchmark(entries, '高力')[0].detail).toContain('對照 台達電');
     expect(searchBenchmark(entries, 'cowos').map(e => e.kind)).toEqual(['claim']);
     expect(searchBenchmark(entries, '液冷').some(e => e.kind === 'theme' && e.title.includes('T2 機櫃液冷'))).toBe(true);
@@ -53,7 +53,7 @@ describe('nav bar search includes the diagram', () => {
     }
     const hit = document.querySelector<HTMLAnchorElement>('#site-search-results a')!;
     expect(hit.textContent).toContain('高力');
-    expect(hit.textContent).toContain('研究圖・持股');
+    expect(hit.textContent).toContain('持股・個股研究');
     expect(fetcher.mock.calls.filter(([url]) => url === '/api/search/benchmark')).toHaveLength(1);
   });
 });

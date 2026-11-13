@@ -37,6 +37,8 @@ import { automationNotice, type AutomationStatus } from './market/automationStat
 import { buildResearchEconomicsSeries, buildResearchEconomicsFromReturns, tokenCostsFromDaily, type TokenCostPoint, type PublicPortfolioReturnPoint } from './market/researchEconomics';
 import { renderResearchReturnChart } from './market/researchEconomicsChart';
 import { initHeroSearch } from './home/heroSearch';
+import { landSearchHit } from './search/landing';
+let _searchLandingCleanup: (() => void) | undefined;
 import { trackReaderEvent } from './analytics/readerEvents';
 import { northStarLine, type NorthStarWeek } from './analytics/northStar';
 import { createFulltextSearch } from './market/reportFulltext';
@@ -1471,11 +1473,17 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
     if (targetId === 'market-auto-list' && !stockDeepLinkDone) {
         const link = stockDeepLink(window.location.search);
         const row = link ? Array.from(target.querySelectorAll<HTMLElement>('[data-market-code]')).find((item) => item.dataset.marketCode === link.code) : undefined;
-        if (link && row) {
+        if (link) {
             stockDeepLinkDone = true;
             if (link.tab) preferredMarketTab = link.tab;
-            if (row.getAttribute('aria-expanded') !== 'true') row.click();
-            row.scrollIntoView?.({ block: 'center' });
+            if (row) {
+                if (row.getAttribute('aria-expanded') !== 'true') row.click();
+                row.scrollIntoView?.({ block: 'center' });
+            } else {
+                // Not held (e.g. a benchmark company): open the detail panel from code and name alone.
+                setMarketDetailInstrument({ code: link.code, name: link.name, productType: 'stock' } as DashboardInstrument);
+                document.getElementById('market-instrument-detail')?.scrollIntoView({ block: 'start' });
+            }
         }
     }
 }
@@ -2003,7 +2011,7 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
         const indicators = group.metrics.flatMap(([code]) => byCode.get(code) ?? []);
         const growthCharts = Object.keys(MACRO_GROWTH_CHARTS).filter((id) => MACRO_GROWTH_CHARTS[id].group === group.id);
         if (!indicators.length && !groupEvents.length) continue;
-        const card = document.createElement('article'); card.className = `macro-group macro-group--${group.id}`;
+        const card = document.createElement('article'); card.className = `macro-group macro-group--${group.id}`; card.dataset.macroGroup = group.id;
         const header = document.createElement('header'); header.className = 'macro-group-header';
         const title = document.createElement('h5'); title.textContent = group.title();
         header.append(title);
@@ -2018,7 +2026,11 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
                     const indicator = byCode.get(code); const meta = spec.get(code);
                     return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
                 });
-                if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest, { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }));
+                if (base) {
+                    const chart = buildMacroTrendChart(base.indicator, base.format, base.label, rest, { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) });
+                    chart.dataset.macroCodes = codes.join(' ').replace(/\|/g, ' '); // nav bar search lands on the chart by code
+                    card.append(chart);
+                }
             }
         }
         for (const id of growthCharts) {
@@ -3782,6 +3794,7 @@ function initIndexPage() {
     initMarketReports();
     _heroSearchCleanup?.();
     _heroSearchCleanup = initHeroSearch(document, trackReaderEvent);
+    _searchLandingCleanup?.(); _searchLandingCleanup = landSearchHit(document);
     void loadNorthStar();
     void loadMarketAutomation();
     void fetchMarketDashboard();

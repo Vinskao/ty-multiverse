@@ -43,7 +43,7 @@ describe('nav bar search palette', () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(fetcher.mock.calls.filter(([url]) => String(url).includes('/fulltext'))).toHaveLength(1);
     const hit = document.querySelector<HTMLAnchorElement>('#site-search-results a')!;
-    expect(hit.getAttribute('href')).toBe('/reports/?q=' + encodeURIComponent('矽光子'));
+    expect(hit.getAttribute('href')).toBe(`/reports/?${new URLSearchParams({ q: '矽光子', report: 'r1' })}`);
     expect(hit.textContent).toContain('Q3 法說');
     expect(hit.textContent).toContain('p.4');
     expect(hit.textContent).toContain('矽光子良率提升');

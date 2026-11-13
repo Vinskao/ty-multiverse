@@ -610,3 +610,6 @@ nav {
 .site-search-hit small { color: var(--gray-400); font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
 .site-search-hint { margin: 0; padding: .55rem 1rem; color: var(--gray-400); border-top: 1px solid var(--gray-800); font-size: .78rem; }
 @media (max-width: 40em) { .site-search-open span, .site-search-open kbd { display: none; } .site-search { padding-top: 1rem; } }
+
+/* Where a nav bar search hit landed (scripts/search/landing.ts); fades after a few seconds. */
+.is-search-landing { outline: 3px solid #58a6ff; outline-offset: 4px; border-radius: 8px; transition: outline-color .6s; }

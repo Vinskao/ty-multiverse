@@ -2,9 +2,10 @@
 // through /api/market/reports/fulltext. A hit opens the report page with the same words already applied.
 
 import { searchBenchmark, type BenchmarkEntry } from './benchmarkIndex';
+import { buildMacroIndex } from './macroIndex';
 
 type Hit = { report_id: string; title?: string; publisher?: string; page: number; snippet: string };
-const KIND = { company: '研究圖・龍頭', holding: '研究圖・持股', claim: '研究圖・年報主張', theme: '研究圖・年度格局' } as const;
+const KIND = { company: 'Benchmark・年報依據與驗證', stock: '個股資料・研究', holding: '持股・個股研究', macro: '總體・指標', claim: 'Benchmark・年報主張', theme: 'Benchmark・年度 AI 長線格局' } as const;
 
 export function initSitePalette(
   doc: Document = document,
@@ -43,8 +44,8 @@ export function initSitePalette(
   let benchmark: Promise<BenchmarkEntry[]> | undefined;
   const benchmarkIndex = () => (benchmark ??= fetcher('/api/search/benchmark')
     .then((response) => response.ok ? response.json() : { entries: [] })
-    .then((payload: { entries?: BenchmarkEntry[] }) => payload.entries ?? [])
-    .catch(() => { benchmark = undefined; return [] as BenchmarkEntry[]; }));
+    .then((payload: { entries?: BenchmarkEntry[] }) => [...(payload.entries ?? []), ...buildMacroIndex()])
+    .catch(() => { benchmark = undefined; return buildMacroIndex(); }));
 
   const render = (q: string, hits: Hit[], diagram: BenchmarkEntry[] = []) => {
     results.replaceChildren();
@@ -61,7 +62,7 @@ export function initSitePalette(
     }
     for (const hit of hits.slice(0, 30)) {
       const link = doc.createElement('a');
-      link.href = `/reports/?q=${encodeURIComponent(q)}`;
+      link.href = `/reports/?${new URLSearchParams({ q, report: hit.report_id })}`;
       link.className = 'site-search-hit';
       const title = doc.createElement('strong'); title.textContent = hit.title || q;
       const meta = doc.createElement('span'); meta.textContent = [hit.publisher, `p.${hit.page}`].filter(Boolean).join(' · ');

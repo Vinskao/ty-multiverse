@@ -66,7 +66,7 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
   </select></label> : null}
   <div data-benchmark-readout aria-live="polite">選擇公司查看年報頁碼、原文、實際值與門檻理由。</div>
   <p data-benchmark-status role="status"></p>
-  {outlook ? <details class="benchmark-outlook"><summary>年度 AI 長線格局（第 {outlook.revision} 版）</summary>
+  {outlook ? <details id="benchmark-outlook" class="benchmark-outlook"><summary>年度 AI 長線格局（第 {outlook.revision} 版）</summary>
     <p class="benchmark-outlook-note">由上方龍頭的股東年報定調；每日精讀與個股 AI 分析都用「長線格局對照」把短線資料放回這些主軸。</p>
     <div class="benchmark-outlook-body">{outlook.content}</div>
   </details> : null}

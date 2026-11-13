@@ -41,8 +41,11 @@ export function initBenchmarkDiagram(doc: Document = document, load: () => Promi
       }
     };
     panel.addEventListener('toggle', () => { void draw(); });
-    // A nav bar search hit links here as /?benchmark=CODE#benchmark: open the diagram straight away.
-    if (searchTarget(doc)) panel.open = true;
+    // A nav bar search hit links here as /?benchmark=CODE#benchmark. Companies with annual-report evidence land on
+    // the evidence picker instead (benchmarkMonitorClient); only the rest open the diagram at their node.
+    const code = searchTarget(doc);
+    const hasEvidence = code && [...doc.querySelectorAll<HTMLOptionElement>('[data-benchmark-evidence] option')].some(o => o.value === code);
+    if (code && !hasEvidence) panel.open = true;
     void draw();
   }
 }

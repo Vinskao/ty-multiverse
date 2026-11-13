@@ -2,6 +2,16 @@ import { formatNumber } from '../format/numbers';
 import { monitorDiagram, type BenchmarkMonitor } from './benchmarkMonitor';
 import type { LineupVersion } from './benchmarkChain';
 
+/** A nav bar search hit (/?benchmark=CODE#benchmark) lands on that company's 年報依據與驗證數據, not the diagram. */
+export function focusEvidence(root: ParentNode, search: string): HTMLSelectElement | null {
+  const code = new URLSearchParams(search).get('benchmark');
+  const select = root.querySelector<HTMLSelectElement>('[data-benchmark-evidence]');
+  if (!code || !select || ![...select.options].some(option => option.value === code)) return null;
+  select.value = code;
+  (select.closest('label') ?? select).scrollIntoView?.({ block: 'center' });
+  return select;
+}
+
 export function initBenchmarkMonitor(doc: Document = document): void {
   const root = doc.querySelector<HTMLElement>('#benchmark[data-lineup]');
   if (!root?.dataset.lineup || root.dataset.monitorBound) return;
@@ -51,6 +61,7 @@ export function initBenchmarkMonitor(doc: Document = document): void {
     }
   };
   select?.addEventListener('change', renderEvidence);
+  if (focusEvidence(root, doc.defaultView?.location.search ?? '')) renderEvidence();
   const refresh = async () => {
     if (pending || stopped || doc.hidden) return;
     pending = true;
