@@ -430,6 +430,15 @@ nav {
   .site-page, .site-search-open span, .site-search-open kbd { display: none; }
 }
 
+/* 2026-11-14: at ~840px the right-hand controls (settings, login) were clipped by overflow-x: clip. Under 66em the brand
+   keeps its icon only and the links and gaps tighten, so every control stays visible. */
+@media (min-width: 50em) and (max-width: 65.99em) {
+  nav { padding: 0 .75rem; gap: .4rem; }
+  .site-title-text { display: none; }
+  .nav-items .link { padding: .25rem .25rem; }
+  .menu-footer { gap: .35rem; }
+}
+
 /* 手機版 RWD 樣式 */
 @media (max-width: 49.99em) {
   nav {

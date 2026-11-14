@@ -18,3 +18,12 @@ it('centres the label in the stylesheet and keeps it centred even if a script se
   expect(rule).toMatch(/align-items:\s*center/);
   expect(rule).toMatch(/justify-content:\s*center/);
 });
+
+// 2026-11-14: at ~840px the settings and login controls were clipped; the brand drops to its icon under 66em.
+it('keeps the right-hand nav controls visible between 50em and 66em', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/styles/nav.css'), 'utf8');
+  const block = css.slice(css.indexOf('@media (min-width: 50em) and (max-width: 65.99em)'));
+  expect(block.slice(0, block.indexOf('
+}')).includes('.site-title-text { display: none; }')).toBe(true);
+  expect(readFileSync(resolve(process.cwd(), 'src/components/Nav.astro'), 'utf8')).toContain('<span class="site-title-text">TY Multiverse</span>');
+});
