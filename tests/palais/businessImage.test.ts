@@ -116,7 +116,7 @@ describe('group page basket hiking button', () => {
     const click = page.slice(page.indexOf("getElementById('cart-business')?.addEventListener"), page.indexOf('applyVariantMode();', page.indexOf("getElementById('cart-hiking')?.addEventListener")));
     expect(click).toContain("'business'");
     expect(click).toContain("'hiking'");
-    expect(click).toMatch(/cartVariant === 'hiking' \? null : 'hiking'/);
+    expect(page).toContain('if (cartVariant !== kind) { cartVariant = kind; cartSetIndex = 1; }');
   });
 
   it('uses the selected variant for the basket download too', () => {
