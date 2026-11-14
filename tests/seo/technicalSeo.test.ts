@@ -63,3 +63,10 @@ describe('technical SEO metadata', () => {
     expect(read('src/pages/login.astro')).toContain('noindex,nofollow');
   });
 });
+
+// 2026-11-14 AdSense "low value content": these three serve the homepage's server HTML, so they stay out of the index.
+it('marks the reports, macro and stocks views noindex', () => {
+  const page = readFileSync('src/pages/index.astro', 'utf8');
+  expect(page).toContain('indexable={!view}');
+  for (const view of ['reports', 'macro', 'stocks']) expect(readFileSync(`src/pages/${view}.astro`, 'utf8')).toContain(`view="${view}"`);
+});

@@ -44,7 +44,8 @@ try {
 }
 
 // 檢查是否需要顯示登入提示
-// /reports, /macro and /stocks render this same page narrowed to one zone (see those pages).
+// /reports, /macro and /stocks render this same page narrowed to one zone (see those pages). Their server HTML is the
+// homepage's (data loads in the browser), so they are noindex: AdSense flagged the site as low value content (2026-11-14).
 const view = (Astro.props as { view?: 'reports' | 'macro' | 'stocks' }).view;
 const viewMeta = {
 	reports: { title: '研究報告｜TY 市場研究室', canonical: 'https://tymultiverse.cc/reports/' },
@@ -64,6 +65,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 	title={pageTitle}
 	description="法說、財報、SEC 申報與公開研究頻道，由 AI 整理成附來源與頁碼的主張，連到標的、技術、供應鏈與總體經濟。"
 	canonical={pageCanonical}
+	indexable={!view}
 	lang="zh-Hant"
 >
 	<Fragment slot="head">

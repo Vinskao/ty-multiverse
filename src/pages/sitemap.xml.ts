@@ -5,21 +5,22 @@ import { buildSitemapXml } from '../scripts/seo/siteMetadata';
 export const prerender = false;
 
 const publicPaths = ['/', '/about', '/work', '/learn', '/api-reference'];
+// Last article list that loaded: a slow or restarting Maya must not drop every article from the sitemap (2026-11-14).
+let lastArticlePaths: string[] = [];
 
 export const GET: APIRoute = async () => {
   const paths = [...publicPaths];
   try {
     const articles = await readBlog();
     if (Array.isArray(articles)) {
-      for (const article of articles) {
-        if (typeof article?.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.id)) {
-          paths.push(`/work/${article.id}`);
-        }
-      }
+      lastArticlePaths = articles
+        .filter(article => typeof article?.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.id))
+        .map(article => `/work/${article.id}`);
     }
   } catch {
-    // Keep the core public sitemap useful while the article service is unavailable.
+    // Article service unavailable: fall back to the last list that loaded.
   }
+  paths.push(...lastArticlePaths);
 
   return new Response(buildSitemapXml(paths), {
     headers: {
