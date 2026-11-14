@@ -121,7 +121,7 @@ describe('group page basket hiking button', () => {
 
   it('uses the selected variant for the basket download too', () => {
     const fn = page.slice(page.indexOf('async function downloadCartRow'));
-    expect(fn).toMatch(/variant: cartVariant/);
+    expect(fn).toMatch(/variant: cartVariant, index: cartSetIndex/);
   });
 });
 

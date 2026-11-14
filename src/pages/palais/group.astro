@@ -958,7 +958,7 @@ if (!isLoggedIn) {
     try {
       const timestamp = characterService.getMediaTimestamp();
       const images = await Promise.all(names.map(async (name) => {
-        const url = await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp, variant: cartVariant, exists: imageExists });
+        const url = await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp, variant: cartVariant, index: cartSetIndex, exists: imageExists });
         const response = await fetch(url);
         if (!response.ok) throw new Error(`${name}: image download failed (${response.status})`);
         return loadImageFromBlob(await response.blob());
