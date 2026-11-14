@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import DiaryPanel from "../components/DiaryPanel.astro";
+import AiVisibilityPanel from "../components/AiVisibilityPanel.astro";
 import Clutches from "../components/Clutches.html";
 import { palaisModules, palaisTools } from "../scripts/palais/modules";
 import i18n from "../storages/i18n.json";
@@ -32,6 +33,7 @@ if (!isLoggedIn) {
   </Fragment>
   <div class="stack gap-20">
     <main class="wrapper stack gap-8">
+      <AiVisibilityPanel />
       <Hero title="皇宮" tagline="你的工作台：角色、社群與管理工具。" align="start" />
 
       <nav class="palais-toolbar" aria-label="皇宮工具列">

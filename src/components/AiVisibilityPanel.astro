@@ -1,0 +1,64 @@
+---
+// Owner-only AI-search visibility dashboard, first block of /palais (docs/AI_VISIBILITY.md). Hidden until the owner's data loads.
+---
+<section class="ai-visibility" id="ai-visibility" aria-labelledby="ai-visibility-heading" hidden>
+  <h2 id="ai-visibility-heading">AI 搜尋曝光檢視</h2>
+  <p id="ai-visibility-headline" role="status"></p>
+  <p id="ai-visibility-platforms" class="ai-visibility-platforms"></p>
+  <div class="ai-visibility-scroll"><table id="ai-visibility-table" class="ai-visibility-table"></table></div>
+  <p id="ai-visibility-trend" class="ai-visibility-note"></p>
+  <ul id="ai-visibility-fixes" class="ai-visibility-note"></ul>
+  <p class="ai-visibility-note">每週二、五 03:00 由 GPT 排程檢視 ChatGPT、Grok、Gemini、Claude；05:30 由 Claude 審核並依結果修繕網站。無法登入的平台標示「無法檢視」，不猜測。</p>
+</section>
+<style>
+  .ai-visibility { padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--gray-600, #777); border-radius: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
+  .ai-visibility h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); }
+  .ai-visibility-scroll { overflow-x: auto; }
+  .ai-visibility-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  .ai-visibility-table th, .ai-visibility-table td { border: 1px solid var(--gray-600, #777); padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
+  .ai-visibility-table td.hit { font-weight: 700; }
+  .ai-visibility-table td.na { opacity: 0.55; }
+  .ai-visibility-note { font-size: 0.85rem; opacity: 0.8; margin: 0; padding-left: 0; list-style-position: inside; }
+</style>
+<script>
+  import { PLATFORM_NAMES, cellLabel, headline, platformLine, type VisibilityView } from '../scripts/palais/aiVisibility';
+
+  const token = () => window.localStorage.getItem('token') || window.localStorage.getItem('accessToken');
+  async function loadAiVisibility() {
+    const root = document.getElementById('ai-visibility');
+    if (!root) return;
+    const bearer = token();
+    if (!bearer) return;
+    const response = await fetch('/api/market/ai-visibility', { headers: { Authorization: `Bearer ${bearer}` }, cache: 'no-store' }).catch(() => null);
+    if (!response?.ok) return;
+    const view = await response.json() as VisibilityView;
+    root.hidden = false;
+    document.getElementById('ai-visibility-headline')!.textContent = headline(view);
+    document.getElementById('ai-visibility-platforms')!.textContent = Object.keys(PLATFORM_NAMES).map((p) => platformLine(p, view.byPlatform[p])).join(' ｜ ');
+    const keywords = [...new Set(view.cells.map((c) => c.keyword))];
+    const platforms = Object.keys(PLATFORM_NAMES);
+    const table = document.getElementById('ai-visibility-table')!;
+    table.replaceChildren();
+    if (keywords.length) {
+      const head = table.insertRow();
+      ['關鍵字', ...platforms.map((p) => PLATFORM_NAMES[p])].forEach((text) => { const th = document.createElement('th'); th.textContent = text; head.appendChild(th); });
+      keywords.forEach((keyword) => {
+        const tr = table.insertRow();
+        const first = tr.insertCell(); first.textContent = keyword;
+        platforms.forEach((p) => {
+          const cell = view.cells.find((c) => c.keyword === keyword && c.platform === p);
+          const td = tr.insertCell();
+          td.textContent = cell ? cellLabel(cell) : '—';
+          if (cell?.appeared) td.className = 'hit'; else if (!cell || cell.status !== 'checked') td.className = 'na';
+        });
+      });
+    }
+    document.getElementById('ai-visibility-trend')!.textContent = view.trend.length > 1
+      ? `近 ${view.trend.length} 次出現格數：${view.trend.map((t) => `${t.appeared}/${t.checked}`).join(' → ')}` : '';
+    const fixes = document.getElementById('ai-visibility-fixes')!;
+    fixes.replaceChildren();
+    view.fixes.forEach((f) => f.items.forEach((item) => { const li = document.createElement('li'); li.textContent = `修繕：${item}`; fixes.appendChild(li); }));
+  }
+  document.addEventListener('astro:page-load', loadAiVisibility);
+  loadAiVisibility();
+</script>
