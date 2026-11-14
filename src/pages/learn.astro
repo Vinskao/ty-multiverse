@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { learnCatalog } from "../scripts/learn/catalog";
-import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 
 ---
 
@@ -26,7 +25,6 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
     </aside>
 
     <main class="learn-main">
-      <HomeAdPlacements compact />
       <!-- 主題總覽：尚未進入任何主題時顯示 -->
       <section id="learn-overview" class="learn-overview">
         <header class="learn-overview-header">
@@ -139,7 +137,7 @@ import HomeAdPlacements from "../components/HomeAdPlacements.astro";
 
       <p id="learn-status" class="learn-status" hidden></p>
     </main>
-    <div class="wrapper"><HomeAdPlacements /></div>
+    
   </div>
 </BaseLayout>
 

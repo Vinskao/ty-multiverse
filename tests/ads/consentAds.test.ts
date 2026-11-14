@@ -1,36 +1,33 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { mountPublisherAds, unmountPublisherAds } from '../../src/scripts/ads/consentAds';
 
 describe('publisher ad consent gate', () => {
-  beforeEach(() => {
-    document.body.innerHTML = '<div id="adsterra-300x250" data-adsterra="300x250"></div><div id="adsterra-responsive-banner" data-adsterra="responsive"></div><div id="adsterra-native" data-adsterra="native"><div id="container-native"></div></div><div id="monetag-ipp" data-monetag-zone="12196776"></div>';
-  });
+  beforeEach(() => { document.body.innerHTML = '<div id="monetag-ipp" data-monetag-zone="12196776"></div>'; });
 
   it('does not request third-party ads without advertising consent', async () => {
     await mountPublisherAds(document, false);
-    expect(document.querySelectorAll('script[src*="bauval.org"], script[src*="nap5k.com"]')).toHaveLength(0);
+    expect(document.querySelectorAll('script[src*="nap5k.com"]')).toHaveLength(0);
   });
 
-  it('loads each configured provider unit only after advertising consent', async () => {
-    document.body.innerHTML = '<div id="adsterra-300x250" data-adsterra="300x250"></div>';
-    const pending = mountPublisherAds(document, true, 1280);
-    await vi.waitFor(() => expect(document.querySelectorAll('script[src]')).toHaveLength(1));
+  it('loads Monetag after consent and removes it when consent is withdrawn', async () => {
+    const pending = mountPublisherAds(document, true);
     document.querySelector<HTMLScriptElement>('script[src]')!.dispatchEvent(new Event('load'));
     await pending;
-    const urls = [...document.querySelectorAll<HTMLScriptElement>('script[src]')].map(script => script.src);
-    expect(urls).toContain('https://bauval.org/22/2143d97a1a273993069cffe00f798381');
-    expect(urls).toEqual(['https://bauval.org/22/2143d97a1a273993069cffe00f798381']);
+    expect(document.querySelector<HTMLScriptElement>('script[src]')!.src).toBe('https://nap5k.com/tag.min.js');
     unmountPublisherAds(document);
-    expect(document.querySelectorAll('script[src*="bauval.org"], script[src*="nap5k.com"]')).toHaveLength(0);
+    expect(document.querySelectorAll('script[src*="nap5k.com"]')).toHaveLength(0);
   });
+});
 
-  it('stops pending provider requests when advertising is turned off', async () => {
-    document.body.innerHTML = '<div data-adsterra="300x250"></div><div data-adsterra="responsive"></div>';
-    const pending = mountPublisherAds(document, true, 1280);
-    await vi.waitFor(() => expect(document.querySelectorAll('script[src]')).toHaveLength(1));
-    await mountPublisherAds(document, false, 1280);
-    await pending;
-    expect(document.querySelectorAll('script[src*="bauval.org"], script[src*="nap5k.com"]')).toHaveLength(0);
-    expect(document.querySelectorAll('[data-adsterra][data-loaded="true"]')).toHaveLength(0);
+// 2026-11-14: every Adsterra tag was removed; its ad host was bauval.org.
+it('has no Adsterra code left in the site', () => {
+  const walk = (dir: string): string[] => readdirSync(dir).flatMap(name => {
+    const path = join(dir, name);
+    return statSync(path).isDirectory() ? walk(path) : [path];
   });
+  for (const file of [...walk('src'), ...walk('public')].filter(f => /\.(astro|ts|js|html|txt)$/.test(f))) {
+    expect(readFileSync(file, 'utf8'), file).not.toMatch(/adsterra|bauval\.org/i);
+  }
 });

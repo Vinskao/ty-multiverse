@@ -21,7 +21,6 @@ import { mailtoHref } from '../scripts/contact';
 import indexCssUrl from '../styles/index.css?url';
 import openSourceCssUrl from '../styles/open-source.css?url';
 import MarketBrief from '../components/MarketBrief.astro';
-import HomeAdPlacements from '../components/HomeAdPlacements.astro';
 import { getMarketBrief } from '../services/server/marketBrief';
 import { getReportStats } from '../services/server/reportStats';
 import { tailwindShare } from '../scripts/market/reportStats';
@@ -138,7 +137,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							); })}
 						</ol>
 					</section>}
-					<HomeAdPlacements />
 					<section id="market-overview" class="market-overview">
 						<div class="market-overview-header">
 							<div>
@@ -161,7 +159,6 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<div id="market-report-filters" class="market-report-filters" role="group" aria-label="依產業板塊篩選"></div>
 							</aside>
 							<div class="market-report-results">
-								<HomeAdPlacements compact />
 								<label class="market-report-search" for="market-report-search">搜尋報告
 									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
 								</label>

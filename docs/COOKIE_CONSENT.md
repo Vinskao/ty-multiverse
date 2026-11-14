@@ -8,7 +8,7 @@ The navigation gear beside the notification bell opens `變更 Cookie 設定` an
 flowchart TD
   Visit[Visit page] --> Read[Read versioned local preference]
   Read -->|No saved choice| Notice[Show notice; ads use default on]
-  Read -->|Advertising enabled| Ads[Load Adsterra and Monetag tags]
+  Read -->|Advertising enabled| Ads[Load Monetag tags (Adsterra removed 2026-11-14)]
   Notice -->|Got it| SaveOn[Save advertising on]
   Notice -->|Necessary only| SaveOff[Save advertising off]
   Gear[Gear beside notification bell] --> Menu[Settings menu]

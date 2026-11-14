@@ -16,7 +16,7 @@ describe('site cookie settings entry points', () => {
     expect(consent).toContain('變更 Cookie 設定');
     expect(consent).toContain('隱私權說明');
     expect(consent).toContain('href="/privacy/"');
-    expect(read('src/pages/privacy.astro')).toContain('Monetag 隱私權政策');
+    expect(read('src/pages/privacy.astro')).toContain('網站目前沒有顯示廣告');
   });
 
   it('keeps the fixed cookie notice anchored to the viewport on desktop', () => {

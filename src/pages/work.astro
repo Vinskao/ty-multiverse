@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import WritingGuide from '../components/WritingGuide.astro';
 import { readBlog } from '../services/server/blog';
 import { sortArticles } from '../scripts/work/catalog';
-import HomeAdPlacements from '../components/HomeAdPlacements.astro';
 let projects = [];
 let unavailable = false;
 try {
@@ -14,7 +13,6 @@ const latest = projects[0];
 ---
 <BaseLayout title="工程知識庫與開發紀錄 | TY Multiverse" description="TY Multiverse 的架構決策、實作紀錄與技術知識：從資料整合、AI 研究到部署驗證。" lang="zh-TW" indexable={!unavailable}>
   <div class="wrapper knowledge-page">
-    <HomeAdPlacements compact />
     <header class="knowledge-header">
       <p class="knowledge-eyebrow">TY MULTIVERSE / ENGINEERING</p>
       <h1 data-i18n="work.title">工程知識庫與開發紀錄</h1>
@@ -43,7 +41,6 @@ const latest = projects[0];
       <p id="article-empty" hidden data-i18n="work.empty">沒有符合條件的文章，請調整關鍵字或分類。</p>
     </section>
     <WritingGuide />
-    <HomeAdPlacements />
     <script type="application/json" id="article-catalog" set:html={JSON.stringify(projects).replace(/</g, '\u003c')} />
   </div>
   <script>

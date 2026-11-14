@@ -4,7 +4,6 @@ import { readBlog } from '../../services/server/blog';
 import { renderArticle } from '../../scripts/work/markdown';
 import ArticleSidebar from '../../components/ArticleSidebar.astro';
 import { sortArticles } from '../../scripts/work/catalog';
-import HomeAdPlacements from '../../components/HomeAdPlacements.astro';
 const slug = Astro.params.slug || '';
 let article;
 let status = 200;
@@ -22,12 +21,10 @@ const html = article ? renderArticle(article.content) : '';
   <div class="wrapper knowledge-page knowledge-detail knowledge-split">
     <ArticleSidebar projects={catalog} currentId={slug} />
     <div class="knowledge-article">
-    <HomeAdPlacements compact />
     {article ? <>
       <header class="knowledge-header"><p class="knowledge-eyebrow">{article.category} / ENGINEERING NOTES</p><h1>{article.title}</h1><p class="knowledge-intro">{article.description}</p><time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
       <article class="knowledge-prose" set:html={html} />
     </> : <h1>{status === 404 ? '找不到文章' : '文章服務暫時無法使用，請稍後再試。'}</h1>}
     </div>
   </div>
-  <HomeAdPlacements />
 </BaseLayout>
