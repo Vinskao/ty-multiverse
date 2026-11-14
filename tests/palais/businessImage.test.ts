@@ -125,22 +125,22 @@ describe('group page basket hiking button', () => {
   });
 });
 
-import { cycleVariantIndex } from '../../src/scripts/palais/businessImage';
-
 describe('numbered sets (nameBusiness, nameBusiness2, ...)', () => {
   it('numbers sets from 2 and keeps set 1 unnumbered', () => {
     expect(peopleImageUrl(BASE, 'Wavo', '1', 'business', 1)).toBe(`${BASE}/WavoBusiness.png?t=1`);
     expect(peopleImageUrl(BASE, 'Wavo', '1', 'business', 2)).toBe(`${BASE}/WavoBusiness2.png?t=1`);
     expect(peopleImageUrl(BASE, 'Wavo', '1', 'hiking', 3)).toBe(`${BASE}/WavoHiking3.png?t=1`);
   });
-  it('cycles forward and wraps to the first set', async () => {
-    const has = async (i: number) => i <= 3;
-    expect(await cycleVariantIndex(1, 1, has)).toBe(2);
-    expect(await cycleVariantIndex(3, 1, has)).toBe(1);
+});
+
+describe('resolveImageUrl with a set number', () => {
+  it('stays on the highest set the character has when the requested one is missing', async () => {
+    const have = new Set([`${BASE}/WavoBusiness.png?t=1`]);
+    const url = await resolveImageUrl({ base: BASE, name: 'Wavo', timestamp: '1', variant: 'business', index: 3, exists: async (u) => have.has(u) });
+    expect(url).toBe(`${BASE}/WavoBusiness.png?t=1`);
   });
-  it('cycles backward and wraps to the last existing set', async () => {
-    const has = async (i: number) => i <= 3;
-    expect(await cycleVariantIndex(3, -1, has)).toBe(2);
-    expect(await cycleVariantIndex(1, -1, has)).toBe(3);
+  it('uses the exact set when present', async () => {
+    const url = await resolveImageUrl({ base: BASE, name: 'Wavo', timestamp: '1', variant: 'business', index: 2, exists: async () => true });
+    expect(url).toBe(`${BASE}/WavoBusiness2.png?t=1`);
   });
 });

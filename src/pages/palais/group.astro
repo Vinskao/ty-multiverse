@@ -416,16 +416,6 @@ if (!isLoggedIn) {
     color: #080908;
   }
 
-  #cart-items > .pg-draggable { position: relative; }
-  #cart-items .pg-variant-nav {
-    position: absolute; left: 0; right: 0; top: 4px; z-index: 5;
-    display: flex; justify-content: space-between; padding: 0 4px; pointer-events: none;
-  }
-  #cart-items .pg-variant-nav button {
-    pointer-events: auto; width: 22px; height: 22px; border-radius: 50%; border: 0; cursor: pointer;
-    background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 16px; line-height: 1;
-  }
-
   /* 最小化：滿版橫幅只留標題列 */
   #palais-cart.minimized #cart-items,
   #palais-cart.minimized #cart-business,
@@ -704,7 +694,7 @@ if (!isLoggedIn) {
   import '../../scripts/palaisMediaZoom';
   import { reversePlay, type ReversePlayHandle } from '../../scripts/videoRewind';
   import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
-  import { cycleVariantIndex, peopleImageUrl, resolveImageUrl, type ImageVariant } from '../../scripts/palais/businessImage';
+  import { peopleImageUrl, resolveImageUrl, type ImageVariant } from '../../scripts/palais/businessImage';
   import { enableTouchDrag } from '../../scripts/palais/touchDrag';
   import {
     buildIndex,
@@ -748,22 +738,11 @@ if (!isLoggedIn) {
       localStorage.setItem(HIKING_KEY, cartVariant === 'hiking' ? '1' : '0');
     } catch { /* storage blocked */ }
   }
-  // 每個人各自記住目前套裝編號（1 = nameBusiness、2 = nameBusiness2…）。
-  const VARIANT_INDEX_KEY = 'palais-cart-variant-index';
-  function loadVariantIndexes(): Record<string, number> {
-    try { return JSON.parse(localStorage.getItem(VARIANT_INDEX_KEY) || '{}'); } catch { return {}; }
-  }
-  function variantIndexOf(name: string): number {
-    const value = Number(loadVariantIndexes()[`${cartVariant}:${name}`]);
-    return value >= 1 ? value : 1;
-  }
-  function saveVariantIndex(name: string, index: number) {
-    try {
-      const all = loadVariantIndexes();
-      all[`${cartVariant}:${name}`] = index;
-      localStorage.setItem(VARIANT_INDEX_KEY, JSON.stringify(all));
-    } catch { /* storage blocked */ }
-  }
+  // 套裝編號是全菜籃共用的：商務／越野按第 N 次就是第 N 套；某角色沒有第 N 套時維持他最後一套。
+  const SET_INDEX_KEY = 'palais-cart-set-index';
+  let cartSetIndex = 1;
+  try { cartSetIndex = Math.max(1, Number(localStorage.getItem(SET_INDEX_KEY)) || 1); } catch { /* storage blocked */ }
+  function saveSetIndex() { try { localStorage.setItem(SET_INDEX_KEY, String(cartSetIndex)); } catch { /* storage blocked */ } }
   const imageExistsCache = new Map<string, Promise<boolean>>();
   // 用載入圖片的方式確認圖是否存在（而不是直接換 src）：卡片圖片的 onerror 會把整張卡移除，
   // 所以絕不能把 src 指到可能 404 的商務圖網址。
@@ -787,47 +766,25 @@ if (!isLoggedIn) {
     if (!img || !name) return;
     if (!card.dataset.originalSrc) card.dataset.originalSrc = img.src;
     const original = card.dataset.originalSrc;
+    const index = cartSetIndex;
     const target = variant
-      ? await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp: characterService.getMediaTimestamp(), variant, index: variantIndexOf(name), exists: imageExists })
+      ? await resolveImageUrl({ base: PEOPLE_IMAGE_URL, name, timestamp: characterService.getMediaTimestamp(), variant, index: cartSetIndex, exists: imageExists })
       : original;
     // 等待期間若使用者已切換版本、或這張卡已離開菜籃，就不要再套用
-    if (variant && (variant !== cartVariant || card.parentElement?.id !== 'cart-items')) return;
+    if (variant && (variant !== cartVariant || index !== cartSetIndex || card.parentElement?.id !== 'cart-items')) return;
     if (img.src !== target) img.src = target;
   }
-  // 卡片上的前／後切換鈕：只在套裝模式、且該角色有第 2 套以上時出現。
-  function removeVariantNav(card: HTMLElement) {
-    card.querySelector(':scope > .pg-variant-nav')?.remove();
-  }
-  function ensureVariantNav(card: HTMLElement) {
-    const name = card.dataset.name;
-    if (!name || card.parentElement?.id !== 'cart-items' || card.querySelector(':scope > .pg-variant-nav')) return;
-    const nav = document.createElement('div');
-    nav.className = 'pg-variant-nav';
-    for (const [label, dir] of [['‹', -1], ['›', 1]] as const) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = label;
-      btn.title = dir === 1 ? '下一套' : '上一套';
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!cartVariant) { cartVariant = 'business'; saveCartVariant(); applyVariantMode(); }
-        const stamp = characterService.getMediaTimestamp();
-        const next = await cycleVariantIndex(variantIndexOf(name), dir, (i) => imageExists(peopleImageUrl(PEOPLE_IMAGE_URL, name, stamp, cartVariant, i)));
-        saveVariantIndex(name, next);
-        applyVariantMode();
-      });
-      btn.addEventListener('mousedown', (e) => e.stopPropagation());
-      nav.appendChild(btn);
-    }
-    card.appendChild(nav);
-  }
   function applyVariantMode() {
-    document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable').forEach(ensureVariantNav);
     document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable').forEach((card) => {
       void syncCardImage(card, cartVariant);
     });
-    document.getElementById('cart-business')?.setAttribute('aria-pressed', cartVariant === 'business' ? 'true' : 'false');
-    document.getElementById('cart-hiking')?.setAttribute('aria-pressed', cartVariant === 'hiking' ? 'true' : 'false');
+    const label = (kind: ImageVariant, text: string) => (cartVariant === kind && cartSetIndex > 1 ? `${text} ${cartSetIndex}` : text);
+    const biz = document.getElementById('cart-business');
+    const hike = document.getElementById('cart-hiking');
+    biz?.setAttribute('aria-pressed', cartVariant === 'business' ? 'true' : 'false');
+    hike?.setAttribute('aria-pressed', cartVariant === 'hiking' ? 'true' : 'false');
+    if (biz) biz.textContent = label('business', '商務');
+    if (hike) hike.textContent = label('hiking', '越野');
   }
   const GROUP_ORDER_KEY = 'palais-group-order-v1';
 
@@ -935,13 +892,11 @@ if (!isLoggedIn) {
     syncArmyEmptyState(prevParent?.closest('.army-container') || null);
     updateCartCount();
     refreshPlaybackNeighbours();
-    ensureVariantNav(card);
     if (cartVariant) void syncCardImage(card, cartVariant);
   }
   function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
     const grid = armyContainer.querySelector('.box-container');
     if (!grid || !card) return;
-    removeVariantNav(card);
     void syncCardImage(card, null);
     grid.appendChild(card);
     scheduleCharacterInfoLayout();
@@ -1051,7 +1006,6 @@ if (!isLoggedIn) {
     if (!items) return;
     Array.from(items.children).forEach((node) => {
       const card = node as HTMLElement;
-      removeVariantNav(card);
       void syncCardImage(card, null);
       const container = findArmyContainer(card.dataset.army || '');
       const grid = container?.querySelector('.box-container');
@@ -1147,16 +1101,21 @@ if (!isLoggedIn) {
       if (draggedCard) moveCardToCart(draggedCard);
     });
     document.getElementById('cart-download')?.addEventListener('click', () => { void downloadCartRow(); });
-    document.getElementById('cart-business')?.addEventListener('click', () => {
-      cartVariant = cartVariant === 'business' ? null : 'business';
-      saveCartVariant();
-      applyVariantMode();
-    });
-    document.getElementById('cart-hiking')?.addEventListener('click', () => {
-      cartVariant = cartVariant === 'hiking' ? null : 'hiking';
-      saveCartVariant();
-      applyVariantMode();
-    });
+    // 已開啟時再按一次 = 下一套；沒有任何角色有那一套就回到第 1 套。
+    async function pressVariant(kind: ImageVariant) {
+      if (cartVariant !== kind) { cartVariant = kind; cartSetIndex = 1; }
+      else {
+        const next = cartSetIndex + 1;
+        const stamp = characterService.getMediaTimestamp();
+        const cards = Array.from(document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable'));
+        const found = await Promise.all(cards.map((c) => c.dataset.name ? imageExists(peopleImageUrl(PEOPLE_IMAGE_URL, c.dataset.name, stamp, kind, next)) : false));
+        cartSetIndex = found.some(Boolean) ? next : 0;
+        if (!cartSetIndex) { cartVariant = null; cartSetIndex = 1; }
+      }
+      saveCartVariant(); saveSetIndex(); applyVariantMode();
+    }
+    document.getElementById('cart-business')?.addEventListener('click', () => { void pressVariant('business'); });
+    document.getElementById('cart-hiking')?.addEventListener('click', () => { void pressVariant('hiking'); });
     applyVariantMode();
     const clearBtn = document.getElementById('cart-clear');
     if (clearBtn) clearBtn.addEventListener('click', clearCart);

@@ -40,25 +40,21 @@ export interface ResolveImageOptions {
   exists: (url: string) => Promise<boolean>;
 }
 
-/** The requested variant when present, otherwise the original image. Never throws. */
+/**
+ * Set `index` of the variant, or the closest lower set the character has (so a character with only set 1 stays on it
+ * while others reach set 2, 3...), or the original when it has no such set at all. Never throws.
+ */
 export async function resolveImageUrl({ base, name, timestamp, variant, business, index = 1, exists }: ResolveImageOptions): Promise<string> {
   const original = peopleImageUrl(base, name, timestamp, null);
   const picked = toVariant(variant ?? business);
   if (!picked) return original;
-  const variantUrl = peopleImageUrl(base, name, timestamp, picked, index);
-  try {
-    return (await exists(variantUrl)) ? variantUrl : original;
-  } catch {
-    return original;
+  for (let i = index; i >= 1; i -= 1) {
+    const url = peopleImageUrl(base, name, timestamp, picked, i);
+    try {
+      if (await exists(url)) return url;
+    } catch {
+      return original;
+    }
   }
-}
-
-/** The next/previous existing set, wrapping around. Sets are assumed contiguous (1, 2, 3...). */
-export async function cycleVariantIndex(current: number, direction: 1 | -1, exists: (index: number) => Promise<boolean>): Promise<number> {
-  const next = current + direction;
-  if (direction === 1) return next <= MAX_VARIANT_SETS && (await exists(next)) ? next : 1;
-  if (next >= 1) return next;
-  let last = 1;
-  while (last < MAX_VARIANT_SETS && (await exists(last + 1))) last += 1;
-  return last;
+  return original;
 }
