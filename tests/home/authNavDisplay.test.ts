@@ -23,7 +23,6 @@ it('centres the label in the stylesheet and keeps it centred even if a script se
 it('keeps the right-hand nav controls visible between 50em and 66em', () => {
   const css = readFileSync(resolve(process.cwd(), 'src/styles/nav.css'), 'utf8');
   const block = css.slice(css.indexOf('@media (min-width: 50em) and (max-width: 65.99em)'));
-  expect(block.slice(0, block.indexOf('
-}')).includes('.site-title-text { display: none; }')).toBe(true);
+  expect(block.slice(0, block.search(/\}\s*\}/)).includes('.site-title-text { display: none; }')).toBe(true);
   expect(readFileSync(resolve(process.cwd(), 'src/components/Nav.astro'), 'utf8')).toContain('<span class="site-title-text">TY Multiverse</span>');
 });
