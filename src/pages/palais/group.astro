@@ -418,7 +418,7 @@ if (!isLoggedIn) {
 
   #cart-items > .pg-draggable { position: relative; }
   #cart-items .pg-variant-nav {
-    position: absolute; left: 0; right: 0; bottom: 4px;
+    position: absolute; left: 0; right: 0; top: 4px; z-index: 5;
     display: flex; justify-content: space-between; padding: 0 4px; pointer-events: none;
   }
   #cart-items .pg-variant-nav button {
@@ -793,16 +793,15 @@ if (!isLoggedIn) {
     // 等待期間若使用者已切換版本、或這張卡已離開菜籃，就不要再套用
     if (variant && (variant !== cartVariant || card.parentElement?.id !== 'cart-items')) return;
     if (img.src !== target) img.src = target;
-    void syncVariantNav(card, variant, name);
   }
   // 卡片上的前／後切換鈕：只在套裝模式、且該角色有第 2 套以上時出現。
-  async function syncVariantNav(card: HTMLElement, variant: ImageVariant | null, name: string) {
-    let nav = card.querySelector<HTMLElement>(':scope > .pg-variant-nav');
-    const hasMany = variant && card.parentElement?.id === 'cart-items'
-      && (await imageExists(peopleImageUrl(PEOPLE_IMAGE_URL, name, characterService.getMediaTimestamp(), variant, 2)));
-    if (!hasMany) { nav?.remove(); return; }
-    if (nav) return;
-    nav = document.createElement('div');
+  function removeVariantNav(card: HTMLElement) {
+    card.querySelector(':scope > .pg-variant-nav')?.remove();
+  }
+  function ensureVariantNav(card: HTMLElement) {
+    const name = card.dataset.name;
+    if (!name || card.parentElement?.id !== 'cart-items' || card.querySelector(':scope > .pg-variant-nav')) return;
+    const nav = document.createElement('div');
     nav.className = 'pg-variant-nav';
     for (const [label, dir] of [['‹', -1], ['›', 1]] as const) {
       const btn = document.createElement('button');
@@ -811,11 +810,11 @@ if (!isLoggedIn) {
       btn.title = dir === 1 ? '下一套' : '上一套';
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!cartVariant) return;
+        if (!cartVariant) { cartVariant = 'business'; saveCartVariant(); applyVariantMode(); }
         const stamp = characterService.getMediaTimestamp();
         const next = await cycleVariantIndex(variantIndexOf(name), dir, (i) => imageExists(peopleImageUrl(PEOPLE_IMAGE_URL, name, stamp, cartVariant, i)));
         saveVariantIndex(name, next);
-        void syncCardImage(card, cartVariant);
+        applyVariantMode();
       });
       btn.addEventListener('mousedown', (e) => e.stopPropagation());
       nav.appendChild(btn);
@@ -823,6 +822,7 @@ if (!isLoggedIn) {
     card.appendChild(nav);
   }
   function applyVariantMode() {
+    document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable').forEach(ensureVariantNav);
     document.querySelectorAll<HTMLElement>('#cart-items > .pg-draggable').forEach((card) => {
       void syncCardImage(card, cartVariant);
     });
@@ -935,11 +935,13 @@ if (!isLoggedIn) {
     syncArmyEmptyState(prevParent?.closest('.army-container') || null);
     updateCartCount();
     refreshPlaybackNeighbours();
+    ensureVariantNav(card);
     if (cartVariant) void syncCardImage(card, cartVariant);
   }
   function moveCardToArmy(card: HTMLElement, armyContainer: HTMLElement) {
     const grid = armyContainer.querySelector('.box-container');
     if (!grid || !card) return;
+    removeVariantNav(card);
     void syncCardImage(card, null);
     grid.appendChild(card);
     scheduleCharacterInfoLayout();
@@ -1049,6 +1051,7 @@ if (!isLoggedIn) {
     if (!items) return;
     Array.from(items.children).forEach((node) => {
       const card = node as HTMLElement;
+      removeVariantNav(card);
       void syncCardImage(card, null);
       const container = findArmyContainer(card.dataset.army || '');
       const grid = container?.querySelector('.box-container');
