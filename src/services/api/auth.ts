@@ -512,6 +512,17 @@ function getJwtExpiry(token: string): number | null {
   }
 }
 let lastToken = null; // 追踪上一次驗證的 token
+
+/** 另一個分頁可能已經換到新 token（localStorage 共用）；有就沿用，不要因為這個分頁手上的舊 token 被拒而登出。 */
+function adoptTokensFromAnotherTab(rejected: string) {
+  const stored = typeof window !== 'undefined' ? localStorage.getItem(storageService.KEYS.TOKEN) : null;
+  const storedRefresh = typeof window !== 'undefined' ? localStorage.getItem(storageService.KEYS.REFRESH_TOKEN) : null;
+  const expiresAt = stored ? getJwtExpiry(stored) : null;
+  if (stored && stored !== rejected && storedRefresh && expiresAt && expiresAt > Date.now()) {
+    return { valid: true, tokenRefreshed: true, accessToken: stored, refreshToken: storedRefresh };
+  }
+  return { valid: false, tokenRefreshed: false, accessToken: null, refreshToken: null };
+}
 let verificationTimer: number | null = null; // Token refresh/verification timeout
 
 /**
@@ -602,45 +613,30 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
       serviceAvailabilityManager.block(SERVICE_KEYS.GATEWAY);
     }
 
-    // 處理錯誤響應（400, 401 等）
+    // 2026-11-16：只有 400/401（session 真的沒了）才登出。5xx／429 是 gateway 重啟、部署或 Keycloak 短暫異常，
+    // 先保留登入、稍後再試（getTokenVerificationDelay 對已過期 token 會 15 秒後重試），避免「每隔不久就被登出」。
     if (!response.ok) {
-      // 只有非 400/401 錯誤才打印詳細日誌
       if (response.status !== 400 && response.status !== 401) {
-        const errorText = await response.text();
-        console.error(`Token 驗證失敗: HTTP ${response.status} - ${errorText}`);
+        console.warn(`Token 驗證暫時失敗（HTTP ${response.status}），保留登入稍後重試`);
+        return { valid: true, tokenRefreshed: false, accessToken: token, refreshToken: refreshToken };
       }
-      
-      // 如果是 400 或 401，token 無效
-      if (response.status === 400 || response.status === 401) {
-        return {
-          valid: false,
-          tokenRefreshed: false,
-          accessToken: null,
-          refreshToken: null
-        };
-      }
-      
-      // 其他錯誤也視為無效
-      return {
-        valid: false,
-        tokenRefreshed: false,
-        accessToken: null,
-        refreshToken: null
-      };
+      return adoptTokensFromAnotherTab(token);
     }
 
     if (response.ok) {
       const data = await response.json();
 
-      // 檢查 token 是否有效
-      if (data.active) {
+      // 檢查 token 是否有效。gateway 用 refresh token 換到新 token 時回的是 Keycloak token 回應（有 access_token、沒有 active），
+      // 2026-11-16 前這種情況被當成無效而登出：access token 每 25 分鐘過期，分頁在背景錯過續期就會被踢出去。
+      if (data.active || data.access_token) {
         // 如果是新的 token，就更新前端儲存的 token
         if (data.access_token) {
           // 保存新的 token 到 storageService（僅在瀏覽器環境中）
+          // 用原始字串寫入：storageService.set 會 JSON 加引號，其他腳本用 getItem 讀會拿到 "\"eyJ…\"" 而送出壞 token
           if (typeof window !== 'undefined') {
-            storageService.set(storageService.KEYS.TOKEN, data.access_token);
+            localStorage.setItem(storageService.KEYS.TOKEN, data.access_token);
             if (data.refresh_token) {
-              storageService.set(storageService.KEYS.REFRESH_TOKEN, data.refresh_token);
+              localStorage.setItem(storageService.KEYS.REFRESH_TOKEN, data.refresh_token);
             }
           }
           return {
@@ -653,9 +649,9 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
 
         // 保存當前的 token 到 storageService（僅在瀏覽器環境中）
         if (typeof window !== 'undefined') {
-          storageService.set(storageService.KEYS.TOKEN, token);
+          localStorage.setItem(storageService.KEYS.TOKEN, token);
           if (refreshToken) {
-            storageService.set(storageService.KEYS.REFRESH_TOKEN, refreshToken);
+            localStorage.setItem(storageService.KEYS.REFRESH_TOKEN, refreshToken);
           }
         }
         return {
@@ -666,12 +662,7 @@ async function verifyToken(token: string, refreshToken: string): Promise<{
         };
       }
     }
-    return {
-      valid: false,
-      tokenRefreshed: false,
-      accessToken: null,
-      refreshToken: null
-    };
+    return adoptTokensFromAnotherTab(token);
   } catch (error) {
     console.warn('Token verification skipped after network/client error:', error);
     return {
