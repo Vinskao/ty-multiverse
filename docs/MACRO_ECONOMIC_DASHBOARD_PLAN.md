@@ -611,3 +611,25 @@ Jenkins只在部署secret階段使用`withCredentials`；不要把key寫進既�
 測試：
 - maya-sawa：`tests/test_market_macro_policy_rates.py`，用真實 BIS CSV 裁剪成 2026-06 起；`tests/test_market_macro_sources.py` 加上歐元。
 - 前端：`macroSeries.test.ts`（`fx-strength`、`macroCommonStart`）、`macroLayout.test.ts`、`macroGroups.test.ts`、`macroChains.test.ts`。
+
+## 台經院經濟預測（2026-11-15）
+
+新增「台灣經濟預測（台經院）」卡片，顯示兩個數字：經濟成長率預測（`TIER_TW_GDP_FORECAST`）和 CPI 年增率預測（`TIER_TW_CPI_FORECAST`）。每個數字都有兩期：明年的預測值，以及今年的修正值。
+
+```mermaid
+flowchart LR
+    T[台經院 macro_trends_annual.aspx 新聞稿] -->|每天最多抓 1 次，24 小時快取| P[parse_tier_forecast]
+    P -->|年度為期間：今年修正值、明年預測值| C[(免費序列快取＋重啟備份)]
+    C --> A[/market/macro API/]
+    A --> F[總經頁「台灣經濟預測（台經院）」卡片與圖]
+```
+
+**開發方法**
+
+- **資料來源：** 台經院的預測表只以圖片公布，所以數字從同一頁的新聞稿文字讀取，例如「2027年經濟成長率為6.45%，較2026年修正後的12.34%」「預測2027年CPI年增率為1.94%」。發布日期也從新聞稿讀，放進來源標籤（`TIER 2026-11-09`）。
+- **格式改版時：** 如果台經院改了網頁或新聞稿寫法，抓不到數字就直接報錯（`tier_forecast_not_found`），不會猜數字，原本快取的值保留 30 天。
+- **頻率：** 台經院約每季更新一次，所以一天最多抓 1 次。
+- **測試：**
+  - maya-sawa `tests/market/macro/test_market_macro_tier_forecast.py`：新聞稿 fixture、沒有修正值的寫法、找不到數字時報錯。
+  - frontend `tests/market/macroGroups.test.ts`：卡片與圖表。
+- **來源：** [台經院總體經濟預測](https://www.tier.org.tw/forecast/macro_trends_annual.aspx)

@@ -92,3 +92,12 @@ describe('every macro indicator is charted', () => {
         }
     });
 });
+
+describe('TIER economic forecast (2026-11-15)', () => {
+    it('has a Taiwan forecast card with TIER GDP and CPI forecasts as percent, charted together', () => {
+        expect(group('tw-forecast').metrics.map((m) => [m.code, m.format])).toEqual([
+            ['TIER_TW_GDP_FORECAST', 'percent'], ['TIER_TW_CPI_FORECAST', 'percent'],
+        ]);
+        expect(MACRO_MERGED_CHARTS['tw-forecast']).toEqual([['TIER_TW_GDP_FORECAST', 'TIER_TW_CPI_FORECAST']]);
+    });
+});

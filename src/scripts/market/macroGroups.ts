@@ -142,4 +142,9 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('TW_PMI', 'Taiwan manufacturing PMI', '台灣製造業 PMI', 'raw'),
         m('TW_NMI', 'Taiwan non-manufacturing NMI', '台灣非製造業 NMI', 'raw'),
     ] },
+    // TIER (台經院) publishes about four times a year: next year's forecast and this year's revised estimate.
+    { id: 'tw-forecast', eventGroups: [], title: { en: 'Taiwan economic forecast (TIER)', zh: '台灣經濟預測（台經院）' }, metrics: [
+        m('TIER_TW_GDP_FORECAST', 'Taiwan GDP growth forecast (TIER)', '台經院 經濟成長率預測', 'percent'),
+        m('TIER_TW_CPI_FORECAST', 'Taiwan CPI inflation forecast (TIER)', '台經院 CPI 年增率預測', 'percent'),
+    ] },
 ];

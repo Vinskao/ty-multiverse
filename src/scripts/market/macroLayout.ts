@@ -35,6 +35,7 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     credit: [['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y'], ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'], ['STLFSI4', 'NFCI']],
     'taiwan-employment': [['TW_EMPLOYED', 'TW_UNEMPLOYED']],
     pmi: [['TW_PMI', 'TW_NMI']],
+    'tw-forecast': [['TIER_TW_GDP_FORECAST', 'TIER_TW_CPI_FORECAST']],
     // Gold and oil histories in one chart. TPEx publishes only the latest Taiwan spot quote (tile only), so gold's
     // trend comes from COMEX futures, or the World Bank monthly average if COMEX is unavailable.
     commodities: [['COMEX_GOLD_USD|WORLD_GOLD_USD', 'WTI_CRUDE_USD|DCOILWTICO']],
