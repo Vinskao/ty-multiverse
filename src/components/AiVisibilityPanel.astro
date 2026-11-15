@@ -8,13 +8,7 @@
   <div class="ai-visibility-scroll"><table id="ai-visibility-table" class="ai-visibility-table"></table></div>
   <p id="ai-visibility-trend" class="ai-visibility-note"></p>
   <ul id="ai-visibility-fixes" class="ai-visibility-note"></ul>
-  <details class="ai-visibility-manual">
-    <summary>填本週手動檢視（ChatGPT／Grok／Gemini／Claude）</summary>
-    <p class="ai-visibility-note">用各平台網頁（建議登出或無痕）逐字輸入關鍵字。名次＝tymultiverse.cc 是第幾個被引用的來源；沒查的格子留「未查」。</p>
-    <form id="ai-visibility-manual-form"><div class="ai-visibility-scroll"><table id="ai-visibility-manual-table" class="ai-visibility-table"></table></div>
-      <button type="submit">儲存手動結果</button> <span id="ai-visibility-manual-status" role="status"></span></form>
-  </details>
-  <p class="ai-visibility-note">試跑 4 週（至 2026-12-15）：每週 3 個關鍵字（1 固定＋2 輪替）× 4 平台＝12 次。四家都請在週五或週日深夜用臨時聊天＋網頁搜尋手動查、在這裡填；週一 04:30 Claude 審核並依結果修繕網站。</p>
+  <p class="ai-visibility-note">試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。</p>
 </section>
 <style>
   .ai-visibility { padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--gray-600, #777); border-radius: 1rem; display: grid; gap: 0.75rem; min-width: 0; }
@@ -27,7 +21,7 @@
   .ai-visibility-note { font-size: 0.85rem; opacity: 0.8; margin: 0; padding-left: 0; list-style-position: inside; }
 </style>
 <script>
-  import { MANUAL_PLATFORMS, PLATFORM_NAMES, cellLabel, headline, manualResults, platformLine, type ManualCell, type VisibilityView } from '../scripts/palais/aiVisibility';
+  import { PLATFORM_NAMES, cellLabel, headline, platformLine, type VisibilityView } from '../scripts/palais/aiVisibility';
 
   const token = () => window.localStorage.getItem('token') || window.localStorage.getItem('accessToken');
   async function loadAiVisibility() {
@@ -64,41 +58,8 @@
     const fixes = document.getElementById('ai-visibility-fixes')!;
     fixes.replaceChildren();
     view.fixes.forEach((f) => f.items.forEach((item) => { const li = document.createElement('li'); li.textContent = `修繕：${item}`; fixes.appendChild(li); }));
-    renderManual(view.thisWeek ?? [], bearer);
   }
 
-  function renderManual(keywords: string[], bearer: string) {
-    const table = document.getElementById('ai-visibility-manual-table') as HTMLTableElement | null;
-    const form = document.getElementById('ai-visibility-manual-form') as HTMLFormElement | null;
-    if (!table || !form) return;
-    table.replaceChildren();
-    const head = table.insertRow();
-    ['關鍵字', '平台', '結果', '名次', '附連結'].forEach((t) => { const th = document.createElement('th'); th.textContent = t; head.appendChild(th); });
-    keywords.forEach((keyword) => MANUAL_PLATFORMS.forEach((platform) => {
-      const tr = table.insertRow();
-      tr.dataset.keyword = keyword; tr.dataset.platform = platform;
-      tr.insertCell().textContent = keyword;
-      tr.insertCell().textContent = PLATFORM_NAMES[platform];
-      tr.insertCell().innerHTML = '<select data-f="outcome"><option value="">未查</option><option value="appeared">出現</option><option value="absent">未出現</option><option value="unavailable">無法檢視</option></select>';
-      tr.insertCell().innerHTML = '<input data-f="rank" type="number" min="1" max="20" inputmode="numeric" style="width:4rem" />';
-      tr.insertCell().innerHTML = '<input data-f="cited" type="checkbox" />';
-    }));
-    form.onsubmit = async (event) => {
-      event.preventDefault();
-      const status = document.getElementById('ai-visibility-manual-status')!;
-      const cells: ManualCell[] = [...table.querySelectorAll<HTMLTableRowElement>('tr[data-keyword]')].map((tr) => ({
-        keyword: tr.dataset.keyword!, platform: tr.dataset.platform!,
-        outcome: tr.querySelector<HTMLSelectElement>('[data-f="outcome"]')!.value as ManualCell['outcome'],
-        rank: tr.querySelector<HTMLInputElement>('[data-f="rank"]')!.value,
-        cited: tr.querySelector<HTMLInputElement>('[data-f="cited"]')!.checked,
-      }));
-      const results = manualResults(cells);
-      if (!results.length) { status.textContent = '沒有填任何格子'; return; }
-      const response = await fetch('/api/market/ai-visibility', { method: 'POST', headers: { Authorization: `Bearer ${bearer}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ results }) }).catch(() => null);
-      status.textContent = response?.ok ? `已儲存 ${results.length} 格` : `儲存失敗（${response?.status ?? '網路'}）`;
-      if (response?.ok) loadAiVisibility();
-    };
-  }
   document.addEventListener('astro:page-load', loadAiVisibility);
   loadAiVisibility();
 </script>

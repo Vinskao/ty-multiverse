@@ -28,22 +28,10 @@ export function cellLabel(cell: Cell): string {
 
 export function platformLine(platform: string, totals: PlatformTotals | undefined): string {
   const name = PLATFORM_NAMES[platform] ?? platform;
+  if (!AUTO_PLATFORMS.includes(platform) && !totals?.checked) return `${name} 暫停（需 API 額度）`;
   if (!totals || !totals.checked) return `${name} 無法檢視`;
   return `${name} ${totals.appeared}/${totals.checked}${totals.bestRank ? ` · #${totals.bestRank}` : ''}`;
 }
 
-export const MANUAL_PLATFORMS = ['chatgpt', 'grok', 'gemini', 'claude'];
-export type ManualCell = { keyword: string; platform: string; outcome: '' | 'appeared' | 'absent' | 'unavailable'; rank: string; cited: boolean };
-
-/** The owner's weekly manual checks become API results; cells left blank were not checked and are not sent. */
-export function manualResults(cells: ManualCell[]) {
-  return cells.filter((c) => c.outcome).map((c) => {
-    const appeared = c.outcome === 'appeared';
-    const rank = Number(c.rank);
-    return {
-      keyword: c.keyword, platform: c.platform, status: c.outcome === 'unavailable' ? 'unavailable' : 'checked', appeared,
-      rank: appeared && c.rank !== '' && Number.isInteger(rank) && rank >= 1 && rank <= 20 ? rank : null,
-      cited: appeared && c.cited, snippet: '', competitors: [] as string[],
-    };
-  });
-}
+/** Checked without the owner: Gemini by the backend's free API probe, Claude by the Monday routine. ChatGPT / Grok need paid API credit. */
+export const AUTO_PLATFORMS = ['gemini', 'claude'];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MANUAL_PLATFORMS, cellLabel, headline, manualResults, platformLine, type VisibilityView } from '../../src/scripts/palais/aiVisibility';
+import { AUTO_PLATFORMS, cellLabel, headline, platformLine, type VisibilityView } from '../../src/scripts/palais/aiVisibility';
 
 const view = (over: Partial<VisibilityView> = {}): VisibilityView => ({
   latest: { id: 'a', at: '2026-11-17T19:00:00+00:00', checked: 8, appeared: 2, unavailable: 4, bestRank: 3 },
@@ -36,27 +36,13 @@ describe('AI visibility dashboard text', () => {
   });
 });
 
-describe('manual entry for Grok / Gemini / Claude', () => {
-  it('turns the form into results and skips cells left unchecked', () => {
-    expect(manualResults([
-      { keyword: 'k', platform: 'grok', outcome: 'appeared', rank: '2', cited: true },
-      { keyword: 'k', platform: 'gemini', outcome: 'absent', rank: '', cited: false },
-      { keyword: 'k', platform: 'claude', outcome: 'unavailable', rank: '', cited: false },
-      { keyword: 'j', platform: 'grok', outcome: '', rank: '', cited: false },
-    ])).toEqual([
-      { keyword: 'k', platform: 'grok', status: 'checked', appeared: true, rank: 2, cited: true, snippet: '', competitors: [] },
-      { keyword: 'k', platform: 'gemini', status: 'checked', appeared: false, rank: null, cited: false, snippet: '', competitors: [] },
-      { keyword: 'k', platform: 'claude', status: 'unavailable', appeared: false, rank: null, cited: false, snippet: '', competitors: [] },
-    ]);
+describe('fully automatic checks (2026-11-15)', () => {
+  it('only Gemini and Claude are checked automatically', () => {
+    expect(AUTO_PLATFORMS).toEqual(['gemini', 'claude']);
   });
 
-  it('drops a rank outside 1-20 instead of sending it', () => {
-    expect(manualResults([{ keyword: 'k', platform: 'grok', outcome: 'appeared', rank: '50', cited: false }])[0].rank).toBeNull();
-  });
-});
-
-describe('manual platforms', () => {
-  it('includes ChatGPT now that the GPT scheduled task cannot search', () => {
-    expect(MANUAL_PLATFORMS).toEqual(['chatgpt', 'grok', 'gemini', 'claude']);
+  it('shows ChatGPT and Grok as paused rather than unavailable', () => {
+    expect(platformLine('chatgpt', undefined)).toBe('ChatGPT 暫停（需 API 額度）');
+    expect(platformLine('gemini', undefined)).toBe('Gemini 無法檢視');
   });
 });
