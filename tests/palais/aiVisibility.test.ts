@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cellLabel, headline, manualResults, platformLine, type VisibilityView } from '../../src/scripts/palais/aiVisibility';
+import { MANUAL_PLATFORMS, cellLabel, headline, manualResults, platformLine, type VisibilityView } from '../../src/scripts/palais/aiVisibility';
 
 const view = (over: Partial<VisibilityView> = {}): VisibilityView => ({
   latest: { id: 'a', at: '2026-11-17T19:00:00+00:00', checked: 8, appeared: 2, unavailable: 4, bestRank: 3 },
@@ -52,5 +52,11 @@ describe('manual entry for Grok / Gemini / Claude', () => {
 
   it('drops a rank outside 1-20 instead of sending it', () => {
     expect(manualResults([{ keyword: 'k', platform: 'grok', outcome: 'appeared', rank: '50', cited: false }])[0].rank).toBeNull();
+  });
+});
+
+describe('manual platforms', () => {
+  it('includes ChatGPT now that the GPT scheduled task cannot search', () => {
+    expect(MANUAL_PLATFORMS).toEqual(['chatgpt', 'grok', 'gemini', 'claude']);
   });
 });

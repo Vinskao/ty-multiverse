@@ -32,7 +32,7 @@ export function platformLine(platform: string, totals: PlatformTotals | undefine
   return `${name} ${totals.appeared}/${totals.checked}${totals.bestRank ? ` · #${totals.bestRank}` : ''}`;
 }
 
-export const MANUAL_PLATFORMS = ['grok', 'gemini', 'claude'];
+export const MANUAL_PLATFORMS = ['chatgpt', 'grok', 'gemini', 'claude'];
 export type ManualCell = { keyword: string; platform: string; outcome: '' | 'appeared' | 'absent' | 'unavailable'; rank: string; cited: boolean };
 
 /** The owner's weekly manual checks become API results; cells left blank were not checked and are not sent. */
