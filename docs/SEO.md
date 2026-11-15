@@ -7,6 +7,7 @@
 - Sitemap 由 SSR route 產生，因 Astro sitemap integration 無法列出 SSR 動態路由。固定公開頁即使文章服務暫時離線仍會輸出；文章資料可用時再附上符合 slug 格式的公開文章 URL。
 - `robots.txt` 指向 sitemap 並減少 API 路徑的爬取。機器可讀的籌碼摘要與 `llms.txt` 保持可被明確請求，但透過 `X-Robots-Tag` 避免成為搜尋結果頁。
 - 共用 head 提供描述、canonical、Open Graph、X/Twitter 大型分享卡片與可縮放 viewport。首頁使用 `WebSite` JSON-LD 指定「TY 市場研究室」站名；沒有編造公司地址、評論、價格或金融服務資格。
+- `llms.txt` 說明「這是什麼站、給誰用」：TY 市場研究室、公開投資研究的統一入口、基金經理人與專業投資人、提供的內容與不提供的服務，並列出機器可讀與公開頁面。首頁 `WebSite` JSON-LD 帶 `description` 與 `audience`（2026-11-15，AI 曝光 W46；測試 `tests/seo/aiVisibilitySite.test.ts`）。
 - 分享預覽圖來源為 `public/assets/og-market-lab.svg`，部署使用 1200×630 PNG。修改圖稿後用專案 Sharp 重新輸出 `public/assets/og-market-lab.png`。
 
 ## 爬取與輸出流程
