@@ -15,3 +15,18 @@ export const GET: APIRoute = async ({ request }) => {
     return Response.json({ detail: 'AI visibility unavailable' }, { status: 502 });
   }
 };
+
+// Owner's manual Grok / Gemini / Claude checks.
+export const POST: APIRoute = async ({ request }) => {
+  const authorization = request.headers.get('authorization');
+  if (!authorization?.toLowerCase().startsWith('bearer ')) return Response.json({ detail: 'Bearer token required' }, { status: 401 });
+  try {
+    const response = await fetch(`${MAYA_SAWA_URL}/market/admin/ai-visibility/manual`, {
+      method: 'POST', body: await request.text(),
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: authorization }, signal: AbortSignal.timeout(15000),
+    });
+    return new Response(response.body, { status: response.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  } catch {
+    return Response.json({ detail: 'AI visibility unavailable' }, { status: 502 });
+  }
+};

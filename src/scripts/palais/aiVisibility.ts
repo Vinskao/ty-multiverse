@@ -4,7 +4,7 @@ export type Cell = { keyword: string; platform: string; status: string; appeared
 export type PlatformTotals = { checked: number; appeared: number; bestRank: number | null };
 export type VisibilityView = {
   latest: Totals | null; previous: Totals | null; byPlatform: Record<string, PlatformTotals>; cells: Cell[];
-  trend: Totals[]; pending: number; fixes: { runId: string; at: string | null; items: string[] }[];
+  trend: Totals[]; pending: number; week?: string; thisWeek?: string[]; fixes: { runId: string; at: string | null; items: string[] }[];
 };
 
 export const PLATFORM_NAMES: Record<string, string> = { chatgpt: 'ChatGPT', grok: 'Grok', gemini: 'Gemini', claude: 'Claude' };
@@ -30,4 +30,20 @@ export function platformLine(platform: string, totals: PlatformTotals | undefine
   const name = PLATFORM_NAMES[platform] ?? platform;
   if (!totals || !totals.checked) return `${name} 無法檢視`;
   return `${name} ${totals.appeared}/${totals.checked}${totals.bestRank ? ` · #${totals.bestRank}` : ''}`;
+}
+
+export const MANUAL_PLATFORMS = ['grok', 'gemini', 'claude'];
+export type ManualCell = { keyword: string; platform: string; outcome: '' | 'appeared' | 'absent' | 'unavailable'; rank: string; cited: boolean };
+
+/** The owner's weekly manual checks become API results; cells left blank were not checked and are not sent. */
+export function manualResults(cells: ManualCell[]) {
+  return cells.filter((c) => c.outcome).map((c) => {
+    const appeared = c.outcome === 'appeared';
+    const rank = Number(c.rank);
+    return {
+      keyword: c.keyword, platform: c.platform, status: c.outcome === 'unavailable' ? 'unavailable' : 'checked', appeared,
+      rank: appeared && c.rank !== '' && Number.isInteger(rank) && rank >= 1 && rank <= 20 ? rank : null,
+      cited: appeared && c.cited, snippet: '', competitors: [] as string[],
+    };
+  });
 }
