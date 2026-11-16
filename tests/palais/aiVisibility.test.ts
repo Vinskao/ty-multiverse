@@ -61,8 +61,8 @@ describe('social numbers', () => {
   });
 
   it('never shows a zero change before a week of history exists', () => {
-    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: null, firstDay: '2026-11-16' }))).toBe('自 11/16 起記錄，滿一週後顯示變化');
-    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: 1, firstDay: '2026-11-14' }))).toBe('+1（自 11/14，未滿一週）');
+    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: null, firstDay: '2026-11-16' }))).toBe('自 11/16 起記錄');
+    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: 1, firstDay: '2026-11-14' }))).toBe('+1（自 11/14 起）');
   });
 
   it('marks the direction for colouring', () => {

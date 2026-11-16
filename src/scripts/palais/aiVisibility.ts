@@ -5,11 +5,11 @@ export type PlatformTotals = { checked: number; appeared: number; bestRank: numb
 export type SocialItem = { platform: string; metric: string; label: string; value: number; asOf: string; weekChange: number | null; comparedWith: string | null; sinceFirst: number | null; firstDay: string };
 export type SocialView = { items: SocialItem[]; unavailable: { platform: string; reason: string }[]; today: string };
 
-/** "+3（較 11/09）", "持平（較 11/09）", or how long the comparison still has to wait. Never shows 0 when there is nothing to compare with. */
+/** "+3（較 11/09）", "持平（較 11/09）", or since when it is recorded. Never shows 0 when there is nothing to compare with. */
 export function socialChange(item: SocialItem): string {
   if (item.weekChange === null || !item.comparedWith) {
-    return item.sinceFirst === null ? `自 ${item.firstDay.slice(5).replace('-', '/')} 起記錄，滿一週後顯示變化`
-      : `${item.sinceFirst > 0 ? '+' : ''}${item.sinceFirst}（自 ${item.firstDay.slice(5).replace('-', '/')}，未滿一週）`;
+    return item.sinceFirst === null ? `自 ${item.firstDay.slice(5).replace('-', '/')} 起記錄`
+      : `${item.sinceFirst > 0 ? '+' : ''}${item.sinceFirst}（自 ${item.firstDay.slice(5).replace('-', '/')} 起）`;
   }
   const since = `較 ${item.comparedWith.slice(5).replace('-', '/')}`;
   if (item.weekChange === 0) return `持平（${since}）`;

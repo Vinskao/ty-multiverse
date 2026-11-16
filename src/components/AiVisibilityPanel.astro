@@ -33,7 +33,7 @@
   .aiv-headline { margin: 0; font-size: 0.9rem; opacity: 0.75; }
   .aiv-platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.6rem; }
   .aiv-card { border: 1px solid var(--aiv-line); border-radius: 0.75rem; padding: 0.6rem 0.8rem; display: grid; gap: 0.15rem; }
-  .aiv-card strong { font-size: 0.8rem; font-weight: 600; opacity: 0.75; }
+  .aiv-card strong { font-size: 0.8rem; font-weight: 600; opacity: 0.75; overflow-wrap: anywhere; }
   .aiv-card .num { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .aiv-card small { font-size: 0.75rem; opacity: 0.65; }
   .aiv-card.off { border-style: dashed; opacity: 0.5; }
@@ -145,8 +145,10 @@
         card.appendChild(el('small', undefined, socialChange(item)));
         box.appendChild(card);
       });
-      document.getElementById('ai-visibility-social-note')!.textContent = social.unavailable.length
-        ? `讀不到的數據：${social.unavailable.map((u) => u.reason).join('；')}。` : '';
+      const notes: string[] = [];
+      if (social.items.some((item) => item.weekChange === null)) notes.push('週變化需累積滿一週的紀錄才會顯示。');
+      if (social.unavailable.length) notes.push(`讀不到：${social.unavailable.map((u) => u.reason).join('；')}。`);
+      document.getElementById('ai-visibility-social-note')!.textContent = notes.join(' ');
     }
   }
 
