@@ -80,7 +80,9 @@ describe('market audio card title', () => {
 
   it('keeps voice tests labelled as tests and the Maya-pending note on titled episodes', () => {
     expect(marketAudioCardTitle({ ...daily, test: true, title: 'ignored', language: 'zh' })).toBe('Maya 試音');
-    expect(marketAudioCardTitle({ ...daily, mayaPending: true, title: '標題', language: 'zh' })).toBe('標題（Uiobbeci 市場分析，Maya 待定）');
+    expect(marketAudioCardTitle({ ...daily, mayaPending: true, title: '標題', language: 'zh' })).toBe('標題');
+    expect(marketAudioCardTitle({ ...daily, mayaPending: true, language: 'zh' })).not.toContain('待定');
+    expect(marketAudioCardTitle({ ...daily, mayaPending: true, language: 'en' })).not.toContain('pending');
   });
 
   it('keeps the existing labels for macro and stock audio, which have no episode title', () => {

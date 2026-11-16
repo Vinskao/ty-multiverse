@@ -19,7 +19,7 @@ export function marketAudioCardTitle(input: MarketAudioCardTitleInput): string {
   const heading = !input.test && episodeTitle
     ? episodeTitle
     : `${presenter} ${input.test ? (zh ? '試音' : 'Voice Test') : (zh ? '每日精讀' : 'Daily Reading')}`;
-  return input.mayaPending ? heading + (zh ? '（Uiobbeci 市場分析，Maya 待定）' : ' (Uiobbeci market analysis; Maya pending)') : heading;
+  return heading;
 }
 
 export function marketAudioDay(day: string | undefined, language: 'zh' | 'en'): string | null {
