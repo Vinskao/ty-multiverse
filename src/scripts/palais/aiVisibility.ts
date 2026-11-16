@@ -2,9 +2,28 @@
 export type Totals = { id: string; at: string; checked: number; appeared: number; unavailable: number; bestRank: number | null };
 export type Cell = { keyword: string; platform: string; status: string; appeared: boolean; rank: number | null; cited: boolean; snippet: string; competitors: string[]; change: string };
 export type PlatformTotals = { checked: number; appeared: number; bestRank: number | null };
+export type SocialItem = { platform: string; metric: string; label: string; value: number; asOf: string; weekChange: number | null; comparedWith: string | null; sinceFirst: number | null; firstDay: string };
+export type SocialView = { items: SocialItem[]; unavailable: { platform: string; reason: string }[]; today: string };
+
+/** "+3（較 11/09）", "持平（較 11/09）", or how long the comparison still has to wait. Never shows 0 when there is nothing to compare with. */
+export function socialChange(item: SocialItem): string {
+  if (item.weekChange === null || !item.comparedWith) {
+    return item.sinceFirst === null ? `自 ${item.firstDay.slice(5).replace('-', '/')} 起記錄，滿一週後顯示變化`
+      : `${item.sinceFirst > 0 ? '+' : ''}${item.sinceFirst}（自 ${item.firstDay.slice(5).replace('-', '/')}，未滿一週）`;
+  }
+  const since = `較 ${item.comparedWith.slice(5).replace('-', '/')}`;
+  if (item.weekChange === 0) return `持平（${since}）`;
+  return `${item.weekChange > 0 ? '+' : ''}${item.weekChange}（${since}）`;
+}
+
+export function socialTrend(item: SocialItem): 'up' | 'down' | 'flat' {
+  const change = item.weekChange ?? item.sinceFirst ?? 0;
+  return change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
+}
+
 export type VisibilityView = {
   latest: Totals | null; previous: Totals | null; byPlatform: Record<string, PlatformTotals>; cells: Cell[];
-  trend: Totals[]; pending: number; week?: string; thisWeek?: string[]; fixes: { runId: string; at: string | null; items: string[] }[];
+  trend: Totals[]; pending: number; social?: SocialView | null; week?: string; thisWeek?: string[]; fixes: { runId: string; at: string | null; items: string[] }[];
 };
 
 export const PLATFORM_NAMES: Record<string, string> = { chatgpt: 'ChatGPT', grok: 'Grok', gemini: 'Gemini', claude: 'Claude' };

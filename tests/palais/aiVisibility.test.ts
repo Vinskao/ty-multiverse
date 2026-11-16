@@ -46,3 +46,26 @@ describe('fully automatic checks (2026-11-15)', () => {
     expect(platformLine('gemini', undefined)).toBe('Gemini 無法檢視');
   });
 });
+
+// 2026-11-16: social follower / reach numbers shown under the AI visibility table.
+import { socialChange, socialTrend, type SocialItem } from '../../src/scripts/palais/aiVisibility';
+
+describe('social numbers', () => {
+  const item = (over: Partial<SocialItem>): SocialItem => ({ platform: 'instagram', metric: 'followers', label: 'Instagram 追蹤', value: 13,
+    asOf: '2026-11-16', weekChange: 3, comparedWith: '2026-11-09', sinceFirst: 3, firstDay: '2026-11-09', ...over });
+
+  it('shows the weekly change with the day it is compared with', () => {
+    expect(socialChange(item({}))).toBe('+3（較 11/09）');
+    expect(socialChange(item({ weekChange: -2 }))).toBe('-2（較 11/09）');
+    expect(socialChange(item({ weekChange: 0 }))).toBe('持平（較 11/09）');
+  });
+
+  it('never shows a zero change before a week of history exists', () => {
+    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: null, firstDay: '2026-11-16' }))).toBe('自 11/16 起記錄，滿一週後顯示變化');
+    expect(socialChange(item({ weekChange: null, comparedWith: null, sinceFirst: 1, firstDay: '2026-11-14' }))).toBe('+1（自 11/14，未滿一週）');
+  });
+
+  it('marks the direction for colouring', () => {
+    expect([socialTrend(item({})), socialTrend(item({ weekChange: -1 })), socialTrend(item({ weekChange: 0 }))]).toEqual(['up', 'down', 'flat']);
+  });
+});

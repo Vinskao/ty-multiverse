@@ -11,6 +11,11 @@
   <div class="ai-visibility-scroll"><table id="ai-visibility-table" class="ai-visibility-table"></table></div>
   <p id="ai-visibility-trend" class="ai-visibility-note"></p>
   <ul id="ai-visibility-fixes" class="aiv-fixes"></ul>
+  <div id="ai-visibility-social-block" hidden>
+    <h3 class="aiv-sub">社群平台數據</h3>
+    <div id="ai-visibility-social" class="aiv-platforms"></div>
+    <p id="ai-visibility-social-note" class="ai-visibility-note"></p>
+  </div>
   <details class="aiv-about">
     <summary>檢視方式</summary>
     <p>試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。</p>
@@ -47,12 +52,16 @@
   .aiv-fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
   .aiv-fixes li { font-size: 0.85rem; padding: 0.5rem 0.75rem; border-left: 3px solid var(--aiv-hit); background: color-mix(in srgb, currentColor 5%, transparent); border-radius: 0.25rem; overflow-wrap: anywhere; }
   .aiv-fixes a { color: inherit; text-decoration: underline; }
+  .aiv-sub { font-size: 1rem; margin: 0 0 0.6rem; }
+  .aiv-card.up small { color: var(--aiv-hit); opacity: 1; }
+  .aiv-card.down small { color: var(--aiv-miss); opacity: 1; }
+  #ai-visibility-social-note { margin-top: 0.6rem; }
   .aiv-about { font-size: 0.8rem; opacity: 0.7; }
   .aiv-about summary { cursor: pointer; }
   .aiv-about p { margin: 0.5rem 0 0; line-height: 1.6; }
 </style>
 <script>
-  import { AUTO_PLATFORMS, PLATFORM_NAMES, cellLabel, headline, type VisibilityView } from '../scripts/palais/aiVisibility';
+  import { AUTO_PLATFORMS, PLATFORM_NAMES, cellLabel, headline, socialChange, socialTrend, type VisibilityView } from '../scripts/palais/aiVisibility';
 
   const token = () => window.localStorage.getItem('token') || window.localStorage.getItem('accessToken');
   const el = (tag: string, cls?: string, text?: string) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
@@ -118,6 +127,23 @@
     const fixes = document.getElementById('ai-visibility-fixes')!;
     fixes.replaceChildren();
     view.fixes.forEach((f) => f.items.forEach((item) => { const li = el('li'); linkify(li, item); fixes.appendChild(li); }));
+
+    const socialBlock = document.getElementById('ai-visibility-social-block')!;
+    const social = view.social;
+    socialBlock.hidden = !social || (!social.items.length && !social.unavailable.length);
+    if (social) {
+      const box = document.getElementById('ai-visibility-social')!;
+      box.replaceChildren();
+      social.items.forEach((item) => {
+        const card = el('div', `aiv-card ${socialTrend(item)}`);
+        card.appendChild(el('strong', undefined, item.label));
+        card.appendChild(el('span', 'num', String(Math.round(item.value))));
+        card.appendChild(el('small', undefined, socialChange(item)));
+        box.appendChild(card);
+      });
+      document.getElementById('ai-visibility-social-note')!.textContent = social.unavailable.length
+        ? `讀不到的數據：${social.unavailable.map((u) => u.reason).join('；')}。` : '';
+    }
   }
 
   document.addEventListener('astro:page-load', loadAiVisibility);
