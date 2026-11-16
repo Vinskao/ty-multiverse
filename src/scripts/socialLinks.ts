@@ -24,4 +24,9 @@ export const socialLinks = [
 		href: 'https://open.spotify.com/show/6c674Xq9as5ugqva8aqimV',
 		icon: 'spotify-logo',
 	},
+	{
+		label: 'YouTube',
+		href: 'https://studio.youtube.com/channel/UC_8izP1QknOejSYVHE-6lJw/content',
+		icon: 'youtube-logo',
+	},
 ] as const;
