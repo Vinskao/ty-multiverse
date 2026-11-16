@@ -129,7 +129,16 @@
 html,
 body {
   height: 100%;
+}
+
+/* Only the page (html) scrolls. `overflow-x: hidden` on body turns its overflow-y into `auto` as well, so body became a second scroll
+   container of viewport height and every long page showed two vertical scrollbars (2026-11-16). `clip` stops sideways overflow without that. */
+html {
   overflow-x: hidden;
+}
+
+body {
+  overflow-x: clip;
 }
 
 body {
