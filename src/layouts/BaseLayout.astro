@@ -29,6 +29,8 @@ import { resolvePageMetadata } from '../scripts/seo/siteMetadata';
 // Component Imports
 import MainHead from '../components/MainHead.astro';
 import Nav from '../components/Nav.astro';
+import MonetagInPagePush from '../components/MonetagInPagePush.astro';
+import { showsPublisherAds } from '../scripts/ads/placement';
 
 import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
@@ -225,6 +227,7 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 				<slot />
 			</main>
 			<Footer />
+			{showsPublisherAds(Astro.url.pathname) && <MonetagInPagePush />}
 		</div>
 		
 		<!-- QA Platform (shared UI) + scripts for v1/v2 -->
