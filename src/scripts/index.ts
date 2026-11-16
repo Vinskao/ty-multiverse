@@ -2184,7 +2184,7 @@ function macroMetricForPeriod(indicator: MacroIndicator, format: string, period:
 async function fetchMacroDashboard() {
     const section = document.getElementById('macro-dashboard'); if (!section) return;
     try {
-        const response = await fetch(astroApiPath('/api/market/dashboard/macro?historyMonths=24'));
+        const response = await fetch(astroApiPath('/api/market/dashboard/macro?historyMonths=60'));
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         renderMacroDashboard(await response.json() as MacroSnapshot);
     } catch (error) {

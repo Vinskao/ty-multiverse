@@ -45,3 +45,9 @@ describe('shared chart time window', () => {
     expect(() => writeChartPreference(blocked, 'metric', 'pe')).not.toThrow();
   });
 });
+
+it('supports three calendar years for the macro chart preset', () => {
+  expect(rangeWindow(['2020-01-01', '2024-02-29'], 'threeYears')).toEqual({
+    start: '2021-02-28', end: '2024-02-29',
+  });
+});

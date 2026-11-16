@@ -1,7 +1,9 @@
 /** Calendar windows shared by every time-series chart. No data is interpolated. */
-export type ChartRange = 'day' | 'week' | 'month' | 'year' | 'fiveYears' | 'all';
+export type ChartRange = 'day' | 'week' | 'month' | 'year' | 'threeYears' | 'fiveYears' | 'all';
 export type ChartWindow = { start: string; end: string };
 export const CHART_RANGES: readonly ChartRange[] = ['day', 'week', 'month', 'year', 'fiveYears', 'all'];
+const MACRO_RANGES = ['threeYears', 'fiveYears'] as const;
+const isMacroChart = (key: string) => key.startsWith('macro:');
 const DAY = 86_400_000;
 export function chartDate(period: string): string | null {
     const quarter = /^(\d{4})\s?Q([1-4])$/.exec(period);
@@ -26,7 +28,7 @@ export function rangeWindow(dates: string[], range: ChartRange): ChartWindow | n
     const end = new Date(`${full.end}T00:00:00Z`);
     if (range === 'day') return { start: full.end, end: full.end };
     if (range === 'week') return { start: iso(end.getTime() - 6 * DAY), end: full.end };
-    const months = range === 'month' ? 1 : range === 'year' ? 12 : 60;
+    const months = range === 'month' ? 1 : range === 'year' ? 12 : range === 'threeYears' ? 36 : 60;
     const first = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - months, 1));
     const lastDay = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
     first.setUTCDate(Math.min(end.getUTCDate(), lastDay));
@@ -65,7 +67,7 @@ export function chartView(key: string, dates: string[]) {
     const end = bounds(dates)?.end ?? '';
     let state = states.get(key);
     if (!state) {
-        const range = readChartPreference(browserStorage(), `market-chart-range:${key}`, CHART_RANGES, 'year');
+        const range = readChartPreference(browserStorage(), `market-chart-range:${key}`, isMacroChart(key) ? MACRO_RANGES : CHART_RANGES, isMacroChart(key) ? 'threeYears' : 'year');
         state = { range, window: rangeWindow(dates, range), anchorEnd: end }; states.set(key, state);
     } else if (state.range !== 'custom' && state.anchorEnd !== end) {
         state.window = rangeWindow(dates, state.range); state.anchorEnd = end;
@@ -77,8 +79,10 @@ export function addChartControls(target: HTMLElement, key: string, dates: string
     const controls = document.createElement('div'); controls.className = 'market-chart-controls';
     controls.setAttribute('role', 'group'); controls.setAttribute('aria-label', zh ? '圖表時間範圍' : 'Chart time range');
     const labels = zh ? ['日', '週', '月', '年', '5 年', '全部'] : ['1D', '1W', '1M', '1Y', '5Y', 'All'];
-    CHART_RANGES.forEach((range, i) => {
-        const button = document.createElement('button'); button.type = 'button'; button.textContent = labels[i];
+    const ranges = isMacroChart(key) ? MACRO_RANGES : CHART_RANGES;
+    const rangeLabels = isMacroChart(key) ? (zh ? ['3 年', '5 年'] : ['3Y', '5Y']) : labels;
+    ranges.forEach((range, i) => {
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = rangeLabels[i];
         button.setAttribute('aria-pressed', String(state.range === range));
         button.addEventListener('click', () => {
             state.range = range; state.window = rangeWindow(dates, range);
@@ -94,7 +98,7 @@ const wheelHandlers = new WeakMap<SVGSVGElement, (event: WheelEvent) => void>();
 export function bindChartZoom(svg: SVGSVGElement, key: string, dates: string[], redraw: () => void, plot = { left: 0, right: 1 }) {
     const previous = wheelHandlers.get(svg); if (previous) svg.removeEventListener('wheel', previous);
     const handler = (event: WheelEvent) => {
-        if (!event.deltaY) return;
+        if (isMacroChart(key) || !event.deltaY) return;
         event.preventDefault();
         const rect = svg.getBoundingClientRect();
         const fraction = (event.clientX - rect.left) / Math.max(rect.width, 1);
