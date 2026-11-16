@@ -70,3 +70,34 @@ describe('live readout line', () => {
     expect(liveReadout(null, 'zh')).toBe('');
   });
 });
+
+// 2026-11-16: VIX futures. Cboe's front-month settlement is a second line on the U.S. VIX chart; VIXY (a VIX futures ETF) trades
+// pre and after hours, so it stands in for the futures overnight. It is shown as a labelled reading, never drawn as futures.
+import { futuresProxyReadout, type LiveFuturesProxy } from '../../src/scripts/market/macroLive';
+
+const proxy: LiveFuturesProxy = { value: 18.54, session: 'post', regularClose: 17.94, previousClose: 17.51, changeFromClose: 0.6,
+  changeFromClosePercent: 3.34, changePercent: 5.88, asOf: '2026-11-13T19:59:59-05:00', date: '2026-11-13' };
+
+describe('VIX futures on the U.S. VIX chart', () => {
+  it('draws the front-month settlement beside the VIX close', () => {
+    expect(MACRO_VOLATILITY_CHARTS[1].compare).toEqual(['VIX_FUT_FRONT']);
+    expect(MACRO_VOLATILITY_CHARTS[0].compare).toEqual([]);
+  });
+
+  it('labels the overnight stand-in as an ETF, not the futures, with its session and both moves', () => {
+    const zh = futuresProxyReadout(proxy, 'zh');
+    expect(zh).toContain('VIXY');
+    expect(zh).toContain('非期貨本身');
+    expect(zh).toContain('盤後');
+    expect(zh).toContain('18.54');
+    expect(zh).toContain('較收盤 +3.34%');
+    expect(zh).toContain('較昨收 +5.88%');
+    expect(futuresProxyReadout({ ...proxy, session: 'pre' }, 'zh')).toContain('盤前');
+    expect(futuresProxyReadout({ ...proxy, session: 'regular' }, 'zh')).toContain('盤中');
+    expect(futuresProxyReadout(proxy, 'en')).toContain('not the futures');
+  });
+
+  it('says nothing when the stand-in is unavailable', () => {
+    expect(futuresProxyReadout(null, 'zh')).toBe('');
+  });
+});

@@ -6,12 +6,12 @@
 /** 2026-11-16: above the borrowing charts, the two volatility indexes, Taiwan left and U.S. right. Each draws its stored
  *  daily closes with the live reading as today's last point (macroLive.ts), refreshed every minute. */
 export const MACRO_VOLATILITY_CHARTS = [
-    { id: 'tw-vix', code: 'TW_VIX', title: { zh: '台指選擇權波動率指數（台灣 VIX）', en: 'Taiwan VIX (TAIEX options volatility index)' },
+    { id: 'tw-vix', code: 'TW_VIX', compare: [] as readonly string[], title: { zh: '台指選擇權波動率指數（台灣 VIX）', en: 'Taiwan VIX (TAIEX options volatility index)' },
       note: { zh: '期交所以台指選擇權價格算出的 30 天預期波動，台股的恐慌指標；數值越高代表市場預期震盪越大。盤中約每分鐘更新。',
         en: 'The 30-day expected volatility implied by TAIEX options (TAIFEX), the Taiwan fear gauge; higher means a bigger expected swing. Updated about every minute while the market trades.' } },
-    { id: 'us-vix', code: 'US_VIX', title: { zh: '美國 VIX 恐慌指數', en: 'CBOE VIX (U.S. fear index)' },
-      note: { zh: 'CBOE 以 S&P 500 選擇權算出的 30 天預期波動。美股交易時段約每分鐘更新，休市時顯示最近一次收盤。',
-        en: 'The 30-day expected volatility implied by S&P 500 options (CBOE). Updates about every minute while U.S. markets trade.' } },
+    { id: 'us-vix', code: 'US_VIX', compare: ['VIX_FUT_FRONT'] as readonly string[], title: { zh: '美國 VIX 恐慌指數', en: 'CBOE VIX (U.S. fear index)' },
+      note: { zh: 'CBOE 以 S&P 500 選擇權算出的 30 天預期波動。美股交易時段約每分鐘更新，休市時顯示最近一次收盤。另畫 VIX 近月期貨每日結算價（芝加哥期貨交易所）；期貨夜間沒有免費即時價，夜間改看 VIXY 盤前盤後當替代指標。',
+        en: 'The 30-day expected volatility implied by S&P 500 options (CBOE). Updates about every minute while U.S. markets trade. The second line is the Cboe front-month VIX futures settlement; there is no free overnight futures price, so overnight shows VIXY (a VIX futures ETF) as a stand-in.' } },
 ] as const;
 
 /** 2026-11-13: the two charts that open the macro page, left 場內 and right 場外. Each stays one frequency

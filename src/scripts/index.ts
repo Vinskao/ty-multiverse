@@ -26,7 +26,7 @@ import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
-import { liveReadout, withLivePoint, type LiveVolatility } from './market/macroLive';
+import { futuresProxyReadout, liveReadout, withLivePoint, type LiveFuturesProxy, type LiveVolatility } from './market/macroLive';
 import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
@@ -1991,6 +1991,7 @@ function bindMacroCountryControls() {
 // Very top of the macro page: Taiwan VIX (left) and U.S. VIX (right). Daily closes from the macro snapshot, today's point and
 // the readout line from the live endpoint, polled every minute while the page is visible. See MACRO_VOLATILITY_CHARTS.
 let volatilityLive: Record<string, LiveVolatility | null> = {};
+let futuresProxyLive: LiveFuturesProxy | null = null;
 let volatilityByCode: Map<string, MacroIndicator> | null = null;
 let volatilityTimer: number | undefined;
 const VOLATILITY_POLL_MS = 60_000;
@@ -2009,11 +2010,18 @@ function renderMacroVolatility(byCode?: Map<string, MacroIndicator>) {
         card.append(title, note);
         const readout = liveReadout(live, marketLocale() === 'zh-TW' ? 'zh' : 'en');
         if (readout) { const line = document.createElement('p'); line.className = 'macro-vol-live'; line.setAttribute('role', 'status'); line.textContent = readout; card.append(line); }
+        const proxyLine = chart.code === 'US_VIX' ? futuresProxyReadout(futuresProxyLive, marketLocale() === 'zh-TW' ? 'zh' : 'en') : '';
+        if (proxyLine) { const line = document.createElement('p'); line.className = 'macro-vol-live macro-vol-proxy'; line.textContent = proxyLine; card.append(line); }
         const history = withLivePoint(stored?.history, live);
         if (history.length) {
             const indicator: MacroIndicator = { ...(stored ?? { code: chart.code, name: chart.title.en, unit: 'index points', frequency: 'daily', referencePeriod: '' }),
                 value: String(live?.value ?? stored?.value ?? ''), history };
-            card.append(buildMacroTrendChart(indicator, 'raw', marketText(chart.title.en, chart.title.zh), []));
+            const futuresLabel = marketText('VIX front-month futures settlement', 'VIX 近月期貨結算價');
+            const comparisons = chart.compare.flatMap((code) => {
+                const line = volatilityByCode?.get(code);
+                return line?.history?.length ? [{ indicator: line, format: 'raw' as MacroMetricFormat, label: futuresLabel }] : [];
+            });
+            card.append(buildMacroTrendChart(indicator, 'raw', marketText(chart.title.en, chart.title.zh), comparisons));
         } else {
             const empty = document.createElement('p'); empty.className = 'market-updated';
             empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。');
@@ -2028,13 +2036,15 @@ async function refreshVolatilityLive() {
     try {
         const response = await fetch(astroApiPath('/api/market/dashboard/volatility/live'), { cache: 'no-store' });
         if (!response.ok) return;
-        const data = await response.json() as Record<string, LiveVolatility | null>;
+        const data = await response.json() as Record<string, LiveVolatility | null> & { VIX_FUT_PROXY?: LiveFuturesProxy | null };
         const changed = MACRO_VOLATILITY_CHARTS.some((chart) => {
             const before = volatilityLive[chart.code], after = data[chart.code] ?? null;
             return before?.value !== after?.value || before?.asOf !== after?.asOf;
         });
+        const proxyChanged = futuresProxyLive?.value !== data.VIX_FUT_PROXY?.value || futuresProxyLive?.asOf !== data.VIX_FUT_PROXY?.asOf;
+        futuresProxyLive = data.VIX_FUT_PROXY ?? null;
         volatilityLive = Object.fromEntries(MACRO_VOLATILITY_CHARTS.map((chart) => [chart.code, data[chart.code] ?? null]));
-        if (changed) renderMacroVolatility();
+        if (changed || proxyChanged) renderMacroVolatility();
     } catch { /* keep the last reading; the next minute tries again */ }
 }
 
