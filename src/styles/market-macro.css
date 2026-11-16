@@ -152,5 +152,6 @@
 .macro-borrowing:empty { display:none; }
 .macro-borrowing-card { min-width:0; padding:.75rem .9rem; border:1px solid var(--gray-700); border-radius:12px; }
 .macro-borrowing-card h5 { margin:0 0 .25rem; font-size:1rem; }
+.macro-vol-live { margin:0 0 .5rem; font-size:.9rem; font-variant-numeric:tabular-nums; }
 .macro-borrowing-note { margin:0 0 .5rem; color:var(--gray-400); font-size:.8rem; line-height:1.5; }
 @media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }

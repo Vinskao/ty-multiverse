@@ -26,7 +26,8 @@ import { getMermaidConfig } from './mermaid-theme';
 import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type FundamentalUnit, REVENUE_CHART_TITLE } from './market/fundamentalsCharts';
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
-import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
+import { liveReadout, withLivePoint, type LiveVolatility } from './market/macroLive';
+import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
 import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
@@ -1987,6 +1988,62 @@ function bindMacroCountryControls() {
     });
 }
 
+// Very top of the macro page: Taiwan VIX (left) and U.S. VIX (right). Daily closes from the macro snapshot, today's point and
+// the readout line from the live endpoint, polled every minute while the page is visible. See MACRO_VOLATILITY_CHARTS.
+let volatilityLive: Record<string, LiveVolatility | null> = {};
+let volatilityByCode: Map<string, MacroIndicator> | null = null;
+let volatilityTimer: number | undefined;
+const VOLATILITY_POLL_MS = 60_000;
+
+function renderMacroVolatility(byCode?: Map<string, MacroIndicator>) {
+    if (byCode) volatilityByCode = byCode;
+    const target = document.getElementById('macro-volatility');
+    if (!target || !volatilityByCode) return;
+    target.replaceChildren();
+    for (const chart of MACRO_VOLATILITY_CHARTS) {
+        const stored = volatilityByCode.get(chart.code);
+        const live = volatilityLive[chart.code] ?? null;
+        const card = document.createElement('article'); card.className = 'macro-borrowing-card'; card.dataset.macroCodes = chart.code;
+        const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
+        const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
+        card.append(title, note);
+        const readout = liveReadout(live, marketLocale() === 'zh-TW' ? 'zh' : 'en');
+        if (readout) { const line = document.createElement('p'); line.className = 'macro-vol-live'; line.setAttribute('role', 'status'); line.textContent = readout; card.append(line); }
+        const history = withLivePoint(stored?.history, live);
+        if (history.length) {
+            const indicator: MacroIndicator = { ...(stored ?? { code: chart.code, name: chart.title.en, unit: 'index points', frequency: 'daily', referencePeriod: '' }),
+                value: String(live?.value ?? stored?.value ?? ''), history };
+            card.append(buildMacroTrendChart(indicator, 'raw', marketText(chart.title.en, chart.title.zh), []));
+        } else {
+            const empty = document.createElement('p'); empty.className = 'market-updated';
+            empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。');
+            card.append(empty);
+        }
+        target.append(card);
+    }
+}
+
+async function refreshVolatilityLive() {
+    if (document.visibilityState === 'hidden') return;
+    try {
+        const response = await fetch(astroApiPath('/api/market/dashboard/volatility/live'), { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json() as Record<string, LiveVolatility | null>;
+        const changed = MACRO_VOLATILITY_CHARTS.some((chart) => {
+            const before = volatilityLive[chart.code], after = data[chart.code] ?? null;
+            return before?.value !== after?.value || before?.asOf !== after?.asOf;
+        });
+        volatilityLive = Object.fromEntries(MACRO_VOLATILITY_CHARTS.map((chart) => [chart.code, data[chart.code] ?? null]));
+        if (changed) renderMacroVolatility();
+    } catch { /* keep the last reading; the next minute tries again */ }
+}
+
+function startVolatilityPolling() {
+    if (volatilityTimer !== undefined) return;
+    void refreshVolatilityLive();
+    volatilityTimer = window.setInterval(() => void refreshVolatilityLive(), VOLATILITY_POLL_MS);
+}
+
 // Top of the macro page: what borrowing to invest costs, 場內 (left) and 場外 (right). See MACRO_BORROWING_CHARTS.
 function renderMacroBorrowing(byCode: Map<string, MacroIndicator>) {
     const target = document.getElementById('macro-borrowing');
@@ -2019,6 +2076,8 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     if (!list || !grid) return;
     grid.replaceChildren(); list.replaceChildren();
     const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
+    renderMacroVolatility(byCode);
+    startVolatilityPolling();
     renderMacroBorrowing(byCode);
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
