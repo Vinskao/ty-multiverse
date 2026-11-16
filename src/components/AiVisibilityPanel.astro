@@ -21,8 +21,9 @@
     <p>試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。</p>
   </details>
 </section>
-<style>
-  .ai-visibility { --aiv-hit: #3ecf8e; --aiv-miss: #f0b429; --aiv-line: color-mix(in srgb, currentColor 18%, transparent);
+<style is:global>
+  /* is:global because the cards, chips and rows below are built by the script, and Astro scoping would skip them */
+  .ai-visibility { color: var(--gray-0); --aiv-hit: #3ecf8e; --aiv-miss: #f0b429; --aiv-line: color-mix(in srgb, currentColor 18%, transparent);
     padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--aiv-line); border-radius: 1rem; display: grid; gap: 1rem; min-width: 0; }
   .aiv-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .ai-visibility h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); margin: 0; }
@@ -44,14 +45,17 @@
   .ai-visibility-table th:first-child, .ai-visibility-table td:first-child { text-align: left; white-space: normal; min-width: 9rem; }
   .ai-visibility-table td { padding: 0.5rem 0.6rem; text-align: center; border-bottom: 1px solid var(--aiv-line); white-space: nowrap; }
   .ai-visibility-table tr:last-child td { border-bottom: 0; }
-  .chip { display: inline-block; min-width: 4.5rem; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--aiv-line); }
-  td.hit .chip { color: var(--aiv-hit); border-color: var(--aiv-hit); font-weight: 700; }
-  td.miss .chip { opacity: 0.85; }
-  td.na .chip { opacity: 0.4; border-style: dashed; }
+  .aiv-chip { display: inline-block; min-width: 4.5rem; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--aiv-line); }
+  .ai-visibility-table td.hit .aiv-chip { color: var(--aiv-hit); border-color: var(--aiv-hit); font-weight: 700; }
+  .ai-visibility-table td.miss .aiv-chip { opacity: 0.85; }
+  .ai-visibility-table td.na .aiv-chip { opacity: 0.4; border-style: dashed; }
   .ai-visibility-note { font-size: 0.85rem; opacity: 0.8; margin: 0; }
   .aiv-fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
   .aiv-fixes li { font-size: 0.85rem; padding: 0.5rem 0.75rem; border-left: 3px solid var(--aiv-hit); background: color-mix(in srgb, currentColor 5%, transparent); border-radius: 0.25rem; overflow-wrap: anywhere; }
-  .aiv-fixes a { color: inherit; text-decoration: underline; }
+  .ai-visibility a, .aiv-fixes a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .ai-visibility-table, .ai-visibility-table th, .ai-visibility-table td { background: transparent; }
+  .aiv-card { background: color-mix(in srgb, currentColor 4%, transparent); }
+  .aiv-card .num, .aiv-card strong, .aiv-card small { color: inherit; }
   .aiv-sub { font-size: 1rem; margin: 0 0 0.6rem; }
   .aiv-card.up small { color: var(--aiv-hit); opacity: 1; }
   .aiv-card.down small { color: var(--aiv-miss); opacity: 1; }
@@ -118,7 +122,7 @@
           const cell = view.cells.find((c) => c.keyword === keyword && c.platform === p);
           const td = tr.insertCell();
           td.className = cell?.appeared ? 'hit' : cell?.status === 'checked' ? 'miss' : 'na';
-          td.appendChild(el('span', 'chip', cell ? cellLabel(cell) : '—'));
+          td.appendChild(el('span', 'aiv-chip', cell ? cellLabel(cell) : '—'));
         });
       });
     }
