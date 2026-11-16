@@ -3,12 +3,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { readBlog } from '../../services/server/blog';
 import { renderArticle } from '../../scripts/work/markdown';
 import ArticleSidebar from '../../components/ArticleSidebar.astro';
+import { articleTopic } from '../../scripts/work/articleTopic';
 import { sortArticles } from '../../scripts/work/catalog';
 const slug = Astro.params.slug || '';
 let article;
 let status = 200;
 let catalog = [];
-try { catalog = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, publishDate: new Date(row.publishDate) } }))); } catch { /* the list stays empty; the article below still loads */ }
+try { catalog = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, category: articleTopic(row), publishDate: new Date(row.publishDate) } }))); } catch { /* the list stays empty; the article below still loads */ }
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) status = 404;
 else {
   try { article = await readBlog(`articles/${slug}`); }
@@ -22,7 +23,7 @@ const html = article ? renderArticle(article.content) : '';
     <ArticleSidebar projects={catalog} currentId={slug} />
     <div class="knowledge-article">
     {article ? <>
-      <header class="knowledge-header"><p class="knowledge-eyebrow">{article.category} / ENGINEERING NOTES</p><h1>{article.title}</h1><p class="knowledge-intro">{article.description}</p><time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
+      <header class="knowledge-header"><p class="knowledge-eyebrow">{articleTopic(article)} / ENGINEERING NOTES</p><h1>{article.title}</h1><p class="knowledge-intro">{article.description}</p><time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
       <article class="knowledge-prose" set:html={html} />
     </> : <h1>{status === 404 ? '找不到文章' : '文章服務暫時無法使用，請稍後再試。'}</h1>}
     </div>

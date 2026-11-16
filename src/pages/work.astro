@@ -2,11 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import WritingGuide from '../components/WritingGuide.astro';
 import { readBlog } from '../services/server/blog';
+import { articleTopic } from '../scripts/work/articleTopic';
 import { sortArticles } from '../scripts/work/catalog';
 let projects = [];
 let unavailable = false;
 try {
-  projects = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, publishDate: new Date(row.publishDate) } })));
+  projects = sortArticles((await readBlog()).map((row) => ({ id: row.id, data: { ...row, category: articleTopic(row), publishDate: new Date(row.publishDate) } })));
 } catch { unavailable = true; Astro.response.status = 503; }
 const categories = [...new Set(projects.map(({data}) => data.category).filter(Boolean))].sort();
 const latest = projects[0];
