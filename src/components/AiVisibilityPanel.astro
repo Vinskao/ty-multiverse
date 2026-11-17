@@ -18,7 +18,7 @@
   </div>
   <details class="aiv-about">
     <summary>檢視方式</summary>
-    <p>試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。</p>
+    <p>試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。</p><p>Grok 已棄用。</p><p>ChatGPT 需付費 API，暫停。</p>
   </details>
 </section>
 <style is:global>
@@ -103,7 +103,8 @@
       const live = AUTO_PLATFORMS.includes(p) || !!totals?.checked;
       const card = el('div', `aiv-card${!live ? ' off' : ''}${totals?.appeared ? ' hit' : ''}`);
       card.appendChild(el('strong', undefined, PLATFORM_NAMES[p]));
-      if (!live) { card.appendChild(el('span', 'num', '暫停')); card.appendChild(el('small', undefined, '需 API 額度')); }
+      if (p === 'grok') { card.appendChild(el('span', 'num', '已棄用')); }
+      else if (!live) { card.appendChild(el('span', 'num', '暫停')); card.appendChild(el('small', undefined, '需 API 額度')); }
       else if (!totals?.checked) { card.appendChild(el('span', 'num', '—')); card.appendChild(el('small', undefined, '本週無法檢視')); }
       else { card.appendChild(el('span', 'num', `${totals.appeared}/${totals.checked}`)); card.appendChild(el('small', undefined, totals.bestRank ? `最佳 #${totals.bestRank}` : '格出現')); }
       cards.appendChild(card);

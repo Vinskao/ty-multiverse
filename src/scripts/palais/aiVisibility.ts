@@ -47,6 +47,7 @@ export function cellLabel(cell: Cell): string {
 
 export function platformLine(platform: string, totals: PlatformTotals | undefined): string {
   const name = PLATFORM_NAMES[platform] ?? platform;
+  if (platform === 'grok') return 'Grok 已棄用';
   if (!AUTO_PLATFORMS.includes(platform) && !totals?.checked) return `${name} 暫停（需 API 額度）`;
   if (!totals || !totals.checked) return `${name} 無法檢視`;
   return `${name} ${totals.appeared}/${totals.checked}${totals.bestRank ? ` · #${totals.bestRank}` : ''}`;

@@ -69,3 +69,5 @@ describe('social numbers', () => {
     expect([socialTrend(item({})), socialTrend(item({ weekChange: -1 })), socialTrend(item({ weekChange: 0 }))]).toEqual(['up', 'down', 'flat']);
   });
 });
+
+it('labels Grok as discontinued', () => expect(platformLine('grok', undefined)).toBe('Grok 已棄用'));
