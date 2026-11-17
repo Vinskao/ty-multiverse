@@ -163,7 +163,7 @@ nav {
 
 .social:hover,
 .social:focus {
-  color: var(--accent-text-over);
+  color: var(--accent-dark);
 }
 
 .theme-toggle {

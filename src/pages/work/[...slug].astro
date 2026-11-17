@@ -23,7 +23,7 @@ const html = article ? renderArticle(article.content) : '';
     <ArticleSidebar projects={catalog} currentId={slug} />
     <div class="knowledge-article">
     {article ? <>
-      <header class="knowledge-header"><p class="knowledge-eyebrow">{articleTopic(article)} / ENGINEERING NOTES</p><h1>{article.title}</h1><p class="knowledge-intro">{article.description}</p><time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
+      <header class="knowledge-header"><p class="knowledge-eyebrow">{articleTopic(article)} / ENGINEERING NOTES</p><h1>{article.title}</h1>{!article.tags.includes('Daily Reading') && <p class="knowledge-intro">{article.description}</p>}<time datetime={article.publishDate}>{article.publishDate.slice(0,10)}</time><div class="knowledge-tags">{article.tags.map(tag => <span>{tag}</span>)}</div></header>
       <article class="knowledge-prose" set:html={html} />
     </> : <h1>{status === 404 ? '找不到文章' : '文章服務暫時無法使用，請稍後再試。'}</h1>}
     </div>
