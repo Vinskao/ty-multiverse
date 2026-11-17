@@ -1,0 +1,10 @@
+#market-heat { position:relative; overflow:hidden; display:flex; align-items:center; gap:14px; padding:12px 24px; background:linear-gradient(100deg,#260900,#711900,#200703); color:#fff3ce; border-bottom:2px solid #ff8b23; box-shadow:0 5px 28px #fa4c1544; isolation:isolate; }
+#market-heat[hidden]{display:none}
+#market-heat::before {content:"";position:absolute;inset:-35px;z-index:-1;background:repeating-radial-gradient(ellipse at 50% 120%,#ffbd3633 0 3%,transparent 5% 12%);filter:blur(7px);animation:heat-flare 2.4s ease-in-out infinite alternate}
+#market-heat strong {font-size:16px;letter-spacing:.04em}
+#market-heat small {color:#ffd3a6}
+#market-heat button {margin-left:auto;flex-shrink:0;background:transparent;border:1px solid #ffcc8b88;border-radius:50%;color:white;width:32px;height:32px;font-size:24px;cursor:pointer}
+.heat-fire {font-size:25px;filter:drop-shadow(0 0 8px #ff7300);animation:heat-flare 1.5s ease-in-out infinite alternate}
+@keyframes heat-flare {from{transform:translateY(4px) scale(1);opacity:.7}to{transform:translateY(-4px) scale(1.08);opacity:1}}
+@media(max-width:600px){#market-heat{gap:8px;padding:8px 12px;flex-wrap:wrap}#market-heat small{font-size:10px}#market-heat strong{font-size:13px}}
+@media(prefers-reduced-motion:reduce){#market-heat::before,.heat-fire{animation:none}}

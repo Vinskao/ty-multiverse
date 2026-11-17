@@ -29,6 +29,8 @@ import { resolvePageMetadata } from '../scripts/seo/siteMetadata';
 // Component Imports
 import MainHead from '../components/MainHead.astro';
 import Nav from '../components/Nav.astro';
+import MarketHeat from '../components/MarketHeat.astro';
+import marketHeatCss from '../styles/market-heat.css?url';
 import MonetagInPagePush from '../components/MonetagInPagePush.astro';
 import { showsPublisherAds } from '../scripts/ads/placement';
 
@@ -197,7 +199,7 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 		<link rel="stylesheet" href={baseLayoutCssUrl} />
 		<link rel="stylesheet" href={globalCssUrl} />
 		<link rel="stylesheet" href={themeToggleCssUrl} />
-		<link rel="stylesheet" href={navCssUrl} />
+		<link rel="stylesheet" href={navCssUrl} /><link rel="stylesheet" href={marketHeatCss} />
 		<link rel="stylesheet" href={footerCssUrl} />
 		<link rel="stylesheet" href={heroCssUrl} />
 		<link rel="stylesheet" href={gridCssUrl} />
@@ -222,6 +224,7 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 	<body>
 		<div class="stack backgrounds">
 			<Nav />
+{!Astro.url.pathname.startsWith('/palais') && <MarketHeat />}
 			<!-- 頁面主要內容容器 - 用於 AI 分析 -->
 			<main class="page-content" data-page-type="content">
 				<slot />

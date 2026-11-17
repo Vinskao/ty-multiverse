@@ -600,3 +600,5 @@ Before changing product-facing pages, read [`docs/DESIGN_PRINCIPLES.md`](docs/DE
 For the current screen-by-screen scope, see [`docs/MONOCHROME_WORKSPACE_REDESIGN.md`](docs/MONOCHROME_WORKSPACE_REDESIGN.md). For the intended social publishing workflow, see [`docs/THREADS_LINKEDIN_AUTOMATION.md`](docs/THREADS_LINKEDIN_AUTOMATION.md).
 
 學習中心分類、既有多益流程與規劃中考試主題：[docs/LEARNING_CATALOG.md](docs/LEARNING_CATALOG.md)。
+
+市場狀態條流程見 [MARKET_HEAT.md](docs/MARKET_HEAT.md)。

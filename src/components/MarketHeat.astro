@@ -1,0 +1,25 @@
+<div id="market-heat" hidden role="status"><span class="heat-fire" aria-hidden="true">🔥</span><strong></strong><small></small><button aria-label="關閉市場狀態條">×</button></div>
+<script>
+import { marketHeat } from '../scripts/market/marketHeat';
+async function showHeat() {
+ const el = document.querySelector<HTMLElement>('#market-heat');
+ if (!el || location.pathname.startsWith('/palais')) return;
+ try {
+ const response = await fetch('/api/market/dashboard/macro?historyMonths=1');
+ if (!response.ok) return;
+ const data = await response.json();
+ const index = data.indicators?.find((i: any) => i.code === 'TW_TAIEX');
+ if (!index || index.cacheStale) return;
+ const rows = [...(index.history || [])].sort((a,b) => a.period.localeCompare(b.period));
+ const message = marketHeat(rows.map(r => Number(r.value)));
+ const key = 'market-heat:' + index.referencePeriod + ':' + message;
+ if (!message || sessionStorage.getItem(key)) return;
+ el.querySelector('strong')!.textContent = message;
+ el.querySelector('small')!.textContent = '截至 ' + index.referencePeriod + ' 收盤 · TWSE';
+ el.hidden = false;
+ el.querySelector('button')!.onclick = () => { el.hidden = true; sessionStorage.setItem(key,'1'); };
+ } catch { /* Keep the banner hidden when market data is unavailable. */ }
+}
+showHeat();
+document.addEventListener('astro:page-load', showHeat);
+</script>
