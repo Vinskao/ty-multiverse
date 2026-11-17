@@ -449,6 +449,15 @@ nav {
     backdrop-filter: none;
   }
 
+  nav:has(> .menu-header) {
+    position: relative;
+  }
+
+  nav:has(> #menu-content:not([hidden])) {
+    height: auto;
+    max-height: none;
+  }
+
   .menu-header {
     width: 100%;
     align-items: center;
@@ -480,12 +489,7 @@ nav {
   }
 
   .menu-content {
-    position: fixed;
-    z-index: 1;
-    top: 3.5rem;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    position: relative;
     display: flex;
     flex-direction: column;
     max-height: none;
@@ -533,8 +537,7 @@ nav {
     align-items: center;
     justify-content: space-between;
     padding: 0.625rem max(0.75rem, env(safe-area-inset-right)) 0.625rem max(0.75rem, env(safe-area-inset-left));
-    /* Leave room for the fixed Maya chat button (bottom-left) and theme toggle (bottom-right). */
-    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
   }
 
   .socials {

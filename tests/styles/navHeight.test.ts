@@ -51,3 +51,10 @@ describe('nav bar height is fixed and never changes', () => {
     expect(headerBarRules()[0]).toMatch(/flex-wrap:\s*nowrap|overflow-y:\s*visible/);
   });
 });
+
+it('keeps the mobile menu in flow and lets the nav expand around it', () => {
+  const mobile = css.split('@media (max-width: 49.99em) {')[1]?.split('/* 小螢幕')[0];
+  expect(mobile).toMatch(/nav:has\(> #menu-content:not\(\[hidden\]\)\)\s*\{[^}]*\bheight:\s*auto;[^}]*max-height:\s*none;/);
+  expect(mobile).toMatch(/\.menu-content\s*\{[^}]*position:\s*relative;/);
+  expect(mobile).toMatch(/\.menu-content\[hidden\]\s*\{\s*display:\s*none;/);
+});
