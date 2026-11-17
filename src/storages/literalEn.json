@@ -366,5 +366,6 @@
   "AI 搜尋曝光檢視": "AI search visibility check",
   "社群平台數據": "Social platform data",
   "檢視方式": "How it is checked",
-  "試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。": "A 4-week trial (until 2026-12-15), checked entirely by AI: every Monday 04:30 a Claude schedule uses the Gemini API (Google Search) and its own web search to look up this week's 3 keywords (1 fixed + 2 rotating), then improves the site from the results. ChatGPT and Grok need a paid API and are paused."
+  "試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。ChatGPT、Grok 需付費 API，暫停。": "A 4-week trial (until 2026-12-15), checked entirely by AI: every Monday 04:30 a Claude schedule uses the Gemini API (Google Search) and its own web search to look up this week's 3 keywords (1 fixed + 2 rotating), then improves the site from the results. ChatGPT and Grok need a paid API and are paused.",
+  "關閉市場狀態條": "Close the market status bar"
 }

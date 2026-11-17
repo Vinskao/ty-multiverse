@@ -1,10 +1,47 @@
-#market-heat { position:relative; overflow:hidden; display:flex; align-items:center; gap:14px; padding:12px 24px; background:linear-gradient(100deg,#260900,#711900,#200703); color:#fff3ce; border-bottom:2px solid #ff8b23; box-shadow:0 5px 28px #fa4c1544; isolation:isolate; }
+/* Market-status banner. Level sets the colour and how hard it hits: info (amber, calm), warn (orange, pulsing rings),
+   alert (red, shockwave rings, a light sweep and a periodic shake). A big rise (data-dir="up") turns green. */
+#market-heat { --heat-a:#260900; --heat-b:#711900; --heat-c:#200703; --heat-edge:#ff8b23; --heat-glow:#fa4c15; --heat-wave:255,140,40;
+  position:relative; overflow:hidden; display:flex; align-items:center; gap:16px; padding:12px 24px; background:linear-gradient(100deg,var(--heat-a),var(--heat-b),var(--heat-c)); color:#fff3ce; border-bottom:2px solid var(--heat-edge); box-shadow:0 5px 28px color-mix(in srgb,var(--heat-glow) 27%,transparent); isolation:isolate; }
 #market-heat[hidden]{display:none}
-#market-heat::before {content:"";position:absolute;inset:-35px;z-index:-1;background:repeating-radial-gradient(ellipse at 50% 120%,#ffbd3633 0 3%,transparent 5% 12%);filter:blur(7px);animation:heat-flare 2.4s ease-in-out infinite alternate}
-#market-heat strong {font-size:16px;letter-spacing:.04em}
-#market-heat small {color:#ffd3a6}
-#market-heat button {margin-left:auto;flex-shrink:0;background:transparent;border:1px solid #ffcc8b88;border-radius:50%;color:white;width:32px;height:32px;font-size:24px;cursor:pointer}
-.heat-fire {font-size:25px;filter:drop-shadow(0 0 8px #ff7300);animation:heat-flare 1.5s ease-in-out infinite alternate}
-@keyframes heat-flare {from{transform:translateY(4px) scale(1);opacity:.7}to{transform:translateY(-4px) scale(1.08);opacity:1}}
-@media(max-width:600px){#market-heat{gap:8px;padding:8px 12px;flex-wrap:wrap}#market-heat small{font-size:10px}#market-heat strong{font-size:13px}}
-@media(prefers-reduced-motion:reduce){#market-heat::before,.heat-fire{animation:none}}
+#market-heat[data-level="info"] { --heat-a:#1f1704; --heat-b:#5a4208; --heat-c:#1a1303; --heat-edge:#e0b030; --heat-glow:#e0b030; --heat-wave:224,176,48; }
+#market-heat[data-level="alert"] { --heat-a:#2a0303; --heat-b:#8a0f0f; --heat-c:#240202; --heat-edge:#ff3b30; --heat-glow:#ff1e1e; --heat-wave:255,70,50; }
+#market-heat[data-dir="up"] { --heat-a:#03210e; --heat-b:#0c6a2c; --heat-c:#03190b; --heat-edge:#37d67a; --heat-glow:#1fe06a; --heat-wave:60,220,120; color:#e6ffe9; }
+#market-heat strong { display:block; font-size:17px; letter-spacing:.04em; }
+#market-heat small { display:block; color:#ffd3a6; margin-top:2px; }
+#market-heat[data-dir="up"] small { color:#b5f0c6; }
+#market-heat .heat-details { display:block; font-size:13px; opacity:.92; margin-top:2px; }
+#market-heat .heat-details:empty { display:none; }
+#market-heat .heat-text { min-width:0; }
+#market-heat button { margin-left:auto; flex-shrink:0; background:transparent; border:1px solid #ffcc8b88; border-radius:50%; color:white; width:32px; height:32px; font-size:24px; cursor:pointer; }
+
+/* The icon and the shockwave rings that spread out from it. */
+.heat-icon { position:relative; flex:0 0 auto; width:34px; height:34px; display:grid; place-items:center; }
+.heat-fire { position:relative; z-index:1; font-size:25px; filter:drop-shadow(0 0 8px var(--heat-glow)); animation:heat-flare 1.5s ease-in-out infinite alternate; }
+.heat-ring { position:absolute; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; border:2px solid rgba(var(--heat-wave),.9); box-shadow:0 0 14px rgba(var(--heat-wave),.65), inset 0 0 10px rgba(var(--heat-wave),.4); opacity:0; animation:heat-shock 2.4s cubic-bezier(.2,.6,.3,1) infinite; }
+.heat-ring:nth-child(2) { animation-delay:.8s; }
+.heat-ring:nth-child(3) { animation-delay:1.6s; }
+#market-heat[data-level="info"] .heat-ring:nth-child(n+2) { display:none; }
+#market-heat[data-level="info"] .heat-ring { animation-duration:3.6s; }
+#market-heat[data-level="alert"] .heat-ring { animation-duration:1.6s; border-width:3px; }
+#market-heat[data-level="alert"] .heat-ring:nth-child(2) { animation-delay:.53s; }
+#market-heat[data-level="alert"] .heat-ring:nth-child(3) { animation-delay:1.06s; }
+
+/* A band of light that sweeps across the whole bar like a pressure wave. */
+.heat-wave { position:absolute; inset:0; z-index:-1; pointer-events:none; background:linear-gradient(100deg,transparent 35%,rgba(var(--heat-wave),.32) 50%,transparent 65%); transform:translateX(-100%); animation:heat-sweep 3.2s ease-in-out infinite; }
+#market-heat[data-level="alert"] .heat-wave { animation-duration:1.9s; }
+#market-heat[data-level="info"] .heat-wave { display:none; }
+#market-heat::before { content:""; position:absolute; inset:-35px; z-index:-1; background:repeating-radial-gradient(ellipse at 50% 120%,rgba(var(--heat-wave),.22) 0 3%,transparent 5% 12%); filter:blur(7px); animation:heat-flare 2.4s ease-in-out infinite alternate; }
+
+/* Entrance: a hard jolt when the bar appears; the red alert level also shakes again every few seconds. */
+#market-heat.heat-enter { animation:heat-jolt .7s cubic-bezier(.36,.07,.19,.97) both; }
+#market-heat[data-level="alert"] { animation:heat-tremor 5s ease-in-out infinite; }
+#market-heat[data-level="alert"].heat-enter { animation:heat-jolt .7s cubic-bezier(.36,.07,.19,.97) both, heat-tremor 5s ease-in-out .7s infinite; }
+
+@keyframes heat-flare { from{transform:translateY(3px) scale(1);opacity:.75} to{transform:translateY(-3px) scale(1.1);opacity:1} }
+@keyframes heat-shock { 0%{transform:scale(.45);opacity:.95} 70%{opacity:.25} 100%{transform:scale(2.6);opacity:0} }
+@keyframes heat-sweep { 0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)} }
+@keyframes heat-jolt { 0%{transform:translateY(-100%);opacity:0} 40%{transform:translateY(4px);opacity:1} 55%{transform:translate(-6px,0)} 65%{transform:translate(6px,0)} 75%{transform:translate(-4px,0)} 85%{transform:translate(3px,0)} 100%{transform:none} }
+@keyframes heat-tremor { 0%,86%,100%{transform:none} 88%{transform:translate(-3px,0)} 90%{transform:translate(3px,1px)} 92%{transform:translate(-2px,-1px)} 94%{transform:translate(2px,0)} 96%{transform:translate(-1px,0)} }
+
+@media (max-width:600px) { #market-heat { gap:10px; padding:8px 12px; } #market-heat strong { font-size:14px; } #market-heat small, #market-heat .heat-details { font-size:11px; } .heat-icon { width:28px; height:28px; } .heat-ring { width:28px; height:28px; margin:-14px 0 0 -14px; } .heat-fire { font-size:21px; } }
+@media (prefers-reduced-motion: reduce) { #market-heat, #market-heat[data-level], #market-heat.heat-enter, #market-heat::before, .heat-fire, .heat-wave, .heat-ring { animation:none !important; } .heat-ring { opacity:0; } }

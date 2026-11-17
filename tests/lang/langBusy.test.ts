@@ -39,3 +39,47 @@ describe('AppLang.busy', () => {
     await expect(api().busy(Promise.resolve(7))).resolves.toBe(7);
   });
 });
+
+// 2026-11-17: /?lang=zh renders Chinese on the server, but AppLang read only localStorage (which said "en"), so the
+// toggle showed 繁 while AppLang was "en"; the first click only made the state match the page and nothing changed.
+describe('AppLang and the ?lang= parameter', () => {
+  // tests/setup.ts stubs localStorage and location with inert objects, so each test installs working ones.
+  const load = (search: string, stored?: string) => {
+    delete (window as unknown as { AppLang?: unknown }).AppLang;
+    const store = new Map<string, string>(stored ? [['site_language', stored]] : []);
+    Object.defineProperty(window, 'localStorage', { configurable: true, value: {
+      getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); }, clear: () => store.clear() } });
+    const place = { href: `http://localhost:4321/${search}`, pathname: '/', search, hash: '' };
+    Object.defineProperty(window, 'location', { configurable: true, writable: true, value: place });
+    window.history.replaceState = ((_: unknown, __: string, url: string) => {
+      const next = new URL(url, 'http://localhost:4321');
+      place.search = next.search; place.href = next.href;
+    }) as History['replaceState'];
+    window.eval(script);
+    return (window as unknown as { AppLang: { get: () => string; set: (code: string) => void } }).AppLang;
+  };
+
+  it('an explicit ?lang= wins over the stored language and is remembered', () => {
+    const lang = load('?lang=zh', 'en');
+    expect(lang.get()).toBe('zh');
+    expect(window.localStorage.getItem('site_language')).toBe('zh');
+  });
+
+  it('ignores an unknown ?lang= value', () => {
+    expect(load('?lang=fr', 'zh').get()).toBe('zh');
+  });
+
+  it('switching language keeps the ?lang= parameter in step so a reload does not undo it', () => {
+    const lang = load('?lang=zh', 'en');
+    lang.set('en');
+    expect(window.location.search).toBe('?lang=en');
+    expect(lang.get()).toBe('en');
+  });
+
+  it('leaves a URL without ?lang= alone', () => {
+    const lang = load('', 'en');
+    lang.set('zh');
+    expect(window.location.search).toBe('');
+  });
+});

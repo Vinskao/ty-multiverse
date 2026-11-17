@@ -9,6 +9,20 @@
     return 'en';
   }
 
+  // An explicit ?lang=zh|en is what the server rendered, so it wins over what this browser remembered (2026-11-17).
+  function fromUrl() {
+    try {
+      const value = new URLSearchParams(window.location.search).get('lang');
+      return value === 'zh' || value === 'en' ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  const urlLang = fromUrl();
+  if (urlLang) {
+    try { localStorage.setItem(STORAGE_KEY, urlLang); } catch (_) {}
+  }
+
   function get() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -22,6 +36,14 @@
     const lang = normalize(code);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
+    } catch (_) {}
+    try {
+      // Keep ?lang= in step, otherwise a reload would put the old language back.
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('lang')) {
+        url.searchParams.set('lang', lang);
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      }
     } catch (_) {}
     const detail = {
       code: lang, // 'en' | 'zh'
