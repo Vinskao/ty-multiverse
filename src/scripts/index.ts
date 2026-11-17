@@ -27,7 +27,7 @@ import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type F
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { futuresProxyReadout, liveReadout, withLivePoint, type LiveFuturesProxy, type LiveVolatility } from './market/macroLive';
-import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle, MACRO_LEVERAGE_CHART } from './market/macroLayout';
+import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle, MACRO_TOP_CHARTS } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { MACRO_SPEED_HEADINGS, isMacroPopulationCode, macroSpeedOf, splitMacroBySpeed, type MacroSpeed } from './market/macroSpeed';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
@@ -2100,19 +2100,21 @@ function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
     if (!target) return;
     const risk = MACRO_GROUPS.find((group) => group.id === 'market-risk');
     const spec = new Map((risk?.metrics ?? []).map(([code, label, format]) => [code, { label, format }]));
-    const chart = MACRO_LEVERAGE_CHART;
-    const card = document.createElement('article'); card.className = 'macro-borrowing-card'; card.dataset.macroCodes = chart.codes.join(' ');
-    const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
-    const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
-    card.append(title, note);
-    const [base, ...rest] = chart.codes.flatMap((code) => {
-        const indicator = byCode.get(code); const meta = spec.get(code);
-        return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
+    const cards = MACRO_TOP_CHARTS.map((chart) => {
+        const card = document.createElement('article'); card.className = 'macro-borrowing-card'; card.dataset.macroCodes = chart.codes.join(' ');
+        const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
+        const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
+        card.append(title, note);
+        const [base, ...rest] = chart.codes.flatMap((code) => {
+            const indicator = byCode.get(code); const meta = spec.get(code);
+            return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
+        });
+        if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest,
+            { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }));
+        else { const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。'); card.append(empty); }
+        return card;
     });
-    if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest,
-        { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }));
-    else { const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。'); card.append(empty); }
-    target.replaceChildren(card);
+    target.replaceChildren(...cards);
 }
 
 function renderMacroBorrowing(byCode: Map<string, MacroIndicator>) {

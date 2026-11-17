@@ -3,6 +3,15 @@
 // Related series are compared in one chart: the first code is the base line, the rest are comparison lines with
 // every value in one readout (AGENTS.md: one chart per shape). Cards listed here draw their charts below the
 // metric tiles instead of one chart per tile. "a|b" means the first code that has data.
+/** 2026-11-17: the very first chart on the macro page, the Taiwan market P/E. TWSE publishes P/E per stock only, so maya-sawa
+ *  computes the market figure: total market cap over total earnings of every listed stock with a positive P/E. */
+export const MACRO_VALUATION_CHART = {
+    id: 'tw-valuation', codes: ['TW_MARKET_PE'] as readonly string[],
+    title: { zh: '台股大盤本益比', en: 'Taiwan market P/E' },
+    note: { zh: '上市股票合計市值除以合計盈餘（市值加權，虧損公司不計），由證交所個股本益比換算，並非證交所官方的大盤本益比；數字越高代表股價相對獲利越貴。歷史從啟用日往回補約 90 天。',
+        en: 'Total market cap over total earnings of listed stocks with a positive P/E (cap-weighted, loss-makers left out), computed from TWSE per-stock P/E; not an official TWSE figure. Higher means pricier against earnings. History is backfilled about 90 days.' },
+} as const;
+
 /** 2026-11-17: first on the macro page, Taiwan margin leverage on its own: the margin loan balance (NT$ 100m, left axis),
  *  the market-wide maintenance ratio (%, right axis) and margin-call accounts (outer right axis): accounts whose whole-account
  *  ratio is below 130%, from the TWSE 臺股儀表板 (BFIJ3U, the dashboard's 追繳戶數). */
@@ -12,6 +21,9 @@ export const MACRO_LEVERAGE_CHART = {
     note: { zh: '上市融資餘額（億元，左軸）與大盤融資維持率（%，右軸，以擔保品市值除以融資金額估算）。維持率跌近 130% 時券商開始追繳；追繳戶數為整戶維持率低於 130% 的戶數（證交所臺股儀表板，外側右軸）。',
         en: 'TWSE margin loan balance (NT$ 100m, left) and the market-wide maintenance ratio (%, right; collateral value over margin loans). Brokers start margin calls near 130%; margin-call accounts are those below 130% (TWSE dashboard, outer right).' },
 } as const;
+
+/** The charts that open the macro page, top to bottom. */
+export const MACRO_TOP_CHARTS = [MACRO_VALUATION_CHART, MACRO_LEVERAGE_CHART] as const;
 
 /** 2026-11-16: above the borrowing charts, the two volatility indexes, Taiwan left and U.S. right. Each draws its stored
  *  daily closes with the live reading as today's last point (macroLive.ts), refreshed every minute. */

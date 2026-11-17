@@ -662,3 +662,10 @@ flowchart LR
 - 新聞常說的「追繳人數」即此數字。
 
 開發方法：maya-sawa `tests/market/macro/test_market_macro_margin_calls.py` 用真實回應 fixture 測解析與合併歷史；`tests/market/macroLayout.test.ts` 確認三條線同圖、三軸、分軸、不在卡片內重畫；`macroGroups.test.ts` 的「每個指標都有畫」把頂端圖算進去。
+
+## 台股大盤本益比（2026-11-17）
+
+- 證交所只公布**個股**本益比（`BWIBBU_d`，每日全市場一次查詢），沒有官方的大盤本益比序列。maya-sawa `_fetch_twse_market_pe` 自己算：上市股票「合計市值 ÷ 合計盈餘」，市值 = 收盤價 × 已發行普通股數（`t187ap03_L`），盈餘 = 市值 ÷ 個股本益比；虧損（無本益比）與查無股數者不計。
+- 股數用最新一份，所以回補的歷史日期有輕微誤差（增資、減資、新上市）；這是估計值，不等於證交所或其他網站的大盤本益比。
+- 啟用時往回補約 90 天，每次最多補 6 個交易日（最新的先補），假日回「無資料」後本程序不再重問；之後每個交易日自動累積。
+- 前端 `MACRO_VALUATION_CHART`（單線）排在 `MACRO_TOP_CHARTS` 第一張，其次是融資槓桿圖。

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MACRO_LEVERAGE_CHART, MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
+import { MACRO_LEVERAGE_CHART, MACRO_TOP_CHARTS, MACRO_VALUATION_CHART, MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 import i18n from '../../src/storages/i18n.json';
 
@@ -134,5 +134,15 @@ describe('margin leverage chart', () => {
     it('is not drawn a second time inside a card', () => {
         const inCards = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         for (const code of MACRO_LEVERAGE_CHART.codes) expect(inCards).not.toContain(code);
+    });
+});
+
+// 2026-11-17: the market P/E opens the macro page, above the leverage chart.
+describe('market valuation chart', () => {
+    it('draws the market P/E alone, opens the macro page and is not drawn again inside a card', () => {
+        expect(MACRO_VALUATION_CHART.codes).toEqual(['TW_MARKET_PE']);
+        expect(MACRO_TOP_CHARTS.map((chart) => chart.id)).toEqual(['tw-valuation', 'tw-leverage']);
+        const inCards = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
+        expect(inCards).not.toContain('TW_MARKET_PE');
     });
 });

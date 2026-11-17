@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MACRO_GROUP_SPECS } from '../../src/scripts/market/macroGroups';
-import { MACRO_LEVERAGE_CHART, MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
+import { MACRO_TOP_CHARTS, MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 
 const group = (id: string) => MACRO_GROUP_SPECS.find((item) => item.id === id)!;
@@ -18,8 +18,8 @@ const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 describe('MACRO_GROUP_SPECS', () => {
     it('has a market risk card with margin balance, turnover, VIX and the margin maintenance ratio', () => {
         // 2026-11-17: margin-call accounts (TWSE 臺股儀表板) added after the maintenance ratio.
-        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE', 'TW_MARGIN_CALL_ACCOUNTS', 'TX_CALENDAR_SPREAD']);
-        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['raw', 'raw', 'raw', 'raw', 'percent', 'raw', 'raw']);
+        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE', 'TW_MARGIN_CALL_ACCOUNTS', 'TX_CALENDAR_SPREAD', 'TW_MARKET_PE']);
+        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['raw', 'raw', 'raw', 'raw', 'percent', 'raw', 'raw', 'raw']);
     });
 
     it('includes Japan and Korea employment, inflation, rates, retail, FX and trade', () => {
@@ -87,7 +87,7 @@ describe('every macro indicator is charted', () => {
             const charted = new Set([
                 ...(MACRO_MERGED_CHARTS[group.id] || []).flat().flatMap((choice) => choice.split('|')),
                 // 2026-11-17: margin balance and maintenance ratio are drawn in the top leverage chart instead.
-                ...(group.id === 'market-risk' ? MACRO_LEVERAGE_CHART.codes : []),
+                ...(group.id === 'market-risk' ? MACRO_TOP_CHARTS.flatMap((chart) => chart.codes) : []),
                 ...Object.values(MACRO_GROWTH_CHARTS).filter((chart) => chart.group === group.id)
                     .flatMap((chart) => [...chart.lines.mom, ...chart.lines.yoy, ...(chart.lines.level || [])].map((line) => line.code)),
             ]);

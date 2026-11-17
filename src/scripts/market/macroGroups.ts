@@ -111,6 +111,8 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         // 2026-11-17: TWSE 臺股儀表板, accounts below 130% (drawn in the top leverage chart, MACRO_LEVERAGE_CHART).
         m('TW_MARGIN_CALL_ACCOUNTS', 'Taiwan margin-call accounts (below 130%, TWSE dashboard)', '台股追繳戶數（維持率低於 130%）', 'raw'),
         m('TX_CALENDAR_SPREAD', 'TAIEX futures next minus near month (points)', '台指期次月減近月價差（點）', 'raw'),
+        // 2026-11-17: computed from TWSE per-stock P/E (cap-weighted); drawn in the top valuation chart, MACRO_VALUATION_CHART.
+        m('TW_MARKET_PE', 'Taiwan market P/E (TWSE listed, cap-weighted)', '台股大盤本益比（上市，市值加權）', 'raw'),
     ] },
     { id: 'fx-trade', eventGroups: [], title: { en: 'Exchange rates and Taiwan trade', zh: '匯率與台灣進出口' }, metrics: [
         // Strength against the dollar, 100 on a shared start date: up means that currency gained (macroSeries 'fx-strength').
