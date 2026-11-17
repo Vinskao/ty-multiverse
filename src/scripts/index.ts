@@ -15,7 +15,7 @@ import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedD
 import { analysisRating } from './market/analysisRating';
 import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { companyEventSourceUrl, conferenceOtherScheduleCounts, insiderSaleNotice } from './market/companyEventPresentation';
+import { companyEventSourceUrl, conferenceOtherScheduleCounts, insiderNotices, type InsiderNotice } from './market/companyEventPresentation';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
 import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
@@ -104,7 +104,7 @@ const MARKET_ACCORDION_QUERY = '(max-width: 768px)';
 let marketDetailRow: HTMLElement | null = null;
 // The tab the user last picked; kept when switching to another instrument.
 let preferredMarketTab: string | null = null;
-type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference' | 'insider_transfer'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming' | 'active'; highlight: boolean; source?: string; sourceUrl?: string };
+type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference' | 'insider_transfer' | 'insider_untransferred' | 'insider_buy'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming' | 'active'; highlight: boolean; source?: string; sourceUrl?: string };
 let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
@@ -1315,26 +1315,29 @@ function renderMarketDetailHeader(instrument: DashboardInstrument) {
 }
 
 // Open insider sale filings (內部人持股轉讓事前申報) mark the detail header and every row of that stock, holdings included.
+function insiderBadge(notice: InsiderNotice) {
+    const tag = document.createElement('span'); tag.className = `market-insider-badge market-insider-badge--${notice.tone}`;
+    tag.textContent = notice.text; tag.title = notice.title;
+    return tag;
+}
+
 function renderInsiderNotice(instrument: DashboardInstrument) {
     const title = document.getElementById('market-detail-title');
     if (!title) return;
     document.getElementById('market-detail-insider')?.remove();
-    const notice = insiderSaleNotice(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW');
-    if (!notice) return;
-    const tag = document.createElement('span'); tag.id = 'market-detail-insider'; tag.className = 'market-insider-badge';
-    tag.textContent = notice.text; tag.title = notice.title;
-    title.after(tag);
+    const notices = insiderNotices(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW');
+    if (!notices.length) return;
+    const holder = document.createElement('span'); holder.id = 'market-detail-insider';
+    holder.append(...notices.map(insiderBadge));
+    title.after(holder);
 }
 
 function applyInsiderBadges() {
     document.querySelectorAll<HTMLElement>('.market-watch-row[data-market-code]').forEach((row) => {
-        row.querySelector('.market-insider-badge')?.remove();
+        row.querySelectorAll('.market-insider-badge').forEach((badge) => badge.remove());
         const instrument = [...marketAutoInstruments, ...marketCustomInstruments].find((item) => item.code === row.dataset.marketCode);
-        const notice = instrument ? insiderSaleNotice(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW') : null;
-        if (!notice) return;
-        const tag = document.createElement('span'); tag.className = 'market-insider-badge';
-        tag.textContent = notice.text; tag.title = notice.title;
-        row.querySelector('.market-watch-instrument')?.append(tag);
+        const notices = instrument ? insiderNotices(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW') : [];
+        row.querySelector('.market-watch-instrument')?.append(...notices.map(insiderBadge));
     });
     if (selectedMarketInstrument) renderInsiderNotice(selectedMarketInstrument);
 }
@@ -1559,6 +1562,8 @@ async function fetchMarketDashboard() {
 
 function marketEventLabel(type: MarketCompanyEvent['type']) {
     if (type === 'insider_transfer') return marketText('Insider sale filed', '內部人申報轉讓');
+    if (type === 'insider_untransferred') return marketText('Insider sale not completed', '內部人未轉讓申報');
+    if (type === 'insider_buy') return marketText('Insider buying', '內部人增持');
     return type === 'monthly_revenue' ? marketI18n('marketEventRevenue', 'Revenue released')
         : type === 'financial_report' ? marketI18n('marketEventFinancialReport', 'Financial report')
             : marketI18n('marketEventConference', 'Investor conference');

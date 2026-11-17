@@ -34,3 +34,17 @@ export function insiderSaleNotice(events: readonly InsiderEvent[], zh: boolean):
   const text = zh ? (active ? '內部人申報賣股中' : '內部人即將賣股') : (active ? 'Insider sale filed' : 'Insider sale starting soon');
   return { text, title: event.period || '' };
 }
+
+export type InsiderNotice = { text: string; title: string; tone: 'sell' | 'buy' | 'neutral' };
+
+/** Every insider mark for a stock, sale first: open sale filing, unsold filing (未轉讓申報), month-over-month buy. */
+export function insiderNotices(events: readonly InsiderEvent[], zh: boolean): InsiderNotice[] {
+  const notices: InsiderNotice[] = [];
+  const sale = insiderSaleNotice(events, zh);
+  if (sale) notices.push({ ...sale, tone: 'sell' });
+  const unsold = events.find((event) => event.type === 'insider_untransferred');
+  if (unsold) notices.push({ text: zh ? '內部人申報未賣出' : 'Insider sale not completed', title: unsold.period || '', tone: 'neutral' });
+  const buy = events.find((event) => event.type === 'insider_buy');
+  if (buy) notices.push({ text: zh ? '內部人增持' : 'Insider buying', title: buy.period || '', tone: 'buy' });
+  return notices;
+}

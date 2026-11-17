@@ -43,3 +43,21 @@ describe('insider sale notice', () => {
     expect(insiderSaleNotice([{ code: '1734', type: 'monthly_revenue' }], true)).toBeNull();
   });
 });
+
+describe('insider notices (sell, unsold, buy)', () => {
+  const sale = { code: '1734', type: 'insider_transfer', status: 'active', period: 'p-sale' };
+  const unsold = { code: '2313', type: 'insider_untransferred', status: 'recent', period: 'p-unsold' };
+  const buy = { code: '1101', type: 'insider_buy', status: 'recent', period: 'p-buy' };
+
+  it('marks a buy, an unsold filing and a sale with their own tone', async () => {
+    const { insiderNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(insiderNotices([buy], true)).toEqual([{ text: '內部人增持', title: 'p-buy', tone: 'buy' }]);
+    expect(insiderNotices([unsold], true)).toEqual([{ text: '內部人申報未賣出', title: 'p-unsold', tone: 'neutral' }]);
+    expect(insiderNotices([sale, buy], false).map((notice) => notice.tone)).toEqual(['sell', 'buy']);
+  });
+
+  it('ignores ordinary company events', async () => {
+    const { insiderNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(insiderNotices([{ code: '1101', type: 'monthly_revenue' }], true)).toEqual([]);
+  });
+});
