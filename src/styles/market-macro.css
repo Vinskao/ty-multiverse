@@ -158,4 +158,5 @@
 .macro-borrowing-card h5 { margin:0 0 .25rem; font-size:1rem; }
 .macro-vol-live { margin:0 0 .5rem; font-size:.9rem; font-variant-numeric:tabular-nums; }
 .macro-borrowing-note { margin:0 0 .5rem; color:var(--gray-400); font-size:.8rem; line-height:1.5; }
+.macro-leverage { grid-template-columns:1fr; }
 @media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }

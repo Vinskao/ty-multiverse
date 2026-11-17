@@ -650,3 +650,11 @@ flowchart LR
 來源選擇：世界銀行與 IMF 不收台灣（IMF 對伺服器直接 403），內政部開放資料與主計總處人口表連不上或查無代號；OWID 一個 CSV 同時含四國。資料只到最近一個 UN 估計年（目前 2023）。
 
 開發方法：後端 `tests/market/macro/test_market_macro_population.py` 用固定 CSV（`tests/fixtures/macro/owid_population.csv`）測解析、單位與一次請求；前端 `tests/market/macroSpeed.test.ts` 確認每張卡都有分區、人口卡的代號與合併圖。
+
+## 融資餘額與維持率移到最上面（2026-11-17）
+
+總經區第一張圖改為「台股融資餘額與融資維持率」（`MACRO_LEVERAGE_CHART`），融資餘額左軸（億元）、維持率右軸（%），整張寬度；原本「市場風險情緒」卡的五線圖拿掉這兩條，剩成交量、VIX、台指期轉倉超額價差。
+
+追繳人數沒有放：證交所、櫃買 OpenAPI 都沒有追繳戶數（只有融資餘額、維持率相關與違約交割公告）；新聞引用的追繳戶數來自第三方「台股儀表板」。來源待使用者決定。
+
+開發方法：`tests/market/macroLayout.test.ts` 確認兩條線同圖、分軸、不在卡片內重畫；`macroGroups.test.ts` 的「每個指標都有畫」把頂端圖算進去。

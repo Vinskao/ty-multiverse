@@ -3,6 +3,16 @@
 // Related series are compared in one chart: the first code is the base line, the rest are comparison lines with
 // every value in one readout (AGENTS.md: one chart per shape). Cards listed here draw their charts below the
 // metric tiles instead of one chart per tile. "a|b" means the first code that has data.
+/** 2026-11-17: first on the macro page, Taiwan margin leverage on its own: the margin loan balance (NT$ 100m, left axis)
+ *  and the market-wide maintenance ratio (%, right axis). Margin-call counts have no official free source (TWSE publishes
+ *  the maintenance ratio and settlement defaults, not how many accounts got a call), so they are not drawn. */
+export const MACRO_LEVERAGE_CHART = {
+    id: 'tw-leverage', codes: ['TW_MARGIN_BALANCE', 'TW_MARGIN_MAINTENANCE'] as readonly string[],
+    title: { zh: '台股融資餘額與融資維持率', en: 'Taiwan margin loans and maintenance ratio' },
+    note: { zh: '上市融資餘額（億元，左軸）與大盤融資維持率（%，右軸，以擔保品市值除以融資金額估算）。維持率跌近 130% 時券商開始追繳。',
+        en: 'TWSE margin loan balance (NT$ 100m, left) and the market-wide maintenance ratio (%, right; collateral value over margin loans). Brokers start margin calls near 130%.' },
+} as const;
+
 /** 2026-11-16: above the borrowing charts, the two volatility indexes, Taiwan left and U.S. right. Each draws its stored
  *  daily closes with the live reading as today's last point (macroLive.ts), refreshed every minute. */
 export const MACRO_VOLATILITY_CHARTS = [
@@ -59,7 +69,8 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     // All daily, one shared time axis, one y-axis per unit (macroAxisPlan): margin balance and trading value (NT$ 100m,
     // left), VIX (right), the TX roll spread above fair carry (TAIEX points, outer right), maintenance ratio (%, outer
     // left). The raw calendar spread is drawn alone: it shares its unit with the excess but a series is drawn only once.
-    'market-risk': [['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE'], ['TX_CALENDAR_SPREAD']],
+    // Margin balance and maintenance ratio moved to MACRO_LEVERAGE_CHART at the top of the page (2026-11-17).
+    'market-risk': [['TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD'], ['TX_CALENDAR_SPREAD']],
 };
 
 // The unit a series is plotted in: growth formats are percent whatever the level's unit.

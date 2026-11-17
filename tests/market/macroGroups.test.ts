@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MACRO_GROUP_SPECS } from '../../src/scripts/market/macroGroups';
-import { MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
+import { MACRO_LEVERAGE_CHART, MACRO_MERGED_CHARTS } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 
 const group = (id: string) => MACRO_GROUP_SPECS.find((item) => item.id === id)!;
@@ -81,10 +81,12 @@ describe('MACRO_GROUP_SPECS', () => {
 
 // The dashboard shows line charts only (no one-number tiles), so every listed indicator must be drawn in a chart.
 describe('every macro indicator is charted', () => {
-    it('appears in a merged chart or a growth chart of its own card', () => {
+    it('appears in a merged chart, a growth chart of its own card, or the top leverage chart', () => {
         for (const group of MACRO_GROUP_SPECS) {
             const charted = new Set([
                 ...(MACRO_MERGED_CHARTS[group.id] || []).flat().flatMap((choice) => choice.split('|')),
+                // 2026-11-17: margin balance and maintenance ratio are drawn in the top leverage chart instead.
+                ...(group.id === 'market-risk' ? MACRO_LEVERAGE_CHART.codes : []),
                 ...Object.values(MACRO_GROWTH_CHARTS).filter((chart) => chart.group === group.id)
                     .flatMap((chart) => [...chart.lines.mom, ...chart.lines.yoy, ...(chart.lines.level || [])].map((line) => line.code)),
             ]);

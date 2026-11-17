@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
+import { MACRO_LEVERAGE_CHART, MACRO_MERGED_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from '../../src/scripts/market/macroLayout';
 import { MACRO_GROWTH_CHARTS } from '../../src/scripts/market/macroGrowth';
 import i18n from '../../src/storages/i18n.json';
 
@@ -62,8 +62,9 @@ describe('macro chart layout', () => {
     // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.
     it('draws margin balance, turnover, VIX, the futures roll excess and the maintenance ratio on one shared time axis', () => {
         // 2026-10-29: the owner wants all of these on one chart with several y-axes; the raw calendar spread is drawn alone.
+        // 2026-11-17: margin balance and the maintenance ratio moved to their own chart at the top (MACRO_LEVERAGE_CHART).
         expect(MACRO_MERGED_CHARTS['market-risk']).toEqual([
-            ['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE'], ['TX_CALENDAR_SPREAD']]);
+            ['TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD'], ['TX_CALENDAR_SPREAD']]);
         expect(macroChartNeedsSeparateAxes([{ format: 'percent', unit: 'percent' }, { format: 'raw', unit: 'index points' }])).toBe(true);
     });
 
@@ -118,5 +119,18 @@ describe('macroChartTitle', () => {
 
     it('ignores blank labels', () => {
         expect(macroChartTitle(['', ' ', 'ICSA'])).toBe('ICSA');
+    });
+});
+
+// 2026-11-17: the owner wants Taiwan margin leverage on its own chart, first on the macro page.
+describe('margin leverage chart', () => {
+    it('draws the margin loan balance and the maintenance ratio together, each on its own axis', () => {
+        expect(MACRO_LEVERAGE_CHART.codes).toEqual(['TW_MARGIN_BALANCE', 'TW_MARGIN_MAINTENANCE']);
+        expect(macroChartNeedsSeparateAxes([{ format: 'raw', unit: 'NTD 100 million' }, { format: 'percent', unit: 'percent' }])).toBe(true);
+    });
+
+    it('is not drawn a second time inside a card', () => {
+        const inCards = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
+        for (const code of MACRO_LEVERAGE_CHART.codes) expect(inCards).not.toContain(code);
     });
 });
