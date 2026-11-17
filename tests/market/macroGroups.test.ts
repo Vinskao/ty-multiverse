@@ -17,8 +17,9 @@ const codesOf = (id: string) => group(id).metrics.map((metric) => metric.code);
 
 describe('MACRO_GROUP_SPECS', () => {
     it('has a market risk card with margin balance, turnover, VIX and the margin maintenance ratio', () => {
-        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE', 'TX_CALENDAR_SPREAD']);
-        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['raw', 'raw', 'raw', 'raw', 'percent', 'raw']);
+        // 2026-11-17: margin-call accounts (TWSE 臺股儀表板) added after the maintenance ratio.
+        expect(codesOf('market-risk')).toEqual(['TW_MARGIN_BALANCE', 'TW_MARKET_TURNOVER', 'US_VIX', 'TX_ROLL_EXCESS_SPREAD', 'TW_MARGIN_MAINTENANCE', 'TW_MARGIN_CALL_ACCOUNTS', 'TX_CALENDAR_SPREAD']);
+        expect(group('market-risk').metrics.map((metric) => metric.format)).toEqual(['raw', 'raw', 'raw', 'raw', 'percent', 'raw', 'raw']);
     });
 
     it('includes Japan and Korea employment, inflation, rates, retail, FX and trade', () => {
@@ -101,5 +102,11 @@ describe('TIER economic forecast (2026-11-15)', () => {
             ['TIER_TW_GDP_FORECAST', 'percent'], ['TIER_TW_CPI_FORECAST', 'percent'],
         ]);
         expect(MACRO_MERGED_CHARTS['tw-forecast']).toEqual([['TIER_TW_GDP_FORECAST', 'TIER_TW_CPI_FORECAST']]);
+    });
+});
+
+describe('margin-call accounts (2026-11-17)', () => {
+    it('are a whole-number count in the market-risk card', () => {
+        expect(group('market-risk').metrics.find((metric) => metric.code === 'TW_MARGIN_CALL_ACCOUNTS')?.format).toBe('raw');
     });
 });

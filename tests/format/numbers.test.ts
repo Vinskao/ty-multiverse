@@ -100,3 +100,10 @@ describe('price kind', () => {
         expect(formatNumber(null, 'price')).toBe('—');
     });
 });
+
+describe('account counts (2026-11-17)', () => {
+    it('show margin-call accounts without decimals', async () => {
+        const { numberKindFor } = await import('../../src/scripts/format/numbers');
+        expect(numberKindFor('accounts', 'raw')).toBe('count');
+    });
+});

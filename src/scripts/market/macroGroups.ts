@@ -108,6 +108,8 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('US_VIX', 'CBOE VIX (fear index)', '美國 VIX 恐慌指數', 'raw'),
         m('TX_ROLL_EXCESS_SPREAD', 'TAIEX futures roll spread above fair carry (points)', '台指期轉倉超額價差（點，扣利率與股利）', 'raw'),
         m('TW_MARGIN_MAINTENANCE', 'Taiwan margin maintenance ratio (TWSE listed)', '台股融資維持率（上市大盤）', 'percent'),
+        // 2026-11-17: TWSE 臺股儀表板, accounts below 130% (drawn in the top leverage chart, MACRO_LEVERAGE_CHART).
+        m('TW_MARGIN_CALL_ACCOUNTS', 'Taiwan margin-call accounts (below 130%, TWSE dashboard)', '台股追繳戶數（維持率低於 130%）', 'raw'),
         m('TX_CALENDAR_SPREAD', 'TAIEX futures next minus near month (points)', '台指期次月減近月價差（點）', 'raw'),
     ] },
     { id: 'fx-trade', eventGroups: [], title: { en: 'Exchange rates and Taiwan trade', zh: '匯率與台灣進出口' }, metrics: [

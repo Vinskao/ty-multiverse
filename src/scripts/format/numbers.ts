@@ -7,7 +7,7 @@ export type NumberKind = 'count' | 'percent' | 'pp' | 'decimal' | 'millions' | '
 
 const DIGITS: Record<NumberKind, number> = { count: 0, percent: 2, pp: 2, decimal: 2, millions: 0, price: 2 };
 const AXIS_DIGITS: Record<NumberKind, number> = { count: 0, percent: 1, pp: 1, decimal: 1, millions: 0, price: 1 };
-const COUNT_UNIT = /persons|jobs|shares|lots|contracts|holders|NTD thousand|people|人|股|張|口/i;
+const COUNT_UNIT = /persons|jobs|shares|lots|contracts|holders|accounts|NTD thousand|people|人|股|張|口|戶/i;
 
 // Kind from a series' unit and display format: growth formats are percent whatever the level's unit.
 export function numberKindFor(unit: string | undefined, format?: string): NumberKind {

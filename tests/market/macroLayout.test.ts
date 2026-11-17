@@ -124,8 +124,10 @@ describe('macroChartTitle', () => {
 
 // 2026-11-17: the owner wants Taiwan margin leverage on its own chart, first on the macro page.
 describe('margin leverage chart', () => {
-    it('draws the margin loan balance and the maintenance ratio together, each on its own axis', () => {
-        expect(MACRO_LEVERAGE_CHART.codes).toEqual(['TW_MARGIN_BALANCE', 'TW_MARGIN_MAINTENANCE']);
+    it('draws margin balance, maintenance ratio and margin-call accounts together, each on its own axis', () => {
+        expect(MACRO_LEVERAGE_CHART.codes).toEqual(['TW_MARGIN_BALANCE', 'TW_MARGIN_MAINTENANCE', 'TW_MARGIN_CALL_ACCOUNTS']);
+        // NT$ 100m left, percent right, accounts outer right: three units, three axes.
+        expect(macroAxisPlan([{ format: 'raw', unit: 'TWD 100 million' }, { format: 'percent', unit: 'percent' }, { format: 'raw', unit: 'accounts' }])).toEqual([0, 1, 2]);
         expect(macroChartNeedsSeparateAxes([{ format: 'raw', unit: 'NTD 100 million' }, { format: 'percent', unit: 'percent' }])).toBe(true);
     });
 

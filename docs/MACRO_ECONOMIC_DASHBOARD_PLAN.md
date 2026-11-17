@@ -655,6 +655,10 @@ flowchart LR
 
 總經區第一張圖改為「台股融資餘額與融資維持率」（`MACRO_LEVERAGE_CHART`），融資餘額左軸（億元）、維持率右軸（%），整張寬度；原本「市場風險情緒」卡的五線圖拿掉這兩條，剩成交量、VIX、台指期轉倉超額價差。
 
-追繳人數沒有放：證交所、櫃買 OpenAPI 都沒有追繳戶數（只有融資餘額、維持率相關與違約交割公告）；新聞引用的追繳戶數來自第三方「台股儀表板」。來源待使用者決定。
+**追繳戶數（同日加入，外側右軸）**：來源是證交所官網的「臺股儀表板」（2026-09-23 上線，`https://www.twse.com.tw/dashboard/zh/credit/margin.html`），不是 OpenAPI。後端讀它頁面用的 `GET /rwd/zh/marginTrading/BFIJ3U_TREND?days=60&response=json`，取 `belowAccNum`（儀表板標為「追繳戶數」，定義：截至當日整戶擔保維持率低於 130% 的戶數）。同一回應另有官方整戶維持率 `keepRate`、處分戶數 `exeAccNum`、追繳金額 `callAmt`，目前未畫。
 
-開發方法：`tests/market/macroLayout.test.ts` 確認兩條線同圖、分軸、不在卡片內重畫；`macroGroups.test.ts` 的「每個指標都有畫」把頂端圖算進去。
+- 端點最多只給最近 60 個交易日（`days` 再大也一樣，目前最早 2026-08-18），`?date=` 查歷史回「沒有符合條件的資料」。所以 maya-sawa `_fetch_twse_margin_calls` 每 6 小時最多抓一次，**與已存歷史合併**，圖會越來越長。
+- 這是網頁內部端點，沒有文件保證；格式一變，`parse_twse_margin_calls` 會回空並記錯誤，圖上保留已存的天數。
+- 新聞常說的「追繳人數」即此數字。
+
+開發方法：maya-sawa `tests/market/macro/test_market_macro_margin_calls.py` 用真實回應 fixture 測解析與合併歷史；`tests/market/macroLayout.test.ts` 確認三條線同圖、三軸、分軸、不在卡片內重畫；`macroGroups.test.ts` 的「每個指標都有畫」把頂端圖算進去。
