@@ -24,7 +24,7 @@ export function companyEventSourceUrl(event: CompanyEvent): string | undefined {
   return event.type === 'investor_conference' ? TDCC_EVENTS_URL : undefined;
 }
 
-type InsiderEvent = CompanyEvent & { status?: string; period?: string };
+type InsiderEvent = CompanyEvent & { status?: string; period?: string; flag?: string };
 
 /** The row/header mark for an open insider sale filing (maya-sawa market_insider_transfers.py); null when there is none. */
 export function insiderSaleNotice(events: readonly InsiderEvent[], zh: boolean): { text: string; title: string } | null {
@@ -35,11 +35,18 @@ export function insiderSaleNotice(events: readonly InsiderEvent[], zh: boolean):
   return { text, title: event.period || '' };
 }
 
-export type InsiderNotice = { text: string; title: string; tone: 'sell' | 'buy' | 'neutral' };
+export type StockNotice = { text: string; title: string; tone: 'sell' | 'buy' | 'neutral' | 'volume' };
 
-/** Every insider mark for a stock, sale first: open sale filing, unsold filing (未轉讓申報), month-over-month buy. */
-export function insiderNotices(events: readonly InsiderEvent[], zh: boolean): InsiderNotice[] {
-  const notices: InsiderNotice[] = [];
+/** Every mark for a stock: this week's volume spike first, then the insider marks (open sale filing, unsold filing
+ *  未轉讓申報, month-over-month buy). */
+export function stockNotices(events: readonly InsiderEvent[], zh: boolean): StockNotice[] {
+  const notices: StockNotice[] = [];
+  const spike = events.find((event) => event.type === 'volume_spike');
+  if (spike) {
+    const top5 = spike.flag === 'top5';
+    const text = zh ? (top5 ? '爆大量 · 年度前 5' : '大量 · 年度前 10') : (top5 ? 'Volume spike · top 5 of the year' : 'Heavy volume · top 10 of the year');
+    notices.push({ text, title: spike.period || '', tone: 'volume' });
+  }
   const sale = insiderSaleNotice(events, zh);
   if (sale) notices.push({ ...sale, tone: 'sell' });
   const unsold = events.find((event) => event.type === 'insider_untransferred');
@@ -48,3 +55,8 @@ export function insiderNotices(events: readonly InsiderEvent[], zh: boolean): In
   if (buy) notices.push({ text: zh ? '內部人增持' : 'Insider buying', title: buy.period || '', tone: 'buy' });
   return notices;
 }
+
+const STOCK_NOTICE_TYPES = new Set(['volume_spike', 'insider_transfer', 'insider_untransferred', 'insider_buy']);
+
+/** True for event types shown as a stock badge (stockNotices), so the older per-event badge skips them. */
+export const hasStockNotice = (type: string) => STOCK_NOTICE_TYPES.has(type);

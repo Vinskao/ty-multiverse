@@ -50,14 +50,41 @@ describe('insider notices (sell, unsold, buy)', () => {
   const buy = { code: '1101', type: 'insider_buy', status: 'recent', period: 'p-buy' };
 
   it('marks a buy, an unsold filing and a sale with their own tone', async () => {
-    const { insiderNotices } = await import('../../src/scripts/market/companyEventPresentation');
-    expect(insiderNotices([buy], true)).toEqual([{ text: '內部人增持', title: 'p-buy', tone: 'buy' }]);
-    expect(insiderNotices([unsold], true)).toEqual([{ text: '內部人申報未賣出', title: 'p-unsold', tone: 'neutral' }]);
-    expect(insiderNotices([sale, buy], false).map((notice) => notice.tone)).toEqual(['sell', 'buy']);
+    const { stockNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(stockNotices([buy], true)).toEqual([{ text: '內部人增持', title: 'p-buy', tone: 'buy' }]);
+    expect(stockNotices([unsold], true)).toEqual([{ text: '內部人申報未賣出', title: 'p-unsold', tone: 'neutral' }]);
+    expect(stockNotices([sale, buy], false).map((notice) => notice.tone)).toEqual(['sell', 'buy']);
   });
 
   it('ignores ordinary company events', async () => {
-    const { insiderNotices } = await import('../../src/scripts/market/companyEventPresentation');
-    expect(insiderNotices([{ code: '1101', type: 'monthly_revenue' }], true)).toEqual([]);
+    const { stockNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(stockNotices([{ code: '1101', type: 'monthly_revenue' }], true)).toEqual([]);
+  });
+});
+
+// 2026-11-17: a stock whose volume reached the yearly top 10 / top 5 this week is marked on its rows (it was Telegram-only before).
+describe('volume spike notice', () => {
+  const top5 = { code: '6857', type: 'volume_spike', flag: 'top5', period: '本週成交量進入近一年前 10 大：週一第 2 名（前 5）' };
+  const top10 = { code: '2330', type: 'volume_spike', flag: 'top10', period: 'p10' };
+
+  it('calls a top-5 day a volume spike and a top-10 day heavy volume, with the ranking as the tooltip', async () => {
+    const { stockNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(stockNotices([top5], true)).toEqual([{ text: '爆大量 · 年度前 5', title: top5.period, tone: 'volume' }]);
+    expect(stockNotices([top10], true)[0]).toMatchObject({ text: '大量 · 年度前 10', tone: 'volume' });
+    expect(stockNotices([top5], false)[0].text).toBe('Volume spike · top 5 of the year');
+  });
+
+  it('lists the volume mark before the insider marks', async () => {
+    const { stockNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    const sale = { code: '6857', type: 'insider_transfer', status: 'active', period: 'p' };
+    expect(stockNotices([sale, top5], true).map((notice) => notice.tone)).toEqual(['volume', 'sell']);
+  });
+});
+
+describe('one badge per mark', () => {
+  it('knows which event types already have their own stock badge', async () => {
+    const { hasStockNotice } = await import('../../src/scripts/market/companyEventPresentation');
+    for (const type of ['volume_spike', 'insider_transfer', 'insider_untransferred', 'insider_buy']) expect(hasStockNotice(type), type).toBe(true);
+    for (const type of ['monthly_revenue', 'financial_report', 'investor_conference']) expect(hasStockNotice(type), type).toBe(false);
   });
 });
