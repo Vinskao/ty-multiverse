@@ -1,7 +1,7 @@
 <div id="market-heat" hidden role="status" aria-live="polite" data-level="warn" data-dir="down">
   <span class="heat-wave" aria-hidden="true"></span><span class="heat-fx" aria-hidden="true"></span>
   <span class="heat-icon" aria-hidden="true"><i class="heat-ring"></i><i class="heat-ring"></i><i class="heat-ring"></i><span class="heat-fire">🔥</span></span>
-  <div class="heat-text"><a class="heat-headline"><strong></strong></a><span class="heat-details"></span><small></small></div>
+  <div class="heat-text"><a class="heat-headline"><strong></strong></a><div class="heat-sub"><span class="heat-details"></span><small></small></div></div>
   <button aria-label="關閉市場狀態條">×</button>
 </div>
 <script>
@@ -32,6 +32,9 @@ function render() {
     return index ? [document.createTextNode(' · '), node] : [node];
   }));
   el.querySelector('small')!.textContent = heat.footnote;
+  // One line each, so the bar stays slim; the full text is on hover.
+  headline.title = heat.headline;
+  el.querySelector<HTMLElement>('.heat-sub')!.title = [...heat.details.map((detail) => detail.text), heat.footnote].join(' · ');
   el.hidden = false;
   if (wasHidden) { el.classList.remove('heat-enter'); void el.offsetWidth; el.classList.add('heat-enter'); }   // restart the entrance shock
   el.querySelector('button')!.onclick = () => { el.hidden = true; try { sessionStorage.setItem(heat.key, '1'); } catch { /* private mode */ } };
