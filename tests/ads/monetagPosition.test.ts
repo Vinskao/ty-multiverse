@@ -51,3 +51,24 @@ it('places the Monetag frame in the document flow inside its slot', () => {
   expect(frame.parentElement?.hasAttribute('data-monetag-zone')).toBe(true);
   expect(frame.style.position).toBe('relative');
 });
+
+// 2026-11-17: mobile showed two stacked ~60px banners (Trip / "Download is ready") pinned over the nav. They were not 190px tall
+// iframes, so they stayed position:fixed. Any provider overlay (iframe or div, any height up to a banner) must flow in the slot.
+describe('Monetag banners of other sizes', () => {
+  const fixed = 'position:fixed;z-index:2147483647;top:10px;left:0;width:100%';
+
+  it('moves a 60px iframe banner into the slot', () => {
+    document.body.innerHTML = `<div data-monetag-zone="1" data-loaded="true"></div><iframe style="${fixed};height:60px"></iframe>`;
+    positionMonetagFloatingAds(document);
+    const frame = document.querySelector('iframe')!;
+    expect(frame.parentElement?.hasAttribute('data-monetag-zone')).toBe(true);
+    expect(frame.style.position).toBe('relative');
+  });
+
+  it('moves a fixed div overlay with the top z-index and leaves our own fixed UI alone', () => {
+    document.body.innerHTML = `<div data-monetag-zone="1" data-loaded="true"></div><div id="ad" style="${fixed};height:64px"></div><div id="mine" style="position:fixed;z-index:1500;bottom:1rem"></div>`;
+    positionMonetagFloatingAds(document);
+    expect(document.getElementById('ad')!.parentElement?.hasAttribute('data-monetag-zone')).toBe(true);
+    expect(document.getElementById('mine')!.parentElement).toBe(document.body);
+  });
+});

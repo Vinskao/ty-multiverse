@@ -239,6 +239,9 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 
 		<script>
 			import { startLiteralTranslation } from '../scripts/lang/literalRuntime';
+				import { initPageLoading } from '../scripts/pageLoading';
+				// Slow server: show a spinner the moment a tab/page switch starts.
+				initPageLoading(document, document.documentElement);
 			// English layer for pages written in Chinese (dictionary: src/storages/literalEn.json)
 			document.addEventListener('astro:page-load', startLiteralTranslation);
 			startLiteralTranslation();
