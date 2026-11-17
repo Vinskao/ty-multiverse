@@ -1,43 +1,48 @@
 <div id="market-heat" hidden role="status" aria-live="polite" data-level="warn" data-dir="down">
   <span class="heat-wave" aria-hidden="true"></span><span class="heat-fx" aria-hidden="true"></span>
   <span class="heat-icon" aria-hidden="true"><i class="heat-ring"></i><i class="heat-ring"></i><i class="heat-ring"></i><span class="heat-fire">🔥</span></span>
-  <div class="heat-text"><a class="heat-headline"><strong></strong></a><div class="heat-sub"><span class="heat-details"></span><small></small></div></div>
+  <div class="heat-text"></div>
   <button aria-label="關閉市場狀態條">×</button>
 </div>
 <script>
-import { pickHeat, type HeatStatus } from '../scripts/market/marketHeat';
+import { heatPollInterval, pickHeat, type HeatStatus } from '../scripts/market/marketHeat';
 
-const POLL_MS = 60_000;
 let timer: number | undefined;
 let last: HeatStatus | null = null;
+let showing = false;
 const lang = () => ((window as any).AppLang?.get?.() === 'zh' ? 'zh' : 'en') as 'zh' | 'en';
 const dismissed = (key: string) => { try { return !!sessionStorage.getItem(key); } catch { return false; } };
 
+// One row per market (Taiwan, then U.S.); every part of a row links to the page that shows that number.
 function render() {
   const el = document.querySelector<HTMLElement>('#market-heat');
   if (!el) return;
   const heat = pickHeat(last, lang());
-  if (!heat || dismissed(heat.key)) { el.hidden = true; return; }
+  showing = !!heat;                                     // an event is on, even if the visitor closed the bar: keep the fast refresh
+  if (!heat || dismissed(heat.key)) { el.hidden = true; schedule(); return; }
   const wasHidden = el.hidden;
   el.dataset.level = heat.level; el.dataset.dir = heat.dir;
   el.querySelector('.heat-fire')!.textContent = heat.icon;
-  const headline = el.querySelector<HTMLAnchorElement>('.heat-headline')!;
-  headline.querySelector('strong')!.textContent = heat.headline;
-  if (heat.href) headline.setAttribute('href', heat.href); else headline.removeAttribute('href');
-  // Each detail is its own link to the page that shows that number.
-  const details = el.querySelector('.heat-details')!;
-  details.replaceChildren(...heat.details.flatMap((detail, index) => {
-    const node = detail.href ? Object.assign(document.createElement('a'), { href: detail.href }) : document.createElement('span');
-    node.textContent = detail.text;
-    return index ? [document.createTextNode(' · '), node] : [node];
+  const text = el.querySelector('.heat-text')!;
+  const lastRow = heat.rows.length - 1;
+  text.replaceChildren(...heat.rows.map((row, rowIndex) => {
+    const line = document.createElement('div'); line.className = 'heat-row'; line.dataset.group = row.group;
+    const tag = document.createElement('b'); tag.className = 'heat-tag'; tag.textContent = row.label;
+    line.append(tag);
+    row.parts.forEach((part, index) => {
+      if (index) line.append(document.createTextNode(' · '));
+      const node = part.href ? Object.assign(document.createElement('a'), { href: part.href }) : document.createElement('span');
+      node.textContent = part.text;
+      line.append(node);
+    });
+    if (rowIndex === lastRow) { const note = document.createElement('small'); note.textContent = heat.footnote; line.append(note); }
+    line.title = row.parts.map((part) => part.text).join(' · ');   // one line each keeps the bar slim; the full text is on hover
+    return line;
   }));
-  el.querySelector('small')!.textContent = heat.footnote;
-  // One line each, so the bar stays slim; the full text is on hover.
-  headline.title = heat.headline;
-  el.querySelector<HTMLElement>('.heat-sub')!.title = [...heat.details.map((detail) => detail.text), heat.footnote].join(' · ');
   el.hidden = false;
   if (wasHidden) { el.classList.remove('heat-enter'); void el.offsetWidth; el.classList.add('heat-enter'); }   // restart the entrance shock
   el.querySelector('button')!.onclick = () => { el.hidden = true; try { sessionStorage.setItem(heat.key, '1'); } catch { /* private mode */ } };
+  schedule();
 }
 
 async function refresh() {
@@ -47,7 +52,14 @@ async function refresh() {
     if (!response.ok) return;
     last = await response.json() as HeatStatus;
     render();
-  } catch { /* Keep the banner as it is when market data is unavailable. */ }
+  } catch { /* Keep the bar as it is when market data is unavailable. */ }
+}
+
+// Refresh about once a minute while a heavy-volume or big-swing event is on; on a quiet day nothing shows and the
+// server is only asked every few minutes.
+function schedule() {
+  if (timer !== undefined) window.clearTimeout(timer);
+  timer = window.setTimeout(() => { if (!document.hidden) void refresh(); else schedule(); }, heatPollInterval(showing));
 }
 
 // The bar sticks right under the navbar, whatever height the navbar has (mobile menu, wrapped links).
@@ -61,12 +73,8 @@ function followNav() {
   if ('ResizeObserver' in window) { navWatch = new ResizeObserver(set); navWatch.observe(nav); }
 }
 
-function start() {
-  followNav();
-  void refresh();
-  if (timer === undefined) timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, POLL_MS);
-}
-start();
+followNav();
+void refresh();
 document.addEventListener('astro:page-load', () => { last = null; followNav(); void refresh(); });
 (window as any).AppLang?.onChange?.(render);
 window.addEventListener('site:language-change', render);

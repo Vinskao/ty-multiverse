@@ -6,17 +6,14 @@
 #market-heat[data-level="info"] { --heat-a:#1f1704; --heat-b:#5a4208; --heat-c:#1a1303; --heat-edge:#e0b030; --heat-glow:#e0b030; --heat-wave:224,176,48; }
 #market-heat[data-level="alert"] { --heat-a:#2a0303; --heat-b:#8a0f0f; --heat-c:#240202; --heat-edge:#ff3b30; --heat-glow:#ff1e1e; --heat-wave:255,70,50; }
 #market-heat[data-dir="up"] { --heat-a:#03210e; --heat-b:#0c6a2c; --heat-c:#03190b; --heat-edge:#37d67a; --heat-glow:#1fe06a; --heat-wave:60,220,120; color:#e6ffe9; }
-#market-heat strong { display:block; font-size:15px; line-height:1.25; letter-spacing:.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-#market-heat .heat-headline { display:block; min-width:0; }
-#market-heat small { display:inline; margin-left:10px; color:#ffd3a6; font-size:11px; opacity:.85; }
-#market-heat .heat-sub { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.3; }
+/* One line per market: Taiwan, then U.S. */
+#market-heat .heat-row { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; line-height:1.45; letter-spacing:.02em; }
+#market-heat .heat-row:first-child { font-weight:600; }
+#market-heat .heat-tag { display:inline-block; min-width:2.6em; margin-right:8px; padding:0 6px; border-radius:4px; background:rgba(var(--heat-wave),.28); color:#fff; font-size:11px; font-weight:700; text-align:center; letter-spacing:.06em; }
+#market-heat small { display:inline; margin-left:10px; color:#ffd3a6; font-size:11px; font-weight:400; opacity:.85; }
 #market-heat[data-dir="up"] small { color:#b5f0c6; }
-#market-heat a { color:inherit; text-decoration:none; }
-#market-heat .heat-details a, #market-heat .heat-headline { text-decoration:underline; text-decoration-color:transparent; text-underline-offset:3px; transition:text-decoration-color .15s; }
+#market-heat a { color:inherit; text-decoration:underline; text-decoration-color:transparent; text-underline-offset:3px; transition:text-decoration-color .15s; }
 #market-heat a:hover, #market-heat a:focus-visible { text-decoration-color:currentColor; }
-#market-heat .heat-headline:not([href]) { text-decoration:none; }
-#market-heat .heat-details { display:inline; font-size:12px; opacity:.92; }
-#market-heat .heat-details:empty { display:none; }
 #market-heat .heat-text { min-width:0; flex:1 1 auto; }
 #market-heat button { margin-left:auto; flex-shrink:0; background:transparent; border:1px solid #ffcc8b88; border-radius:50%; color:white; width:26px; height:26px; font-size:20px; line-height:1; padding:0; cursor:pointer; }
 
@@ -54,7 +51,7 @@
 @keyframes heat-jolt { 0%{transform:translateY(-100%);opacity:0} 40%{transform:translateY(4px);opacity:1} 55%{transform:translate(-6px,0)} 65%{transform:translate(6px,0)} 75%{transform:translate(-4px,0)} 85%{transform:translate(3px,0)} 100%{transform:none} }
 @keyframes heat-tremor { 0%,86%,100%{transform:none} 88%{transform:translate(-3px,0)} 90%{transform:translate(3px,1px)} 92%{transform:translate(-2px,-1px)} 94%{transform:translate(2px,0)} 96%{transform:translate(-1px,0)} }
 
-@media (max-width:600px) { #market-heat { gap:8px; padding:4px 10px; } #market-heat strong { font-size:13px; } #market-heat small, #market-heat .heat-details { font-size:10px; } .heat-icon { width:24px; height:24px; } .heat-ring { width:24px; height:24px; margin:-12px 0 0 -12px; } .heat-fire { font-size:18px; } #market-heat button { width:22px; height:22px; font-size:17px; } }
+@media (max-width:600px) { #market-heat { gap:8px; padding:4px 10px; } #market-heat .heat-row { font-size:12px; } #market-heat small { font-size:10px; } #market-heat .heat-tag { font-size:10px; margin-right:6px; padding:0 4px; } .heat-icon { width:24px; height:24px; } .heat-ring { width:24px; height:24px; margin:-12px 0 0 -12px; } .heat-fire { font-size:18px; } #market-heat button { width:22px; height:22px; font-size:17px; } }
 @media (prefers-reduced-motion: reduce) { #market-heat, #market-heat[data-level], #market-heat[data-dir], #market-heat.heat-enter, #market-heat::before, .heat-fire, .heat-wave, .heat-ring, .heat-fx { animation:none !important; } .heat-ring { opacity:0; } }
 
 /* The fall/rise texture: dashes drain DOWN through the bar on a fall, sparks float UP on a rise. */
