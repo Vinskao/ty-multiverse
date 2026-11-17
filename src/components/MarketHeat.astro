@@ -1,7 +1,7 @@
 <div id="market-heat" hidden role="status" aria-live="polite" data-level="warn" data-dir="down">
-  <span class="heat-wave" aria-hidden="true"></span>
+  <span class="heat-wave" aria-hidden="true"></span><span class="heat-fx" aria-hidden="true"></span>
   <span class="heat-icon" aria-hidden="true"><i class="heat-ring"></i><i class="heat-ring"></i><i class="heat-ring"></i><span class="heat-fire">🔥</span></span>
-  <div class="heat-text"><strong></strong><span class="heat-details"></span><small></small></div>
+  <div class="heat-text"><a class="heat-headline"><strong></strong></a><span class="heat-details"></span><small></small></div>
   <button aria-label="關閉市場狀態條">×</button>
 </div>
 <script>
@@ -21,8 +21,16 @@ function render() {
   const wasHidden = el.hidden;
   el.dataset.level = heat.level; el.dataset.dir = heat.dir;
   el.querySelector('.heat-fire')!.textContent = heat.icon;
-  el.querySelector('strong')!.textContent = heat.headline;
-  el.querySelector('.heat-details')!.textContent = heat.details.join(' · ');
+  const headline = el.querySelector<HTMLAnchorElement>('.heat-headline')!;
+  headline.querySelector('strong')!.textContent = heat.headline;
+  if (heat.href) headline.setAttribute('href', heat.href); else headline.removeAttribute('href');
+  // Each detail is its own link to the page that shows that number.
+  const details = el.querySelector('.heat-details')!;
+  details.replaceChildren(...heat.details.flatMap((detail, index) => {
+    const node = detail.href ? Object.assign(document.createElement('a'), { href: detail.href }) : document.createElement('span');
+    node.textContent = detail.text;
+    return index ? [document.createTextNode(' · '), node] : [node];
+  }));
   el.querySelector('small')!.textContent = heat.footnote;
   el.hidden = false;
   if (wasHidden) { el.classList.remove('heat-enter'); void el.offsetWidth; el.classList.add('heat-enter'); }   // restart the entrance shock
@@ -39,12 +47,24 @@ async function refresh() {
   } catch { /* Keep the banner as it is when market data is unavailable. */ }
 }
 
+// The bar sticks right under the navbar, whatever height the navbar has (mobile menu, wrapped links).
+let navWatch: ResizeObserver | undefined;
+function followNav() {
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const set = () => document.documentElement.style.setProperty('--heat-top', `${Math.round(nav.getBoundingClientRect().height)}px`);
+  set();
+  navWatch?.disconnect();
+  if ('ResizeObserver' in window) { navWatch = new ResizeObserver(set); navWatch.observe(nav); }
+}
+
 function start() {
+  followNav();
   void refresh();
   if (timer === undefined) timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, POLL_MS);
 }
 start();
-document.addEventListener('astro:page-load', () => { last = null; void refresh(); });
+document.addEventListener('astro:page-load', () => { last = null; followNav(); void refresh(); });
 (window as any).AppLang?.onChange?.(render);
 window.addEventListener('site:language-change', render);
 </script>
