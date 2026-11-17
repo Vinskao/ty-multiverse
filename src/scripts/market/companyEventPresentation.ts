@@ -60,3 +60,6 @@ const STOCK_NOTICE_TYPES = new Set(['volume_spike', 'insider_transfer', 'insider
 
 /** True for event types shown as a stock badge (stockNotices), so the older per-event badge skips them. */
 export const hasStockNotice = (type: string) => STOCK_NOTICE_TYPES.has(type);
+
+/** Events are filed per company; Tokyo stocks share digits with Taiwan codes (6857), so only non-Taiwan markets get a prefix. */
+export const marketEventKey = (code: string, market?: string) => (market && market !== 'TW' ? `${market}:${code}` : code);

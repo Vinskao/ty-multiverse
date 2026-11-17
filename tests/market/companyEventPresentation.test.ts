@@ -88,3 +88,13 @@ describe('one badge per mark', () => {
     for (const type of ['monthly_revenue', 'financial_report', 'investor_conference']) expect(hasStockNotice(type), type).toBe(false);
   });
 });
+
+describe('marketEventKey', () => {
+  it('keeps Taiwan codes as they are and separates a Japanese stock with the same digits', async () => {
+    const { marketEventKey } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(marketEventKey('6857')).toBe('6857');
+    expect(marketEventKey('6857', 'TW')).toBe('6857');
+    expect(marketEventKey('6857', 'JP')).toBe('JP:6857');
+    expect(marketEventKey('6857', 'JP')).not.toBe(marketEventKey('6857', 'TW'));
+  });
+});

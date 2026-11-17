@@ -15,7 +15,7 @@ import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedD
 import { analysisRating } from './market/analysisRating';
 import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { companyEventSourceUrl, conferenceOtherScheduleCounts, hasStockNotice, stockNotices, type StockNotice } from './market/companyEventPresentation';
+import { companyEventSourceUrl, conferenceOtherScheduleCounts, hasStockNotice, marketEventKey, stockNotices, type StockNotice } from './market/companyEventPresentation';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
 import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
@@ -104,7 +104,7 @@ const MARKET_ACCORDION_QUERY = '(max-width: 768px)';
 let marketDetailRow: HTMLElement | null = null;
 // The tab the user last picked; kept when switching to another instrument.
 let preferredMarketTab: string | null = null;
-type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference' | 'insider_transfer' | 'insider_untransferred' | 'insider_buy' | 'volume_spike'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming' | 'active'; highlight: boolean; source?: string; sourceUrl?: string };
+type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference' | 'insider_transfer' | 'insider_untransferred' | 'insider_buy' | 'volume_spike'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming' | 'active'; highlight: boolean; source?: string; sourceUrl?: string; market?: string };
 let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
@@ -1295,7 +1295,7 @@ function marketUnderlyingCode(instrument: DashboardInstrument) {
 
 function marketEventsForInstrument(instrument: DashboardInstrument) {
     const underlyingCode = marketUnderlyingCode(instrument);
-    return marketEventsByCode.get(instrument.code) || (underlyingCode ? marketEventsByCode.get(underlyingCode) : undefined) || [];
+    return marketEventsByCode.get(marketEventKey(instrument.code, instrument.market)) || (underlyingCode ? marketEventsByCode.get(underlyingCode) : undefined) || [];
 }
 
 function renderMarketDetailHeader(instrument: DashboardInstrument) {
@@ -1582,12 +1582,13 @@ async function fetchMarketCompanyEvents() {
         const otherConferenceSchedules = conferenceOtherScheduleCounts(events);
         marketEventsByCode = new Map();
         for (const event of events) {
-            const group = marketEventsByCode.get(event.code) || [];
-            group.push(event); marketEventsByCode.set(event.code, group);
+            const key = marketEventKey(event.code, event.market);
+            const group = marketEventsByCode.get(key) || [];
+            group.push(event); marketEventsByCode.set(key, group);
         }
         marketEventInstruments.clear();
         for (const instrument of [...marketAutoInstruments, ...marketCustomInstruments]) {
-            marketEventInstruments.set(instrument.code, instrument);
+            marketEventInstruments.set(marketEventKey(instrument.code, instrument.market), instrument);
             const underlyingCode = marketUnderlyingCode(instrument);
             if (underlyingCode) marketEventInstruments.set(underlyingCode, instrument);
         }
@@ -1626,7 +1627,7 @@ async function fetchMarketCompanyEvents() {
             const target = document.createElement('button'); target.type = 'button'; target.className = 'market-company-event-link';
             target.textContent = `${event.code} ${event.name}`;
             target.addEventListener('click', () => {
-                const instrument = marketEventInstruments.get(event.code);
+                const instrument = marketEventInstruments.get(marketEventKey(event.code, event.market));
                 if (!instrument) return;
                 const marketRow = Array.from(document.querySelectorAll<HTMLButtonElement>('.market-watch-row--selected'))
                     .find((item) => {
