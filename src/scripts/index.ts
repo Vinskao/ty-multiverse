@@ -3997,11 +3997,13 @@ function refreshMarketLanguage() {
         const current = document.querySelector<HTMLButtonElement>('[data-market-tab][aria-selected="true"]')?.dataset.marketTab || 'price';
         selectMarketDetailTab(current);
     }
-    void fetchMarketDashboard();
-    if (macroLoader?.isLoaded()) void fetchMacroDashboard();
-    fetchTxfQuote();
-    fetchMarketUsage();
-    fetchPortfolio();
+    // The server is slow: keep the page spinner up until the refetched data is back (AppLang.busy, public/scripts/lang.js).
+    const jobs: Promise<unknown>[] = [fetchMarketDashboard()];
+    if (macroLoader?.isLoaded()) jobs.push(fetchMacroDashboard());
+    jobs.push(Promise.resolve(fetchTxfQuote()), Promise.resolve(fetchMarketUsage()), Promise.resolve(fetchPortfolio()));
+    const work = Promise.allSettled(jobs);
+    const appLang = (window as any).AppLang;
+    if (appLang?.busy) void appLang.busy(work); else void work;
 }
 
 // 監聽 View Transitions 事件

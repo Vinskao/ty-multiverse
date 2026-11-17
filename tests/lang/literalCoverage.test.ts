@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import dict from '../../src/storages/literalEn.json';
 import { translateLiteral } from '../../src/scripts/lang/literal';
@@ -31,4 +31,19 @@ describe('English coverage of the Chinese-written tabs', () => {
   it('the sign-in redirect message is covered', () => {
     expect(translateLiteral('正在跳轉到登入頁面...', dict)).toBe('Redirecting to the sign-in page...');
   });
+});
+
+// 2026-11-17: the home page and its components also need English. Strings written before this guard existed are listed in
+// literalBaseline.json (admin panels, game widgets, text that is deliberately Chinese such as AI prompts); anything NOT in
+// that list must have an English entry, so a new feature that adds Chinese text without a translation fails here.
+describe('English coverage of the home page and components (new strings only)', () => {
+  const baseline = JSON.parse(read('tests/lang/literalBaseline.json')) as Record<string, string[]>;
+  const files = ['src/pages/index.astro', ...readdirSync('src/components').filter((name) => /\.(astro|tsx)$/.test(name)).map((name) => `src/components/${name}`)];
+  for (const file of files) {
+    it(`${file} adds no untranslated Chinese string`, () => {
+      const known = new Set(baseline[file] ?? []);
+      const missing = [...new Set(literals(read(file)))].filter((text) => CJK.test(translateLiteral(text, dict)) && !known.has(text));
+      expect(missing, `Add English for these to src/storages/literalEn.json (or data-i18n): ${missing.join(' | ')}`).toEqual([]);
+    });
+  }
 });

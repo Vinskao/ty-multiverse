@@ -42,8 +42,22 @@
     return get() === 'zh' ? 'chinese' : 'english';
   }
 
+  // The server is slow, so a language switch that refetches data shows the page spinner (global.css html.page-loading)
+  // until every job registered here has finished, failed or not.
+  let pending = 0;
+  function busy(work) {
+    pending += 1;
+    document.documentElement.classList.add('page-loading');
+    const done = () => {
+      pending = Math.max(0, pending - 1);
+      if (pending === 0) document.documentElement.classList.remove('page-loading');
+    };
+    Promise.resolve(work).then(done, done);
+    return Promise.resolve(work);
+  }
+
   // expose global
-  window.AppLang = window.AppLang || { get, set, onChange, getQALang };
+  window.AppLang = window.AppLang || { get, set, onChange, getQALang, busy };
 })();
 
 

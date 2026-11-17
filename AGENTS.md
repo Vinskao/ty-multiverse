@@ -145,6 +145,7 @@ Follow the workspace TDD rules (`../AGENTS.md`, "Test-driven development"): fail
 2. Apply `data-i18n` attributes to HTML elements
 3. If the component is dynamic, use the `getI18n` helper pattern to update text in scripts
 4. Verify persistence across page navigations
+5. Hard-coded Chinese text needs an entry in `src/storages/literalEn.json`; `tests/lang/literalCoverage.test.ts` fails for new strings on the home page/components without one. Slow server: wrap refetches in `AppLang.busy(...)` for the spinner. Full checklist: skill `frontend-feature-polish`.
 
 ### Build Environment / 建置環境
 - This frontend requires Node.js `>= 22.12.0` for `astro build`.
