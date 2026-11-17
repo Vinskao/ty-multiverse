@@ -6,6 +6,7 @@ import {
   type AiTokenUsageSummary,
 } from '../services/api/aiUsageService';
 import { groupUsage } from '../scripts/aiUsage/modelGroups';
+import { formatTokens } from '../scripts/aiUsage/formatTokens';
 
 const PROVIDER_COLORS: Record<string, string> = {
   codex: '#00D084',    // OpenAI - 亮綠
@@ -22,12 +23,6 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 function getProviderColor(provider: string): string {
   return PROVIDER_COLORS[provider.toLowerCase()] ?? '#888';
-}
-
-function formatTokens(n: number): string {
-  if (n >= 1_000_000) return `${Math.round(n / 1_000_000)}M`;
-  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
-  return String(Math.round(n));
 }
 
 function formatCost(n: number): string {
