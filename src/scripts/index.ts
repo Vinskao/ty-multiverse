@@ -29,6 +29,7 @@ import { buildResearchContext, brokerAvailabilityLabel } from './market/research
 import { futuresProxyReadout, liveReadout, withLivePoint, type LiveFuturesProxy, type LiveVolatility } from './market/macroLive';
 import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
+import { MACRO_SPEED_HEADINGS, isMacroPopulationCode, macroSpeedOf, splitMacroBySpeed, type MacroSpeed } from './market/macroSpeed';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
 import { chartCodes, type MacroChainNode, type MacroGraph } from './market/macroChains';
 import { renderMacroChains, type MacroNodeAnalysis } from './market/macroChainView';
@@ -1780,6 +1781,9 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
             return point.raw === undefined ? index : `${index} (${formatNumber(point.raw, 'decimal', { digits: point.raw < 10 ? 4 : 2, locale: marketLocale() })})`;
         }
         if (pointFormat === 'rebased') {
+            if (point.raw !== undefined && isMacroPopulationCode(code)) {
+                return `${formatNumber(point.value, 'decimal', { digits: 1, locale: marketLocale() })} (${formatNumber(point.raw, 'decimal', { digits: 2, locale: marketLocale() })} ${marketText('million', '百萬人')})`;
+            }
             const stock = point.raw === undefined ? null : macroMoneyStock(code, point.raw);
             const index = formatNumber(point.value, 'decimal', { digits: 1, locale: marketLocale() });
             return stock ? `${index} (${stock.currency} ${formatNumber(stock.trillions, 'decimal', { digits: 2, locale: marketLocale() })} ${marketText('trillion', '兆')})` : index;
@@ -2091,7 +2095,10 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     renderMacroBorrowing(byCode);
     const events = dedupeMacroEvents(snapshot.events || []);
     const claimed = new Set<MacroEvent>();
-    for (const groupSpec of prioritizeMacroGroups(MACRO_GROUP_SPECS, macroCountry)) {
+    // Fast variables first, then slow ones; the country filter still orders the cards inside each section.
+    const { fast: fastGroups, slow: slowGroups } = splitMacroBySpeed(prioritizeMacroGroups(MACRO_GROUP_SPECS, macroCountry));
+    let shownSpeed: MacroSpeed | null = null;
+    for (const groupSpec of [...fastGroups, ...slowGroups]) {
         const group = MACRO_GROUPS.find(item => item.id === groupSpec.id)!;
         const inGroup = events.filter((event) => group.eventGroups.includes(event.groupId)
             && (group.id === 'consumption' || !MACRO_FOREIGN_EVENT.test(event.title)));
@@ -2139,6 +2146,16 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
             const upcoming = document.createElement('p'); upcoming.className = 'macro-later';
             upcoming.textContent = `${marketText('Then', '之後')}: ${later.map((event) => macroEventDate(event, false)).join(' · ')}`;
             card.append(upcoming);
+        }
+        const speed = macroSpeedOf(group.id);
+        if (speed !== shownSpeed) {
+            shownSpeed = speed;
+            const heading = MACRO_SPEED_HEADINGS[speed];
+            const section = document.createElement('header'); section.className = `macro-speed-heading macro-speed-heading--${speed}`;
+            const name = document.createElement('h4'); name.textContent = marketText(heading.en, heading.zh);
+            const note = document.createElement('p'); note.textContent = marketText(heading.noteEn, heading.noteZh);
+            section.append(name, note);
+            grid.append(section);
         }
         grid.append(card);
     }

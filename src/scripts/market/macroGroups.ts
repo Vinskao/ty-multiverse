@@ -147,4 +147,11 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('TIER_TW_GDP_FORECAST', 'Taiwan GDP growth forecast (TIER)', '台經院 經濟成長率預測', 'percent'),
         m('TIER_TW_CPI_FORECAST', 'Taiwan CPI inflation forecast (TIER)', '台經院 CPI 年增率預測', 'percent'),
     ] },
+    // Slow variable (2026-11-17): yearly population in millions, drawn indexed to the first year (macroSeries 'rebased').
+    { id: 'population', eventGroups: [], title: { en: 'Population (U.S., Japan, Taiwan, Korea)', zh: '人口（美、日、台、韓）' }, metrics: [
+        m('US_POPULATION', 'U.S. population (1990 = 100)', '美國人口（1990 = 100）', 'rebased'),
+        m('JP_POPULATION', 'Japan population (1990 = 100)', '日本人口（1990 = 100）', 'rebased'),
+        m('TW_POPULATION', 'Taiwan population (1990 = 100)', '台灣人口（1990 = 100）', 'rebased'),
+        m('KR_POPULATION', 'South Korea population (1990 = 100)', '韓國人口（1990 = 100）', 'rebased'),
+    ] },
 ];

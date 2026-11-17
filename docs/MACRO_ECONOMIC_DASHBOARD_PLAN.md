@@ -633,3 +633,20 @@ flowchart LR
   - maya-sawa `tests/market/macro/test_market_macro_tier_forecast.py`：新聞稿 fixture、沒有修正值的寫法、找不到數字時報錯。
   - frontend `tests/market/macroGroups.test.ts`：卡片與圖表。
 - **來源：** [台經院總體經濟預測](https://www.tier.org.tw/forecast/macro_trends_annual.aspx)
+
+## 快變量與慢變量、人口（2026-11-17）
+
+總體頁卡片分兩區：**快變量**（利率、信用、商品、市場風險情緒、匯率、流動性；市場每天或每週重新定價）在上，**慢變量**（就業、通膨、消費、PMI、台灣景氣預測、台灣就業、人口）在下。分類在 `src/scripts/market/macroSpeed.ts`（`FAST_GROUPS`，其餘為慢），新增卡片時預設歸慢變量。國別篩選只調整各區內的順序。
+
+人口卡畫美、日、台、韓四國的年度人口，以 1990 年為 100 的指數畫在同一張圖（人數差到 15 倍，用原值台灣會變成一條平線），滑過去的讀數同時顯示百萬人。
+
+```mermaid
+flowchart LR
+  A[Our World in Data population.csv<br/>UN World Population Prospects] -->|maya-sawa _fetch_population 每日最多 1 次| B[(記憶體快取 + 重啟副本<br/>US/JP/TW/KR_POPULATION 百萬人 年)]
+  B --> C[macro snapshot API]
+  C --> D[macroGroups population 卡 → rebased 折線]
+```
+
+來源選擇：世界銀行與 IMF 不收台灣（IMF 對伺服器直接 403），內政部開放資料與主計總處人口表連不上或查無代號；OWID 一個 CSV 同時含四國。資料只到最近一個 UN 估計年（目前 2023）。
+
+開發方法：後端 `tests/market/macro/test_market_macro_population.py` 用固定 CSV（`tests/fixtures/macro/owid_population.csv`）測解析、單位與一次請求；前端 `tests/market/macroSpeed.test.ts` 確認每張卡都有分區、人口卡的代號與合併圖。
