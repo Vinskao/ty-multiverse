@@ -1856,6 +1856,7 @@
 .market-company-event-source { color:var(--accent-color, #7db8ff); text-decoration:underline; text-underline-offset:2px; }
 .market-company-event-link { padding:0; border:0; color:inherit; background:none; text-align:left; font:inherit; cursor:pointer; }
 .market-company-event-link:hover { color:#f0c66a; text-decoration:underline; }
+.market-insider-badge { display:inline-flex; align-items:center; margin:.3rem 0 0 .35rem; padding:.1rem .45rem; border:1px solid #d9534f; border-radius:999px; color:#ff8a80; background:color-mix(in srgb,#d9534f 14%,transparent); font-size:.72rem; font-weight:700; white-space:nowrap; }
 .market-event-badges { display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem; }
 .market-event-badge { display:inline-flex; align-items:center; border:1px solid color-mix(in srgb,#e1ae4b 55%,transparent); border-radius:999px; padding:.1rem .42rem; color:#f0c66a; background:color-mix(in srgb,#e1ae4b 12%,transparent); font-size:.65rem; line-height:1.4; white-space:nowrap; }
 .market-watch-row--event { border-color:color-mix(in srgb,#e1ae4b 65%,transparent); box-shadow:inset 3px 0 #e1ae4b; }

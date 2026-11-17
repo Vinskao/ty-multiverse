@@ -15,7 +15,7 @@ import { formatNumber, formatWithUnit, formatAxisTick, numberKindFor, publishedD
 import { analysisRating } from './market/analysisRating';
 import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
-import { companyEventSourceUrl, conferenceOtherScheduleCounts } from './market/companyEventPresentation';
+import { companyEventSourceUrl, conferenceOtherScheduleCounts, insiderSaleNotice } from './market/companyEventPresentation';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
 import { holdingGroupKey } from './market/holdingsGroups';
 import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
@@ -104,7 +104,7 @@ const MARKET_ACCORDION_QUERY = '(max-width: 768px)';
 let marketDetailRow: HTMLElement | null = null;
 // The tab the user last picked; kept when switching to another instrument.
 let preferredMarketTab: string | null = null;
-type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming'; highlight: boolean; source?: string; sourceUrl?: string };
+type MarketCompanyEvent = { code: string; name: string; type: 'monthly_revenue' | 'financial_report' | 'investor_conference' | 'insider_transfer'; period?: string; date: string; dateTime?: string; status: 'recent' | 'upcoming' | 'active'; highlight: boolean; source?: string; sourceUrl?: string };
 let marketEventsByCode = new Map<string, MarketCompanyEvent[]>();
 let marketEventInstruments = new Map<string, DashboardInstrument>();
 let marketAutoInstruments: DashboardInstrument[] = [];
@@ -1305,12 +1305,38 @@ function renderMarketDetailHeader(instrument: DashboardInstrument) {
         : underlyingCode ? ` · ${marketText(`${underlyingCode} stock charts`, `${underlyingCode} 現股圖表`)}` : ` · ${marketText('TAIFEX futures charts', '期交所期貨圖表')}`;
     const marketLabel = instrumentMarketLabel(instrument, marketLocale() === 'zh-TW' ? 'zh' : 'en');
     setText('market-detail-title', `${instrument.code} · ${instrument.name}${marketLabel ? ` · ${marketLabel}` : ''}${scope}`);
+    renderInsiderNotice(instrument);
     const institutionalDescription = document.getElementById('market-history-institutional-description');
     if (institutionalDescription) institutionalDescription.textContent = instrument.productType === 'futures'
         ? (underlyingCode
             ? `${underlyingCode} ${marketI18n('marketHistorySpotInstitutionalDescription', 'spot ticker institutional net trading · shares')}`
             : marketI18n('marketHistoryTaifexAggregateDescription', 'TAIFEX participant totals for the futures product category; not contract-specific positions.'))
         : marketI18n('marketHistoryInstitutionalDescription', 'Foreign, investment trust, and dealer net trading · shares');
+}
+
+// Open insider sale filings (內部人持股轉讓事前申報) mark the detail header and every row of that stock, holdings included.
+function renderInsiderNotice(instrument: DashboardInstrument) {
+    const title = document.getElementById('market-detail-title');
+    if (!title) return;
+    document.getElementById('market-detail-insider')?.remove();
+    const notice = insiderSaleNotice(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW');
+    if (!notice) return;
+    const tag = document.createElement('span'); tag.id = 'market-detail-insider'; tag.className = 'market-insider-badge';
+    tag.textContent = notice.text; tag.title = notice.title;
+    title.after(tag);
+}
+
+function applyInsiderBadges() {
+    document.querySelectorAll<HTMLElement>('.market-watch-row[data-market-code]').forEach((row) => {
+        row.querySelector('.market-insider-badge')?.remove();
+        const instrument = [...marketAutoInstruments, ...marketCustomInstruments].find((item) => item.code === row.dataset.marketCode);
+        const notice = instrument ? insiderSaleNotice(marketEventsForInstrument(instrument), marketLocale() === 'zh-TW') : null;
+        if (!notice) return;
+        const tag = document.createElement('span'); tag.className = 'market-insider-badge';
+        tag.textContent = notice.text; tag.title = notice.title;
+        row.querySelector('.market-watch-instrument')?.append(tag);
+    });
+    if (selectedMarketInstrument) renderInsiderNotice(selectedMarketInstrument);
 }
 
 function setMarketDetailInstrument(instrument: DashboardInstrument) {
@@ -1520,7 +1546,8 @@ async function fetchMarketDashboard() {
         renderDashboardRows('market-custom-list', marketCustomInstruments, marketText('No buy-rated opportunities, or ratings are unavailable.', '目前沒有買入評級的機會標的，或評級暫時無法讀取。'));
         const updated = document.getElementById('market-auto-updated');
         if (updated) updated.textContent = data.automatic?.snapshotAt ? ` · Snapshot ${new Date(data.automatic.snapshotAt).toLocaleString()}` : '';
-        if (eventsLoader?.isLoaded()) await fetchMarketCompanyEvents();
+        // Always loaded (not only when the events table scrolls into view): insider sale marks belong on the holding rows.
+        await fetchMarketCompanyEvents();
     } catch (error) {
         if (sequence !== marketDashboardSequence) return;
         console.error('Market dashboard unavailable:', error);
@@ -1531,6 +1558,7 @@ async function fetchMarketDashboard() {
 
 
 function marketEventLabel(type: MarketCompanyEvent['type']) {
+    if (type === 'insider_transfer') return marketText('Insider sale filed', '內部人申報轉讓');
     return type === 'monthly_revenue' ? marketI18n('marketEventRevenue', 'Revenue released')
         : type === 'financial_report' ? marketI18n('marketEventFinancialReport', 'Financial report')
             : marketI18n('marketEventConference', 'Investor conference');
@@ -1559,6 +1587,7 @@ async function fetchMarketCompanyEvents() {
         }
         // the holdings panel does not show event badges, so only the custom list is rebuilt
         renderDashboardRows('market-custom-list', marketCustomInstruments, marketText('No buy-rated opportunities, or ratings are unavailable.', '目前沒有買入評級的機會標的，或評級暫時無法讀取。'));
+        applyInsiderBadges();
         body.replaceChildren();
         if (!events.length) {
             const row = document.createElement('tr'); const cell = document.createElement('td');

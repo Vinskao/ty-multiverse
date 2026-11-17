@@ -23,3 +23,14 @@ export function companyEventSourceUrl(event: CompanyEvent): string | undefined {
   if (event.sourceUrl) return event.sourceUrl;
   return event.type === 'investor_conference' ? TDCC_EVENTS_URL : undefined;
 }
+
+type InsiderEvent = CompanyEvent & { status?: string; period?: string };
+
+/** The row/header mark for an open insider sale filing (maya-sawa market_insider_transfers.py); null when there is none. */
+export function insiderSaleNotice(events: readonly InsiderEvent[], zh: boolean): { text: string; title: string } | null {
+  const event = events.find((item) => item.type === 'insider_transfer');
+  if (!event) return null;
+  const active = event.status !== 'upcoming';
+  const text = zh ? (active ? '內部人申報賣股中' : '內部人即將賣股') : (active ? 'Insider sale filed' : 'Insider sale starting soon');
+  return { text, title: event.period || '' };
+}

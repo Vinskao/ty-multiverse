@@ -22,3 +22,24 @@ describe('company event presentation', () => {
     expect(companyEventSourceUrl({ type: 'monthly_revenue' })).toBeUndefined();
   });
 });
+
+// 2026-11-17: a stock with an open insider sale filing (內部人持股轉讓事前申報) is marked on its row and in its detail header.
+describe('insider sale notice', () => {
+  const sale = { code: '1734', type: 'insider_transfer', status: 'active', period: '法人董事代表人本人 郭修吉 預定轉讓 173,000 股（盤後定價交易），11/19–12/18' };
+
+  it('says the insiders are selling now, with the filing as the tooltip', async () => {
+    const { insiderSaleNotice } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(insiderSaleNotice([sale], true)).toEqual({ text: '內部人申報賣股中', title: sale.period });
+    expect(insiderSaleNotice([sale], false)?.text).toBe('Insider sale filed');
+  });
+
+  it('says a sale is about to start when the window has not opened yet', async () => {
+    const { insiderSaleNotice } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(insiderSaleNotice([{ ...sale, status: 'upcoming' }], true)?.text).toBe('內部人即將賣股');
+  });
+
+  it('shows nothing without an insider filing', async () => {
+    const { insiderSaleNotice } = await import('../../src/scripts/market/companyEventPresentation');
+    expect(insiderSaleNotice([{ code: '1734', type: 'monthly_revenue' }], true)).toBeNull();
+  });
+});
