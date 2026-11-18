@@ -96,7 +96,8 @@
     "learn": { "en": "Learn", "zh": "學習" },
     "control": { "en": "Control", "zh": "主控室" },
     "wildland": { "en": "Wildland", "zh": "荒野" },
-    "palais": { "en": "Palais", "zh": "皇宮" }
+    "palais": { "en": "Palais", "zh": "皇宮" },
+    "socials": { "en": "Social media", "zh": "社群連結" }
   },
   "palaisTools": {
     "admin": { "en": "Administration", "zh": "管理後台" },

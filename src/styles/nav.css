@@ -17,7 +17,7 @@ nav {
   font-family: var(--font-brand);
   font-weight: 500;
   margin-bottom: 1.25rem;
-  background-color: color-mix(in srgb, var(--gray-999) 76%, transparent);
+  background-color: color-mix(in srgb, var(--gray-999) 96%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--gray-800) 70%, transparent);
 }
 
@@ -164,6 +164,88 @@ nav {
 .social:hover,
 .social:focus {
   color: var(--accent-dark);
+}
+
+.social-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.social-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--nav-control-size, 2.5rem);
+  height: var(--nav-control-size, 2.5rem);
+  padding: 0;
+  border: 1px solid var(--gray-800);
+  border-radius: 50%;
+  background: var(--gray-999);
+  color: var(--gray-100);
+  cursor: pointer;
+  box-shadow: 0 1px 2px #0002;
+  transition: border-color var(--theme-transition), background-color var(--theme-transition), transform 0.15s ease;
+}
+
+.social-toggle-btn:hover,
+.social-toggle-btn:focus-visible {
+  border-color: var(--gray-500);
+  background: var(--gray-900);
+  transform: translateY(-1px);
+}
+
+.social-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-regular);
+  outline-offset: 2px;
+}
+
+.social-toggle-btn[aria-expanded="true"] {
+  border-color: var(--accent-regular);
+  background: var(--gray-800);
+}
+
+.social-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 1200;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--gray-700);
+  border-radius: var(--surface-radius, 0.9rem);
+  background: var(--gray-999);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.social-popover[hidden] {
+  display: none !important;
+}
+
+.social-popover .socials {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--icon-size, 1.25rem);
+}
+
+.social-popover .social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 0.4rem;
+  color: var(--accent-regular);
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.social-popover .social:hover,
+.social-popover .social:focus-visible {
+  background-color: var(--gray-800);
+  color: var(--accent-dark);
+  transform: scale(1.15);
 }
 
 .theme-toggle {
@@ -544,6 +626,12 @@ nav {
     display: flex;
     justify-content: center;
     margin-bottom: 0;
+  }
+
+  .social-popover {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    right: 0;
   }
 
   .nav-controls-footer {
