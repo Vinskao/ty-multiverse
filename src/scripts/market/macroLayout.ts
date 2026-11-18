@@ -36,8 +36,22 @@ export const MACRO_CSP_CHART = {
         en: 'Quarterly, USD billions, from SEC filings (10-Q/10-K). A quarter is totalled only once all five have reported; fiscal years differ, so each is placed on the nearest calendar quarter (Oracle’s August quarter counts as September). When the spending line is above the cash-flow line, the build-out costs more than the quarter’s operating cash. Capital spending is purchases of property and equipment, finance leases excluded.' },
 } as const;
 
+/** 2026-11-18: TAIEX 乖離率, the close's distance from its 20-, 60- and 240-session averages (月線、季線、年線), in percent.
+ *  maya-sawa derives it from the stored TAIEX closes. Not part of any card, so it carries its own labels. */
+export const MACRO_BIAS_CHART = {
+    id: 'tw-bias', codes: ['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_240'] as readonly string[],
+    labels: {
+        TW_TAIEX_BIAS_20: { zh: '月線乖離率（20 日，%）', en: '20-day bias (%)' },
+        TW_TAIEX_BIAS_60: { zh: '季線乖離率（60 日，%）', en: '60-day bias (%)' },
+        TW_TAIEX_BIAS_240: { zh: '年線乖離率（240 日，%）', en: '240-day bias (%)' },
+    } as Record<string, { zh: string; en: string }>,
+    title: { zh: '加權指數乖離率（月線、季線、年線）', en: 'TAIEX bias from its 20-, 60- and 240-day averages' },
+    note: { zh: '收盤價與移動平均線的距離，(收盤 ÷ 平均 − 1) × 100，單位 %。正值代表在均線之上，越大越過熱、越容易回檔；負值代表在均線之下，越深越超跌。由證交所每日加權指數收盤價換算，不是官方數字。',
+        en: 'How far the close sits from its moving average, (close ÷ average − 1) × 100, in percent. Positive is above the average (the larger, the more stretched and the likelier a pullback); negative is below it (the deeper, the more oversold). Computed from TWSE daily TAIEX closes, not an official figure.' },
+} as const;
+
 /** The charts that open the macro page, top to bottom. */
-export const MACRO_TOP_CHARTS = [MACRO_CSP_CHART, MACRO_VALUATION_CHART, MACRO_LEVERAGE_CHART] as const;
+export const MACRO_TOP_CHARTS = [MACRO_CSP_CHART, MACRO_BIAS_CHART, MACRO_VALUATION_CHART, MACRO_LEVERAGE_CHART] as const;
 
 /** 2026-11-16: above the borrowing charts, the two volatility indexes, Taiwan left and U.S. right. Each draws its stored
  *  daily closes with the live reading as today's last point (macroLive.ts), refreshed every minute. */

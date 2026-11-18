@@ -141,7 +141,7 @@ describe('margin leverage chart', () => {
 describe('market valuation chart', () => {
     it('draws the market P/E alone, opens the macro page and is not drawn again inside a card', () => {
         expect(MACRO_VALUATION_CHART.codes).toEqual(['TW_MARKET_PE']);
-        expect(MACRO_TOP_CHARTS.map((chart) => chart.id)).toEqual(['csp-capex', 'tw-valuation', 'tw-leverage']);
+        expect(MACRO_TOP_CHARTS.map((chart) => chart.id)).toEqual(['csp-capex', 'tw-bias', 'tw-valuation', 'tw-leverage']);
         const inCards = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         expect(inCards).not.toContain('TW_MARKET_PE');
     });
@@ -155,5 +155,15 @@ describe('cloud provider capital spending chart', () => {
         expect(MACRO_TOP_CHARTS[0]).toBe(MACRO_CSP_CHART);
         expect(MACRO_CSP_CHART.codes).toEqual(['CSP_CAPEX', 'CSP_OPERATING_CASH_FLOW']);
         for (const code of MACRO_CSP_CHART.codes) expect(MACRO_CSP_CHART.labels[code].zh && MACRO_CSP_CHART.labels[code].en).toBeTruthy();
+    });
+});
+
+// 2026-11-18: TAIEX 乖離率 (20/60/240-day) sits second on the macro page, right under the cloud providers' chart.
+describe('TAIEX bias chart', () => {
+    it('is second, draws the three averages and names its own lines', async () => {
+        const { MACRO_BIAS_CHART } = await import('../../src/scripts/market/macroLayout');
+        expect(MACRO_TOP_CHARTS[1]).toBe(MACRO_BIAS_CHART);
+        expect(MACRO_BIAS_CHART.codes).toEqual(['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_240']);
+        for (const code of MACRO_BIAS_CHART.codes) expect(MACRO_BIAS_CHART.labels[code].zh && MACRO_BIAS_CHART.labels[code].en).toBeTruthy();
     });
 });
