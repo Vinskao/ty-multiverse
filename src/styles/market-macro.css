@@ -158,5 +158,7 @@
 .macro-borrowing-card h5 { margin:0 0 .25rem; font-size:1rem; }
 .macro-vol-live { margin:0 0 .5rem; font-size:.9rem; font-variant-numeric:tabular-nums; }
 .macro-borrowing-note { margin:0 0 .5rem; color:var(--gray-400); font-size:.8rem; line-height:1.5; }
-.macro-leverage { grid-template-columns:1fr; }
+/* 2026-11-18: market P/E and margin loans side by side; both the block and each chart are capped so a wide screen cannot blow them up. */
+.macro-leverage { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1100px; }
+.macro-leverage .macro-trend-chart svg { max-height:340px; }
 @media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }
