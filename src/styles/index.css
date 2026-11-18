@@ -2344,3 +2344,10 @@
 .home-page[data-view="reports"] *:not(#zone-reports):not(#zone-reports *):not(:has(#zone-reports)),
 .home-page[data-view="macro"] *:not(#zone-macro):not(#zone-macro *):not(:has(#zone-macro)),
 .home-page[data-view="stocks"] *:not(:is(#zone-stocks, #zone-account)):not(:is(#zone-stocks, #zone-account) *):not(:has(#zone-stocks)) { display: none !important; }
+
+.market-opportunity-item { position:relative; min-width:0; }
+.market-opportunity-item > .market-watch-row { padding-right:3rem; }
+.market-opportunity-remove { position:absolute; top:.25rem; right:.25rem; width:44px; height:44px; border:0; border-radius:.5rem; background:transparent; color:var(--gray-400); font-size:1.4rem; cursor:pointer; }
+.market-opportunity-remove:hover, .market-opportunity-remove:focus-visible { background:var(--gray-800); color:var(--gray-100); }
+.market-opportunity-remove:disabled { cursor:wait; }
+.market-opportunity-remove[hidden] { display:none; }

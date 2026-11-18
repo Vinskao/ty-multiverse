@@ -1,3 +1,4 @@
+import { removeOpportunity } from './market/removeOpportunity';
 import { stockDeepLink } from './market/stockDeepLink';
 import { prioritizeMacroGroups, type MacroCountry } from './market/macroCountry';
 import type { Portfolio, PortfolioPosition } from '../types/portfolio';
@@ -1495,6 +1496,33 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
             }
             group.querySelector('.market-holding-industry-rows')?.append(row);
             holdingRows.push({ key, label: group.querySelector('h6')?.textContent ?? key, tagIds: industries[0] ? researchTagIdsForIndustryGroup({ id: industries[0].id, name: industries[0].name }) : [] });
+        } else if (targetId === 'market-custom-list') {
+            const wrapper = document.createElement('div'); wrapper.className = 'market-opportunity-item';
+            const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'market-opportunity-remove';
+            remove.textContent = '×';
+            remove.setAttribute('aria-label', `${marketText('Remove', '移除')} ${instrument.code}`);
+            remove.title = remove.getAttribute('aria-label') || '';
+            remove.hidden = (document.getElementById('market-custom-edit') as HTMLButtonElement | null)?.hidden !== false;
+            remove.addEventListener('click', async () => {
+                const notice = document.getElementById('market-custom-notice');
+                const controls = document.querySelectorAll<HTMLButtonElement>('.market-opportunity-remove, #market-custom-edit');
+                controls.forEach(control => { control.disabled = true; });
+                remove.setAttribute('aria-busy', 'true'); remove.textContent = '…';
+                if (notice) notice.textContent = marketText('Removing…', '正在移除…');
+                try {
+                    await removeOpportunity(fetch, astroApiPath('/api/market/dashboard/custom'), marketAuthHeaders(), instrument.code);
+                    if (row.getAttribute('aria-expanded') === 'true') row.click();
+                    if (notice) notice.textContent = marketText('Removed.', '已移除。');
+                    await fetchMarketDashboard();
+                } catch (cause) {
+                    if (notice) notice.textContent = marketText(`Could not remove ${instrument.code}. Please try again.`, `無法移除 ${instrument.code}，請稍後再試。`);
+                    console.error('Could not remove opportunity:', cause);
+                } finally {
+                    controls.forEach(control => { control.disabled = false; });
+                    remove.removeAttribute('aria-busy'); remove.textContent = '×';
+                }
+            });
+            wrapper.append(row, remove); target.append(wrapper);
         } else target.append(row);
     }
     if (targetId === 'market-auto-list') renderHoldingFilters(holdingFilters(holdingRows));
@@ -2449,7 +2477,7 @@ function initMarketCustomEditor() {
     button.hidden = true;
     if (hasMarketAuth()) {
         void fetch(astroApiPath('/api/market/dashboard/candidates?limit=1'), { headers: marketAuthHeaders() })
-            .then((response) => { button.hidden = !canEditCustomSelection(true, response.ok); }).catch(() => undefined);
+            .then((response) => { button.hidden = !canEditCustomSelection(true, response.ok); document.querySelectorAll<HTMLButtonElement>('.market-opportunity-remove').forEach(remove => { remove.hidden = button.hidden; }); }).catch(() => undefined);
     }
 }
 
