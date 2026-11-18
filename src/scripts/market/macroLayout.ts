@@ -39,10 +39,11 @@ export const MACRO_CSP_CHART = {
 /** 2026-11-18: TAIEX 乖離率, the close's distance from its 20-, 60- and 240-session averages (月線、季線、年線), in percent.
  *  maya-sawa derives it from the stored TAIEX closes. Not part of any card, so it carries its own labels. */
 export const MACRO_BIAS_CHART = {
-    id: 'tw-bias', codes: ['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_240'] as readonly string[],
+    id: 'tw-bias', codes: ['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_120', 'TW_TAIEX_BIAS_240'] as readonly string[],
     labels: {
         TW_TAIEX_BIAS_20: { zh: '月線乖離率（20 日，%）', en: '20-day bias (%)' },
         TW_TAIEX_BIAS_60: { zh: '季線乖離率（60 日，%）', en: '60-day bias (%)' },
+        TW_TAIEX_BIAS_120: { zh: '半年線乖離率（120 日，%）', en: '120-day bias (%)' },
         TW_TAIEX_BIAS_240: { zh: '年線乖離率（240 日，%）', en: '240-day bias (%)' },
     } as Record<string, { zh: string; en: string }>,
     title: { zh: '加權指數乖離率（月線、季線、年線）', en: 'TAIEX bias from its 20-, 60- and 240-day averages' },

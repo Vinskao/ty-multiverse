@@ -163,7 +163,7 @@ describe('TAIEX bias chart', () => {
     it('is second, draws the three averages and names its own lines', async () => {
         const { MACRO_BIAS_CHART } = await import('../../src/scripts/market/macroLayout');
         expect(MACRO_TOP_CHARTS[1]).toBe(MACRO_BIAS_CHART);
-        expect(MACRO_BIAS_CHART.codes).toEqual(['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_240']);
+        expect(MACRO_BIAS_CHART.codes).toEqual(['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_120', 'TW_TAIEX_BIAS_240']);
         for (const code of MACRO_BIAS_CHART.codes) expect(MACRO_BIAS_CHART.labels[code].zh && MACRO_BIAS_CHART.labels[code].en).toBeTruthy();
     });
 });

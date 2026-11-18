@@ -28,6 +28,7 @@ import { FUNDAMENTAL_CHARTS, fundamentalChartLines, fundamentalUnitLabel, type F
 import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload, OVERSEAS_PRICE_SOURCE, type OverseasResearch } from './market/overseasResearch';
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { futuresProxyReadout, liveReadout, withLivePoint, type LiveFuturesProxy, type LiveVolatility } from './market/macroLive';
+import { biasBreakAlert } from './market/macroBiasAlert';
 import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle, MACRO_TOP_CHARTS } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { MACRO_SPEED_HEADINGS, isMacroPopulationCode, macroSpeedOf, splitMacroBySpeed, type MacroSpeed } from './market/macroSpeed';
@@ -2137,6 +2138,15 @@ function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
         const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
         const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
         card.append(title, note);
+        if (chart.id === 'tw-bias') {   // two averages broken on one day: a warning for a week
+            const broken = biasBreakAlert(Object.fromEntries(chart.codes.map((code) => [code, byCode.get(code)?.history])), new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Taipei' }));
+            if (broken) {
+                const alert = document.createElement('p'); alert.className = 'macro-bias-alert'; alert.setAttribute('role', 'alert');
+                alert.textContent = marketText(`Warning: on ${broken.date} the TAIEX closed below its ${broken.lines.map((line) => line.en).join(' and ')} averages at once. This stays up for a week.`,
+                    `警示：${broken.date} 加權指數一次跌破${broken.lines.map((line) => line.zh).join('、')}。此警示自發生日起維持一週。`);
+                card.append(alert);
+            }
+        }
         const own = 'labels' in chart ? chart.labels : undefined;   // a chart outside every card (the cloud providers') names its own lines
         const [base, ...rest] = chart.codes.flatMap((code) => {
             const indicator = byCode.get(code); const meta = spec.get(code) ?? (own?.[code] ? { format: 'raw' as const, label: () => marketText(own[code].en, own[code].zh) } : undefined);
