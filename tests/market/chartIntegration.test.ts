@@ -4,7 +4,7 @@ import { drawMarketHistoryChart, buildMacroTrendChart, renderPortfolioHistory } 
 beforeAll(() => { vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} }); });
 beforeEach(() => { document.body.innerHTML = ''; });
 
-it('filters and zooms the actual history renderer without losing original rows on redraw', () => {
+it('filters the actual history renderer without losing original rows on redraw', () => {
   document.body.innerHTML = '<div id="integration-history"></div>';
   const points = ['2021-10-22', '2025-10-22', '2026-10-21', '2026-10-22'].map((date, i) => ({ date, code: '2330', name: 'TSMC', sources: { test: { value: i + 10 } } }));
   drawMarketHistoryChart('integration-history', points, [{ label: 'Value', color: '#fff', sourceKeys: ['test'], field: 'value' }]);
@@ -15,7 +15,7 @@ it('filters and zooms the actual history renderer without losing original rows o
   expect(document.querySelector('svg')!.textContent).toContain('2021-10-22');
   const svg = document.querySelector('svg')!;
   const event = new WheelEvent('wheel', { deltaY: -100, cancelable: true }); svg.dispatchEvent(event);
-  expect(event.defaultPrevented).toBe(true);
+  expect(event.defaultPrevented).toBe(false);   // no wheel zoom: the page scrolls
   expect(document.querySelectorAll('.market-chart-controls')).toHaveLength(1);
   document.querySelector('svg')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', cancelable: true }));
   expect(document.querySelector('.market-chart-readout')!.textContent).toContain('2021-10-22');
@@ -29,7 +29,7 @@ it('retains macro observations beyond the old 130-session limit and redraws the 
   const all = [...chart.querySelectorAll('button')].find(b => b.textContent === 'All')!; all.click();
   expect(document.querySelector('svg')!.textContent).toContain('2026-01-01');
   const event = new WheelEvent('wheel', { deltaY: -100, cancelable: true }); document.querySelector('svg')!.dispatchEvent(event);
-  expect(event.defaultPrevented).toBe(true);
+  expect(event.defaultPrevented).toBe(false);
 });
 
 it('keeps a single portfolio control bar and wheel listener across repeated redraws', () => {
@@ -40,7 +40,7 @@ it('keeps a single portfolio control bar and wheel listener across repeated redr
   document.querySelector('svg')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', cancelable: true }));
   expect(document.querySelector('.market-chart-readout')!.textContent).toContain('2026-10-22');
   const event = new WheelEvent('wheel', { deltaY: -100, cancelable: true }); document.querySelector('svg')!.dispatchEvent(event);
-  expect(event.defaultPrevented).toBe(true);
+  expect(event.defaultPrevented).toBe(false);
   expect(document.querySelectorAll('.market-chart-controls')).toHaveLength(1);
   expect(document.querySelectorAll('.market-chart-readout')).toHaveLength(1);
 });

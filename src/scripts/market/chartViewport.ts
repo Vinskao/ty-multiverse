@@ -95,17 +95,10 @@ export function addChartControls(target: HTMLElement, key: string, dates: string
     controls.append(coverage); target.prepend(controls);
 }
 const wheelHandlers = new WeakMap<SVGSVGElement, (event: WheelEvent) => void>();
-export function bindChartZoom(svg: SVGSVGElement, key: string, dates: string[], redraw: () => void, plot = { left: 0, right: 1 }) {
-    const previous = wheelHandlers.get(svg); if (previous) svg.removeEventListener('wheel', previous);
-    const handler = (event: WheelEvent) => {
-        if (isMacroChart(key) || !event.deltaY) return;
-        event.preventDefault();
-        const rect = svg.getBoundingClientRect();
-        const fraction = (event.clientX - rect.left) / Math.max(rect.width, 1);
-        const state = chartView(key, dates);
-        state.window = zoomWindow(dates, state.window, event.deltaY, (fraction - plot.left) / (plot.right - plot.left));
-        state.range = 'custom'; redraw();
-    };
-    wheelHandlers.set(svg, handler);
-    svg.addEventListener('wheel', handler, { passive: false });
+/** 2026-11-18: the mouse wheel no longer zooms a chart (it hijacked page scrolling and was hard to control). The time range
+ *  is changed with the range buttons only. Kept under its old name so every chart still calls it; it just removes any
+ *  wheel listener an earlier version of the page left on the SVG. */
+export function bindChartZoom(svg: SVGSVGElement, _key: string, _dates: string[], _redraw: () => void, _plot = { left: 0, right: 1 }) {
+    const previous = wheelHandlers.get(svg);
+    if (previous) { svg.removeEventListener('wheel', previous); wheelHandlers.delete(svg); }
 }

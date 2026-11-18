@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { addChartControls, bindChartZoom, chartView } from '../../src/scripts/market/chartViewport';
 
-it('changes calendar windows through accessible buttons, and consumes wheel zoom only on the chart', () => {
+it('changes calendar windows through accessible buttons; the mouse wheel no longer zooms the chart (2026-11-18)', () => {
   const target = document.createElement('div');
   const dates = ['2020-01-01', '2025-01-01'];
   const redraw = vi.fn();
@@ -14,7 +14,7 @@ it('changes calendar windows through accessible buttons, and consumes wheel zoom
   bindChartZoom(svg, 'controls-test', dates, redraw);
   const event = new WheelEvent('wheel', { deltaY: -100, cancelable: true });
   svg.dispatchEvent(event);
-  expect(event.defaultPrevented).toBe(true);
-  expect(chartView('controls-test', dates).range).toBe('custom');
-  expect(redraw).toHaveBeenCalledTimes(2);
+  expect(event.defaultPrevented).toBe(false);   // the page scrolls as usual
+  expect(chartView('controls-test', dates).range).toBe('week');
+  expect(redraw).toHaveBeenCalledOnce();           // only the button redrew
 });

@@ -55,6 +55,7 @@ import { watchBadge } from './market/watchBadge';
 import { renderTargetDetails } from './market/targetDetails';
 import { setAccountSections } from './market/accountSections';
 import { chartView, visibleRows, addChartControls, bindChartZoom } from './market/chartViewport';
+import { withLiveBar } from './market/liveBar';
 
 let _leetcodeAvailabilityCleanup: (() => void) | null = null;
 let _marketQuoteTimer: number | null = null;
@@ -461,7 +462,8 @@ async function loadMarketHistory(instrument: DashboardInstrument, selectedTab = 
         }
         const historyLabel = instrument.productType === 'futures'
             ? `${historyCode} ${usesSpotHistory ? marketI18n('marketHistorySpotData', 'spot data') : marketI18n('marketHistoryFuturesData', 'TAIFEX futures data')} · ` : '';
-        const points = payload.points ?? []; if (status) status.textContent = points.length
+        // Today's bar from the stock's own live quote until the official daily row is collected after the close (market/liveBar.ts).
+        const points = withLiveBar(payload.points ?? [], instrument.quote, instrument.productType); if (status) status.textContent = points.length
             ? `${historyLabel}${marketI18n('marketHistoryLoadedCount', '{count} daily records · {first} — {last}').replace('{count}', String(points.length)).replace('{first}', points[0].date).replace('{last}', points[points.length - 1].date)}`
             : `${historyLabel}${marketI18n('marketHistoryCollecting', 'Collecting history for this stock; the charts fill in automatically.')}`;
         if (!points.length && retries > 0) {
@@ -3237,6 +3239,7 @@ interface TxfQuote {
     change: number;
     changePercent: number;
     volume: number;
+    volumeShares?: number | null;
     timestamp?: string;
 }
 
