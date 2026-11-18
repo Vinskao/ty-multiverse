@@ -22,8 +22,22 @@ export const MACRO_LEVERAGE_CHART = {
         en: 'TWSE margin loan balance (NT$ 100m, left) and the market-wide maintenance ratio (%, right; collateral value over margin loans). Brokers start margin calls near 130%; margin-call accounts are those below 130% (TWSE dashboard, outer right).' },
 } as const;
 
+/** 2026-11-18: the very top of the macro page, the five big cloud providers' capital spending against their operating cash
+ *  flow (SEC filings, USD billions per quarter). When the spending line passes the cash-flow line, the build-out is being paid
+ *  for with borrowed or reserved money rather than the year's cash. Not part of any card, so it carries its own labels. */
+export const MACRO_CSP_CHART = {
+    id: 'csp-capex', codes: ['CSP_CAPEX', 'CSP_OPERATING_CASH_FLOW'] as readonly string[],
+    labels: {
+        CSP_CAPEX: { zh: '資本支出（五家合計）', en: 'Capital spending (five-company total)' },
+        CSP_OPERATING_CASH_FLOW: { zh: '營業現金流（五家合計）', en: 'Operating cash flow (five-company total)' },
+    } as Record<string, { zh: string; en: string }>,
+    title: { zh: '雲端大廠資本支出與營業現金流（微軟、Alphabet、亞馬遜、Meta、甲骨文）', en: 'Cloud providers: capital spending and operating cash flow (Microsoft, Alphabet, Amazon, Meta, Oracle)' },
+    note: { zh: '每季，單位十億美元，來自 SEC 財報（10-Q／10-K）。五家都已公布的季度才加總；各家會計年度不同，按最接近的曆年季度對齊（甲骨文 8 月底算 9 月季）。資本支出線高於現金流線，代表擴建的錢超過當季本業賺的現金。資本支出為購置不動產與設備，不含融資租賃。',
+        en: 'Quarterly, USD billions, from SEC filings (10-Q/10-K). A quarter is totalled only once all five have reported; fiscal years differ, so each is placed on the nearest calendar quarter (Oracle’s August quarter counts as September). When the spending line is above the cash-flow line, the build-out costs more than the quarter’s operating cash. Capital spending is purchases of property and equipment, finance leases excluded.' },
+} as const;
+
 /** The charts that open the macro page, top to bottom. */
-export const MACRO_TOP_CHARTS = [MACRO_VALUATION_CHART, MACRO_LEVERAGE_CHART] as const;
+export const MACRO_TOP_CHARTS = [MACRO_CSP_CHART, MACRO_VALUATION_CHART, MACRO_LEVERAGE_CHART] as const;
 
 /** 2026-11-16: above the borrowing charts, the two volatility indexes, Taiwan left and U.S. right. Each draws its stored
  *  daily closes with the live reading as today's last point (macroLive.ts), refreshed every minute. */

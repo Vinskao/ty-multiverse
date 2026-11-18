@@ -248,6 +248,11 @@ nav {
   transform: scale(1.15);
 }
 
+.notification-bell {
+  width: var(--nav-control-size);
+  height: var(--nav-control-size);
+}
+
 .theme-toggle {
   display: flex;
   align-items: center;

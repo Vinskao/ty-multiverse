@@ -20,3 +20,7 @@ it('caps the width of the whole block and the size of each chart', () => {
 it('falls back to one column on a phone', () => {
   expect(css).toMatch(/@media \(max-width: 760px\)[^\n]*\.macro-borrowing\s*\{\s*grid-template-columns:1fr/);
 });
+
+it('gives the cloud-provider chart a full row above the side-by-side pair', () => {
+  expect(rule('.macro-leverage .macro-wide-card')).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+});

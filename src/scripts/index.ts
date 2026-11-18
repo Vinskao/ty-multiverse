@@ -2137,10 +2137,12 @@ function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
         const title = document.createElement('h5'); title.textContent = marketText(chart.title.en, chart.title.zh);
         const note = document.createElement('p'); note.className = 'macro-borrowing-note'; note.textContent = marketText(chart.note.en, chart.note.zh);
         card.append(title, note);
+        const own = 'labels' in chart ? chart.labels : undefined;   // a chart outside every card (the cloud providers') names its own lines
         const [base, ...rest] = chart.codes.flatMap((code) => {
-            const indicator = byCode.get(code); const meta = spec.get(code);
+            const indicator = byCode.get(code); const meta = spec.get(code) ?? (own?.[code] ? { format: 'raw' as const, label: () => marketText(own[code].en, own[code].zh) } : undefined);
             return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
         });
+        if (own) card.classList.add('macro-wide-card');
         if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest,
             { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }));
         else { const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。'); card.append(empty); }

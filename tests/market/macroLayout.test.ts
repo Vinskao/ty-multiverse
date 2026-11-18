@@ -141,8 +141,19 @@ describe('margin leverage chart', () => {
 describe('market valuation chart', () => {
     it('draws the market P/E alone, opens the macro page and is not drawn again inside a card', () => {
         expect(MACRO_VALUATION_CHART.codes).toEqual(['TW_MARKET_PE']);
-        expect(MACRO_TOP_CHARTS.map((chart) => chart.id)).toEqual(['tw-valuation', 'tw-leverage']);
+        expect(MACRO_TOP_CHARTS.map((chart) => chart.id)).toEqual(['csp-capex', 'tw-valuation', 'tw-leverage']);
         const inCards = Object.values(MACRO_MERGED_CHARTS).flatMap(chartCodes);
         expect(inCards).not.toContain('TW_MARKET_PE');
+    });
+});
+
+
+// 2026-11-18: the cloud providers' capital spending and operating cash flow open the macro page, above the P/E.
+describe('cloud provider capital spending chart', () => {
+    it('is first, draws spending against operating cash flow and names its own lines', async () => {
+        const { MACRO_CSP_CHART } = await import('../../src/scripts/market/macroLayout');
+        expect(MACRO_TOP_CHARTS[0]).toBe(MACRO_CSP_CHART);
+        expect(MACRO_CSP_CHART.codes).toEqual(['CSP_CAPEX', 'CSP_OPERATING_CASH_FLOW']);
+        for (const code of MACRO_CSP_CHART.codes) expect(MACRO_CSP_CHART.labels[code].zh && MACRO_CSP_CHART.labels[code].en).toBeTruthy();
     });
 });
