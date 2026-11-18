@@ -18,7 +18,7 @@ import { buyOpportunities } from './market/opportunities';
 import { isTaiwanInstrument, analysisRecordCode, instrumentMarketLabel } from './market/instrumentIdentity';
 import { companyEventSourceUrl, conferenceOtherScheduleCounts, hasStockNotice, marketEventKey, stockNotices, type StockNotice } from './market/companyEventPresentation';
 import { parseResearchRecord, researchRecordCode, industryDiagrams, industryPeers, groupsForCode, type IndustryGroup } from './market/researchMap';
-import { holdingGroupKey } from './market/holdingsGroups';
+import { HOLDING_KIND_HEADINGS, holdingGroupKey } from './market/holdingsGroups';
 import { lazyLoader, memoizeAsync, type LazyLoader } from './lazy';
 import { holdingFilters, filterForReportTag, reportTagForFilter, type HoldingFilter, type HoldingRow } from './market/holdingsFilter';
 import { renderResearchContent } from './market/researchContent';
@@ -1489,11 +1489,11 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
         if (targetId === 'market-auto-list') {
             const identity = researchRecordCode({ ...instrument, underlyingCode: marketUnderlyingCode(instrument) || null });
             const industries = marketHoldingIndustries.get(identity) || [];
-            const key = holdingGroupKey(industries);
+            const key = holdingGroupKey(industries, instrument.productType);
             let group = groups.get(key);
             if (!group) {
                 group = document.createElement('section'); group.className = 'market-holding-industry'; group.dataset.groupKey = key;
-                const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : marketText('Awaiting classification (filed by the next AI run)', '待分類（下次 AI 排程自動歸組）');
+                const heading = document.createElement('h6'); heading.textContent = industries[0] ? marketText(industries[0].name.en, industries[0].name.zh) : HOLDING_KIND_HEADINGS[key] ? marketText(HOLDING_KIND_HEADINGS[key].en, HOLDING_KIND_HEADINGS[key].zh) : marketText('Awaiting classification (filed by the next AI run)', '待分類（下次 AI 排程自動歸組）');
                 const rows = document.createElement('div'); rows.className = 'market-holding-industry-rows';
                 group.append(heading, rows); groups.set(key, group); target.append(group);
             }
