@@ -240,6 +240,7 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
 <script>
   import i18nData from "../storages/i18n.json";
   import { langToggleState } from "../scripts/lang/toggle";
+  import { applySocialToggleLabel } from "../scripts/navigation/socialDropdown";
 
   let _langCleanup: (() => void) | null = null;
 
@@ -285,6 +286,11 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
         const label = i18nData.nav.logout[code.toLowerCase().startsWith("zh") ? "zh" : "en"];
         logoutButton.setAttribute("aria-label", label);
         logoutButton.setAttribute("title", label);
+      }
+
+      const socialToggle = document.querySelector<HTMLButtonElement>("#socialToggleBtn");
+      if (socialToggle) {
+        applySocialToggleLabel(socialToggle, code, i18nData.nav.socials);
       }
     };
 

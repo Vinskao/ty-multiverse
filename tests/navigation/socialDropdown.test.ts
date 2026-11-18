@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { initSocialDropdown } from '../../src/scripts/navigation/socialDropdown';
+import { applySocialToggleLabel, initSocialDropdown } from '../../src/scripts/navigation/socialDropdown';
 
 const root = process.cwd().endsWith('ty-multiverse-frontend') ? process.cwd() : resolve(process.cwd(), 'ty-multiverse-frontend');
 const source = (path: string) => readFileSync(resolve(root, path), 'utf8');
@@ -29,6 +29,26 @@ describe('navbar social media popover', () => {
     expect(css).toMatch(/\.social-popover/);
     expect(css).toMatch(/\.social-dropdown/);
     expect(css).toMatch(/\.social-popover\s*\.socials/);
+  });
+
+  it('sets the social toggle aria-label and title from the active language', () => {
+    document.body.innerHTML = `<button class="social-toggle-btn" aria-label="社群連結" title="社群連結"></button>`;
+    const btn = document.querySelector('.social-toggle-btn') as HTMLButtonElement;
+    const labels = { en: 'Social media', zh: '社群連結' };
+
+    applySocialToggleLabel(btn, 'en', labels);
+    expect(btn.getAttribute('aria-label')).toBe('Social media');
+    expect(btn.getAttribute('title')).toBe('Social media');
+
+    applySocialToggleLabel(btn, 'zh-TW', labels);
+    expect(btn.getAttribute('aria-label')).toBe('社群連結');
+    expect(btn.getAttribute('title')).toBe('社群連結');
+  });
+
+  it('updates the social toggle label when the nav language changes', () => {
+    const nav = source('src/components/Nav.astro');
+    expect(nav).toContain('applySocialToggleLabel');
+    expect(nav).toContain('i18nData.nav.socials');
   });
 
   it('toggles the popover open on click and closes on outside click or Escape', () => {

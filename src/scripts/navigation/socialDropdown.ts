@@ -1,3 +1,13 @@
+export function applySocialToggleLabel(
+  button: HTMLElement,
+  code: string,
+  labels: { en: string; zh: string },
+): void {
+  const label = code.toLowerCase().startsWith('zh') ? labels.zh : labels.en;
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+}
+
 /**
  * Controller for the navbar social links popover.
  * Collapses the 6 social links into a single trigger icon button,
