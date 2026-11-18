@@ -24,7 +24,7 @@ export function companyEventSourceUrl(event: CompanyEvent): string | undefined {
   return event.type === 'investor_conference' ? TDCC_EVENTS_URL : undefined;
 }
 
-type InsiderEvent = CompanyEvent & { status?: string; period?: string; flag?: string };
+type InsiderEvent = CompanyEvent & { status?: string; period?: string; flag?: string; today?: { weekday: string; rank: number; flag: string | null } };
 
 /** The row/header mark for an open insider sale filing (maya-sawa market_insider_transfers.py); null when there is none. */
 export function insiderSaleNotice(events: readonly InsiderEvent[], zh: boolean): { text: string; title: string } | null {
@@ -44,7 +44,9 @@ export function stockNotices(events: readonly InsiderEvent[], zh: boolean): Stoc
   const spike = events.find((event) => event.type === 'volume_spike');
   if (spike) {
     const top5 = spike.flag === 'top5';
-    const text = zh ? (top5 ? '爆大量 · 年度前 5' : '大量 · 年度前 10') : (top5 ? 'Volume spike · top 5 of the year' : 'Heavy volume · top 10 of the year');
+    const base = zh ? (top5 ? '爆大量 · 年度前 5' : '大量 · 年度前 10') : (top5 ? 'Volume spike · top 5 of the year' : 'Heavy volume · top 10 of the year');
+    const quiet = spike.today && !spike.today.flag;   // an earlier day made the week: say where today ranks
+    const text = quiet ? (zh ? `${base}（今日第 ${spike.today!.rank} 名）` : `${base} (today #${spike.today!.rank})`) : base;
     notices.push({ text, title: spike.period || '', tone: 'volume' });
   }
   const sale = insiderSaleNotice(events, zh);

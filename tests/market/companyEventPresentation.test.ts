@@ -82,6 +82,17 @@ describe('volume spike notice', () => {
 });
 
 describe('one badge per mark', () => {
+  // 2026-11-18: an earlier day made the week, today is not a spike: the mark stays and says where today ranks.
+  it('adds where today ranks when only an earlier day of the week was a spike', async () => {
+    const { stockNotices } = await import('../../src/scripts/market/companyEventPresentation');
+    const top10 = { code: '3443', type: 'volume_spike', flag: 'top10', period: 'p' };
+    const earlier = { ...top10, today: { weekday: '週三', rank: 209, flag: null } };
+    expect(stockNotices([earlier], true)[0].text).toBe('大量 · 年度前 10（今日第 209 名）');
+    expect(stockNotices([earlier], false)[0].text).toBe('Heavy volume · top 10 of the year (today #209)');
+    const todayToo = { ...top10, today: { weekday: '週三', rank: 7, flag: 'top10' } };
+    expect(stockNotices([todayToo], true)[0].text).toBe('大量 · 年度前 10');   // today is itself in the ranking: nothing to add
+  });
+
   it('knows which event types already have their own stock badge', async () => {
     const { hasStockNotice } = await import('../../src/scripts/market/companyEventPresentation');
     for (const type of ['volume_spike', 'insider_transfer', 'insider_untransferred', 'insider_buy']) expect(hasStockNotice(type), type).toBe(true);
