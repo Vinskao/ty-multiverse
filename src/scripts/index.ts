@@ -1,4 +1,4 @@
-import { removeOpportunity } from './market/removeOpportunity';
+import { removeOpportunity, removeWatched } from './market/removeOpportunity';
 import { stockDeepLink } from './market/stockDeepLink';
 import { prioritizeMacroGroups, type MacroCountry } from './market/macroCountry';
 import type { Portfolio, PortfolioPosition } from '../types/portfolio';
@@ -1512,7 +1512,8 @@ function renderDashboardRows(targetId: string, instruments: DashboardInstrument[
                 remove.setAttribute('aria-busy', 'true'); remove.textContent = '…';
                 if (notice) notice.textContent = marketText('Removing…', '正在移除…');
                 try {
-                    await removeOpportunity(fetch, astroApiPath('/api/market/dashboard/custom'), marketAuthHeaders(), instrument.code);
+                    if (instrument.source === 'ai-watch') await removeWatched(fetch, astroApiPath('/api/market/dashboard/watch'), marketAuthHeaders(), instrument.code);
+                    else await removeOpportunity(fetch, astroApiPath('/api/market/dashboard/custom'), marketAuthHeaders(), instrument.code);
                     if (row.getAttribute('aria-expanded') === 'true') row.click();
                     if (notice) notice.textContent = marketText('Removed.', '已移除。');
                     await fetchMarketDashboard();

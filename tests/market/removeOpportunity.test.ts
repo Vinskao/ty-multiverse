@@ -15,3 +15,16 @@ describe('removeOpportunity', () => {
     await expect(removeOpportunity(writeFail, '/custom', {}, '3037')).rejects.toThrow();
   });
 });
+
+describe('removeWatched', () => {
+  it('sends DELETE for the AI-found stock to its own endpoint', async () => {
+    const { removeWatched } = await import('../../src/scripts/market/removeOpportunity');
+    const request = vi.fn(async () => new Response('{}', { status: 200 }));
+    await removeWatched(request as unknown as typeof fetch, '/api/market/dashboard/watch', { Authorization: 'Bearer t' }, '3443');
+    expect(request).toHaveBeenCalledWith('/api/market/dashboard/watch/3443', expect.objectContaining({ method: 'DELETE' }));
+  });
+  it('throws when the server refuses', async () => {
+    const { removeWatched } = await import('../../src/scripts/market/removeOpportunity');
+    await expect(removeWatched((async () => new Response('', { status: 403 })) as unknown as typeof fetch, '/x', {}, '3443')).rejects.toThrow('HTTP 403');
+  });
+});
