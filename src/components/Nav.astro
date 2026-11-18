@@ -73,17 +73,16 @@ const textLinks: {
     href: isLoggedIn ? `/learn/?username=${username}` : "/learn/",
     isActive: currentPath.startsWith("/learn"),
   },
-  ...(isLoggedIn
-    ? [
-        {
-          label: "Palais",
-          i18nKey: "nav.palais",
-          adminOnly: true,
-          href: `/palais/?username=${username}`,
-          isActive: currentPath.startsWith("/palais"),
-        },
-      ]
-    : []),
+  // Always in the markup: login state and the admin role are read in the browser (NavScript), and the server only
+  // sees ?username=, so rendering this link only for that parameter hid it on every page opened without it.
+  // It stays hidden (.admin-only) until the script confirms an admin.
+  {
+    label: "Palais",
+    i18nKey: "nav.palais",
+    adminOnly: true,
+    href: isLoggedIn ? `/palais/?username=${username}` : "/palais/",
+    isActive: currentPath.startsWith("/palais"),
+  },
 ];
 
 const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[] = socialLinks;
