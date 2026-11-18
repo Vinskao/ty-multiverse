@@ -126,9 +126,14 @@
     0px 4px 9px rgba(255, 255, 255, 0.12);
 }
 
-html,
-body {
+/* 2026-11-19: body must grow with the page. A sticky element only sticks inside its parent, so `body { height: 100% }` (one screen)
+   let the nav scroll away once the page was longer than a screen: on long mobile pages the navbar went missing. */
+html {
   height: 100%;
+}
+
+body {
+  min-height: 100%;
 }
 
 /* Only the page (html) scrolls. `overflow-x: hidden` on body turns its overflow-y into `auto` as well, so body became a second scroll
