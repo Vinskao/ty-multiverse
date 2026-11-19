@@ -809,27 +809,19 @@ const diagrams: Record<DiagramId, string> = {
     participant U as User
     participant F as Frontend
     participant A as API
-    participant C as Celery Worker
-    participant DB as Database
+    participant L as Language model
 
     U->>F: Send Question
-    F->>A: POST /maya-v2/ask-with-model/
-    A->>DB: Create Task Record
-    A->>C: Send Processing Task
-    A-->>F: Return task_id
-    F-->>U: Show Processing
-
-    loop Poll Status
-        F->>A: GET /maya-v2/task-status/{task_id}
-        A->>C: Query Task Status
-        C-->>A: Return Status
-
-        alt Task Complete
-            A-->>F: Return AI Response
-            F-->>U: Display Result
-        else Processing
-            F-->>U: Show Processing
-        end
+    F->>A: POST /maya-sawa/qa/query
+    A->>A: Search articles and characters
+    A->>L: Ask with the retrieved context
+    alt Answer ready
+        L-->>A: Answer
+        A-->>F: Answer and sources
+        F-->>U: Display Result
+    else Model unavailable or allowance used up
+        A-->>F: Soft "not on shift yet" reply
+        F-->>U: Show reply and the Messenger button
     end`,
 
   cicdPipeline: `graph LR

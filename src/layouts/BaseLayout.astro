@@ -37,7 +37,6 @@ import { showsPublisherAds } from '../scripts/ads/placement';
 import Footer from '../components/Footer.astro';
 import QAPlatform from '../components/QAPlatform.astro';
 import QABot from '../components/QABot.astro';
-import QABotV2 from '../components/QABotV2.astro';
 import { ClientRouter } from 'astro:transitions';
 
 
@@ -233,10 +232,9 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 			{showsPublisherAds(Astro.url.pathname) && <MonetagInPagePush />}
 		</div>
 		
-		<!-- QA Platform (shared UI) + scripts for v1/v2 -->
+		<!-- QA Platform (shared UI) + the chat script -->
 		<QAPlatform />
 		<QABot />
-		<QABotV2 />
 		
 
 

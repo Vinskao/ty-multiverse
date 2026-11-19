@@ -22,7 +22,6 @@
   // @ts-ignore
   import analystTemplates from "../storages/analyst.json";
   // @ts-ignore
-  import qabotConfig from "../storages/qabot.json";
   import { getErrorMessage, parseJsonOrThrow } from "../services/core/apiError";
   import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
   import { isMayaBusyAnswer } from "../scripts/qabot/mayaBusyAnswer";
@@ -654,28 +653,11 @@
       avatarEl.addEventListener("click", (e) => {
         e.stopPropagation();
 
-        // 檢查是否在V2模式下
-        if ((window as any).qabotMode === "v2") {
-          const config = qabotConfig.header_controls.v2.avatar;
-          if (config && !config.enabled && config.restriction_message) {
-            this.showV2RestrictionMessage(config.restriction_message);
-          }
-          return;
-        }
-
         this.showAvatarSelector(avatarSelector);
       });
 
       // 2026-11-19: one assistant. The header title no longer switches to Maya v2 (model picker / async task flow);
       // every question goes through the same /qa/query flow, which also gives the soft reply when the allowance is used up.
-
-      // 監聽全域模式切換，使用配置文件管理header controls狀態
-      window.addEventListener("qabot:switch", (e: any) => {
-        const mode = e?.detail?.mode;
-        if (mode === "v1" || mode === "v2") {
-          this.updateHeaderControlsByConfig(mode);
-        }
-      });
 
       // 點擊其他地方隱藏選擇面板
       document.addEventListener("click", (e) => {
@@ -835,34 +817,6 @@
       this.elements.qaBotToggle.addEventListener("click", () =>
         this.toggleChat(),
       );
-      // 監聽從外部切換 v1/v2
-      window.addEventListener("qabot:switch", (e: any) => {
-        const mode = e?.detail?.mode;
-        const container = this.elements.qaBotContainer;
-        const headerNameEl = container?.querySelector(
-          ".header-text h3",
-        ) as HTMLElement | null;
-        const inputEl = this.elements.userInput as HTMLInputElement;
-        if (mode === "v2") {
-          // 確保 v1 視窗可見
-          if (container && !container.classList.contains("show")) {
-            container.classList.add("show");
-          }
-          // 顯示 Maya v2 名稱
-          if (headerNameEl) headerNameEl.textContent = "Maya v2";
-          // 調整輸入框提示
-          if (inputEl) inputEl.placeholder = "問 Maya v2...";
-        } else if (mode === "v1") {
-          // 還原成目前 bot 名稱
-          if (headerNameEl) headerNameEl.textContent = this.state.botName;
-          // 還原輸入框提示
-          this.updateInputPlaceholder();
-          // 顯示 v1 面板
-          if (container && !container.classList.contains("show")) {
-            container.classList.add("show");
-          }
-        }
-      });
       this.elements.closeButton.addEventListener("click", () =>
         this.hideChat(),
       );
@@ -874,14 +828,6 @@
       );
       // 新增：頁面分析按鈕事件
       this.elements.pageAnalysisButton.addEventListener("click", () => {
-        // 檢查是否在V2模式下
-        if ((window as any).qabotMode === "v2") {
-          const config = qabotConfig.header_controls.v2.page_analysis;
-          if (config && !config.enabled && config.restriction_message) {
-            this.showV2RestrictionMessage(config.restriction_message);
-          }
-          return;
-        }
         this.toggleAnalysisPanel();
       });
 
@@ -904,14 +850,12 @@
       this.elements.userInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          if ((window as any).qabotMode === "v2") return; // 交由 v2 處理
           this.sendMessage();
         }
         this.resetInactivityTimer();
       });
 
       this.elements.sendButton.addEventListener("click", () => {
-        if ((window as any).qabotMode === "v2") return; // 交由 v2 處理
         this.sendMessage();
         this.resetInactivityTimer();
       });
@@ -958,38 +902,6 @@
         }
       });
 
-      // 監聽全域模式切換事件
-      window.addEventListener("qabot:switch", (e: any) => {
-        const mode = e?.detail?.mode;
-        const headerText = document.querySelector(
-          ".header-text",
-        ) as HTMLElement;
-        const input = document.getElementById("userInput") as HTMLInputElement;
-
-        if (mode === "v2") {
-          // 切換到 v2 模式
-          if (headerText) {
-            headerText.setAttribute("data-tooltip", "切換至 v1 模式");
-          }
-          if (input) {
-            input.placeholder = "問我任何問題... (v2)";
-          }
-        } else if (mode === "v1") {
-          // 切換到 v1 模式
-          if (headerText) {
-            headerText.setAttribute("data-tooltip", "切換至 v2 模式");
-          }
-          if (input) {
-            input.placeholder = "問我任何問題...";
-          }
-        }
-      });
-
-      // 初始化 tooltip
-      const headerText = document.querySelector(".header-text") as HTMLElement;
-      if (headerText) {
-        headerText.setAttribute("data-tooltip", "切換至 v2 模式");
-      }
     }
 
     // 創建消息結構的通用方法
@@ -1900,89 +1812,6 @@
       const div = document.createElement("div");
       div.textContent = text;
       return div.innerHTML;
-    }
-
-    // 顯示V2模式限制提示
-    private showV2RestrictionMessage(featureName: string) {
-      if (typeof (window as any).Swal !== "undefined") {
-        (window as any).Swal.fire({
-          title: "⚠️ V2模式限制",
-          html: `
-            <div style="text-align: center; padding: 20px;">
-              <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
-              <p style="font-size: 16px; color: #666; margin-bottom: 15px;">
-                Maya v2 模式下無法使用 ${featureName} 功能
-              </p>
-              <p style="font-size: 14px; color: #999;">
-                請切換回 v1 模式以使用此功能
-              </p>
-            </div>
-          `,
-          icon: "info",
-          confirmButtonText: "知道了",
-          confirmButtonColor: "#3085d6",
-          showCancelButton: true,
-          cancelButtonText: "切換到 v1",
-          cancelButtonColor: "#6c757d",
-          customClass: {
-            popup: "swal-v2-restriction-popup",
-          },
-          background: "#fff",
-          backdrop: "rgba(0,0,0,0.4)",
-          allowOutsideClick: true,
-          allowEscapeKey: true,
-          width: "400px",
-        }).then((result: any) => {
-          if (result.dismiss === "cancel") {
-            // 用戶選擇切換到v1
-            (window as any).qabotMode = "v1";
-            window.dispatchEvent(
-              new CustomEvent("qabot:switch", { detail: { mode: "v1" } }),
-            );
-          }
-        });
-      }
-    }
-
-    // 根據配置更新header controls狀態
-    private updateHeaderControlsByConfig(mode: "v1" | "v2") {
-      const config = qabotConfig.header_controls[mode];
-      if (!config) return;
-
-      // 更新各個控制項的狀態
-      Object.entries(config).forEach(([key, controlConfig]: [string, any]) => {
-        let element: HTMLElement | null = null;
-
-        // 根據配置獲取元素
-        if (controlConfig.element_id) {
-          element = document.getElementById(controlConfig.element_id);
-        } else if (controlConfig.element_selector) {
-          element = document.querySelector(controlConfig.element_selector);
-        }
-
-        if (!element) return;
-
-        // 更新元素狀態
-        if (controlConfig.enabled) {
-          // 啟用狀態
-          element.classList.remove("v2-disabled");
-          element.removeAttribute("disabled");
-          if (element instanceof HTMLButtonElement) {
-            element.disabled = false;
-          }
-        } else {
-          // 禁用狀態
-          element.classList.add("v2-disabled");
-          if (element instanceof HTMLButtonElement) {
-            element.disabled = true;
-          }
-        }
-
-        // 更新title
-        if (controlConfig.title) {
-          element.title = controlConfig.title;
-        }
-      });
     }
 
     // ============================

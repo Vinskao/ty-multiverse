@@ -21,7 +21,5 @@ describe('AI chat widget across page changes', () => {
   it('still skips re-initialising when the DOM is the same one, so persisted listeners are not doubled', () => {
     const bot = readFileSync('src/components/QABot.astro', 'utf8');
     expect(bot).toContain('sameDom');
-    const v2 = readFileSync('src/components/QABotV2.astro', 'utf8');
-    expect(v2).toContain('sameDom');
   });
 });
