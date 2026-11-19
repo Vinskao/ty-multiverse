@@ -1882,6 +1882,13 @@
         this.state.currentLanguage === "chinese"
           ? "請輸入您的問題..."
           : "Please enter your question...";
+      const messenger = document.getElementById("messengerLink");
+      if (messenger) {
+        messenger.textContent =
+          this.state.currentLanguage === "chinese"
+            ? "或在 Messenger 留言給我們"
+            : "Or leave us a message on Messenger";
+      }
     }
 
     private updateFullscreenButton() {

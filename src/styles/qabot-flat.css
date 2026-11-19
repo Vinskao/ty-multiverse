@@ -191,3 +191,6 @@
   border: 1px solid var(--gray-800) !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
 }
+
+.messenger-link { display:block; margin:.35rem 0 0; text-align:center; font-size:.8rem; color:var(--gray-400); text-decoration:underline; text-underline-offset:.2em; }
+.messenger-link:hover { color:var(--gray-0); }
