@@ -191,29 +191,3 @@
   border: 1px solid var(--gray-800) !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
 }
-
-
-.maya-messenger-handoff {
-  display: grid;
-  justify-items: start;
-  gap: .375rem;
-  margin-block-start: .75rem;
-}
-
-.message-content .maya-messenger-handoff a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  max-width: 100%;
-  padding: .5rem .75rem;
-  border: 1px solid var(--accent-regular);
-  border-radius: .5rem;
-  background: color-mix(in srgb, var(--accent-regular) 14%, transparent);
-  color: var(--gray-0);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.maya-messenger-handoff small {
-  color: var(--gray-300);
-}

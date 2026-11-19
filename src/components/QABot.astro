@@ -1229,11 +1229,6 @@
         ".message-content",
       ) as HTMLDivElement;
 
-      if (isMayaBusyAnswer(answerText)) {
-        const handoff = document.querySelector<HTMLTemplateElement>("#mayaMessengerHandoff");
-        if (handoff) contentDiv.append(handoff.content.cloneNode(true));
-      }
-
       // 添加來源列表（僅在存在有效來源時）
       if (sources && Array.isArray(sources) && sources.length > 0) {
         const sourcesDiv = document.createElement("div");
@@ -2298,7 +2293,7 @@
 
         if (result.success) {
           const answer = result.text || result.answer || result;
-          if (isMayaBusyAnswer(answer)) {
+          if (isMayaBusyAnswer(answer)) {   // show it, but never cache the "not on shift" reply as an analysis
             this.addBotResponse(answer, []);
             return;
           }

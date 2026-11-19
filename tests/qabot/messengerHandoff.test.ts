@@ -16,15 +16,10 @@ describe('Messenger handoff for Maya’s unavailable reply', () => {
     expect(isMayaBusyAnswer(`You asked about "${en}"`)).toBe(false);
   });
 
-  it('uses the same Page as the footer and labels the link and sign-in requirement in both languages', () => {
+  it('adds no Messenger link inside the reply: the header icon is the only entry', () => {
     const platform = readFileSync('src/components/QAPlatform.astro', 'utf8');
-    const main = platform.match(/id="messengerIcon" href="([^"]+)"/)?.[1];
-    const handoff = platform.match(/<template id="mayaMessengerHandoff">([\s\S]*?)<\/template>/)?.[1];
-    expect(main).toBe('https://m.me/61596064529255');
-    expect(handoff).toContain(`href="${main}" target="_blank" rel="noopener noreferrer"`);
-    expect(handoff).toContain('改用 Messenger 留言給真人');
-    expect(handoff).toContain('訪客需登入 Facebook');
-    expect(english['改用 Messenger 留言給真人']).toBe('Message our team on Messenger');
-    expect(english['訪客需登入 Facebook']).toBe('Facebook login required.');
+    expect(platform).not.toContain('mayaMessengerHandoff');
+    expect(platform.match(/m\.me\/61596064529255/g)).toHaveLength(1);
+    expect(english).not.toHaveProperty(['改用 Messenger 留言給真人']);
   });
 });
