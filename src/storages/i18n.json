@@ -172,7 +172,7 @@
     "statSources": {"en": "sources", "zh": "個來源"},
     "statAdded": {"en": "added in 7 days", "zh": "近 7 日新增"},
     "topicRankingTitle": {"en": "Research topics by claims", "zh": "研究主題排行"},
-    "topicRankingNote": {"en": "Ordered by number of claims. The tailwind share counts only claims with a direction. Select a topic to filter the reports.", "zh": "依主張數排序；順風比例只計有方向的主張。點選主題可篩選下方報告。"},
+    "topicRankingNote": {"en": "Ranked by claim count. The tailwind share starts with the first annual report for the previous fiscal year. Tailwind and headwind weights halve for every 90 days of age. Select a topic to filter the reports below.", "zh": "依主張數排序。順風比例從去年財年首份年報日起計算，順逆風主張每早 90 天，權重減半。點選主題可篩選下方報告。"},
     "topicTailwind": {"en": "Tailwind", "zh": "順風"},
     "zoneBriefing": {"en": "Daily reading and company events", "zh": "每日精讀與公司事件"},
     "visitorCounterPrefix": { "en": "Sequence #", "zh": "\u5e8f\u5217 #" },

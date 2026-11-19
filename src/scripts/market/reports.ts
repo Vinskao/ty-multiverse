@@ -72,7 +72,12 @@ const BENCHMARK_ROLE: Record<string, ResearchTagId> = Object.fromEntries([
   ...['欣興', '台光電', '村田製作所'].map((name) => [name, 'pcb-electronics']),
   ['Lumentum', 'optical'],
 ]);
-const BENCHMARK_ANNUAL = /^(.+?) \d{4} 年股東(?:會)?年報[|｜]/;
+const BENCHMARK_ANNUAL = /^(.+?) (\d{4}) 年股東(?:會)?年報[|｜]/;
+
+export function benchmarkAnnualFiscalYear(report: Pick<MarketReport, 'title'>): number | null {
+  const year = BENCHMARK_ANNUAL.exec(report.title)?.[2];
+  return year ? Number(year) : null;
+}
 
 /** A benchmark company's shareholder annual report (stored by the benchmark sync, titled "<公司> <年> 年股東(會)年報｜…"). */
 export function reportIsBenchmarkAnnual(report: Pick<MarketReport, 'title'>): boolean {

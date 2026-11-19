@@ -127,7 +127,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					</div>
 					{ranking.length > 0 &&
 					<section class="home-topic-ranking" aria-labelledby="home-topic-ranking-title">
-						<div class="home-topic-ranking-head"><h2 id="home-topic-ranking-title" data-i18n="home.topicRankingTitle">研究主題排行</h2><p data-i18n="home.topicRankingNote">依主張數排序；順風比例只計有方向的主張。點選主題可篩選下方報告。</p></div>
+						<div class="home-topic-ranking-head"><h2 id="home-topic-ranking-title" data-i18n="home.topicRankingTitle">研究主題排行</h2><p data-i18n="home.topicRankingNote">依主張數排序。順風比例從去年財年首份年報日起計算，順逆風主張每早 90 天，權重減半。點選主題可篩選下方報告。</p></div>
 						<ol class="home-topic-ranking-list">
 							{ranking.map((topic) => { const share = tailwindShare(topic); return (
 							<li><button type="button" data-report-topic={topic.tagId} data-label-zh={researchTagLabel(topic.tagId, 'zh')} data-label-en={researchTagLabel(topic.tagId, 'en')}>

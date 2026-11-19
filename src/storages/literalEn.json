@@ -258,7 +258,7 @@
   "上傳報告": "Upload a report",
   "參與開源協作": "Join the open-source work",
   "研究主題排行": "Research topic ranking",
-  "依主張數排序；順風比例只計有方向的主張。點選主題可篩選下方報告。": "Sorted by number of claims; the tailwind share counts only claims with a direction. Click a topic to filter the reports below.",
+  "依主張數排序。順風比例從去年財年首份年報日起計算，順逆風主張每早 90 天，權重減半。點選主題可篩選下方報告。": "Ranked by claim count. The tailwind share starts with the first annual report for the previous fiscal year. Tailwind and headwind weights halve for every 90 days of age. Select a topic to filter the reports below.",
   "順風": "Tailwind",
   "研究報告": "Research reports",
   "依上方 Benchmark 骨幹蒐集、選讀的報告，作為 Benchmark、總體、個體三步研究的材料。公開報告可供所有人閱讀；原始 PDF 僅上傳者可下載。": "Reports collected and selected along the Benchmark backbone above, as material for the three-step research: Benchmark, macro, micro. Public reports are readable by everyone; the original PDF can be downloaded only by its uploader.",
