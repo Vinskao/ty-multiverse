@@ -101,10 +101,21 @@
 .chat-messages {
   background: transparent !important;
 }
-.ai-name,
-.user-id {
+.ai-name {
   color: var(--gray-400) !important;
   text-shadow: none !important;
+}
+
+.user-message .message-header {
+  min-width: 0;
+  max-width: 28%;
+  opacity: 1;
+}
+.user-message .user-id {
+  color: var(--gray-200) !important;
+  text-shadow: none !important;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .message-content {
@@ -116,9 +127,15 @@
   border: 1px solid var(--gray-800) !important;
 }
 .user-message .message-content {
+  flex: 1 1 0;
+  min-width: 0;
   background: var(--accent-regular) !important;
-  color: #fff !important;
+  color: var(--accent-text-over) !important;
   border: 0 !important;
+}
+.user-message .message-content p {
+  color: inherit !important;
+  text-shadow: none !important;
 }
 .bot-message .message-content p,
 .bot-message .message-content li {

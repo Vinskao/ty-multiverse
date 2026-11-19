@@ -14,6 +14,17 @@ describe('chat widget matches the flat site style', () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
+  it('keeps user message paragraphs readable on the accent bubble in both themes', () => {
+    expect(flat).toMatch(/\.user-message \.message-content\s*\{[^}]*color:\s*var\(--accent-text-over\)/);
+    expect(flat).toMatch(/\.user-message \.message-content p\s*\{[^}]*color:\s*inherit\s*!important[^}]*text-shadow:\s*none/);
+  });
+
+  it('wraps the sender name at spaces and keeps the bubble shrinkable', () => {
+    expect(flat).toMatch(/\.user-message \.message-header\s*\{[^}]*max-width:[^}]*opacity:\s*1/);
+    expect(flat).toMatch(/\.user-message \.user-id\s*\{[^}]*word-break:\s*keep-all[^}]*overflow-wrap:\s*anywhere/);
+    expect(flat).toMatch(/\.user-message \.message-content\s*\{[^}]*min-width:\s*0/);
+  });
+
   it('restyles every surface of the widget with the site tokens, not gold', () => {
     for (const selector of ['.qa-bot-container', '.chat-header', '.bot-message .message-content', '.user-message .message-content',
       '.suggestion-btn', '.topic-suggestions h4', '.chat-input', '.send-button', '.fullscreen-button', '.close-button']) {
