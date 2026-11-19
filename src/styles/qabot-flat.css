@@ -192,7 +192,7 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
 }
 
-.messenger-link { display:block; margin:.35rem 0 0; text-align:center; font-size:.8rem; color:var(--gray-400); text-decoration:underline; text-underline-offset:.2em; }
+.messenger-link { display:flex; align-items:center; justify-content:center; min-height:40px; margin:.5rem 0 0; padding:.4rem .75rem; border:1px solid var(--accent-regular); border-radius:.5rem; background:color-mix(in srgb, var(--accent-regular) 14%, transparent); color:var(--gray-0); font-size:.85rem; font-weight:600; text-decoration:none; }
 .messenger-link:hover { color:var(--gray-0); }
 
 .maya-messenger-handoff {

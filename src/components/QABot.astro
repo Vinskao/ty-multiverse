@@ -666,30 +666,8 @@
         this.showAvatarSelector(avatarSelector);
       });
 
-      // 新增：header-text hover + click 切換到 V2
-      const headerText = document.querySelector(
-        ".chat-header .header-text",
-      ) as HTMLElement;
-      if (headerText) {
-        headerText.style.cursor = "pointer";
-        headerText.title = "切換到 Maya v2";
-        headerText.addEventListener("mouseenter", () => {
-          headerText.style.opacity = "0.85";
-          headerText.style.textDecoration = "underline";
-        });
-        headerText.addEventListener("mouseleave", () => {
-          headerText.style.opacity = "";
-          headerText.style.textDecoration = "";
-        });
-        headerText.addEventListener("click", () => {
-          const current = (window as any).qabotMode;
-          const next = current === "v2" ? "v1" : "v2";
-          (window as any).qabotMode = next;
-          window.dispatchEvent(
-            new CustomEvent("qabot:switch", { detail: { mode: next } }),
-          );
-        });
-      }
+      // 2026-11-19: one assistant. The header title no longer switches to Maya v2 (model picker / async task flow);
+      // every question goes through the same /qa/query flow, which also gives the soft reply when the allowance is used up.
 
       // 監聽全域模式切換，使用配置文件管理header controls狀態
       window.addEventListener("qabot:switch", (e: any) => {
