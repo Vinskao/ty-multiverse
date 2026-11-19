@@ -3455,6 +3455,13 @@ function prettifyFormula(formula: string): string {
 
 function renderPortfolio(portfolio: Portfolio, offline = false) {
     portfolio = taiwanPortfolio(portfolio);
+    const positioning = {
+        cashPercentage: portfolio.cashPercentage,
+        leverageRatio: portfolio.leverageRatio,
+        regions: portfolio.regions,
+    };
+    (window as any).__marketPortfolioPositioning = positioning;
+    window.dispatchEvent(new CustomEvent('market:portfolio-positioning', { detail: positioning }));
     const section = document.getElementById('portfolio-section');
     if (!section) return;
 
@@ -3557,6 +3564,8 @@ function renderPortfolio(portfolio: Portfolio, offline = false) {
 }
 
 function resetPortfolioDisplay(message = 'Login required to view account portfolio') {
+    (window as any).__marketPortfolioPositioning = null;
+    window.dispatchEvent(new CustomEvent('market:portfolio-positioning', { detail: null }));
     const section = document.getElementById('portfolio-section');
     if (!section) return;
 

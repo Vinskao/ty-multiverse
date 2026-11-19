@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { heatPollInterval, pickHeat, type HeatStatus } from '../../src/scripts/market/marketHeat';
+import { heatPollInterval, pickHeat, portfolioPositioningItem, type HeatStatus } from '../../src/scripts/market/marketHeat';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -13,6 +13,28 @@ it('scrolls overflowing market headlines and keeps short headlines still', () =>
 it('refreshes every minute while an event is showing and only every few minutes on a quiet day', () => {
   expect(heatPollInterval(true)).toBe(60_000);
   expect(heatPollInterval(false)).toBe(300_000);
+});
+
+it('warns when portfolio cash is dominant, invested, or leveraged', () => {
+  expect(portfolioPositioningItem({ cashPercentage: 75 })).toMatchObject({ id: 'positioning-cash-heavy', level: 'info', dir: 'down', zh: '明哲保身｜現金水位 75%' });
+  expect(portfolioPositioningItem({ cashPercentage: 5 })).toMatchObject({ id: 'positioning-invested', level: 'warn', dir: 'up', en: 'Offensive | cash only 5%' });
+  expect(portfolioPositioningItem({ cashPercentage: 20, leverageRatio: 1.2 })).toMatchObject({ id: 'positioning-leveraged', level: 'warn', en: 'Leveraged | portfolio leverage 1.20x' });
+  expect(portfolioPositioningItem({ cashPercentage: 20, regions: { total: { leverage: 1.6 } } })).toMatchObject({ id: 'positioning-leveraged', level: 'alert', zh: '發狂進攻｜部位槓桿 1.60x' });
+  expect(portfolioPositioningItem({ cashPercentage: 20, regions: { total: { cash: 800, totalAssets: 1000 } } })).toMatchObject({ id: 'positioning-cash-heavy', zh: '明哲保身｜現金水位 80%' });
+});
+
+it('does not infer a portfolio warning when the user is logged out or data is incomplete', () => {
+  expect(portfolioPositioningItem(null)).toBeNull();
+  expect(portfolioPositioningItem({})).toBeNull();
+  expect(portfolioPositioningItem({ cashPercentage: Number.NaN })).toBeNull();
+});
+
+it('shows a personal warning without public market data and styles the bar by the strongest warning', () => {
+  const personal = portfolioPositioningItem({ cashPercentage: 5 })!;
+  expect(pickHeat(null, 'zh', personal)).toMatchObject({ level: 'warn', rows: [{ group: 'portfolio' }] });
+  const mixed = pickHeat({ asOf: '2026-11-17', items: [{ id: 'market', level: 'info', zh: '市場平穩', en: 'Calm' }] }, 'zh', personal)!;
+  expect(mixed.level).toBe('warn');
+  expect(mixed.rows.map((row) => row.group)).toEqual(['portfolio', 'tw']);
 });
 
 const status: HeatStatus = {

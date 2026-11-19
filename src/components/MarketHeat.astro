@@ -5,20 +5,22 @@
   <button aria-label="關閉市場狀態條">×</button>
 </div>
 <script>
-import { heatPollInterval, pickHeat, type HeatStatus } from '../scripts/market/marketHeat';
+import { heatPollInterval, pickHeat, portfolioPositioningItem, type HeatItem, type HeatStatus } from '../scripts/market/marketHeat';
 
 let timer: number | undefined;
 let last: HeatStatus | null = null;
+let personalItem: HeatItem | null = null;
 let showing = false;
 let heatResizeObserver: ResizeObserver | undefined;
 const lang = () => ((window as any).AppLang?.get?.() === 'zh' ? 'zh' : 'en') as 'zh' | 'en';
 const dismissed = (key: string) => { try { return !!sessionStorage.getItem(key); } catch { return false; } };
+personalItem = portfolioPositioningItem((window as any).__marketPortfolioPositioning);
 
 // One row per market (Taiwan, then U.S.); every part of a row links to the page that shows that number.
 function render() {
   const el = document.querySelector<HTMLElement>('#market-heat');
   if (!el) return;
-  const heat = pickHeat(last, lang());
+  const heat = pickHeat(last, lang(), personalItem);
   showing = !!heat;                                     // an event is on, even if the visitor closed the bar: keep the fast refresh
   if (!heat || dismissed(heat.key)) { el.hidden = true; schedule(); return; }
   const wasHidden = el.hidden;
@@ -72,6 +74,15 @@ async function refresh() {
     render();
   } catch { /* Keep the bar as it is when market data is unavailable. */ }
 }
+
+// The public market endpoint never receives or stores account data. Position sizing is derived from the authenticated
+// portfolio response already fetched by the signed-in portfolio panel and is kept only in this browser session.
+window.addEventListener('market:portfolio-positioning', (event) => {
+  const detail = (event as CustomEvent).detail;
+  (window as any).__marketPortfolioPositioning = detail;
+  personalItem = portfolioPositioningItem(detail);
+  render();
+});
 
 // Refresh about once a minute while a heavy-volume or big-swing event is on; on a quiet day nothing shows and the
 // server is only asked every few minutes.
