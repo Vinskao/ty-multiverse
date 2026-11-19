@@ -1,5 +1,7 @@
 # TY Multiverse Development Guidelines (AGENTS.md)
 
+LinkedIn 職缺審核面板：[流程與開發方法](docs/LINKEDIN_JOBS.md)。
+
 Benchmark 產業強弱與持股研究圖：[流程與開發方法](docs/BENCHMARK_MONITOR.md)。
 
 User preference: after completing changes and relevant checks, commit and push to the appropriate existing branch by default. Preserve unrelated work and report the commit and branch; this applies to Codex and Claude.

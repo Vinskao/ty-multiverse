@@ -1,0 +1,161 @@
+<section class="linkedin-jobs" aria-labelledby="linkedin-jobs-heading" hidden>
+  <h3 id="linkedin-jobs-heading">LinkedIn 職缺</h3>
+  <p>勾選職缺後按「同意投遞」。AI 排程會處理已同意的職缺。</p>
+  <p data-jobs-message role="status"></p>
+  <form>
+    <div data-jobs-list></div>
+    <div class="jobs-actions">
+      <button type="submit" value="approve" disabled>同意投遞</button>
+      <button type="submit" value="revoke" disabled>取消同意</button>
+      <button type="button" data-jobs-refresh>重新整理職缺</button>
+    </div>
+  </form>
+</section>
+
+<style is:global>
+  .linkedin-jobs { border-top: 1px solid var(--aiv-line); padding-top: 1rem; min-width: 0; }
+  .linkedin-jobs h3 { margin: 0; }
+  .linkedin-jobs p { margin: .45rem 0; }
+  .linkedin-jobs [data-jobs-list] { display: grid; gap: .55rem; }
+  .linkedin-jobs .job-row {
+    border: 1px solid var(--aiv-line); border-radius: .6rem; padding: .6rem;
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .65rem; overflow-wrap: anywhere;
+  }
+  .linkedin-jobs .job-row label { display: flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; }
+  .linkedin-jobs .job-meta { display: block; }
+  .linkedin-jobs .jobs-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .65rem; }
+  .linkedin-jobs button { min-height: 40px; color: inherit; background: transparent; border: 1px solid var(--aiv-line); border-radius: .45rem; padding: .4rem .75rem; }
+  .linkedin-jobs button:disabled { opacity: .5; }
+  .linkedin-jobs[aria-busy="true"] [data-jobs-message]::before {
+    content: ''; display: inline-block; border: 2px solid var(--aiv-line); border-top-color: currentColor;
+    width: .8em; height: .8em; border-radius: 50%; margin-inline-end: .5em; animation: jobs-spin .7s linear infinite;
+  }
+  @keyframes jobs-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .linkedin-jobs[aria-busy="true"] [data-jobs-message]::before { animation: none; } }
+</style>
+
+<script>
+  const states: Record<string, string> = {
+    pending: '待審核', approved: '已同意', claimed: '準備投遞', submitting: '投遞中',
+    submitted: '已投遞', needs_review: '需要人工確認', uncertain: '投遞結果待確認',
+  };
+  type Job = { id: string; title: string; company?: string; location?: string; received?: string; status: string; note?: string };
+
+  function initJobs() {
+    const panel = document.querySelector<HTMLElement>('.linkedin-jobs');
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    if (!panel || !token || panel.dataset.bound) return;
+    panel.dataset.bound = 'true';
+    const form = panel.querySelector('form')!;
+    const rows = panel.querySelector('[data-jobs-list]')!;
+    const message = panel.querySelector('[data-jobs-message]')!;
+    const refresh = form.querySelector<HTMLButtonElement>('[data-jobs-refresh]')!;
+    const approve = form.querySelector<HTMLButtonElement>('[value="approve"]')!;
+    const revoke = form.querySelector<HTMLButtonElement>('[value="revoke"]')!;
+    let busy = false;
+    const selected = (status: string) => Array.from(
+      form.querySelectorAll<HTMLInputElement>(`input[data-status="${status}"]:checked`),
+      input => input.value,
+    );
+    function updateControls() {
+      refresh.disabled = busy;
+      approve.disabled = busy || !selected('pending').length;
+      revoke.disabled = busy || !selected('approved').length;
+      form.querySelectorAll('input').forEach(input => { input.disabled = busy; });
+    }
+    function render(jobs: Job[]) {
+      rows.replaceChildren();
+      for (const job of jobs) {
+        if (!/^[0-9]+$/.test(job.id)) continue;
+        const row = document.createElement('article');
+        row.className = 'job-row';
+        const choice = document.createElement('label');
+        if (job.status === 'approved' || job.status === 'pending') {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = job.id;
+          checkbox.dataset.status = job.status;
+          checkbox.setAttribute('aria-labelledby', `linkedin-job-${job.id}`);
+          choice.append(checkbox);
+        }
+        const detail = document.createElement('div');
+        const link = document.createElement('a');
+        link.id = `linkedin-job-${job.id}`;
+        link.href = `https://www.linkedin.com/jobs/view/${job.id}/`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = job.title;
+        const status = document.createElement('small');
+        status.className = 'job-meta';
+        status.textContent = states[job.status] ?? job.status;
+        const metadata = document.createElement('small');
+        metadata.className = 'job-meta';
+        metadata.textContent = [job.company, job.location, job.received &&
+          new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Taipei' }).format(new Date(job.received))].filter(Boolean).join(' · ');
+        detail.append(link, metadata, status);
+        if (job.note) {
+          const note = document.createElement('small');
+          note.className = 'job-meta';
+          note.textContent = job.note;
+          detail.append(note);
+        }
+        row.append(choice, detail);
+        rows.append(row);
+      }
+    }
+    async function request(body?: { ids: string[]; approve: boolean }) {
+      return fetch('/api/market/linkedin-jobs', {
+        method: body ? 'POST' : 'GET', body: body && JSON.stringify(body),
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        cache: 'no-store', signal: AbortSignal.timeout(18000),
+      });
+    }
+    async function load(body?: { ids: string[]; approve: boolean }) {
+      if (busy) return;
+      busy = true;
+      panel.hidden = false;
+      panel.setAttribute('aria-busy', 'true');
+      message.textContent = body ? '正在儲存職缺審核…' : '正在載入職缺…';
+      updateControls();
+      try {
+        let updated = 0;
+        if (body) {
+          const result = await request(body);
+          if (!result.ok) throw new Error();
+          updated = (await result.json()).updated.length;
+        }
+        const result = await request();
+        if (result.status === 401 || result.status === 403) {
+          rows.replaceChildren();
+          panel.hidden = true;
+          return;
+        }
+        if (!result.ok) throw new Error();
+        const { jobs } = await result.json();
+        render(jobs);
+        message.textContent = body
+          ? updated === body.ids.length ? '職缺審核已儲存。' : '部分職缺狀態已變更，請核對清單。'
+          : jobs.length ? '' : '目前沒有職缺。';
+      } catch {
+        message.textContent = '無法更新職缺，請重新整理確認狀態。';
+      } finally {
+        busy = false;
+        panel.removeAttribute('aria-busy');
+        updateControls();
+      }
+    }
+    form.addEventListener('change', updateControls);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const button = event.submitter as HTMLButtonElement | null;
+      if (!button) return;
+      const approving = button === approve;
+      const ids = selected(approving ? 'pending' : 'approved').slice(0, 100);
+      if (ids.length) void load({ ids, approve: approving });
+    });
+    refresh.addEventListener('click', () => void load());
+    void load();
+  }
+  document.addEventListener('astro:page-load', initJobs);
+  initJobs();
+</script>

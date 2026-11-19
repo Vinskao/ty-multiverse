@@ -1,5 +1,6 @@
 ---
 // Owner-only AI-search visibility dashboard, first block of /palais (docs/AI_VISIBILITY.md). Hidden until the owner's data loads.
+import LinkedInJobsPanel from "./LinkedInJobsPanel.astro";
 ---
 <section class="ai-visibility" id="ai-visibility" aria-labelledby="ai-visibility-heading" hidden>
   <header class="aiv-head">
@@ -16,6 +17,7 @@
     <div id="ai-visibility-social" class="aiv-platforms"></div>
     <p id="ai-visibility-social-note" class="ai-visibility-note"></p>
   </div>
+  <LinkedInJobsPanel />
   <details class="aiv-about">
     <summary>檢視方式</summary>
     <p>試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。</p><p>Grok 已棄用。</p><p>ChatGPT 需付費 API，暫停。</p>
