@@ -229,7 +229,7 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 				<slot />
 			</main>
 			<Footer />
-			{showsPublisherAds(Astro.url.pathname) && <MonetagInPagePush />}
+			<MonetagInPagePush showSlot={showsPublisherAds(Astro.url.pathname)} />
 		</div>
 		
 		<!-- QA Platform (shared UI) + the chat script -->

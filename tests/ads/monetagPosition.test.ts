@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { observeMonetagFloatingAds, positionMonetagFloatingAds } from '../../src/scripts/ads/monetagPosition';
+import { observeMonetagFloatingAds, positionMonetagFloatingAds, removeMonetagFloatingAds } from '../../src/scripts/ads/monetagPosition';
 
 describe('Monetag floating ad placement', () => {
   beforeEach(() => { document.body.innerHTML = ''; });
@@ -71,4 +71,19 @@ describe('Monetag banners of other sizes', () => {
     expect(document.getElementById('ad')!.parentElement?.hasAttribute('data-monetag-zone')).toBe(true);
     expect(document.getElementById('mine')!.parentElement).toBe(document.body);
   });
+});
+
+it('removes provider fixed overlays on ad-free pages while keeping ordinary fixed UI', () => {
+  document.body.innerHTML = '<iframe id="ad" style="position:fixed;z-index:2147483647;height:60px"></iframe><div id="ui" style="position:fixed;z-index:1500;height:60px"></div>';
+  removeMonetagFloatingAds(document);
+  expect(document.getElementById('ad')).toBeNull();
+  expect(document.getElementById('ui')).not.toBeNull();
+});
+
+it('keeps mobile provider banners in normal document flow and within the screen width', () => {
+  document.body.innerHTML = '<div data-monetag-zone="1" data-loaded="true"></div><iframe style="position:fixed;z-index:2147483647;height:60px;width:100%"></iframe>';
+  positionMonetagFloatingAds(document);
+  const frame = document.querySelector('iframe')!;
+  expect(frame.style.position).toBe('relative');
+  expect(frame.style.getPropertyValue('max-width')).toBe('100%');
 });

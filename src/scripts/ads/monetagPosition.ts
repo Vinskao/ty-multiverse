@@ -36,16 +36,27 @@ export function positionMonetagFloatingAds(root: ParentNode): void {
   });
 }
 
+export function removeMonetagFloatingAds(root: ParentNode): void {
+  root.querySelectorAll<HTMLElement>('iframe, body > div').forEach(frame => {
+    const height = Number.parseFloat(frame.style.height);
+    if (frame.style.position !== 'fixed' || Number(frame.style.zIndex) < MIN_FLOATING_Z_INDEX
+      || (!Number.isNaN(height) && height > MAX_BANNER_HEIGHT)) return;
+    frame.remove();
+  });
+}
+
 let observer: MutationObserver | undefined;
 
-export function observeMonetagFloatingAds(root: Document = document): void {
+export function observeMonetagFloatingAds(root: Document = document, isAdFree: () => boolean = () => false): void {
   observer?.disconnect();
-  positionMonetagFloatingAds(root);
+  if (isAdFree()) removeMonetagFloatingAds(root);
+  else positionMonetagFloatingAds(root);
   const options = { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] };
   const placementObserver = new MutationObserver(() => {
     placementObserver.disconnect();
     try {
-      positionMonetagFloatingAds(root);
+      if (isAdFree()) removeMonetagFloatingAds(root);
+      else positionMonetagFloatingAds(root);
     } finally {
       placementObserver.observe(root.documentElement, options);
     }
