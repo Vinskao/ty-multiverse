@@ -8,9 +8,6 @@ nav:has(> .menu-header) {
   min-height: var(--nav-height);
   max-height: var(--nav-height);
   flex-wrap: nowrap;
-}
-
-nav {
   z-index: 9999;
   position: sticky;
   top: 0;
@@ -417,7 +414,7 @@ nav {
 
 /* 桌面版樣式 */
 @media (min-width: 50em) {
-  nav {
+  nav:has(> .menu-header) {
     display: grid;
     /* Side columns never shrink below their content, so the brand cannot slide under the links. */
     grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
@@ -520,7 +517,7 @@ nav {
 /* 2026-11-14: at ~840px the right-hand controls (settings, login) were clipped by overflow-x: clip. Under 66em the brand
    keeps its icon only and the links and gaps tighten, so every control stays visible. */
 @media (min-width: 50em) and (max-width: 65.99em) {
-  nav { padding: 0 .75rem; gap: .4rem; }
+  nav:has(> .menu-header) { padding: 0 .75rem; gap: .4rem; }
   .site-title-text { display: none; }
   .nav-items .link { padding: .25rem .25rem; }
   .menu-footer { gap: .35rem; }
@@ -528,19 +525,12 @@ nav {
 
 /* 手機版 RWD 樣式 */
 @media (max-width: 49.99em) {
-  nav {
+  nav:has(> .menu-header) {
     margin-bottom: 0;
     padding: 0;
     overflow: visible;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-  }
-
-  /* 2026-11-19: was `position: relative`, which overrode the sticky header on phones so the navbar scrolled away
-     while the market heat bar (sticky under it) stayed. Sticky also anchors the absolutely placed mobile menu. */
-  nav:has(> .menu-header) {
-    position: sticky;
-    top: 0;
   }
 
   nav:has(> #menu-content:not([hidden])) {

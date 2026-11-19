@@ -3,7 +3,12 @@ import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
 const css = readFileSync(resolve(process.cwd(), 'src/styles/nav.css'), 'utf8');
-const navRule = css.match(/^nav \{[^}]*\}/m)![0];
+const navRule = css.match(/^nav:has\(> \.menu-header\) \{[^}]*position:\s*sticky[^}]*\}/m)?.[0] ?? '';
+
+it('keeps footer navigation columns in normal flow at every screen width', () => {
+    expect(css).not.toMatch(/^\s*nav\s*\{/m);
+    expect(navRule).toMatch(/position:\s*sticky/);
+});
 
 // 2026-11-05: the blur was removed on purpose. backdrop-filter makes the nav the containing block of its
 // position: fixed children, which pinned the desktop cookie notice to the bar instead of the viewport.
