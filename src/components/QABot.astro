@@ -25,6 +25,7 @@
   import qabotConfig from "../storages/qabot.json";
   import { getErrorMessage, parseJsonOrThrow } from "../services/core/apiError";
   import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
+  import { isMayaBusyAnswer } from "../scripts/qabot/mayaBusyAnswer";
   class QABot {
     // DOM 元素
     private elements: Record<string, HTMLElement> = {};
@@ -1338,6 +1339,11 @@
         ".message-content",
       ) as HTMLDivElement;
 
+      if (isMayaBusyAnswer(answerText)) {
+        const handoff = document.querySelector<HTMLTemplateElement>("#mayaMessengerHandoff");
+        if (handoff) contentDiv.append(handoff.content.cloneNode(true));
+      }
+
       // 添加來源列表（僅在存在有效來源時）
       if (sources && Array.isArray(sources) && sources.length > 0) {
         const sourcesDiv = document.createElement("div");
@@ -1882,13 +1888,6 @@
         this.state.currentLanguage === "chinese"
           ? "請輸入您的問題..."
           : "Please enter your question...";
-      const messenger = document.getElementById("messengerLink");
-      if (messenger) {
-        messenger.textContent =
-          this.state.currentLanguage === "chinese"
-            ? "或在 Messenger 留言給我們"
-            : "Or leave us a message on Messenger";
-      }
     }
 
     private updateFullscreenButton() {
@@ -2492,6 +2491,10 @@
 
         if (result.success) {
           const answer = result.text || result.answer || result;
+          if (isMayaBusyAnswer(answer)) {
+            this.addBotResponse(answer, []);
+            return;
+          }
 
           // 儲存快取
           this.setAnalysisCache(this.state.analysisType, answer);

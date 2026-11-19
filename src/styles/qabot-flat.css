@@ -194,3 +194,28 @@
 
 .messenger-link { display:block; margin:.35rem 0 0; text-align:center; font-size:.8rem; color:var(--gray-400); text-decoration:underline; text-underline-offset:.2em; }
 .messenger-link:hover { color:var(--gray-0); }
+
+.maya-messenger-handoff {
+  display: grid;
+  justify-items: start;
+  gap: .375rem;
+  margin-block-start: .75rem;
+}
+
+.message-content .maya-messenger-handoff a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  padding: .5rem .75rem;
+  border: 1px solid var(--accent-regular);
+  border-radius: .5rem;
+  background: color-mix(in srgb, var(--accent-regular) 14%, transparent);
+  color: var(--gray-0);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.maya-messenger-handoff small {
+  color: var(--gray-300);
+}
