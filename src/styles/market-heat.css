@@ -7,7 +7,12 @@
 #market-heat[data-level="alert"] { --heat-a:#2a0303; --heat-b:#8a0f0f; --heat-c:#240202; --heat-edge:#ff3b30; --heat-glow:#ff1e1e; --heat-wave:255,70,50; }
 #market-heat[data-dir="up"] { --heat-a:#03210e; --heat-b:#0c6a2c; --heat-c:#03190b; --heat-edge:#37d67a; --heat-glow:#1fe06a; --heat-wave:60,220,120; color:#e6ffe9; }
 /* One line per market: Taiwan, then U.S. */
-#market-heat .heat-row { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; line-height:1.45; letter-spacing:.02em; }
+#market-heat .heat-row { white-space:nowrap; overflow:hidden; font-size:13px; line-height:1.45; letter-spacing:.02em; }
+#market-heat .heat-marquee-track { display:inline-block; min-width:max-content; }
+#market-heat .heat-row.heat-marquee .heat-marquee-track { padding-right:2rem; animation:heat-marquee var(--heat-marquee-duration,18s) linear infinite; }
+#market-heat .heat-row.heat-marquee:hover .heat-marquee-track,
+#market-heat .heat-row.heat-marquee:focus-within .heat-marquee-track { animation-play-state:paused; }
+@keyframes heat-marquee { from{transform:translateX(0)} to{transform:translateX(calc(-1 * var(--heat-marquee-distance)))} }
 #market-heat .heat-row:first-child { font-weight:600; }
 #market-heat .heat-tag { display:inline-block; min-width:2.6em; margin-right:8px; padding:0 6px; border-radius:4px; background:rgba(var(--heat-wave),.28); color:#fff; font-size:11px; font-weight:700; text-align:center; letter-spacing:.06em; }
 #market-heat small { display:inline; margin-left:10px; color:#ffd3a6; font-size:11px; font-weight:400; opacity:.85; }
@@ -52,7 +57,7 @@
 @keyframes heat-tremor { 0%,86%,100%{transform:none} 88%{transform:translate(-3px,0)} 90%{transform:translate(3px,1px)} 92%{transform:translate(-2px,-1px)} 94%{transform:translate(2px,0)} 96%{transform:translate(-1px,0)} }
 
 @media (max-width:600px) { #market-heat { gap:8px; padding:4px 10px; } #market-heat .heat-row { font-size:12px; } #market-heat small { font-size:10px; } #market-heat .heat-tag { font-size:10px; margin-right:6px; padding:0 4px; } .heat-icon { width:24px; height:24px; } .heat-ring { width:24px; height:24px; margin:-12px 0 0 -12px; } .heat-fire { font-size:18px; } #market-heat button { width:22px; height:22px; font-size:17px; } }
-@media (prefers-reduced-motion: reduce) { #market-heat, #market-heat[data-level], #market-heat[data-dir], #market-heat.heat-enter, #market-heat::before, .heat-fire, .heat-wave, .heat-ring, .heat-fx { animation:none !important; } .heat-ring { opacity:0; } }
+@media (prefers-reduced-motion: reduce) { #market-heat, #market-heat[data-level], #market-heat[data-dir], #market-heat.heat-enter, #market-heat::before, .heat-fire, .heat-wave, .heat-ring, .heat-fx, #market-heat .heat-marquee-track { animation:none !important; } .heat-ring { opacity:0; } }
 
 /* The fall/rise texture: dashes drain DOWN through the bar on a fall, sparks float UP on a rise. */
 .heat-fx { position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:.55; -webkit-mask:repeating-linear-gradient(90deg,#000 0 2px,transparent 2px 26px); mask:repeating-linear-gradient(90deg,#000 0 2px,transparent 2px 26px); }

@@ -1,5 +1,14 @@
 import { expect, it } from 'vitest';
 import { heatPollInterval, pickHeat, type HeatStatus } from '../../src/scripts/market/marketHeat';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+it('scrolls overflowing market headlines and keeps short headlines still', () => {
+  const css = readFileSync(join(process.cwd(), 'src/styles/market-heat.css'), 'utf8');
+  expect(css).toMatch(/\.heat-row\.heat-marquee\s+\.heat-marquee-track\s*\{[^}]*animation:\s*heat-marquee/);
+  expect(css).toMatch(/\.heat-row\.heat-marquee:hover\s+\.heat-marquee-track/);
+  expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
+});
 
 it('refreshes every minute while an event is showing and only every few minutes on a quiet day', () => {
   expect(heatPollInterval(true)).toBe(60_000);

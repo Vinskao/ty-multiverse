@@ -10,6 +10,7 @@ import { heatPollInterval, pickHeat, type HeatStatus } from '../scripts/market/m
 let timer: number | undefined;
 let last: HeatStatus | null = null;
 let showing = false;
+let heatResizeObserver: ResizeObserver | undefined;
 const lang = () => ((window as any).AppLang?.get?.() === 'zh' ? 'zh' : 'en') as 'zh' | 'en';
 const dismissed = (key: string) => { try { return !!sessionStorage.getItem(key); } catch { return false; } };
 
@@ -36,12 +37,29 @@ function render() {
       line.append(node);
     });
     if (rowIndex === lastRow) { const note = document.createElement('small'); note.textContent = heat.footnote; line.append(note); }
-    line.title = row.parts.map((part) => part.text).join(' · ');   // one line each keeps the bar slim; the full text is on hover
+    const track = document.createElement('span'); track.className = 'heat-marquee-track';
+    track.append(...Array.from(line.childNodes));
+    line.append(track);
     return line;
   }));
   el.hidden = false;
   if (wasHidden) { el.classList.remove('heat-enter'); void el.offsetWidth; el.classList.add('heat-enter'); }   // restart the entrance shock
   el.querySelector('button')!.onclick = () => { el.hidden = true; try { sessionStorage.setItem(heat.key, '1'); } catch { /* private mode */ } };
+  const measure = () => text.querySelectorAll<HTMLElement>('.heat-row').forEach((line) => {
+    const track = line.querySelector<HTMLElement>('.heat-marquee-track');
+    line.classList.toggle('heat-marquee', !!track && track.scrollWidth > line.clientWidth + 2);
+    if (track) {
+      const distance = Math.max(0, track.scrollWidth - line.clientWidth);
+      track.style.setProperty('--heat-marquee-distance', `${distance}px`);
+      track.style.setProperty('--heat-marquee-duration', `${Math.max(8, Math.min(24, distance / 34))}s`);
+    }
+  });
+  requestAnimationFrame(measure);
+  if ('ResizeObserver' in window) {
+    heatResizeObserver?.disconnect();
+    heatResizeObserver = new ResizeObserver(measure);
+    heatResizeObserver.observe(text);
+  }
   schedule();
 }
 
