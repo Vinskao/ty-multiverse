@@ -24,6 +24,7 @@
   // @ts-ignore
   import { getErrorMessage, parseJsonOrThrow } from "../services/core/apiError";
   import { checkQaRateLimit, formatQaRateLimitMessage } from "../services/core/qaRateLimiter";
+  import { chatUserLabel } from "../scripts/qabot/chatUserLabel";
   import { isMayaBusyAnswer } from "../scripts/qabot/mayaBusyAnswer";
   class QABot {
     // DOM 元素
@@ -968,7 +969,7 @@
         headerDiv.className = "message-header";
         const userId = document.createElement("span");
         userId.className = "user-id";
-        userId.textContent = `ID: ${this.state.userId.substring(0, 8)}...`;
+        userId.textContent = chatUserLabel(localStorage.getItem("token"), localStorage.getItem("userFullName"), this.state.userId);
         headerDiv.appendChild(userId);
         messageDiv.appendChild(headerDiv);
 

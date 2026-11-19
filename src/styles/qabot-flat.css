@@ -167,7 +167,7 @@
 }
 .send-button {
   background: var(--accent-regular) !important;
-  color: #fff !important;
+  color: var(--accent-text-over) !important;
   border: 0 !important;
   box-shadow: none !important;
 }
