@@ -10,3 +10,12 @@ describe('sticky navbar parent', () => {
         expect(css).toMatch(/body\s*\{\s*min-height:\s*100%/);
     });
 });
+
+describe('mobile navbar', () => {
+    it('stays sticky on phones instead of scrolling away with the page', () => {
+        const navCss = readFileSync('src/styles/nav.css', 'utf8');
+        const mobile = navCss.slice(navCss.indexOf('@media (max-width: 49.99em)'));
+        const header = mobile.match(/nav:has\(> \.menu-header\)\s*\{([^}]*)\}/)?.[1] ?? '';
+        expect(header).not.toMatch(/position:\s*relative/);
+    });
+});

@@ -536,8 +536,11 @@ nav {
     backdrop-filter: none;
   }
 
+  /* 2026-11-19: was `position: relative`, which overrode the sticky header on phones so the navbar scrolled away
+     while the market heat bar (sticky under it) stayed. Sticky also anchors the absolutely placed mobile menu. */
   nav:has(> .menu-header) {
-    position: relative;
+    position: sticky;
+    top: 0;
   }
 
   nav:has(> #menu-content:not([hidden])) {
