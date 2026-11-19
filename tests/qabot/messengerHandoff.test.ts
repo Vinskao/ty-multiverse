@@ -18,7 +18,7 @@ describe('Messenger handoff for Maya’s unavailable reply', () => {
 
   it('uses the same Page as the footer and labels the link and sign-in requirement in both languages', () => {
     const platform = readFileSync('src/components/QAPlatform.astro', 'utf8');
-    const main = platform.match(/id="messengerLink" href="([^"]+)"/)?.[1];
+    const main = platform.match(/id="messengerIcon" href="([^"]+)"/)?.[1];
     const handoff = platform.match(/<template id="mayaMessengerHandoff">([\s\S]*?)<\/template>/)?.[1];
     expect(main).toBe('https://m.me/61596064529255');
     expect(handoff).toContain(`href="${main}" target="_blank" rel="noopener noreferrer"`);

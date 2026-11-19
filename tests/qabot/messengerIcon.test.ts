@@ -14,3 +14,10 @@ describe('Messenger icon in the chat header', () => {
         expect(css).toContain('.messenger-icon-button');
     });
 });
+
+describe('no Messenger button under the input', () => {
+    it('keeps only the header icon and the busy-reply handoff', () => {
+        expect(platform).not.toContain('id="messengerLink"');
+        expect(css).not.toContain('.messenger-link');
+    });
+});
