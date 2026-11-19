@@ -115,3 +115,15 @@ describe('response schema and per-venue examples', () => {
     expect(schemaRows(plain.schema)).toEqual([]);
   });
 });
+
+it('shows a localized research MCP guide before loading the public API spec', () => {
+  const page = read('src/pages/api-reference.astro');
+  const guide = page.match(/<section id="research-mcp"[\s\S]*?<\/section>/)?.[0] ?? '';
+  const english = JSON.parse(read('src/storages/literalEn.json'));
+  expect(guide).toContain('claude mcp add');
+  expect(guide).toContain('codex mcp add');
+  expect(guide).toContain('https://tymultiverse.cc/maya-sawa/market/research/mcp');
+  for (const match of guide.matchAll(/>([^<>{}]*[\u4e00-\u9fff][^<>{}]*)</g)) {
+    expect(english[match[1].trim()]).toBeTruthy();
+  }
+});

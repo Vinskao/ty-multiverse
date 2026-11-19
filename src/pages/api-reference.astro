@@ -14,7 +14,25 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <p>行情、總體經濟資料、財報與研究報告的 API 規格文件。</p>
       <p class="api-note">API 採授權制，金鑰核發、用量額度與計費方案依合作需求個別議定。如需串接資料，歡迎<a href="/#contact">與我們聯絡</a>。</p>
     </header>
-    <p id="api-status" class="api-status" role="status" aria-live="polite">載入規格中…</p>
+    <section id="research-mcp" class="api-op stack gap-2" aria-labelledby="research-mcp-title">
+      <h2 id="research-mcp-title">市場研究 MCP</h2>
+      <p>使用獲授權的 Keycloak 帳號登入，即可從 Claude Code 或 Codex 查詢已發布的市場研究。</p>
+      <p><code class="api-path">https://tymultiverse.cc/maya-sawa/market/research/mcp</code></p>
+      <ul class="api-params">
+        <li><code>get_stock_analysis</code> <span>查詢已發布的台股分析</span></li>
+        <li><code>get_macro_snapshot</code> <span>查詢總經指標與邏輯鏈判讀</span></li>
+        <li><code>get_benchmark_monitor</code> <span>查詢半導體龍頭主張與驗證結果</span></li>
+        <li><code>get_daily_reading</code> <span>閱讀已核准的 Maya 每日市場精讀</span></li>
+      </ul>
+      <h3>Claude Code</h3>
+      <pre class="api-curl"><code>claude mcp add --transport http --client-id ty-research-mcp ty-research https://tymultiverse.cc/maya-sawa/market/research/mcp</code></pre>
+      <p>新增後，在 Claude Code 使用 /mcp 完成登入。</p>
+      <h3>Codex</h3>
+      <pre class="api-curl"><code>codex mcp add ty-research --url https://tymultiverse.cc/maya-sawa/market/research/mcp --oauth-client-id ty-research-mcp</code></pre>
+      <p>依終端提示登入。若需要重新登入，請執行下列指令。</p>
+      <pre class="api-curl"><code>codex mcp login ty-research</code></pre>
+    </section>
+    <p id="api-status" class="api-status" role="status" aria-live="polite" aria-busy="true">載入規格中…</p>
     <div id="api-groups" class="stack gap-8"></div>
   </main>
 </BaseLayout>
@@ -35,7 +53,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   async function load() {
     if (!status || !root) return;
     try {
-      const response = await fetch("/maya-sawa/public-openapi.json", { headers: { Accept: "application/json" } });
+      const response = await fetch("/maya-sawa/public-openapi.json", {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(20_000),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const operations = publicOperations(await response.json(), window.location.origin);
       status.textContent = `共 ${operations.length} 個文件端點`;
@@ -88,7 +109,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         root.append(section);
       }
     } catch {
-      if (status) status.textContent = "規格暫時無法載入，請稍後再試。";
+      status.textContent = "規格暫時無法載入，請稍後再試。";
+    } finally {
+      status.setAttribute("aria-busy", "false");
     }
   }
   void load();
@@ -98,6 +121,24 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .api-reference code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .api-note { color: var(--gray-300); border-left: 3px solid var(--accent-regular); padding-left: 0.75rem; }
   .api-status { color: var(--gray-400); }
+  .api-status[aria-busy="true"]::before {
+    content: "";
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    margin-inline-end: 0.5em;
+    border: 2px solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: api-spec-spin 0.8s linear infinite;
+  }
+  @keyframes api-spec-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .api-status[aria-busy="true"]::before { animation: none; }
+  }
+  #research-mcp { min-width: 0; }
+  #research-mcp h2 { margin: 0; font-size: 1.15rem; }
+  #research-mcp p { margin: 0; }
   .api-group h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
   .api-op { border: 1px solid var(--gray-800); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.75rem; }
   .api-op h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0 0 0.35rem; font-size: 1rem; }

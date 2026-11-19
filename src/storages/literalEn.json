@@ -1,4 +1,12 @@
 {
+  "市場研究 MCP": "Market Research MCP",
+  "使用獲授權的 Keycloak 帳號登入，即可從 Claude Code 或 Codex 查詢已發布的市場研究。": "Sign in with an authorized Keycloak account to access published market research from Claude Code or Codex.",
+  "查詢已發布的台股分析": "Read published Taiwan stock analyses",
+  "查詢總經指標與邏輯鏈判讀": "Read macro indicators and logic-chain analyses",
+  "查詢半導體龍頭主張與驗證結果": "Read semiconductor benchmark leader claims and validation results",
+  "閱讀已核准的 Maya 每日市場精讀": "Read approved Maya daily market readings",
+  "新增後，在 Claude Code 使用 /mcp 完成登入。": "After adding the server, use /mcp in Claude Code to sign in.",
+  "依終端提示登入。若需要重新登入，請執行下列指令。": "Follow the terminal prompts to sign in. To sign in again, run the command below.",
   "試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。": "During the four-week trial ending December 15, Claude uses Google Search through the Gemini API and its own web search each Monday at 04:30 to check three keywords and update the site.",
   "LinkedIn 職缺": "LinkedIn jobs",
   "勾選職缺後按「同意投遞」。AI 排程會處理已同意的職缺。": "Select jobs and choose Approve applications. The AI schedule processes approved jobs.",
