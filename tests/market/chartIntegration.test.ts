@@ -86,3 +86,32 @@ it('switches both bias series to the selected period and labels missing US data'
   select.dispatchEvent(new Event('change'));
   expect(lines()).toHaveLength(2);
 });
+
+it('allows legend toggles on ordinary multi-series macro charts', () => {
+  const indicator = (code: string) => ({ code, unit: 'percent', frequency: 'daily',
+    history: [{ period: '2026-11-19', value: '3' }, { period: '2026-11-20', value: '4' }] });
+  document.body.append(buildMacroTrendChart(indicator('A') as any, 'raw', 'First',
+    [{ indicator: indicator('B') as any, format: 'raw', label: 'Second' }]));
+  const button = [...document.querySelectorAll<HTMLButtonElement>('.macro-trend-legend button')].find(item => item.textContent === 'Second')!;
+  button.click();
+  expect(button.getAttribute('aria-pressed')).toBe('false');
+  expect(document.querySelector<SVGElement>('.macro-trend-line--series-1')?.style.display).toBe('none');
+  expect(document.querySelector('.macro-trend-readout')?.textContent).not.toContain('Second');
+  button.click();
+  expect(document.querySelector<SVGElement>('.macro-trend-line--series-1')?.style.display).toBe('');
+});
+
+it('toggles individual historical chart lines and values', () => {
+  document.body.innerHTML = '<div id="history-toggle"></div>';
+  const points = [{ date: '2026-11-20', code: '2330', name: 'TSMC', sources: { test: { a: 10, b: 20 } } }];
+  drawMarketHistoryChart('history-toggle', points, [
+    { label: 'A', color: 'red', sourceKeys: ['test'], field: 'a' },
+    { label: 'B', color: 'blue', sourceKeys: ['test'], field: 'b' },
+  ]);
+  const button = [...document.querySelectorAll<HTMLButtonElement>('.market-history-legend button')].find(item => item.textContent === 'B')!;
+  button.click();
+  expect(button.getAttribute('aria-pressed')).toBe('false');
+  expect(document.querySelector('.market-chart-readout')?.textContent).not.toContain('B ');
+  button.click();
+  expect(document.querySelector('.market-chart-readout')?.textContent).toContain('B ');
+});

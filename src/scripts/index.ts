@@ -203,7 +203,7 @@ function historyValue(point: MarketHistoryPoint, sourceKeys: string[], field: st
 
 // negative: an outflow (sells, borrowed-stock sales) is drawn below the zero axis as a negative value.
 interface HistoryChartField { label: string; color: string; sourceKeys: string[]; field: string; negative?: boolean; tooltip?: (point: MarketHistoryPoint, value: number) => string }
-interface HistoryChartOptions { bars?: boolean; height?: number; format?: (value: number) => string; legend?: boolean; area?: boolean }
+interface HistoryChartOptions { hiddenSeries?: Set<number>; bars?: boolean; height?: number; format?: (value: number) => string; legend?: boolean; area?: boolean }
 
 function marketLocale() {
     return String((window as any).AppLang?.get?.() || 'en').toLowerCase().startsWith('zh') ? 'zh-TW' : 'en-US';
@@ -237,6 +237,8 @@ function svgEl<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<strin
 export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPoint[], fields: HistoryChartField[], options: HistoryChartOptions = {}) {
     const target = document.getElementById(targetId);
     if (!target) return;
+    options.hiddenSeries ??= new Set<number>();
+    const hiddenSeries = options.hiddenSeries;
     const allPoints = points;
     const dates = allPoints.map(point => point.date);
     const redraw = () => drawMarketHistoryChart(targetId, allPoints, fields, options);
@@ -282,6 +284,7 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
 
     const hoverDots: (SVGCircleElement | null)[] = [];
     series.forEach((item, si) => {
+        const before = new Set(svg.children);
         if (bars) {
             const w = Math.max(1.5, Math.min(18, slot * .78 / series.length));
             item.values.forEach((v, i) => {
@@ -289,6 +292,7 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
                 svg.append(svgEl('rect', { x: x(i) - w * series.length / 2 + si * w + w * .06, y: Math.min(y(0), y(v)), width: w * .88,
                     height: Math.max(1, Math.abs(y(0) - y(v))), rx: Math.min(2, w / 4), fill: item.color }, 'market-history-bar'));
             });
+            [...svg.children].filter(node => !before.has(node)).forEach(node => node.setAttribute("data-history-series", String(si)));
             hoverDots.push(null);
             return;
         }
@@ -307,6 +311,7 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
         svg.append(svgEl('circle', { cx: last[0], cy: last[1], r: 3.5, fill: item.color }, 'market-history-last'));
         const hover = svgEl('circle', { r: 4.5, fill: item.color }, 'market-history-hover-dot');
         hover.style.display = 'none'; svg.append(hover); hoverDots.push(hover);
+        [...svg.children].filter(node => !before.has(node)).forEach(node => node.setAttribute('data-history-series', String(si)));
     });
     const guide = svgEl('line', { y1: top, y2: bottom }, 'market-history-guide'); guide.style.display = 'none'; svg.append(guide);
     target.append(svg);
@@ -314,7 +319,22 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
 
     if (options.legend ?? series.length > 1) {
         const legend = document.createElement('div'); legend.className = 'market-history-legend';
-        series.forEach((item) => { const label = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color; label.append(dot, document.createTextNode(item.label)); legend.append(label); });
+        series.forEach((item, index) => {
+            const label = document.createElement('button'); label.type = 'button';
+            const dot = document.createElement('i'); dot.style.background = item.color;
+            label.append(dot, document.createTextNode(item.label));
+            const update = () => {
+                const hidden = hiddenSeries.has(index);
+                label.setAttribute('aria-pressed', String(!hidden));
+                svg.querySelectorAll<SVGElement>(`[data-history-series="${index}"]`).forEach(node => { node.style.display = hidden ? 'none' : ''; });
+            };
+            update();
+            label.addEventListener('click', () => {
+                if (hiddenSeries.has(index)) hiddenSeries.delete(index); else hiddenSeries.add(index);
+                update(); describe(activeIndex, false);
+            });
+            legend.append(label);
+        });
         target.append(legend);
     }
     // Readout replaces native <title> tooltips: shows the latest point at rest, the hovered point on move.
@@ -325,7 +345,8 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
         readout.replaceChildren();
         const date = document.createElement('strong');
         date.textContent = isLatest ? `${points[i].date} · ${marketI18n('marketHistoryLatestShort', 'latest')}` : points[i].date; readout.append(date);
-        series.forEach((item) => {
+        series.forEach((item, index) => {
+            if (hiddenSeries.has(index)) return;
             const value = item.values[i]; const chip = document.createElement('span'); const dot = document.createElement('i'); dot.style.background = item.color;
             chip.append(dot, document.createTextNode(`${series.length > 1 ? `${item.label} ` : ''}${value === null ? '—' : (item.tooltip?.(points[i], value) || value.toLocaleString(marketLocale()))}`));
             readout.append(chip);
@@ -349,7 +370,7 @@ export function drawMarketHistoryChart(targetId: string, points: MarketHistoryPo
         guide.setAttribute('x1', String(x(i))); guide.setAttribute('x2', String(x(i))); guide.style.display = bars ? 'none' : '';
         band.setAttribute('x', String(left + slot * i)); band.style.display = bars ? '' : 'none';
         series.forEach((item, si) => {
-            const dot = hoverDots[si]; if (!dot) return; const value = item.values[i];
+            const dot = hoverDots[si]; if (!dot) return; if (hiddenSeries.has(si)) { dot.style.display = 'none'; return; } const value = item.values[i];
             if (value === null) { dot.style.display = 'none'; return; }
             dot.setAttribute('cx', String(x(i))); dot.setAttribute('cy', String(y(value))); dot.style.display = '';
         });
@@ -1739,6 +1760,7 @@ function buildMacroRelease(event: MacroEvent) {
 // separateAxes: series in different units (e.g. USD/TWD, JPY/USD, dollar index) share the date axis but each of the
 // first three gets its own y-axis (left, right, outer right) drawn in that series' color.
 export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean; hiddenSeries?: Set<string> } = {}): HTMLElement {
+    options.hiddenSeries ??= new Set<string>();
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
     const heading = document.createElement('h6'); heading.className = 'macro-trend-title';

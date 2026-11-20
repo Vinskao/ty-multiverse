@@ -2351,3 +2351,6 @@
 .market-opportunity-remove:hover, .market-opportunity-remove:focus-visible { background:var(--gray-800); color:var(--gray-100); }
 .market-opportunity-remove:disabled { cursor:wait; }
 .market-opportunity-remove[hidden] { display:none; }
+
+.market-history-legend button { min-height: 40px; color: inherit; background: transparent; border: 1px solid var(--gray-700); border-radius: .35rem; cursor: pointer; }
+.market-history-legend button[aria-pressed="false"] { text-decoration: line-through; }
