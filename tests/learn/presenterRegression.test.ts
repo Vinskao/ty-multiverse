@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 describe('presenter regression', () => {
   it('uses a half-height frame showing the upper half of the video and poster', () => {
     const css = readFileSync('src/styles/learn.css', 'utf8');
-    expect(css).toMatch(/\.presenter-frame\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*32\s*\/\s*9/);
-    expect(css).toMatch(/\.market-audio-media \.presenter-frame\[data-full="false"\] video\s*\{[^}]*height:\s*200%/);
+    expect(css).toMatch(/\.presenter-frame:not\(\[data-full="true"\]\)\s*\{[^}]*aspect-ratio:\s*32\s*\/\s*9/);
+    expect(css).toMatch(/\.market-audio-media \.presenter-frame:not\(\[data-full="true"\]\) video\s*\{[^}]*height:\s*200%/);
   });
   it('does not load the floating Monetag ads on Learn', () => {
     const page = readFileSync('src/pages/learn.astro', 'utf8');
@@ -52,7 +52,7 @@ describe('presenter regression', () => {
   });
   it('hides video and poster before dimensions are known for restricted viewers', () => {
     const css = readFileSync('src/styles/learn.css', 'utf8');
-    expect(css).toMatch(/\.presenter-frame\[data-full="false"\]\[data-metadata-ready="false"\]/);
-    expect(css).toMatch(/\.presenter-frame\[data-full="false"\]\[data-metadata-ready="false"\] video/);
+    expect(css).toMatch(/\.presenter-frame:not\(\[data-full="true"\]\)\[data-metadata-ready="false"\]/);
+    expect(css).toMatch(/\.presenter-frame:not\(\[data-full="true"\]\)\[data-metadata-ready="false"\] video/);
   });
 });

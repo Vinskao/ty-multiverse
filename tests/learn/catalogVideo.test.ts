@@ -184,8 +184,8 @@ describe('catalog videos follow the same login rule as 每日市場精讀', () =
   });
 
   it('crops to the top two fifths when not full and shows the whole frame when full', () => {
-    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\]\s*\{[^}]*aspect-ratio:\s*832\s*\/\s*217\.6/);
-    expect(css).toMatch(/\.learn-catalog-video\[data-full="false"\] video[^{]*\{[^}]*top:\s*0/);
+    expect(css).toMatch(/\.learn-catalog-video:not\(\[data-full="true"\]\)\s*\{[^}]*aspect-ratio:\s*832\s*\/\s*217\.6/);
+    expect(css).toMatch(/\.learn-catalog-video:not\(\[data-full="true"\]\) video[^{]*\{[^}]*top:\s*0/);
   });
 });
 

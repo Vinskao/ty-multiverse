@@ -166,20 +166,22 @@ import { learnCatalog } from "../scripts/learn/catalog";
   import { presenterForAudio, dailyReadingTitle } from '../scripts/learn/presenterSchedule';
   import { bindMarketAudioPlayback } from '../scripts/learn/marketAudioPlayback';
   import { applyMarketPresenterSettings } from '../scripts/learn/marketPresenterConfig';
-  import { canShowFullPresenter } from '../scripts/learn/presenterAccess';
+  import { canShowFullPresenter, createPresenterAccess } from '../scripts/learn/presenterAccess';
   import { GATEWAY_API_BASE } from '../common/constants/api';
   type AudioItem = { productType: 'macro' | 'stock' | 'daily'; code: string; revision: number; createdAt?: string; day?: string; voice?: string; presenterName?: string; title?: string | null };
   const language = () => window.AppLang?.get?.() === 'zh' ? 'zh' : 'en';
-  let presenterAccessVersion = 0;
-  async function updatePresenterAccess() {
-    const version = ++presenterAccessVersion;
+  const syncPresenterAccess = createPresenterAccess(token => canShowFullPresenter(token, fetch, GATEWAY_API_BASE));
+  function updatePresenterAccess(refresh = true) {
     const token = localStorage.getItem('token');
-    document.querySelectorAll<HTMLElement>('.presenter-frame, .learn-catalog-video').forEach(frame => { frame.dataset.full = 'false'; });
-    const allowed = await canShowFullPresenter(token, fetch, GATEWAY_API_BASE);
-    if (version !== presenterAccessVersion || token !== localStorage.getItem('token')) return;
-    document.querySelectorAll<HTMLElement>('.presenter-frame, .learn-catalog-video').forEach(frame => { frame.dataset.full = allowed ? 'true' : 'false'; });
+    return syncPresenterAccess(token, allowed => {
+      if (token !== localStorage.getItem('token')) return;
+      const full = String(allowed);
+      document.querySelectorAll<HTMLElement>('.presenter-frame, .learn-catalog-video').forEach(frame => {
+        if (frame.dataset.full !== full) frame.dataset.full = full;
+      });
+    }, refresh);
   }
-  document.addEventListener('tym:auth-changed', updatePresenterAccess);
+  document.addEventListener('tym:auth-changed', () => { void updatePresenterAccess(); });
   window.addEventListener('storage', event => { if (event.key === 'token') void updatePresenterAccess(); });
   function localizeMarketAudio() {
     const zh = language() === 'zh';
@@ -269,7 +271,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         card.append(details, media); list.append(card);
       }
       localizeMarketAudio();
-      void updatePresenterAccess();
+      void updatePresenterAccess(false);
     }).catch(() => { list.textContent = '市場快報暫時無法載入。'; });
   }
   document.addEventListener("astro:page-load", loadMarketAudio);
