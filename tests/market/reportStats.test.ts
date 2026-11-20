@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeReports, tailwindShare } from '../../src/scripts/market/reportStats';
+import { reportRecencyWeights, summarizeReports, tailwindShare } from '../../src/scripts/market/reportStats';
 import type { MarketReport } from '../../src/scripts/market/reports';
 
 const NOW = new Date('2026-11-10T04:00:00Z');
@@ -84,6 +84,17 @@ describe('time-weighted report direction', () => {
   const dated = (id: string, day: string | null, direction: 'tailwind' | 'headwind') => report({
     id, published_at: day, received_at: '2026-11-10T01:00:00Z',
     claim_count: 1, claims: [claim('foundry', direction)],
+  });
+
+  it('exposes the same per-report factors used by the ranking and why a report is excluded', () => {
+    const reports = [annual(), dated('new', '2026-11-10', 'tailwind'), dated('old', '2026-08-12', 'headwind'),
+      dated('excluded', '2026-04-30', 'tailwind'), dated('missing', null, 'tailwind'), dated('future', '2026-11-11', 'headwind')];
+    const weights = reportRecencyWeights(reports, NOW);
+    expect(weights.get('new')).toMatchObject({ weight: 1, ageDays: 0 });
+    expect(weights.get('old')).toMatchObject({ weight: 0.5, ageDays: 90 });
+    expect(weights.get('excluded')).toMatchObject({ weight: 0, reason: 'before-cutoff' });
+    expect(weights.get('missing')).toMatchObject({ weight: 0, reason: 'undated' });
+    expect(weights.get('future')).toMatchObject({ weight: 0, reason: 'future' });
   });
 
   it('drops pre-annual, undated and future claims and halves weight every 90 days', () => {

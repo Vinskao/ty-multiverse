@@ -46,6 +46,8 @@ let _searchLandingCleanup: (() => void) | undefined;
 import { trackReaderEvent } from './analytics/readerEvents';
 import { createFulltextSearch } from './market/reportFulltext';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, reportIsBenchmarkAnnual, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
+import { reportRecencyWeights } from './market/reportStats';
+import { reportClaimsDetails } from './market/reportClaimsView';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
 import { renderPriceChart } from './market/priceChart';
 import { priceCandles, statementComparisons, overseasPePoints, type StatementComparisons, type EpsSnapshot } from './market/priceComparison';
@@ -2597,10 +2599,12 @@ function initMarketCustomEditor() {
 }
 
 type ReportClaimsPayload = { reports: MarketReport[] };
+const reportsByList = new WeakMap<HTMLElement, MarketReport[]>();
 
 function renderMarketReports(reports: MarketReport[]) {
     const list = document.getElementById('market-report-list');
     if (!list) return;
+    reportsByList.set(list, reports);
     const filters = document.getElementById('market-report-filters');
     list.replaceChildren();
     filters?.replaceChildren();
@@ -2609,6 +2613,7 @@ function renderMarketReports(reports: MarketReport[]) {
         const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = '目前沒有公開研究報告。'; list.append(empty); return;
     }
     const reportGroups = groupReportDocuments(reports);
+    const weights = reportRecencyWeights(reports.filter(({ visibility }) => visibility === 'public'));
     const categorized = reportGroups.map((group) => {
         const claims = group.reports.flatMap((report) => report.claims ?? []);
         const filing = { title: group.title, claims };
@@ -2708,21 +2713,9 @@ function renderMarketReports(reports: MarketReport[]) {
             }
             sections.append(sectionList); card.append(sections);
         }
-        const claims = group.reports.flatMap((document) => document.claims ?? []);
-        if (claims.length) {
-            const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = `報告主張（${claims.length}）`;
+        if (group.reports.some(({ claims }) => claims?.length)) {
+            const details = reportClaimsDetails(group.reports, weights, marketLocale() === 'zh-TW');
             details.addEventListener('toggle', () => { if (details.open) trackReaderEvent('claims_open', report.id); });
-            details.append(summary);
-            const groups = new Map<string, MarketReport['claims']>();
-            for (const claim of claims) groups.set(claim.segment, [...(groups.get(claim.segment) ?? []), claim]);
-            for (const [segment, claims] of groups) {
-                const groupTitle = document.createElement('h6'); groupTitle.textContent = segment; details.append(groupTitle);
-                for (const claim of claims) {
-                    const item = document.createElement('p'); item.className = 'market-report-claim';
-                    item.textContent = `${claim.direction === 'tailwind' ? '順風' : claim.direction === 'headwind' ? '逆風' : '中性'} · p.${claim.page}｜${claim.claim}`;
-                    details.append(item);
-                }
-            }
             card.append(details);
         }
         for (const reportDocument of group.reports.filter(({ can_download }) => can_download)) {
@@ -4138,6 +4131,9 @@ function initIndexPage() {
 
 // Charts, tiles and tooltips are drawn by JS with the language at render time; redraw them on a switch.
 function refreshMarketLanguage() {
+    const reportList = document.getElementById('market-report-list');
+    const reports = reportList && reportsByList.get(reportList);
+    if (reports) renderMarketReports(reports);
     if (selectedMarketInstrument) {
         renderMarketDetailHeader(selectedMarketInstrument);
         const current = document.querySelector<HTMLButtonElement>('[data-market-tab][aria-selected="true"]')?.dataset.marketTab || 'price';

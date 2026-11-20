@@ -21,19 +21,40 @@ function recordedDay(report: MarketReport): number {
   return Number.isFinite(received) ? publicationDay(taipeiDate.format(received)) : NaN;
 }
 
+export type ReportRecency = {
+  weight: number;
+  ageDays: number | null;
+  reason: 'undated' | 'future' | 'no-cutoff' | 'before-cutoff' | null;
+};
+
+export function reportRecencyWeights(reports: readonly MarketReport[], now = new Date()): Map<string, ReportRecency> {
+  const today = taipeiDate.format(now);
+  const asOf = publicationDay(today);
+  const previousYear = Number(today.slice(0, 4)) - 1;
+  const annuals = reports.filter((report) => reportHasAnalyzableText(report) && benchmarkAnnualFiscalYear(report) === previousYear);
+  const publishedCutoff = Math.min(...annuals.map((report) => publicationDay(report.published_at)).filter((day) => day <= asOf));
+  const useRecordedAnnual = !Number.isFinite(publishedCutoff);
+  const cutoff = useRecordedAnnual ? Math.min(...annuals.map(recordedDay).filter((day) => day <= asOf)) : publishedCutoff;
+  const weights = new Map<string, ReportRecency>();
+  for (const report of reports) {
+    const published = publicationDay(report.published_at);
+    const day = useRecordedAnnual && !Number.isFinite(published) && benchmarkAnnualFiscalYear(report) === previousYear
+      ? recordedDay(report) : published;
+    const ageDays = Number.isFinite(day) ? (asOf - day) / DAY_MS : null;
+    const reason = ageDays === null ? 'undated' : ageDays < 0 ? 'future'
+      : !Number.isFinite(cutoff) ? 'no-cutoff' : day < cutoff ? 'before-cutoff' : null;
+    weights.set(report.id, { ageDays, reason, weight: reason ? 0 : 2 ** ((day - asOf) / HALF_LIFE_MS) });
+  }
+  return weights;
+}
+
 /**
  * Homepage numbers for the report library. Counts the same documents the report list shows: textless failed
  * imports are left out and a split SEC filing is one document. 其他產業 is counted in the totals but not ranked.
  */
 export function summarizeReports(reports: readonly MarketReport[], now: Date = new Date(), topics = 6): ReportStats {
   const visible = reports.filter(reportHasAnalyzableText);
-  const today = taipeiDate.format(now);
-  const asOf = publicationDay(today);
-  const previousYear = Number(today.slice(0, 4)) - 1;
-  const annuals = visible.filter((report) => benchmarkAnnualFiscalYear(report) === previousYear);
-  const publishedCutoff = Math.min(...annuals.map((report) => publicationDay(report.published_at)).filter((day) => day <= asOf));
-  const useRecordedAnnual = !Number.isFinite(publishedCutoff);
-  const cutoff = useRecordedAnnual ? Math.min(...annuals.map(recordedDay).filter((day) => day <= asOf)) : publishedCutoff;
+  const weights = reportRecencyWeights(visible, now);
   const sources = new Set(visible.map(({ publisher }) => (publisher ?? '').trim()).filter(Boolean));
   const byTopic = new Map<ResearchTagId, ReportTopicStat>();
   let claims = 0;
@@ -55,10 +76,7 @@ export function summarizeReports(reports: readonly MarketReport[], now: Date = n
     topic.reports += 1;
     topic.claims += count;
     for (const report of group.reports) {
-      const published = publicationDay(report.published_at);
-      const day = useRecordedAnnual && !Number.isFinite(published) && benchmarkAnnualFiscalYear(report) === previousYear
-        ? recordedDay(report) : published;
-      const weight = day >= cutoff && day <= asOf ? 2 ** ((day - asOf) / HALF_LIFE_MS) : 0;
+      const weight = weights.get(report.id)?.weight ?? 0;
       for (const { direction } of report.claims ?? []) {
         topic[direction] += 1;
         if (direction !== 'neutral') topic.directionalWeight[direction] += weight;

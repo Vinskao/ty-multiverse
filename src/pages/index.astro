@@ -130,11 +130,11 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 					<section class="home-topic-ranking" aria-labelledby="home-topic-ranking-title">
 						<div class="home-topic-ranking-head"><h2 id="home-topic-ranking-title" data-i18n="home.topicRankingTitle">研究主題排行</h2><p data-i18n="home.topicRankingNote">依主張數排序。順風比例從去年財年首份年報日起計算，順逆風主張每早 90 天，權重減半。點選主題可篩選下方報告。</p></div>
 						<ol class="home-topic-ranking-list">
-							{ranking.map((topic) => { const share = tailwindShare(topic); return (
+							{ranking.map((topic) => { const share = tailwindShare(topic); const rawShare = tailwindShare({ directionalWeight: topic }); return (
 							<li><button type="button" data-report-topic={topic.tagId} data-label-zh={researchTagLabel(topic.tagId, 'zh')} data-label-en={researchTagLabel(topic.tagId, 'en')}>
 								<strong data-topic-label>{researchTagLabel(topic.tagId, 'zh')}</strong>
 								<span class="home-topic-counts">{formatNumber(topic.claims, 'count')} <span data-i18n="home.statClaims">項主張</span> · {formatNumber(topic.reports, 'count')} <span data-i18n="home.statReports">份報告</span></span>
-								<span class="home-topic-share">{share === null ? '—' : <Fragment><span data-i18n="home.topicTailwind">順風</span> {share}%</Fragment>}</span>
+								<span class="home-topic-share"><span>原始順風</span> {formatNumber(rawShare, 'percent', { digits: 0 })} · <span>加權順風</span> {formatNumber(share, 'percent', { digits: 0 })}</span>
 								<span class="home-topic-bar" aria-hidden="true"><span style={`width:${share ?? 0}%`}></span></span>
 							</button></li>
 							); })}
