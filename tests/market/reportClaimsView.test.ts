@@ -26,6 +26,8 @@ it('groups approved claims by direction, shows their source weights and renders 
   chart.dispatchEvent(new Event('toggle'));
   await vi.waitFor(() => expect(run).toHaveBeenCalledOnce());
   expect(chart.querySelector('pre')?.textContent).toContain('Headwind · 1 · 0.50');
-  expect(chart.querySelector('pre')?.textContent).not.toContain('example.com');
+  expect(chart.querySelector('pre')?.textContent).toContain('D0 --> C0["p.1 · Capacity expansion"]');
+  expect(chart.querySelector('pre')?.textContent).toContain('D1 --> C1["p.2 · Financing pressure"]');
+  expect(chart.querySelector('pre')?.textContent).toContain('#quot;https#58;#47;#47;example.com#quot;');
   view.remove();
 });

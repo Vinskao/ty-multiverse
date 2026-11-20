@@ -11,6 +11,8 @@ const DIRECTIONS = {
 } as const;
 type Direction = keyof typeof DIRECTIONS;
 const directions = Object.keys(DIRECTIONS) as Direction[];
+const mermaidClaimLabel = (text: string) => Array.from(text.replace(/\s+/g, ' ').trim(), (char) =>
+  /[\p{L}\p{N} .，。·]/u.test(char) ? char : char === '"' ? '#quot;' : `#${char.codePointAt(0)};`).join('');
 const REASONS = {
   undated: ['Publication date unavailable', '缺少發布日期'],
   future: ['Future publication date', '發布日期尚未到'],
@@ -49,13 +51,18 @@ export function reportClaimsDetails(
     status.textContent = zh ? '載入方向圖中…' : 'Loading diagram…';
     graph.append(status);
     const pre = document.createElement('pre');
-    // The graph uses only fixed labels and computed numbers. Full claims stay in the text list.
     const root = zh ? '主張方向 · 筆數 · 加權合計' : 'Direction · Count · Weighted total';
-    pre.textContent = [`flowchart TD`, `  R["${root}"]`, ...counts.map((label, index) => `  R --> D${index}["${label}"]`)].join('\n');
+    const nodes = groupedClaims.map(({ claim }, index) => {
+      const text = Array.from(claim.claim);
+      const label = text.length > 72 ? `${text.slice(0, 72).join('')}…` : claim.claim;
+      return `  D${directions.indexOf(claim.direction)} --> C${index}["p.${formatNumber(claim.page, 'count')} · ${mermaidClaimLabel(label)}"]`;
+    });
+    pre.textContent = ['flowchart LR', `  R["${root}"]`, ...counts.map((label, index) => `  R --> D${index}["${label}"]`), ...nodes].join('\n');
     try {
       const mermaid = await load();
       if (!graph.isConnected) return;
-      mermaid.initialize({ ...getMermaidConfig(document.documentElement.classList.contains('theme-dark')), securityLevel: 'strict' });
+      mermaid.initialize({ ...getMermaidConfig(document.documentElement.classList.contains('theme-dark')), securityLevel: 'strict',
+        flowchart: { htmlLabels: false } });
       graph.append(pre);
       await mermaid.run({ nodes: [pre] });
     } catch {
@@ -113,6 +120,10 @@ export function reportClaimsDetails(
   };
   filter.onchange = drawList;
   details.append(summary, graph, filterLabel, list);
-  details.addEventListener('toggle', () => { if (details.open && !list.childElementCount) drawList(); });
+  details.addEventListener('toggle', () => {
+    if (!details.open || list.childElementCount) return;
+    graph.open = true;
+    drawList();
+  });
   return details;
 }
