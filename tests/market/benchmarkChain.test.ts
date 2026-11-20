@@ -102,6 +102,7 @@ describe('versioned benchmark line-up', () => {
     expect(component).toContain('/market/benchmark/versions');
     expect(component).toContain('monitorDiagram(current, monitor)');
     expect(read('src/scripts/market/benchmarkMonitor.ts')).toContain('lineupDiagram(lineup)');
+    expect(component).toMatch(/<details class="benchmark-version">[\s\S]*?<summary>[\s\S]*?current.version[\s\S]*?<\/summary>[\s\S]*?current.rationale/);
     expect(component).toContain('benchmark-versions');
   });
 });

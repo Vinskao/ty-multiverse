@@ -54,7 +54,10 @@ const conflicts = monitorConflicts(monitor);
     <li><strong><a href="/stocks/">個體</a></strong>回到預計買進的公司，用 Benchmark 定下的指引與景氣位置，檢查它的營收、訂單與展望是否說得通。</li>
   </ol>
   <p>下方的研究報告依這條路線蒐集與選讀。年報與年度財務報告分開查閱。</p>
-  {current && <p class="benchmark-version"><strong>第 {current.version} 版・{current.name}</strong>　{current.rationale}</p>}
+  {current && <details class="benchmark-version">
+    <summary><strong>第 {current.version} 版・{current.name}</strong></summary>
+    <p>{current.rationale}</p>
+  </details>}
   <section id="benchmark-overview" class="overview" aria-labelledby="benchmark-overview-title">
     <h5 id="benchmark-overview-title">供應鏈綜觀研究圖・產業風向與持股定位</h5>
     {(current || rows?.length) ? <>
@@ -104,7 +107,9 @@ const conflicts = monitorConflicts(monitor);
   table { font-size: .9rem; }
   .benchmark-method { margin: .5rem 0; padding-inline-start: 1.4rem; line-height: 1.7; }
   .benchmark-method strong { margin-inline-end: .5rem; }
-  .benchmark-version { line-height: 1.7; }
+  .benchmark-version { font-size: .82rem; line-height: 1.7; }
+  .benchmark-version summary { cursor: pointer; min-height: 40px; padding-block: .5rem; }
+  .benchmark-version p { margin: 0 0 .6rem; }
   .benchmark-versions { margin-block: .5rem 1rem; }
   .benchmark-versions summary { cursor: pointer; }
   .benchmark-versions p { margin: .5rem 0; line-height: 1.7; }
