@@ -103,10 +103,10 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
 const positionedHoldings = (monitor: BenchmarkMonitor, companyCodes: Set<string>) => monitor.holdings
   .filter(holding => !companyCodes.has(holding.code) && (holding.benchmarks ?? []).some(code => companyCodes.has(code)));
 
-export type Conflict = { code: string; kind: 'breaking' | 'hollow' };
-const CONFLICT_LABEL: Record<Conflict['kind'], string> = { breaking: '年報順風但驗證反駁占多數，敘事正在破',
-  hollow: '年報已折減且驗證幾乎都是未知，不能當結論' };
-export const conflictLabel = (kind: Conflict['kind']) => CONFLICT_LABEL[kind];
+export type Conflict = { code: string; kind: 'breaking' | 'hollow'; direction: string };
+export const conflictLabel = (kind: Conflict['kind'], direction: string) => kind === 'breaking'
+  ? `年報${direction === 'headwind' ? '逆風' : '順風'}但驗證${direction === 'headwind' ? '支持' : '反駁'}占多數，敘事正在破`
+  : '年報已折減且驗證幾乎都是未知，不能當結論';
 
 /** Divergences worth a researcher's eye; the two percentages are never merged into one score. */
 export function monitorConflicts(monitor: BenchmarkMonitor): Conflict[] {
@@ -116,8 +116,8 @@ export function monitorConflicts(monitor: BenchmarkMonitor): Conflict[] {
     const counts = node.validation?.counts;
     const refuted = node.annual.direction === 'tailwind' ? counts?.headwind : counts?.support;
     const confirmed = node.annual.direction === 'tailwind' ? counts?.support : counts?.headwind;
-    if (counts && counts.total > 0 && (refuted ?? 0) > (counts.total / 2) && (refuted ?? 0) > (confirmed ?? 0)) found.push({ code: node.code, kind: 'breaking' });
-    else if (node.annual.recency != null && node.annual.recency < 1 && (!counts?.total || counts.unknown / counts.total >= 0.8)) found.push({ code: node.code, kind: 'hollow' });
+    if (counts && counts.total > 0 && (refuted ?? 0) > (counts.total / 2) && (refuted ?? 0) > (confirmed ?? 0)) found.push({ code: node.code, kind: 'breaking', direction: node.annual.direction });
+    else if (node.annual.recency != null && node.annual.recency < 1 && (!counts?.total || counts.unknown / counts.total >= 0.8)) found.push({ code: node.code, kind: 'hollow', direction: node.annual.direction });
   }
   return found;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { monitorConflicts, monitorCoverage, monitorDiagram, paceLabel } from '../../src/scripts/market/benchmarkMonitor';
+import { conflictLabel, monitorConflicts, monitorCoverage, monitorDiagram, paceLabel } from '../../src/scripts/market/benchmarkMonitor';
 import { initBenchmarkMonitor } from '../../src/scripts/market/benchmarkMonitorClient';
 import type { LineupVersion } from '../../src/scripts/market/benchmarkChain';
 
@@ -105,12 +105,22 @@ describe('benchmark monitor diagram', () => {
       validation: { supportPercent: null, headwindPercent: null, unknownPercent: null, counts: { support: 0, headwind: 0, unknown: 2, total: 2 } } };
     const solid = { ...base, code: '2454', annual: { direction: 'tailwind', recency: 1 } };
     const found = monitorConflicts({ revision: 'c', holdings: [], nodes: [breaking, hollow, solid] });
-    expect(found).toEqual([{ code: '2330', kind: 'breaking' }, { code: '3037', kind: 'hollow' }]);
+    expect(found).toEqual([{ code: '2330', kind: 'breaking', direction: 'tailwind' }, { code: '3037', kind: 'hollow', direction: 'tailwind' }]);
     expect(monitorDiagram(lineup, { revision: 'd', holdings: [], nodes: [breaking] })).toContain('⚠ 分歧');
   });
   it('counts how many reports have started to fade', () => {
     const coverage = monitorCoverage(lineup, { revision: 'e', holdings: [], nodes: [
       { code: '2330', annual: { direction: 'tailwind', recency: 0.4 }, claims: [{ report_id: 'r', page: 1, claim: 'c', evidence: 'e', source: 's', year: 2024 }] }] });
     expect(coverage.aging).toBe(1);
+  });
+  it('words a breaking narrative by its own direction, so a headwind node is not called tailwind', () => {
+    const headwind = { code: '2330', claims: [{ report_id: 'r', page: 1, claim: 'c', evidence: 'e', source: 's', year: 2025 }],
+      annual: { direction: 'headwind', recency: 1 },
+      validation: { supportPercent: 60, headwindPercent: 20, unknownPercent: 20, counts: { support: 3, headwind: 1, unknown: 1, total: 5 } } };
+    const found = monitorConflicts({ revision: 'h', holdings: [], nodes: [headwind] });
+    expect(found).toEqual([{ code: '2330', kind: 'breaking', direction: 'headwind' }]);
+    expect(conflictLabel(found[0].kind, found[0].direction)).toContain('年報逆風');
+    expect(conflictLabel(found[0].kind, found[0].direction)).not.toContain('順風');
+    expect(conflictLabel('breaking', 'tailwind')).toContain('年報順風');
   });
 });
