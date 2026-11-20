@@ -87,6 +87,9 @@ export function reportIsBenchmarkAnnual(report: Pick<MarketReport, 'title'>): bo
 export function reportTagIdForReport(report: Pick<MarketReport, 'title' | 'claims'>): ResearchTagId {
   const company = BENCHMARK_ANNUAL.exec(report.title)?.[1];
   if (company) return BENCHMARK_ROLE[company] ?? 'semiconductor';
+  // The BIS rule applies across the supply chain, including before claims are indexed.
+  if (report.title.trim().toLowerCase() === 'addressing remote access to advanced semiconductors') return 'macro';
+  if (report.claims?.some(({ segment }) => segment === 'macro')) return 'macro';
   const text = `${report.title} ${(report.claims ?? []).map(({ claim, segment }) => `${segment} ${claim}`).join(' ')}`;
   if (researchTagIdsForText(text).includes('cpo')) return 'cpo';
   const claimTags = researchTagIdsForSegments((report.claims ?? []).map(({ segment }) => segment));

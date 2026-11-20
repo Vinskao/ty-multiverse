@@ -4,6 +4,15 @@ import { resolve } from 'node:path';
 import { canUploadReports, filterMarketReports, groupReportDocuments, reportDocumentGroupMeta, reportFileAllowed, MAX_REPORT_BYTES, reportStatusLabel, reportClaimTone, reportSegmentForText, reportClaimRelevant, reportClaimRelevantToResearchTags, reportIndustryCategory, reportIndustryForReport, reportHasAnalyzableText, reportSearchMatches, planReportUploads, type MarketReport } from '../../src/scripts/market/reports';
 
 describe('report industry categories', () => {
+  it('classifies the BIS remote-access rule and cross-industry claims as macro', () => {
+    expect(reportIndustryForReport({ title: 'Addressing Remote Access to Advanced Semiconductors', claims: [] }))
+      .toBe('總經與市場');
+    expect(reportIndustryForReport({ title: 'Cross-industry export restrictions', claims: [
+      { segment: 'optical', claim: 'CPO exposure' },
+      { segment: 'macro', claim: 'Export controls across markets' },
+    ] })).toBe('總經與市場');
+  });
+
   it('groups company and supply-chain segments into readable industry boards', () => {
     expect(reportIndustryCategory(['foundry', 'memory'])).toBe('半導體');
     expect(reportIndustryCategory(['ccl_pcb'])).toBe('PCB 與電子材料');
