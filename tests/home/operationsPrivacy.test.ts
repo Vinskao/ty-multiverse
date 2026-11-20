@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 
-it('keeps returning-reader statistics and AI usage off the public home page', () => {
+it('shows public AI usage without exposing returning-reader statistics', () => {
   const home = readFileSync('src/pages/index.astro', 'utf8');
   const script = readFileSync('src/scripts/index.ts', 'utf8');
   expect(home).not.toContain('north-star-readout');
-  expect(home).not.toContain('<AiTokenUsageDashboard');
+  expect(home).toContain('<AiTokenUsageDashboard client:visible />');
   expect(script).not.toContain('loadNorthStar');
 });
