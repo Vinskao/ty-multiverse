@@ -224,6 +224,7 @@ const pageLabel = textLinks.find((link) => link.i18nKey === pageKey)?.label ?? (
         <div class="nav-auth" data-auth-logged-in={isLoggedIn ? "true" : "false"}>
           <a class="link nav-auth-trigger" data-auth-link href={`/login?redirect=${encodeURIComponent(Astro.url.pathname + Astro.url.search)}`} data-i18n="nav.login" hidden={isLoggedIn}>Login</a>
           <span class="nav-user-name" data-auth-user-name hidden={!isLoggedIn}>{isLoggedIn ? username : ""}</span>
+          <a class="nav-account-settings" href="/account-settings" data-account-settings aria-label="Account settings" title="Account settings" hidden={!isLoggedIn}><span aria-hidden="true">&#9881;</span></a>
           <button class="nav-logout-button" data-auth-logout type="button" aria-label="Logout" title="Logout" hidden={!isLoggedIn}>
             <Icon icon="sign-out" size="1.15em" />
           </button>

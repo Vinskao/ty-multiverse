@@ -221,3 +221,5 @@
 .palais-file-tools > summary span:last-child { margin-left:auto; color:var(--gray-400); font-size:.82rem; font-weight:500; }
 .palais-file-tools .clutch-container { flex-wrap:wrap; }
 @media (max-width:600px) { .palais-file-tools > summary { align-items:flex-start; flex-direction:column; } .palais-file-tools > summary span:last-child { margin:0; } }
+
+.palais-tool-link[hidden] { display: none; }

@@ -2,6 +2,7 @@ import { GATEWAY_API_BASE } from '../../common/constants/api';
 
 /** The backend's hand-maintained BPMN 2.0 module overview (ty-multiverse-backend docs/PRODUCT_INTEGRITY.md). */
 export const BPMN_URL = `${GATEWAY_API_BASE}/api/business-processes.bpmn`;
+export const PALAIS_BPMN_URL = `${GATEWAY_API_BASE}/api/palais-access.bpmn`;
 const TIMEOUT_MS = 20000;
 
 type Viewer = { importXML(xml: string): Promise<unknown>; get(name: 'canvas'): { zoom(level: string): void }; destroy(): void };
@@ -38,6 +39,7 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
   const status = details?.querySelector<HTMLElement>('[data-business-process-status]');
   if (!details || !canvas || !status || details.dataset.bound) return;
   details.dataset.bound = 'true';
+  const picker = details.querySelector<HTMLSelectElement>('[data-business-process-picker]');
   let state: 'idle' | 'loading' | 'done' = 'idle';
   const lifecycle = new AbortController();
   let viewer: Viewer | undefined;
@@ -47,15 +49,16 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
       viewer?.destroy();
     }, { once: true });
   }
-  details.addEventListener('toggle', async () => {
+  const load = async () => {
     if (!details.open || state !== 'idle') return;
     state = 'loading';
+    if (picker) picker.disabled = true;
     canvas.setAttribute('aria-busy', 'true');
     status.hidden = false;
     status.className = 'business-process-status business-process-status--loading';
     status.textContent = '流程圖載入中…';
     try {
-      const response = await deps.fetch(BPMN_URL, { signal: AbortSignal.any([lifecycle.signal, AbortSignal.timeout(TIMEOUT_MS)]) });
+      const response = await deps.fetch(picker?.value === 'palais' ? PALAIS_BPMN_URL : BPMN_URL, { signal: AbortSignal.any([lifecycle.signal, AbortSignal.timeout(TIMEOUT_MS)]) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const xml = await response.text();
       if (lifecycle.signal.aborted) return;
@@ -77,6 +80,14 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
       state = 'idle';
     } finally {
       canvas.removeAttribute('aria-busy');
+      if (picker) picker.disabled = false;
     }
+  };
+  details.addEventListener('toggle', load);
+  picker?.addEventListener('change', () => {
+    viewer?.destroy();
+    viewer = undefined;
+    state = 'idle';
+    void load();
   });
 }

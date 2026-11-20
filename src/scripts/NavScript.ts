@@ -1,5 +1,5 @@
 import { palaisLinkDisplay } from './palais/modules';
-import { visibleNavItems } from './navigation/menu';
+import { hasPalaisCheckerRole, visibleNavItems } from './navigation/menu';
 import { isLogoutButton, syncAuthNavControls } from './navigation/authNavLanguage';
 import { userDisplayNameFromToken } from './navigation/userDisplayName';
 import { storageService } from '../services/core/storageService';
@@ -613,12 +613,23 @@ export class NavController {
     const authContainer = document.querySelector<HTMLElement>('.nav-auth');
     if (authContainer) {
       syncAuthNavControls(authContainer, this.isLoggedIn && window.location.pathname !== '/login', language, fullName);
+      const settings = authContainer.querySelector<HTMLElement>('[data-account-settings]');
+      if (settings) {
+        const label = language.startsWith('zh') ? '\u5e33\u865f\u8a2d\u5b9a' : 'Account settings';
+        settings.hidden = !this.isLoggedIn;
+        settings.setAttribute('aria-label', label);
+        settings.title = label;
+      }
     }
+
+    document.querySelectorAll<HTMLElement>('[data-palais-admin]').forEach(link => {
+      link.hidden = !this.isLoggedIn || !this.isAdmin;
+    });
 
     const workLink = document.querySelector('a[href^="/work"]') as HTMLAnchorElement;
     const aboutLink = document.querySelector('a[href^="/about"]') as HTMLAnchorElement;
     const learnLink = document.querySelector('a[href^="/learn"]') as HTMLElement;
-    const palaisLink = document.querySelector('a[href*="/palais"]') as HTMLAnchorElement;
+
 
     if (authContainer) {
       const loginLink = authContainer.querySelector<HTMLAnchorElement>('[data-auth-link]');
@@ -644,7 +655,12 @@ export class NavController {
         : '/learn/';
     }
 
-    // Palais 需要管理員權限
+    if (/^\/palais(?:\/|$)/.test(window.location.pathname) && this.token
+        && !hasPalaisCheckerRole(this.token) && !this.checkManageUsersRoleFromToken(this.token)) {
+      window.location.replace('/account-settings');
+      return;
+    }
+
     // 查找所有可能的 Palais 鏈接（包括 admin-only class 的）
     const palaisLinks = Array.from(document.querySelectorAll('a')).filter(link => {
       const href = link.getAttribute('href') || '';
@@ -653,7 +669,7 @@ export class NavController {
     }) as HTMLAnchorElement[];
 
     palaisLinks.forEach(palaisLink => {
-      const shouldShowPalais = visibleNavItems({ isLoggedIn: this.isLoggedIn, isAdmin: this.isAdmin }).includes('palais');
+      const shouldShowPalais = visibleNavItems({ isLoggedIn: this.isLoggedIn, isAdmin: this.isAdmin, isPalaisChecker: hasPalaisCheckerRole(this.token) }).includes('palais');
       palaisLink.style.display = palaisLinkDisplay(shouldShowPalais, palaisLink.hasAttribute('data-palais-module'));
 
       // 同時隱藏父元素（li）如果存在

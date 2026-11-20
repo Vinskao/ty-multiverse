@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { BPMN_URL, initBusinessProcess } from '../../src/scripts/home/businessProcess';
+import { BPMN_URL, PALAIS_BPMN_URL, initBusinessProcess } from '../../src/scripts/home/businessProcess';
 
 const markup = () => {
   const root = document.createElement('div');
@@ -48,6 +48,22 @@ describe('business process diagram on the home page', () => {
     await open(details, () => fetcher.mock.calls.length, 1);
     expect(fetcher).toHaveBeenCalledTimes(2);
     expect(viewer.importXML).toHaveBeenCalledTimes(1);
+  });
+
+  it('switches from the overview to the Palais access diagram', async () => {
+    const root = markup();
+    const details = root.querySelector('details')!;
+    details.insertAdjacentHTML('beforeend', '<select data-business-process-picker><option value="overview">Overview</option><option value="palais">Palais</option></select>');
+    const viewer = { importXML: vi.fn().mockResolvedValue({}), get: () => ({ zoom: vi.fn() }), destroy: vi.fn() };
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, text: async () => '<definitions/>' });
+    initBusinessProcess(root, { fetch: fetcher, createViewer: vi.fn().mockResolvedValue(viewer) });
+    await open(details, () => fetcher.mock.calls.length, 0);
+    const picker = details.querySelector('select')!;
+    picker.value = 'palais';
+    picker.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(viewer.importXML).toHaveBeenCalledTimes(2));
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual([BPMN_URL, PALAIS_BPMN_URL]);
+    expect(viewer.destroy).toHaveBeenCalledOnce();
   });
 
   it('caps the diagram box so it never grows huge on a wide screen', () => {

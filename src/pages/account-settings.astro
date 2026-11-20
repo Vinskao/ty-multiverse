@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Account settings" indexable={false}>
+  <main class="wrapper stack gap-8 account-settings">
+    <h1 data-copy="heading">Account settings</h1>
+    <section class="stack gap-4" aria-labelledby="access-heading">
+      <h2 id="access-heading" data-copy="access">Palais access and review</h2>
+      <p id="access-status" role="status" aria-live="polite"></p>
+      <form id="access-apply" hidden>
+        <label for="access-reason" data-copy="reason">Application reason</label>
+        <textarea id="access-reason" maxlength="1000" required></textarea>
+        <button data-copy="apply">Apply for access and review rights</button>
+      </form>
+      <div id="access-requests"></div>
+      <div id="access-queue"></div>
+      <div id="access-audit"></div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .account-settings { max-width: 55rem; padding-block: 2rem; overflow-wrap: anywhere; }
+  #access-apply:not([hidden]) { display: grid; gap: .75rem; }
+  textarea { width: 100%; min-height: 5rem; color: inherit; background: var(--gray-999); }
+  button, :global(.access-action) { min-height: 44px; padding: .5rem .9rem; color: inherit; }
+  :global(.access-request) { display: grid; gap: .5rem; padding: .75rem; margin-block: .5rem; border: 1px solid var(--gray-700); }
+  #access-status[aria-busy="true"]::before {
+    content: ""; display: inline-block; width: 1em; height: 1em; margin-inline-end: .5rem;
+    border: .16em solid currentColor; border-inline-end-color: transparent; border-radius: 50%;
+    animation: access-spin .75s linear infinite;
+  }
+  @keyframes access-spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+  import { initPalaisAccountSettings } from "../scripts/palais/accountSettings";
+  document.addEventListener("astro:page-load", initPalaisAccountSettings);
+  initPalaisAccountSettings();
+</script>

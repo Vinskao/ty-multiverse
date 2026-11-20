@@ -4,6 +4,13 @@
 <details class="home-transparency business-process" data-business-process>
   <summary>業務流程圖（BPMN）</summary>
   <p class="business-process-note">後端維護的主要業務流程概覽，可拖曳、滾輪縮放。細部規則以各模組文件為準。</p>
+  <label class="business-process-picker">
+    <span>流程</span>
+    <select data-business-process-picker>
+      <option value="overview">主要業務流程</option>
+      <option value="palais">Palais 權限申請</option>
+    </select>
+  </label>
   <p class="business-process-status" data-business-process-status role="status" hidden></p>
   <div class="business-process-canvas" data-business-process-canvas aria-label="業務流程圖"></div>
 </details>
@@ -15,6 +22,8 @@
 </script>
 
 <style>
+  .business-process-picker { display: flex; gap: .5rem; align-items: center; margin: .75rem 0; }
+  .business-process-picker select { min-height: 44px; max-width: 100%; color: var(--gray-100); background: var(--gray-999); }
   .business-process-note { color: var(--gray-400); font-size: .85rem; margin: .5rem 0; }
   .business-process-status { font-size: .9rem; display: flex; align-items: center; gap: .5rem; }
   .business-process-status--loading::before {
