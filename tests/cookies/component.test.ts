@@ -8,8 +8,14 @@ describe('site cookie settings entry points', () => {
   const consent = read('src/components/CookieConsent.astro');
   it('places the settings gear immediately after the notification bell', () => {
     expect(nav.indexOf('<NotificationCenter />')).toBeGreaterThan(-1);
-    expect(nav.indexOf('<CookieConsent />')).toBeGreaterThan(nav.indexOf('<NotificationCenter />'));
+    expect(nav.indexOf('<CookieConsent isLoggedIn={isLoggedIn} />')).toBeGreaterThan(nav.indexOf('<NotificationCenter />'));
     expect(consent).toContain('data-cookie-gear');
+  });
+
+  it('puts account settings inside the shared menu and hides it for guests', () => {
+    expect(nav).not.toContain('data-account-settings');
+    const menu = consent.slice(consent.indexOf('data-cookie-menu'), consent.indexOf('<aside'));
+    expect(menu).toMatch(/href="\/account-settings" data-account-settings hidden=\{!isLoggedIn\}/);
   });
 
   it('offers editable cookie preferences and a privacy explanation', () => {

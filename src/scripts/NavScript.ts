@@ -613,14 +613,9 @@ export class NavController {
     const authContainer = document.querySelector<HTMLElement>('.nav-auth');
     if (authContainer) {
       syncAuthNavControls(authContainer, this.isLoggedIn && window.location.pathname !== '/login', language, fullName);
-      const settings = authContainer.querySelector<HTMLElement>('[data-account-settings]');
-      if (settings) {
-        const label = language.startsWith('zh') ? '\u5e33\u865f\u8a2d\u5b9a' : 'Account settings';
-        settings.hidden = !this.isLoggedIn;
-        settings.setAttribute('aria-label', label);
-        settings.title = label;
-      }
     }
+    const settings = document.querySelector<HTMLElement>('[data-account-settings]');
+    if (settings) settings.hidden = !this.isLoggedIn;
 
     document.querySelectorAll<HTMLElement>('[data-palais-admin]').forEach(link => {
       link.hidden = !this.isLoggedIn || !this.isAdmin;

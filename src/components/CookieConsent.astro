@@ -1,12 +1,14 @@
 ---
 import cookieConsentCssUrl from '../styles/cookieConsent.css?url';
+const { isLoggedIn = false } = Astro.props;
 ---
 <link rel="stylesheet" href={cookieConsentCssUrl} />
 <div class="cookie-consent" data-cookie-consent>
-  <button type="button" class="cookie-gear" data-cookie-gear aria-label="Cookie 設定" aria-expanded="false" aria-controls="cookie-settings-menu">
+  <button type="button" class="cookie-gear" data-cookie-gear aria-label="設定" aria-expanded="false" aria-controls="cookie-settings-menu">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
-  <div class="cookie-settings-menu" id="cookie-settings-menu" data-cookie-menu hidden aria-label="Cookie 設定選單">
+  <div class="cookie-settings-menu" id="cookie-settings-menu" data-cookie-menu hidden aria-label="設定選單">
+    <a href="/account-settings" data-account-settings hidden={!isLoggedIn}><span data-cookie-copy="account">帳號設定</span></a>
     <button type="button" data-cookie-open-preferences><span data-cookie-copy="change">變更 Cookie 設定</span></button>
     <a href="/privacy/"><span data-cookie-copy="privacy">隱私權說明</span></a>
   </div>
