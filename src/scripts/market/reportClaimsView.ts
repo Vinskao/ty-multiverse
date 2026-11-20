@@ -12,7 +12,7 @@ const DIRECTIONS = {
 type Direction = keyof typeof DIRECTIONS;
 const directions = Object.keys(DIRECTIONS) as Direction[];
 const mermaidClaimLabel = (text: string) => Array.from(text.replace(/\s+/g, ' ').trim(), (char) =>
-  /[\p{L}\p{N} .，。·]/u.test(char) ? char : char === '"' ? '#quot;' : `#${char.codePointAt(0)};`).join('');
+  /[\p{L}\p{N} .，。、；：！？（）／·]/u.test(char) ? char : char === '"' ? '#quot;' : `#${char.codePointAt(0)};`).join('');
 const REASONS = {
   undated: ['Publication date unavailable', '缺少發布日期'],
   future: ['Future publication date', '發布日期尚未到'],
