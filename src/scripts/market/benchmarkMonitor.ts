@@ -5,7 +5,7 @@ export type MonitorNode = { code: string; annual: { direction: string }; claims?
 }[]; filing?: { fiscal_year: number; source_url: string; analysis_status: string | null } | null;
   validation?: { supportPercent: number | null; headwindPercent: number | null;
   unknownPercent: number | null; counts?: { support: number; headwind: number; unknown: number; total: number }; checks?: { code: string; metric: string; value: number | null;
-    period: string; source: string; threshold: number; rationale: string; outcome: string }[] } };
+    period: string; source: string; threshold: number; weight?: number; rationale: string; outcome: string }[] } };
 export type HoldingPace = { benchmark: string; verdict: 'ahead' | 'inline' | 'behind' | 'unknown'; metric: string | null;
   period: string | null; holdingValue: number | null; benchmarkValue: number | null; gapPp: number | null };
 const PACE: Record<string, string> = { ahead: '超前', inline: '同步', behind: '落後' };
@@ -15,6 +15,21 @@ export function paceLabel(pace: HoldingPace, name = pace.benchmark): string {
   if (pace.verdict === 'unknown' || pace.gapPp === null) return `對照 ${name}：資料不足`;
   const sign = pace.gapPp > 0 ? '+' : '';
   return `${PACE[pace.verdict]} ${name} ${sign}${pace.gapPp.toFixed(1)}pp（${pace.period ?? ''} ${pace.metric ?? ''}）`;
+}
+
+type Validation = NonNullable<MonitorNode['validation']>;
+
+/** "加權 支持 50%・反駁 25%・未知 25%（4 項）": weighted share of checks; unknown stays in the denominator. */
+export function weightedLabel(validation: Validation, total: number): string {
+  const pct = (value: number | null) => `${Math.round(value ?? 0)}%`;
+  return `加權 支持 ${pct(validation.supportPercent)}・反駁 ${pct(validation.headwindPercent)}・未知 ${pct(validation.unknownPercent)}（${total} 項）`;
+}
+
+/** Share of the total weight this check carries, e.g. "權重 2（占 50%）". */
+export function weightShare(weight: number | undefined, checks: { weight?: number }[]): string {
+  const total = checks.reduce((sum, item) => sum + (item.weight ?? 0), 0);
+  if (!weight || !total) return '';
+  return `權重 ${weight}（占 ${Math.round(weight / total * 100)}%）`;
 }
 
 export type BenchmarkMonitor = { nodes: MonitorNode[]; holdings: {
@@ -41,9 +56,10 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     const parts: string[] = [];
     if (held) parts.push('★ 持股');
     if (direction !== 'unknown' && directions[direction]) parts.push(directions[direction]);
-    // Counts, not percentages: with a handful of checks "50%" reads as far more certain than "2 of 4".
+    // The API only returns percentages from 3 checks up; below that show counts so "50%" never overstates certainty.
     const counts = validation?.counts;
-    if (counts?.total) parts.push(`驗證 支持 ${counts.support}・反駁 ${counts.headwind}・未知 ${counts.unknown}`);
+    if (validation?.supportPercent != null && counts?.total) parts.push(weightedLabel(validation, counts.total));
+    else if (counts?.total) parts.push(`驗證 支持 ${counts.support}・反駁 ${counts.headwind}・未知 ${counts.unknown}`);
     const nodeId = `c${id(company.code)}`;
     const index = lines.findIndex(line => line.trimStart().startsWith(`${nodeId}[`));
     if (index >= 0 && parts.length) lines[index] = lines[index].replace(/"\]$/, `<br/>${parts.join('・')}"]`);

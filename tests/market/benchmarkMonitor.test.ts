@@ -24,8 +24,7 @@ describe('benchmark monitor diagram', () => {
       { code: '6857', name: '宏碁智醫', role: '尚未定位' },
     ] });
     expect(diagram).toContain('年報多空並存');
-    expect(diagram).toContain('驗證 支持 2・反駁 1・未知 1');
-    expect(diagram).not.toContain('%');
+    expect(diagram).toContain('加權 支持 50%・反駁 25%・未知 25%（4 項）');
     expect(diagram).toContain('持股');
     expect(diagram).toContain('|對照|');
     expect(diagram).toContain('h6857_JP');
@@ -67,6 +66,7 @@ describe('benchmark monitor diagram', () => {
     const diagram = monitorDiagram(lineup, { revision: '3', holdings: [], nodes: [{ code: '2330', annual: { direction: 'tailwind' },
       validation: { supportPercent: null, headwindPercent: null, unknownPercent: null, counts: { support: 1, headwind: 0, unknown: 1, total: 2 } } }] });
     expect(diagram).toContain('驗證 支持 1・反駁 0・未知 1');
+    expect(diagram).not.toContain('%');
   });
   it('reports evidence coverage and lists holdings it cannot place instead of drawing them', () => {
     const coverage = monitorCoverage(lineup, { revision: '3', nodes: [

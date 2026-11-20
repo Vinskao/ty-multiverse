@@ -1,5 +1,5 @@
 import { formatNumber } from '../format/numbers';
-import { monitorDiagram, type BenchmarkMonitor } from './benchmarkMonitor';
+import { monitorDiagram, weightedLabel, weightShare, type BenchmarkMonitor } from './benchmarkMonitor';
 import type { LineupVersion } from './benchmarkChain';
 
 /** A nav bar search hit (/?benchmark=CODE#benchmark) lands on that company's 年報依據與驗證數據, not the diagram. */
@@ -50,14 +50,17 @@ export function initBenchmarkMonitor(doc: Document = document): void {
       }
     }
     if (!node?.validation?.checks?.length) paragraph('尚無已審核驗證條件，順逆風占比暫不計算。');
-    for (const check of node?.validation?.checks ?? []) {
+    const all = node?.validation?.checks ?? [];
+    if (all.length && node?.validation?.supportPercent != null) paragraph(`${weightedLabel(node.validation, all.length)}。未知留在分母，不是報酬率或機率。`);
+    else if (all.length) paragraph(`驗證條件不足 3 項，只列筆數、不算占比：支持 ${node?.validation?.counts?.support ?? 0}・反駁 ${node?.validation?.counts?.headwind ?? 0}・未知 ${node?.validation?.counts?.unknown ?? 0}。`);
+    for (const check of all) {
       const labels: Record<string, string> = { 'monthly.yoyPercent': '月營收年增率',
         'quarterly.revenueYoYPercent': '季營收年增率', 'quarterly.grossMarginPercent': '毛利率',
         'quarterly.grossMarginYoYPp': '毛利率年變動', 'quarterly.operatingMarginPercent': '營業利益率' };
       const kind = check.metric.endsWith('Pp') ? 'pp' : 'percent';
       const outcomes: Record<string, string> = { support: '符合條件', headwind: '不符條件', unknown: '資料不足或過期' };
       const outcome = outcomes[check.outcome] ?? '未知';
-      paragraph(`${check.code}・${labels[check.metric] ?? check.metric}・${check.period ?? '缺期別'}：${formatNumber(check.value, kind)}，門檻 ${formatNumber(check.threshold, kind)}。${check.rationale}。${check.source ?? '缺來源'}。${outcome}`);
+      paragraph(`${check.code}・${labels[check.metric] ?? check.metric}・${check.period ?? '缺期別'}：${formatNumber(check.value, kind)}，門檻 ${formatNumber(check.threshold, kind)}。${check.rationale}。${check.source ?? '缺來源'}。${[weightShare(check.weight, all), outcome].filter(Boolean).join('・')}`);
     }
   };
   select?.addEventListener('change', renderEvidence);
