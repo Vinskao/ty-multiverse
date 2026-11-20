@@ -46,6 +46,7 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
   const companies = lineup.layers.flatMap(layer => layer.stages.flatMap(stage => stage.companies));
   const companyCodes = new Set(companies.map(company => company.code));
   const lines = lineupDiagram(lineup).split('\n');
+  const conflicts = new Set(monitorConflicts(monitor).map(item => item.code));
   const additions: string[] = [];
   for (const company of companies) {
     const node = nodes.get(company.code);
@@ -55,6 +56,7 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     // Only real evidence goes on a node: an empty "待審／缺資料" line on every box says nothing.
     const parts: string[] = [];
     if (held) parts.push('★ 持股');
+    if (conflicts.has(company.code)) parts.push('⚠ 分歧');
     if (direction !== 'unknown' && directions[direction]) {
       // An older report still counts, but at a reduced weight; fresh ones stay unlabelled.
       const recency = node?.annual.recency;
@@ -67,7 +69,10 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     const nodeId = `c${id(company.code)}`;
     const index = lines.findIndex(line => line.trimStart().startsWith(`${nodeId}[`));
     if (index >= 0 && parts.length) lines[index] = lines[index].replace(/"\]$/, `<br/>${parts.join('・')}"]`);
-    additions.push(`  class ${nodeId} strength_${Object.hasOwn(directions, direction) ? direction : 'unknown'}`);
+    const known = Object.hasOwn(directions, direction) ? direction : 'unknown';
+    // Aging report: same hue, greyer fill. Unknown stays reserved for "not reviewed / no claim".
+    const faded = known !== 'unknown' && node?.annual.recency != null && node.annual.recency < 1;
+    additions.push(`  class ${nodeId} strength_${known}${faded ? '_faded' : ''}`);
     if (held) additions.push(`  style ${nodeId} stroke:#d4a72c,stroke-width:4px`);
   }
   // A holding is drawn only when it is tied to a benchmark node; an unattached box cannot be read against anything.
@@ -87,12 +92,35 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     '  classDef strength_headwind fill:#48232b,stroke:#f47067,color:#fff',
     '  classDef strength_mixed fill:#44391c,stroke:#d4a72c,color:#fff',
     '  classDef strength_neutral fill:#213b50,stroke:#58a6ff,color:#fff',
+    '  classDef strength_tailwind_faded fill:#2a3a33,stroke:#3fb950,color:#d0d7de',
+    '  classDef strength_headwind_faded fill:#3a2d31,stroke:#f47067,color:#d0d7de',
+    '  classDef strength_mixed_faded fill:#3a3528,stroke:#d4a72c,color:#d0d7de',
+    '  classDef strength_neutral_faded fill:#2a3540,stroke:#58a6ff,color:#d0d7de',
     '  classDef strength_unknown fill:#30363d,stroke:#8b949e,color:#fff');
   return [...lines, ...additions].join('\n');
 }
 
 const positionedHoldings = (monitor: BenchmarkMonitor, companyCodes: Set<string>) => monitor.holdings
   .filter(holding => !companyCodes.has(holding.code) && (holding.benchmarks ?? []).some(code => companyCodes.has(code)));
+
+export type Conflict = { code: string; kind: 'breaking' | 'hollow' };
+const CONFLICT_LABEL: Record<Conflict['kind'], string> = { breaking: '年報順風但驗證反駁占多數，敘事正在破',
+  hollow: '年報已折減且驗證幾乎都是未知，不能當結論' };
+export const conflictLabel = (kind: Conflict['kind']) => CONFLICT_LABEL[kind];
+
+/** Divergences worth a researcher's eye; the two percentages are never merged into one score. */
+export function monitorConflicts(monitor: BenchmarkMonitor): Conflict[] {
+  const found: Conflict[] = [];
+  for (const node of monitor.nodes) {
+    if (!node.claims?.length || !['tailwind', 'headwind'].includes(node.annual.direction)) continue;
+    const counts = node.validation?.counts;
+    const refuted = node.annual.direction === 'tailwind' ? counts?.headwind : counts?.support;
+    const confirmed = node.annual.direction === 'tailwind' ? counts?.support : counts?.headwind;
+    if (counts && counts.total > 0 && (refuted ?? 0) > (counts.total / 2) && (refuted ?? 0) > (confirmed ?? 0)) found.push({ code: node.code, kind: 'breaking' });
+    else if (node.annual.recency != null && node.annual.recency < 1 && (!counts?.total || counts.unknown / counts.total >= 0.8)) found.push({ code: node.code, kind: 'hollow' });
+  }
+  return found;
+}
 
 /** Holdings the diagram cannot place yet, and how many benchmark nodes have any reviewed annual-report claim. */
 export function monitorCoverage(lineup: LineupVersion, monitor: BenchmarkMonitor) {
@@ -101,6 +129,7 @@ export function monitorCoverage(lineup: LineupVersion, monitor: BenchmarkMonitor
   const unplaced = monitor.holdings.filter(holding => !companyCodes.has(holding.code) && !placed.has(holding.code));
   const withClaims = monitor.nodes.filter(node => companyCodes.has(node.code) && (node.claims?.length ?? 0) > 0);
   const withChecks = monitor.nodes.filter(node => companyCodes.has(node.code) && (node.validation?.counts?.total ?? 0) > 0);
-  return { total: companyCodes.size, withClaims: withClaims.map(node => node.code),
+  const aging = withClaims.filter(node => node.annual.recency != null && node.annual.recency < 1).length;
+  return { total: companyCodes.size, aging, withClaims: withClaims.map(node => node.code),
     withChecks: withChecks.length, unplaced };
 }

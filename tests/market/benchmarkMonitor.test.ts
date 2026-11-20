@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { monitorCoverage, monitorDiagram, paceLabel } from '../../src/scripts/market/benchmarkMonitor';
+import { monitorConflicts, monitorCoverage, monitorDiagram, paceLabel } from '../../src/scripts/market/benchmarkMonitor';
 import { initBenchmarkMonitor } from '../../src/scripts/market/benchmarkMonitorClient';
 import type { LineupVersion } from '../../src/scripts/market/benchmarkChain';
 
@@ -89,5 +89,28 @@ describe('benchmark monitor diagram', () => {
     expect(monitorDiagram(lineup, { revision: '4', holdings: [], nodes: [node(0.62)] })).toContain('年報順風（參考力 62%）');
     expect(monitorDiagram(lineup, { revision: '5', holdings: [], nodes: [node(1)] })).not.toContain('參考力');
     expect(monitorDiagram(lineup, { revision: '6', holdings: [], nodes: [node(null)] })).not.toContain('參考力');
+  });
+  it('fades only the fill of an aging report, keeping hue and never turning it unknown', () => {
+    const node = (recency: number | null) => ({ code: '2330', annual: { direction: 'tailwind', recency } });
+    expect(monitorDiagram(lineup, { revision: '7', holdings: [], nodes: [node(0.5)] })).toContain('class c2330 strength_tailwind_faded');
+    expect(monitorDiagram(lineup, { revision: '8', holdings: [], nodes: [node(1)] })).toContain('class c2330 strength_tailwind\n');
+    expect(monitorDiagram(lineup, { revision: '9', holdings: [], nodes: [node(null)] })).not.toContain('_faded\n');
+    expect(monitorDiagram(lineup, { revision: '10', holdings: [], nodes: [node(0.5)] })).toContain('classDef strength_tailwind_faded');
+  });
+  it('flags a tailwind narrative that checks mostly refute, and an aging report whose checks are almost all unknown', () => {
+    const base = { code: '2330', claims: [{ report_id: 'r', page: 1, claim: 'c', evidence: 'e', source: 's', year: 2024 }] };
+    const breaking = { ...base, annual: { direction: 'tailwind', recency: 1 },
+      validation: { supportPercent: 20, headwindPercent: 60, unknownPercent: 20, counts: { support: 1, headwind: 3, unknown: 1, total: 5 } } };
+    const hollow = { ...base, code: '3037', annual: { direction: 'tailwind', recency: 0.5 },
+      validation: { supportPercent: null, headwindPercent: null, unknownPercent: null, counts: { support: 0, headwind: 0, unknown: 2, total: 2 } } };
+    const solid = { ...base, code: '2454', annual: { direction: 'tailwind', recency: 1 } };
+    const found = monitorConflicts({ revision: 'c', holdings: [], nodes: [breaking, hollow, solid] });
+    expect(found).toEqual([{ code: '2330', kind: 'breaking' }, { code: '3037', kind: 'hollow' }]);
+    expect(monitorDiagram(lineup, { revision: 'd', holdings: [], nodes: [breaking] })).toContain('⚠ 分歧');
+  });
+  it('counts how many reports have started to fade', () => {
+    const coverage = monitorCoverage(lineup, { revision: 'e', holdings: [], nodes: [
+      { code: '2330', annual: { direction: 'tailwind', recency: 0.4 }, claims: [{ report_id: 'r', page: 1, claim: 'c', evidence: 'e', source: 's', year: 2024 }] }] });
+    expect(coverage.aging).toBe(1);
   });
 });

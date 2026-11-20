@@ -39,6 +39,11 @@ export function initBenchmarkMonitor(doc: Document = document): void {
       link.textContent = `${node.filing.fiscal_year} 年報原始來源`;
       readout.append(link);
     }
+    if (node?.claims?.length) {
+      const year = node.claims[0].year;
+      const recency = node.annual.recency;
+      paragraph(`${year} 財年年報，基準日 ${year}-12-31。方向保留，直到新年報取代；財年結束滿一年後參考力逐步降到 25%${recency != null ? `，目前 ${Math.round(recency * 100)}%` : ''}。年報參考力與下方驗證占比分開計算，不合成單一分數。`);
+    }
     for (const claim of node?.claims ?? []) {
       paragraph(`${claim.year} 年報，第 ${claim.page} 頁：${claim.claim}`);
       paragraph(claim.evidence);

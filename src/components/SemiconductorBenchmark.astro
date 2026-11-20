@@ -1,6 +1,6 @@
 ---
 import { lineupLegend, supplyChainDiagram, type LineupVersion } from '../scripts/market/benchmarkChain';
-import { monitorCoverage, monitorDiagram, type BenchmarkMonitor } from '../scripts/market/benchmarkMonitor';
+import { conflictLabel, monitorConflicts, monitorCoverage, monitorDiagram, type BenchmarkMonitor } from '../scripts/market/benchmarkMonitor';
 
 type BenchmarkRow = {
   code: string;
@@ -42,6 +42,8 @@ try {
   if (response.ok) monitor = await response.json();
 } catch { /* unavailable evidence stays explicitly unknown */ }
 const coverage = current ? monitorCoverage(current, monitor) : null;
+const companyNames = new Map((current?.layers ?? []).flatMap(layer => layer.stages.flatMap(stage => stage.companies)).map(company => [company.code, company.company_name]));
+const conflicts = monitorConflicts(monitor);
 ---
 
 <section id="benchmark" aria-labelledby="benchmark-title" data-lineup={current ? JSON.stringify(current) : ''}>
@@ -63,6 +65,8 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
   </section>
   <p>用途：龍頭年報定出各環節的成長敘事（綠＝順風、紅＝逆風、黃＝多空並存，灰＝尚無已審核主張）；持股以虛線「對照」接到它該比較的龍頭，並用同一期月營收（沒有則季營收）年增率比較：差距 ≥10 個百分點為超前（綠框）、≤−10 為落後（紅框），其餘同步；期別對不上就標資料不足。</p>
   {coverage && <p class="benchmark-coverage">目前 {coverage.total} 家龍頭中 {coverage.withClaims.length} 家已有審核過的年報主張、{coverage.withChecks} 家有驗證條件；{coverage.withClaims.length === 0 ? '主張由每日美股與總經 Opus 排程逐批從年報萃取（每次最多 6 家），經 20:30 審核後才上色，所以現在全是灰色、也沒有紅色。' : '其餘仍待排程萃取。'}</p>}
+  {coverage?.aging ? <p class="benchmark-coverage">其中 {coverage.aging} 家的年報已開始折減（財年結束滿一年後逐步降到 25%，顏色變淡但方向保留）；先確認這片顏色有多少是去年的。</p> : null}
+  {conflicts.length ? <ul class="benchmark-coverage" aria-label="年報與驗證分歧">{conflicts.map(item => <li>⚠ {companyNames.get(item.code) ?? item.code}（{item.code}）：{conflictLabel(item.kind)}</li>)}</ul> : null}
   {coverage?.unplaced.length ? <p class="benchmark-coverage">尚未對照到龍頭的持股（不畫在圖上）：{coverage.unplaced.map(holding => `${holding.name} ${holding.code}`).join('、')}。下次排程歸組後自動接上。</p> : null}
   {coverage?.withClaims.length ? <label>查看年報依據與驗證數據 <select data-benchmark-evidence aria-label="選擇 Benchmark 年報依據">
     <option value="">選擇已有年報主張的公司</option>

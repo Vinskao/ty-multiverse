@@ -31,3 +31,11 @@ flowchart LR
 `vitest run tests/market/benchmarkMonitor.test.ts tests/market/benchmarkChain.test.ts tests/market/benchmarkDiagram.test.ts tests/market/benchmarkReports.test.ts`
 
 實際年報主張仍依後端審核結果，測試資料的百分比不是正式產業判斷。
+
+## 年報折減與分歧標示
+
+- 年報方向（`annual.recency`）在財年結束滿 12 個月後，12 個月內線性降到 25%，之後維持；方向保留，直到新年報取代，不會變成未知。基準日用該年 12 月 31 日，非曆年財年的公司有幾週誤差，不改計算。
+- 圖上：`recency` 為 1 或沒有年份時維持飽和色；小於 1 時色相不變、填色往灰靠（`strength_*_faded`，只有兩階），並在節點寫「（參考力 xx%）」。持股金框不動。
+- 圖下覆蓋句多一行「其中幾家年報已開始折減」；節點細節寫財年、基準日與「方向保留，直到新年報取代」。
+- 分歧標示（`monitorConflicts`，不合成分數）：年報順風但驗證反駁過半且多於支持＝「敘事正在破」；年報已折減且驗證幾乎全未知（未知占比 ≥ 80% 或無條件）＝「不能當結論」。節點加「⚠ 分歧」，圖下列清單。
+- 年報參考力與驗證加權百分比分開顯示。
