@@ -41,7 +41,7 @@ class AiUsageService {
   async getSummary(): Promise<AiUsageSummaryResponse> {
     const response = await apiService.makeRequest<AiUsageSummaryResponse>(
       this.baseUrl, '/ai-usage/summary', 'GET', undefined,
-      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
+      { auth: true, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }
@@ -49,7 +49,7 @@ class AiUsageService {
   async getDailySummary(days = 30): Promise<AiTokenUsageSummary[]> {
     const response = await apiService.makeRequest<AiTokenUsageSummary[]>(
       this.baseUrl, `/ai-usage/daily?days=${days}`, 'GET', undefined,
-      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
+      { auth: true, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }
@@ -57,7 +57,7 @@ class AiUsageService {
   async getMonthlySummary(months = 12): Promise<AiTokenUsageSummary[]> {
     const response = await apiService.makeRequest<AiTokenUsageSummary[]>(
       this.baseUrl, `/ai-usage/monthly?months=${months}`, 'GET', undefined,
-      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
+      { auth: true, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }
@@ -68,7 +68,7 @@ class AiUsageService {
       `/ai-usage/overview?timezone=${encodeURIComponent(timezone)}`,
       'GET',
       undefined,
-      { auth: false, serviceKey: SERVICE_KEYS.BACKEND }
+      { auth: true, serviceKey: SERVICE_KEYS.BACKEND }
     );
     return response.data;
   }

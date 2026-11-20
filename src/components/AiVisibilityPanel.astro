@@ -7,6 +7,7 @@ import LinkedInJobsPanel from "./LinkedInJobsPanel.astro";
     <h2 id="ai-visibility-heading">AI 搜尋曝光檢視</h2>
     <span id="ai-visibility-badge" class="aiv-badge" role="status"></span>
   </header>
+  <p id="palais-north-star" class="ai-visibility-note" role="status" hidden></p>
   <p id="ai-visibility-headline" class="aiv-headline"></p>
   <div id="ai-visibility-platforms" class="aiv-platforms"></div>
   <div class="ai-visibility-scroll"><table id="ai-visibility-table" class="ai-visibility-table"></table></div>
@@ -67,6 +68,7 @@ import LinkedInJobsPanel from "./LinkedInJobsPanel.astro";
   .aiv-about p { margin: 0.5rem 0 0; line-height: 1.6; }
 </style>
 <script>
+  import { northStarLine, type NorthStarWeek } from '../scripts/analytics/northStar';
   import { AUTO_PLATFORMS, PLATFORM_NAMES, cellLabel, headline, socialChange, socialTrend, type VisibilityView } from '../scripts/palais/aiVisibility';
 
   const token = () => window.localStorage.getItem('token') || window.localStorage.getItem('accessToken');
@@ -85,13 +87,26 @@ import LinkedInJobsPanel from "./LinkedInJobsPanel.astro";
   async function loadAiVisibility() {
     const root = document.getElementById('ai-visibility');
     if (!root) return;
+    root.hidden = true;
+    const northStar = document.getElementById('palais-north-star');
+    if (northStar) { northStar.hidden = true; northStar.textContent = ''; }
     const bearer = token();
     if (!bearer) return;
     const response = await fetch('/api/market/ai-visibility', { headers: { Authorization: `Bearer ${bearer}` }, cache: 'no-store' }).catch(() => null);
-    if (!response?.ok) return;
+    if (!response?.ok || token() !== bearer) return;
     const view = await response.json() as VisibilityView;
     root.hidden = false;
+    const northResponse = await fetch('/api/market/north-star?weeks=2', {
+      headers: { Authorization: `Bearer ${bearer}` }, cache: 'no-store',
+      signal: AbortSignal.timeout(15000),
+    }).catch(() => null);
+    if (northStar && northResponse?.ok && token() === bearer) {
+      const result = await northResponse.json() as { weeks?: NorthStarWeek[] };
+      northStar.textContent = northStarLine(result.weeks ?? [], window.AppLang?.get?.() === 'en' ? 'en' : 'zh');
+      northStar.hidden = false;
+    }
 
+    if (token() !== bearer) { root.hidden = true; return; }
     const badge = document.getElementById('ai-visibility-badge')!;
     badge.textContent = view.latest ? `出現 ${view.latest.appeared}/${view.latest.checked}` : '尚無結果';
     badge.className = `aiv-badge ${view.latest?.appeared ? 'good' : 'none'}`;
@@ -155,6 +170,8 @@ import LinkedInJobsPanel from "./LinkedInJobsPanel.astro";
     }
   }
 
+  document.addEventListener('tym:auth-changed', loadAiVisibility);
+  window.addEventListener('storage', event => { if (event.key === 'token' || event.key === 'accessToken') void loadAiVisibility(); });
   document.addEventListener('astro:page-load', loadAiVisibility);
   loadAiVisibility();
 </script>

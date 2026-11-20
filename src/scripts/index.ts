@@ -44,7 +44,6 @@ import { initHeroSearch } from './home/heroSearch';
 import { landSearchHit } from './search/landing';
 let _searchLandingCleanup: (() => void) | undefined;
 import { trackReaderEvent } from './analytics/readerEvents';
-import { northStarLine, type NorthStarWeek } from './analytics/northStar';
 import { createFulltextSearch } from './market/reportFulltext';
 import { canUploadReports, claimDateLabel, reportDateLabel, reportClaimTone, reportFileAllowed, reportStatusLabel, reportIsChannelPost, reportIsWebArticle, reportMetaLine, reportDocumentGroupMeta, groupReportDocuments, reportClaimRelevantToResearchTags, reportIndustryForReport, reportTagIdForReport, reportIsBenchmarkAnnual, filterMarketReports, reportHasAnalyzableText, planReportUploads, type MarketReport } from './market/reports';
 import { researchTagLabel, researchTagIdsForIndustryGroup, researchTagIdsForText, segmentsForResearchTags, type ResearchTagId } from './market/researchTaxonomy';
@@ -2734,19 +2733,6 @@ function renderMarketReports(reports: MarketReport[]) {
     applyFilters(); // words typed in the hero search before the list loaded apply as soon as it renders
 }
 
-/** Owner only: the north star readout in the operations zone; everyone else gets a 401/403 and sees nothing. */
-async function loadNorthStar() {
-    const readout = document.getElementById('north-star-readout');
-    if (!readout) return;
-    readout.hidden = true;
-    if (!hasMarketAuth()) return;
-    const response = await fetch(astroApiPath('/api/market/north-star?weeks=2'), { headers: marketAuthHeaders(), cache: 'no-store' }).catch(() => null);
-    if (!response?.ok) return;
-    const payload = await response.json().catch(() => null) as { weeks?: NorthStarWeek[] } | null;
-    readout.textContent = northStarLine(payload?.weeks ?? [], marketLocale() === 'zh-TW' ? 'zh' : 'en');
-    readout.hidden = false;
-}
-
 async function loadMarketReports() {
     const status = document.getElementById('market-reports-status');
     const form = document.getElementById('market-report-upload') as HTMLFormElement | null;
@@ -4121,7 +4107,6 @@ function initIndexPage() {
     _heroSearchCleanup?.();
     _heroSearchCleanup = initHeroSearch(document, trackReaderEvent);
     _searchLandingCleanup?.(); _searchLandingCleanup = landSearchHit(document);
-    void loadNorthStar();
     void loadMarketAutomation();
     void fetchMarketDashboard();
     macroLoader = lazyLoader(document.getElementById('macro-dashboard'), () => { void fetchMacroDashboard(); void loadMacroCommentary(); });

@@ -16,7 +16,7 @@ describe('home page zones', () => {
     }
     expect(document.getElementById('zone-macro')?.querySelector('#macro-dashboard')).not.toBeNull();
     expect(document.getElementById('zone-reports')?.querySelector('#market-reports')).not.toBeNull();
-    expect(document.getElementById('zone-operations')?.querySelector('.home-transparency')).not.toBeNull();
+    expect(html()).toContain('<BusinessProcessDiagram />');
   });
 
   it('keeps the account zone signed-in only', () => {
