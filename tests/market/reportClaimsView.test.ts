@@ -11,7 +11,7 @@ it('groups approved claims by direction, shows their source weights and renders 
   const run = vi.fn(async () => {});
   const load = async () => ({ initialize: vi.fn(), run });
   const view = reportClaimsDetails([{ claims, id: 'report' } as MarketReport],
-    new Map([['report', { weight: 0.5, ageDays: 90, reason: null }]]), false, load);
+    new Map([['report', { weight: 0.5, ageDays: 90, cutoffDate: '2026-05-01', reason: null }]]), false, load);
   document.body.append(view);
   view.open = true;
   view.dispatchEvent(new Event('toggle'));

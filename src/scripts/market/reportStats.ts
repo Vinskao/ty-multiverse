@@ -24,6 +24,7 @@ function recordedDay(report: MarketReport): number {
 export type ReportRecency = {
   weight: number;
   ageDays: number | null;
+  cutoffDate: string | null;
   reason: 'undated' | 'future' | 'no-cutoff' | 'before-cutoff' | null;
 };
 
@@ -35,6 +36,7 @@ export function reportRecencyWeights(reports: readonly MarketReport[], now = new
   const publishedCutoff = Math.min(...annuals.map((report) => publicationDay(report.published_at)).filter((day) => day <= asOf));
   const useRecordedAnnual = !Number.isFinite(publishedCutoff);
   const cutoff = useRecordedAnnual ? Math.min(...annuals.map(recordedDay).filter((day) => day <= asOf)) : publishedCutoff;
+  const cutoffDate = Number.isFinite(cutoff) ? new Date(cutoff).toISOString().slice(0, 10) : null;
   const weights = new Map<string, ReportRecency>();
   for (const report of reports) {
     const published = publicationDay(report.published_at);
@@ -43,7 +45,7 @@ export function reportRecencyWeights(reports: readonly MarketReport[], now = new
     const ageDays = Number.isFinite(day) ? (asOf - day) / DAY_MS : null;
     const reason = ageDays === null ? 'undated' : ageDays < 0 ? 'future'
       : !Number.isFinite(cutoff) ? 'no-cutoff' : day < cutoff ? 'before-cutoff' : null;
-    weights.set(report.id, { ageDays, reason, weight: reason ? 0 : 2 ** ((day - asOf) / HALF_LIFE_MS) });
+    weights.set(report.id, { ageDays, cutoffDate, reason, weight: reason ? 0 : 2 ** ((day - asOf) / HALF_LIFE_MS) });
   }
   return weights;
 }

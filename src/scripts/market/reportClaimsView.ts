@@ -103,7 +103,9 @@ export function reportClaimsDetails(
       const factor = !recency ? (zh ? '未納入公開排行' : 'Outside the public ranking')
         : claim.direction === 'neutral' ? (zh ? '中性不計入順逆風比例' : 'Neutral excluded from direction share')
         : (zh ? `時效權重 ${weight}` : `Recency weight ${weight}`);
-      const reason = claim.direction !== 'neutral' && recency?.reason ? REASONS[recency.reason][locale] : null;
+      const reason = claim.direction !== 'neutral' && recency?.reason
+        ? [REASONS[recency.reason][locale], recency.reason === 'before-cutoff' ? recency.cutoffDate : null].filter(Boolean).join(' ')
+        : null;
       meta.textContent = [publishedAt, age, factor, reason].filter(Boolean).join(' · ');
       item.append(text, meta);
       group.append(item);

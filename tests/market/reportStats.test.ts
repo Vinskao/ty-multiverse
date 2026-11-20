@@ -92,7 +92,7 @@ describe('time-weighted report direction', () => {
     const weights = reportRecencyWeights(reports, NOW);
     expect(weights.get('new')).toMatchObject({ weight: 1, ageDays: 0 });
     expect(weights.get('old')).toMatchObject({ weight: 0.5, ageDays: 90 });
-    expect(weights.get('excluded')).toMatchObject({ weight: 0, reason: 'before-cutoff' });
+    expect(weights.get('excluded')).toMatchObject({ weight: 0, reason: 'before-cutoff', cutoffDate: '2026-05-01' });
     expect(weights.get('missing')).toMatchObject({ weight: 0, reason: 'undated' });
     expect(weights.get('future')).toMatchObject({ weight: 0, reason: 'future' });
   });
