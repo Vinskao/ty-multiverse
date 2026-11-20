@@ -406,5 +406,15 @@
   "社群平台數據": "Social platform data",
   "檢視方式": "How it is checked",
   "試跑 4 週（至 2026-12-15），完全由 AI 檢視：每週一 04:30 Claude 排程用 Gemini API（Google 搜尋）與自己的網頁搜尋，查本週 3 個關鍵字（1 固定＋2 輪替），再依結果修繕網站。</p><p>Grok 已棄用。</p><p>ChatGPT 需付費 API，暫停。": "A 4-week trial (until 2026-12-15), checked entirely by AI: every Monday 04:30 a Claude schedule uses the Gemini API (Google Search) and its own web search to look up this week's 3 keywords (1 fixed + 2 rotating), then improves the site from the results. ChatGPT and Grok need a paid API and are paused.",
-  "關閉市場狀態條": "Close the market status bar"
+  "關閉市場狀態條": "Close the market status bar",
+  "業務流程圖（BPMN）": "Business process map (BPMN)",
+  "後端維護的主要業務流程概覽，可拖曳、滾輪縮放。細部規則以各模組文件為準。": "An overview of the main business processes, maintained by the backend. Drag to pan, scroll to zoom. Each module's own documentation has the detailed rules.",
+  "業務流程圖": "Business process map",
+  "流程圖載入中…": "Loading the process map…",
+  "流程圖暫時無法載入，請收起後再展開重試。": "The process map could not load. Close and reopen it to try again.",
+  "年報與驗證分歧": "Annual report vs. checks: divergences",
+  "其中 {n} 家的年報已開始折減（財年結束滿一年後逐步降到 25%，顏色變淡但方向保留）；先確認這片顏色有多少是去年的。": "Of these, {n} annual reports have started to fade (from a year after the fiscal year ends, their weight falls to 25%; the colour pales but the direction stays). Check how much of this colour is last year's.",
+  "⚠ {name}（{code}）：年報順風但驗證反駁占多數，敘事正在破": "⚠ {name} ({code}): the annual report reads tailwind but most checks refute it; the narrative is breaking",
+  "⚠ {name}（{code}）：年報逆風但驗證支持占多數，敘事正在破": "⚠ {name} ({code}): the annual report reads headwind but most checks support it; the narrative is breaking",
+  "⚠ {name}（{code}）：年報已折減且驗證幾乎都是未知，不能當結論": "⚠ {name} ({code}): the annual report has faded and the checks are almost all unknown; do not treat this as a conclusion"
 }

@@ -9,6 +9,7 @@ import Grid from '../components/Grid.astro';
 import { Icon } from '../components/Icon';
 
 import AiTokenUsageDashboard from '../components/AiTokenUsageDashboard';
+import BusinessProcessDiagram from '../components/BusinessProcessDiagram.astro';
 import ResearchZone from '../components/ResearchZone';
 import SemiconductorBenchmark from '../components/SemiconductorBenchmark.astro';
 import companyProductMapping from '../storages/companyProductMapping.json';
@@ -562,6 +563,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 				<div class="ai-usage-home-section ai-usage-home-section--fullwidth">
 					<p id="north-star-readout" class="market-updated north-star-readout" role="status" hidden></p>
 					<details class="home-transparency"><summary data-i18n="home.operationsTitle">產品運作資訊 · AI 使用紀錄</summary><AiTokenUsageDashboard client:visible /></details>
+					<BusinessProcessDiagram />
 				</div>
 				</section>
 			</header>

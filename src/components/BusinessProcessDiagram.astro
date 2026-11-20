@@ -1,0 +1,32 @@
+---
+// Backend's hand-maintained BPMN overview of the main business processes, drawn on demand (bpmn-js loads on open).
+---
+<details class="home-transparency business-process" data-business-process>
+  <summary>業務流程圖（BPMN）</summary>
+  <p class="business-process-note">後端維護的主要業務流程概覽，可拖曳、滾輪縮放。細部規則以各模組文件為準。</p>
+  <p class="business-process-status" data-business-process-status role="status" hidden></p>
+  <div class="business-process-canvas" data-business-process-canvas aria-label="業務流程圖"></div>
+</details>
+
+<script>
+  import { initBusinessProcess } from '../scripts/home/businessProcess';
+  initBusinessProcess();
+  document.addEventListener('astro:page-load', () => initBusinessProcess());
+</script>
+
+<style>
+  .business-process-note { color: var(--gray-400); font-size: .85rem; margin: .5rem 0; }
+  .business-process-status { font-size: .9rem; display: flex; align-items: center; gap: .5rem; }
+  .business-process-status--loading::before {
+    content: ''; width: 1rem; height: 1rem; border-radius: 50%;
+    border: 2px solid currentColor; border-right-color: transparent; animation: business-process-spin .8s linear infinite;
+  }
+  .business-process-status--error { color: #f47067; }
+  @keyframes business-process-spin { to { transform: rotate(360deg); } }
+  /* The BPMN renderer draws dark strokes, so the drawing keeps a light sheet in both themes. */
+  .business-process-canvas {
+    max-width: 1100px; height: min(70vh, 560px); margin: 0 auto;
+    background: #fff; border: 1px solid var(--gray-700, #444); border-radius: 8px; overflow: hidden;
+  }
+  @media (max-width: 640px) { .business-process-canvas { height: min(60vh, 420px); } }
+</style>
