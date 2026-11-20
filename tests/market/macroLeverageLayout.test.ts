@@ -31,5 +31,5 @@ it('puts cloud spending and index bias in adjacent grid cells', () => {
 it('pairs Taiwan and US bias series by the selected moving-average window', async () => {
   const { MACRO_BIAS_WINDOWS } = await import('../../src/scripts/market/macroLayout');
   expect(MACRO_BIAS_WINDOWS.map(window => window.codes)).toEqual([20, 60, 120, 240]
-    .map(days => [`TW_TAIEX_BIAS_${days}`, `US_SP500_BIAS_${days}`]));
+    .map(days => [`TW_TAIEX_BIAS_${days}`, `US_SP500_BIAS_${days}`, `US_SOX_BIAS_${days}`]));
 });

@@ -2206,10 +2206,14 @@ export function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
                 return indicator?.history?.length && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
             });
             host.replaceChildren();
-            if (isBias && !byCode.get(macroBiasWindow.codes[1])?.history?.length) {
+            const missing = isBias ? codes.filter((code) => !byCode.get(code)?.history?.length) : [];
+            if (missing.length && own) {
                 const unavailable = document.createElement('p');
                 unavailable.className = 'market-updated';
-                unavailable.textContent = marketText('U.S. index data unavailable for this window.', '此均線期間暫無美國指數資料。');
+                unavailable.textContent = marketText(
+                    `Data unavailable for this window: ${missing.map((code) => own[code].en).join(', ')}`,
+                    `此均線期間暫無資料：${missing.map((code) => own[code].zh).join('、')}`,
+                );
                 host.append(unavailable);
             }
             if (base) {

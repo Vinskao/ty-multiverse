@@ -66,9 +66,9 @@ it('toggles individual macro lines, their points, and readout through chart redr
   expect(document.querySelector('.macro-trend-readout')?.textContent).toContain('Capex');
 });
 
-it('switches both bias series to the selected period and labels missing US data', () => {
+it('switches the three bias series and identifies the missing indices', () => {
   document.body.innerHTML = '<section id="macro-leverage"></section>';
-  const indicators = ['TW_TAIEX_BIAS_20', 'US_SP500_BIAS_20', 'TW_TAIEX_BIAS_60'].map((code, i) => ({
+  const indicators = ['TW_TAIEX_BIAS_20', 'US_SP500_BIAS_20', 'US_SOX_BIAS_20', 'TW_TAIEX_BIAS_60', 'US_SOX_BIAS_60'].map((code, i) => ({
     code, name: code, frequency: 'daily', unit: 'percent', value: String(i + 1), referencePeriod: '2026-11-20',
     history: [{ period: '2026-11-20', value: String(i + 1) }],
   }));
@@ -76,15 +76,17 @@ it('switches both bias series to the selected period and labels missing US data'
   const select = document.querySelector<HTMLSelectElement>('.macro-bias-window select')!;
   const card = select.closest('article')!;
   const lines = () => card.querySelectorAll('.macro-trend-line');
-  expect(lines()).toHaveLength(2);
+  expect(lines()).toHaveLength(3);
   expect(card.querySelector('.macro-trend-readout')?.textContent).toContain('S&P 500');
+  expect(card.querySelector('.macro-trend-readout')?.textContent).toContain('SOX');
   select.value = '60';
   select.dispatchEvent(new Event('change'));
-  expect(lines()).toHaveLength(1);
-  expect(card.textContent).toContain('U.S. index data unavailable for this window.');
+  expect(lines()).toHaveLength(2);
+  expect(card.textContent).toContain('Data unavailable for this window: U.S. S&P 500');
+  expect(card.querySelector('.macro-trend-readout')?.textContent).toContain('5.00%');
   select.value = '20';
   select.dispatchEvent(new Event('change'));
-  expect(lines()).toHaveLength(2);
+  expect(lines()).toHaveLength(3);
 });
 
 it('allows legend toggles on ordinary multi-series macro charts', () => {

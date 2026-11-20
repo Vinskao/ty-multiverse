@@ -45,7 +45,7 @@ const biasWindows = [
 
 export const MACRO_BIAS_WINDOWS = biasWindows.map(window => ({
     ...window,
-    codes: [`TW_TAIEX_BIAS_${window.days}`, `US_SP500_BIAS_${window.days}`] as const,
+    codes: [`TW_TAIEX_BIAS_${window.days}`, `US_SP500_BIAS_${window.days}`, `US_SOX_BIAS_${window.days}`] as const,
 }));
 
 export const MACRO_BIAS_CHART = {
@@ -53,6 +53,7 @@ export const MACRO_BIAS_CHART = {
     labels: Object.fromEntries(MACRO_BIAS_WINDOWS.flatMap(({ codes }) => [
         [codes[0], { zh: '台灣加權指數', en: 'Taiwan TAIEX' }],
         [codes[1], { zh: '美國 S&P 500', en: 'U.S. S&P 500' }],
+        [codes[2], { zh: '費城半導體指數', en: 'Philadelphia Semiconductor Index (SOX)' }],
     ])) as Record<string, { zh: string; en: string }>,
     title: { zh: '台美股市指數乖離率', en: 'Taiwan and U.S. index bias' },
     note: { zh: '以各市場交易日的收盤價計算，(收盤 ÷ 移動平均 − 1) × 100，單位 %。正值高於均線，負值低於均線。',
