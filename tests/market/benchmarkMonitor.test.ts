@@ -84,4 +84,10 @@ describe('benchmark monitor diagram', () => {
     expect(paceLabel({ benchmark: '2330', verdict: 'unknown', metric: null, period: null, holdingValue: null, benchmarkValue: null, gapPp: null }))
       .toBe('對照 2330：資料不足');
   });
+  it('labels an aging annual report with how much weight it still carries, and stays plain when fresh', () => {
+    const node = (recency: number | null) => ({ code: '2330', annual: { direction: 'tailwind', recency } });
+    expect(monitorDiagram(lineup, { revision: '4', holdings: [], nodes: [node(0.62)] })).toContain('年報順風（參考力 62%）');
+    expect(monitorDiagram(lineup, { revision: '5', holdings: [], nodes: [node(1)] })).not.toContain('參考力');
+    expect(monitorDiagram(lineup, { revision: '6', holdings: [], nodes: [node(null)] })).not.toContain('參考力');
+  });
 });

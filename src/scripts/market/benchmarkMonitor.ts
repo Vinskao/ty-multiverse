@@ -1,6 +1,6 @@
 import { lineupDiagram, type LineupVersion } from './benchmarkChain';
 
-export type MonitorNode = { code: string; annual: { direction: string }; claims?: {
+export type MonitorNode = { code: string; annual: { direction: string; recency?: number | null }; claims?: {
   report_id: string; page: number; claim: string; evidence: string; source: string; year: number;
 }[]; filing?: { fiscal_year: number; source_url: string; analysis_status: string | null } | null;
   validation?: { supportPercent: number | null; headwindPercent: number | null;
@@ -55,7 +55,11 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     // Only real evidence goes on a node: an empty "待審／缺資料" line on every box says nothing.
     const parts: string[] = [];
     if (held) parts.push('★ 持股');
-    if (direction !== 'unknown' && directions[direction]) parts.push(directions[direction]);
+    if (direction !== 'unknown' && directions[direction]) {
+      // An older report still counts, but at a reduced weight; fresh ones stay unlabelled.
+      const recency = node?.annual.recency;
+      parts.push(recency != null && recency < 1 ? `${directions[direction]}（參考力 ${Math.round(recency * 100)}%）` : directions[direction]);
+    }
     // The API only returns percentages from 3 checks up; below that show counts so "50%" never overstates certainty.
     const counts = validation?.counts;
     if (validation?.supportPercent != null && counts?.total) parts.push(weightedLabel(validation, counts.total));
