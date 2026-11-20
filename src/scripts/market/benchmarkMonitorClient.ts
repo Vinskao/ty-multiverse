@@ -40,12 +40,14 @@ export function initBenchmarkMonitor(doc: Document = document): void {
       readout.append(link);
     }
     if (node?.claims?.length) {
-      const year = node.claims[0].year;
+      const year = node.claims.find(claim => Number.isInteger(claim.year))?.year;
       const recency = node.annual.recency;
-      paragraph(`${year} 財年年報，基準日 ${year}-12-31。方向保留，直到新年報取代；財年結束滿一年後參考力逐步降到 25%${recency != null ? `，目前 ${Math.round(recency * 100)}%` : ''}。年報參考力與下方驗證占比分開計算，不合成單一分數。`);
+      paragraph(year
+        ? `${year} 財年年報，基準日 ${year}-12-31。方向保留，直到新年報取代；財年結束滿一年後參考力逐步降到 25%${recency != null ? `，目前 ${Math.round(recency * 100)}%` : ''}。年報參考力與下方驗證占比分開計算，不合成單一分數。`
+        : '缺財年資料，不計參考力，也不當成舊年報。方向保留，直到新年報取代。');
     }
     for (const claim of node?.claims ?? []) {
-      paragraph(`${claim.year} 年報，第 ${claim.page} 頁：${claim.claim}`);
+      paragraph(`${claim.year ? `${claim.year} 年報，` : ''}第 ${claim.page} 頁：${claim.claim}`);
       paragraph(claim.evidence);
       if (claim.source?.startsWith('https://')) {
         const link = doc.createElement('a');

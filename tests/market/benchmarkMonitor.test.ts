@@ -123,4 +123,27 @@ describe('benchmark monitor diagram', () => {
     expect(conflictLabel(found[0].kind, found[0].direction)).not.toContain('順風');
     expect(conflictLabel('breaking', 'tailwind')).toContain('年報順風');
   });
+  it('keeps the holding gold frame as a class declared after the direction colours, so classDef cannot override it', () => {
+    const diagram = monitorDiagram(lineup, { revision: 'g', nodes: [{ code: '2330', annual: { direction: 'mixed', recency: 0.5 } }],
+      holdings: [{ code: '2330', name: '台積電', role: '代工', benchmarks: ['2330'] }] });
+    expect(diagram).toContain('class c2330 held');
+    expect(diagram.lastIndexOf('classDef held')).toBeGreaterThan(diagram.lastIndexOf('classDef strength_'));
+  });
+  it('says the fiscal year is missing instead of printing undefined', async () => {
+    vi.useFakeTimers();
+    const root = document.createElement('section');
+    root.id = 'benchmark';
+    root.dataset.lineup = JSON.stringify(lineup);
+    root.innerHTML = '<section id="benchmark-overview"><pre class="mermaid"></pre></section><select data-benchmark-evidence><option value="2330">2330</option></select><div data-benchmark-readout></div><p data-benchmark-status></p>';
+    document.body.replaceChildren(root);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ revision: 'y', holdings: [], nodes: [{ code: '2330',
+      annual: { direction: 'mixed', recency: null }, claims: [{ report_id: 'r', page: 3, claim: 'c', evidence: 'e', source: 'https://x' }] }] }) }));
+    try {
+      initBenchmarkMonitor();
+      await vi.advanceTimersByTimeAsync(0);
+      const text = root.querySelector('[data-benchmark-readout]')!.textContent!;
+      expect(text).not.toContain('undefined');
+      expect(text).toContain('缺財年');
+    } finally { vi.useRealTimers(); vi.unstubAllGlobals(); }
+  });
 });

@@ -73,7 +73,8 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     // Aging report: same hue, greyer fill. Unknown stays reserved for "not reviewed / no claim".
     const faded = known !== 'unknown' && node?.annual.recency != null && node.annual.recency < 1;
     additions.push(`  class ${nodeId} strength_${known}${faded ? '_faded' : ''}`);
-    if (held) additions.push(`  style ${nodeId} stroke:#d4a72c,stroke-width:4px`);
+    // A class declared after the direction colours: Mermaid's classDef rules outrank an inline style.
+    if (held) additions.push(`  class ${nodeId} held`);
   }
   // A holding is drawn only when it is tied to a benchmark node; an unattached box cannot be read against anything.
   for (const holding of positionedHoldings(monitor, companyCodes)) {
@@ -96,7 +97,8 @@ export function monitorDiagram(lineup: LineupVersion, monitor: BenchmarkMonitor)
     '  classDef strength_headwind_faded fill:#3a2d31,stroke:#f47067,color:#d0d7de',
     '  classDef strength_mixed_faded fill:#3a3528,stroke:#d4a72c,color:#d0d7de',
     '  classDef strength_neutral_faded fill:#2a3540,stroke:#58a6ff,color:#d0d7de',
-    '  classDef strength_unknown fill:#30363d,stroke:#8b949e,color:#fff');
+    '  classDef strength_unknown fill:#30363d,stroke:#8b949e,color:#fff',
+    '  classDef held stroke:#d4a72c,stroke-width:4px');
   return [...lines, ...additions].join('\n');
 }
 
