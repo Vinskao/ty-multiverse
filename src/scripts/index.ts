@@ -2275,6 +2275,14 @@ function renderMacroBorrowing(byCode: Map<string, MacroIndicator>) {
 
 function renderMacroDashboard(snapshot: MacroSnapshot) {
     macroSnapshot = snapshot;
+    const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
+    renderMacroLeverage(byCode);
+    const preview = document.querySelector('#macro-dashboard[data-macro-preview]');
+    if (preview) {
+        const status = document.getElementById('macro-dashboard-status');
+        if (status) status.textContent = snapshot.asOf ? `${marketI18n('macroUpdated','Updated')} · ${new Date(snapshot.asOf).toLocaleString()}` : '';
+        return;
+    }
     bindMacroCountryControls();
     void renderMacroChainsView(snapshot);
     const grid = document.getElementById('macro-indicator-grid');
@@ -2282,8 +2290,6 @@ function renderMacroDashboard(snapshot: MacroSnapshot) {
     const status = document.getElementById('macro-dashboard-status');
     if (!list || !grid) return;
     grid.replaceChildren(); list.replaceChildren();
-    const byCode = new Map((snapshot.indicators || []).map((item) => [item.code, item]));
-    renderMacroLeverage(byCode);
     renderMacroVolatility(byCode);
     startVolatilityPolling();
     renderMacroBorrowing(byCode);
@@ -2608,12 +2614,19 @@ function renderMarketReports(reports: MarketReport[]) {
     const allCategory = 'all';
     let selectedCategory = allCategory;
     const search = document.getElementById('market-report-search') as HTMLInputElement | null;
+    const previewLimit = Number(list.dataset.reportPreview) || Infinity;
+    const library = document.querySelector<HTMLAnchorElement>('#home-all-reports');
     const applyFilters = () => {
+        const query = search?.value.trim() ?? '';
+        if (library) library.href = `/reports/${query ? `?${new URLSearchParams({ q: query })}` : ''}#market-reports`;
+        let shown = 0;
         const body = fulltext.matches();
         const matches = new Set(filterMarketReports(reports, selectedCategory, search?.value ?? '', new Set(body.keys())).map((report) => report.id));
         list.querySelectorAll<HTMLElement>('.market-report-card').forEach((card) => {
             const ids = (card.dataset.reportIds ?? '').split(' ').filter(Boolean);
-            card.hidden = !ids.some((id) => matches.has(id));
+            const matched = ids.some((id) => matches.has(id));
+            card.hidden = !matched || shown >= previewLimit;
+            if (matched) shown++;
             // Where in the body the words were found, so a card that matched outside its title explains itself.
             const hit = ids.map((id) => body.get(id)).find(Boolean);
             let note = card.querySelector<HTMLElement>('.market-report-fulltext');

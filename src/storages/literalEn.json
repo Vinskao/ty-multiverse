@@ -1,4 +1,9 @@
 {
+  "查看完整報告清單": "Browse all reports",
+  "總經邏輯鏈總覽": "Macro logic chain overview",
+  "載入總經邏輯圖中…": "Loading macro logic map…",
+  "查看完整總經邏輯鏈 →": "View the full macro logic chain →",
+  "總經邏輯圖暫時無法載入。": "The macro map could not load.",
   "市場研究 MCP": "Market Research MCP",
   "使用獲授權的 Keycloak 帳號登入，即可從 Claude Code 或 Codex 查詢已發布的市場研究。": "Sign in with an authorized Keycloak account to access published market research from Claude Code or Codex.",
   "查詢已發布的台股分析": "Read published Taiwan stock analyses",

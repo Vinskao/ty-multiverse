@@ -151,6 +151,7 @@
     "productAudience": {"en": "Every claim leads back to its source. Search a ticker or a topic, read the evidence, then make your own investment decisions.", "zh": "每項主張都能回到原文核對。先搜尋代號或主題，讀完證據，再自行做出投資決策。"},
     "productContact": {"en": "Email about Miner API access", "zh": "Email 洽詢 Miner API"},
     "productPricingLink": { "en": "Choose an enquiry topic ↓", "zh": "選擇洽詢主題 ↓" },
+    "allReportsLink": {"en": "Browse all reports", "zh": "查看完整報告清單"},
     "productExplore": {"en": "Explore research maps", "zh": "探索研究圖"},
     "productWorkflow": {"en": "Public reports become evidence, opportunities and research maps", "zh": "公開報告匯成證據，發掘最新標的與技術，建立研究圖"},
     "productCollectTitle": {"en": "Public sources in one library", "zh": "公開來源收進同一個資料庫"},

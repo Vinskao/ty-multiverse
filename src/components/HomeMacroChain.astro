@@ -1,0 +1,59 @@
+---
+import graph from '../storages/macroLogicGraph.json';
+const { href } = Astro.props;
+const groupOf = new Map([...graph.nodes.map(node => [node.id, node.row] as const), ...graph.focus.map(node => [node.id, node.id] as const)]);
+const edges = [...new Set(graph.edges.map(edge => {
+  const from = groupOf.get(edge.from);
+  const to = groupOf.get(edge.to);
+  return from && to && from !== to ? `${from} --> ${to}` : '';
+}).filter(Boolean))];
+const source = (lang: 'zh' | 'en') => ['flowchart LR', ...[...graph.rows, ...graph.focus].map(node =>
+  `${node.id}["${node.title[lang].replaceAll('"', '#quot;')}"]`), ...edges].join('\n');
+---
+<a class="home-macro-map" href={href} data-home-macro-map data-zh={source('zh')} data-en={source('en')}>
+  <strong>總經邏輯鏈總覽</strong>
+  <span role="status" data-map-status>載入總經邏輯圖中…</span>
+  <div data-map-graph aria-hidden="true"></div>
+  <span>查看完整總經邏輯鏈 →</span>
+</a>
+<script>
+  import { loadFromCdn } from '../scripts/market/benchmarkDiagram';
+  import { getMermaidConfig } from '../scripts/mermaid-theme';
+  import { lazyLoader } from '../scripts/lazy';
+  document.addEventListener('astro:page-load', () => {
+    const link = document.querySelector<HTMLElement>('[data-home-macro-map]');
+    if (!link || link.dataset.bound) return;
+    link.dataset.bound = 'true';
+    const graph = link.querySelector<HTMLElement>('[data-map-graph]')!;
+    const status = link.querySelector<HTMLElement>('[data-map-status]')!;
+    const draw = async () => {
+      const zh = window.AppLang?.get?.() !== 'en';
+      const node = document.createElement('pre');
+      node.className = 'mermaid';
+      node.textContent = link.dataset[zh ? 'zh' : 'en'] ?? '';
+      node.style.visibility = 'hidden';
+      graph.replaceChildren(node);
+      try {
+        const mermaid = await loadFromCdn();
+        if (!node.isConnected) return;
+        mermaid.initialize({ ...getMermaidConfig(document.documentElement.classList.contains('theme-dark')), startOnLoad: false });
+        await mermaid.run({ nodes: [node] });
+        node.style.visibility = '';
+        status.hidden = true;
+      } catch {
+        if (!node.isConnected) return;
+        node.remove();
+        status.textContent = zh ? '總經邏輯圖暫時無法載入。' : 'The macro map could not load.';
+        status.hidden = false;
+      }
+    };
+    const loader = lazyLoader(link, () => { void draw(); });
+    const cleanup = window.AppLang?.onChange?.(() => { if (loader.isLoaded()) void draw(); });
+    document.addEventListener('astro:before-swap', () => { loader.cancel(); cleanup?.(); }, { once: true });
+  });
+</script>
+<style>
+  .home-macro-map { display: grid; gap: .55rem; padding: .75rem; margin-block: .8rem; color: inherit; border: 1px solid var(--gray-700); border-radius: .65rem; overflow: hidden; }
+  [data-map-graph] :global(pre) { margin: 0; overflow: hidden; }
+  [data-map-graph] :global(svg) { display: block; margin: auto; max-width: 100%; max-height: 22rem; height: auto; }
+</style>

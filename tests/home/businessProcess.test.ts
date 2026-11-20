@@ -29,7 +29,7 @@ describe('business process diagram on the home page', () => {
     expect(root.querySelector('[data-business-process-status]')!.textContent).toContain('載入中');
     await vi.waitFor(() => expect(zoom).toHaveBeenCalledWith('fit-viewport'));
     expect(fetcher.mock.calls[0][0]).toBe(BPMN_URL);
-    expect(BPMN_URL).toMatch(/\/api\/business-processes\.bpmn$/);
+    expect(BPMN_URL).toMatch(/\/tymg\/api\/business-processes\.bpmn$/);
     expect(viewer.importXML).toHaveBeenCalledWith('<definitions/>');
     expect((root.querySelector('[data-business-process-status]') as HTMLElement).hidden).toBe(true);
   });

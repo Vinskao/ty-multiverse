@@ -11,6 +11,7 @@ import { Icon } from '../components/Icon';
 import AiTokenUsageDashboard from '../components/AiTokenUsageDashboard';
 import BusinessProcessDiagram from '../components/BusinessProcessDiagram.astro';
 import ResearchZone from '../components/ResearchZone';
+import HomeMacroChain from '../components/HomeMacroChain.astro';
 import SemiconductorBenchmark from '../components/SemiconductorBenchmark.astro';
 import companyProductMapping from '../storages/companyProductMapping.json';
 
@@ -164,18 +165,21 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								<label class="market-report-search" for="market-report-search">搜尋報告
 									<input id="market-report-search" type="search" autocomplete="off" placeholder="搜尋標題、來源或報告主張" />
 								</label>
-								<div id="market-report-list" class="market-report-list" aria-live="polite"></div>
+								<div id="market-report-list" data-report-preview={view ? undefined : 6} class="market-report-list" aria-live="polite"></div>
+                                {!view && <a id="home-all-reports" href="/reports/#market-reports" data-i18n="home.allReportsLink">查看完整報告清單</a>}
 							</div>
 						</div>
 					</section>
 						</section>
 						<section class="home-zone" id="zone-macro" aria-labelledby="zone-macro-title" >
 							<header class="home-zone-head"><h3 id="zone-macro-title" class="home-zone-title" data-i18n="home.zoneMacro">總體經濟</h3></header>
-						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" aria-labelledby="macro-dashboard-title" aria-live="polite">
+						<section id="macro-dashboard" class="macro-dashboard" data-macro-view="chains" data-macro-preview={view ? undefined : true} aria-labelledby="macro-dashboard-title" aria-live="polite">
 							<div class="macro-dashboard-heading"><div><h4 id="macro-dashboard-title" data-i18n="home.macroTitle">Key macro data · U.S., Taiwan and more</h4><p data-i18n="home.macroDescription">Labor, inflation, rates, consumption, trade and FX for the U.S., Taiwan and other major economies, with upcoming release reminders.</p></div><span id="macro-dashboard-status" class="market-updated" data-i18n="home.macroLoading">Loading macro data…</span></div>
+							{!view && <HomeMacroChain href="/macro/#macro-chains" />}
+							<section id="macro-leverage" class="macro-borrowing macro-leverage" aria-label="Key macro charts"></section>
+							{view === 'macro' && <>
 							<div class="macro-country-coverage" role="group" aria-label="Economies"><strong data-i18n="home.macroCoverage">Economies covered</strong><button type="button" data-macro-country="us" aria-pressed="false" data-i18n="home.macroCountryUs">United States</button><button type="button" data-macro-country="tw" aria-pressed="false" data-i18n="home.macroCountryTaiwan">Taiwan</button><button type="button" data-macro-country="ez" aria-pressed="false" data-i18n="home.macroCountryEuroArea">Euro area</button><button type="button" data-macro-country="uk" aria-pressed="false" data-i18n="home.macroCountryUk">United Kingdom</button><button type="button" data-macro-country="jp" aria-pressed="false" data-i18n="home.macroCountryJapan">Japan</button><button type="button" data-macro-country="kr" aria-pressed="false" data-i18n="home.macroCountryKorea">South Korea</button><button type="button" data-macro-country-clear hidden data-i18n="home.macroCountryClear">Clear</button></div>
 							<p class="market-updated" data-i18n="home.macroPeriodNote">Reference months differ by source. BIS CPI can lag national releases; overnight call rates are market rates, not central-bank policy targets.</p>
-							<section id="macro-leverage" class="macro-borrowing macro-leverage" aria-label="台股大盤本益比、融資餘額、融資維持率與追繳戶數"></section>
 							<section id="macro-volatility" class="macro-borrowing" aria-label="波動率指數：台灣 VIX 與美國 VIX"></section>
 							<section id="macro-borrowing" class="macro-borrowing" aria-label="投資借錢的實際利率：場內與場外"></section>
 							<div class="macro-view-toggle" role="tablist" aria-label="總經檢視方式"><button type="button" role="tab" aria-selected="true" aria-controls="macro-chains" data-macro-view="chains" data-i18n="home.macroViewChains">邏輯鏈</button><button type="button" role="tab" aria-selected="false" aria-controls="macro-indicator-grid" data-macro-view="grid" data-i18n="home.macroViewGrid">指標總表</button></div>
@@ -227,6 +231,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 								</details>
 							</section>
 							<p class="macro-source-note"><span data-i18n="home.macroSources">Sources</span>: <a href="https://www.bls.gov/developers/" target="_blank" rel="noopener noreferrer">BLS</a> · <a href="https://fred.stlouisfed.org/docs/api/fred/" target="_blank" rel="noopener noreferrer">FRED</a> · <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener noreferrer">Federal Reserve</a> · <a href="https://www.financecalendar.com/api/" target="_blank" rel="noopener noreferrer">Finance Calendar</a></p>
+                            </>}
 						</section>
 						</section>
 						<section class="home-zone" id="zone-stocks" aria-labelledby="zone-stocks-title">

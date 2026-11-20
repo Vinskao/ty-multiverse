@@ -6,7 +6,7 @@ import { addResearchDiagramZoom } from './researchDiagramZoom';
 type MermaidLib = { initialize(config: unknown): void; run(options: { nodes: HTMLElement[] }): Promise<void> };
 
 let script: Promise<MermaidLib> | null = null;
-function loadFromCdn(): Promise<MermaidLib> {
+export function loadFromCdn(): Promise<MermaidLib> {
   script ??= new Promise<MermaidLib>((done, fail) => {
     const ready = (window as unknown as { mermaid?: MermaidLib }).mermaid;
     if (ready) return done(ready);

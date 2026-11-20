@@ -168,3 +168,5 @@
 .macro-leverage .macro-trend-chart svg { max-height:340px; }
 /* 2026-11-18: the cloud-provider chart opens the block on a row of its own; P/E and margin loans stay side by side below it. */
 @media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }
+
+#macro-chains { scroll-margin-top: calc(var(--nav-height, 3.5rem) + .75rem); }

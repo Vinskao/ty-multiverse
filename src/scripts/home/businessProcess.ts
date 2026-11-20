@@ -1,7 +1,7 @@
-import { API_BASE } from '../../common/constants/api';
+import { GATEWAY_API_BASE } from '../../common/constants/api';
 
 /** The backend's hand-maintained BPMN 2.0 module overview (ty-multiverse-backend docs/PRODUCT_INTEGRITY.md). */
-export const BPMN_URL = `${API_BASE}/api/business-processes.bpmn`;
+export const BPMN_URL = `${GATEWAY_API_BASE}/api/business-processes.bpmn`;
 const TIMEOUT_MS = 20000;
 
 type Viewer = { importXML(xml: string): Promise<unknown>; get(name: 'canvas'): { zoom(level: string): void }; destroy(): void };
@@ -13,7 +13,21 @@ const defaultDeps: Deps = {
   createViewer: async container => {
     const [{ default: NavigatedViewer }] = await Promise.all([
       import('bpmn-js/lib/NavigatedViewer'), import('bpmn-js/dist/assets/diagram-js.css')]);
-    return new NavigatedViewer({ container }) as unknown as Viewer;
+    const viewer = new NavigatedViewer({ container });
+    const zoomScroll = viewer.get('zoomScroll') as {
+      toggle(enabled: boolean): void;
+      stepZoom(direction: number, position: { x: number; y: number }): void;
+    };
+    zoomScroll.toggle(false);
+    const listener = (event: WheelEvent) => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      const { left, top } = container.getBoundingClientRect();
+      zoomScroll.stepZoom(event.deltaY < 0 ? 1 : -1, { x: event.clientX - left, y: event.clientY - top });
+    };
+    container.addEventListener('wheel', listener, { passive: false });
+    viewer.on('diagram.destroy', () => container.removeEventListener('wheel', listener));
+    return viewer as unknown as Viewer;
   },
 };
 
@@ -25,6 +39,14 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
   if (!details || !canvas || !status || details.dataset.bound) return;
   details.dataset.bound = 'true';
   let state: 'idle' | 'loading' | 'done' = 'idle';
+  const lifecycle = new AbortController();
+  let viewer: Viewer | undefined;
+  if (root === document) {
+    document.addEventListener('astro:before-swap', () => {
+      lifecycle.abort();
+      viewer?.destroy();
+    }, { once: true });
+  }
   details.addEventListener('toggle', async () => {
     if (!details.open || state !== 'idle') return;
     state = 'loading';
@@ -33,15 +55,23 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
     status.className = 'business-process-status business-process-status--loading';
     status.textContent = '流程圖載入中…';
     try {
-      const response = await deps.fetch(BPMN_URL, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+      const response = await deps.fetch(BPMN_URL, { signal: AbortSignal.any([lifecycle.signal, AbortSignal.timeout(TIMEOUT_MS)]) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const xml = await response.text();
-      const viewer = await deps.createViewer(canvas);
+      if (lifecycle.signal.aborted) return;
+      viewer = await deps.createViewer(canvas);
+      if (lifecycle.signal.aborted) { viewer.destroy(); return; }
       await viewer.importXML(xml);
-      viewer.get('canvas').zoom('fit-viewport');
+      if (lifecycle.signal.aborted) return;
+      const fit = () => { if (details.open) viewer?.get('canvas').zoom('fit-viewport'); };
+      fit();
+      if (!details.open) details.addEventListener('toggle', fit, { once: true, signal: lifecycle.signal });
       status.hidden = true;
       state = 'done';
     } catch {
+      if (lifecycle.signal.aborted) return;
+      viewer?.destroy();
+      viewer = undefined;
       status.className = 'business-process-status business-process-status--error';
       status.textContent = '流程圖暫時無法載入，請收起後再展開重試。';
       state = 'idle';
