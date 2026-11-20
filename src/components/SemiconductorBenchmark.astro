@@ -53,9 +53,14 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
   </ol>
   <p>下方的研究報告依這條路線蒐集與選讀。年報與年度財務報告分開查閱。</p>
   {current && <p class="benchmark-version"><strong>第 {current.version} 版・{current.name}</strong>　{current.rationale}</p>}
-  {(current || rows?.length) ? <details class="overview"><summary>供應鏈綜觀研究圖・產業風向與持股定位</summary><pre class="mermaid">{current ? monitorDiagram(current, monitor) : supplyChainDiagram(rows ?? [])}</pre>
+  <section id="benchmark-overview" class="overview" aria-labelledby="benchmark-overview-title">
+    <h5 id="benchmark-overview-title">供應鏈綜觀研究圖・產業風向與持股定位</h5>
+    {(current || rows?.length) ? <>
+      <p data-benchmark-loading class="market-updated" role="status">載入研究圖中…</p>
+      <pre class="mermaid">{current ? monitorDiagram(current, monitor) : supplyChainDiagram(rows ?? [])}</pre>
+    </> : <p>Benchmark 資料暫未載入。</p>}
     {current && lineupLegend(current).length ? <p class="benchmark-legend">箭頭從供應者指向客戶。{lineupLegend(current).map(item => item.label).join('；')}。</p> : null}
-  </details> : null}
+  </section>
   <p>用途：龍頭年報定出各環節的成長敘事（綠＝順風、紅＝逆風、黃＝多空並存，灰＝尚無已審核主張）；持股以虛線「對照」接到它該比較的龍頭，並用同一期月營收（沒有則季營收）年增率比較：差距 ≥10 個百分點為超前（綠框）、≤−10 為落後（紅框），其餘同步；期別對不上就標資料不足。</p>
   {coverage && <p class="benchmark-coverage">目前 {coverage.total} 家龍頭中 {coverage.withClaims.length} 家已有審核過的年報主張、{coverage.withChecks} 家有驗證條件；{coverage.withClaims.length === 0 ? '主張由每日美股與總經 Opus 排程逐批從年報萃取（每次最多 6 家），經 20:30 審核後才上色，所以現在全是灰色、也沒有紅色。' : '其餘仍待排程萃取。'}</p>}
   {coverage?.unplaced.length ? <p class="benchmark-coverage">尚未對照到龍頭的持股（不畫在圖上）：{coverage.unplaced.map(holding => `${holding.name} ${holding.code}`).join('、')}。下次排程歸組後自動接上。</p> : null}
@@ -76,7 +81,6 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
       <p>{version.layers.flatMap(layer => layer.stages.flatMap(stage => stage.companies.map(company => `${company.company_name} ${company.code}`))).join('、')}</p>
     </div>)}
   </details> : null}
-  {!current && !rows?.length && <p>Benchmark 資料暫未載入。</p>}
 </section>
 <script>
   import { initBenchmarkDiagram } from '../scripts/market/benchmarkDiagram';
@@ -100,8 +104,17 @@ const coverage = current ? monitorCoverage(current, monitor) : null;
   .benchmark-versions { margin-block: .5rem 1rem; }
   .benchmark-versions summary { cursor: pointer; }
   .benchmark-versions p { margin: .5rem 0; line-height: 1.7; }
-  .overview { margin: .75rem 0 1rem; border: 1px solid #8885; border-radius: .6rem; }
-  .overview summary { cursor: pointer; padding: .7rem 1rem; font-weight: 650; }
+  .overview { scroll-margin-top: calc(var(--nav-height, 3.5rem) + .75rem); margin: .75rem 0 1rem; border: 1px solid #8885; border-radius: .6rem; }
+  .overview h5 { margin: 0; padding: .7rem 1rem; font-weight: 650; }
+  .overview > p { margin-inline: 1rem; }
+  [data-benchmark-loading]::before {
+    content: ""; display: inline-block; width: .85em; height: .85em; margin-inline-end: .45em;
+    vertical-align: -.1em; border: 2px solid currentColor; border-inline-end-color: transparent;
+    border-radius: 50%; animation: benchmark-spin .8s linear infinite;
+  }
+  @keyframes benchmark-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { [data-benchmark-loading]::before { animation: none; } }
+  .overview pre.mermaid:not([data-processed]) { display: none; }
   .overview pre.mermaid { overflow: visible; margin: 0; padding: .75rem; background: transparent; }
   .overview pre.mermaid :global(svg) { display: block; height: auto; }
   .overview :global(.market-research-diagram-controls) { padding-inline: .75rem; }

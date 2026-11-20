@@ -119,8 +119,7 @@ const showLoginAlert = Astro.url.searchParams.get('showLoginAlert') === 'true';
 							<div><dd>{formatNumber(reportStats.addedLast7Days, 'count')}</dd><dt data-i18n="home.statAdded">近 7 日新增</dt></div>
 						</dl>}
 						<div class="home-product-actions">
-							<a href="#research-zone" data-i18n="home.productExplore">探索研究圖</a>
-							<a href={mailtoHref('data', 'zh')} data-contact-topic="data" data-i18n="home.heroSuggestSource">推薦來源</a>
+							<a href="#benchmark-overview" data-i18n="home.productExplore">探索研究圖</a>
 							<a href="#market-reports" data-report-owner-only hidden data-i18n="home.heroUpload">上傳報告</a>
 							<a href="#open-source" data-i18n="openSource.explore">參與開源協作</a>
 						</div>

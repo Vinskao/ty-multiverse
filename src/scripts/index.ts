@@ -29,7 +29,7 @@ import { overseasDetailTabs, overseasHistoryPoints, overseasFundamentalsPayload,
 import { buildResearchContext, brokerAvailabilityLabel } from './market/researchContext';
 import { futuresProxyReadout, liveReadout, withLivePoint, type LiveFuturesProxy, type LiveVolatility } from './market/macroLive';
 import { biasBreakAlert } from './market/macroBiasAlert';
-import { MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle, MACRO_TOP_CHARTS } from './market/macroLayout';
+import { MACRO_BIAS_WINDOWS, MACRO_BORROWING_CHARTS, MACRO_MERGED_CHARTS, MACRO_VOLATILITY_CHARTS, macroAxisPlan, macroChartNeedsSeparateAxes, macroChartTitle, MACRO_TOP_CHARTS } from './market/macroLayout';
 import { MACRO_GROUP_SPECS, type MacroText } from './market/macroGroups';
 import { MACRO_SPEED_HEADINGS, isMacroPopulationCode, macroSpeedOf, splitMacroBySpeed, type MacroSpeed } from './market/macroSpeed';
 import macroLogicGraph from '../storages/macroLogicGraph.json';
@@ -1738,7 +1738,7 @@ function buildMacroRelease(event: MacroEvent) {
 
 // separateAxes: series in different units (e.g. USD/TWD, JPY/USD, dollar index) share the date axis but each of the
 // first three gets its own y-axis (left, right, outer right) drawn in that series' color.
-export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean } = {}): HTMLElement {
+export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMetricFormat, indicatorLabel: string, comparisons: Array<{ indicator: MacroIndicator; format: MacroMetricFormat; label: string }> = [], options: { separateAxes?: boolean; hiddenSeries?: Set<string> } = {}): HTMLElement {
     const wrap = document.createElement('section');
     wrap.className = 'macro-trend-chart';
     const heading = document.createElement('h6'); heading.className = 'macro-trend-title';
@@ -1863,7 +1863,7 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
     let showPoint: (index: number, hovering: boolean) => void;
     const addAccessiblePoint = (point: {period:string;value:number}, isExpected = false) => {
         const expectationLabel = marketText('One-year consumer expectation', '消費者一年期通膨預期');
-        const dot = add('circle', { cx: String(x(point.period)), cy: String(y(point.value)), r: isExpected ? '4' : points.length > 36 ? '2' : '3', class: isExpected ? 'macro-trend-point macro-trend-point--expected' : 'macro-trend-point', style: `--tone:${toneColor(isExpected ? 'expected' : 'base')}`, tabindex: '0', role: 'button', 'aria-label': `${isExpected ? expectationLabel : baseSeriesLabel} ${point.period} ${describeMacroPoint(point)}` });
+        const dot = add('circle', { cx: String(x(point.period)), cy: String(y(point.value)), r: isExpected ? '4' : points.length > 36 ? '2' : '3', class: isExpected ? 'macro-trend-point macro-trend-point--expected' : 'macro-trend-point macro-trend-point--base', style: `--tone:${toneColor(isExpected ? 'expected' : 'base')}`, tabindex: '0', role: 'button', 'aria-label': `${isExpected ? expectationLabel : baseSeriesLabel} ${point.period} ${describeMacroPoint(point)}` });
         dot.addEventListener('focus', () => showPoint(periodIndex.get(point.period) || 0, true));
         dot.addEventListener('click', () => showPoint(periodIndex.get(point.period) || 0, true));
     };
@@ -1901,12 +1901,16 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
         series.forEach((item, index) => {
             const value = macroValueAtOrBefore(item.values, period);
             const marker = markers[index];
+            if (options.hiddenSeries?.has(item.code ?? item.tone)) {
+                marker.style.display = 'none';
+                return;
+            }
             marker.style.display = hovering && value ? '' : 'none';
             if (!value) return;
             marker.setAttribute('cx', String(x(value.period))); marker.setAttribute('cy', String(yOn(item.axis, value.value)));
             const entry = document.createElement('span'); entry.className = 'macro-trend-readout-item';
             entry.style.setProperty('--tone', toneColor(item.tone));
-            const name = series.length > 1 || format === 'sales' ? item.label : marketText('Actual', '實際');
+            const name = series.length > 1 || format === 'sales' || options.hiddenSeries ? item.label : marketText('Actual', '實際');
             // A carried-forward close (another market's calendar) shows its own date.
             entry.textContent = `${name} ${describeMacroPoint(value, item.format, item.unit, item.code)}${value.period === period ? '' : ` (${value.period.slice(5)})`}`;
             readout.append(entry);
@@ -1937,11 +1941,32 @@ export function buildMacroTrendChart(indicator: MacroIndicator, format: MacroMet
     add('text', { x: String(left + plotWidth / 2), y: String(height - 1), 'text-anchor': 'middle', class: 'macro-trend-axis-title' }, marketText('Date', '日期'));
     bindChartZoom(svg, chartKey, dates, redraw, { left: left / width, right: (width - right) / width });
     wrap.append(svg, readout);
-    const legendItems: Array<{ label: string; tone: MacroSeriesTone }> = series.map((item) => ({ label: item.label, tone: item.tone }));
-    if (legendItems.length > 1) {
+    if (series.length > 1 || options.hiddenSeries) {
         const legend = document.createElement('div'); legend.className = 'macro-trend-legend macro-trend-legend--series';
-        for (const item of legendItems) {
-            const entry = document.createElement('span'); entry.className = `macro-trend-legend-item macro-trend-legend-item--${item.tone}`; entry.style.setProperty('--tone', toneColor(item.tone)); entry.textContent = item.label; legend.append(entry);
+        for (const item of series) {
+            const hiddenSeries = options.hiddenSeries;
+            const key = item.code ?? item.tone;
+            const entry = document.createElement(hiddenSeries ? 'button' : 'span');
+            entry.className = `macro-trend-legend-item macro-trend-legend-item--${item.tone}`;
+            entry.style.setProperty('--tone', toneColor(item.tone));
+            entry.textContent = item.label;
+            if (entry instanceof HTMLButtonElement && hiddenSeries) {
+                entry.type = 'button';
+                const update = () => {
+                    const hidden = hiddenSeries.has(key);
+                    entry.setAttribute('aria-pressed', String(!hidden));
+                    svg.querySelectorAll<SVGElement>(`.macro-trend-line--${item.tone}, .macro-trend-point--${item.tone}`)
+                        .forEach(node => { node.style.display = hidden ? 'none' : ''; });
+                };
+                update();
+                entry.addEventListener('click', () => {
+                    if (hiddenSeries.has(key)) hiddenSeries.delete(key);
+                    else hiddenSeries.add(key);
+                    update();
+                    showPoint(active, false);
+                });
+            }
+            legend.append(entry);
         }
         wrap.append(legend);
     }
@@ -2126,9 +2151,11 @@ function startVolatilityPolling() {
     volatilityTimer = window.setInterval(() => void refreshVolatilityLive(), VOLATILITY_POLL_MS);
 }
 
-// Top of the macro page: what borrowing to invest costs, 場內 (left) and 場外 (right). See MACRO_BORROWING_CHARTS.
-// 2026-11-17: Taiwan margin loans and the maintenance ratio, first on the macro page, each on its own y-axis.
-function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
+let macroBiasWindow = MACRO_BIAS_WINDOWS[0];
+const macroCspHiddenSeries = new Set<string>();
+const macroBiasHiddenSeries = new Set<string>();
+
+export function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
     const target = document.getElementById('macro-leverage');
     if (!target) return;
     const risk = MACRO_GROUPS.find((group) => group.id === 'market-risk');
@@ -2147,15 +2174,57 @@ function renderMacroLeverage(byCode: Map<string, MacroIndicator>) {
                 card.append(alert);
             }
         }
-        const own = 'labels' in chart ? chart.labels : undefined;   // a chart outside every card (the cloud providers') names its own lines
-        const [base, ...rest] = chart.codes.flatMap((code) => {
-            const indicator = byCode.get(code); const meta = spec.get(code) ?? (own?.[code] ? { format: 'raw' as const, label: () => marketText(own[code].en, own[code].zh) } : undefined);
-            return indicator && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
-        });
-        if (own) card.classList.add('macro-wide-card');
-        if (base) card.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest,
-            { separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))) }));
-        else { const empty = document.createElement('p'); empty.className = 'market-updated'; empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。'); card.append(empty); }
+        const own = 'labels' in chart ? chart.labels : undefined;
+        const host = document.createElement('div');
+        const draw = () => {
+            const isBias = chart.id === 'tw-bias';
+            const codes = isBias ? macroBiasWindow.codes : chart.codes;
+            const [base, ...rest] = codes.flatMap((code) => {
+                const indicator = byCode.get(code);
+                const meta = spec.get(code) ?? (own?.[code] ? { format: 'raw' as const, label: () => marketText(own[code].en, own[code].zh) } : undefined);
+                return indicator?.history?.length && meta ? [{ indicator, format: meta.format, label: meta.label() }] : [];
+            });
+            host.replaceChildren();
+            if (isBias && !byCode.get(macroBiasWindow.codes[1])?.history?.length) {
+                const unavailable = document.createElement('p');
+                unavailable.className = 'market-updated';
+                unavailable.textContent = marketText('U.S. index data unavailable for this window.', '此均線期間暫無美國指數資料。');
+                host.append(unavailable);
+            }
+            if (base) {
+                const hiddenSeries = isBias ? macroBiasHiddenSeries : chart.id === 'csp-capex' ? macroCspHiddenSeries : undefined;
+                host.append(buildMacroTrendChart(base.indicator, base.format, base.label, rest, {
+                    separateAxes: macroChartNeedsSeparateAxes([base, ...rest].map((item) => ({ format: item.format, unit: item.indicator.unit }))),
+                    hiddenSeries,
+                }));
+            } else {
+                const empty = document.createElement('p');
+                empty.className = 'market-updated';
+                empty.textContent = marketText('Collecting data; the chart fills in after the next refresh.', '資料收集中，下次更新後自動補上。');
+                host.append(empty);
+            }
+        };
+        if (chart.id === 'tw-bias') {
+            const label = document.createElement('label');
+            label.className = 'macro-bias-window';
+            label.textContent = marketText('Moving average', '移動平均線');
+            const select = document.createElement('select');
+            for (const interval of MACRO_BIAS_WINDOWS) {
+                const option = document.createElement('option');
+                option.value = String(interval.days);
+                option.textContent = marketText(interval.en, interval.zh);
+                select.append(option);
+            }
+            select.value = String(macroBiasWindow.days);
+            select.addEventListener('change', () => {
+                macroBiasWindow = MACRO_BIAS_WINDOWS.find(window => String(window.days) === select.value) ?? MACRO_BIAS_WINDOWS[0];
+                draw();
+            });
+            label.append(select);
+            card.append(label);
+        }
+        card.append(host);
+        draw();
         return card;
     });
     target.replaceChildren(...cards);

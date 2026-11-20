@@ -19,8 +19,6 @@ it('leads with search over public research and keeps paid Miner access secondary
   const actions = header.querySelector('.home-product-actions');
   expect(search!.compareDocumentPosition(actions!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(actions?.querySelector('[data-contact-topic="trial"]')).toBeNull();
-  expect(actions?.querySelector('a[href="#research-zone"]')).not.toBeNull();
-  expect(actions?.querySelector('a[data-contact-topic="data"][data-i18n="home.heroSuggestSource"]')).not.toBeNull();
   const upload = actions?.querySelector('a[href="#market-reports"]');
   expect(upload?.hasAttribute('data-report-owner-only') && upload?.hasAttribute('hidden')).toBe(true);
   expect(document.querySelector('details.home-miner [data-contact-topic="trial"]')).not.toBeNull();
@@ -37,4 +35,11 @@ it('shows library numbers and the topic ranking only from server data, never inv
   const script = readFileSync('src/scripts/index.ts', 'utf8');
   expect(script).toContain('initHeroSearch(document');
   expect(script).toContain("'[data-report-owner-only]'");
+});
+
+it('links the homepage research action to the visible benchmark and removes the source suggestion', () => {
+  document.body.innerHTML = readFileSync('src/pages/index.astro', 'utf8');
+  const actions = document.querySelector('.home-product-actions');
+  expect(actions?.querySelector('a[href="#benchmark-overview"]')).not.toBeNull();
+  expect(actions?.querySelector('a[data-contact-topic="data"][data-i18n="home.heroSuggestSource"]')).toBeNull();
 });

@@ -1,5 +1,5 @@
-// Draws the benchmark supply chain diagram when its <details> panel is opened. Mermaid is loaded only then,
-// from the same pinned CDN build the About page uses, so the homepage does not pay for it up front.
+// Draws the benchmark supply chain diagram using the same pinned Mermaid build as the About page.
+import { lazyLoader } from '../lazy';
 import { getMermaidConfig } from '../mermaid-theme';
 import { addResearchDiagramZoom } from './researchDiagramZoom';
 
@@ -20,33 +20,35 @@ function loadFromCdn(): Promise<MermaidLib> {
 }
 
 export function initBenchmarkDiagram(doc: Document = document, load: () => Promise<MermaidLib> = loadFromCdn): void {
-  for (const panel of doc.querySelectorAll<HTMLDetailsElement>('#benchmark details.overview')) {
+  for (const panel of doc.querySelectorAll<HTMLElement>('#benchmark-overview')) {
     if (panel.dataset.bound) continue;
     panel.dataset.bound = 'true';
     const draw = async () => {
       const nodes = [...panel.querySelectorAll<HTMLElement>('pre.mermaid:not([data-processed])')];
-      if (!panel.open || !nodes.length) return;
+      if (!nodes.length) return;
       try {
         const mermaid = await load();
         mermaid.initialize({ ...getMermaidConfig(doc.documentElement.classList.contains('theme-dark')), startOnLoad: false });
-        await mermaid.run({ nodes });
+        const currentNodes = nodes.filter(node => panel.contains(node));
+        if (!currentNodes.length) return;
+        await mermaid.run({ nodes: currentNodes });
         addResearchDiagramZoom(panel, 'zh');
-        highlightSearchTarget(panel, doc);
+        const code = searchTarget(doc);
+        const hasEvidence = code && [...doc.querySelectorAll<HTMLOptionElement>('[data-benchmark-evidence] option')].some(o => o.value === code);
+        if (!hasEvidence) highlightSearchTarget(panel, doc);
       } catch {
         for (const node of nodes) {
           const note = doc.createElement('p');
           note.textContent = '研究圖暫時無法載入，請稍後重新整理。';
           node.replaceWith(note);
         }
+      } finally {
+        panel.querySelector('[data-benchmark-loading]')?.remove();
       }
     };
-    panel.addEventListener('toggle', () => { void draw(); });
-    // A nav bar search hit links here as /?benchmark=CODE#benchmark. Companies with annual-report evidence land on
-    // the evidence picker instead (benchmarkMonitorClient); only the rest open the diagram at their node.
-    const code = searchTarget(doc);
-    const hasEvidence = code && [...doc.querySelectorAll<HTMLOptionElement>('[data-benchmark-evidence] option')].some(o => o.value === code);
-    if (code && !hasEvidence) panel.open = true;
-    void draw();
+    const loader = lazyLoader(panel, () => { void draw(); });
+    panel.addEventListener('benchmark:diagram-update', () => { if (loader.isLoaded()) void draw(); });
+    doc.addEventListener('astro:before-swap', () => loader.cancel(), { once: true });
   }
 }
 

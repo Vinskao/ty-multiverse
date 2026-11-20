@@ -21,6 +21,15 @@ it('falls back to one column on a phone', () => {
   expect(css).toMatch(/@media \(max-width: 760px\)[^\n]*\.macro-borrowing\s*\{\s*grid-template-columns:1fr/);
 });
 
-it('gives the cloud-provider chart a full row above the side-by-side pair', () => {
-  expect(rule('.macro-leverage .macro-wide-card')).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+it('puts cloud spending and index bias in adjacent grid cells', () => {
+  const script = readFileSync('src/scripts/index.ts', 'utf8');
+  expect(script).not.toContain('macro-wide-card');
+  const layout = readFileSync('src/scripts/market/macroLayout.ts', 'utf8');
+  expect(layout).toContain('[MACRO_CSP_CHART, MACRO_BIAS_CHART,');
+});
+
+it('pairs Taiwan and US bias series by the selected moving-average window', async () => {
+  const { MACRO_BIAS_WINDOWS } = await import('../../src/scripts/market/macroLayout');
+  expect(MACRO_BIAS_WINDOWS.map(window => window.codes)).toEqual([20, 60, 120, 240]
+    .map(days => [`TW_TAIEX_BIAS_${days}`, `US_SP500_BIAS_${days}`]));
 });

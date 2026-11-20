@@ -36,19 +36,27 @@ export const MACRO_CSP_CHART = {
         en: 'Quarterly, USD billions, from SEC filings (10-Q/10-K). A quarter is totalled only once all five have reported; fiscal years differ, so each is placed on the nearest calendar quarter (Oracle’s August quarter counts as September). When the spending line is above the cash-flow line, the build-out costs more than the quarter’s operating cash. Capital spending is purchases of property and equipment, finance leases excluded.' },
 } as const;
 
-/** 2026-11-18: TAIEX 乖離率, the close's distance from its 20-, 60- and 240-session averages (月線、季線、年線), in percent.
- *  maya-sawa derives it from the stored TAIEX closes. Not part of any card, so it carries its own labels. */
+const biasWindows = [
+    { days: 20, zh: '月線', en: '20-day' },
+    { days: 60, zh: '季線', en: '60-day' },
+    { days: 120, zh: '半年線', en: '120-day' },
+    { days: 240, zh: '年線', en: '240-day' },
+] as const;
+
+export const MACRO_BIAS_WINDOWS = biasWindows.map(window => ({
+    ...window,
+    codes: [`TW_TAIEX_BIAS_${window.days}`, `US_SP500_BIAS_${window.days}`] as const,
+}));
+
 export const MACRO_BIAS_CHART = {
-    id: 'tw-bias', codes: ['TW_TAIEX_BIAS_20', 'TW_TAIEX_BIAS_60', 'TW_TAIEX_BIAS_120', 'TW_TAIEX_BIAS_240'] as readonly string[],
-    labels: {
-        TW_TAIEX_BIAS_20: { zh: '月線乖離率（20 日，%）', en: '20-day bias (%)' },
-        TW_TAIEX_BIAS_60: { zh: '季線乖離率（60 日，%）', en: '60-day bias (%)' },
-        TW_TAIEX_BIAS_120: { zh: '半年線乖離率（120 日，%）', en: '120-day bias (%)' },
-        TW_TAIEX_BIAS_240: { zh: '年線乖離率（240 日，%）', en: '240-day bias (%)' },
-    } as Record<string, { zh: string; en: string }>,
-    title: { zh: '加權指數乖離率（月線、季線、年線）', en: 'TAIEX bias from its 20-, 60- and 240-day averages' },
-    note: { zh: '收盤價與移動平均線的距離，(收盤 ÷ 平均 − 1) × 100，單位 %。正值代表在均線之上，越大越過熱、越容易回檔；負值代表在均線之下，越深越超跌。由證交所每日加權指數收盤價換算，不是官方數字。',
-        en: 'How far the close sits from its moving average, (close ÷ average − 1) × 100, in percent. Positive is above the average (the larger, the more stretched and the likelier a pullback); negative is below it (the deeper, the more oversold). Computed from TWSE daily TAIEX closes, not an official figure.' },
+    id: 'tw-bias', codes: MACRO_BIAS_WINDOWS.flatMap(window => window.codes),
+    labels: Object.fromEntries(MACRO_BIAS_WINDOWS.flatMap(({ codes }) => [
+        [codes[0], { zh: '台灣加權指數', en: 'Taiwan TAIEX' }],
+        [codes[1], { zh: '美國 S&P 500', en: 'U.S. S&P 500' }],
+    ])) as Record<string, { zh: string; en: string }>,
+    title: { zh: '台美股市指數乖離率', en: 'Taiwan and U.S. index bias' },
+    note: { zh: '以各市場交易日的收盤價計算，(收盤 ÷ 移動平均 − 1) × 100，單位 %。正值高於均線，負值低於均線。',
+        en: 'Based on each market’s daily close: (close ÷ moving average − 1) × 100, in percent. Positive is above the moving average, negative is below.' },
 } as const;
 
 /** The charts that open the macro page, top to bottom. */

@@ -66,6 +66,10 @@
 .macro-trend-line--expected { stroke-dasharray:5 4; }
 .macro-trend-line--consensus { stroke-dasharray:2 4; }
 .macro-trend-legend--series { display:flex; flex-wrap:wrap; gap:.2rem .7rem; margin:.35rem 0; }
+.macro-trend-legend--series button { min-height: 40px; padding: .25rem .5rem; color: inherit; border: 1px solid var(--gray-700); border-radius: .35rem; background: transparent; cursor: pointer; }
+.macro-trend-legend--series button[aria-pressed="false"] { text-decoration: line-through; }
+.macro-bias-window { display: inline-flex; align-items: center; gap: .5rem; margin-block: .25rem; }
+.macro-bias-window select { min-height: 40px; color: inherit; background: var(--gray-999); border: 1px solid var(--gray-700); border-radius: .35rem; }
 .macro-trend-legend-item::before { content:""; display:inline-block; width:.75rem; height:2px; margin:0 .25rem .18rem 0; background:var(--tone,#70b7f0); vertical-align:middle; }
 .macro-trend-chart svg { cursor:crosshair; }
 .macro-trend-chart svg:focus-visible { outline:1px solid #70b7f0; outline-offset:2px; }
@@ -163,5 +167,4 @@
 .macro-leverage { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1100px; }
 .macro-leverage .macro-trend-chart svg { max-height:340px; }
 /* 2026-11-18: the cloud-provider chart opens the block on a row of its own; P/E and margin loans stay side by side below it. */
-.macro-leverage .macro-wide-card { grid-column:1 / -1; }
 @media (max-width: 760px) { .macro-borrowing { grid-template-columns:1fr; } }

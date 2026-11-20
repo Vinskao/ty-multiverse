@@ -36,7 +36,7 @@ describe('benchmark monitor diagram', () => {
     const root = document.createElement('section');
     root.id = 'benchmark';
     root.dataset.lineup = JSON.stringify(lineup);
-    root.innerHTML = '<details class="overview"><pre class="mermaid"></pre></details><select data-benchmark-evidence></select><div data-benchmark-readout></div><p data-benchmark-status></p>';
+    root.innerHTML = '<section id="benchmark-overview" class="overview"><pre class="mermaid"></pre></section><select data-benchmark-evidence></select><div data-benchmark-readout></div><p data-benchmark-status></p>';
     document.body.replaceChildren(root);
     const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ revision: '1', nodes: [], holdings: [] }) })
       .mockResolvedValue({ ok: true, json: async () => ({ revision: '2', nodes: [], holdings: [
@@ -46,7 +46,7 @@ describe('benchmark monitor diagram', () => {
       initBenchmarkMonitor();
       await vi.advanceTimersByTimeAsync(0);
       expect(root.querySelector('pre')!.textContent).not.toContain('★ 持股');
-      const panel = root.querySelector('details')!;
+      const panel = root.querySelector('#benchmark-overview')!;
       const viewport = document.createElement('div');
       viewport.className = 'market-research-diagram-viewport';
       viewport.append(panel.querySelector('pre')!);

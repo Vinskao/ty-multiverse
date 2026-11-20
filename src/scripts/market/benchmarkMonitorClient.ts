@@ -72,7 +72,7 @@ export function initBenchmarkMonitor(doc: Document = document): void {
       if (stopped) return;
       if (next.revision !== snapshot?.revision) {
         snapshot = next;
-        const panel = root.querySelector<HTMLDetailsElement>('details.overview');
+        const panel = root.querySelector<HTMLElement>('#benchmark-overview');
         const old = panel?.querySelector('pre.mermaid');
         if (old && panel) {
           const viewport = panel.querySelector('.market-research-diagram-viewport');
@@ -82,7 +82,7 @@ export function initBenchmarkMonitor(doc: Document = document): void {
           pre.className = 'mermaid';
           pre.textContent = monitorDiagram(lineup, next);
           old.replaceWith(pre);
-          panel.dispatchEvent(new Event('toggle'));
+          panel.dispatchEvent(new Event('benchmark:diagram-update'));
         }
         renderEvidence();
       }
