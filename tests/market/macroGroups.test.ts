@@ -68,10 +68,16 @@ describe('MACRO_GROUP_SPECS', () => {
             'DFII10', 'T10YIE', 'ECBDFR', 'IUDSOIA', 'IRSTCI01JPM156N', 'CBC_REDISCOUNT']));
     });
 
+    it('has an AI financing card with the cloud-provider ratio, CoreWeave liquidity and NVIDIA backstops, all from SEC filings', () => {
+        const codes = codesOf('ai-financing');
+        expect(codes.slice(0, 3)).toEqual(['CSP_CAPEX_OCF_RATIO', 'CRWV_CASH_TO_DEBT_DUE_12M', 'CRWV_OCF_TO_CAPEX']);
+        expect(codes).toEqual(expect.arrayContaining(['CRWV_DEBT_DUE_12M', 'CRWV_RPO', 'NVDA_NON_MARKETABLE_EQUITY', 'NVDA_GUARANTEE_EXPOSURE']));
+    });
+
     it('has a credit and default-risk card with spreads, bank delinquency and charge-offs, and stress indexes', () => {
         expect(codesOf('credit')).toEqual(['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y', 'DRALACBS', 'DRBLACBS',
-            'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS', 'CSP_CAPEX_OCF_RATIO', 'STLFSI4', 'NFCI']);
-        for (const metric of group('credit').metrics.slice(0, 11)) expect(metric.format, metric.code).toBe('percent');
+            'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS', 'STLFSI4', 'NFCI']);
+        for (const metric of group('credit').metrics.slice(0, 10)) expect(metric.format, metric.code).toBe('percent');
     });
 
     it('keeps liquidity and credit right after rates', () => {

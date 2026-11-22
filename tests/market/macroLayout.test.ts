@@ -56,8 +56,12 @@ describe('macro chart layout', () => {
         expect(MACRO_MERGED_CHARTS.credit).toEqual([
             ['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y'],
             ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'],
-            ['STLFSI4', 'NFCI'],
-            ['CSP_CAPEX_OCF_RATIO']]);
+            ['STLFSI4', 'NFCI']]);
+    });
+
+    it('draws CoreWeave liquidity, cloud-provider cash coverage and NVIDIA backstops in the AI financing card', () => {
+        expect(MACRO_MERGED_CHARTS['ai-financing'].flat()).toEqual(expect.arrayContaining([
+            'CSP_CAPEX_OCF_RATIO', 'CRWV_CASH_TO_DEBT_DUE_12M', 'CRWV_DEBT_DUE_12M', 'NVDA_GUARANTEE_EXPOSURE']));
     });
 
     // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.

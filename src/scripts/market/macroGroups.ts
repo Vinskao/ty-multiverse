@@ -92,9 +92,25 @@ export const MACRO_GROUP_SPECS: readonly MacroGroupSpec[] = [
         m('DRSFRMACBS', 'Bank delinquency · home mortgages', '銀行逾期率 · 住宅房貸', 'percent'),
         m('DRCCLACBS', 'Bank delinquency · credit cards', '銀行逾期率 · 信用卡', 'percent'),
         m('CORCCACBS', 'Credit card net charge-off rate', '信用卡淨沖銷率', 'percent'),
-        m('CSP_CAPEX_OCF_RATIO', 'Cloud providers: capital spending ÷ operating cash flow', '雲端大廠資本支出 ÷ 營業現金流', 'percent'),
         m('STLFSI4', 'St. Louis Fed financial stress (0 = normal)', '聖路易 Fed 金融壓力指數 (0 = 正常)', 'raw'),
         m('NFCI', 'Chicago Fed financial conditions (0 = average)', '芝加哥 Fed 金融狀況指數 (0 = 平均)', 'raw'),
+    ] },
+    // Who pays for the AI build-out (SEC filings, quarterly): the cloud providers' own cash, CoreWeave as the stressed neocloud
+    // borrower, and NVIDIA as the vendor that funds and backstops customers. Power energization has no clean free series yet.
+    { id: 'ai-financing', eventGroups: [], title: { en: 'AI build-out financing', zh: 'AI 建設的融資供應鏈' }, metrics: [
+        m('CSP_CAPEX_OCF_RATIO', 'Cloud providers: capital spending ÷ operating cash flow', '雲端大廠資本支出 ÷ 營業現金流', 'percent'),
+        m('CRWV_CASH_TO_DEBT_DUE_12M', 'CoreWeave: cash ÷ debt due within 12 months (times)', 'CoreWeave：現金 ÷ 12 個月內到期債務（倍）', 'raw'),
+        m('CRWV_OCF_TO_CAPEX', 'CoreWeave: operating cash flow ÷ capital spending', 'CoreWeave：營業現金流 ÷ 資本支出', 'percent'),
+        m('CRWV_CASH', 'CoreWeave cash (USD billion)', 'CoreWeave 現金（十億美元）', 'raw'),
+        m('CRWV_DEBT_DUE_12M', 'CoreWeave debt due within 12 months (USD billion)', 'CoreWeave 12 個月內到期債務（十億美元）', 'raw'),
+        m('CRWV_DEBT', 'CoreWeave debt (USD billion)', 'CoreWeave 債務（十億美元）', 'raw'),
+        m('CRWV_RPO', 'CoreWeave contract backlog (USD billion)', 'CoreWeave 合約積壓（十億美元）', 'raw'),
+        m('CRWV_OPERATING_CASH_FLOW', 'CoreWeave operating cash flow (USD billion)', 'CoreWeave 營業現金流（十億美元）', 'raw'),
+        m('CRWV_CAPEX', 'CoreWeave capital spending (USD billion)', 'CoreWeave 資本支出（十億美元）', 'raw'),
+        m('CRWV_INTEREST_EXPENSE', 'CoreWeave interest expense (USD billion)', 'CoreWeave 利息費用（十億美元）', 'raw'),
+        m('NVDA_NON_MARKETABLE_EQUITY', 'NVIDIA non-marketable equity stakes (USD billion)', '輝達非上市股權投資（十億美元）', 'raw'),
+        m('NVDA_GUARANTEE_EXPOSURE', 'NVIDIA guarantee exposure (USD billion)', '輝達擔保最大曝險（十億美元）', 'raw'),
+        m('NVDA_OPERATING_CASH_FLOW', 'NVIDIA operating cash flow (USD billion)', '輝達營業現金流（十億美元）', 'raw'),
     ] },
     { id: 'commodities', eventGroups: [], title: { en: 'Commodities', zh: '商品價格' }, metrics: [
         m('COMEX_GOLD_USD', 'COMEX gold futures', '美國 COMEX 黃金期貨', 'raw'),

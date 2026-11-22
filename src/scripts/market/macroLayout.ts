@@ -103,7 +103,10 @@ export const MACRO_MERGED_CHARTS: Record<string, readonly (readonly string[])[]>
     // Fed total assets with net liquidity, then the two drains (TGA, ON RRP) on their own scale: on one axis the
     // ~6,800B balance sheet flattened a 0-2,500B reverse repo. Money supply is the "money" growth chart.
     liquidity: [['WALCL', 'US_NET_LIQUIDITY_DAILY|US_NET_LIQUIDITY'], ['TGA_DAILY|WTREGEN', 'RRPONTSYD'], ['ECBASSETSW'], ['JPNASSETS']],
-    credit: [['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y'], ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'], ['STLFSI4', 'NFCI'], ['CSP_CAPEX_OCF_RATIO']],
+    credit: [['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y'], ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'], ['STLFSI4', 'NFCI']],
+    'ai-financing': [['CSP_CAPEX_OCF_RATIO', 'CRWV_OCF_TO_CAPEX'], ['CRWV_CASH_TO_DEBT_DUE_12M'], ['CRWV_CASH', 'CRWV_DEBT_DUE_12M', 'CRWV_DEBT'],
+        ['CRWV_OPERATING_CASH_FLOW', 'CRWV_CAPEX', 'CRWV_INTEREST_EXPENSE'], ['CRWV_RPO'],
+        ['NVDA_NON_MARKETABLE_EQUITY', 'NVDA_GUARANTEE_EXPOSURE', 'NVDA_OPERATING_CASH_FLOW']],
     'taiwan-employment': [['TW_EMPLOYED', 'TW_UNEMPLOYED']],
     pmi: [['TW_PMI', 'TW_NMI']],
     'tw-forecast': [['TIER_TW_GDP_FORECAST', 'TIER_TW_CPI_FORECAST']],
