@@ -54,9 +54,10 @@ describe('macro chart layout', () => {
 
     it('groups credit spreads, quarterly bank delinquency and weekly stress indexes in their own charts', () => {
         expect(MACRO_MERGED_CHARTS.credit).toEqual([
-            ['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y'],
+            ['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y'],
             ['DRALACBS', 'DRBLACBS', 'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS'],
-            ['STLFSI4', 'NFCI']]);
+            ['STLFSI4', 'NFCI'],
+            ['CSP_CAPEX_OCF_RATIO']]);
     });
 
     // 2026-10-29: the owner wants Taiwan's margin maintenance ratio and VIX in one chart, each on its own y-axis.

@@ -69,9 +69,9 @@ describe('MACRO_GROUP_SPECS', () => {
     });
 
     it('has a credit and default-risk card with spreads, bank delinquency and charge-offs, and stress indexes', () => {
-        expect(codesOf('credit')).toEqual(['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAA10Y', 'DRALACBS', 'DRBLACBS', 'DRSFRMACBS',
-            'DRCCLACBS', 'CORCCACBS', 'STLFSI4', 'NFCI']);
-        for (const metric of group('credit').metrics.slice(0, 8)) expect(metric.format, metric.code).toBe('percent');
+        expect(codesOf('credit')).toEqual(['BAMLH0A0HYM2', 'BAMLC0A0CM', 'BAMLC0A4CBBB', 'BAMLH0A3HYC', 'BAA10Y', 'DRALACBS', 'DRBLACBS',
+            'DRSFRMACBS', 'DRCCLACBS', 'CORCCACBS', 'CSP_CAPEX_OCF_RATIO', 'STLFSI4', 'NFCI']);
+        for (const metric of group('credit').metrics.slice(0, 11)) expect(metric.format, metric.code).toBe('percent');
     });
 
     it('keeps liquidity and credit right after rates', () => {
