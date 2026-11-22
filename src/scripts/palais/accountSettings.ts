@@ -9,6 +9,8 @@ const copy = {
   busy: ['Working…', '處理中…'],
   conflict: ['The application changed. The list has been refreshed.', '申請已更新，已重新載入清單。'],
   unavailable: ['Palais access is temporarily unavailable.', 'Palais 權限服務暫時無法使用。'],
+  disabled: ['Palais access applications are not open yet. Nothing is wrong with your account.', 'Palais 權限申請尚未開放，不是你的帳號有問題。'],
+  roles: ['Maker: any signed-in account can apply here. Checker: an approved account that reviews applications.', 'Maker（申請者）：登入後即可在此申請。Checker（審核者）：已核准的帳號，負責審核他人申請。'],
   error: ['Request failed. Refresh to try again.', '操作失敗，請重新整理後再試。'],
   login: ['Sign in to manage Palais access.', '請登入後管理 Palais 權限。'],
   queue: ['Pending applications', '待審申請'],
@@ -154,7 +156,7 @@ export function initPalaisAccountSettings(): void {
         }
         return;
       }
-      status.textContent = t(code === 503 || code === 404 ? 'unavailable' : 'error');
+      status.textContent = t(code === 404 ? 'disabled' : code === 503 ? 'unavailable' : 'error');
       if (!current) status.append(' ', button('refresh', () => void run(load)));
     } finally {
       status.setAttribute('aria-busy', 'false');
