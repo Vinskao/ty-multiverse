@@ -40,6 +40,15 @@ describe('bucket article rendering', () => {
     expect(html).not.toContain('<script>');
     expect(html).not.toContain('href="javascript:');
   });
+
+  it('keeps the page title as the only <h1> by moving article headings down one level', () => {
+    const html = renderArticle('# Redis 是什麼？\n\n## 設計理由\n\n###### 深層\n\n```\n<h1>code</h1>\n```');
+    expect(html).not.toMatch(/<h1>/);
+    expect(html).toContain('<h2>Redis 是什麼？</h2>');
+    expect(html).toContain('<h3>設計理由</h3>');
+    expect(html).toContain('<h6>深層</h6>');
+    expect(html).toContain('&lt;h1&gt;code&lt;/h1&gt;');
+  });
 });
 describe('blog proxy', () => {
   it('rejects arbitrary paths and anonymous writes before contacting upstream', async () => {

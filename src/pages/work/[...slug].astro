@@ -5,6 +5,7 @@ import { renderArticle } from '../../scripts/work/markdown';
 import ArticleSidebar from '../../components/ArticleSidebar.astro';
 import { articleTopic } from '../../scripts/work/articleTopic';
 import { sortArticles } from '../../scripts/work/catalog';
+import { articleStructuredData } from '../../scripts/work/structuredData';
 const slug = Astro.params.slug || '';
 let article;
 let status = 200;
@@ -17,8 +18,9 @@ else {
 }
 Astro.response.status = status;
 const html = article ? renderArticle(article.content) : '';
+const structuredData = article && status === 200 ? articleStructuredData(article, slug) : undefined;
 ---
-<BaseLayout title={`${article?.title || (status === 404 ? '找不到文章' : '文章服務暫時無法使用')} | TY Multiverse`} description={article?.description} lang="zh-TW" indexable={status === 200 && !!article}>
+<BaseLayout title={`${article?.title || (status === 404 ? '找不到文章' : '文章服務暫時無法使用')} | TY Multiverse`} description={article?.description} lang="zh-TW" indexable={status === 200 && !!article} structuredData={structuredData}>
   <div class="wrapper knowledge-page knowledge-detail knowledge-split">
     <ArticleSidebar projects={catalog} currentId={slug} />
     <div class="knowledge-article">
