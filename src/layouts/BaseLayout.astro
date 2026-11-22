@@ -47,9 +47,10 @@ interface Props {
 	canonical?: string;
 	lang?: string;
 	indexable?: boolean;
+	structuredData?: Record<string, unknown>;
 }
 
-const { title, description, canonical, lang = 'en', indexable = true } = Astro.props;
+const { title, description, canonical, lang = 'en', indexable = true, structuredData } = Astro.props;
 const pageMetadata = resolvePageMetadata(Astro.url.pathname, { canonical, indexable });
 const websiteStructuredData = Astro.url.pathname === '/' ? {
 	'@context': 'https://schema.org',
@@ -218,6 +219,7 @@ const websiteStructuredData = Astro.url.pathname === '/' ? {
 		<slot name="head" />
 		<MainHead title={title} description={description} canonical={pageMetadata.canonical} robots={pageMetadata.robots} lang={lang} />
 		{websiteStructuredData && <script type="application/ld+json" set:html={JSON.stringify(websiteStructuredData).replace(/</g, '\\u003c')} />}
+		{structuredData && <script type="application/ld+json" set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')} />}
 		<ClientRouter />
 	</head>
 	<body>
