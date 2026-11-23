@@ -24,7 +24,17 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .account-settings { max-width: 55rem; padding-block: 2rem; overflow-wrap: anywhere; }
   #access-apply:not([hidden]) { display: grid; gap: .75rem; }
   textarea { width: 100%; min-height: 5rem; color: inherit; background: var(--gray-999); }
-  button, :global(.access-action) { min-height: 44px; padding: .5rem .9rem; color: inherit; }
+  .account-settings h1 { font-size: var(--text-2xl); }
+  .account-settings h2 { font-size: var(--text-xl); }
+  .account-settings :global(h3) { font-size: var(--text-lg); }
+  .account-settings :global(button) {
+    min-height: 44px; padding: .5rem 1.1rem; font: inherit; font-weight: 600; cursor: pointer;
+    color: var(--gray-0); background: var(--gray-900);
+    border: 1px solid var(--gray-500); border-radius: var(--surface-radius-small);
+  }
+  .account-settings :global(button:hover:not(:disabled)) { border-color: var(--gray-0); }
+  .account-settings :global(button:disabled) { opacity: .6; cursor: not-allowed; }
+  #access-status :global(button) { display: block; margin-top: .75rem; }
   :global(.access-request) { display: grid; gap: .5rem; padding: .75rem; margin-block: .5rem; border: 1px solid var(--gray-700); }
   #access-status[aria-busy="true"]::before {
     content: ""; display: inline-block; width: 1em; height: 1em; margin-inline-end: .5rem;
