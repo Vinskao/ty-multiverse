@@ -3,6 +3,7 @@ import skillsData from '../storages/skills.json';
 import { mailtoHref } from '../scripts/contact';
 import { CREDENTIALS } from '../scripts/credentials';
 import SkillsBubbleChart from './SkillsBubbleChart';
+import HealthRecord from './HealthRecord.astro';
 import { skillBubbles } from '../scripts/skillBubbles';
 
 const bubbles = skillBubbles(skillsData.categories as any);
@@ -53,6 +54,7 @@ const bubbles = skillBubbles(skillsData.categories as any);
                 </details>
             ))}
         </div>
+        <HealthRecord />
     </details>
     <section class="maintenance-credentials" aria-labelledby="maintenance-credentials-title">
         <h3 id="maintenance-credentials-title" data-i18n="home.teamCredentials">技術認證</h3>
