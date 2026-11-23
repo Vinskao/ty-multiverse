@@ -66,6 +66,11 @@ describe('business process diagram on the home page', () => {
     expect(viewer.destroy).toHaveBeenCalledOnce();
   });
 
+  it('really hides the loading line: an author display rule must not override the hidden attribute', () => {
+    const css = readFileSync('src/components/BusinessProcessDiagram.astro', 'utf8');
+    expect(css).toMatch(/\.business-process-status\[hidden\]\s*\{\s*display:\s*none/);
+  });
+
   it('caps the diagram box so it never grows huge on a wide screen', () => {
     const css = readFileSync('src/components/BusinessProcessDiagram.astro', 'utf8');
     expect(css).toMatch(/\.business-process-canvas\s*\{[^}]*max-width:\s*1100px/);

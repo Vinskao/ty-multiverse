@@ -26,6 +26,7 @@
   .business-process-picker select { min-height: 44px; max-width: 100%; color: var(--gray-100); background: var(--gray-999); }
   .business-process-note { color: var(--gray-400); font-size: .85rem; margin: .5rem 0; }
   .business-process-status { font-size: .9rem; display: flex; align-items: center; gap: .5rem; }
+  .business-process-status[hidden] { display: none; }
   .business-process-status--loading::before {
     content: ''; width: 1rem; height: 1rem; border-radius: 50%;
     border: 2px solid currentColor; border-right-color: transparent; animation: business-process-spin .8s linear infinite;
