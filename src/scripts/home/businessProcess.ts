@@ -1,8 +1,8 @@
 import { GATEWAY_API_BASE } from '../../common/constants/api';
 
-/** The backend's hand-maintained BPMN 2.0 module overview (ty-multiverse-backend docs/PRODUCT_INTEGRITY.md). */
-export const BPMN_URL = `${GATEWAY_API_BASE}/api/business-processes.bpmn`;
-export const PALAIS_BPMN_URL = `${GATEWAY_API_BASE}/api/palais-access.bpmn`;
+/** Hand-maintained BPMN 2.0 overviews: gateway docs/BUSINESS_PROCESS_BPMN.md and backend docs/PRODUCT_INTEGRITY.md. */
+export const BACKEND_BPMN_URL = `${GATEWAY_API_BASE}/api/business-processes.bpmn`;
+export const GATEWAY_BPMN_URL = `${GATEWAY_API_BASE}/api/gateway.bpmn`;
 const TIMEOUT_MS = 20000;
 
 type Viewer = { importXML(xml: string): Promise<unknown>; get(name: 'canvas'): { zoom(level: string): void }; destroy(): void };
@@ -58,7 +58,7 @@ export function initBusinessProcess(root: ParentNode = document, deps: Deps = de
     status.className = 'business-process-status business-process-status--loading';
     status.textContent = '流程圖載入中…';
     try {
-      const response = await deps.fetch(picker?.value === 'palais' ? PALAIS_BPMN_URL : BPMN_URL, { signal: AbortSignal.any([lifecycle.signal, AbortSignal.timeout(TIMEOUT_MS)]) });
+      const response = await deps.fetch(picker?.value === 'backend' ? BACKEND_BPMN_URL : GATEWAY_BPMN_URL, { signal: AbortSignal.any([lifecycle.signal, AbortSignal.timeout(TIMEOUT_MS)]) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const xml = await response.text();
       if (lifecycle.signal.aborted) return;

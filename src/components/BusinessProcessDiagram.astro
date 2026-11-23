@@ -1,14 +1,14 @@
 ---
-// Backend's hand-maintained BPMN overview of the main business processes, drawn on demand (bpmn-js loads on open).
+// Hand-maintained BPMN overviews, one served by the gateway and one by the backend, drawn on demand (bpmn-js loads on open).
 ---
 <details class="home-transparency business-process" data-business-process>
   <summary>業務流程圖（BPMN）</summary>
-  <p class="business-process-note">後端維護的主要業務流程概覽，可拖曳、滾輪縮放。細部規則以各模組文件為準。</p>
+  <p class="business-process-note">Gateway 與 Backend 的業務流程概覽，可拖曳、滾輪縮放。細部規則以各模組文件為準。</p>
   <label class="business-process-picker">
     <span>流程</span>
     <select data-business-process-picker>
-      <option value="overview">主要業務流程</option>
-      <option value="palais">Palais 權限申請</option>
+      <option value="gateway">Gateway</option>
+      <option value="backend">Backend</option>
     </select>
   </label>
   <p class="business-process-status" data-business-process-status role="status" hidden></p>
