@@ -1,4 +1,5 @@
 import { formatNumber } from '../format/numbers';
+import { hasPalaisCheckerRole } from '../navigation/menu';
 
 type Lang = 'zh' | 'en';
 type Week = { start: string; km: number };
@@ -6,8 +7,11 @@ export type HealthSummary = {
   running: { runs: number; totalKm: number; peakDay: { day: string; km: number } | null;
     fastest: { day: string; km: number; secondsPerKm: number } | null;
     thisWeekKm: number; peakWeek: Week | null; weeks: Week[]; lastRun: string | null };
+};
+/** Other activities and metrics: owner and Palais Checkers only. */
+export type HealthOverview = {
   activities: { activity: string; sessions: number; km: number; hours: number }[];
-  metrics: { metric: string; unit: string; peak: number; peak_day: string; average30: number | null }[];
+  metrics: { metric: string; unit: string; last_day: string; latest: number | null; peak: number | null; peak_day: string; average30: number | null }[];
 };
 export type Tile = { label: string; value: string; note: string };
 
@@ -39,22 +43,43 @@ export function runningTiles({ running: r }: HealthSummary, lang: Lang): Tile[] 
   ];
 }
 
-export function metricTiles({ metrics }: HealthSummary, lang: Lang): Tile[] {
-  return metrics.map(m => {
-    const kind = COUNTS.has(m.metric) ? 'count' : 'decimal';
-    const unit = m.unit === 'count' ? '' : ` ${m.unit}`;
-    const show = (value: number | null) => (value === null ? '—' : formatNumber(value, kind) + unit);
-    return { label: METRICS[m.metric]?.[lang === 'zh' ? 0 : 1] ?? m.metric, value: show(m.peak),
-      note: lang === 'zh' ? `單日最高 ${day(m.peak_day)}；近 30 天日均 ${show(m.average30)}` : `Best day ${day(m.peak_day)}; 30-day daily average ${show(m.average30)}` };
-  });
+const readable = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+export function overviewTiles({ activities, metrics }: HealthOverview, lang: Lang): Tile[] {
+  const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
+  return [
+    ...activities.filter(a => a.activity !== 'Running').map(a => ({ label: readable(a.activity),
+      value: a.km > 0 ? km(a.km) : `${formatNumber(a.hours, 'decimal')} h`,
+      note: t(`${formatNumber(a.sessions, 'count')} 次，共 ${formatNumber(a.hours, 'decimal')} 小時`, `${formatNumber(a.sessions, 'count')} sessions, ${formatNumber(a.hours, 'decimal')} hours`) })),
+    ...metrics.map(m => {
+      const kind = COUNTS.has(m.metric) ? 'count' : 'decimal';
+      const unit = !m.unit || m.unit === 'count' ? '' : ` ${m.unit}`;
+      const show = (value: number | null) => (value === null ? '—' : formatNumber(value, kind) + unit);
+      return { label: METRICS[m.metric]?.[lang === 'zh' ? 0 : 1] ?? readable(m.metric), value: show(m.latest),
+        note: t(`${day(m.last_day)}；近 30 天平均 ${show(m.average30)}；最高 ${show(m.peak)}（${day(m.peak_day)}）`,
+          `${day(m.last_day)}; 30-day average ${show(m.average30)}; peak ${show(m.peak)} (${day(m.peak_day)})`) };
+    }),
+  ];
 }
 
-type Deps = { fetch: typeof fetch; lang: () => Lang; onLang: (callback: () => void) => void };
+/** Only decides whether to ask; the backend makes the real decision. */
+export function mayReadOverview(token: string | null): boolean {
+  if (hasPalaisCheckerRole(token)) return true;
+  try {
+    const claims = JSON.parse(atob((token ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return [claims.realm_access, ...Object.values(claims.resource_access ?? {})].some((access: any) => access?.roles?.includes('manage-users'));
+  } catch {
+    return false;
+  }
+}
+
+type Deps = { fetch: typeof fetch; lang: () => Lang; onLang: (callback: () => void) => void; token: () => string | null };
 const appLang = () => (window as any).AppLang;
 const defaults: Deps = {
   fetch: (...args) => fetch(...args),
   lang: () => (appLang()?.get() === 'zh' ? 'zh' : 'en'),
   onLang: callback => { appLang()?.onChange(callback); },
+  token: () => { try { return localStorage.getItem('token'); } catch { return null; } },
 };
 
 function element(tag: string, className: string, text = ''): HTMLElement {
@@ -73,6 +98,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
   if (!section || !details || !status || !body || !base || section.dataset.bound) return;
   section.dataset.bound = 'true';
   let data: HealthSummary | undefined;
+  let overview: HealthOverview | undefined;
   let state: 'idle' | 'loading' | 'done' = 'idle';
 
   const tiles = (rows: Tile[]) => {
@@ -110,7 +136,8 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     if (!data) return;
     const lang = deps.lang();
     const run = runningTiles(data, lang);
-    body.replaceChildren(...(run.length ? [tiles(run), chart(data.running.weeks, lang)] : []), tiles(metricTiles(data, lang)));
+    body.replaceChildren(...(run.length ? [tiles(run), chart(data.running.weeks, lang)] : []),
+      ...(overview ? [element('h4', 'health-private', lang === 'zh' ? '其他健康資料（僅 Palais 權限可見）' : 'Other health data (Palais access only)'), tiles(overviewTiles(overview, lang))] : []));
   };
   const load = async () => {
     if (!details.open || state !== 'idle') return;
@@ -123,8 +150,15 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
       const response = await deps.fetch(`${base}/health-data/summary`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       data = (await response.json()).data as HealthSummary;
+      const token = deps.token();
+      if (mayReadOverview(token)) {
+        // A refusal or failure here must not hide the public part.
+        const extra = await deps.fetch(`${base}/health-data/overview`, { headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+          cache: 'no-store', signal: AbortSignal.timeout(20000) }).catch(() => undefined);
+        overview = extra?.ok ? (await extra.json()).data as HealthOverview : undefined;
+      }
       state = 'done';
-      section.hidden = !data.running.runs && !data.metrics.length;
+      section.hidden = !data.running.runs && !overview;
       render();
     } catch {
       // Closing and reopening the block tries again.
