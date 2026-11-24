@@ -69,8 +69,8 @@ describe('health record', () => {
     await vi.waitFor(() => expect(page.root.querySelector('[aria-busy]')).toBeNull());
     await vi.waitFor(() => expect(page.section.hidden).toBe(true));
   });
-  it('credits Apple Health', () => {
-    expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toContain('Powered by Apple Health');
+  it('credits Apple Health and WorkOutDoors', () => {
+    expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toContain('Powered by Apple Health and WorkOutDoors');
   });
   it('caps the chart size', () => {
     expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toMatch(/\.health-chart \{[^}]*max-width/);
