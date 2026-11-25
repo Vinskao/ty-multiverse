@@ -1,6 +1,7 @@
 import { formatNumber } from '../format/numbers';
 import { getMermaidConfig } from '../mermaid-theme';
 import { loadFromCdn } from './benchmarkDiagram';
+import { addResearchDiagramZoom } from './researchDiagramZoom';
 import type { MarketReport } from './reports';
 import type { ReportRecency } from './reportStats';
 
@@ -51,6 +52,7 @@ export function reportClaimsDetails(
     status.textContent = zh ? '載入方向圖中…' : 'Loading diagram…';
     graph.append(status);
     const pre = document.createElement('pre');
+    pre.className = 'mermaid';
     const root = zh ? '主張方向 · 筆數 · 加權合計' : 'Direction · Count · Weighted total';
     const nodes = groupedClaims.map(({ claim }, index) => {
       const text = Array.from(claim.claim);
@@ -65,6 +67,9 @@ export function reportClaimsDetails(
         flowchart: { htmlLabels: false } });
       graph.append(pre);
       await mermaid.run({ nodes: [pre] });
+      addResearchDiagramZoom(graph, zh ? 'zh' : 'en');
+      const viewport = graph.querySelector<HTMLElement>('.market-research-diagram-viewport');
+      if (viewport) viewport.tabIndex = 0;
     } catch {
       pre.remove();
       const error = document.createElement('p');

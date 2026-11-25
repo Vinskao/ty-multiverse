@@ -240,8 +240,10 @@
 .market-report-direction { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-block: .4rem; }
 .market-report-direction select { min-height: 40px; color: inherit; background: var(--gray-999); border: 1px solid var(--gray-700); border-radius: .35rem; }
 .market-report-claims-graph { max-width: 640px; }
-.market-report-claims-graph pre { max-height: 420px; overflow: auto; }
-.market-report-claims-graph svg { display: block; width: max-content; max-width: none !important; }
+.market-report-claims-graph .market-research-diagram-viewport { max-height: min(420px, 70vh); }
+.market-report-claims-graph .market-research-diagram-viewport pre { margin: 0; padding: 0; }
+.market-report-claims-graph .market-research-diagram-controls { flex-wrap: wrap; }
+.market-report-claims-graph .market-research-diagram-controls button { min-width: 40px; min-height: 40px; }
 .market-report-graph-loading::before { content: ""; display: inline-block; width: .75em; height: .75em; margin-inline-end: .4em; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: page-loading-spin .8s linear infinite; }
 .market-report-claim--opposed { border-left-color: #e35d6a; color: #ff9ca4; }
 .market-report-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
