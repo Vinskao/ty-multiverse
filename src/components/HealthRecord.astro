@@ -24,6 +24,11 @@
   @keyframes health-spin { to { transform: rotate(360deg); } }
   .health-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin: 0 0 .8rem; }
   .health-tile { padding: .7rem .8rem; border: 1px solid var(--gray-700); border-radius: var(--surface-radius-small); }
+  .health-month .health-fill { background: none; }
+  .health-stack { display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+  .health-stack-hike { display: block; flex: 1 1 auto; background: var(--gray-500, #94a3b8); opacity: .55; }
+  .health-stack-run { display: block; flex: none; height: var(--run); background: var(--gray-300, #cbd5e1); }
+  .health-month:is(:hover, :focus-visible) .health-stack-run { background: var(--gray-0); }
   .health-other { font-size: .95rem; margin: 1rem 0 .5rem; }
   .health-activities { display: grid; gap: .4rem; margin: 0 0 .9rem; max-width: 720px; }
   .health-activity { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: .1rem .6rem; align-items: center; font-size: .82rem; }

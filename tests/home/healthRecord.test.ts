@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { activityBars, formatPace, initHealthRecord, metricCharts, runningTiles, type HealthOther, type HealthSummary } from '../../src/scripts/home/healthRecord';
+import { activityBars, formatPace, initHealthRecord, metricCharts, recordTiles, runningTiles, streakTiles, type HealthOther, type HealthRecords, type HealthSummary } from '../../src/scripts/home/healthRecord';
 
 const weeks = Array.from({ length: 12 }, (_, i) => ({ start: `2026-09-${String(i + 1).padStart(2, '0')}`, km: i }));
 const summary: HealthSummary = {
@@ -28,7 +28,7 @@ describe('health record', () => {
     expect(formatPace(305)).toBe('5:05 /km');
   });
   it('lists the running records and shows missing values as a dash', () => {
-    expect(runningTiles(summary, 'zh').map(t => t.value)).toEqual(['11.00 km', '5:00 /km', '4.00 km', '21.00 km', '26.50 km']);
+    expect(runningTiles(summary, 'zh').map(t => t.value)).toEqual(['11.00 km', '5:00 /km', '4.00 km', '21.00 km']);
   });
   it('charts each daily metric over its days and bars the other sports by time', () => {
     const [steps] = metricCharts(other, 'en');
@@ -73,5 +73,33 @@ describe('health record', () => {
   });
   it('caps the chart size', () => {
     expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toMatch(/\.health-chart \{[^}]*max-width/);
+  });
+  const records: HealthRecords = {
+    prs: [{ key: 'fastest5kS', value: 1500, day: '2026-10-01' }, { key: 'longestRunKm', value: 21.5, day: '2026-10-15' },
+      { key: 'mostAscentM', value: 849, day: '2026-10-17' }, { key: 'fastest10kPace', value: 418.6, day: '2026-10-15' }],
+    weekStreaks: [{ km: 10, current: 3, best: 5 }, { km: 40, current: 0, best: 0 }], dayStreak: 2, bestDayStreak: 4,
+    months: [{ month: '2026-10', runKm: 40, hikeKm: 10 }, { month: '2026-11', runKm: 6.08, hikeKm: 16.55 }],
+  };
+  it('lists personal records in a fixed order with Strava-like values', () => {
+    expect(recordTiles(records, 'en').map(t => [t.label, t.value, t.note])).toEqual([
+      ['🏆 Fastest 5 km', '25:00', '2026-10-01'], ['🏆 Fastest pace, 10 km+', '6:59 /km', '2026-10-15'],
+      ['🏆 Longest run', '21.50 km', '2026-10-15'], ['🏆 Biggest single climb', '849 m', '2026-10-17']]);
+  });
+  it('shows streaks only for distances that were ever reached', () => {
+    expect(streakTiles(records, 'zh').map(t => [t.label, t.value, t.note])).toEqual([
+      ['🔥 連續每週 10 km 以上', '3 週', '歷史最佳 5 週'], ['🔥 連續運動天數', '2 天', '歷史最佳 4 天']]);
+  });
+  it('draws records, streaks and a monthly running-and-hiking chart from the summary', async () => {
+    const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records } }) }));
+    const page = setup(fetcher);
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.root.querySelectorAll('.health-month')).toHaveLength(2));
+    expect(page.section.textContent).toContain('個人紀錄');
+    expect(page.section.textContent).toContain('連續紀錄');
+    expect(page.section.textContent).not.toContain('總里程');
+    page.root.querySelectorAll<HTMLButtonElement>('.health-month')[0].click();
+    expect(page.root.querySelectorAll('.health-readout')[1].textContent).toContain('跑步 40.00 km，健行 10.00 km');
+    page.english();
+    expect(page.section.textContent).toContain('Personal records');
   });
 });
