@@ -1,23 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { formatPace, initHealthRecord, mayReadOverview, overviewTiles, runningTiles, type HealthOverview, type HealthSummary } from '../../src/scripts/home/healthRecord';
+import { activityBars, formatPace, initHealthRecord, metricCharts, runningTiles, type HealthOther, type HealthSummary } from '../../src/scripts/home/healthRecord';
 
 const weeks = Array.from({ length: 12 }, (_, i) => ({ start: `2026-09-${String(i + 1).padStart(2, '0')}`, km: i }));
 const summary: HealthSummary = {
   running: { runs: 3, totalKm: 26.5, peakDay: { day: '2026-11-01', km: 11 }, fastest: { day: '2026-11-02', km: 5, secondsPerKm: 299.6 },
     thisWeekKm: 4, peakWeek: { start: '2026-10-26', km: 21 }, weeks, lastRun: '2026-11-02' },
 };
-const overview: HealthOverview = {
+const other: HealthOther = {
   activities: [{ activity: 'Running', sessions: 3, km: 26.5, hours: 3 }, { activity: 'CoreTraining', sessions: 2, km: 0, hours: 1.5 }],
   metrics: [{ metric: 'StepCount', unit: 'count', last_day: '2026-11-02', latest: 8000, peak: 30000, peak_day: '2026-11-01', average30: null }],
+  series: [{ metric: 'StepCount', day: '2026-11-01', value: 30000 }, { metric: 'StepCount', day: '2026-11-02', value: 8000 }],
 };
-const jwt = (roles: string[]) => `x.${btoa(JSON.stringify({ realm_access: { roles } }))}.y`;
-const setup = (fetcher: any, token: string | null = null) => {
+const setup = (fetcher: any) => {
   let lang: 'zh' | 'en' = 'zh';
   let changed = () => {};
   const root = document.createElement('div');
   root.innerHTML = '<details><section data-health-record hidden><p data-health-status hidden></p><div data-health-body></div></section></details>';
-  initHealthRecord(root, { fetch: fetcher, lang: () => lang, onLang: callback => { changed = callback; }, token: () => token }, 'https://x/tymb');
+  initHealthRecord(root, { fetch: fetcher, lang: () => lang, onLang: callback => { changed = callback; } }, 'https://x/tymb');
   return { root, section: root.querySelector<HTMLElement>('section')!, details: root.querySelector('details')!,
     english: () => { lang = 'en'; changed(); } };
 };
@@ -29,27 +29,26 @@ describe('health record', () => {
   });
   it('lists the running records and shows missing values as a dash', () => {
     expect(runningTiles(summary, 'zh').map(t => t.value)).toEqual(['11.00 km', '5:00 /km', '4.00 km', '21.00 km', '26.50 km']);
-    expect(overviewTiles(overview, 'en')).toEqual([
-      { label: 'Core Training', value: '1.50 h', note: '2 sessions, 1.50 hours' },
-      { label: 'Steps', value: '8,000', note: '2026-11-02; 30-day average —; peak 30,000 (2026-11-01)' }]);
   });
-  it('asks for the private overview only with Palais access, and keeps the public part when refused', async () => {
-    expect([null, 'bad', jwt(['member'])].map(mayReadOverview)).toEqual([false, false, false]);
-    expect(mayReadOverview(jwt(['manage-users']))).toBe(true);
-    const answer = (ok: boolean) => vi.fn(async (url: string) => (url.endsWith('/summary')
-      ? { ok: true, json: async () => ({ data: summary }) } : { ok, json: async () => ({ data: overview }) }));
-    const member = answer(true);
-    const plain = setup(member, jwt(['member']));
-    plain.details.open = true;
-    await vi.waitFor(() => expect(plain.root.querySelectorAll('.health-bar')).toHaveLength(12));
-    expect(member).toHaveBeenCalledTimes(1);
-    const allowed = setup(answer(true), jwt(['palais-checker']));
-    allowed.details.open = true;
-    await vi.waitFor(() => expect(allowed.section.textContent).toContain('步數'));
-    const refused = setup(answer(false), jwt(['palais-checker']));
-    refused.details.open = true;
-    await vi.waitFor(() => expect(refused.root.querySelectorAll('.health-bar')).toHaveLength(12));
-    expect(refused.section.textContent).not.toContain('步數');
+  it('charts each daily metric over its days and bars the other sports by time', () => {
+    const [steps] = metricCharts(other, 'en');
+    expect(steps).toMatchObject({ label: 'Steps', value: '8,000', note: '2026-11-02; 30-day average —; peak 30,000 (2026-11-01)' });
+    expect(steps.days.map(d => d.h)).toEqual([100, (8000 / 30000) * 100]);
+    expect(steps.days[0].text).toBe('2026-11-01：Steps 30,000');
+    expect(activityBars(other, 'zh')).toEqual([{ label: 'Core Training', text: '2 次 · 1.50 h', h: 100 }]);
+  });
+  it('shows the other health data to everyone, without any login', async () => {
+    const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, other } }) }));
+    const page = setup(fetcher);
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.root.querySelectorAll('.health-spark-bar')).toHaveLength(2));
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(page.section.textContent).toContain('其他健康資料');
+    expect(page.section.textContent).not.toContain('Palais');
+    page.root.querySelectorAll<HTMLButtonElement>('.health-spark-bar')[0].click();
+    expect(page.root.querySelector('.health-spark-card .health-readout')!.textContent).toContain('30,000');
+    page.english();
+    expect(page.section.textContent).toContain('Other health data');
   });
   it('loads when opened, shows each week on focus and follows the language', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: summary }) });

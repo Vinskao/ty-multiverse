@@ -1,5 +1,4 @@
 import { formatNumber } from '../format/numbers';
-import { hasPalaisCheckerRole } from '../navigation/menu';
 
 type Lang = 'zh' | 'en';
 type Week = { start: string; km: number };
@@ -7,11 +6,13 @@ export type HealthSummary = {
   running: { runs: number; totalKm: number; peakDay: { day: string; km: number } | null;
     fastest: { day: string; km: number; secondsPerKm: number } | null;
     thisWeekKm: number; peakWeek: Week | null; weeks: Week[]; lastRun: string | null };
+  other?: HealthOther;
 };
-/** Other activities and metrics: owner and Palais Checkers only. */
-export type HealthOverview = {
+/** Other activities and the daily activity totals; public together with the running statistics. */
+export type HealthOther = {
   activities: { activity: string; sessions: number; km: number; hours: number }[];
   metrics: { metric: string; unit: string; last_day: string; latest: number | null; peak: number | null; peak_day: string; average30: number | null }[];
+  series: { metric: string; day: string; value: number }[];
 };
 export type Tile = { label: string; value: string; note: string };
 
@@ -45,41 +46,43 @@ export function runningTiles({ running: r }: HealthSummary, lang: Lang): Tile[] 
 
 const readable = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
 
-export function overviewTiles({ activities, metrics }: HealthOverview, lang: Lang): Tile[] {
+export type MetricChart = { label: string; value: string; note: string; days: { day: string; value: number; text: string; h: number }[] };
+export type ActivityBar = { label: string; text: string; h: number };
+
+/** One chart per daily metric (the last 30 days) with its latest value, average and peak. */
+export function metricCharts({ metrics, series }: HealthOther, lang: Lang): MetricChart[] {
   const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
-  return [
-    ...activities.filter(a => a.activity !== 'Running').map(a => ({ label: readable(a.activity),
-      value: a.km > 0 ? km(a.km) : `${formatNumber(a.hours, 'decimal')} h`,
-      note: t(`${formatNumber(a.sessions, 'count')} 次，共 ${formatNumber(a.hours, 'decimal')} 小時`, `${formatNumber(a.sessions, 'count')} sessions, ${formatNumber(a.hours, 'decimal')} hours`) })),
-    ...metrics.map(m => {
-      const kind = COUNTS.has(m.metric) ? 'count' : 'decimal';
-      const unit = !m.unit || m.unit === 'count' ? '' : ` ${m.unit}`;
-      const show = (value: number | null) => (value === null ? '—' : formatNumber(value, kind) + unit);
-      return { label: METRICS[m.metric]?.[lang === 'zh' ? 0 : 1] ?? readable(m.metric), value: show(m.latest),
-        note: t(`${day(m.last_day)}；近 30 天平均 ${show(m.average30)}；最高 ${show(m.peak)}（${day(m.peak_day)}）`,
-          `${day(m.last_day)}; 30-day average ${show(m.average30)}; peak ${show(m.peak)} (${day(m.peak_day)})`) };
-    }),
-  ];
+  return metrics.map(m => {
+    const kind = COUNTS.has(m.metric) ? 'count' : 'decimal';
+    const unit = !m.unit || m.unit === 'count' ? '' : ` ${m.unit}`;
+    const show = (value: number | null) => (value === null ? '—' : formatNumber(value, kind) + unit);
+    const label = METRICS[m.metric]?.[lang === 'zh' ? 0 : 1] ?? readable(m.metric);
+    const rows = series.filter(r => r.metric === m.metric);
+    const max = Math.max(...rows.map(r => r.value), 1);
+    return { label, value: show(m.latest),
+      note: t(`${day(m.last_day)}；近 30 天平均 ${show(m.average30)}；最高 ${show(m.peak)}（${day(m.peak_day)}）`,
+        `${day(m.last_day)}; 30-day average ${show(m.average30)}; peak ${show(m.peak)} (${day(m.peak_day)})`),
+      days: rows.map(r => ({ day: r.day, value: r.value, text: `${day(r.day)}：${label} ${show(r.value)}`, h: (r.value / max) * 100 })) };
+  });
 }
 
-/** Only decides whether to ask; the backend makes the real decision. */
-export function mayReadOverview(token: string | null): boolean {
-  if (hasPalaisCheckerRole(token)) return true;
-  try {
-    const claims = JSON.parse(atob((token ?? '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return [claims.realm_access, ...Object.values(claims.resource_access ?? {})].some((access: any) => access?.roles?.includes('manage-users'));
-  } catch {
-    return false;
-  }
+/** Other sports as horizontal bars sized by time spent. */
+export function activityBars({ activities }: HealthOther, lang: Lang): ActivityBar[] {
+  const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
+  const rows = activities.filter(a => a.activity !== 'Running');
+  const max = Math.max(...rows.map(a => a.hours), 0.01);
+  return rows.map(a => ({ label: readable(a.activity),
+    text: [t(`${formatNumber(a.sessions, 'count')} 次`, `${formatNumber(a.sessions, 'count')} sessions`), a.km > 0 ? km(a.km) : '',
+      `${formatNumber(a.hours, 'decimal')} h`].filter(Boolean).join(' · '),
+    h: (a.hours / max) * 100 }));
 }
 
-type Deps = { fetch: typeof fetch; lang: () => Lang; onLang: (callback: () => void) => void; token: () => string | null };
+type Deps = { fetch: typeof fetch; lang: () => Lang; onLang: (callback: () => void) => void };
 const appLang = () => (window as any).AppLang;
 const defaults: Deps = {
   fetch: (...args) => fetch(...args),
   lang: () => (appLang()?.get() === 'zh' ? 'zh' : 'en'),
   onLang: callback => { appLang()?.onChange(callback); },
-  token: () => { try { return localStorage.getItem('token'); } catch { return null; } },
 };
 
 function element(tag: string, className: string, text = ''): HTMLElement {
@@ -98,7 +101,6 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
   if (!section || !details || !status || !body || !base || section.dataset.bound) return;
   section.dataset.bound = 'true';
   let data: HealthSummary | undefined;
-  let overview: HealthOverview | undefined;
   let state: 'idle' | 'loading' | 'done' = 'idle';
 
   const tiles = (rows: Tile[]) => {
@@ -131,13 +133,47 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     box.append(element('figcaption', '', t(`近 12 週跑量（公里，最高 ${km(max)}）`, `Running distance, last 12 weeks (km, top of scale ${km(max)})`)), bars, readout);
     return box;
   };
+  const activities = (other: HealthOther, lang: Lang) => {
+    const list = element('div', 'health-activities');
+    for (const row of activityBars(other, lang)) {
+      const item = element('div', 'health-activity');
+      const track = element('span', 'health-activity-track');
+      const fill = element('span', 'health-activity-fill');
+      fill.style.setProperty('--w', `${Math.max(row.h, 2)}%`);
+      track.append(fill);
+      item.append(element('span', 'health-activity-name', row.label), track, element('small', 'health-note', row.text));
+      list.append(item);
+    }
+    return list;
+  };
+  const sparks = (other: HealthOther, lang: Lang) => {
+    const grid = element('div', 'health-sparks');
+    for (const m of metricCharts(other, lang)) {
+      const card = element('figure', 'health-spark-card');
+      const bars = element('div', 'health-spark');
+      const readout = element('p', 'health-readout', m.value);
+      for (const d of m.days) {
+        const bar = element('button', 'health-spark-bar') as HTMLButtonElement;
+        bar.type = 'button';
+        bar.setAttribute('aria-label', d.text);
+        bar.title = d.text;
+        bar.style.setProperty('--h', `${Math.max(d.h, 3)}%`);
+        for (const event of ['mouseenter', 'focus', 'click']) bar.addEventListener(event, () => { readout.textContent = d.text; });
+        bars.append(bar);
+      }
+      readout.setAttribute('aria-live', 'polite');
+      card.append(element('figcaption', 'health-spark-title', m.label), element('p', 'health-value', m.value), bars, readout, element('small', 'health-note', m.note));
+      grid.append(card);
+    }
+    return grid;
+  };
   const render = () => {
     if (state === 'loading') status.textContent = deps.lang() === 'zh' ? '載入中…' : 'Loading…';
     if (!data) return;
     const lang = deps.lang();
     const run = runningTiles(data, lang);
     body.replaceChildren(...(run.length ? [tiles(run), chart(data.running.weeks, lang)] : []),
-      ...(overview ? [element('h4', 'health-private', lang === 'zh' ? '其他健康資料（僅 Palais 權限可見）' : 'Other health data (Palais access only)'), tiles(overviewTiles(overview, lang))] : []));
+      ...(data.other ? [element('h4', 'health-other', lang === 'zh' ? '其他健康資料' : 'Other health data'), activities(data.other, lang), sparks(data.other, lang)] : []));
   };
   const load = async () => {
     if (!details.open || state !== 'idle') return;
@@ -150,15 +186,8 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
       const response = await deps.fetch(`${base}/health-data/summary`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       data = (await response.json()).data as HealthSummary;
-      const token = deps.token();
-      if (mayReadOverview(token)) {
-        // A refusal or failure here must not hide the public part.
-        const extra = await deps.fetch(`${base}/health-data/overview`, { headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
-          cache: 'no-store', signal: AbortSignal.timeout(20000) }).catch(() => undefined);
-        overview = extra?.ok ? (await extra.json()).data as HealthOverview : undefined;
-      }
       state = 'done';
-      section.hidden = !data.running.runs && !overview;
+      section.hidden = !data.running.runs && !data.other?.metrics.length;
       render();
     } catch {
       // Closing and reopening the block tries again.
