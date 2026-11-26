@@ -85,9 +85,48 @@ describe('health record', () => {
       ['🏆 Fastest 5 km', '25:00', '2026-10-01'], ['🏆 Fastest pace, 10 km+', '6:59 /km', '2026-10-15'],
       ['🏆 Longest run', '21.50 km', '2026-10-15'], ['🏆 Biggest single climb', '849 m', '2026-10-17']]);
   });
+  it('renders distance and pace for heart rate and ascent records in both languages', async () => {
+    const longest = { value: 9, day: '2026-10-17' };
+    const fastest = { value: 300, day: '2026-10-16' };
+    const detailed = { ...records, prs: [
+      { key: 'lowestAvgHr', value: 120, day: longest.day, longest, fastest },
+      { key: 'mostAscentM', value: 849, day: longest.day, longest, fastest: null },
+    ] };
+    const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records: detailed } }) }));
+    const page = setup(fetcher);
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.section.textContent).toContain('120.00 bpm'));
+    expect(page.section.textContent).toContain('最低平均心率');
+    expect(page.section.textContent).toContain('最長距離 9.00 km · 2026-10-17');
+    expect(page.section.textContent).toContain('最快配速 5:00 /km · 2026-10-16');
+    expect(page.section.textContent).toContain('最快配速 —');
+    page.english();
+    expect(page.section.textContent).toContain('Lowest average heart rate');
+    expect(page.section.textContent).toContain('Biggest single climb');
+    expect(page.section.textContent).toContain('Longest distance 9.00 km');
+    expect(page.section.textContent).toContain('Fastest pace 5:00 /km');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
   it('shows streaks only for distances that were ever reached', () => {
     expect(streakTiles(records, 'zh').map(t => [t.label, t.value, t.note])).toEqual([
       ['🔥 連續每週 10 km 以上', '3 週', '歷史最佳 5 週'], ['🔥 連續運動天數', '2 天', '歷史最佳 4 天']]);
+  });
+  it('hides ended streaks even when they have a historical best', () => {
+    const ended = { ...records, dayStreak: 0, weekStreaks: [{ km: 10, current: 0, best: 5 }] };
+    expect(streakTiles(ended, 'zh')).toEqual([]);
+    expect(streakTiles(records, 'en').every(tile => tile.status === 'On streak')).toBe(true);
+    expect(streakTiles(records, 'zh').every(tile => tile.status === '連續中')).toBe(true);
+  });
+  it('labels the monthly distance axis and scales bars against its top tick', async () => {
+    const monthly = { ...records, months: [{ month: '2026-10', runKm: 43.64, hikeKm: 8.50 }] };
+    const page = setup(vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records: monthly } }) })));
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.root.querySelector('.health-month')).not.toBeNull());
+    const ticks = [...page.root.querySelectorAll('.health-axis-tick')].map(tick => tick.textContent);
+    expect(ticks).toEqual(['0', '10', '20', '30', '40', '50', '60']);
+    const bar = page.root.querySelector<HTMLElement>('.health-month')!;
+    expect(parseFloat(bar.style.getPropertyValue('--h'))).toBeCloseTo(52.14 / 60 * 100);
+    expect(page.root.querySelector('.health-axis-unit')?.textContent).toBe('km');
   });
   it('draws records, streaks and a monthly running-and-hiking chart from the summary', async () => {
     const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records } }) }));
@@ -96,6 +135,7 @@ describe('health record', () => {
     await vi.waitFor(() => expect(page.root.querySelectorAll('.health-month')).toHaveLength(2));
     expect(page.section.textContent).toContain('個人紀錄');
     expect(page.section.textContent).toContain('連續紀錄');
+    expect(page.root.querySelectorAll('.health-streak-status')).toHaveLength(2);
     expect(page.section.textContent).not.toContain('總里程');
     page.root.querySelectorAll<HTMLButtonElement>('.health-month')[0].click();
     expect(page.root.querySelectorAll('.health-readout')[1].textContent).toContain('跑步 40.00 km，健行 10.00 km');
