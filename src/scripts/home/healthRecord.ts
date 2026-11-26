@@ -38,8 +38,8 @@ export function runningTiles({ running: r }: HealthSummary, lang: Lang): Tile[] 
     { label: t('單日跑量高峰', 'Longest day'), value: r.peakDay ? km(r.peakDay.km) : '—', note: day(r.peakDay?.day ?? null) },
     { label: t('最快均速（3 公里以上）', 'Fastest average pace (3 km+)'), value: r.fastest ? formatPace(r.fastest.secondsPerKm) : '—',
       note: r.fastest ? `${km(r.fastest.km)} · ${day(r.fastest.day)}` : '' },
-    { label: t('本週累積', 'This week'), value: km(r.thisWeekKm), note: t('週一起算', 'From Monday') },
-    { label: t('單週最高', 'Best week'), value: r.peakWeek ? km(r.peakWeek.km) : '—', note: r.peakWeek ? t(`${r.peakWeek.start} 當週`, `Week of ${r.peakWeek.start}`) : '' },
+    { label: t('本週累積（跑步＋健行）', 'This week (running + hiking)'), value: km(r.thisWeekKm), note: t('週一起算', 'From Monday') },
+    { label: t('單週最高（跑步＋健行）', 'Best week (running + hiking)'), value: r.peakWeek ? km(r.peakWeek.km) : '—', note: r.peakWeek ? t(`${r.peakWeek.start} 當週`, `Week of ${r.peakWeek.start}`) : '' },
     { label: t('總里程', 'Total distance'), value: km(r.totalKm), note: t(`${formatNumber(r.runs, 'count')} 次`, `${formatNumber(r.runs, 'count')} runs`) },
   ];
 }
@@ -118,7 +118,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     const bars = element('div', 'health-bars');
     const readout = element('p', 'health-readout');
     const max = Math.max(...weeks.map(w => w.km), 1);
-    const text = (w: Week) => t(`${w.start} 當週：跑步 ${km(w.km)}`, `Week of ${w.start}: ran ${km(w.km)}`);
+    const text = (w: Week) => t(`${w.start} 當週：跑步＋健行 ${km(w.km)}`, `Week of ${w.start}: running + hiking ${km(w.km)}`);
     for (const week of weeks) {
       const bar = element('button', 'health-bar') as HTMLButtonElement;
       bar.type = 'button';
@@ -130,7 +130,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     }
     readout.textContent = weeks.length ? text(weeks[weeks.length - 1]) : '';
     readout.setAttribute('aria-live', 'polite');
-    box.append(element('figcaption', '', t(`近 12 週跑量（公里，最高 ${km(max)}）`, `Running distance, last 12 weeks (km, top of scale ${km(max)})`)), bars, readout);
+    box.append(element('figcaption', '', t(`近 12 週跑步＋健行距離（公里，最高 ${km(max)}）`, `Running + hiking distance, last 12 weeks (km, top of scale ${km(max)})`)), bars, readout);
     return box;
   };
   const activities = (other: HealthOther, lang: Lang) => {
