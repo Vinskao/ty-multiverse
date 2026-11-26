@@ -7,7 +7,7 @@ const clamp = (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.roun
 
 /** Zoom and pan for a rendered Mermaid research diagram: +/− buttons, ctrl + wheel around the cursor, drag to pan.
  *  A plain wheel still scrolls the page, so the diagram never traps the reader. It opens fitted to the viewport width. */
-export function addResearchDiagramZoom(section: HTMLElement, lang: 'en' | 'zh'): void {
+export function addResearchDiagramZoom(section: HTMLElement, lang: 'en' | 'zh', options: { centerVertically?: boolean } = {}): void {
     const svg = section.querySelector<SVGSVGElement>('pre.mermaid svg');
     if (!svg || section.querySelector('.market-research-diagram-controls')) return;
 
@@ -28,6 +28,11 @@ export function addResearchDiagramZoom(section: HTMLElement, lang: 'en' | 'zh'):
 
     let zoom = 1;
     const fitZoom = () => (viewport.clientWidth > 0 ? clamp(Math.min(1, (viewport.clientWidth - 2) / baseWidth)) : 1);
+    // A tall left-to-right tree has its root in the middle, so opening at the top shows only blank space and a fan of lines.
+    const home = () => {
+        viewport.scrollLeft = 0;
+        viewport.scrollTop = options.centerVertically ? Math.max(0, (viewport.scrollHeight - viewport.clientHeight) / 2) : 0;
+    };
     const applyZoom = () => {
         svg.style.width = `${baseWidth * zoom}px`;
         svg.style.minWidth = '0';
@@ -57,7 +62,7 @@ export function addResearchDiagramZoom(section: HTMLElement, lang: 'en' | 'zh'):
         return control;
     };
     button(t.zoomOut, '−', () => zoomTo(zoom - ZOOM_STEP));
-    button(t.reset, lang === 'zh' ? '重設' : 'Reset', () => { zoom = fitZoom(); applyZoom(); viewport.scrollLeft = 0; viewport.scrollTop = 0; });
+    button(t.reset, lang === 'zh' ? '重設' : 'Reset', () => { zoom = fitZoom(); applyZoom(); home(); });
     button(t.zoomIn, '+', () => zoomTo(zoom + ZOOM_STEP));
     const hint = document.createElement('span');
     hint.className = 'market-research-diagram-hint';
@@ -93,4 +98,5 @@ export function addResearchDiagramZoom(section: HTMLElement, lang: 'en' | 'zh'):
     section.append(viewport);
     zoom = fitZoom();
     applyZoom();
+    home();
 }

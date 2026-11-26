@@ -56,7 +56,7 @@ export function reportClaimsDetails(
     const root = zh ? '主張方向 · 筆數 · 加權合計' : 'Direction · Count · Weighted total';
     const nodes = groupedClaims.map(({ claim }, index) => {
       const text = Array.from(claim.claim);
-      const label = text.length > 72 ? `${text.slice(0, 72).join('')}…` : claim.claim;
+      const label = text.length > 40 ? `${text.slice(0, 40).join('')}…` : claim.claim;
       return `  D${directions.indexOf(claim.direction)} --> C${index}["p.${formatNumber(claim.page, 'count')} · ${mermaidClaimLabel(label)}"]`;
     });
     pre.textContent = ['flowchart LR', `  R["${root}"]`, ...counts.map((label, index) => `  R --> D${index}["${label}"]`), ...nodes].join('\n');
@@ -67,7 +67,7 @@ export function reportClaimsDetails(
         flowchart: { htmlLabels: false } });
       graph.append(pre);
       await mermaid.run({ nodes: [pre] });
-      addResearchDiagramZoom(graph, zh ? 'zh' : 'en');
+      addResearchDiagramZoom(graph, zh ? 'zh' : 'en', { centerVertically: true });
       const viewport = graph.querySelector<HTMLElement>('.market-research-diagram-viewport');
       if (viewport) viewport.tabIndex = 0;
     } catch {

@@ -60,4 +60,24 @@ describe('research diagram zoom controls', () => {
         viewport.dispatchEvent(new MouseEvent('pointerup', { bubbles: true }));
         expect(viewport.classList.contains('is-dragging')).toBe(false);
     });
+
+    it('opens a tall tree at its vertical middle when asked, and Reset returns there', () => {
+        const section = document.createElement('section');
+        section.innerHTML = '<h5>Claims</h5><pre class="mermaid"><svg width="800" viewBox="0 0 800 2000"></svg></pre>';
+        const proto = HTMLElement.prototype;
+        const scrollHeight = Object.getOwnPropertyDescriptor(proto, 'scrollHeight');
+        Object.defineProperty(proto, 'scrollHeight', { configurable: true, get: () => 2000 });
+        Object.defineProperty(proto, 'clientHeight', { configurable: true, get: () => 400 });
+        try {
+            addResearchDiagramZoom(section, 'en', { centerVertically: true });
+            const viewport = section.querySelector<HTMLElement>('.market-research-diagram-viewport')!;
+            expect(viewport.scrollTop).toBe(800);
+            viewport.scrollTop = 0;
+            section.querySelector<HTMLButtonElement>('[aria-label="Reset diagram size"]')!.click();
+            expect(viewport.scrollTop).toBe(800);
+        } finally {
+            if (scrollHeight) Object.defineProperty(proto, 'scrollHeight', scrollHeight); else delete (proto as any).scrollHeight;
+            delete (proto as any).clientHeight;
+        }
+    });
 });
