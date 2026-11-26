@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { activityBars, formatPace, initHealthRecord, metricCharts, recordTiles, runningTiles, streakTiles, type HealthOther, type HealthRecords, type HealthSummary } from '../../src/scripts/home/healthRecord';
+import { activityBars, formatPace, initHealthRecord, metricCharts, recordGroups, recordTiles, streakTiles, thisWeek, type HealthOther, type HealthRecords, type HealthSummary } from '../../src/scripts/home/healthRecord';
 
 const weeks = Array.from({ length: 12 }, (_, i) => ({ start: `2026-09-${String(i + 1).padStart(2, '0')}`, km: i }));
 const summary: HealthSummary = {
@@ -28,7 +28,10 @@ describe('health record', () => {
     expect(formatPace(305)).toBe('5:05 /km');
   });
   it('lists the running records and shows missing values as a dash', () => {
-    expect(runningTiles(summary, 'zh').map(t => t.value)).toEqual(['11.00 km', '5:00 /km', '4.00 km', '21.00 km']);
+    const week = thisWeek(summary, 'zh');
+    expect(week).toMatchObject({ value: '4.00 km', trend: 'down' });
+    expect(week.note).toBe('上週 10.00 km · 比上週少 6.00 km');
+    expect(thisWeek({ running: { ...summary.running, thisWeekKm: 12 } }, 'en').note).toBe('Last week 10.00 km · 2.00 km more than last week');
   });
   it('charts each daily metric over its days and bars the other sports by time', () => {
     const [steps] = metricCharts(other, 'en');
@@ -43,12 +46,12 @@ describe('health record', () => {
     page.details.open = true;
     await vi.waitFor(() => expect(page.root.querySelectorAll('.health-spark-bar')).toHaveLength(2));
     expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(page.section.textContent).toContain('其他健康資料');
+    expect(page.section.textContent).toContain('日常活動');
     expect(page.section.textContent).not.toContain('Palais');
     page.root.querySelectorAll<HTMLButtonElement>('.health-spark-bar')[0].click();
     expect(page.root.querySelector('.health-spark-card .health-readout')!.textContent).toContain('30,000');
     page.english();
-    expect(page.section.textContent).toContain('Other health data');
+    expect(page.section.textContent).toContain('Daily activity');
   });
   it('loads when opened, shows each week on focus and follows the language', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: summary }) });
@@ -59,7 +62,7 @@ describe('health record', () => {
     page.root.querySelectorAll<HTMLButtonElement>('.health-bar')[3].click();
     expect(page.root.querySelector('.health-readout')!.textContent).toContain('3.00 km');
     page.english();
-    expect(page.section.textContent).toContain('Longest day');
+    expect(page.section.textContent).toContain('This week (running + hiking)');
     expect(page.section.hidden).toBe(false);
   });
   it('hides itself when the backend fails', async () => {
@@ -141,5 +144,21 @@ describe('health record', () => {
     expect(page.root.querySelectorAll('.health-readout')[1].textContent).toContain('跑步 40.00 km，健行 10.00 km');
     page.english();
     expect(page.section.textContent).toContain('Personal records');
+  });
+  it('groups the records under speed, single outings and volume, skipping empty groups', () => {
+    const groups = recordGroups({ ...records, prs: [...records.prs, { key: 'bestWeekKm', value: 31, day: '2026-11-02' }] }, 'zh');
+    expect(groups.map(g => g.title)).toEqual(['速度與心率', '單次距離與爬升', '累積']);
+    expect(groups[0].tiles).toHaveLength(2);
+    expect(recordGroups({ ...records, prs: [{ key: 'bestWeekKm', value: 31, day: '2026-11-02' }] }, 'en').map(g => g.title)).toEqual(['Volume']);
+  });
+  it('tells the story in order: this week, months, records, streaks, daily activity', async () => {
+    const fetcher = vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records, other } }) }));
+    const page = setup(fetcher);
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.root.querySelectorAll('.health-block')).toHaveLength(5));
+    expect([...page.root.querySelectorAll('.health-block-title')].map(h => h.textContent)).toEqual(['本週', '每月距離', '個人紀錄', '連續紀錄', '日常活動']);
+    expect(page.root.querySelector('.health-legend')!.textContent).toContain('健行');
+    expect(page.root.querySelector('.health-bar.is-current')).not.toBeNull();
+    expect(page.root.querySelector('.health-hero-value')!.textContent).toBe('4.00 km');
   });
 });

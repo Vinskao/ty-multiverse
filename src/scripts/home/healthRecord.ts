@@ -46,16 +46,19 @@ export function formatPace(secondsPerKm: number): string {
 const km = (value: number) => `${formatNumber(value, 'decimal')} km`;
 const day = (value: string | null) => String(value ?? '').slice(0, 10);
 
-export function runningTiles({ running: r }: HealthSummary, lang: Lang): Tile[] {
+export type Hero = { label: string; value: string; note: string; trend: 'up' | 'down' | 'flat' | 'none' };
+
+/** This week's running + hiking distance against last week, the first thing a visitor wants to know. */
+export function thisWeek({ running: r }: HealthSummary, lang: Lang): Hero {
   const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
-  if (!r.runs) return [];
-  return [
-    { label: t('單日跑量高峰', 'Longest day'), value: r.peakDay ? km(r.peakDay.km) : '—', note: day(r.peakDay?.day ?? null) },
-    { label: t('最快均速（3 公里以上）', 'Fastest average pace (3 km+)'), value: r.fastest ? formatPace(r.fastest.secondsPerKm) : '—',
-      note: r.fastest ? `${km(r.fastest.km)} · ${day(r.fastest.day)}` : '' },
-    { label: t('本週累積（跑步＋健行）', 'This week (running + hiking)'), value: km(r.thisWeekKm), note: t('週一起算', 'From Monday') },
-    { label: t('單週最高（跑步＋健行）', 'Best week (running + hiking)'), value: r.peakWeek ? km(r.peakWeek.km) : '—', note: r.peakWeek ? t(`${r.peakWeek.start} 當週`, `Week of ${r.peakWeek.start}`) : '' },
-  ];
+  const last = r.weeks.length >= 2 ? r.weeks[r.weeks.length - 2].km : null;
+  const label = t('本週（跑步＋健行）', 'This week (running + hiking)');
+  if (last === null) return { label, value: km(r.thisWeekKm), note: t('週一起算', 'Counted from Monday'), trend: 'none' };
+  const diff = r.thisWeekKm - last;
+  const trend = Math.abs(diff) < 0.05 ? 'flat' : diff > 0 ? 'up' : 'down';
+  const compare = trend === 'flat' ? t('與上週相同', 'Same as last week')
+    : t(`比上週${diff > 0 ? '多' : '少'} ${km(Math.abs(diff))}`, `${km(Math.abs(diff))} ${diff > 0 ? 'more' : 'less'} than last week`);
+  return { label, value: km(r.thisWeekKm), note: `${t(`上週 ${km(last)}`, `Last week ${km(last)}`)} · ${compare}`, trend };
 }
 
 const readable = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
@@ -86,10 +89,21 @@ function prValue(key: string, value: number): string {
   return km(value);
 }
 
+const PR_GROUPS: { title: [string, string]; keys: string[] }[] = [
+  { title: ['速度與心率', 'Speed and heart rate'], keys: ['fastest1kS', 'fastest5kS', 'fastest10kPace', 'fastestHalfPace', 'lowestAvgHr'] },
+  { title: ['單次距離與爬升', 'Single outings'], keys: ['longestRunKm', 'longestHikeKm', 'mostAscentM'] },
+  { title: ['累積', 'Volume'], keys: ['bestWeekKm', 'bestMonthKm'] },
+];
+
+/** Records under three headings (speed, single outings, volume), each in a fixed order so the page does not jump around. */
+export function recordGroups(records: HealthRecords, lang: Lang): { title: string; tiles: Tile[] }[] {
+  return PR_GROUPS.map(g => ({ title: g.title[lang === 'zh' ? 0 : 1], tiles: recordTiles(records, lang, g.keys) })).filter(g => g.tiles.length);
+}
+
 /** Best single efforts, in a fixed order so the page does not jump around as records appear. */
-export function recordTiles({ prs }: HealthRecords, lang: Lang): Tile[] {
+export function recordTiles({ prs }: HealthRecords, lang: Lang, order: string[] = PR_ORDER): Tile[] {
   const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
-  return PR_ORDER.flatMap(key => {
+  return order.flatMap(key => {
     const pr = prs.find(p => p.key === key && p.value > 0);
     if (!pr) return [];
 
@@ -193,7 +207,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     const max = Math.max(...weeks.map(w => w.km), 1);
     const text = (w: Week) => t(`${w.start} 當週：跑步＋健行 ${km(w.km)}`, `Week of ${w.start}: running + hiking ${km(w.km)}`);
     for (const week of weeks) {
-      const bar = element('button', 'health-bar') as HTMLButtonElement;
+      const bar = element('button', week === weeks[weeks.length - 1] ? 'health-bar is-current' : 'health-bar') as HTMLButtonElement;
       bar.type = 'button';
       bar.setAttribute('aria-label', text(week));
       bar.style.setProperty('--h', `${(week.km / max) * 100}%`);
@@ -203,7 +217,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     }
     readout.textContent = weeks.length ? text(weeks[weeks.length - 1]) : '';
     readout.setAttribute('aria-live', 'polite');
-    box.append(element('figcaption', '', t(`近 12 週跑步＋健行距離（公里，最高 ${km(max)}）`, `Running + hiking distance, last 12 weeks (km, top of scale ${km(max)})`)), bars, readout);
+    box.append(element('figcaption', '', t(`近 12 週（公里，最高 ${km(max)}），最右邊亮色是本週`, `Last 12 weeks (km, top of scale ${km(max)}); the bright bar on the right is this week`)), bars, readout);
     return box;
   };
   const activities = (other: HealthOther, lang: Lang) => {
@@ -272,22 +286,60 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     readout.textContent = months.length ? text(months[months.length - 1]) : '';
     readout.setAttribute('aria-live', 'polite');
     plot.append(axis, bars);
-    box.append(element('figcaption', '', t(`每月距離（公里，最高 ${km(peak)}）：深色跑步、淺色健行`, `Distance per month (km, peak ${km(peak)}): dark running, light hiking`)), plot, readout);
+    box.append(element('figcaption', '', t(`公里，最高 ${km(peak)}`, `km, peak ${km(peak)}`)), plot, readout);
     return box;
+  };
+  const block = (title: string, caption: string, ...content: HTMLElement[]) => {
+    const wrap = element('section', 'health-block');
+    wrap.append(element('h4', 'health-block-title', title), element('p', 'health-caption', caption), ...content);
+    return wrap;
+  };
+  const hero = (summary: HealthSummary, lang: Lang) => {
+    const h = thisWeek(summary, lang);
+    const card = element('div', `health-hero health-hero-${h.trend}`);
+    const arrow = h.trend === 'up' ? '▲ ' : h.trend === 'down' ? '▼ ' : '';
+    card.append(element('p', 'health-hero-label', h.label), element('p', 'health-hero-value', h.value), element('p', 'health-hero-note', arrow + h.note));
+    return card;
+  };
+  const legend = (items: [string, string][]) => {
+    const list = element('p', 'health-legend');
+    for (const [cls, text] of items) {
+      const item = element('span', 'health-legend-item');
+      item.append(element('span', `health-swatch ${cls}`), text);
+      list.append(item);
+    }
+    return list;
   };
   const render = () => {
     if (state === 'loading') status.textContent = deps.lang() === 'zh' ? '載入中…' : 'Loading…';
     if (!data) return;
     const lang = deps.lang();
-    const run = runningTiles(data, lang);
+    const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
     const records = data.records;
-    const prs = records ? recordTiles(records, lang) : [];
+    const groups = records ? recordGroups(records, lang) : [];
     const streaks = records ? streakTiles(records, lang) : [];
-    body.replaceChildren(...(run.length ? [tiles(run), chart(data.running.weeks, lang)] : []),
-      ...(prs.length ? [element('h4', 'health-other', lang === 'zh' ? '個人紀錄' : 'Personal records'), tiles(prs)] : []),
-      ...(streaks.length ? [element('h4', 'health-other', lang === 'zh' ? '連續紀錄' : 'Streaks'), tiles(streaks)] : []),
-      ...(records && records.months.some(m => m.runKm + m.hikeKm > 0) ? [monthChart(records.months, lang)] : []),
-      ...(data.other ? [element('h4', 'health-other', lang === 'zh' ? '其他健康資料' : 'Other health data'), activities(data.other, lang), sparks(data.other, lang)] : []));
+    const hasMonths = !!records && records.months.some(m => m.runKm + m.hikeKm > 0);
+    const blocks: HTMLElement[] = [];
+    if (data.running.runs || data.running.weeks.some(w => w.km > 0)) {
+      blocks.push(block(t('本週', 'This week'), t('跑步加健行，週一起算，和上週比較', 'Running plus hiking from Monday, compared with last week'),
+        hero(data, lang), chart(data.running.weeks, lang)));
+    }
+    if (hasMonths) {
+      blocks.push(block(t('每月距離', 'Distance by month'), t('近 12 個月，跑步與健行分開看', 'The last 12 months, running and hiking apart'),
+        legend([['health-swatch-run', t('跑步', 'Running')], ['health-swatch-hike', t('健行', 'Hiking')]]), monthChart(records!.months, lang)));
+    }
+    if (groups.length) {
+      blocks.push(block(t('個人紀錄', 'Personal records'), t('歷史最佳的單次表現，日期是創下紀錄的那天', 'Best single performances; the date is the day it was set'),
+        ...groups.flatMap(g => [element('h5', 'health-group-title', g.title), tiles(g.tiles)])));
+    }
+    if (streaks.length) {
+      blocks.push(block(t('連續紀錄', 'Streaks'), t('目前正在持續中的紀錄，附歷史最佳', 'Streaks still going, with the best ever'), tiles(streaks)));
+    }
+    if (data.other) {
+      blocks.push(block(t('日常活動', 'Daily activity'), t('其他運動的時間，以及近 30 天每天的步數、距離、爬樓、運動時間與熱量', 'Time spent in other sports, and the last 30 days of steps, distance, flights, exercise and energy'),
+        activities(data.other, lang), sparks(data.other, lang)));
+    }
+    body.replaceChildren(...blocks);
   };
   const load = async () => {
     if (!details.open || state !== 'idle') return;

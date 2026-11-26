@@ -57,6 +57,24 @@
   .health-stack-hike { display: block; flex: 1 1 auto; background: var(--gray-500, #94a3b8); opacity: .55; }
   .health-stack-run { display: block; flex: none; height: var(--run); background: var(--gray-300, #cbd5e1); }
   .health-month:is(:hover, :focus-visible) .health-stack-run { background: var(--gray-0); }
+  .health-block { margin: 0 0 1.6rem; }
+  .health-block-title { font-size: 1.05rem; margin: 0 0 .15rem; }
+  .health-caption { margin: 0 0 .6rem; font-size: .78rem; color: var(--gray-400); }
+  .health-group-title { margin: .7rem 0 .35rem; font-size: .82rem; color: var(--gray-300); font-weight: 600; }
+  .health-hero { margin: 0 0 .8rem; padding: .9rem 1rem; max-width: 720px; border: 1px solid var(--gray-700); border-radius: var(--surface-radius-small); }
+  .health-hero p { margin: 0; }
+  .health-hero-label { font-size: .8rem; color: var(--gray-400); }
+  .health-hero-value { font-size: 2rem; font-weight: 700; color: var(--gray-0); line-height: 1.2; }
+  .health-hero-note { font-size: .82rem; color: var(--gray-300); }
+  .health-hero-up .health-hero-note { color: #6ccf8f; }
+  .health-hero-down .health-hero-note { color: #f0a35e; }
+  .health-legend { display: flex; flex-wrap: wrap; gap: .9rem; margin: 0 0 .3rem; font-size: .78rem; color: var(--gray-300); }
+  .health-legend-item { display: inline-flex; align-items: center; gap: .35rem; }
+  .health-swatch { width: .8rem; height: .8rem; border-radius: 2px; display: inline-block; }
+  .health-swatch-run { background: var(--gray-300, #cbd5e1); }
+  .health-swatch-hike { background: var(--gray-500, #94a3b8); opacity: .55; }
+  .health-bar.is-current .health-fill { background: var(--gray-0); }
+  .health-bar.is-current small { color: var(--gray-0); font-weight: 600; }
   .health-other { font-size: .95rem; margin: 1rem 0 .5rem; }
   .health-activities { display: grid; gap: .4rem; margin: 0 0 .9rem; max-width: 720px; }
   .health-activity { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: .1rem .6rem; align-items: center; font-size: .82rem; }
