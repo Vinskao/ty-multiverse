@@ -338,12 +338,13 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     const streaks = records ? streakTiles(records, lang) : [];
     const hasMonths = !!records && records.months.some(m => m.runKm + m.hikeKm > 0);
     const blocks: HTMLElement[] = [];
+    const pair: HTMLElement[] = []; // the weekly and monthly charts sit side by side
     if (data.running.runs || data.running.weeks.some(w => w.km > 0)) {
-      blocks.push(block(t('本週', 'This week'), t('跑步加健行，週一起算，和上週比較', 'Running plus hiking from Monday, compared with last week'),
+      pair.push(block(t('本週', 'This week'), t('跑步加健行，週一起算，和上週比較', 'Running plus hiking from Monday, compared with last week'),
         hero(data, lang), chart(data.running.weeks, lang)));
     }
     if (hasMonths) {
-      blocks.push(block(t('每月距離', 'Distance by month'), t('近 12 個月，跑步與健行分開看', 'The last 12 months, running and hiking apart'),
+      pair.push(block(t('每月距離', 'Distance by month'), t('近 12 個月，跑步與健行分開看', 'The last 12 months, running and hiking apart'),
         legend([['health-swatch-run', t('跑步', 'Running')], ['health-swatch-hike', t('健行', 'Hiking')]]), monthChart(records!.months, lang)));
     }
     if (groups.length) {
@@ -357,6 +358,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
       blocks.push(block(t('日常活動', 'Daily activity'), t('其他運動的時間，以及近 30 天每天的步數、距離、爬樓、運動時間與熱量', 'Time spent in other sports, and the last 30 days of steps, distance, flights, exercise and energy'),
         activities(data.other, lang), sparks(data.other, lang)));
     }
+    if (pair.length) { const row = element('div', 'health-pair'); row.append(...pair); blocks.unshift(row); }
     body.replaceChildren(...blocks);
   };
   const load = async () => {
