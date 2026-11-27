@@ -11,7 +11,7 @@ describe('nav login button on mobile', () => {
   });
 
   it('opens the sign-in popover inside the clipped drawer so the market banner cannot cover it', () => {
-    expect(mobile).toMatch(/.nav-auth-popovers*{[^}]*position:s*static/);
-    expect(mobile).toMatch(/.nav-auth:focus-within .nav-auth-popovers*{[^}]*display:s*block/);
+    expect(mobile).toMatch(/\.nav-auth-popover\s*\{[^}]*position:\s*static/);
+    expect(mobile).toMatch(/\.nav-auth:focus-within \.nav-auth-popover\s*\{[^}]*display:\s*block/);
   });
 });
