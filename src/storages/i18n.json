@@ -73,6 +73,7 @@
     "researchGraph": { "en": "Research graph", "zh": "研究圖" },
     "aiUsage": { "en": "AI usage", "zh": "AI 使用紀錄" },
     "privacy": { "en": "Privacy Policy", "zh": "隱私權政策" },
+    "contact": { "en": "Contact", "zh": "聯絡我們" },
     "apiReference": { "en": "API reference", "zh": "API 文件" },
     "llms": { "en": "AI site map", "zh": "AI 網站地圖" },
     "briefJson": { "en": "Holdings brief JSON", "zh": "持股摘要 JSON" },

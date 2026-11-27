@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
 import { readBlog } from '../services/server/blog';
 import { buildSitemapXml } from '../scripts/seo/siteMetadata';
+import { isDailyReading } from '../scripts/seo/articleSeo';
 
 export const prerender = false;
 
-const publicPaths = ['/', '/about', '/work', '/learn', '/api-reference'];
+const publicPaths = ['/', '/about', '/contact', '/privacy', '/work', '/learn', '/api-reference'];
 // Last article list that loaded: a slow or restarting Maya must not drop every article from the sitemap (2026-11-14).
 let lastArticlePaths: string[] = [];
 
@@ -14,7 +15,7 @@ export const GET: APIRoute = async () => {
     const articles = await readBlog();
     if (Array.isArray(articles)) {
       lastArticlePaths = articles
-        .filter(article => typeof article?.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.id))
+        .filter(article => typeof article?.id === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(article.id) && !isDailyReading(article))
         .map(article => `/work/${article.id}`);
     }
   } catch {

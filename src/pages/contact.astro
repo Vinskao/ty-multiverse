@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { CONTACT_EMAIL as email } from '../scripts/contact';
+---
+<BaseLayout title="聯絡我們 | TY Multiverse" description="與 TY Multiverse 的經營者聯絡：合作洽詢、內容更正、隱私或廣告相關問題。" lang="zh-TW">
+  <article class="wrapper contact-page">
+    <p class="knowledge-eyebrow">TY MULTIVERSE / CONTACT</p>
+    <h1>聯絡我們</h1>
+    <p>TY Multiverse（TY 市場研究室）由高天逸（TY）個人經營，內容包含市場研究、工程筆記與個人專案紀錄。歡迎來信。</p>
+
+    <h2>電子郵件</h2>
+    <p><a href={`mailto:${email}`}>{email}</a></p>
+
+    <h2>可以寫信的事</h2>
+    <ul>
+      <li>合作洽詢與專案邀約</li>
+      <li>文章或資料有誤，請求更正</li>
+      <li>隱私、Cookie 或廣告相關問題（另見<a href="/privacy/">隱私權說明</a>）</li>
+      <li>想訂閱或取消每日精讀信件的問題</li>
+    </ul>
+
+    <h2>關於這個網站</h2>
+    <p>想知道網站在做什麼、作者的背景，請看<a href="/about/">關於頁</a>。工程筆記與開發紀錄在<a href="/work/">部落格</a>。</p>
+
+    <h2>English</h2>
+    <p>TY Multiverse is run by TY (Tian-Yi Kao) as a personal market-research and engineering notes site. For collaboration, corrections, or privacy and ad questions, write to <a href={`mailto:${email}`}>{email}</a>.</p>
+  </article>
+</BaseLayout>
+<style>
+  .contact-page { max-width: 56rem; padding-block: 3rem 6rem; color: var(--gray-100); line-height: 1.75; }
+  .contact-page h1 { margin: .4rem 0 1.5rem; }
+  .contact-page h2 { margin: 2rem 0 .5rem; font-size: 1.25rem; }
+  .contact-page a { color: inherit; text-underline-offset: 4px; }
+</style>
