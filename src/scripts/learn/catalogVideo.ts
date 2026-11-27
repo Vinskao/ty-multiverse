@@ -3,6 +3,9 @@
 // iOS (low-power mode, data saver) blocks autoplay and shows a native play button, so we force
 // muted + play() and retry on the first touch / scroll / tab return.
 export const CATALOG_FADE_SECONDS = 1;
+const START_GRACE_SECONDS = 2;
+const BROKEN_RETRY_MS = 30_000;
+const WATCHDOG_MS = 3000;
 
 export const CATALOG_CLIP_BASE = 'https://tymultiverse.cc/images/people/walking';
 export const CATALOG_MAX_NUMBERED_CLIPS = 200;
@@ -70,7 +73,12 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     video.style.opacity = visible ? '1' : '0';
-    video.addEventListener('error', () => { broken.add(video); video.style.opacity = '0'; });
+    video.addEventListener('error', () => {
+      broken.add(video);
+      video.style.opacity = '0';
+      setTimeout(() => broken.delete(video), BROKEN_RETRY_MS); // a clip that failed once (network, low power) gets another chance
+      if (video === active) recover();
+    });
   };
   all.forEach((video, index) => prepare(video, index === 0));
 
@@ -101,6 +109,27 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
       outgoing.currentTime = 0;
       fading = false;
     }, fadeSeconds * 1000);
+    // The switch is only real once the new clip moves: if it never started, bring the old one back instead of leaving a black frame.
+    setTimeout(() => {
+      if (active !== incoming || (incoming.currentTime >= 0.1 && !incoming.paused)) return;
+      broken.add(incoming);
+      setTimeout(() => broken.delete(incoming), BROKEN_RETRY_MS);
+      incoming.style.opacity = '0';
+      outgoing.style.opacity = '1';
+      outgoing.currentTime = 0;
+      active = outgoing;
+      play(outgoing);
+    }, (fadeSeconds + START_GRACE_SECONDS) * 1000);
+  };
+  /** The active clip failed: fade to another one that works, or, when none does, show the poster behind the frame. */
+  const recover = () => {
+    const other = all.find(video => video !== active && !broken.has(video) && allowed(video));
+    if (!other) return;
+    fading = false;
+    active = other;
+    other.currentTime = 0;
+    other.style.opacity = '1';
+    play(other);
   };
 
   const wire = (video: HTMLVideoElement) => {
@@ -115,6 +144,18 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
   all.forEach(wire);
 
   play(active);
+  // Watchdog: a clip that stops advancing without any event (stalled network, iOS suspending media) is nudged, then reloaded.
+  let lastTime = -1;
+  let stalled = 0;
+  setInterval(() => {
+    if (document.hidden || fading) return;
+    const stuck = active.paused || (active.currentTime === lastTime && !active.ended);
+    lastTime = active.currentTime;
+    stalled = stuck ? stalled + 1 : 0;
+    if (!stuck) return;
+    if (stalled >= 3) { stalled = 0; active.load(); }
+    play(active);
+  }, WATCHDOG_MS);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && active.paused) play(active); });
   for (const type of ['touchstart', 'pointerdown', 'click', 'scroll', 'keydown']) {
     document.addEventListener(type, () => { if (active.paused) play(active); }, { once: true, passive: true });

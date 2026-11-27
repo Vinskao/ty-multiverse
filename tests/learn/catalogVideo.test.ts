@@ -93,6 +93,35 @@ describe('walking -> hiking cross-fade playlist', () => {
 });
 
 
+describe('a clip that never starts does not leave a black frame', () => {
+  it('brings the old clip back when the next one is not playing after the grace period', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
+    const [a, b] = Array.from(document.querySelectorAll('video'));
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    [a, b].forEach(v => Object.defineProperty(v, 'duration', { value: 10, configurable: true }));
+    keepCatalogVideoPlaying(document, 1);
+    a.currentTime = 9.5; a.dispatchEvent(new Event('timeupdate'));
+    expect(b.style.opacity).toBe('1');
+    vi.advanceTimersByTime(3100); // b stays paused at 0 the whole time
+    expect(a.style.opacity).toBe('1');
+    expect(b.style.opacity).toBe('0');
+    vi.useRealTimers();
+  });
+
+  it('moves to another clip when the playing one fails', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
+    const [a, b] = Array.from(document.querySelectorAll('video'));
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    keepCatalogVideoPlaying(document, 1);
+    a.dispatchEvent(new Event('error'));
+    expect(b.style.opacity).toBe('1');
+    vi.useRealTimers();
+  });
+});
+
 describe('walking2.mp4 through the final consecutive numbered clip join the playlist', () => {
   it('stops at the first missing clip', async () => {
     const have = new Set(['https://x/walking2.mp4', 'https://x/walking3.mp4', 'https://x/walking5.mp4', 'https://x/walking12.mp4']);
