@@ -33,8 +33,8 @@ import { learnCatalog } from "../scripts/learn/catalog";
           <p>從英文到經濟與工程，依主題建立知識。多益練習已開放，其餘先規劃考試範圍。</p>
         </header>
         <div class="learn-catalog-video" data-full="false" aria-hidden="true">
-          <video src="https://tymultiverse.cc/images/people/walking.mp4" autoplay muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
-          <video src="https://tymultiverse.cc/images/people/hiking.mp4" muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
+          <video src="https://tymultiverse.cc/images/people/walking.mp4" poster="/assets/learn-poster-walking.jpg" autoplay muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
+          <video src="https://tymultiverse.cc/images/people/hiking.mp4" poster="/assets/learn-poster-walking.jpg" muted playsinline preload="auto" disablepictureinpicture tabindex="-1"></video>
         </div>
         <div class="learn-catalog-heading"><h2>探索學習領域</h2><span>課程與考試主題</span></div>
         <div class="learn-catalog">
@@ -282,6 +282,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
   import { GATEWAY_API_BASE } from "../common/constants/api";
   import { learningRequest, LoginRequiredError } from "../scripts/learn/learnRequest";
   import { groupLearnTopics } from "../scripts/learn/catalog";
+  import { learnDate } from "../scripts/learn/dates";
 
   type Topic = {
     id: string; title: string; description: string; partCode?: string; recommendedMinutes?: number;
@@ -611,7 +612,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
       tr.append(element("td", "", row.averageDurationSeconds
         ? `${Math.round(row.averageDurationSeconds / 60)} 分` : "—"));
       tr.append(element("td", "", row.lastSubmittedAt
-        ? new Date(row.lastSubmittedAt).toLocaleDateString() : "—"));
+        ? learnDate(row.lastSubmittedAt).toLocaleDateString() : "—"));
       table.append(tr);
     }
     container.append(table);
@@ -741,7 +742,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         head.append(element("span", "learn-badge level-3", `${learner.topicsInProgress} 個主題作答中`));
       }
       head.append(element("span", "learn-focus", learner.lastActiveAt
-        ? `最後作答 ${new Date(learner.lastActiveAt).toLocaleString()}` : "尚未送出任何一輪"));
+        ? `最後作答 ${learnDate(learner.lastActiveAt).toLocaleString()}` : "尚未送出任何一輪"));
       card.append(head);
 
       const table = element("table", "learn-scorecard-table");
@@ -768,7 +769,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         tr.append(element("td", "", last === null || last === undefined
           ? "—" : `${last} / ${topic.questionCount}`));
         tr.append(element("td", "", topic.lastSubmittedAt
-          ? new Date(topic.lastSubmittedAt).toLocaleDateString() : "—"));
+          ? learnDate(topic.lastSubmittedAt).toLocaleDateString() : "—"));
         table.append(tr);
       }
       card.append(table);
@@ -846,7 +847,7 @@ import { learnCatalog } from "../scripts/learn/catalog";
         return;
       }
       target.replaceChildren(...history.slice(0, 6).map(item => element("p", "learn-history-row",
-        `${new Date(item.submittedAt).toLocaleDateString()}　${item.quizTitle}　${item.score}/${item.totalQuestions}`)));
+        `${learnDate(item.submittedAt).toLocaleDateString()}　${item.quizTitle}　${item.score}/${item.totalQuestions}`)));
     } catch {
       target.textContent = "暫時無法讀取作答紀錄";
     }
