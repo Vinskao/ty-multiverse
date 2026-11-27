@@ -172,4 +172,10 @@ describe('health record', () => {
     expect(page.section.textContent).toContain('150 bpm · 距離 10.00 km');
     expect(page.section.textContent).toContain('配速 5:00 /km');
   });
+  it('places the weekly and monthly charts side by side', async () => {
+    const page = setup(vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records } }) })));
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.root.querySelector('.health-pair')).not.toBeNull());
+    expect(page.root.querySelectorAll('.health-pair .health-month-plot')).toHaveLength(2);
+  });
 });
