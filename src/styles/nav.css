@@ -581,6 +581,11 @@ nav:has(> .menu-header) {
 
   .menu-content[hidden] { display: none; }
 
+  /* The drawer clips overflow, so the sign-in popover opens inside it (taking space) instead of hanging below it under the market banner. */
+  .nav-auth { flex-wrap: wrap; }
+  .nav-auth-popover { position: static; display: none; flex: 1 0 100%; padding-top: .4rem; }
+  .nav-auth:hover .nav-auth-popover, .nav-auth:focus-within .nav-auth-popover { display: block; }
+
   .nav-items {
     flex: 1 1 auto;
     min-height: 0;

@@ -9,4 +9,9 @@ describe('nav login button on mobile', () => {
     expect(mobile).toMatch(/\.link\.nav-auth-trigger\s*\{[^}]*background:\s*var\(--gray-100\)/);
     expect(mobile).toMatch(/\.link\.nav-auth-trigger\s*\{[^}]*color:\s*var\(--gray-999\)/);
   });
+
+  it('opens the sign-in popover inside the clipped drawer so the market banner cannot cover it', () => {
+    expect(mobile).toMatch(/.nav-auth-popovers*{[^}]*position:s*static/);
+    expect(mobile).toMatch(/.nav-auth:focus-within .nav-auth-popovers*{[^}]*display:s*block/);
+  });
 });
