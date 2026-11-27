@@ -74,8 +74,8 @@ describe('health record', () => {
   it('credits Apple Health and WorkOutDoors', () => {
     expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toContain('Powered by Apple Health and WorkOutDoors');
   });
-  it('caps the chart size', () => {
-    expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toMatch(/\.health-chart \{[^}]*max-width/);
+  it('caps the block width at a size that fills a wide page', () => {
+    expect(readFileSync('src/components/HealthRecord.astro', 'utf8')).toMatch(/\.health-record \{[^}]*max-width: 1400px/);
   });
   const records: HealthRecords = {
     prs: [{ key: 'fastest5kS', value: 1500, day: '2026-10-01' }, { key: 'longestRunKm', value: 21.5, day: '2026-10-15' },
@@ -125,7 +125,7 @@ describe('health record', () => {
     const page = setup(vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records: monthly } }) })));
     page.details.open = true;
     await vi.waitFor(() => expect(page.root.querySelector('.health-month')).not.toBeNull());
-    const ticks = [...page.root.querySelectorAll('.health-axis-tick')].map(tick => tick.textContent);
+    const ticks = [...page.root.querySelectorAll('.health-month')[0].closest('.health-month-plot')!.querySelectorAll('.health-axis-tick')].map(tick => tick.textContent);
     expect(ticks).toEqual(['0', '10', '20', '30', '40', '50', '60']);
     const bar = page.root.querySelector<HTMLElement>('.health-month')!;
     expect(parseFloat(bar.style.getPropertyValue('--h'))).toBeCloseTo(52.14 / 60 * 100);
@@ -160,5 +160,16 @@ describe('health record', () => {
     expect(page.root.querySelector('.health-legend')!.textContent).toContain('健行');
     expect(page.root.querySelector('.health-bar.is-current')).not.toBeNull();
     expect(page.root.querySelector('.health-hero-value')!.textContent).toBe('4.00 km');
+  });
+  it('draws the weekly chart with its own distance axis and a beats-per-km record with its run', async () => {
+    const eff: HealthRecords = { ...records, prs: [{ key: 'fewestBeatsPerKm', value: 750, day: '2026-11-08',
+      longest: { value: 10, day: '2026-11-08' }, fastest: { value: 300, day: '2026-11-08' } }] };
+    const page = setup(vi.fn(async () => ({ ok: true, json: async () => ({ data: { ...summary, records: eff } }) })));
+    page.details.open = true;
+    await vi.waitFor(() => expect(page.section.textContent).toContain('最省心跳'));
+    expect(page.root.querySelectorAll('.health-month-plot')).toHaveLength(2);
+    expect(page.section.textContent).toContain('750 beats/km');
+    expect(page.section.textContent).toContain('150 bpm · 距離 10.00 km');
+    expect(page.section.textContent).toContain('配速 5:00 /km');
   });
 });

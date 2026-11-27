@@ -76,21 +76,23 @@ const PR_LABELS: Record<string, [string, string]> = {
   fastest10kPace: ['10 公里以上最快均速', 'Fastest pace, 10 km+'], fastestHalfPace: ['半馬以上最快均速', 'Fastest pace, half marathon+'],
   longestRunKm: ['最長跑步', 'Longest run'], longestHikeKm: ['最長健行', 'Longest hike'],
   lowestAvgHr: ['最低平均心率（跑步）', 'Lowest average heart rate (running)'],
+  fewestBeatsPerKm: ['最省心跳（每公里）', 'Most efficient (beats per km)'],
   mostAscentM: ['單次最大爬升', 'Biggest single climb'], bestWeekKm: ['單週最多（跑步＋健行）', 'Best week (running + hiking)'],
   bestMonthKm: ['單月最多（跑步＋健行）', 'Best month (running + hiking)'],
 };
-const PR_ORDER = ['fastest1kS', 'fastest5kS', 'fastest10kPace', 'fastestHalfPace', 'longestRunKm', 'longestHikeKm', 'lowestAvgHr', 'mostAscentM', 'bestWeekKm', 'bestMonthKm'];
+const PR_ORDER = ['fastest1kS', 'fastest5kS', 'fastest10kPace', 'fastestHalfPace', 'longestRunKm', 'longestHikeKm', 'lowestAvgHr', 'fewestBeatsPerKm', 'mostAscentM', 'bestWeekKm', 'bestMonthKm'];
 
 function prValue(key: string, value: number): string {
   if (key === 'fastest1kS' || key === 'fastest5kS') return clock(value);
   if (key.endsWith('Pace')) return formatPace(value);
+  if (key === 'fewestBeatsPerKm') return `${formatNumber(value, 'count')} ${'beats/km'}`;
   if (key === 'lowestAvgHr') return `${formatNumber(value, 'decimal')} bpm`;
   if (key === 'mostAscentM') return `${formatNumber(value, 'count')} m`;
   return km(value);
 }
 
 const PR_GROUPS: { title: [string, string]; keys: string[] }[] = [
-  { title: ['速度與心率', 'Speed and heart rate'], keys: ['fastest1kS', 'fastest5kS', 'fastest10kPace', 'fastestHalfPace', 'lowestAvgHr'] },
+  { title: ['速度與心率', 'Speed and heart rate'], keys: ['fastest1kS', 'fastest5kS', 'fastest10kPace', 'fastestHalfPace', 'lowestAvgHr', 'fewestBeatsPerKm'] },
   { title: ['單次距離與爬升', 'Single outings'], keys: ['longestRunKm', 'longestHikeKm', 'mostAscentM'] },
   { title: ['累積', 'Volume'], keys: ['bestWeekKm', 'bestMonthKm'] },
 ];
@@ -110,9 +112,10 @@ export function recordTiles({ prs }: HealthRecords, lang: Lang, order: string[] 
     const label = '🏆 ' + PR_LABELS[key][lang === 'zh' ? 0 : 1];
     const tile: Tile = { label, value: prValue(key, pr.value), note: day(pr.day) };
     if (pr.longest) {
-      tile.note = t('最長距離', 'Longest distance') + ' ' + km(pr.longest.value) + ' · ' + day(pr.longest.day);
-      tile.detail = t('最快配速', 'Fastest pace') + ' ' +
-        (pr.fastest ? formatPace(pr.fastest.value) + ' · ' + day(pr.fastest.day) : '—');
+      const eff = key === 'fewestBeatsPerKm';
+      const hr = eff && pr.fastest ? Math.round(pr.value / (pr.fastest.value / 60)) : null;
+      tile.note = (hr ? `${hr} bpm · ` : '') + t(eff ? '距離' : '最長距離', eff ? 'Distance' : 'Longest distance') + ' ' + km(pr.longest.value) + ' · ' + day(pr.longest.day);
+      tile.detail = t(eff ? '配速' : '最快配速', eff ? 'Pace' : 'Fastest pace') + ' ' + (pr.fastest ? formatPace(pr.fastest.value) + (eff ? '' : ' · ' + day(pr.fastest.day)) : '—');
     }
     return [tile];
   });
@@ -199,12 +202,26 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     }
     return list;
   };
+  const axisFor = (peak: number) => {
+    const axis = element('div', 'health-month-axis');
+    axis.append(element('span', 'health-axis-unit', 'km'));
+    const ticks = monthlyDistanceTicks(peak);
+    const max = ticks[ticks.length - 1];
+    for (const value of ticks) {
+      const tick = element('span', 'health-axis-tick', formatNumber(value, 'count'));
+      tick.style.bottom = String((value / max) * 100) + '%';
+      axis.append(tick);
+    }
+    return { axis, max };
+  };
   const chart = (weeks: Week[], lang: Lang) => {
     const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
     const box = element('figure', 'health-chart');
-    const bars = element('div', 'health-bars');
+    const plot = element('div', 'health-month-plot');
+    const bars = element('div', 'health-bars health-month-bars');
     const readout = element('p', 'health-readout');
-    const max = Math.max(...weeks.map(w => w.km), 1);
+    const peak = Math.max(...weeks.map(w => w.km), 0);
+    const { axis, max } = axisFor(peak);
     const text = (w: Week) => t(`${w.start} 當週：跑步＋健行 ${km(w.km)}`, `Week of ${w.start}: running + hiking ${km(w.km)}`);
     for (const week of weeks) {
       const bar = element('button', week === weeks[weeks.length - 1] ? 'health-bar is-current' : 'health-bar') as HTMLButtonElement;
@@ -217,7 +234,8 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     }
     readout.textContent = weeks.length ? text(weeks[weeks.length - 1]) : '';
     readout.setAttribute('aria-live', 'polite');
-    box.append(element('figcaption', '', t(`近 12 週（公里，最高 ${km(max)}），最右邊亮色是本週`, `Last 12 weeks (km, top of scale ${km(max)}); the bright bar on the right is this week`)), bars, readout);
+    plot.append(axis, bars);
+    box.append(element('figcaption', '', t(`近 12 週，最右邊亮色是本週`, `Last 12 weeks; the bright bar on the right is this week`)), plot, readout);
     return box;
   };
   const activities = (other: HealthOther, lang: Lang) => {

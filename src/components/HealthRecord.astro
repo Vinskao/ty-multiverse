@@ -15,7 +15,7 @@
 </script>
 
 <style is:global>
-  .health-record { margin: 1rem 0; max-width: 1100px; }
+  .health-record { margin: 1rem 0; max-width: 1400px; }
   .health-record h3 { font-size: var(--text-lg); margin-bottom: .6rem; }
   .health-status[aria-busy="true"]::before {
     content: ''; display: inline-block; width: 1em; height: 1em; margin-inline-end: .5rem; border-radius: 50%;
@@ -30,11 +30,11 @@
     position: relative; margin: 1.9rem 0 .4rem;
   }
   .health-month-plot .health-month-bars { margin: 0; padding-inline-start: var(--axis-width); }
-  .health-month-bars .health-month { position: relative; height: calc(100% - var(--month-label-height)); }
-  .health-month-bars .health-month small {
+  .health-month-bars .health-bar { position: relative; height: calc(100% - var(--month-label-height)); }
+  .health-month-bars .health-bar small {
     position: absolute; inset-inline: 0; top: 100%; line-height: var(--month-label-height); text-align: center;
   }
-  .health-month-bars .health-month .health-fill { height: var(--h); min-height: 0; }
+  .health-month-bars .health-bar .health-fill { height: var(--h); min-height: 0; }
   .health-month-axis {
     position: absolute; inset: 0 0 var(--month-label-height); pointer-events: none;
     font-size: .68rem; color: var(--gray-400);
@@ -53,6 +53,7 @@
   }
   .health-axis-tick::after { content: ''; border-top: 1px solid var(--gray-700); }
   .health-month .health-fill { background: none; }
+  .health-month-bars .health-bar { height: calc(100% - var(--month-label-height)); }
   .health-stack { display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
   .health-stack-hike { display: block; flex: 1 1 auto; background: var(--gray-500, #94a3b8); opacity: .55; }
   .health-stack-run { display: block; flex: none; height: var(--run); background: var(--gray-300, #cbd5e1); }
@@ -61,7 +62,7 @@
   .health-block-title { font-size: 1.05rem; margin: 0 0 .15rem; }
   .health-caption { margin: 0 0 .6rem; font-size: .78rem; color: var(--gray-400); }
   .health-group-title { margin: .7rem 0 .35rem; font-size: .82rem; color: var(--gray-300); font-weight: 600; }
-  .health-hero { margin: 0 0 .8rem; padding: .9rem 1rem; max-width: 720px; border: 1px solid var(--gray-700); border-radius: var(--surface-radius-small); }
+  .health-hero { margin: 0 0 .8rem; padding: .9rem 1rem; border: 1px solid var(--gray-700); border-radius: var(--surface-radius-small); }
   .health-hero p { margin: 0; }
   .health-hero-label { font-size: .8rem; color: var(--gray-400); }
   .health-hero-value { font-size: 2rem; font-weight: 700; color: var(--gray-0); line-height: 1.2; }
@@ -76,7 +77,7 @@
   .health-bar.is-current .health-fill { background: var(--gray-0); }
   .health-bar.is-current small { color: var(--gray-0); font-weight: 600; }
   .health-other { font-size: .95rem; margin: 1rem 0 .5rem; }
-  .health-activities { display: grid; gap: .4rem; margin: 0 0 .9rem; max-width: 720px; }
+  .health-activities { display: grid; gap: .4rem; margin: 0 0 .9rem; }
   .health-activity { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: .1rem .6rem; align-items: center; font-size: .82rem; }
   .health-activity small { grid-column: 2; }
   .health-activity-track { height: .6rem; background: #8883; border-radius: 3px; overflow: hidden; }
@@ -96,7 +97,7 @@
     color: var(--gray-0); font-size: .72rem; font-weight: 600;
   }
   .health-value { font-size: 1.2rem; font-weight: 600; color: var(--gray-0); }
-  .health-chart { margin: 0 0 .8rem; max-width: 720px; }
+  .health-chart { margin: 0 0 .8rem; }
   .health-chart figcaption, .health-readout { font-size: .82rem; color: var(--gray-300); }
   .health-bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; height: 160px; margin: .4rem 0; }
   .health-bar { display: flex; flex-direction: column; justify-content: flex-end; padding: 0; min-width: 0; border: 0; background: none; color: var(--gray-400); cursor: pointer; }
