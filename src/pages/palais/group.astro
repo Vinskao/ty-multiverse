@@ -696,6 +696,7 @@ if (!isLoggedIn) {
   import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
   import { peopleImageUrl, resolveImageUrl, type ImageVariant } from '../../scripts/palais/businessImage';
   import { enableTouchDrag } from '../../scripts/palais/touchDrag';
+  import { clampCartTop, navBottom } from '../../scripts/palais/cartPosition';
   import {
     buildIndex,
     buildIndexFromFiles,
@@ -1031,9 +1032,7 @@ if (!isLoggedIn) {
     } else {
       const savedTop = localStorage.getItem(POS_KEY);
       if (savedTop !== null) {
-        const h = cart.offsetHeight || 80;
-        const maxTop = Math.max(0, window.innerHeight - h);
-        const top = Math.min(Math.max(0, parseInt(savedTop, 10)), maxTop);
+        const top = clampCartTop(parseInt(savedTop, 10), cart.offsetHeight || 80, window.innerHeight, navBottom(document.querySelector('nav')));
         cart.style.top = top + 'px';
         cart.style.bottom = 'auto';
       }
@@ -1128,9 +1127,7 @@ if (!isLoggedIn) {
 
     // 只能上下拖曳：標題列當把手，改變 top
     const applyCartTop = (top: number) => {
-      const h = cart.offsetHeight || 80;
-      const maxTop = Math.max(0, window.innerHeight - h);
-      const clamped = Math.min(Math.max(0, top), maxTop);
+      const clamped = clampCartTop(top, cart.offsetHeight || 80, window.innerHeight, navBottom(document.querySelector('nav')));
       cart.style.top = clamped + 'px';
       cart.style.bottom = 'auto';
       localStorage.setItem(POS_KEY, String(clamped));
@@ -1151,6 +1148,11 @@ if (!isLoggedIn) {
       });
       window.addEventListener('pointerup', () => { dragging = false; });
     }
+    // 旋轉或縮放後，舊位置可能蓋住導覽列或超出畫面：重新夾回範圍
+    window.addEventListener('resize', () => {
+      if (cart.classList.contains('minimized') || cart.style.top === '' || cart.style.top === 'auto') return;
+      applyCartTop(cart.getBoundingClientRect().top);
+    });
     // 還原上次拖曳的位置（預設貼底）
     const savedTop = localStorage.getItem(POS_KEY);
     if (!cart.classList.contains('minimized') && savedTop !== null) {
