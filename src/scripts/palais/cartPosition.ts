@@ -12,3 +12,16 @@ export function clampCartTop(top: number, height: number, viewport: number, minT
   const maxTop = Math.max(0, viewport - height);
   return Math.min(Math.max(minTop, top), maxTop);
 }
+
+const CART_PADDING_PX = 24;
+const MIN_FIT = 0.05;
+
+/**
+ * Multiplier (≤ 1) that keeps `count` people in one row. A person advances 100px × scale and the last one is 200px wide,
+ * so the row needs 100 × (count + 1) × scale plus the padding; when that is wider than the cart, everyone shrinks to fit.
+ */
+export function cartFit(count: number, width: number, scale: number): number {
+  if (count < 1 || scale <= 0) return 1;
+  const needed = 100 * (count + 1) * scale;
+  return Math.min(1, Math.max(MIN_FIT, (width - CART_PADDING_PX) / needed));
+}

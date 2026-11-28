@@ -426,12 +426,14 @@ if (!isLoggedIn) {
   }
 
   #cart-items {
+    /* 實際縮放 = 縮放倍率（手機橫向／縮放）× 人多時的縮小倍率 --cart-fit（fitCart 寫入） */
+    --cart-s: calc(var(--palais-media-scale) * var(--cart-fit, 1));
     display: flex;
     flex-wrap: nowrap; /* 單一橫排，不換行 */
     gap: 0; /* 跟外面一樣：靠在一起、重疊排列，不留間距 */
     /* 左側預留半張卡寬度，讓第一張的負 margin 不被切到 */
-    padding: 12px 12px 12px calc(100px * var(--palais-media-scale));
-    overflow: hidden; /* 不出捲軸；滿了就禁止添加 */
+    padding: 12px 12px 12px calc(100px * var(--cart-s));
+    overflow: hidden; /* 不出捲軸；人多時整排縮小 */
     min-height: calc(330px * var(--palais-media-scale));
     align-items: flex-end; /* 底部對齊，與主畫面一致 */
   }
@@ -446,17 +448,10 @@ if (!isLoggedIn) {
     }
   }
 
-  /* 菜籃放不下時的提示動畫 */
-  #palais-cart.cart-full {
-    border-color: #ff5757 !important;
-    box-shadow: 0 0 0 2px #ff5757, 0 8px 30px rgba(0, 0, 0, 0.5) !important;
-    animation: cart-shake 0.3s ease;
-  }
-
-  @keyframes cart-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
+  /* 菜籃內的互動影片跟著整排縮小 */
+  #cart-items > div > video.pair-video {
+    height: calc(300px * var(--cart-s));
+    max-width: calc(200px * var(--cart-s));
   }
 
   /* 空菜籃：顯示虛線置放區提示 */
@@ -484,9 +479,9 @@ if (!isLoggedIn) {
   #cart-items > div {
     position: relative !important;
     display: inline-block !important;
-    width: calc(200px * var(--palais-media-scale)) !important;
+    width: calc(200px * var(--cart-s)) !important;
     /* 與外面相同的負 margin，讓角色彼此重疊靠攏；拿掉一個會自動補位 */
-    margin: 0 0 0 calc(-100px * var(--palais-media-scale)) !important;
+    margin: 0 0 0 calc(-100px * var(--cart-s)) !important;
     left: auto !important;
     bottom: auto !important;
     flex: 0 0 auto !important;
@@ -495,8 +490,8 @@ if (!isLoggedIn) {
   }
 
   #cart-items > div > img {
-    height: calc(300px * var(--palais-media-scale)) !important;
-    max-width: calc(200px * var(--palais-media-scale)) !important;
+    height: calc(300px * var(--cart-s)) !important;
+    max-width: calc(200px * var(--cart-s)) !important;
     width: auto !important;
     transform: none !important;
     transition: opacity 160ms ease !important;
@@ -696,7 +691,7 @@ if (!isLoggedIn) {
   import { layoutSingleRow, singleRowExportScale } from '../../scripts/palais/singleRow';
   import { peopleImageUrl, resolveImageUrl, type ImageVariant } from '../../scripts/palais/businessImage';
   import { enableTouchDrag } from '../../scripts/palais/touchDrag';
-  import { clampCartTop, navBottom } from '../../scripts/palais/cartPosition';
+  import { cartFit, clampCartTop, navBottom } from '../../scripts/palais/cartPosition';
   import {
     buildIndex,
     buildIndexFromFiles,
@@ -846,11 +841,14 @@ if (!isLoggedIn) {
     const downloadBtn = document.getElementById('cart-download') as HTMLButtonElement | null;
     if (downloadBtn && items) downloadBtn.disabled = items.children.length === 0;
   }
-  function flashCartFull() {
+  /** 人太多時整排等比縮小，維持單排：寫在 #cart-items 的 --cart-fit，CSS 用它縮小卡片寬度、重疊與圖高。 */
+  function fitCart() {
     const cart = document.getElementById('palais-cart');
-    if (!cart) return;
-    cart.classList.add('cart-full');
-    setTimeout(() => cart.classList.remove('cart-full'), 500);
+    const items = document.getElementById('cart-items');
+    if (!cart || !items) return;
+    const scale = parseFloat(getComputedStyle(cart).getPropertyValue('--palais-media-scale')) || 1;
+    const fit = String(Math.round(cartFit(items.children.length, items.clientWidth, scale) * 1000) / 1000);
+    if (items.style.getPropertyValue('--cart-fit') !== fit) items.style.setProperty('--cart-fit', fit);
   }
   function syncArmyEmptyState(container: Element | null) {
     if (!(container instanceof HTMLElement)) return;
@@ -880,13 +878,7 @@ if (!isLoggedIn) {
     const prevParent = card.parentElement;
     items.appendChild(card);
     scheduleCharacterInfoLayout();
-    // 單排限制：若加入後會超出寬度（換行），退回原處、禁止添加
-    if (items.scrollWidth > items.clientWidth) {
-      if (prevParent) prevParent.appendChild(card);
-      else card.remove();
-      flashCartFull();
-      return;
-    }
+    // 不限人數：放不下時整排縮小（fitCart），不換行也不拒絕
     const set = getCartSet();
     if (card.dataset.name) set.add(card.dataset.name);
     saveCartSet(set);
@@ -1148,6 +1140,12 @@ if (!isLoggedIn) {
       });
       window.addEventListener('pointerup', () => { dragging = false; });
     }
+    // 人數、視窗寬度或縮放倍率改變時，重算整排縮小比例
+    const items = document.getElementById('cart-items');
+    if (items) new MutationObserver(fitCart).observe(items, { childList: true });
+    new MutationObserver(fitCart).observe(cart, { attributes: true, attributeFilter: ['style'] });
+    window.addEventListener('resize', fitCart);
+    fitCart();
     // 旋轉或縮放後，舊位置可能蓋住導覽列或超出畫面：重新夾回範圍
     window.addEventListener('resize', () => {
       if (cart.classList.contains('minimized') || cart.style.top === '' || cart.style.top === 'auto') return;
