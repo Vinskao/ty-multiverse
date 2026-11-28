@@ -165,6 +165,32 @@ describe('walking2.mp4 through the final consecutive numbered clip join the play
   });
 });
 
+describe('added clips are buffered before their turn (iOS ignores preload on videos added later)', () => {
+  it('loads the next clip while the current one plays, and switches to it', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="learn-catalog-video"><video></video><video></video></div>';
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+    vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+    const load = vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    const playlist = keepCatalogVideoPlaying(document, 1)!;
+    const [a, b] = Array.from(document.querySelectorAll('video'));
+    [a, b].forEach(v => Object.defineProperty(v, 'duration', { value: 10, configurable: true }));
+    // b is the queued next clip; after switching to it, the next pick (random 0.99 → last) is the added clip, loaded right away
+    playlist.add('https://x/walking2.mp4');
+    const c = document.querySelectorAll('video')[2];
+    Object.defineProperty(c, 'duration', { value: 10, configurable: true });
+    a.currentTime = 9.5; a.dispatchEvent(new Event('timeupdate'));
+    expect(b.style.opacity).toBe('1');
+    expect(load.mock.contexts).toContain(c);
+    vi.advanceTimersByTime(1100);
+    b.currentTime = 9.5; b.dispatchEvent(new Event('timeupdate'));
+    expect(c.style.opacity).toBe('1');
+    random.mockRestore(); load.mockRestore();
+    vi.useRealTimers();
+  });
+});
+
 describe('catalog clips stop at the first missing number and play randomly', () => {
   it('discovers clips only through the last consecutive numbered clip', async () => {
     const checked: string[] = [];

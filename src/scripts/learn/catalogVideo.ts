@@ -93,9 +93,18 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     if (candidate) return candidate;
     return active;
   };
+  // The next clip is picked as soon as the current one starts and loaded right away: iOS ignores preload on videos added
+  // after the page loaded, so without this an added clip is still empty at its turn and the rotation falls back to the first two.
+  let upcoming: HTMLVideoElement | null = null;
+  const queueNext = () => {
+    upcoming = nextPlayable();
+    if (upcoming === active) { upcoming = null; return; }
+    if (upcoming.readyState < 2) { upcoming.preload = 'auto'; upcoming.load(); }
+  };
   const advance = () => {
     if (fading) return;
-    const incoming = nextPlayable();
+    const queued = upcoming && upcoming !== active && !broken.has(upcoming) && allowed(upcoming) ? upcoming : null;
+    const incoming = queued ?? nextPlayable();
     if (incoming === active) { active.currentTime = 0; play(active); return; } // only one clip works: plain loop
     fading = true;
     const outgoing = active;
@@ -104,6 +113,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     incoming.style.opacity = '1';
     outgoing.style.opacity = '0';
     active = incoming;
+    queueNext();
     setTimeout(() => {
       outgoing.pause();
       outgoing.currentTime = 0;
@@ -119,6 +129,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
       outgoing.currentTime = 0;
       active = outgoing;
       play(outgoing);
+      queueNext();
     }, (fadeSeconds + START_GRACE_SECONDS) * 1000);
   };
   /** The active clip failed: fade to another one that works, or, when none does, show the poster behind the frame. */
@@ -144,6 +155,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
   all.forEach(wire);
 
   play(active);
+  queueNext();
   // Watchdog: a clip that stops advancing without any event (stalled network, iOS suspending media) is nudged, then reloaded.
   let lastTime = -1;
   let stalled = 0;
@@ -174,6 +186,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
       wire(video);
       container.append(video);
       all.push(video);
+      if (!upcoming) queueNext();
     },
   };
 }
