@@ -350,12 +350,24 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
       chips.append(chip);
     }
     const stats = element('dl', 'hp-stats');
-    for (const [label, value] of [[t('距離', 'Distance'), t(`${formatNumber(p.week.km, 'decimal')} 公里`, `${formatNumber(p.week.km, 'decimal')} km`)],
-      [t('時間', 'Time'), formatDuration(p.week.seconds, lang)], [t('爬升海拔', 'Elevation'), t(`${formatNumber(p.week.ascentM, 'count')} 公尺`, `${formatNumber(p.week.ascentM, 'count')} m`)]]) {
-      const item = element('div', 'hp-stat');
-      item.append(element('dt', '', label), element('dd', '', value));
-      stats.append(item);
-    }
+    const heading = element('h4', 'hp-title');
+    const show = (index: number) => {
+      const w = p.weeks[index];
+      const end = new Date(Date.parse(w.start + 'T00:00:00Z') + 6 * 86400000).toISOString().slice(5, 10).replace('-', '/');
+      heading.textContent = index === 11 ? t('本週', 'This week') : `${w.start.slice(5).replace('-', '/')}–${end}`;
+      stats.replaceChildren();
+      for (const [label, value] of [[t('距離', 'Distance'), t(`${formatNumber(w.km, 'decimal')} 公里`, `${formatNumber(w.km, 'decimal')} km`)],
+        [t('時間', 'Time'), formatDuration(w.seconds, lang)], [t('爬升海拔', 'Elevation'), t(`${formatNumber(w.ascentM, 'count')} 公尺`, `${formatNumber(w.ascentM, 'count')} m`)]]) {
+        const item = element('div', 'hp-stat');
+        item.append(element('dt', '', label), element('dd', '', value));
+        stats.append(item);
+      }
+      nowLine?.setAttribute('x1', String(x(index)));
+      nowLine?.setAttribute('x2', String(x(index)));
+      dots.forEach((d, i) => d.classList.toggle('is-selected', i === index));
+    };
+    const dots: SVGElement[] = [];
+    let nowLine: SVGElement | undefined;
     // 12-week line: plot area 0..300 x 0..100, axis labels on the right.
     const peak = Math.max(...p.weeks.map(w => w.km), 0);
     const step = peak <= 10 ? 5 : peak <= 20 ? 10 : peak <= 60 ? 20 : 50;
@@ -382,18 +394,22 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     const pts = p.weeks.map((w, i) => `${x(i)},${y(w.km)}`).join(' ');
     add('polygon', { points: `${x(0)},${y(0)} ${pts} ${x(11)},${y(0)}`, class: 'hp-area' });
     add('polyline', { points: pts, class: 'hp-line' });
-    add('line', { x1: x(11), x2: x(11), y1: 8, y2: y(0), class: 'hp-now' });
+    nowLine = add('line', { x1: x(11), x2: x(11), y1: 8, y2: y(0), class: 'hp-now' });
     let lastMonth = '';
     p.weeks.forEach((w, i) => {
       const month = w.start.slice(5, 7);
       if (month !== lastMonth && i > 0 && i < 11) add('text', { x: x(i), y: 124, class: 'hp-axis hp-month', 'text-anchor': 'middle' }, t(`${Number(month)} 月`, new Date(w.start).toLocaleString('en', { month: 'short', timeZone: 'UTC' })));
       lastMonth = month;
-      const dot = add('circle', { cx: x(i), cy: y(w.km), r: i === 11 ? 5 : 3.5, class: i === 11 ? 'hp-dot is-now' : 'hp-dot' });
-      const title = document.createElementNS(ns, 'title');
-      title.textContent = t(`${w.start} 當週 ${formatNumber(w.km, 'decimal')} 公里`, `Week of ${w.start}: ${formatNumber(w.km, 'decimal')} km`);
-      dot.append(title);
+      dots.push(add('circle', { cx: x(i), cy: y(w.km), r: 4, class: 'hp-dot' }));
     });
-    card.append(chips, element('h4', 'hp-title', t('本週', 'This week')), stats, element('p', 'hp-sub', t('過去 12 週', 'Past 12 weeks')), svg);
+    // A full-height invisible column per week, so a point is easy to hit with a finger, a mouse or the keyboard.
+    p.weeks.forEach((w, i) => {
+      const hit = add('rect', { x: x(i) - 12, y: 0, width: 24, height: 130, class: 'hp-hit', tabindex: 0, role: 'button',
+        'aria-label': t(`${w.start} 當週 ${formatNumber(w.km, 'decimal')} 公里`, `Week of ${w.start}: ${formatNumber(w.km, 'decimal')} km`) });
+      for (const type of ['mouseenter', 'focus', 'click']) hit.addEventListener(type, () => show(i));
+    });
+    show(11);
+    card.append(chips, heading, stats, element('p', 'hp-sub', t('過去 12 週', 'Past 12 weeks')), svg);
 
     const streak = element('section', 'hp-card hp-streak');
     const flame = element('div', 'hp-flame');

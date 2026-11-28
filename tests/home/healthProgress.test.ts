@@ -20,10 +20,10 @@ describe('health progress (Strava-style)', () => {
   it('gives 12 weekly points ending this week, with zeros for empty weeks', () => {
     const weeks = progress(workouts, 'Running', today).weeks;
     expect(weeks).toHaveLength(12);
-    expect(weeks.at(-1)).toEqual({ start: '2026-11-23', km: 5 });
-    expect(weeks.at(-2)).toEqual({ start: '2026-11-16', km: 3 });
+    expect(weeks.at(-1)).toMatchObject({ start: '2026-11-23', km: 5 });
+    expect(weeks.at(-2)).toMatchObject({ start: '2026-11-16', km: 3 });
     expect(weeks.at(-3)!.km).toBe(0);
-    expect(weeks.at(-4)).toEqual({ start: '2026-11-02', km: 6 });
+    expect(weeks.at(-4)).toMatchObject({ start: '2026-11-02', km: 6 });
   });
 
   it('counts consecutive active weeks, all sports, still alive when this week is empty', () => {
@@ -71,5 +71,14 @@ describe('progress panel on the page', () => {
     expect(body.querySelector('.hp-flame-num')!.textContent).toBe('1');
     (body.querySelectorAll<HTMLButtonElement>('.hp-chip')[1]).click();
     expect(root.querySelector('.hp-stat dd')!.textContent).toBe('5.00 公里');
+    // any point can be picked (hover, tap or keyboard): the line moves there and the numbers show that week
+    const hits = root.querySelectorAll<SVGRectElement>('.hp-hit');
+    expect(hits).toHaveLength(12);
+    hits[0].dispatchEvent(new Event('mouseenter'));
+    expect(root.querySelector('.hp-stat dd')!.textContent).toBe('0.00 公里');
+    expect(root.querySelector('.hp-title')!.textContent).not.toBe('本週');
+    expect(root.querySelectorAll('.hp-dot.is-selected')).toHaveLength(1);
+    hits[11].dispatchEvent(new Event('click'));
+    expect(root.querySelector('.hp-title')!.textContent).toBe('本週');
   });
 });

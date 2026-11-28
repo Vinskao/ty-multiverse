@@ -107,7 +107,9 @@
   .hp-line { fill: none; stroke: var(--hp-accent); stroke-width: 2.5; stroke-linejoin: round; }
   .hp-now { stroke: var(--gray-0); stroke-width: 1.5; }
   .hp-dot { fill: var(--gray-900, #111); stroke: var(--hp-accent); stroke-width: 2; }
-  .hp-dot.is-now { fill: var(--hp-accent); }
+  .hp-dot.is-selected { fill: var(--hp-accent); r: 5.5; }
+  .hp-hit { fill: transparent; cursor: pointer; outline: none; }
+  .hp-chart { touch-action: pan-y; }
   .hp-streak-head { display: flex; justify-content: space-between; align-items: baseline; }
   .hp-streak-head .hp-title { margin-top: 0; }
   .hp-streak-head .hp-sub { margin: 0; }

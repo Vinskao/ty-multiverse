@@ -4,7 +4,7 @@ export type Sport = 'all' | 'Running' | 'Hiking' | 'Walking' | 'Cycling';
 export type DayCell = { day: string; active: boolean; today: boolean; future: boolean } | null;
 export type Progress = {
   week: { km: number; seconds: number; ascentM: number };
-  weeks: { start: string; km: number }[];
+  weeks: { start: string; km: number; seconds: number; ascentM: number }[];
   streakWeeks: number;
   month: DayCell[][];
 };
@@ -21,6 +21,12 @@ const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const monday = (ms: number) => ms - ((new Date(ms).getUTCDay() + 6) % 7) * DAY;
 const round = (n: number, digits = 2) => Math.round(n * 10 ** digits) / 10 ** digits;
 
+const totals = (rows: Workout[]) => ({
+  km: round(rows.reduce((s, w) => s + (w.km || 0), 0)),
+  seconds: Math.round(rows.reduce((s, w) => s + (w.seconds || 0), 0)),
+  ascentM: Math.round(rows.reduce((s, w) => s + (w.ascentM || 0), 0)),
+});
+
 export function sportsIn(workouts: Workout[]): Sport[] {
   return SPORTS.filter(s => s === 'all' || workouts.some(w => w.activity === s));
 }
@@ -30,14 +36,10 @@ export function progress(workouts: Workout[], sport: Sport, today: string): Prog
   const thisWeek = monday(now);
   const mine = workouts.filter(w => sport === 'all' || w.activity === sport);
   const inWeek = mine.filter(w => monday(parse(w.day)) === thisWeek);
-  const week = {
-    km: round(inWeek.reduce((s, w) => s + (w.km || 0), 0)),
-    seconds: Math.round(inWeek.reduce((s, w) => s + (w.seconds || 0), 0)),
-    ascentM: Math.round(inWeek.reduce((s, w) => s + (w.ascentM || 0), 0)),
-  };
+  const week = totals(inWeek);
   const weeks = Array.from({ length: 12 }, (_, i) => {
     const start = thisWeek - (11 - i) * 7 * DAY;
-    return { start: iso(start), km: round(mine.filter(w => monday(parse(w.day)) === start).reduce((s, w) => s + (w.km || 0), 0)) };
+    return { start: iso(start), ...totals(mine.filter(w => monday(parse(w.day)) === start)) };
   });
 
   // Like Strava, the streak counts weeks with any activity; an empty current week does not break it yet.
