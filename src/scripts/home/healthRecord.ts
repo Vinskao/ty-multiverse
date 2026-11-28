@@ -1,4 +1,5 @@
 import { formatNumber } from '../format/numbers';
+import { formatDuration, progress, sportsIn, SPORT_LABELS, type Sport, type Workout } from './healthProgress';
 
 type Lang = 'zh' | 'en';
 type Week = { start: string; km: number };
@@ -8,6 +9,7 @@ export type HealthSummary = {
     thisWeekKm: number; peakWeek: Week | null; weeks: Week[]; lastRun: string | null };
   records?: HealthRecords;
   other?: HealthOther;
+  workouts?: Workout[];
 };
 type Effort = { value: number; day: string };
 export type HealthRecords = {
@@ -190,6 +192,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
   section.dataset.bound = 'true';
   let data: HealthSummary | undefined;
   let state: 'idle' | 'loading' | 'done' = 'idle';
+  let sport: Sport = 'all';
 
   const tiles = (rows: Tile[]) => {
     const list = element('dl', 'health-tiles');
@@ -328,6 +331,89 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     }
     return list;
   };
+  const progressPanel = (workouts: Workout[], lang: Lang) => {
+    const t = (zh: string, en: string) => (lang === 'zh' ? zh : en);
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Taipei' });
+    const sports = sportsIn(workouts);
+    if (!sports.includes(sport)) sport = 'all';
+    const p = progress(workouts, sport, today);
+    const card = element('section', 'hp-card');
+    const chips = element('div', 'hp-chips');
+    chips.setAttribute('role', 'tablist');
+    for (const s of sports) {
+      const [zh, en, icon] = SPORT_LABELS[s];
+      const chip = element('button', s === sport ? 'hp-chip is-active' : 'hp-chip', `${icon} ${t(zh, en)}`) as HTMLButtonElement;
+      chip.type = 'button';
+      chip.setAttribute('role', 'tab');
+      chip.setAttribute('aria-selected', String(s === sport));
+      chip.addEventListener('click', () => { sport = s; render(); });
+      chips.append(chip);
+    }
+    const stats = element('dl', 'hp-stats');
+    for (const [label, value] of [[t('距離', 'Distance'), t(`${formatNumber(p.week.km, 'decimal')} 公里`, `${formatNumber(p.week.km, 'decimal')} km`)],
+      [t('時間', 'Time'), formatDuration(p.week.seconds, lang)], [t('爬升海拔', 'Elevation'), t(`${formatNumber(p.week.ascentM, 'count')} 公尺`, `${formatNumber(p.week.ascentM, 'count')} m`)]]) {
+      const item = element('div', 'hp-stat');
+      item.append(element('dt', '', label), element('dd', '', value));
+      stats.append(item);
+    }
+    // 12-week line: plot area 0..300 x 0..100, axis labels on the right.
+    const peak = Math.max(...p.weeks.map(w => w.km), 0);
+    const step = peak <= 10 ? 5 : peak <= 20 ? 10 : peak <= 60 ? 20 : 50;
+    const top = Math.max(step * 2, Math.ceil(peak / step) * step);
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 340 130');
+    svg.setAttribute('class', 'hp-chart');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', t('過去 12 週距離', 'Distance over the last 12 weeks'));
+    const x = (i: number) => 8 + (i * 272) / 11;
+    const y = (km: number) => 105 - (km / top) * 95;
+    const add = (tag: string, attrs: Record<string, string | number>, text?: string) => {
+      const el = document.createElementNS(ns, tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      if (text) el.textContent = text;
+      svg.append(el);
+      return el;
+    };
+    for (const v of [0, top / 2, top]) {
+      add('line', { x1: 0, x2: 284, y1: y(v), y2: y(v), class: 'hp-grid' });
+      add('text', { x: 292, y: y(v) + 4, class: 'hp-axis' }, t(`${formatNumber(v, 'count')} 公里`, `${formatNumber(v, 'count')} km`));
+    }
+    const pts = p.weeks.map((w, i) => `${x(i)},${y(w.km)}`).join(' ');
+    add('polygon', { points: `${x(0)},${y(0)} ${pts} ${x(11)},${y(0)}`, class: 'hp-area' });
+    add('polyline', { points: pts, class: 'hp-line' });
+    add('line', { x1: x(11), x2: x(11), y1: 8, y2: y(0), class: 'hp-now' });
+    let lastMonth = '';
+    p.weeks.forEach((w, i) => {
+      const month = w.start.slice(5, 7);
+      if (month !== lastMonth && i > 0 && i < 11) add('text', { x: x(i), y: 124, class: 'hp-axis hp-month', 'text-anchor': 'middle' }, t(`${Number(month)} 月`, new Date(w.start).toLocaleString('en', { month: 'short', timeZone: 'UTC' })));
+      lastMonth = month;
+      const dot = add('circle', { cx: x(i), cy: y(w.km), r: i === 11 ? 5 : 3.5, class: i === 11 ? 'hp-dot is-now' : 'hp-dot' });
+      const title = document.createElementNS(ns, 'title');
+      title.textContent = t(`${w.start} 當週 ${formatNumber(w.km, 'decimal')} 公里`, `Week of ${w.start}: ${formatNumber(w.km, 'decimal')} km`);
+      dot.append(title);
+    });
+    card.append(chips, element('h4', 'hp-title', t('本週', 'This week')), stats, element('p', 'hp-sub', t('過去 12 週', 'Past 12 weeks')), svg);
+
+    const streak = element('section', 'hp-card hp-streak');
+    const flame = element('div', 'hp-flame');
+    flame.append(element('span', 'hp-flame-num', String(p.streakWeeks)), element('span', 'hp-flame-unit', t('週', p.streakWeeks === 1 ? 'week' : 'weeks')));
+    const grid = element('div', 'hp-dots');
+    grid.setAttribute('aria-label', t('本月有運動的日子', 'Active days this month'));
+    for (const cell of p.month.flat()) {
+      const dot = element('span', cell ? `hp-day${cell.active ? ' is-active' : ''}${cell.today ? ' is-today' : ''}${cell.future ? ' is-future' : ''}` : 'hp-day is-blank');
+      if (cell) dot.title = cell.day;
+      grid.append(dot);
+    }
+    const head = element('div', 'hp-streak-head');
+    head.append(element('h4', 'hp-title', t('連續紀錄', 'Streak')), element('span', 'hp-sub', t('本月', 'This month')));
+    const bodyRow = element('div', 'hp-streak-body');
+    bodyRow.append(flame, grid);
+    streak.append(head, bodyRow);
+    const wrap = element('div', 'hp-progress');
+    wrap.append(card, streak);
+    return wrap;
+  };
   const render = () => {
     if (state === 'loading') status.textContent = deps.lang() === 'zh' ? '載入中…' : 'Loading…';
     if (!data) return;
@@ -339,7 +425,9 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
     const hasMonths = !!records && records.months.some(m => m.runKm + m.hikeKm > 0);
     const blocks: HTMLElement[] = [];
     const pair: HTMLElement[] = []; // the weekly and monthly charts sit side by side
-    if (data.running.runs || data.running.weeks.some(w => w.km > 0)) {
+    if (data.workouts?.length) {
+      blocks.push(progressPanel(data.workouts, lang));
+    } else if (data.running.runs || data.running.weeks.some(w => w.km > 0)) {
       pair.push(block(t('本週', 'This week'), t('跑步加健行，週一起算，和上週比較', 'Running plus hiking from Monday, compared with last week'),
         hero(data, lang), chart(data.running.weeks, lang)));
     }
@@ -358,7 +446,7 @@ export function initHealthRecord(root: ParentNode = document, deps: Deps = defau
       blocks.push(block(t('日常活動', 'Daily activity'), t('其他運動的時間，以及近 30 天每天的步數、距離、爬樓、運動時間與熱量', 'Time spent in other sports, and the last 30 days of steps, distance, flights, exercise and energy'),
         activities(data.other, lang), sparks(data.other, lang)));
     }
-    if (pair.length) { const row = element('div', 'health-pair'); row.append(...pair); blocks.unshift(row); }
+    if (pair.length) { const row = element('div', 'health-pair'); row.append(...pair); blocks.splice(data.workouts?.length ? 1 : 0, 0, row); }
     body.replaceChildren(...blocks);
   };
   const load = async () => {
