@@ -16,6 +16,9 @@ describe('learnDate', () => {
     const page = readFileSync('src/pages/learn.astro', 'utf8');
     expect(page).toContain('poster="/assets/learn-poster-walking.jpg"');
     expect(page).not.toMatch(/new Date\((row|learner|topic|item)\./);
-    expect(readFileSync('src/styles/learn.css', 'utf8')).toContain('learn-poster-walking.jpg');
+    const css = readFileSync('src/styles/learn.css', 'utf8');
+    expect(css).toMatch(/\.learn-catalog-video:not\(\.is-playing\) \{[^}]*learn-poster-walking\.jpg/);
+    expect(css).toMatch(/\.learn-catalog-video \{[^}]*background: #000;/); // black bars beside a playing clip
+    expect(readFileSync('src/scripts/learn/catalogVideo.ts', 'utf8')).toContain("classList.add('is-playing')");
   });
 });

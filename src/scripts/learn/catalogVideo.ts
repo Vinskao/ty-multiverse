@@ -150,6 +150,7 @@ export function keepCatalogVideoPlaying(root: ParentNode = document, fadeSeconds
     });
     video.addEventListener('ended', () => { if (video === active) advance(); });
     video.addEventListener('loadeddata', () => { if (video === active && video.paused) play(video); });
+    video.addEventListener('playing', () => { (container as HTMLElement | null)?.classList.add('is-playing'); });
     video.addEventListener('pause', () => { if (video === active && !fading && !document.hidden) play(video); });
   };
   all.forEach(wire);
